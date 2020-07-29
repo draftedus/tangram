@@ -1,0 +1,42 @@
+struct StatsSettings {
+	1 u64 text_histogram_max_size,
+	2 u64 number_histogram_max_size,
+}
+
+enum ColumnStats {
+	1 UnknownColumnStats Unknown,
+	2 NumberColumnStats Number,
+	3 EnumColumnStats Enum,
+	4 TextColumnStats Text,
+}
+
+struct UnknownColumnStats {
+	1 string column_name,
+}
+
+struct NumberColumnStats {
+	1 string column_name,
+	2 u64 invalid_count,
+	3 u64 unique_count,
+	4 option<array<(f32, u64)>> histogram,
+	5 f32 min,
+	6 f32 max,
+	7 f32 mean,
+	8 f32 variance,
+	9 f32 std,
+	10 f32 p25,
+	11 f32 p50,
+	12 f32 p75,
+}
+
+struct EnumColumnStats {
+	1 string column_name,
+	2 u64 invalid_count,
+	3 array<(string, u64)> histogram,
+	4 u64 unique_count,
+}
+
+struct TextColumnStats {
+	1 string column_name,
+	2 array<(string, u64)> top_tokens,
+}

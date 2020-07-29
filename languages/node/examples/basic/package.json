@@ -1,0 +1,8 @@
+{
+	"name": "@tangramhq/tangram-node-example-basic",
+	"private": true,
+	"scripts": {
+		"start": "node main.js"
+	},
+	"version": "0.0.0"
+}

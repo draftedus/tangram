@@ -1,0 +1,121 @@
+name: build
+on:
+  repository_dispatch:
+    types:
+      - build
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          key: linux-cargo-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+      - name: build
+        run: |
+          cargo build --release
+      - name: upload cli
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-cli-linux-x64
+          path: target/release/tangram
+      - name: upload cdylib
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-cdylib-linux-x64
+          path: target/release/libtangram.so
+      - name: upload staticlib
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-staticlib-linux-x64
+          path: target/release/libtangram.a
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          key: macos-cargo-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+      - name: build
+        run: |
+          cargo build --release
+      - name: upload cli
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-cli-macos-x64
+          path: target/release/tangram
+      - name: upload cdylib
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-cdylib-macos-x64
+          path: target/release/libtangram.dylib
+      - name: upload staticlib
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-staticlib-macos-x64
+          path: target/release/libtangram.a
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          key: windows-cargo-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+      - name: build
+        run: |
+          cargo build --release
+      - name: upload cli
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-cli-windows-x64
+          path: target/release/tangram.exe
+      - name: upload cdylib
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-cdylib-windows-x64
+          path: target/release/tangram.dll
+      - name: upload staticlib
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-staticlib-windows-x64
+          path: target/release/tangram.lib
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          key: wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+      - name: build
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo build --release --lib --target wasm32-unknown-unknown
+      - name: upload wasm
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-wasm
+          path: target/wasm32-unknown-unknown/release/tangram.wasm

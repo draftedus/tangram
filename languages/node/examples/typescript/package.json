@@ -1,0 +1,12 @@
+{
+	"dependencies": {
+		"typescript": "3.8.3"
+	},
+	"name": "@tangramhq/tangram-node-example-typescript",
+	"private": true,
+	"scripts": {
+		"build": "tsc",
+		"start": "node main.js"
+	},
+	"version": "0.0.0"
+}

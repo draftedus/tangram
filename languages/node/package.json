@@ -1,0 +1,9 @@
+{
+	"private": true,
+	"workspaces": [
+		"examples/advanced",
+		"examples/basic",
+		"examples/typescript",
+		"packages/tangram-node"
+	]
+}

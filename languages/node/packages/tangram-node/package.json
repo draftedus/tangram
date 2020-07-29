@@ -1,0 +1,21 @@
+{
+	"author": "Tangram",
+	"devDependencies": {
+		"@types/node": "^13.13.4",
+		"typescript": "3.8.3"
+	},
+	"license": "MIT",
+	"main": "index.js",
+	"exports": {
+		"require": "./index.js"
+	},
+	"name": "@tangramhq/tangram-node",
+	"scripts": {
+		"build": "tsc"
+	},
+	"types": "index.d.ts",
+	"version": "0.2.0",
+	"dependencies": {
+		"node-fetch": "^2.6.0"
+	}
+}

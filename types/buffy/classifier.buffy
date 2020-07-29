@@ -1,0 +1,122 @@
+import { FeatureGroup } from './features.buffy'
+import { ColumnStats, StatsSettings } from './stats.buffy'
+import { GBTModelTrainOptions, LinearModelTrainOptions } from './train_options.buffy'
+import { Tree } from './tree.buffy'
+
+struct Classifier {
+  1 string id,
+  2 string target_column_name,
+  3 u64 row_count,
+  4 StatsSettings stats_settings,
+  5 array<ColumnStats> overall_column_stats,
+  6 ColumnStats overall_target_column_stats,
+  7 array<ColumnStats> train_column_stats,
+  8 ColumnStats train_target_column_stats,
+  9 array<ColumnStats> test_column_stats,
+  10 ColumnStats test_target_column_stats,
+  11 f32 test_fraction,
+  12 ClassificationMetrics test_metrics,
+  13 ClassificationModel model,
+  14 f32 comparison_fraction,
+  15 ClassificationComparisonMetric comparison_metric,
+}
+
+struct ClassificationMetrics {
+  1 array<ClassMetrics> class_metrics,
+  2 f32 accuracy,
+  3 f32 precision_unweighted,
+  4 f32 precision_weighted,
+  5 f32 recall_unweighted,
+  6 f32 recall_weighted,
+  7 f32 baseline_accuracy,
+}
+
+struct ClassMetrics {
+  1 u64 true_positives,
+  2 u64 false_positives,
+  3 u64 true_negatives,
+  4 u64 false_negatives,
+  5 f32 accuracy,
+  6 f32 precision,
+  7 f32 recall,
+  8 f32 f1_score,
+}
+
+enum ClassificationModel {
+  1 LinearBinaryClassifier LinearBinary,
+  2 LinearMulticlassClassifier LinearMulticlass,
+  3 GBTBinaryClassifier GBTBinary,
+  4 GBTMulticlassClassifier GBTMulticlass,
+}
+
+struct LinearBinaryClassifier {
+  1 array<FeatureGroup> feature_groups,
+  2 LinearModelTrainOptions options,
+  3 array<f32> weights,
+  4 f32 bias,
+  5 array<string> classes,
+  6 array<f32> losses,
+  7 array<BinaryClassifierClassMetrics> class_metrics,
+  8 f32 auc_roc,
+  9 array<f32> means,
+}
+
+struct LinearMulticlassClassifier {
+  1 array<FeatureGroup> feature_groups,
+  2 LinearModelTrainOptions options,
+  3 u64 n_features,
+  4 u64 n_classes,
+  5 array<f32> biases,
+  6 array<f32> weights,
+  7 array<string> classes,
+  8 array<f32> losses,
+  9 array<f32> means,
+}
+
+struct GBTBinaryClassifier {
+  1 array<FeatureGroup> feature_groups,
+  2 GBTModelTrainOptions options,
+  3 f32 bias,
+  4 array<Tree> trees,
+  5 array<string> classes,
+  6 array<f32> losses,
+  7 array<f32> feature_importances,
+  8 array<BinaryClassifierClassMetrics> class_metrics,
+  9 f32 auc_roc,
+}
+
+struct GBTMulticlassClassifier {
+  1 array<FeatureGroup> feature_groups,
+  2 GBTModelTrainOptions options,
+  3 u64 n_classes,
+  4 u64 n_rounds,
+  5 array<f32> biases,
+  6 array<Tree> trees,
+  7 array<string> classes,
+  8 array<f32> losses,
+  9 array<f32> feature_importances,
+}
+
+struct BinaryClassifierClassMetrics {
+  1 array<ThresholdMetrics> thresholds,
+}
+
+struct ThresholdMetrics {
+  1 f32 threshold,
+  2 u64 true_positives,
+  3 u64 false_positives,
+  4 u64 true_negatives,
+  5 u64 false_negatives,
+  6 f32 accuracy,
+  7 f32 precision,
+  8 f32 recall,
+  9 f32 f1Score,
+  10 f32 true_positive_rate,
+  11 f32 false_positive_rate,
+}
+
+enum ClassificationComparisonMetric {
+  1 void Accuracy,
+  2 void AUCROC,
+  3 void F1,
+}

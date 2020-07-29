@@ -1,0 +1,4 @@
+PORT=8000 \
+API_URL=http://localhost:8001 \
+STRIPE_PUBLISHABLE_KEY=pk_test_IdZDlwnF8QDZoDB3dIdtIZ5K00p4enlqGE \
+deno run --unstable -A ../pinwheel/cli/main.ts dev

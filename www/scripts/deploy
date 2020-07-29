@@ -1,0 +1,1 @@
+rsync --archive --delete --progress dist/* tangram@router.tangramhq.com:/var/www/

@@ -1,0 +1,7 @@
+import { Classifier } from './classifier.buffy'
+import { Regressor } from './regressor.buffy'
+
+enum Model {
+	1 Regressor Regressor,
+	2 Classifier Classifier,
+}

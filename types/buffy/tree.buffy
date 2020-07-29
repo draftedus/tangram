@@ -1,0 +1,42 @@
+struct Tree {
+	1 array<Node> nodes,
+}
+
+enum Node {
+	1 BranchNode Branch,
+	2 LeafNode Leaf,
+}
+
+struct BranchNode {
+	1 u64 left_child_index,
+	2 u64 right_child_index,
+	3 BranchSplit split,
+	// this is the fraction of examples
+	// that passed through this branch in training
+	4 f32 examples_fraction,
+}
+
+enum BranchSplit {
+	1 BranchSplitContinuous Continuous,
+	2 BranchSplitDiscrete Discrete,
+}
+
+struct BranchSplitContinuous {
+	1 u64 feature_index,
+	2 f32 split_value,
+	3 bool invalid_values_direction,
+}
+
+struct BranchSplitDiscrete {
+	1 u64 feature_index,
+	// the directions correspond to label id's
+	// so the first direction is for invalid values
+	2 array<bool> directions,
+}
+
+struct LeafNode {
+	1 f32 value,
+	// this is the fraction of examples
+	// that ended in this leaf in training
+	2 f32 examples_fraction,
+}

@@ -1,0 +1,15 @@
+struct LinearModelTrainOptions {
+	1 u64 max_epochs,
+	2 u64 n_examples_per_batch,
+	3 f32 learning_rate,
+	4 f32 l2_regularization,
+	5 f32 early_stopping_fraction,
+}
+
+struct GBTModelTrainOptions {
+	1 u64 depth,
+	2 f32 learning_rate,
+	3 u64 min_examples_per_leaf,
+	4 u64 max_rounds,
+	5 f32 early_stopping_fraction,
+}

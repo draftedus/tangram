@@ -1,0 +1,12 @@
+{
+	"private": true,
+	"workspaces": [
+		"examples/create-react-app",
+		"examples/next",
+		"examples/parcel",
+		"examples/webpack",
+		"packages/inline-model.macro",
+		"packages/model-loader",
+		"packages/tangram-js"
+	]
+}

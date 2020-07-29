@@ -1,0 +1,61 @@
+import { FeatureGroup } from './features.buffy'
+import { ColumnStats, StatsSettings } from './stats.buffy'
+import { GBTModelTrainOptions, LinearModelTrainOptions } from './train_options.buffy'
+import { Tree } from './tree.buffy'
+
+struct Regressor {
+  1 string id,
+  2 string target_column_name,
+  3 u64 row_count,
+  4 StatsSettings stats_settings,
+  5 array<ColumnStats> overall_column_stats,
+  6 ColumnStats overall_target_column_stats,
+  7 array<ColumnStats> train_column_stats,
+  8 ColumnStats train_target_column_stats,
+  9 array<ColumnStats> test_column_stats,
+  10 ColumnStats test_target_column_stats,
+  11 f32 test_fraction,
+  12 RegressionMetrics test_metrics,
+  13 RegressionModel model,
+  14 f32 comparison_fraction,
+  15 RegressionComparisonMetric comparison_metric,
+}
+
+struct RegressionMetrics {
+  1 f32 mse,
+  2 f32 rmse,
+  3 f32 mae,
+  4 f32 r2,
+  5 f32 baseline_mse,
+  6 f32 baseline_rmse,
+}
+
+enum RegressionModel {
+  1 LinearRegressor Linear,
+  2 GBTRegressor GBT,
+}
+
+struct LinearRegressor {
+  1 array<FeatureGroup> feature_groups,
+  2 LinearModelTrainOptions options,
+  3 f32 bias,
+  4 array<f32> weights,
+  5 array<f32> losses,
+  6 array<f32> means,
+}
+
+struct GBTRegressor {
+  1 array<FeatureGroup> feature_groups,
+  2 GBTModelTrainOptions options,
+  3 f32 bias,
+  4 array<Tree> trees,
+  5 array<f32> losses,
+  6 array<f32> feature_importances,
+}
+
+enum RegressionComparisonMetric {
+  1 void MeanAbsoluteError,
+  2 void MeanSquaredError,
+  3 void RootMeanSquaredError,
+  4 void R2,
+}

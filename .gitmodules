@@ -1,0 +1,6 @@
+[submodule "buffy"]
+	path = buffy
+	url = git@github.com:tangram-hq/buffy
+[submodule "term-ui"]
+	path = term-ui
+	url = git@github.com:tangram-hq/term-ui

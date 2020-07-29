@@ -1,0 +1,13 @@
+{
+	"devDependencies": {
+		"@tangramhq/eslint-plugin": "0.1.17",
+		"csstype": "^2.6.11",
+		"esbuild": "0.6.10",
+		"eslint": "7.5.0",
+		"preact": "10.4.6",
+		"preact-render-to-string": "5.1.10",
+		"prettier": "2.0.5",
+		"typescript": "3.9.7"
+	},
+	"type": "module"
+}

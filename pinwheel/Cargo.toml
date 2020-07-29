@@ -1,0 +1,29 @@
+[package]
+name = "pinwheel"
+version = "0.0.0"
+edition = "2018"
+
+[lib]
+path = "lib.rs"
+
+[[bin]]
+name = "pinwheel"
+path = "main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "2.33", features = ["color"] }
+env_logger = "0.7"
+futures = "0.3"
+futures-util = "0.3"
+glob = "0.3"
+hyper =  { version = "0.13", features = ["stream"] }
+include_dir = "0.6"
+log = "0.4"
+rusty_v8 = "0.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sourcemap = { git = "https://github.com/getsentry/rust-sourcemap.git" }
+tokio = { version = "0.2", features = ["rt-threaded", "tcp", "macros", "fs"] }
+url = "2"
+walkdir = "2"

@@ -1,0 +1,66 @@
+:root {
+	--min-width: 320px;
+	--max-width: 1200px;
+	--border-radius: 4px;
+	--border-width: 2px;
+
+	--blue: #0a84ff;
+	--gray: #8e8e93;
+	--green: #30d158;
+	--indigo: #5e5ce6;
+	--orange: #ff9f0a;
+	--pink: #ff375f;
+	--purple: #bf5af2;
+	--red: #ff453a;
+	--teal: #4dd0e1;
+	--yellow: #ffd60a;
+
+	--terminal-black: #000000;
+	--terminal-blue: #0a84ff;
+	--terminal-cyan: #4dd0e1;
+	--terminal-green: #30d158;
+	--terminal-magenta: #ff375f;
+	--terminal-red: #ff453a;
+	--terminal-white: #ffffff;
+	--terminal-yellow: #ffd60a;
+}
+
+:root {
+	--background: #ffffff;
+	--border: #f2f2f2;
+	--header: #eeeeee;
+	--hover: #cccccc;
+	--surface: #fafafa;
+	--muted-text: #666666;
+	--text: #222222;
+	--accent: #0a84ff;
+	--fun-text: #111111;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #111111;
+		--border: #212121;
+		--header: #232323;
+		--hover: #333333;
+		--surface: #181818;
+		--muted-text: #8b8b8b;
+		--text: #e8e8e8;
+		--accent: #0a84ff;
+		--fun-text: #111111;
+	}
+}
+
+@font-face {
+	font-family: 'JetBrains Mono';
+	src: url('/jetbrainsmono.woff2') format('woff2');
+	font-display: swap;
+}
+
+body {
+	background-color: var(--background);
+	color: var(--text);
+	font-family: JetBrains Mono, monospace, sans-serif;
+	margin: 0;
+	line-height: 1;
+}
