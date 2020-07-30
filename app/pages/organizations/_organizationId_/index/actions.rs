@@ -11,6 +11,7 @@ use std::sync::Arc;
 use tangram::id::Id;
 
 #[derive(serde::Deserialize)]
+#[serde(tag = "action")]
 enum Action {
 	#[serde(rename = "delete_organization")]
 	DeleteOrganization,
@@ -39,7 +40,7 @@ pub async fn actions(
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
-	let action: Action = serde_json::from_slice(&data).map_err(|_| Error::BadRequest)?;
+	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
 	let mut db = context
 		.database_pool
 		.get()
@@ -79,7 +80,7 @@ async fn delete_organization(
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
-			format!("/organizations/{}", organization_id),
+			format!("/organizations/{}/", organization_id),
 		)
 		.body(Body::empty())?)
 }
@@ -106,7 +107,7 @@ async fn delete_member(
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
-			format!("/organizations/{}", organization_id),
+			format!("/organizations/{}/", organization_id),
 		)
 		.body(Body::empty())?)
 }
@@ -132,7 +133,7 @@ async fn change_plan(
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
-			format!("/organizations/{}", organization_id),
+			format!("/organizations/{}/", organization_id),
 		)
 		.body(Body::empty())?)
 }

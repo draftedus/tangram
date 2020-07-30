@@ -217,7 +217,7 @@ async fn handle(
 			pages::organizations::_organizationId_::index::page(request, &context, organization_id)
 				.await
 		}
-		(&Method::POST, &["organizations", organization_id]) => {
+		(&Method::POST, &["organizations", organization_id, ""]) => {
 			pages::organizations::_organizationId_::index::actions(
 				request,
 				context,

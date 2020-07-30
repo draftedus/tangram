@@ -1,5 +1,4 @@
 use anyhow::Result;
-use postgres_derive::{FromSql, ToSql};
 use tangram::id::Id;
 use tokio_postgres as postgres;
 
@@ -33,21 +32,52 @@ pub struct Member {
 	pub is_admin: bool,
 }
 
-#[derive(Debug, ToSql, FromSql, serde::Serialize, serde::Deserialize)]
-#[postgres(name = "plan")]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum Plan {
-	#[postgres(name = "trial")]
 	#[serde(rename = "trial")]
 	Trial,
-	#[postgres(name = "startup")]
 	#[serde(rename = "startup")]
 	Startup,
-	#[postgres(name = "team")]
 	#[serde(rename = "team")]
 	Team,
-	#[postgres(name = "enterprise")]
 	#[serde(rename = "enterprise")]
 	Enterprise,
+}
+
+impl<'a> postgres_types::FromSql<'a> for Plan {
+	fn from_sql(
+		_: &postgres_types::Type,
+		raw: &[u8],
+	) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+		let plan = match raw {
+			b"trial" => Plan::Trial,
+			b"startup" => Plan::Startup,
+			b"team" => Plan::Team,
+			b"enterprise" => Plan::Enterprise,
+			_ => todo!(),
+		};
+		Ok(plan)
+	}
+	postgres_types::accepts!(TEXT);
+}
+
+impl postgres_types::ToSql for Plan {
+	fn to_sql(
+		&self,
+		_: &postgres_types::Type,
+		w: &mut bytes::BytesMut,
+	) -> Result<postgres_types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
+		let bytes = match self {
+			Self::Trial => "trial",
+			Self::Startup => "startup",
+			Self::Team => "team",
+			Self::Enterprise => "enterprise",
+		};
+		bytes::BufMut::put_slice(w, bytes.as_bytes());
+		Ok(postgres_types::IsNull::No)
+	}
+	postgres_types::accepts!(TEXT);
+	postgres_types::to_sql_checked!();
 }
 
 pub async fn get_organization(

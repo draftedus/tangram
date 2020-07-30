@@ -67,11 +67,11 @@ export function TableRow(props: TableRowProps) {
 }
 
 export type TableCellProps = {
-	align?: 'left' | 'center' | 'right' | null
 	children?: Children
 	colSpan?: string
 	color?: string
 	expand?: boolean
+	textAlign?: 'left' | 'center' | 'right' | null
 }
 
 let tableHeaderCellClass = cssClass()
@@ -86,9 +86,19 @@ let tableHeaderCellCss = css({
 	},
 })
 
-let alignClass = cssClass()
-let alignCss = css({
-	[`.${alignClass}`]: { textAlign: 'left' },
+let alignLeftClass = cssClass()
+let alignLeftCss = css({
+	[`.${alignLeftClass}`]: { textAlign: 'left' },
+})
+
+let alignRightClass = cssClass()
+let alignRightCss = css({
+	[`.${alignRightClass}`]: { textAlign: 'right' },
+})
+
+let alignCenterClass = cssClass()
+let alignCenterCss = css({
+	[`.${alignCenterClass}`]: { textAlign: 'center' },
 })
 
 let expandClass = cssClass()
@@ -97,12 +107,34 @@ let expandCss = css({
 })
 
 export function TableHeaderCell(props: TableCellProps) {
-	useCss(tableHeaderCellCss, alignCss, expandCss)
+	useCss(
+		tableHeaderCellCss,
+		expandCss,
+		expandCss,
+		alignCenterCss,
+		alignRightCss,
+		alignLeftCss,
+	)
+	let alignClass
+	switch (props.textAlign) {
+		case 'left': {
+			alignClass = alignLeftClass
+			break
+		}
+		case 'right': {
+			alignClass = alignRightClass
+			break
+		}
+		case 'center': {
+			alignClass = alignCenterClass
+			break
+		}
+	}
 	return (
 		<th
 			class={cx(
 				tableHeaderCellClass,
-				props.align ? alignClass : undefined,
+				props.textAlign ? alignClass : alignLeftClass,
 				props.expand && expandClass,
 			)}
 		>

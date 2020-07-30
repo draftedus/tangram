@@ -110,7 +110,7 @@ export default function OrganizationIndexPage(props: Props) {
 									</ui.TableCell>
 									<ui.TableCell>
 										{props.userId != member.id ? (
-											<ui.Form action="delete_member">
+											<ui.Form action="delete_member" post>
 												<input
 													name="memberId"
 													type="hidden"
@@ -132,7 +132,7 @@ export default function OrganizationIndexPage(props: Props) {
 					<ui.P>You are currently on the {props.plan} plan.</ui.P>
 					<PricingCards
 						enterpriseCta={
-							<ui.Form action="change_plan">
+							<ui.Form action="change_plan" post>
 								<input name="plan" type="hidden" value={Plan.Enterprise} />
 								<ui.Button
 									color={ui.colors.blue}
@@ -145,7 +145,7 @@ export default function OrganizationIndexPage(props: Props) {
 						}
 						enterpriseSelected={props.plan === Plan.Enterprise}
 						freeCta={
-							<ui.Form action="change_plan">
+							<ui.Form action="change_plan" post>
 								<input name="plan" type="hidden" value={Plan.Free} />
 								<ui.Button
 									color={ui.colors.indigo}
@@ -158,7 +158,7 @@ export default function OrganizationIndexPage(props: Props) {
 						}
 						freeSelected={props.plan === Plan.Free}
 						startupCta={
-							<ui.Form action="change_plan">
+							<ui.Form action="change_plan" post>
 								<input name="plan" type="hidden" value={Plan.Startup} />
 								<ui.Button
 									color={ui.colors.teal}
@@ -171,7 +171,7 @@ export default function OrganizationIndexPage(props: Props) {
 						}
 						startupSelected={props.plan === Plan.Startup}
 						teamCta={
-							<ui.Form action="change_plan">
+							<ui.Form action="change_plan" post>
 								<input name="plan" type="hidden" value={Plan.Team} />
 								<ui.Button
 									color={ui.colors.green}
@@ -221,7 +221,7 @@ export default function OrganizationIndexPage(props: Props) {
 				</ui.S2>
 				<ui.S2>
 					<ui.H2>Danger Zone</ui.H2>
-					<ui.Form action="delete_organization">
+					<ui.Form action="delete_organization" post>
 						<ui.Button color={ui.colors.red}>Delete Organization</ui.Button>
 					</ui.Form>
 				</ui.S2>

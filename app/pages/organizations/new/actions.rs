@@ -65,7 +65,7 @@ async fn create_organization(
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
-			format!("/organizations/{}", organization_id),
+			format!("/organizations/{}/", organization_id),
 		)
 		.body(Body::empty())?)
 }
