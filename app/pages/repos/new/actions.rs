@@ -10,15 +10,8 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use tangram::id::Id;
 
 #[derive(serde::Deserialize, Clone, Debug)]
-#[serde(tag = "action", rename_all = "camelCase")]
-pub enum Action {
-	#[serde(rename = "create_repo")]
-	CreateRepo(CreateRepoAction),
-}
-
-#[derive(serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateRepoAction {
+pub struct Action {
 	pub data: String,
 	pub organization_id: Option<String>,
 	pub title: String,
@@ -38,17 +31,15 @@ pub async fn actions(mut request: Request<Body>, context: &Context) -> Result<Re
 		.await
 		.map_err(|_| Error::BadRequest)?;
 	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-	match action {
-		Action::CreateRepo(action) => create_repo(action, db, user).await,
-	}
+	create_repo(action, db, user).await
 }
 
 async fn create_repo(
-	action: CreateRepoAction,
+	action: Action,
 	db: deadpool_postgres::Transaction<'_>,
 	user: User,
 ) -> Result<Response<Body>> {
-	let CreateRepoAction {
+	let Action {
 		title,
 		data,
 		organization_id,

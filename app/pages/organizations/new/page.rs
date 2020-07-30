@@ -1,12 +1,15 @@
 use crate::app::Context;
 use anyhow::Result;
-use html::html;
 use hyper::{Body, Request, Response, StatusCode};
 
-pub async fn page(_request: Request<Body>, _context: &Context) -> Result<Response<Body>> {
-	let html = html!(<div>"Hello World"</div>);
+#[derive(serde::Serialize)]
+struct Props {}
+
+pub async fn page(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	let props = Props {};
+	let html = context.pinwheel.render("/organizations/new", props).await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
-		.body(Body::from(html.render_to_string()))
+		.body(Body::from(html))
 		.unwrap())
 }

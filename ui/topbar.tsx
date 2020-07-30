@@ -267,14 +267,8 @@ function TopbarHamburger(props: HamburgerMenuProps) {
 	useCss(hamburgerCss)
 
 	return (
-		<div class={topbarDropdownWrapperClass}>
-			<svg
-				class="topbar-hamburger-icon"
-				height="15px"
-				overflow="visible"
-				viewBox="0 0 1 1"
-				width="15px"
-			>
+		<div class={hamburgerClass}>
+			<svg height="15px" overflow="visible" viewBox="0 0 1 1" width="15px">
 				{[0, 0.5, 1].map(y => (
 					<line
 						key={y}
@@ -353,6 +347,7 @@ let topbarDropdownItemCss = css({
 let topbarDropdownLinkClass = cssClass()
 let topbarDropdownLinkCss = css({
 	[`.${topbarDropdownLinkClass}`]: {
+		color: variables.colors.text,
 		cursor: 'pointer',
 		textDecoration: 'none',
 	},

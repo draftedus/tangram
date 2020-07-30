@@ -9,14 +9,7 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use tangram::id::Id;
 
 #[derive(serde::Deserialize, Clone, Debug)]
-#[serde(tag = "action")]
-pub enum Action {
-	#[serde(rename = "create_organization")]
-	CreateOrganization(CreateOrganizationAction),
-}
-
-#[derive(serde::Deserialize, Clone, Debug)]
-pub struct CreateOrganizationAction {
+pub struct Action {
 	pub name: String,
 }
 
@@ -34,17 +27,15 @@ pub async fn actions(mut request: Request<Body>, context: &Context) -> Result<Re
 	let user = authorize_user(&request, &db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	match action {
-		Action::CreateOrganization(action) => create_organization(action, user, db).await,
-	}
+	create_organization(action, user, db).await
 }
 
 async fn create_organization(
-	action: CreateOrganizationAction,
+	action: Action,
 	user: User,
 	db: deadpool_postgres::Transaction<'_>,
 ) -> Result<Response<Body>> {
-	let CreateOrganizationAction { name } = action;
+	let Action { name } = action;
 	let created_at: DateTime<Utc> = Utc::now();
 	let organization_id: Id = db
 		.query_one(

@@ -3,4 +3,4 @@ APP_URL=http://localhost:8080 \
 DATABASE_URL=postgres://postgres@localhost:5432/tangram \
 DATABASE_POOL_MAX_SIZE=100 \
 STRIPE_SECRET_KEY=sk_test_8HE9tiU8FcQ3qKmo2nWADZrW00zstANVQE \
-watchexec --exts rs --restart --watch . -- cargo run -p tangram --release -- app
+watchexec --exts rs --restart --watch . -- cargo run -p tangram -- app

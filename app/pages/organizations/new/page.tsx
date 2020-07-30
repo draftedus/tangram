@@ -6,7 +6,7 @@ export default function OrganizationCreatePage() {
 		<AppLayout>
 			<ui.S1>
 				<ui.H1>Create New Organization</ui.H1>
-				<ui.Form>
+				<ui.Form post>
 					<ui.TextField label="Name" name="name"></ui.TextField>
 					<ui.Button>Create</ui.Button>
 				</ui.Form>

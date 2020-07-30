@@ -109,8 +109,8 @@ async fn handle(
 		(&Method::GET, &["repos", _repo_id, "new"]) => pages::repos::_repo_id::models::new::page(request, &context).await,
 		(&Method::POST, &["repos", _repo_id, "new"]) => pages::repos::_repo_id::models::new::actions(request, &context).await,
 
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, ""]) => {
-			pages::repos::_repo_id::models::_model_id::index::page(request, &context).await
+		(&Method::GET, &["repos", _repo_id, "models",model_id, ""]) => {
+			pages::repos::_repo_id::models::_model_id::index::page(request, &context, model_id).await
 		}
 	  (&Method::POST, &["repos", _repo_id, "models", model_id,]) => {
 			pages::repos::_repo_id::models::_model_id::actions(request, &context, model_id).await
@@ -214,7 +214,7 @@ async fn handle(
 		}
 
 		(&Method::GET, &["organizations", organization_id, ""]) => {
-			pages::organizations::_organizationId_::index::page(request, context, organization_id)
+			pages::organizations::_organizationId_::index::page(request, &context, organization_id)
 				.await
 		}
 		(&Method::POST, &["organizations", organization_id]) => {
@@ -227,7 +227,7 @@ async fn handle(
 		}
 
 		(&Method::GET, &["organizations", organization_id, "edit"]) => {
-			pages::organizations::_organizationId_::edit::page(request, context, organization_id)
+			pages::organizations::_organizationId_::edit::page(request, &context, organization_id)
 				.await
 		}
 
@@ -326,11 +326,17 @@ pub async fn start() -> Result<()> {
 		Pool::new(database_manager, database_pool_max_size)
 	};
 
-	let pinwheel = if cfg!(debug_assertions) {
+	#[cfg(debug_assertions)]
+	fn pinwheel() -> Pinwheel {
 		Pinwheel::dev(PathBuf::from("app"), PathBuf::from("target/js"))
-	} else {
+	}
+
+	#[cfg(not(debug_assertions))]
+	fn pinwheel() -> Pinwheel {
 		Pinwheel::prod(include_dir::include_dir!("target/js"))
-	};
+	}
+
+	let pinwheel = pinwheel();
 
 	// use sqlx::postgres::PgPool;
 	// let pool = PgPool::builder()
