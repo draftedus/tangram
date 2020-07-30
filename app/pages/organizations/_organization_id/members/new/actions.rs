@@ -7,26 +7,18 @@ use anyhow::format_err;
 use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
-use std::sync::Arc;
 use tangram::id::Id;
 
 #[derive(serde::Deserialize, Clone, Debug)]
-#[serde(tag = "action")]
-pub enum Action {
-	#[serde(rename = "add_member")]
-	AddMember(AddMemberAction),
-}
-
-#[derive(serde::Deserialize, Clone, Debug)]
-pub struct AddMemberAction {
+pub struct Action {
 	pub email: String,
 	#[serde(rename = "isAdmin")]
-	pub is_admin: bool,
+	pub is_admin: Option<String>,
 }
 
 pub async fn actions(
 	mut request: Request<Body>,
-	context: Arc<Context>,
+	context: &Context,
 	organization_id: &str,
 ) -> Result<Response<Body>> {
 	let data = to_bytes(request.body_mut())
@@ -46,19 +38,17 @@ pub async fn actions(
 	authorize_user_for_organization(&db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
-	match action {
-		Action::AddMember(action) => add_member(action, user, db, context, organization_id).await,
-	}
+	add_member(action, user, db, context, organization_id).await
 }
 
 async fn add_member(
-	action: AddMemberAction,
+	action: Action,
 	user: User,
 	db: deadpool_postgres::Transaction<'_>,
-	context: Arc<Context>,
+	context: &Context,
 	organization_id: Id,
 ) -> Result<Response<Body>> {
-	let AddMemberAction { email, .. } = action;
+	let Action { email, .. } = action;
 	let inviter_email = user.email;
 	if let Some(sendgrid_api_token) = context.sendgrid_api_token.clone() {
 		tokio::spawn(send_invite_email(
@@ -82,15 +72,20 @@ async fn add_member(
 		)
 		.await?
 		.get(0);
+	let is_admin = if let Some(is_admin) = action.is_admin {
+		is_admin == "on"
+	} else {
+		false
+	};
 	db.execute(
 		"
 			insert into organizations_users
 				(organization_id, user_id, is_admin)
 			values
-				($1, $2, false)
+				($1, $2, $3)
 			on conflict (organization_id, user_id) do nothing
     ",
-		&[&organization_id, &user_id],
+		&[&organization_id, &user_id, &is_admin],
 	)
 	.await?;
 	db.commit().await?;
@@ -99,7 +94,7 @@ async fn add_member(
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
-			format!("/organizations/{}", organization_id),
+			format!("/organizations/{}/", organization_id),
 		)
 		.body(Body::empty())?)
 }

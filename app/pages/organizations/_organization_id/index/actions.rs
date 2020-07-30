@@ -102,10 +102,7 @@ async fn delete_member(
 	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
-		.header(
-			header::LOCATION,
-			format!("/organizations/{}/", organization_id),
-		)
+		.header(header::LOCATION, "/user/")
 		.body(Body::empty())?)
 }
 

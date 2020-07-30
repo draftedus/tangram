@@ -5,7 +5,6 @@ use crate::app::{
 	Context,
 };
 use anyhow::Result;
-use html::html;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use tangram::id::Id;
@@ -16,10 +15,13 @@ pub async fn page(
 	organization_id: &str,
 ) -> Result<Response<Body>> {
 	let props = props(request, context, organization_id).await?;
-	let html = html!(<div>"Hello World"</div>);
+	let html = context
+		.pinwheel
+		.render("/organizations/_organizationId_/edit", props)
+		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
-		.body(Body::from(html.render_to_string()))
+		.body(Body::from(html))
 		.unwrap())
 }
 

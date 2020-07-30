@@ -6,8 +6,9 @@ export default function MembersInvitePage() {
 		<AppLayout>
 			<ui.S1>
 				<ui.H1>Invite Team Member</ui.H1>
-				<ui.Form>
+				<ui.Form post>
 					<ui.TextField label="Email" name="email"></ui.TextField>
+					<ui.CheckboxField label="Admin" name="isAdmin" />
 					<ui.Button>Invite</ui.Button>
 				</ui.Form>
 			</ui.S1>

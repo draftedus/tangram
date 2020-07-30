@@ -6,7 +6,7 @@ export default function OrganizationEditPage() {
 		<AppLayout>
 			<ui.S1>
 				<ui.H1>Edit Organization</ui.H1>
-				<ui.Form>
+				<ui.Form post>
 					<ui.TextField label="Organization Name" name="name" />
 					<ui.Button type="submit">Submit</ui.Button>
 				</ui.Form>

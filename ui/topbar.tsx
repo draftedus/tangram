@@ -22,6 +22,9 @@ export type TopbarItem = {
 	title: string
 }
 
+let hamburgerIconClass = cssClass()
+let xIconClass = cssClass()
+
 let topbarWrapperClass = cssClass()
 let topbarWrapperCss = css({
 	[`.${topbarWrapperClass}`]: {
@@ -74,11 +77,11 @@ let detailsCss = css({
 			display: 'block',
 		},
 	},
-	[`.${detailsClass}[open] .topbar-hamburger-icon`]: {
+	[`.${detailsClass}[open] .${hamburgerIconClass}`]: {
 		color: 'blue',
 		display: 'none',
 	},
-	[`.${detailsClass}:not([open]) .topbar-x-icon`]: {
+	[`.${detailsClass}:not([open]) .${xIconClass}`]: {
 		display: 'none',
 	},
 })
@@ -269,7 +272,13 @@ function TopbarHamburger(props: HamburgerMenuProps) {
 
 	return (
 		<div class={hamburgerClass}>
-			<svg height="15px" overflow="visible" viewBox="0 0 1 1" width="15px">
+			<svg
+				class={hamburgerIconClass}
+				height="15px"
+				overflow="visible"
+				viewBox="0 0 1 1"
+				width="15px"
+			>
 				{[0, 0.5, 1].map(y => (
 					<line
 						key={y}
@@ -284,7 +293,7 @@ function TopbarHamburger(props: HamburgerMenuProps) {
 				))}
 			</svg>
 			<svg
-				class="topbar-x-icon"
+				class={xIconClass}
 				height="15px"
 				overflow="visible"
 				viewBox="0 0 1 1"

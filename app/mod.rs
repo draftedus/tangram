@@ -99,40 +99,48 @@ async fn handle(
 		(&Method::GET, &["login"]) => pages::login::page(request, context, search_params).await,
 		(&Method::POST, &["login"]) => pages::login::actions(request, &context).await,
 		(&Method::GET, &[""]) => pages::index::page(request, &context).await,
-		(&Method::GET, &["repos", "new"]) => {
-			pages::repos::new::page(request, &context).await
-		}
-		(&Method::POST, &["repos", "new"]) => {
-			pages::repos::new::actions(request, &context).await
-		}
+		(&Method::GET, &["repos", "new"]) => pages::repos::new::page(request, &context).await,
+		(&Method::POST, &["repos", "new"]) => pages::repos::new::actions(request, &context).await,
 		(&Method::GET, &["repos", _repo_id]) => pages::repos::page(request, &context).await,
-		(&Method::GET, &["repos", _repo_id, "new"]) => pages::repos::_repo_id::models::new::page(request, &context).await,
-		(&Method::POST, &["repos", _repo_id, "new"]) => pages::repos::_repo_id::models::new::actions(request, &context).await,
+		(&Method::GET, &["repos", _repo_id, "new"]) => {
+			pages::repos::_repo_id::models::new::page(request, &context).await
+		}
+		(&Method::POST, &["repos", _repo_id, "new"]) => {
+			pages::repos::_repo_id::models::new::actions(request, &context).await
+		}
 
-		(&Method::GET, &["repos", _repo_id, "models",model_id, ""]) => {
-			pages::repos::_repo_id::models::_model_id::index::page(request, &context, model_id).await
-		}
-	  (&Method::POST, &["repos", _repo_id, "models", model_id,]) => {
-			pages::repos::_repo_id::models::_model_id::actions(request, &context, model_id).await
-		}
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "training_stats", ""]) => {
-			pages::repos::_repo_id::models::_model_id::training_stats::index::page(request, &context)
+		(&Method::GET, &["repos", _repo_id, "models", model_id, ""]) => {
+			pages::repos::_repo_id::models::_model_id::index::page(request, &context, model_id)
 				.await
 		}
-		(
-			&Method::GET,
-			&["repos", _repo_id, "models", _model_id, "training_stats", "columns", _column_name],
-		) => {
-			pages::repos::_repo_id::models::_model_id::training_stats::columns::_column_name::page(
-				request, &context,
+		(&Method::POST, &["repos", _repo_id, "models", model_id]) => {
+			pages::repos::_repo_id::models::_model_id::actions(request, &context, model_id).await
+		}
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_stats", ""]) => {
+			pages::repos::_repo_id::models::_model_id::training_stats::index::page(
+				request, &context, model_id,
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "introspect"]) => {
-			pages::repos::_repo_id::models::_model_id::introspect::page(request, &context).await
+		(
+			&Method::GET,
+			&["repos", _repo_id, "models", model_id, "training_stats", "columns", column_name],
+		) => {
+			pages::repos::_repo_id::models::_model_id::training_stats::columns::_column_name::page(
+				request,
+				&context,
+				model_id,
+				column_name,
+			)
+			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "predict"]) => {
-			pages::repos::_repo_id::models::_model_id::predict::page(request, &context).await
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "introspect"]) => {
+			pages::repos::_repo_id::models::_model_id::introspect::page(request, &context, model_id)
+				.await
+		}
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "predict"]) => {
+			pages::repos::_repo_id::models::_model_id::predict::page(request, &context, model_id)
+				.await
 		}
 		(&Method::POST, &["repos", _repo_id, "models", model_id, "predict"]) => {
 			pages::repos::_repo_id::models::_model_id::predict::actions::actions(
@@ -140,9 +148,9 @@ async fn handle(
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "training_metrics", ""]) => {
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
 			pages::repos::_repo_id::models::_model_id::training_metrics::index::page(
-				request, &context,
+				request, &context, model_id,
 			)
 			.await
 		}
@@ -152,64 +160,83 @@ async fn handle(
 		) => {
 			pages::repos::_repo_id::models::_model_id::training_metrics::class_metrics::page(
 				request,
-				context,
+				&context,
 				model_id,
 				search_params,
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "production_metrics", ""]) => {
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", ""]) => {
 			pages::repos::_repo_id::models::_model_id::production_metrics::index::page(
-				request, &context,
+				request,
+				&context,
+				model_id,
+				search_params,
 			)
 			.await
 		}
 		(
 			&Method::GET,
-			&["repos", _repo_id, "models", _model_id, "production_metrics", "class_metrics"],
+			&["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"],
 		) => {
-			pages::repos::_repo_id::models::_model_id::production_metrics::index::page(
-				request, &context,
+			pages::repos::_repo_id::models::_model_id::production_metrics::class_metrics::page(
+				request,
+				&context,
+				model_id,
+				search_params,
 			)
 			.await
 		}
 		(
 			&Method::GET,
-			&["repos", _repo_id, "models", _model_id, "training_metrics", "precision_recall"],
+			&["repos", _repo_id, "models", model_id, "training_metrics", "precision_recall"],
 		) => {
 			pages::repos::_repo_id::models::_model_id::training_metrics::precision_recall::page(
-				request, &context,
+				request, &context, model_id,
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "training_metrics", "roc"]) => {
-			pages::repos::_repo_id::models::_model_id::training_metrics::roc::page(request, &context)
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", "roc"]) => {
+			pages::repos::_repo_id::models::_model_id::training_metrics::roc::page(
+				request, &context, model_id,
+			)
+			.await
+		}
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "tuning"]) => {
+			pages::repos::_repo_id::models::_model_id::tuning::page(request, &context, model_id)
 				.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "tuning"]) => {
-			pages::repos::_repo_id::models::_model_id::tuning::page(request, &context).await
-		}
 
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "production_stats", ""]) => {
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", ""]) => {
 			pages::repos::_repo_id::models::_model_id::production_stats::index::page(
-				request, &context,
+				request,
+				&context,
+				model_id,
+				search_params,
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", _model_id, "production_stats", "columns", _column_name]) => {
-			pages::repos::_repo_id::models::_model_id::production_stats::columns::_column_name::page(
-				request, &context,
+		(
+			&Method::GET,
+			&["repos", _repo_id, "models", model_id, "production_stats", "columns", column_name],
+		) => {
+			pages::repos::_repo_id::models::_model_id::production_stats::columns::_columnName_::page(
+				request,
+				&context,
+				model_id,
+				column_name,
+				search_params,
 			)
 			.await
 		}
 
 		(&Method::GET, &["user", ""]) => pages::user::index::page(request, &context).await,
-	  (&Method::POST, &["user", ""]) => {
-			pages::user::index::actions(request, &context).await
-		}
+		(&Method::POST, &["user", ""]) => pages::user::index::actions(request, &context).await,
 
-		(&Method::GET, &["organizations", "new"]) => pages::organizations::new::page(request, &context).await,
-	  (&Method::POST, &["organizations", "new"]) => {
+		(&Method::GET, &["organizations", "new"]) => {
+			pages::organizations::new::page(request, &context).await
+		}
+		(&Method::POST, &["organizations", "new"]) => {
 			pages::organizations::new::actions(request, &context).await
 		}
 
@@ -225,25 +252,35 @@ async fn handle(
 			)
 			.await
 		}
-
 		(&Method::GET, &["organizations", organization_id, "edit"]) => {
 			pages::organizations::_organization_id::edit::page(request, &context, organization_id)
 				.await
 		}
-
 		(&Method::GET, &["organizations", organization_id, "members", "new"]) => {
-					pages::organizations::_organization_id::members::new::page(request, context, organization_id)
-						.await
-				}
-		(&Method::POST, &["organizations", organization_id, "members"]) => {
-					pages::organizations::_organization_id::members::new::actions(request, context, organization_id)
-						.await
-				}
 
+			pages::organizations::_organizationId_::members::new::page(
+				request,
+				&context,
+				organization_id,
+			)
+			.await
+		}
+		(&Method::POST, &["organizations", organization_id, "members", "new"]) => {
+			pages::organizations::_organizationId_::members::new::actions(
+				request,
+				&context,
+				organization_id,
+			)
+			.await
+		}
 		(&Method::POST, &["organizations", organization_id, "edit"]) => {
-				pages::organizations::_organization_id::edit::actions(request, context, organization_id)
-					.await
-			}
+			pages::organizations::_organizationId_::edit::actions(
+				request,
+				&context,
+				organization_id,
+			)
+			.await
+		}
 
 		_ => Err(Error::NotFound.into()),
 	};
