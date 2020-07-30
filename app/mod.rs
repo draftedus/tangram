@@ -220,7 +220,7 @@ async fn handle(
 			&Method::GET,
 			&["repos", _repo_id, "models", model_id, "production_stats", "columns", column_name],
 		) => {
-			pages::repos::_repo_id::models::_model_id::production_stats::columns::_columnName_::page(
+			pages::repos::_repo_id::models::_model_id::production_stats::columns::_column_name::page(
 				request,
 				&context,
 				model_id,
@@ -258,7 +258,7 @@ async fn handle(
 		}
 		(&Method::GET, &["organizations", organization_id, "members", "new"]) => {
 
-			pages::organizations::_organizationId_::members::new::page(
+			pages::organizations::_organization_id::members::new::page(
 				request,
 				&context,
 				organization_id,
@@ -266,7 +266,7 @@ async fn handle(
 			.await
 		}
 		(&Method::POST, &["organizations", organization_id, "members", "new"]) => {
-			pages::organizations::_organizationId_::members::new::actions(
+			pages::organizations::_organization_id::members::new::actions(
 				request,
 				&context,
 				organization_id,
@@ -274,7 +274,7 @@ async fn handle(
 			.await
 		}
 		(&Method::POST, &["organizations", organization_id, "edit"]) => {
-			pages::organizations::_organizationId_::edit::actions(
+			pages::organizations::_organization_id::edit::actions(
 				request,
 				&context,
 				organization_id,
