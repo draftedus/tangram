@@ -197,7 +197,7 @@ async fn handle(
 			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", _model_id, "production_stats", "columns", _column_name]) => {
-			pages::repos::_repo_id::models::_model_id::production_stats::columns::_columnName_::page(
+			pages::repos::_repo_id::models::_model_id::production_stats::columns::_column_name::page(
 				request, &context,
 			)
 			.await
@@ -214,11 +214,11 @@ async fn handle(
 		}
 
 		(&Method::GET, &["organizations", organization_id, ""]) => {
-			pages::organizations::_organizationId_::index::page(request, &context, organization_id)
+			pages::organizations::_organization_id::index::page(request, &context, organization_id)
 				.await
 		}
 		(&Method::POST, &["organizations", organization_id, ""]) => {
-			pages::organizations::_organizationId_::index::actions(
+			pages::organizations::_organization_id::index::actions(
 				request,
 				context,
 				organization_id,
@@ -227,21 +227,21 @@ async fn handle(
 		}
 
 		(&Method::GET, &["organizations", organization_id, "edit"]) => {
-			pages::organizations::_organizationId_::edit::page(request, &context, organization_id)
+			pages::organizations::_organization_id::edit::page(request, &context, organization_id)
 				.await
 		}
 
 		(&Method::GET, &["organizations", organization_id, "members", "new"]) => {
-					pages::organizations::_organizationId_::members::new::page(request, context, organization_id)
+					pages::organizations::_organization_id::members::new::page(request, context, organization_id)
 						.await
 				}
 		(&Method::POST, &["organizations", organization_id, "members"]) => {
-					pages::organizations::_organizationId_::members::new::actions(request, context, organization_id)
+					pages::organizations::_organization_id::members::new::actions(request, context, organization_id)
 						.await
 				}
 
 		(&Method::POST, &["organizations", organization_id, "edit"]) => {
-				pages::organizations::_organizationId_::edit::actions(request, context, organization_id)
+				pages::organizations::_organization_id::edit::actions(request, context, organization_id)
 					.await
 			}
 

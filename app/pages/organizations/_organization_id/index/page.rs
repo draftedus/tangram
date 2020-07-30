@@ -17,7 +17,7 @@ pub async fn page(
 	let props = props(request, context, organization_id).await?;
 	let html = context
 		.pinwheel
-		.render("/organizations/_organizationId_/", props)
+		.render("/organizations/_organization_id/", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)

@@ -26,15 +26,13 @@ let numberChartGridCss = css({
 })
 
 export function Tuning() {
+	useCss(gridCss, numberChartGridCss)
+
 	let [thresholdIndex, setThresholdIndex] = useState(9)
 
 	function formatter(thresholdIndex: number) {
 		return (thresholdIndex * 0.05 + 0.05).toPrecision(2)
 	}
-
-	useCss(gridCss)
-
-	useCss(numberChartGridCss)
 
 	let thresholdString = formatter(thresholdIndex)
 	let metrics = data[thresholdIndex]

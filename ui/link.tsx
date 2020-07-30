@@ -25,6 +25,9 @@ let linkCss = css({
 	[`.${linkClass}:hover`]: {
 		filter: 'brightness(90%)',
 	},
+	[`.${linkClass}:focus`]: {
+		filter: 'brightness(90%)',
+	},
 })
 
 export function Link(props: LinkProps) {

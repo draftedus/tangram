@@ -127,7 +127,7 @@ export default function PredictPage(props: Props) {
 									return <ui.TextField key={name} />
 							}
 						})}
-						<ui.TextField name="action" type="hidden" value="predict" />
+						<input name="action" type="hidden" value="predict" />
 						<ui.Button type="submit">Predict</ui.Button>
 					</ui.Form>
 					<div>

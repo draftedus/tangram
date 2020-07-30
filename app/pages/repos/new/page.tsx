@@ -17,7 +17,7 @@ export default function ModelCreatePage(props: Props) {
 						name="organization"
 						options={['root', ...props.organizations.map(org => org.name)]}
 					/>
-					<ui.TextField label="File" name="file" type="file" />
+					<ui.FileField label="File" name="file" />
 					<ui.Button type="submit">Upload</ui.Button>
 				</ui.Form>
 			</ui.S1>

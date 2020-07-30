@@ -1,9 +1,8 @@
 import { css, cssClass, h, useCss } from '../deps'
 import { border, variables } from '../theme'
 import { Label } from './label'
-import { useEffect } from 'preact/hooks'
 
-type TextFieldProps = {
+type FileFieldProps = {
 	autocomplete?: string
 	disabled?: boolean
 	label?: string
@@ -14,9 +13,9 @@ type TextFieldProps = {
 	value?: string | null
 }
 
-let textFieldClass = cssClass()
-let textFieldCss = css({
-	[`.${textFieldClass}`]: {
+let fileFieldClass = cssClass()
+let fileFieldCss = css({
+	[`.${fileFieldClass}`]: {
 		MozAppearance: 'none',
 		WebkitAppearance: 'none',
 		WebkitTextFillColor: 'inherit',
@@ -35,30 +34,34 @@ let textFieldCss = css({
 		userSelect: 'text',
 		width: '100%',
 	},
-	[`.${textFieldClass}:hover`]: {
+	[`.${fileFieldClass}:hover`]: {
 		borderColor: variables.colors.hover,
 	},
-	[`.${textFieldClass}:focus`]: {
+	[`.${fileFieldClass}:focus`]: {
 		borderColor: variables.colors.accent,
 	},
-	[`.${textFieldClass}::-webkit-input-placeholder`]: {
+	[`.${fileFieldClass}::-webkit-input-placeholder`]: {
 		WebkitTextFillColor: variables.colors.mutedText,
 		color: variables.colors.mutedText,
 	},
+	[`.${fileFieldClass}::-webkit-file-upload-button`]: {
+		visibility: 'hidden',
+	},
 })
 
-export function TextField(props: TextFieldProps) {
-	useCss(textFieldCss)
+export function FileField(props: FileFieldProps) {
+	useCss(fileFieldCss)
 	return (
 		<Label>
 			{props.label}
 			<input
-				autocomplete={props.autocomplete}
-				class={textFieldClass}
+				autocomplete={props.autocomplete ?? 'off'}
+				class={fileFieldClass}
 				name={props.name}
 				placeholder={props.placeholder}
 				readOnly={props.readOnly}
 				spellcheck={false}
+				type="file"
 				value={props.value ?? undefined}
 			/>
 		</Label>

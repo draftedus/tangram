@@ -1,1 +1,1 @@
-pub mod _columnName_;
+pub mod _column_name;

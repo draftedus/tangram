@@ -16,6 +16,7 @@ export type SelectProps = {
 let selectClass = cssClass()
 let selectCss = css({
 	[`.${selectClass}`]: {
+		MozAppearance: 'none',
 		WebkitTextFillColor: 'inherit',
 		appearance: 'none',
 		backgroundColor: variables.colors.surface,

@@ -1,3 +1,4 @@
+export * from './file'
 export * from './form'
 export * from './text'
 export * from './label'

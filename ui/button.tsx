@@ -39,6 +39,9 @@ let buttonCss = css({
 	[`.${buttonClass}:hover`]: {
 		filter: 'brightness(90%)',
 	},
+	[`.${buttonClass}:active`]: {
+		filter: 'brightness(90%)',
+	},
 	[`.${buttonClass}::-moz-focus-inner`]: {
 		border: 'none',
 	},
