@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/camelcase */
+
 import * as tangram from '@tangramhq/tangram-node'
 import * as fs from 'fs'
 import * as path from 'path'

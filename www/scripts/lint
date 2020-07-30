@@ -1,2 +1,2 @@
-tsc
-eslint --ext ts,tsx .
+yarn run tsc -p www/tsconfig.json
+yarn run eslint --ext ts,tsx www

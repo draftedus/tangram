@@ -90,11 +90,7 @@ let subtitleCss = css({
 })
 
 function Hero() {
-	useCss(wrapperCss)
-	useCss(innerCss)
-	useCss(titleCss)
-	useCss(subtitleCss)
-
+	useCss(wrapperCss, innerCss, titleCss, subtitleCss)
 	return (
 		<div class={wrapperClass}>
 			<div class={innerClass}>
@@ -124,8 +120,7 @@ let placeholderCss = css({
 })
 
 function Video() {
-	useCss(wrapperCss)
-	useCss(placeholderCss)
+	useCss(wrapperCss, placeholderCss)
 	let videoStyle = {
 		border: 'none',
 		bottom: '0',
@@ -217,12 +212,13 @@ let stepTitleCss = css({
 })
 
 function Features() {
-	useCss(featuresGridCss)
-	useCss(stepCss)
-	useCss(stepTitleWrapperCss)
-	useCss(stepIconCss)
-	useCss(stepTitleCss)
-
+	useCss(
+		featuresGridCss,
+		stepCss,
+		stepTitleWrapperCss,
+		stepIconCss,
+		stepTitleCss,
+	)
 	return (
 		<div class={featuresGridClass}>
 			<div class={stepClass}>

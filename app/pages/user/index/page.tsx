@@ -26,7 +26,7 @@ export default function UserPage(props: Props) {
 				</ui.SpaceBetween>
 				<ui.S2>
 					<ui.Form>
-						<ui.TextField label="Email" value={props.email} />
+						<ui.TextField label="Email" readOnly value={props.email} />
 					</ui.Form>
 				</ui.S2>
 				<ui.S2>

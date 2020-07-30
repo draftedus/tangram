@@ -106,13 +106,15 @@ let innerCss = css({
 })
 
 export function ModelLayout(props: ModelLayoutProps) {
-	useCss(modelLayoutCss)
-	useCss(modelGridCss)
-	useCss(modelGroupTopbarCss)
-	useCss(modelTopbarCss)
-	useCss(repoTitleCss)
-	useCss(ownerTitleCss)
-	useCss(innerCss)
+	useCss(
+		modelLayoutCss,
+		modelGridCss,
+		modelGroupTopbarCss,
+		modelTopbarCss,
+		repoTitleCss,
+		ownerTitleCss,
+		innerCss,
+	)
 
 	let selectedModel = r(
 		props.repoModels.find(model => model.id == props.modelId),

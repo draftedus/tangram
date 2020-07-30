@@ -1,0 +1,2 @@
+yarn run tsc -p app/tsconfig.json
+yarn run eslint --ext ts,tsx app

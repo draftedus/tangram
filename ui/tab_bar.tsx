@@ -59,9 +59,7 @@ let disabledTabCss = css({
 })
 
 export function Tab(props: TabProps) {
-	useCss(tabCss)
-	useCss(selectedTabCss)
-	useCss(disabledTabCss)
+	useCss(tabCss, selectedTabCss, disabledTabCss)
 	return (
 		<div
 			class={cx(

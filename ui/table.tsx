@@ -23,8 +23,7 @@ let tableCss = css({
 })
 
 export function Table(props: TableProps) {
-	useCss(tableWrapperCss)
-	useCss(tableCss)
+	useCss(tableWrapperCss, tableCss)
 	return (
 		<div class={tableWrapperClass}>
 			<table class={tableClass} style={{ width: props.width ?? 'auto' }}>
@@ -98,9 +97,7 @@ let expandCss = css({
 })
 
 export function TableHeaderCell(props: TableCellProps) {
-	useCss(tableHeaderCellCss)
-	useCss(alignCss)
-	useCss(expandCss)
+	useCss(tableHeaderCellCss, alignCss, expandCss)
 	return (
 		<th
 			class={cx(

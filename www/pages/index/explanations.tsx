@@ -19,8 +19,7 @@ let innerWrapperCss = css({
 })
 
 export function Explanations() {
-	useCss(explanationsWrapperCss)
-	useCss(innerWrapperCss)
+	useCss(explanationsWrapperCss, innerWrapperCss)
 	let xAxisLabelFormatter = (i: number) => data.classes[i]
 	let data = {
 		chartData: [

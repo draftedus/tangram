@@ -106,15 +106,12 @@ let progressCss = css({
 })
 
 export function Slider(props: SliderProps) {
+	useCss(wrapperCss, rangeCss, progressCss, tooltipCss)
 	let value = props.valueFormatter
 		? props.valueFormatter(props.value)
 		: props.value
 	let percent = ((props.value - props.min) / (props.max - props.min)) * 100
-	useCss(wrapperCss)
-	useCss(rangeCss)
-	useCss(progressCss)
 	let progressStyle = { width: `${percent}%` }
-	useCss(tooltipCss)
 	let tooltipStyle = { marginLeft: `${percent}%` }
 	let onInput = (event: Event) => {
 		if (!(event.currentTarget instanceof HTMLInputElement)) throw Error()

@@ -193,14 +193,15 @@ let topbarBrandTitleCss = css({
 })
 
 export function TopbarBrand(props: TopbarBrandProps) {
-	useCss(topbarBrandWrapperCss)
-	useCss(topbarBrandImgCss)
-	useCss(topbarBrandSvgCss)
-	useCss(topbarBrandTitleCss)
+	useCss(
+		topbarBrandWrapperCss,
+		topbarBrandImgCss,
+		topbarBrandSvgCss,
+		topbarBrandTitleCss,
+	)
 	let titleStyle = {
 		color: props.textColor,
 	}
-
 	return (
 		<a class={topbarLinkClass} href={props.logoHref ?? '/'}>
 			<div class={topbarBrandWrapperClass}>

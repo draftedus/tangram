@@ -36,11 +36,7 @@ let logoCss = css({
 })
 
 export function Footer() {
-	useCss(gridCss)
-	useCss(linksCss)
-	useCss(copyrightCss)
-	useCss(logoCss)
-
+	useCss(gridCss, linksCss, copyrightCss, logoCss)
 	return (
 		<div class={gridClass}>
 			<nav class={linksClass}>

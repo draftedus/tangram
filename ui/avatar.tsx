@@ -39,9 +39,7 @@ let placeholderCss = css({
 })
 
 export function Avatar(props: AvatarProps) {
-	useCss(avatarCss)
-	useCss(imgCss)
-	useCss(placeholderCss)
+	useCss(avatarCss, imgCss, placeholderCss)
 	return (
 		<div class={avatarClass}>
 			{props.src ? (

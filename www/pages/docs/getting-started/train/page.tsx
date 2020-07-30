@@ -1,7 +1,7 @@
-import { h, ui } from 'deps'
-import { DocsLayout } from 'layouts/docs_layout'
 import { Install } from '../../shared/install'
 import { DatasetPreview } from './dataset_preview'
+import { h, ui } from 'deps'
+import { DocsLayout } from 'layouts/docs_layout'
 
 export default () => (
 	<DocsLayout>

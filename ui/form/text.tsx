@@ -2,13 +2,14 @@ import { css, cssClass, cx, h, useCss } from '../deps'
 import { border, variables } from '../theme'
 import { Label } from './label'
 
-type InputFieldProps = {
+type TextFieldProps = {
 	autocomplete?: string
 	disabled?: boolean
 	label?: string
 	name?: string
 	onChange?: (newValue: string | null) => void
 	placeholder?: string
+	readOnly?: boolean
 	type?: string
 	value?: string | null
 }
@@ -53,9 +54,8 @@ let fileCss = css({
 	},
 })
 
-export function TextField(props: InputFieldProps) {
-	useCss(textFieldCss)
-	useCss(fileCss)
+export function TextField(props: TextFieldProps) {
+	useCss(textFieldCss, fileCss)
 	return (
 		<Label>
 			{props.label}
@@ -64,6 +64,7 @@ export function TextField(props: InputFieldProps) {
 				class={cx(textFieldClass, props.type === 'file' && fileClass)}
 				name={props.name}
 				placeholder={props.placeholder}
+				readOnly={props.readOnly}
 				spellcheck={false}
 				type={props.type}
 				value={props.value ?? undefined}

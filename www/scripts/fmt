@@ -1,1 +1,0 @@
-prettier --no-color --write "**/*.{ts,tsx}"

@@ -173,15 +173,16 @@ let featureListCss = css({
 })
 
 function PricingCard(props: PricingCardProps) {
-	useCss(pricingGridCss)
-	useCss(pricingGridSelectedCss)
-	useCss(pricingTopGridCss)
-	useCss(priceAndPriceSubtitleCss)
-	useCss(priceCss)
-	useCss(priceSubtitleCss)
-	useCss(featureListCss)
-	useCss(featureCss)
-
+	useCss(
+		pricingGridCss,
+		pricingGridSelectedCss,
+		pricingTopGridCss,
+		priceAndPriceSubtitleCss,
+		priceCss,
+		priceSubtitleCss,
+		featureListCss,
+		featureCss,
+	)
 	return (
 		<div
 			class={cx(pricingGridClass, props.selected && pricingGridSelectedClass)}

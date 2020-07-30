@@ -278,8 +278,7 @@ let lineNumberCss = css({
 })
 
 function LineNumbers(props: LineNumbersProps) {
-	useCss(wrapperCss)
-	useCss(lineNumberCss)
+	useCss(wrapperCss, lineNumberCss)
 	return (
 		<div class={wrapperClass}>
 			{times(props.count, index => (

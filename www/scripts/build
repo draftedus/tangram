@@ -1,1 +1,1 @@
-TANGRAM_TELEMETRY_ENABLED="1" deno run -A --unstable ../pinwheel/cli/main.ts build
+cargo run -p pinwheel build

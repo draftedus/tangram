@@ -330,12 +330,10 @@ pub async fn start() -> Result<()> {
 	fn pinwheel() -> Pinwheel {
 		Pinwheel::dev(PathBuf::from("app"), PathBuf::from("target/js"))
 	}
-
 	#[cfg(not(debug_assertions))]
 	fn pinwheel() -> Pinwheel {
 		Pinwheel::prod(include_dir::include_dir!("target/js"))
 	}
-
 	let pinwheel = pinwheel();
 
 	// use sqlx::postgres::PgPool;

@@ -101,16 +101,17 @@ let differenceCss = css({
 })
 
 export function NumberComparisonChart(props: NumberComparisonChartProps) {
+	useCss(
+		containerCss,
+		numberComparisonContainerCss,
+		titleCss,
+		valueCss,
+		differenceCss,
+		positiveCss,
+		negativeCss,
+		equalsCss,
+	)
 	let valueFormatter = props.valueFormatter ?? defaultValueFormatter
-	useCss(containerCss)
-	useCss(numberComparisonContainerCss)
-	useCss(titleCss)
-	useCss(valueCss)
-	useCss(differenceCss)
-	useCss(positiveCss)
-	useCss(negativeCss)
-	useCss(equalsCss)
-
 	let difference = Number(props.valueB) - Number(props.valueA)
 	return (
 		<div class={containerClass}>

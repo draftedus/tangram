@@ -1,4 +1,0 @@
-ssh -t tangram@router.tangramhq.com "sudo systemctl stop tangram-app"
-rsync --progress --archive --chown=app:app --chmod=770 ../pinwheel/* tangram@router.tangramhq.com:/var/lib/app/pinwheel/
-rsync --progress --archive --chown=app:app --chmod=770 dist/*  tangram@router.tangramhq.com:/var/lib/app/app/
-ssh -t tangram@router.tangramhq.com "sudo systemctl start tangram-app"

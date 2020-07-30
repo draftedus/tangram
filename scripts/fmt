@@ -1,0 +1,2 @@
+cargo fmt
+yarn run prettier --no-color --write "**/*.{ts,tsx}"

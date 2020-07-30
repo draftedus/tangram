@@ -60,11 +60,7 @@ let bodyCss = css({
 })
 
 export function Window(props: WindowProps) {
-	useCss(wrapperCss)
-	useCss(topbarCss)
-	useCss(topbarButtonCss)
-	useCss(bodyCss)
-
+	useCss(wrapperCss, topbarCss, topbarButtonCss, bodyCss)
 	return (
 		<div class={wrapperClass}>
 			<div class={topbarClass}>

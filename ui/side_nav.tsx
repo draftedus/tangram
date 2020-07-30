@@ -75,9 +75,8 @@ let selectedCss = css({
 })
 
 export function SideNavItem(props: SideNavItemProps) {
+	useCss(itemCss, selectedCss)
 	let selected = false
-	useCss(itemCss)
-	useCss(selectedCss)
 	return (
 		<Link
 			class={cx(selectedClass, selected && selectedClass)}

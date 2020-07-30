@@ -74,10 +74,7 @@ export function Callout(props: CalloutProps) {
 			wrapperClass = warningWrapperClass
 			break
 	}
-	useCss(wrapperCss)
-	useCss(layoutWrapperCss)
-	useCss(titleCss)
-	useCss(innerCss)
+	useCss(wrapperCss, layoutWrapperCss, titleCss, innerCss)
 
 	return (
 		<div class={wrapperClass}>

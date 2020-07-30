@@ -210,19 +210,18 @@ let valueCss = css({
 	},
 })
 function ConfusionMatrixComparisonItem(props: ConfusionMatrixItemProps) {
+	useCss(
+		itemWrapperCss,
+		trueItemWrapperCss,
+		falseItemWrapperCss,
+		numberComparisonContainerCss,
+		titleCss,
+		valueCss,
+	)
 	let valueFormatter = props.valueFormatter || (v => v.toString())
-	useCss(itemWrapperCss)
-	useCss(trueItemWrapperCss)
-	useCss(falseItemWrapperCss)
-
 	let wrapperStyle = {
 		gridArea: props.area,
 	}
-
-	useCss(numberComparisonContainerCss)
-	useCss(titleCss)
-	useCss(valueCss)
-
 	return (
 		<div
 			class={cx(

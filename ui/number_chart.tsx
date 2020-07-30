@@ -35,9 +35,7 @@ let titleCss = css({
 })
 
 export function NumberChart(props: NumberChartProps) {
-	useCss(containerCss)
-	useCss(valueCss)
-	useCss(titleCss)
+	useCss(containerCss, valueCss, titleCss)
 	return (
 		<div class={containerClass}>
 			<div class={valueClass}>{props.value}</div>

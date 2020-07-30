@@ -79,24 +79,30 @@ impl Pinwheel {
 			let render_page_string = v8::String::new(&mut scope, "renderPage").unwrap().into();
 			let pinwheel_module_render_page_export = pinwheel_module_namespace
 				.get(&mut scope, render_page_string)
-				.unwrap();
+				.ok_or_else(|| format_err!("failed to find renderPage export of pinwheel.js"))?;
 			if !pinwheel_module_render_page_export.is_function() {
-				return Err(format_err!("pinwheel export error"));
+				return Err(format_err!(
+					"renderPage export of pinwheel.js is not a function"
+				));
 			}
 			let pinwheel_module_render_page_function: v8::Local<v8::Function> =
 				unsafe { v8::Local::cast(pinwheel_module_render_page_export) };
 
-			let page_module_namespace = run_module(&mut scope, self.fs.as_ref(), page_js_url)?;
+			let page_module_namespace =
+				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone())?;
 			let document_namespace = run_module(&mut scope, self.fs.as_ref(), document_js_url)?;
 			let default_string = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_string)
-				.unwrap();
-			let document_module_default_export =
-				document_namespace.get(&mut scope, default_string).unwrap();
+				.ok_or_else(|| {
+					format_err!("failed to find default export of page {}", page_js_url)
+				})?;
+			let document_module_default_export = document_namespace
+				.get(&mut scope, default_string)
+				.ok_or_else(|| format_err!("failed to find default export of document.js"))?;
 
 			// send the props to v8
-			let json = serde_json::to_string(&props).unwrap();
+			let json = serde_json::to_string(&props)?;
 			let json = v8::String::new(&mut scope, &json).unwrap();
 			let props = v8::json::parse(&mut scope, json).unwrap();
 			let undefined = v8::undefined(&mut scope).into();
@@ -125,6 +131,7 @@ impl Pinwheel {
 				let exception = try_catch_scope.exception().unwrap();
 				let mut scope = v8::HandleScope::new(&mut try_catch_scope);
 				print_error(&mut scope, exception);
+				return Err(format_err!(""));
 			}
 			let html = html.unwrap();
 			drop(try_catch_scope);
@@ -157,6 +164,15 @@ impl Pinwheel {
 	}
 }
 
+fn init_v8() {
+	static V8_INIT: std::sync::Once = std::sync::Once::new();
+	V8_INIT.call_once(|| {
+		let platform = v8::new_default_platform().unwrap();
+		v8::V8::initialize_platform(platform);
+		v8::V8::initialize();
+	});
+}
+
 thread_local!(static THREAD_LOCAL_ISOLATE: RefCell<v8::OwnedIsolate> = {
 	init_v8();
 	let mut isolate = v8::Isolate::new(Default::default());
@@ -177,15 +193,6 @@ pub struct ModuleHandle {
 	url: Url,
 	module: v8::Global<v8::Module>,
 	source_map: Option<SourceMap>,
-}
-
-fn init_v8() {
-	static V8_INIT: std::sync::Once = std::sync::Once::new();
-	V8_INIT.call_once(|| {
-		let platform = v8::new_default_platform().unwrap();
-		v8::V8::initialize_platform(platform);
-		v8::V8::initialize();
-	});
 }
 
 fn get_state(isolate: &mut v8::Isolate) -> Rc<RefCell<State>> {
@@ -211,7 +218,7 @@ fn run_module<'s>(
 	fs: &dyn VirtualFileSystem,
 	url: Url,
 ) -> Result<v8::Local<'s, v8::Object>> {
-	let module_id = load_module(scope, fs, url);
+	let module_id = load_module(scope, fs, url)?;
 	let state = get_state(scope);
 	let state = state.borrow();
 	let module = &get_module_handle_with_id(&state, module_id).unwrap().module;
@@ -237,7 +244,7 @@ fn run_module<'s>(
 }
 
 /// load a module at the specified path and return the module id
-fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url) -> i32 {
+fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url) -> Result<i32> {
 	// return the id for an existing module
 	// if a module at the specified path
 	// has alread been loaded
@@ -245,7 +252,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	let state = state.borrow();
 	let existing_module = get_module_handle_for_url(&state, &url);
 	if let Some(existing_module) = existing_module {
-		return existing_module.id;
+		return Ok(existing_module.id);
 	}
 	drop(state);
 
@@ -272,17 +279,18 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	);
 
 	// read the source
-	let code = fs.read(&url).unwrap();
-	let code = std::str::from_utf8(code.as_ref()).unwrap();
+	let code = fs.read(&url)?;
+	let code = std::str::from_utf8(code.as_ref())?;
 	let source = v8::script_compiler::Source::new(v8::String::new(scope, code).unwrap(), &origin);
 
 	// read the source map
-	let source_map_url = sourcemap::locate_sourcemap_reference_slice(code.as_bytes())
-		.unwrap()
-		.map(|s| url.join(s.get_url()).unwrap());
+	let source_map_url = match sourcemap::locate_sourcemap_reference_slice(code.as_bytes())? {
+		Some(s) => Some(url.join(s.get_url())?),
+		None => None,
+	};
 	let source_map = if let Some(source_map_url) = source_map_url {
-		let source_map = fs.read(&source_map_url).unwrap();
-		let source_map = sourcemap::SourceMap::from_slice(source_map.as_ref()).unwrap();
+		let source_map = fs.read(&source_map_url)?;
+		let source_map = sourcemap::SourceMap::from_slice(source_map.as_ref())?;
 		Some(source_map)
 	} else {
 		None
@@ -319,12 +327,12 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 		let state = get_state(scope);
 		let state = state.borrow();
 		let referrer_url = &get_module_handle_with_id(&state, id).unwrap().url;
-		let url = referrer_url.join(&specifier).unwrap();
+		let url = referrer_url.join(&specifier)?;
 		drop(state);
-		load_module(scope, fs, url);
+		load_module(scope, fs, url)?;
 	}
 
-	id
+	Ok(id)
 }
 
 fn module_resolve_callback<'s>(
