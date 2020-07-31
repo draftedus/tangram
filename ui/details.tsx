@@ -54,7 +54,6 @@ let summaryCss = css({
 		outline: 'none',
 		padding: '0.5rem 1rem',
 		position: 'relative',
-		textAlign: 'center',
 		userSelect: 'text',
 		width: '100%',
 	},

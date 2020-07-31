@@ -10,7 +10,7 @@ import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
 	inner: InnerProps | null
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 }
 
 export type InnerProps = {
@@ -44,7 +44,7 @@ export default function TuningPage(props: Props) {
 			</ui.S1>
 		)
 	}
-	return <ModelLayout {...props.modelLayout}>{inner}</ModelLayout>
+	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
 }
 
 export function TuningPageInner(props: InnerProps) {

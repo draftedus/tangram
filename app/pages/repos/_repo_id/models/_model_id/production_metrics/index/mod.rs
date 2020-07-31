@@ -2,7 +2,7 @@ use crate::{
 	cookies,
 	error::Error,
 	helpers::production_metrics,
-	helpers::repos::get_repo_for_model,
+	helpers::repos::get_model_layout_props,
 	time::format_date_window_interval,
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -21,7 +21,7 @@ struct Props {
 	id: String,
 	inner: Inner,
 	title: String,
-	repo: types::Repo,
+	model_layout_props: types::ModelLayoutProps,
 }
 
 #[derive(Serialize)]
@@ -148,7 +148,7 @@ async fn props(
 	let date_window = search_params
 		.as_ref()
 		.and_then(|query| query.get("date_window"));
-	let date_window = date_window.map(|dw| dw.as_str()).ok_or(Error::BadRequest)?;
+	let date_window = date_window.map_or("this_month", |dw| dw.as_str());
 	let date_window = match date_window {
 		"today" => types::DateWindow::Today,
 		"this_month" => types::DateWindow::ThisMonth,
@@ -409,13 +409,13 @@ async fn props(
 		_ => unimplemented!(),
 	};
 
-	let repo = get_repo_for_model(&db, model_id).await?;
+	let model_layout_props = get_model_layout_props(&db, model_id).await?;
 	db.commit().await?;
 
 	Ok(Props {
 		id: id.to_string(),
 		inner,
 		title,
-		repo,
+		model_layout_props,
 	})
 }

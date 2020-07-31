@@ -6,9 +6,9 @@ export default function ModelCreatePage() {
 		<AppLayout>
 			<ui.S1>
 				<ui.H1>Upload Model</ui.H1>
-				<ui.Form post>
-					<input name="title" type="text" />
-					<input name="file" type="file" />
+				<ui.Form encType="multipart/form-data" post>
+					<ui.TextField label="Title" name="title" />
+					<ui.FileField label="File" name="file" />
 					<ui.Button type="submit">Upload</ui.Button>
 				</ui.Form>
 			</ui.S1>

@@ -17,7 +17,7 @@ export type Props = {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 	modelId: string
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 	overallColumnStatsTable: Array<{
 		absentCount: number
 		alert: string | null
@@ -108,7 +108,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 		'Prediction Count',
 	)
 	return (
-		<ModelLayout {...props.modelLayout}>
+		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
 				<ui.H1>Production Stats</ui.H1>
 				<DateWindowSelectField dateWindow={props.dateWindow} />
@@ -176,9 +176,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 									{column.columnType === ColumnType.Text ? (
 										<div>{column.name}</div>
 									) : (
-										<ui.Link
-											href={`/models/${props.modelId}/production_stats/columns/${column.name}`}
-										>
+										<ui.Link href={`./columns/${column.name}`}>
 											{column.name}
 										</ui.Link>
 									)}

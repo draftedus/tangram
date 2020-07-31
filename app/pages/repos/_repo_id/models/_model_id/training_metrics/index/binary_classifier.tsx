@@ -25,20 +25,10 @@ export function BinaryClassifierTrainingMetricsIndexPage(props: Props) {
 		<ui.S1>
 			<ui.H1>Training Metrics</ui.H1>
 			<ui.TabBar>
-				<ui.TabLink href={`/models/${props.id}/training_metrics/`}>
-					Overview
-				</ui.TabLink>
-				<ui.TabLink href={`/models/${props.id}/training_metrics/class_metrics`}>
-					Class Metrics
-				</ui.TabLink>
-				<ui.TabLink
-					href={`/models/${props.id}/training_metrics/precision_recall`}
-				>
-					PR Curve
-				</ui.TabLink>
-				<ui.TabLink href={`/models/${props.id}/training_metrics/roc`}>
-					ROC Curve
-				</ui.TabLink>
+				<ui.TabLink href="./">Overview</ui.TabLink>
+				<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
+				<ui.TabLink href="./precision_recall">PR Curve</ui.TabLink>
+				<ui.TabLink href="./roc">ROC Curve</ui.TabLink>
 			</ui.TabBar>
 			<ui.S2>
 				<ui.P>

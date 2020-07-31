@@ -2,7 +2,7 @@ use crate::{
 	cookies,
 	error::Error,
 	helpers::production_metrics,
-	helpers::repos::get_repo_for_model,
+	helpers::repos::get_model_layout_props,
 	time::format_date_window_interval,
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -16,7 +16,7 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
@@ -26,17 +26,18 @@ struct Props {
 	date_window_interval: types::DateWindowInterval,
 	classes: Vec<String>,
 	overall: OverallClassMetrics,
-	repo: types::Repo,
+	model_layout_props: types::ModelLayoutProps,
+	selected_class: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct ClassMetricsEntry {
 	class_name: String,
 	intervals: Vec<IntervalEntry>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct IntervalEntry {
 	label: String,
@@ -45,14 +46,14 @@ struct IntervalEntry {
 	recall: TrainingProductionMetrics,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct OverallClassMetrics {
 	class_metrics: Vec<OverallClassMetricsEntry>,
 	label: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct OverallClassMetricsEntry {
 	class_name: String,
@@ -63,7 +64,7 @@ struct OverallClassMetricsEntry {
 	recall: TrainingProductionMetrics,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Comparison {
 	false_negative_fraction: TrainingProductionMetrics,
@@ -72,7 +73,7 @@ struct Comparison {
 	true_negative_fraction: TrainingProductionMetrics,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct ConfusionMatrix {
 	false_negatives: Option<u64>,
@@ -81,7 +82,7 @@ struct ConfusionMatrix {
 	false_positives: Option<u64>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct TrainingProductionMetrics {
 	production: Option<f32>,
@@ -118,7 +119,7 @@ async fn props(
 	let date_window = search_params
 		.as_ref()
 		.and_then(|query| query.get("date_window"));
-	let date_window = date_window.map(|dw| dw.as_str()).ok_or(Error::BadRequest)?;
+	let date_window = date_window.map_or("this_month", |dw| dw.as_str());
 	let date_window = match date_window {
 		"today" => types::DateWindow::Today,
 		"this_month" => types::DateWindow::ThisMonth,
@@ -362,7 +363,7 @@ async fn props(
 		})
 		.collect();
 
-	let repo = get_repo_for_model(&db, model_id).await?;
+	let model_layout_props = get_model_layout_props(&db, model_id).await?;
 
 	db.commit().await?;
 
@@ -374,6 +375,7 @@ async fn props(
 		date_window_interval,
 		classes: classes.to_owned(),
 		overall,
-		repo,
+		model_layout_props,
+		selected_class: classes.last().unwrap().to_owned(),
 	})
 }

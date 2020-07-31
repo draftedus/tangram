@@ -100,10 +100,10 @@ async fn handle(
 		(&Method::GET, &["repos", "new"]) => pages::repos::new::get(request, &context).await,
 		(&Method::POST, &["repos", "new"]) => pages::repos::new::post(request, &context).await,
 		(&Method::GET, &["repos", _repo_id]) => pages::repos::get(request, &context).await,
-		(&Method::GET, &["repos", _repo_id, "new"]) => {
+		(&Method::GET, &["repos", _repo_id, "models", "new"]) => {
 			pages::repos::_repo_id::models::new::get(request, &context).await
 		}
-		(&Method::POST, &["repos", repo_id, "new"]) => {
+		(&Method::POST, &["repos", repo_id, "models", "new"]) => {
 			pages::repos::_repo_id::models::new::post(request, &context, repo_id).await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, ""]) => {
@@ -111,6 +111,9 @@ async fn handle(
 		}
 		(&Method::POST, &["repos", _repo_id, "models", model_id]) => {
 			pages::repos::_repo_id::models::_model_id::post(request, &context, model_id).await
+		}
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "download"]) => {
+			pages::repos::_repo_id::models::_model_id::download(request, &context, model_id).await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_stats", ""]) => {
 			pages::repos::_repo_id::models::_model_id::training_stats::index::get(

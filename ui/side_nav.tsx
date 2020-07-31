@@ -78,10 +78,7 @@ export function SideNavItem(props: SideNavItemProps) {
 	useCss(itemCss, selectedCss)
 	let selected = false
 	return (
-		<Link
-			class={cx(selectedClass, selected && selectedClass)}
-			href={props.href}
-		>
+		<Link class={cx(itemClass, selected && selectedClass)} href={props.href}>
 			{props.children}
 		</Link>
 	)

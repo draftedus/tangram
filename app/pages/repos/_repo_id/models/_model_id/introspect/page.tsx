@@ -10,7 +10,7 @@ import { LinearRegressorModelPage } from './linear_regressor'
 
 export type Props = {
 	inner: Inner
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 }
 
 export type Inner =
@@ -88,5 +88,5 @@ export default function ModelPage(props: Props) {
 			break
 		}
 	}
-	return <ModelLayout {...props.modelLayout}>{inner}</ModelLayout>
+	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
 }

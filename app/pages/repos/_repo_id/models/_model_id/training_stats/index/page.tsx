@@ -24,7 +24,7 @@ export type Props = {
 		variance: number | null
 	}>
 	modelId: string
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 	rowCount: number
 	targetColumnStats: {
 		columnType?: ColumnType
@@ -48,7 +48,7 @@ export enum ColumnType {
 
 export default function TrainingStatsIndexPage(props: Props) {
 	return (
-		<ModelLayout {...props.modelLayout}>
+		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
 				<ui.H1>Training Stats</ui.H1>
 				<ui.S2>
@@ -72,9 +72,7 @@ export default function TrainingStatsIndexPage(props: Props) {
 						<ui.TableBody>
 							<ui.TableRow key={props.targetColumnStats.name}>
 								<ui.TableCell>
-									<ui.Link
-										href={`/models/${props.modelId}/training_stats/columns/${props.targetColumnStats.name}`}
-									>
+									<ui.Link href={`./columns/${props.targetColumnStats.name}`}>
 										{props.targetColumnStats.name}
 									</ui.Link>
 								</ui.TableCell>
@@ -137,9 +135,7 @@ export default function TrainingStatsIndexPage(props: Props) {
 											{columnStats.columnType === ColumnType.Unknown ? (
 												columnStats.name
 											) : (
-												<ui.Link
-													href={`/models/${props.modelId}/training_stats/columns/${columnStats.name}`}
-												>
+												<ui.Link href={`./columns/${columnStats.name}`}>
 													{columnStats.name}
 												</ui.Link>
 											)}

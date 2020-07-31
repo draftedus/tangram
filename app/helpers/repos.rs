@@ -2,10 +2,10 @@ use crate::types;
 use anyhow::Result;
 use tangram_core::id::Id;
 
-pub async fn get_repo_for_model(
+pub async fn get_model_layout_props(
 	db: &deadpool_postgres::Transaction<'_>,
 	model_id: Id,
-) -> Result<types::Repo> {
+) -> Result<types::ModelLayoutProps> {
 	let row = db
 		.query_one(
 			"
@@ -45,11 +45,38 @@ pub async fn get_repo_for_model(
 			id: user_id.unwrap().to_string(),
 		}),
 	};
-	Ok(types::Repo {
+
+	let (owner_name, owner_url) = match owner {
+		types::RepoOwner::Organization(organization) => {
+			let owner_url = format!("/organizations/{}", organization.id);
+			(organization.name, owner_url)
+		}
+		types::RepoOwner::User(user) => {
+			let owner_url = "/user/".to_string();
+			(user.email, owner_url)
+		}
+	};
+
+	let types::RepoModel {
+		id: model_id,
+		title: model_title,
+		..
+	} = models
+		.iter()
+		.find(|model| model.id == model_id.to_string())
+		.unwrap();
+
+	let model_id = model_id.clone();
+	let model_title = model_title.clone();
+
+	Ok(types::ModelLayoutProps {
 		id: id.to_string(),
 		title,
 		models,
-		owner,
+		owner_name,
+		owner_url,
+		model_id,
+		model_title,
 	})
 }
 

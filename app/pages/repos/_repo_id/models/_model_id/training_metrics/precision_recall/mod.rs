@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_repo_for_model,
+	helpers::repos::get_model_layout_props,
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -18,7 +18,7 @@ struct Props {
 	classes: Vec<String>,
 	non_parametric_precision_recall_curve_data: Vec<Vec<NonParametricPrecisionRecallCurveData>>,
 	parametric_precision_recall_curve_data: Vec<Vec<ParametricPrecisionRecallCurveData>>,
-	repo: types::Repo,
+	model_layout_props: types::ModelLayoutProps,
 }
 
 #[derive(Serialize)]
@@ -133,7 +133,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						.collect()
 				})
 				.collect();
-			let repo = get_repo_for_model(&db, model_id).await?;
+			let model_layout_props = get_model_layout_props(&db, model_id).await?;
 			db.commit().await?;
 			Ok(Props {
 				id: id.to_string(),
@@ -141,7 +141,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				classes: model.classes().to_owned(),
 				non_parametric_precision_recall_curve_data,
 				parametric_precision_recall_curve_data,
-				repo,
+				model_layout_props,
 			})
 		}
 		_ => {

@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_repo_for_model,
+	helpers::repos::get_model_layout_props,
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -17,7 +17,7 @@ struct Props {
 	id: String,
 	inner: Inner,
 	title: String,
-	repo: types::Repo,
+	model_layout_props: types::ModelLayoutProps,
 }
 
 #[derive(Serialize)]
@@ -159,14 +159,14 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		_ => return Err(Error::BadRequest.into()),
 	};
 
-	let repo = get_repo_for_model(&db, id).await?;
+	let model_layout_props = get_model_layout_props(&db, id).await?;
 	db.commit().await?;
 
 	Ok(Props {
 		id: id.to_string(),
 		title,
 		inner,
-		repo,
+		model_layout_props,
 	})
 }
 

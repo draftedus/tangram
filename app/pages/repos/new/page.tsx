@@ -5,7 +5,7 @@ export type Props = {
 	organizations: Array<{ id: string; name: string }>
 }
 
-export default function ModelCreatePage(props: Props) {
+export default function RepoCreatePage(props: Props) {
 	return (
 		<AppLayout>
 			<ui.S1>

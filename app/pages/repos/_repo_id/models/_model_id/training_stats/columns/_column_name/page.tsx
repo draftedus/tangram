@@ -6,7 +6,7 @@ import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
 	inner: Inner
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 }
 
 export type Inner =
@@ -42,5 +42,5 @@ export default function TrainingStatsColumnPage(props: Props) {
 			inner = <TextColumnDetail {...props.inner.value} />
 			break
 	}
-	return <ModelLayout {...props.modelLayout}>{inner}</ModelLayout>
+	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
 }

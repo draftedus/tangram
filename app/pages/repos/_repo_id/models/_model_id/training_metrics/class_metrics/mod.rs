@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_repo_for_model,
+	helpers::repos::get_model_layout_props,
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -12,11 +12,12 @@ use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
 	inner: Inner,
 	title: String,
-	repo: types::Repo,
+	model_layout_props: types::ModelLayoutProps,
 }
 
 #[derive(Serialize)]
@@ -35,6 +36,8 @@ struct BinaryClassifier {
 	class: String,
 	classes: Vec<String>,
 	id: String,
+	#[serde(rename = "selectedClass")]
+	selected_class: String,
 }
 
 #[derive(Serialize)]
@@ -50,12 +53,14 @@ struct ClassMetrics {
 }
 
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
 struct MulticlassClassifier {
+	#[serde(rename = "classMetrics")]
 	class_metrics: ClassMetrics,
 	classes: Vec<String>,
 	id: String,
 	class: String,
+	#[serde(rename = "selectedClass")]
+	selected_class: String,
 }
 
 pub async fn get(
@@ -67,7 +72,10 @@ pub async fn get(
 	let props = props(request, context, model_id, search_params).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repo_id/models/_model_id", props)
+		.render(
+			"/repos/_repo_id/models/_model_id/training_metrics/class_metrics",
+			props,
+		)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -135,13 +143,13 @@ async fn props(
 		},
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let repo = get_repo_for_model(&db, model_id).await?;
+	let model_layout_props = get_model_layout_props(&db, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
 		id: id.to_string(),
 		title,
 		inner,
-		repo,
+		model_layout_props,
 	})
 }
 
@@ -169,11 +177,13 @@ fn build_inner_binary(
 		false_negatives: *class_metrics.false_negatives.as_option().unwrap(),
 		false_positives: *class_metrics.false_positives.as_option().unwrap(),
 	};
+	let selected_class = classes.last().unwrap().to_owned();
 	BinaryClassifier {
 		id: id.to_string(),
 		class_metrics,
 		classes,
 		class,
+		selected_class,
 	}
 }
 
@@ -201,10 +211,12 @@ fn build_inner_multiclass(
 		false_negatives: *class_metrics.false_negatives.as_option().unwrap(),
 		false_positives: *class_metrics.false_positives.as_option().unwrap(),
 	};
+	let selected_class = classes.last().unwrap().to_owned();
 	MulticlassClassifier {
 		id: id.to_string(),
 		class_metrics,
 		classes,
 		class,
+		selected_class,
 	}
 }

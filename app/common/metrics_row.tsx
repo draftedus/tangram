@@ -12,12 +12,12 @@ let metricsRowCss = css({
 	},
 	[ui.desktop]: {
 		[`.${metricsRowClass}`]: {
-			grid: 'auto / 1fr',
+			gridAutoFlow: 'column',
 		},
 	},
 	[ui.mobile]: {
 		[`.${metricsRowClass}`]: {
-			grid: 'auto / 1fr',
+			gridAutoFlow: 'row',
 		},
 	},
 })

@@ -5,7 +5,7 @@ import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
 	inner: Inner
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 }
 
 export enum Type {
@@ -29,5 +29,5 @@ export default function ModelIndexPage(props: Props) {
 			break
 		}
 	}
-	return <ModelLayout {...props.modelLayout}>{inner}</ModelLayout>
+	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
 }

@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_repo_for_model,
+	helpers::repos::get_model_layout_props,
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -16,7 +16,7 @@ struct Props {
 	id: String,
 	inner: Inner,
 	title: String,
-	repo: types::Repo,
+	model_layout_props: types::ModelLayoutProps,
 }
 
 #[derive(Serialize)]
@@ -75,7 +75,7 @@ pub async fn get(
 	let props = props(request, context, model_id).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repo_id/models/_modelId/training_metrics/", props)
+		.render("/repos/_repo_id/models/_model_id/training_metrics/", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -147,13 +147,13 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 		_ => return Err(Error::NotFound.into()),
 	};
-	let repo = get_repo_for_model(&db, model_id).await?;
+	let model_layout_props = get_model_layout_props(&db, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
 		id: id.to_string(),
 		title,
 		inner,
-		repo,
+		model_layout_props,
 	})
 }
 

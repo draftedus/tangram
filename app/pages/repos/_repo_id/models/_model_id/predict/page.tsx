@@ -3,7 +3,7 @@ import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
 	columns: Column[]
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 	prediction: Prediction | null
 }
 
@@ -109,7 +109,7 @@ export default function PredictPage(props: Props) {
 	useCss(predictOutputContainerCss)
 
 	return (
-		<ModelLayout {...props.modelLayout}>
+		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
 				<ui.H1>Predict</ui.H1>
 				<div class={predictClass}>
@@ -118,13 +118,19 @@ export default function PredictPage(props: Props) {
 							let name = column.name
 							switch (column.type) {
 								case ColumnType.Unknown:
-									return <ui.TextField key={name} />
+									return <ui.TextField key={name} label={column.name} />
 								case ColumnType.Number:
-									return <ui.TextField key={name} />
+									return <ui.TextField key={name} label={column.name} />
 								case ColumnType.Enum:
-									return <ui.SelectField key={name} options={column.options} />
+									return (
+										<ui.SelectField
+											key={name}
+											label={column.name}
+											options={column.options}
+										/>
+									)
 								case ColumnType.Text:
-									return <ui.TextField key={name} />
+									return <ui.TextField key={name} label={column.name} />
 							}
 						})}
 						<input name="action" type="hidden" value="predict" />

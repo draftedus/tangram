@@ -38,7 +38,7 @@ export type Props = {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 	id: string
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 	overall: {
 		classMetrics: OverallClassMetrics[]
 		label: string
@@ -173,18 +173,12 @@ export default function ProductionMetricsPage(props: Props) {
 	]
 
 	return (
-		<ModelLayout {...props.modelLayout}>
+		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
 				<ui.H1>Production Metrics</ui.H1>
 				<ui.TabBar>
-					<ui.TabLink href={`/models/${props.id}/production_metrics/`}>
-						Overview
-					</ui.TabLink>
-					<ui.TabLink
-						href={`/models/${props.id}/production_metrics/class_metrics`}
-					>
-						Class Metrics
-					</ui.TabLink>
+					<ui.TabLink href="./">Overview</ui.TabLink>
+					<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
 				</ui.TabBar>
 				<DateWindowSelectField dateWindow={props.dateWindow} />
 				<ui.SelectField label="Select Class" options={props.classes} />

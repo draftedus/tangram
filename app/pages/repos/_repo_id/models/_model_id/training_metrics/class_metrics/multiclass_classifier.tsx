@@ -4,7 +4,7 @@ import { h, ui } from 'deps'
 
 export type Props = {
 	class: string
-	classMetrics: Array<{
+	classMetrics: {
 		f1Score: number
 		falseNegatives: number
 		falsePositives: number
@@ -12,25 +12,19 @@ export type Props = {
 		recall: number
 		trueNegatives: number
 		truePositives: number
-	}>
+	}
 	classes: string[]
 	id: string
 	selectedClass: string
 }
 
 export function MulticlassClassifierClassMetricsPage(props: Props) {
-	let selectedClassIndex = props.classes.indexOf(props.selectedClass)
-	let selectedClassTaskMetrics = props.classMetrics[selectedClassIndex]
 	return (
 		<ui.S1>
 			<ui.H1>Training Metrics</ui.H1>
 			<ui.TabBar>
-				<ui.TabLink href="/models/${props.id}/training_metrics/">
-					Overview
-				</ui.TabLink>
-				<ui.TabLink href="/models/${props.id}/training_metrics/class_metrics">
-					Class Metrics
-				</ui.TabLink>
+				<ui.TabLink href="./">Overview</ui.TabLink>
+				<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
 			</ui.TabBar>
 			<ui.SelectField options={props.classes} />
 			<ui.S2>
@@ -41,14 +35,14 @@ export function MulticlassClassifierClassMetricsPage(props: Props) {
 						<ui.NumberChart
 							key="precision"
 							title="Precision"
-							value={ui.formatPercent(selectedClassTaskMetrics.precision, 2)}
+							value={ui.formatPercent(props.classMetrics.precision, 2)}
 						/>
 					</ui.Card>
 					<ui.Card>
 						<ui.NumberChart
 							key="recall"
 							title="Recall"
-							value={ui.formatPercent(selectedClassTaskMetrics.recall, 2)}
+							value={ui.formatPercent(props.classMetrics.recall, 2)}
 						/>
 					</ui.Card>
 				</MetricsRow>
@@ -57,7 +51,7 @@ export function MulticlassClassifierClassMetricsPage(props: Props) {
 						<ui.NumberChart
 							key="f1Score"
 							title="F1 Score"
-							value={ui.formatPercent(selectedClassTaskMetrics.f1Score, 2)}
+							value={ui.formatPercent(props.classMetrics.f1Score, 2)}
 						/>
 					</ui.Card>
 				</MetricsRow>
@@ -67,10 +61,10 @@ export function MulticlassClassifierClassMetricsPage(props: Props) {
 				<ui.P>{definitions.confusionMatrix}</ui.P>
 				<ui.ConfusionMatrix
 					classLabel={props.selectedClass}
-					falseNegatives={selectedClassTaskMetrics.falseNegatives}
-					falsePositives={selectedClassTaskMetrics.falsePositives}
-					trueNegatives={selectedClassTaskMetrics.trueNegatives}
-					truePositives={selectedClassTaskMetrics.truePositives}
+					falseNegatives={props.classMetrics.falseNegatives}
+					falsePositives={props.classMetrics.falsePositives}
+					trueNegatives={props.classMetrics.trueNegatives}
+					truePositives={props.classMetrics.truePositives}
 				/>
 			</ui.S2>
 		</ui.S1>

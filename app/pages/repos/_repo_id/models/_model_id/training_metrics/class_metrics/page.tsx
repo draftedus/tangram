@@ -11,12 +11,12 @@ import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
 	inner: Inner
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 }
 
 export enum ModelType {
-	BinaryClassifier = 'binaryClassifier',
-	MulticlassClassifier = 'multiclassClassifier',
+	BinaryClassifier = 'BinaryClassifier',
+	MulticlassClassifier = 'MulticlassClassifier',
 }
 
 export type Inner =
@@ -39,5 +39,5 @@ export default function ClassMetricsPage(props: Props) {
 			inner = <MulticlassClassifierClassMetricsPage {...props.inner.value} />
 			break
 	}
-	return <ModelLayout {...props.modelLayout}>{inner}</ModelLayout>
+	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
 }

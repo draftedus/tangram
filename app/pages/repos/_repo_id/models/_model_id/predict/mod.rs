@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_repo_for_model,
+	helpers::repos::get_model_layout_props,
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -19,7 +19,7 @@ struct Props {
 	columns: Vec<Column>,
 	title: String,
 	id: String,
-	repo: types::Repo,
+	model_layout_props: types::ModelLayoutProps,
 }
 
 #[derive(Serialize)]
@@ -125,10 +125,10 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
 		})
 		.collect();
-	let repo = get_repo_for_model(&db, id).await?;
+	let model_layout_props = get_model_layout_props(&db, id).await?;
 	db.commit().await?;
 	Ok(Props {
-		repo,
+		model_layout_props,
 		id: id.to_string(),
 		title,
 		columns,

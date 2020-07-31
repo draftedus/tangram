@@ -10,7 +10,7 @@ export type Props = {
 	columnName: string
 	dateWindow: DateWindow
 	inner: Inner
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 }
 
 export type Inner =
@@ -48,7 +48,7 @@ export default function ProductionStatsColumnsPage(props: Props) {
 	}
 
 	return (
-		<ModelLayout {...props.modelLayout}>
+		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
 				<ui.H1>{props.columnName}</ui.H1>
 				<DateWindowSelectField dateWindow={props.dateWindow} />

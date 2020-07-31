@@ -7,11 +7,14 @@ pub struct Owner {
 
 #[derive(serde::Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Repo {
+pub struct ModelLayoutProps {
 	pub id: String,
 	pub title: String,
 	pub models: Vec<RepoModel>,
-	pub owner: RepoOwner,
+	pub owner_name: String,
+	pub owner_url: String,
+	pub model_id: String,
+	pub model_title: String,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]

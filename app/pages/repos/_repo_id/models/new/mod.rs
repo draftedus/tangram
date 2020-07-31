@@ -17,7 +17,7 @@ pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<
 	let props = Props {};
 	let html = context
 		.pinwheel
-		.render("/repos/_repo_id/models/_model_id/new", props)
+		.render("/repos/_repo_id/models/new", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -60,7 +60,7 @@ pub async fn post(
 		}
 		match name.as_str() {
 			"title" => title = Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?),
-			"model" => data = Some(field_data),
+			"file" => data = Some(field_data),
 			_ => return Err(Error::BadRequest.into()),
 		};
 	}

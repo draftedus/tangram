@@ -21,7 +21,7 @@ export enum Type {
 
 export type Props = {
 	inner: Inner
-	modelLayout: ModelLayoutProps
+	modelLayoutProps: ModelLayoutProps
 }
 
 export type Inner =
@@ -56,5 +56,5 @@ export default function TrainingMetricsIndexPage(props: Props) {
 			break
 	}
 
-	return <ModelLayout {...props.modelLayout}>{inner}</ModelLayout>
+	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
 }
