@@ -7,7 +7,6 @@ use anyhow::Result;
 use hyper::{header, Body, Request, Response, StatusCode};
 use tangram_core::id::Id;
 use tokio_postgres as postgres;
-mod actions;
 
 pub mod index;
 pub mod introspect;
