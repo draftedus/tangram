@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	pages::repos::new::actions::get_repo_for_model,
+	helpers::repos::get_repo_for_model,
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -9,22 +9,6 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use tangram_core::id::Id;
-
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
-	let html = context
-		.pinwheel
-		.render("/repos/_repo_id/models/_model_id/tuning", props)
-		.await?;
-	Ok(Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap())
-}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,6 +39,22 @@ struct Metrics {
 	threshold: f32,
 	true_negatives: u64,
 	true_positives: u64,
+}
+
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id).await?;
+	let html = context
+		.pinwheel
+		.render("/repos/_repo_id/models/_model_id/tuning", props)
+		.await?;
+	Ok(Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap())
 }
 
 async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {

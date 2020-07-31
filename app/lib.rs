@@ -138,10 +138,8 @@ async fn handle(
 				.await
 		}
 		(&Method::POST, &["repos", _repo_id, "models", model_id, "predict"]) => {
-			pages::repos::_repo_id::models::_model_id::predict::actions::post(
-				request, &context, model_id,
-			)
-			.await
+			pages::repos::_repo_id::models::_model_id::predict::post(request, &context, model_id)
+				.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
 			pages::repos::_repo_id::models::_model_id::training_metrics::index::get(

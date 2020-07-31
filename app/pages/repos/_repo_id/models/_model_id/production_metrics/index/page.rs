@@ -2,7 +2,7 @@ use crate::{
 	cookies,
 	error::Error,
 	helpers::production_metrics,
-	pages::repos::new::actions::get_repo_for_model,
+	helpers::repos::get_repo_for_model,
 	time::format_date_window_interval,
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -14,26 +14,6 @@ use hyper::{header, Body, Request, Response, StatusCode};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
-
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id, search_params).await?;
-	let html = context
-		.pinwheel
-		.render(
-			"/repos/_repo_id/models/_model_id/production_metrics/",
-			props,
-		)
-		.await?;
-	Ok(Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap())
-}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -136,6 +116,26 @@ struct ClassMetricsTableEntry {
 	class_name: String,
 	precision: TrainingProductionMetrics,
 	recall: TrainingProductionMetrics,
+}
+
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+	search_params: Option<BTreeMap<String, String>>,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id, search_params).await?;
+	let html = context
+		.pinwheel
+		.render(
+			"/repos/_repo_id/models/_model_id/production_metrics/",
+			props,
+		)
+		.await?;
+	Ok(Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap())
 }
 
 async fn props(
