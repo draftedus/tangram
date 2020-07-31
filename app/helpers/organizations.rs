@@ -82,7 +82,7 @@ impl postgres_types::ToSql for Plan {
 
 pub async fn get_organization(
 	organization_id: Id,
-	db: &deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 ) -> Result<Option<OrganizationResponse>> {
 	let rows = db
 		.query(

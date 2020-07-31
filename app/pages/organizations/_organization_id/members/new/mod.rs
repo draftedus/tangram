@@ -7,6 +7,7 @@ use anyhow::{format_err, Result};
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use tangram_core::id::Id;
+use tokio_postgres as postgres;
 
 #[derive(serde::Serialize)]
 struct Props {}
@@ -56,13 +57,15 @@ pub async fn post(
 	authorize_user_for_organization(&db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
-	add_member(action, user, db, context, organization_id).await
+	let response = add_member(action, user, &db, context, organization_id).await?;
+	db.commit().await?;
+	Ok(response)
 }
 
 async fn add_member(
 	action: Action,
 	user: User,
-	db: deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	context: &Context,
 	organization_id: Id,
 ) -> Result<Response<Body>> {
@@ -106,8 +109,6 @@ async fn add_member(
 		&[&organization_id, &user_id, &is_admin],
 	)
 	.await?;
-	db.commit().await?;
-
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(

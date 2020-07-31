@@ -1,6 +1,7 @@
 use crate::types;
 use anyhow::Result;
 use tangram_core::id::Id;
+use tokio_postgres as postgres;
 
 pub async fn get_model_layout_props(
 	db: &deadpool_postgres::Transaction<'_>,
@@ -81,7 +82,7 @@ pub async fn get_model_layout_props(
 }
 
 async fn get_models_for_repo(
-	db: &deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	repo_id: Id,
 ) -> Result<Vec<types::RepoModel>> {
 	Ok(db

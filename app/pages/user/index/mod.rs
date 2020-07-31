@@ -75,12 +75,14 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.await
 		.map_err(|_| Error::BadRequest)?;
 	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-	match action {
-		Action::Logout => logout(user, db).await,
-	}
+	let response = match action {
+		Action::Logout => logout(user, &db).await?,
+	};
+	db.commit().await?;
+	Ok(response)
 }
 
-pub async fn logout(user: User, db: deadpool_postgres::Transaction<'_>) -> Result<Response<Body>> {
+pub async fn logout(user: User, db: &postgres::Transaction<'_>) -> Result<Response<Body>> {
 	db.execute(
 		"
 			update
@@ -93,7 +95,6 @@ pub async fn logout(user: User, db: deadpool_postgres::Transaction<'_>) -> Resul
 		&[&user.token],
 	)
 	.await?;
-	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/login")

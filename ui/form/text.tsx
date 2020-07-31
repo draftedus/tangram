@@ -1,7 +1,6 @@
 import { css, cssClass, h, useCss } from '../deps'
 import { border, variables } from '../theme'
 import { Label } from './label'
-import { useEffect } from 'preact/hooks'
 
 type TextFieldProps = {
 	autocomplete?: string
@@ -30,8 +29,7 @@ let textFieldCss = css({
 		fontSize: '1rem',
 		height: '2.5rem',
 		outline: 'none',
-		padding: '0.5rem 1rem',
-		position: 'relative',
+		padding: `calc(0.5rem - ${variables.border.width}) 1rem`,
 		userSelect: 'text',
 		width: '100%',
 	},

@@ -4,9 +4,10 @@ use chrono::{prelude::*, Duration};
 use chrono_tz::Tz;
 use num_traits::ToPrimitive;
 use tangram_core::metrics::RunningMetric;
+use tokio_postgres as postgres;
 
 pub async fn get_production_column_stats(
-	db: &deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	model: &tangram_core::types::Model,
 	column_name: &str,
 	date_window: types::DateWindow,
@@ -149,7 +150,7 @@ pub async fn get_production_column_stats(
 }
 
 pub async fn get_production_stats(
-	db: &deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	model: &tangram_core::types::Model,
 	date_window: types::DateWindow,
 	date_window_interval: types::DateWindowInterval,

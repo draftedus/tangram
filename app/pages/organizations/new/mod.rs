@@ -7,6 +7,7 @@ use anyhow::Result;
 use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use tangram_core::id::Id;
+use tokio_postgres as postgres;
 
 #[derive(serde::Serialize)]
 struct Props {}
@@ -39,13 +40,14 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 	let user = authorize_user(&request, &db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	create_organization(action, user, db).await
+	let response = create_organization(action, user, &db).await?;
+	Ok(response)
 }
 
 async fn create_organization(
 	action: Action,
 	user: User,
-	db: deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 ) -> Result<Response<Body>> {
 	let Action { name } = action;
 	let created_at: DateTime<Utc> = Utc::now();
@@ -72,7 +74,6 @@ async fn create_organization(
 		&[&organization_id, &user.id],
 	)
 	.await?;
-	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(

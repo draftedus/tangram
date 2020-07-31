@@ -1,12 +1,3 @@
-pub mod index;
-pub mod introspect;
-pub mod predict;
-pub mod production_metrics;
-pub mod production_stats;
-pub mod training_metrics;
-pub mod training_stats;
-pub mod tuning;
-
 use crate::{
 	error::Error,
 	user::{authorize_user, authorize_user_for_model},
@@ -15,6 +6,17 @@ use crate::{
 use anyhow::Result;
 use hyper::{header, Body, Request, Response, StatusCode};
 use tangram_core::id::Id;
+use tokio_postgres as postgres;
+mod actions;
+
+pub mod index;
+pub mod introspect;
+pub mod predict;
+pub mod production_metrics;
+pub mod production_stats;
+pub mod training_metrics;
+pub mod training_stats;
+pub mod tuning;
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "action")]
@@ -43,13 +45,12 @@ pub async fn post(
 	if !authorize_user_for_model(&db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	delete_model(db, model_id).await
+	let response = delete_model(&db, model_id).await?;
+	db.commit().await?;
+	Ok(response)
 }
 
-async fn delete_model(
-	db: deadpool_postgres::Transaction<'_>,
-	model_id: Id,
-) -> Result<Response<Body>> {
+async fn delete_model(db: &postgres::Transaction<'_>, model_id: Id) -> Result<Response<Body>> {
 	db.execute(
 		"
 			delete from models
@@ -59,7 +60,6 @@ async fn delete_model(
 		&[&model_id],
 	)
 	.await?;
-	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/")

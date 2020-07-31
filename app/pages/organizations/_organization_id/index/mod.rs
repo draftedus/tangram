@@ -9,6 +9,7 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde::Serialize;
 use serde_json::json;
 use tangram_core::id::Id;
+use tokio_postgres as postgres;
 
 pub async fn get(
 	request: Request<Body>,
@@ -93,7 +94,7 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 }
 
 async fn get_organization_repositories(
-	db: &deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	organization_id: Id,
 ) -> Result<Vec<Repo>> {
 	let rows = db
@@ -149,7 +150,7 @@ struct StripeCard {
 }
 
 pub async fn get_card(
-	db: &deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	organization_id: Id,
 	stripe_secret_key: &str,
 ) -> Result<Option<Card>> {
@@ -238,15 +239,17 @@ pub async fn post(
 	if !authorize_user_for_organization(&db, &user, organization_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	match action {
-		Action::DeleteOrganization => delete_organization(db, organization_id).await,
-		Action::DeleteMember(action) => delete_member(action, db, organization_id).await,
-		Action::ChangePlan(action) => change_plan(action, db, organization_id).await,
-	}
+	let response = match action {
+		Action::DeleteOrganization => delete_organization(&db, organization_id).await?,
+		Action::DeleteMember(action) => delete_member(action, &db, organization_id).await?,
+		Action::ChangePlan(action) => change_plan(action, &db, organization_id).await?,
+	};
+	db.commit().await?;
+	Ok(response)
 }
 
 async fn delete_organization(
-	db: deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	organization_id: Id,
 ) -> Result<Response<Body>> {
 	db.query(
@@ -258,8 +261,6 @@ async fn delete_organization(
 		&[&organization_id],
 	)
 	.await?;
-	db.commit().await?;
-
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/user/")
@@ -268,7 +269,7 @@ async fn delete_organization(
 
 async fn delete_member(
 	action: DeleteMemberAction,
-	db: deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	organization_id: Id,
 ) -> Result<Response<Body>> {
 	let DeleteMemberAction { member_id } = action;
@@ -283,7 +284,6 @@ async fn delete_member(
 		&[&organization_id, &member_id],
 	)
 	.await?;
-	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/user/")
@@ -292,11 +292,10 @@ async fn delete_member(
 
 async fn change_plan(
 	action: ChangePlanAction,
-	db: deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	organization_id: Id,
 ) -> Result<Response<Body>> {
 	let ChangePlanAction { plan } = action;
-
 	db.execute(
 		"
 			update organizations
@@ -306,7 +305,6 @@ async fn change_plan(
 		&[&plan, &organization_id],
 	)
 	.await?;
-	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
@@ -411,7 +409,6 @@ pub async fn start_stripe_checkout(
 		.json::<serde_json::Value>()
 		.await?;
 	let session_id = response.get("id").unwrap().as_str().unwrap().to_owned();
-	db.commit().await?;
 	let response = StartStripeCheckoutResponse {
 		stripe_checkout_session_id: session_id,
 	};
@@ -478,7 +475,6 @@ pub async fn finish_stripe_checkout(
 		&[&stripe_payment_method_id, &organization_id],
 	)
 	.await?;
-	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.header(header::CONTENT_TYPE, "application/json")

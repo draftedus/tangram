@@ -5,6 +5,7 @@ use rand::Rng;
 use serde_json::json;
 use std::{collections::BTreeMap, sync::Arc};
 use tangram_core::id::Id;
+use tokio_postgres as postgres;
 
 #[derive(serde::Serialize)]
 struct LoginProps {
@@ -63,15 +64,17 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
 	let db = db.transaction().await?;
-	match request_body {
-		Action::Email(request_body) => email(request_body, db, context).await,
-		Action::Code(request_body) => code(request_body, db, context).await,
-	}
+	let response = match request_body {
+		Action::Email(request_body) => email(request_body, &db, context).await?,
+		Action::Code(request_body) => code(request_body, &db, context).await?,
+	};
+	db.commit().await?;
+	Ok(response)
 }
 
 pub async fn email(
 	request_body: EmailAction,
-	db: deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	context: &Context,
 ) -> Result<Response<Body>> {
 	let EmailAction { email } = request_body;
@@ -108,7 +111,6 @@ pub async fn email(
 		if let Some(sendgrid_api_token) = context.sendgrid_api_token.clone() {
 			tokio::spawn(send_code_email(email.to_owned(), code, sendgrid_api_token));
 		}
-		db.commit().await?;
 		let response = Response::builder()
 			.status(StatusCode::SEE_OTHER)
 			.header(header::LOCATION, format!("/login?email={}", email))
@@ -129,7 +131,6 @@ pub async fn email(
 			&[&id, &token, &user_id],
 		)
 		.await?;
-		db.commit().await?;
 		let set_cookie = set_cookie_header_value(token, context.cookie_domain.as_deref());
 		let response = Response::builder()
 			.status(StatusCode::SEE_OTHER)
@@ -142,7 +143,7 @@ pub async fn email(
 
 pub async fn code(
 	request_body: CodeAction,
-	db: deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	context: &Context,
 ) -> Result<Response<Body>> {
 	let CodeAction { email, code } = request_body;
@@ -214,7 +215,6 @@ pub async fn code(
 		&[&id, &token, &user_id],
 	)
 	.await?;
-	db.commit().await?;
 	let set_cookie = set_cookie_header_value(token, context.cookie_domain.as_deref());
 
 	Ok(Response::builder()

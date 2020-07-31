@@ -11,9 +11,7 @@ let labelCss = css({
 	[`.${labelClass}`]: {
 		color: variables.colors.text,
 		display: 'grid',
-		fontSize: '.8rem',
 		gridGap: '0.5rem',
-		letterSpacing: '.1rem',
 		userSelect: 'none',
 	},
 })
