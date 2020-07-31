@@ -1,3 +1,4 @@
+import { ClassSelect } from './page'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { h, ui } from 'deps'
@@ -18,7 +19,6 @@ export type Props = {
 }
 
 export function BinaryClassifierClassMetricsPage(props: Props) {
-	console.log(props.class)
 	return (
 		<ui.S1>
 			<ui.H1>Training Metrics</ui.H1>
@@ -28,15 +28,7 @@ export function BinaryClassifierClassMetricsPage(props: Props) {
 				<ui.TabLink href="./precision_recall">PR Curve</ui.TabLink>
 				<ui.TabLink href="./roc">ROC Curve</ui.TabLink>
 			</ui.TabBar>
-			<form id="form">
-				<select name="class">
-					{props.classes.map(c => (
-						<option key={c} name={c} selected={c === props.class}>
-							{c}
-						</option>
-					))}
-				</select>
-			</form>
+			<ClassSelect class={props.class} classes={props.classes} />
 			<ui.S2>
 				<ui.H2>Precision and Recall</ui.H2>
 				<ui.P>{definitions.precisionRecall}</ui.P>

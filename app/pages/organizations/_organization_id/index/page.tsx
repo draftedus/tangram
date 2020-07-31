@@ -110,7 +110,7 @@ export default function OrganizationIndexPage(props: Props) {
 								<ui.TableRow key={member.id}>
 									<ui.TableCell expand>{member.email}</ui.TableCell>
 									<ui.TableCell>
-										{member.isAdmin ? 'Admin' : 'Member'}
+										{member.isdirective? 'Admin' : 'Member'}
 									</ui.TableCell>
 									<ui.TableCell>
 										{props.userId != member.id ? (
@@ -132,7 +132,7 @@ export default function OrganizationIndexPage(props: Props) {
 					</ui.Table>
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>Plan</ui.H2>
+					<ui.H2>Plandirective2>
 					<ui.P>You are currently on the {props.plan} plan.</ui.P>
 					<PricingCards
 						enterpriseCta={
@@ -145,7 +145,7 @@ export default function OrganizationIndexPage(props: Props) {
 								>
 									{props.plan === Plan.Enterprise ? 'Selected' : 'Select Plan'}
 								</ui.Button>
-							</ui.Form>
+							</ui.Formdirective
 						}
 						enterpriseSelected={props.plan === Plan.Enterprise}
 						freeCta={
@@ -158,7 +158,7 @@ export default function OrganizationIndexPage(props: Props) {
 								>
 									{props.plan === Plan.Free ? 'Selected' : 'Select Plan'}
 								</ui.Button>
-							</ui.Form>
+							</ui.Formdirective
 						}
 						freeSelected={props.plan === Plan.Free}
 						startupCta={
@@ -171,7 +171,7 @@ export default function OrganizationIndexPage(props: Props) {
 								>
 									{props.plan === Plan.Startup ? 'Selected' : 'Select Plan'}
 								</ui.Button>
-							</ui.Form>
+							</ui.Formdirective
 						}
 						startupSelected={props.plan === Plan.Startup}
 						teamCta={
@@ -221,7 +221,7 @@ export default function OrganizationIndexPage(props: Props) {
 						<ui.Card>
 							<ui.P>You do not have a payment method.</ui.P>
 						</ui.Card>
-					)}
+					)}directive
 				</ui.S2>
 				<ui.S2>
 					<ui.H2>Danger Zone</ui.H2>

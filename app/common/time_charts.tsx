@@ -43,14 +43,17 @@ type DateWindowSelectFieldProps = {
 
 export function DateWindowSelectField(props: DateWindowSelectFieldProps) {
 	return (
-		<ui.Form>
-			<ui.SelectField
-				label="Select Date Range"
-				name="date_window"
-				options={Object.values(DateWindow)}
-				value={props.dateWindow}
-			/>
-		</ui.Form>
+		<div>
+			<ui.Form>
+				<ui.SelectField
+					label="Date Window"
+					name="date_window"
+					options={Object.values(DateWindow)}
+					value={props.dateWindow}
+				/>
+				<ui.Button>Submit</ui.Button>
+			</ui.Form>
+		</div>
 	)
 }
 

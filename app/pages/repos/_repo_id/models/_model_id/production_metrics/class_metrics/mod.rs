@@ -27,7 +27,7 @@ struct Props {
 	classes: Vec<String>,
 	overall: OverallClassMetrics,
 	model_layout_props: types::ModelLayoutProps,
-	selected_class: String,
+	class: String,
 }
 
 #[derive(Serialize, Debug)]
@@ -367,6 +367,16 @@ async fn props(
 
 	db.commit().await?;
 
+	let class = search_params.and_then(|s| s.get("class").map(|class| class.to_string()));
+	let class_index = if let Some(class) = &class {
+		classes.iter().position(|c| c == class).unwrap()
+	} else {
+		0
+	};
+	let class = class
+		.unwrap_or_else(|| classes[class_index].to_owned())
+		.to_owned();
+
 	Ok(Props {
 		id: id.to_string(),
 		title: title.to_string(),
@@ -376,6 +386,6 @@ async fn props(
 		classes: classes.to_owned(),
 		overall,
 		model_layout_props,
-		selected_class: classes.last().unwrap().to_owned(),
+		class,
 	})
 }

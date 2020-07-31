@@ -1,3 +1,4 @@
+import { ClassSelect } from './page'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { h, ui } from 'deps'
@@ -15,7 +16,6 @@ export type Props = {
 	}
 	classes: string[]
 	id: string
-	selectedClass: string
 }
 
 export function MulticlassClassifierClassMetricsPage(props: Props) {
@@ -26,7 +26,7 @@ export function MulticlassClassifierClassMetricsPage(props: Props) {
 				<ui.TabLink href="./">Overview</ui.TabLink>
 				<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
 			</ui.TabBar>
-			<ui.SelectField options={props.classes} />
+			<ClassSelect class={props.class} classes={props.classes} />
 			<ui.S2>
 				<ui.H2>Precision and Recall</ui.H2>
 				<ui.P>{definitions.precisionRecall}</ui.P>
@@ -60,7 +60,7 @@ export function MulticlassClassifierClassMetricsPage(props: Props) {
 				<ui.H2>Confusion Matrix</ui.H2>
 				<ui.P>{definitions.confusionMatrix}</ui.P>
 				<ui.ConfusionMatrix
-					classLabel={props.selectedClass}
+					classLabel={props.class}
 					falseNegatives={props.classMetrics.falseNegatives}
 					falsePositives={props.classMetrics.falsePositives}
 					trueNegatives={props.classMetrics.trueNegatives}

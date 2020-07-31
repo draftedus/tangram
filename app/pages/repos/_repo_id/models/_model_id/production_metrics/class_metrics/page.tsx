@@ -3,7 +3,6 @@ import { MetricsRow } from 'common/metrics_row'
 import {
 	DateWindow,
 	DateWindowInterval,
-	DateWindowSelectField,
 	intervalChartTitle,
 } from 'common/time_charts'
 import {
@@ -16,6 +15,7 @@ import { Fragment, h, ui } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
+	class: string
 	classMetrics: Array<{
 		className: string
 		intervals: Array<{
@@ -43,7 +43,6 @@ export type Props = {
 		classMetrics: OverallClassMetrics[]
 		label: string
 	}
-	selectedClass: string
 	title: string
 }
 
@@ -88,7 +87,7 @@ export type OverallClassMetrics = {
 }
 
 export default function ProductionMetricsPage(props: Props) {
-	let selectedClassIndex = props.classes.indexOf(props.selectedClass)
+	let selectedClassIndex = props.classes.indexOf(props.class)
 	let selectedIntervalClassMetrics = props.classMetrics[selectedClassIndex]
 	let selectedOverallClassMetrics = props.overall.classMetrics
 		? props.overall.classMetrics[selectedClassIndex]
@@ -180,8 +179,23 @@ export default function ProductionMetricsPage(props: Props) {
 					<ui.TabLink href="./">Overview</ui.TabLink>
 					<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
 				</ui.TabBar>
-				<DateWindowSelectField dateWindow={props.dateWindow} />
-				<ui.SelectField label="Select Class" options={props.classes} />
+				<div>
+					<ui.Form>
+						<ui.SelectField
+							label="Date Window"
+							name="date_window"
+							options={Object.values(DateWindow)}
+							value={props.dateWindow}
+						/>
+						<ui.SelectField
+							label="class"
+							name="class"
+							options={props.classes}
+							value={props.class}
+						/>
+						<ui.Button>Submit</ui.Button>
+					</ui.Form>
+				</div>
 				{selectedOverallClassMetrics !== null && (
 					<Fragment>
 						<ui.S2>
@@ -271,7 +285,7 @@ export default function ProductionMetricsPage(props: Props) {
 							<ui.H2>Confusion Matrix</ui.H2>
 							<ui.P>{definitions.confusionMatrix}</ui.P>
 							<ui.ConfusionMatrix
-								classLabel={props.selectedClass}
+								classLabel={props.class}
 								falseNegatives={
 									selectedOverallClassMetrics.confusionMatrix.falseNegatives
 								}
@@ -291,7 +305,7 @@ export default function ProductionMetricsPage(props: Props) {
 							<ui.P>{definitions.confusionMatrix}</ui.P>
 							{selectedOverallClassMetrics.comparison && (
 								<ui.ConfusionMatrixComparison
-									classLabel={props.selectedClass}
+									classLabel={props.class}
 									colorA={trainingColor}
 									colorB={productionColor}
 									textColorA={trainingTextColor}

@@ -20,7 +20,7 @@ export default function UserPage(props: Props) {
 			<ui.S1>
 				<ui.SpaceBetween>
 					<ui.H1>User</ui.H1>
-					<ui.Form action="logout" post>
+					<ui.Form directive="logout" post>
 						<ui.Button color={ui.colors.red}>Logout</ui.Button>
 					</ui.Form>
 				</ui.SpaceBetween>

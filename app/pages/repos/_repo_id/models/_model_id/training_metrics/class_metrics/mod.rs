@@ -36,8 +36,6 @@ struct BinaryClassifier {
 	class: String,
 	classes: Vec<String>,
 	id: String,
-	#[serde(rename = "selectedClass")]
-	selected_class: String,
 }
 
 #[derive(Serialize)]
@@ -59,8 +57,6 @@ struct MulticlassClassifier {
 	classes: Vec<String>,
 	id: String,
 	class: String,
-	#[serde(rename = "selectedClass")]
-	selected_class: String,
 }
 
 pub async fn get(
@@ -177,13 +173,11 @@ fn build_inner_binary(
 		false_negatives: *class_metrics.false_negatives.as_option().unwrap(),
 		false_positives: *class_metrics.false_positives.as_option().unwrap(),
 	};
-	let selected_class = classes.last().unwrap().to_owned();
 	BinaryClassifier {
 		id: id.to_string(),
 		class_metrics,
 		classes,
 		class,
-		selected_class,
 	}
 }
 
@@ -195,12 +189,14 @@ fn build_inner_multiclass(
 	let test_metrics = model.test_metrics.as_option().unwrap();
 	let classes = model.classes().to_owned();
 	let class_metrics = test_metrics.class_metrics.as_option().unwrap();
+
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {
-		1
+		0
 	};
 	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
+
 	let class_metrics = &class_metrics[class_index];
 	let class_metrics = ClassMetrics {
 		precision: *class_metrics.precision.as_option().unwrap(),
@@ -211,12 +207,10 @@ fn build_inner_multiclass(
 		false_negatives: *class_metrics.false_negatives.as_option().unwrap(),
 		false_positives: *class_metrics.false_positives.as_option().unwrap(),
 	};
-	let selected_class = classes.last().unwrap().to_owned();
 	MulticlassClassifier {
 		id: id.to_string(),
 		class_metrics,
 		classes,
 		class,
-		selected_class,
 	}
 }

@@ -63,7 +63,11 @@ export function SelectField(props: SelectProps) {
 				value={props.value ?? undefined}
 			>
 				{props.options
-					? props.options.map(option => <option key={option}>{option}</option>)
+					? props.options.map(option => (
+							<option key={option} selected={props.value == option}>
+								{option}
+							</option>
+					  ))
 					: props.children}
 			</select>
 		</Label>
