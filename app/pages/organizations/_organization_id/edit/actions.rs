@@ -12,7 +12,7 @@ pub struct Action {
 	pub name: String,
 }
 
-pub async fn actions(
+pub async fn post(
 	mut request: Request<Body>,
 	context: &Context,
 	organization_id: &str,

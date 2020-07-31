@@ -10,7 +10,7 @@ use hyper::{header, Body, Request, Response, StatusCode};
 use multer::Multipart;
 use tangram_core::id::Id;
 
-pub async fn actions(
+pub async fn post(
 	request: Request<Body>,
 	context: &Context,
 	repo_id: &str,

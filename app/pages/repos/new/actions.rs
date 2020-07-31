@@ -19,7 +19,7 @@ pub struct Action {
 	pub title: String,
 }
 
-pub async fn actions(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
 		.database_pool
 		.get()
@@ -33,8 +33,8 @@ pub async fn actions(request: Request<Body>, context: &Context) -> Result<Respon
 		.headers()
 		.get(header::CONTENT_TYPE)
 		.and_then(|ct| ct.to_str().ok())
-		.and_then(|ct| multer::parse_boundary(ct).ok());
-	let boundary = boundary.ok_or_else(|| Error::BadRequest)?;
+		.and_then(|ct| multer::parse_boundary(ct).ok())
+		.ok_or_else(|| Error::BadRequest)?;
 	let mut title: Option<String> = None;
 	let mut organization_id: Option<String> = None;
 	let mut file: Option<Vec<u8>> = None;

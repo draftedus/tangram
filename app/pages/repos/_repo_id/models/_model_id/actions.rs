@@ -16,7 +16,7 @@ enum Action {
 	DownloadModel,
 }
 
-pub async fn actions(
+pub async fn post(
 	request: Request<Body>,
 	context: &Context,
 	model_id: &str,

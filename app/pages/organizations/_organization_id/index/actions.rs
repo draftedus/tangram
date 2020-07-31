@@ -32,7 +32,7 @@ struct DeleteMemberAction {
 	member_id: String,
 }
 
-pub async fn actions(
+pub async fn post(
 	mut request: Request<Body>,
 	context: Arc<Context>,
 	organization_id: &str,

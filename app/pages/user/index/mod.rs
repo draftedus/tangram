@@ -2,6 +2,6 @@ pub mod actions;
 mod data;
 mod page;
 
-pub use actions::actions;
+pub use actions::post;
 pub use data::data;
-pub use page::page;
+pub use page::get;

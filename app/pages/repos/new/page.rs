@@ -17,7 +17,7 @@ struct Organization {
 	name: String,
 }
 
-pub async fn page(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
 		.database_pool
 		.get()

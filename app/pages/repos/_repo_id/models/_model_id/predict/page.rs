@@ -10,7 +10,7 @@ use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use tangram_core::id::Id;
 
-pub async fn page(
+pub async fn get(
 	request: Request<Body>,
 	context: &Context,
 	model_id: &str,
@@ -84,7 +84,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	if !authorize_user_for_model(&db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	// get the necessary data from the model
 	let rows = db
 		.query(
 			"
@@ -105,7 +104,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
 	let model = tangram_core::types::Model::from_slice(&data)?;
-	// assemble the response
 	let column_stats = match model {
 		tangram_core::types::Model::Classifier(model) => {
 			model.overall_column_stats.into_option().unwrap()
@@ -142,7 +140,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		.collect();
 	let repo = get_repo_for_model(&db, id).await?;
 	db.commit().await?;
-
 	Ok(Props {
 		repo,
 		id: id.to_string(),

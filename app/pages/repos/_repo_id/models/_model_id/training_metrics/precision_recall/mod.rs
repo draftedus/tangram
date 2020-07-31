@@ -1,3 +1,3 @@
 mod page;
 
-pub use page::page;
+pub use page::get;

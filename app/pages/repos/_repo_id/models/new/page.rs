@@ -5,7 +5,7 @@ use hyper::{Body, Request, Response, StatusCode};
 #[derive(serde::Serialize)]
 struct Props {}
 
-pub async fn page(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let props = Props {};
 	let html = context
 		.pinwheel

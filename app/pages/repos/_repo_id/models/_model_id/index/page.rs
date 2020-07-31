@@ -11,7 +11,7 @@ use num_traits::cast::ToPrimitive;
 use serde::Serialize;
 use tangram_core::id::Id;
 
-pub async fn page(
+pub async fn get(
 	request: Request<Body>,
 	context: &Context,
 	model_id: &str,

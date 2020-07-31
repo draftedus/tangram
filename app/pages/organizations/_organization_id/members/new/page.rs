@@ -5,7 +5,7 @@ use hyper::{Body, Request, Response, StatusCode};
 #[derive(serde::Serialize)]
 struct Props {}
 
-pub async fn page(
+pub async fn get(
 	_request: Request<Body>,
 	context: &Context,
 	_organization_id: &str,

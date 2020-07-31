@@ -16,7 +16,7 @@ pub struct Action {
 	pub is_admin: Option<String>,
 }
 
-pub async fn actions(
+pub async fn post(
 	mut request: Request<Body>,
 	context: &Context,
 	organization_id: &str,

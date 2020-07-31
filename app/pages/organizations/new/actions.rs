@@ -13,7 +13,7 @@ pub struct Action {
 	pub name: String,
 }
 
-pub async fn actions(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;

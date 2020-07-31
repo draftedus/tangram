@@ -2,7 +2,7 @@ use crate::{error::Error, user::authorize_user, Context};
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 
-pub async fn page(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
 		.database_pool
 		.get()

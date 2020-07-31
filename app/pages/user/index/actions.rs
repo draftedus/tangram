@@ -12,7 +12,7 @@ enum Action {
 	Logout,
 }
 
-pub async fn actions(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
 		.database_pool
 		.get()
