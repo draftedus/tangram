@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{format_err, Result};
 use tangram_core::id::Id;
 use tokio_postgres as postgres;
 
@@ -54,7 +54,7 @@ impl<'a> postgres_types::FromSql<'a> for Plan {
 			b"startup" => Plan::Startup,
 			b"team" => Plan::Team,
 			b"enterprise" => Plan::Enterprise,
-			_ => todo!(),
+			_ => return Err(format_err!("bad plan {:?}", raw).into()),
 		};
 		Ok(plan)
 	}

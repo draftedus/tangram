@@ -94,7 +94,8 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.unwrap())
 }
 
-pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn post(_request: Request<Body>, _context: &Context) -> Result<Response<Body>> {
+	// TODO
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/")

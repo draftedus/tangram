@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use colored::*;
 use std::{
 	borrow::Cow,
 	path::{Path, PathBuf},
@@ -77,14 +78,14 @@ fn main() {
 		}
 		_ => unreachable!(),
 	};
-	// if let Err(error) = result {
-	// 	eprintln!("{}: {}", "error".red().bold(), error);
-	// 	error
-	// 		.chain()
-	// 		.skip(1)
-	// 		.for_each(|cause| eprintln!("  {} {}", "->".red().bold(), cause));
-	// 	std::process::exit(1);
-	// }
+	if let Err(error) = result {
+		eprintln!("{}: {}", "error".red().bold(), error);
+		error
+			.chain()
+			.skip(1)
+			.for_each(|cause| eprintln!("  {} {}", "->".red().bold(), cause));
+		std::process::exit(1);
+	}
 }
 
 #[cfg(feature = "train")]

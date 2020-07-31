@@ -70,6 +70,16 @@ impl Pinwheel {
 			let context = v8::Context::new(&mut scope);
 			let mut scope = v8::ContextScope::new(&mut scope, context);
 
+			// create console global
+			let console = v8::Object::new(&mut scope);
+			let log_string = v8::String::new(&mut scope, "log").unwrap();
+			let log = v8::Function::new(&mut scope, console_log).unwrap();
+			console.set(&mut scope, log_string.into(), log.into());
+			let console_string = v8::String::new(&mut scope, "console").unwrap();
+			context
+				.global(&mut scope)
+				.set(&mut scope, console_string.into(), console.into());
+
 			let pinwheel_module_namespace =
 				run_module(&mut scope, self.fs.as_ref(), pinwheel_js_url)?;
 			let render_page_string = v8::String::new(&mut scope, "renderPage").unwrap().into();
@@ -509,4 +519,21 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 		return Err(format_err!("esbuild {}", status.to_string()));
 	}
 	Ok(())
+}
+
+fn console_log(
+	scope: &mut v8::HandleScope,
+	args: v8::FunctionCallbackArguments,
+	_rv: v8::ReturnValue,
+) {
+	let mut result = String::new();
+	for i in 0..args.length() {
+		let arg = args.get(i);
+		let arg_string = arg.to_string(scope).unwrap().to_rust_string_lossy(scope);
+		if i > 0 {
+			result.push(' ');
+		}
+		result.push_str(&arg_string);
+	}
+	println!("{}", result);
 }

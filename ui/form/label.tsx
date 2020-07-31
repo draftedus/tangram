@@ -6,7 +6,6 @@ type Props = {
 	for?: string
 }
 
-let childClass = cssClass()
 let labelClass = cssClass()
 let labelCss = css({
 	[`.${labelClass}`]: {
@@ -16,9 +15,6 @@ let labelCss = css({
 		gridGap: '0.5rem',
 		letterSpacing: '.1rem',
 		userSelect: 'none',
-	},
-	[`.${labelClass} > .${childClass}`]: {
-		color: 'green',
 	},
 })
 

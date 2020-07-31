@@ -3,28 +3,21 @@ import { border, variables } from '../theme'
 import { Label } from './label'
 
 type FileFieldProps = {
-	autocomplete?: string
 	disabled?: boolean
 	label?: string
 	name?: string
-	onChange?: (newValue: string | null) => void
-	placeholder?: string
-	readOnly?: boolean
-	value?: string | null
 }
 
-let fileFieldClass = cssClass()
+let inputClass = cssClass()
+let wrapperClass = cssClass()
 let fileFieldCss = css({
-	[`.${fileFieldClass}`]: {
-		MozAppearance: 'none',
-		WebkitAppearance: 'none',
-		WebkitTextFillColor: 'inherit',
-		appearance: 'none',
+	[`.${wrapperClass}`]: {
 		backgroundColor: variables.colors.surface,
 		border,
 		borderRadius: variables.border.radius,
 		boxSizing: 'border-box',
 		color: 'inherit',
+		cursor: 'pointer',
 		font: 'inherit',
 		fontSize: '1rem',
 		height: '2.5rem',
@@ -34,18 +27,17 @@ let fileFieldCss = css({
 		userSelect: 'text',
 		width: '100%',
 	},
-	[`.${fileFieldClass}:hover`]: {
+	[`.${inputClass}`]: {
+		MozAppearance: 'none',
+		WebkitAppearance: 'none',
+		WebkitTextFillColor: 'inherit',
+		appearance: 'none',
+	},
+	[`.${inputClass}:hover`]: {
 		borderColor: variables.colors.hover,
 	},
-	[`.${fileFieldClass}:focus`]: {
+	[`.${inputClass}:focus`]: {
 		borderColor: variables.colors.accent,
-	},
-	[`.${fileFieldClass}::-webkit-input-placeholder`]: {
-		WebkitTextFillColor: variables.colors.mutedText,
-		color: variables.colors.mutedText,
-	},
-	[`.${fileFieldClass}::-webkit-file-upload-button`]: {
-		visibility: 'hidden',
 	},
 })
 
@@ -54,16 +46,9 @@ export function FileField(props: FileFieldProps) {
 	return (
 		<Label>
 			{props.label}
-			<input
-				autocomplete={props.autocomplete ?? 'off'}
-				class={fileFieldClass}
-				name={props.name}
-				placeholder={props.placeholder}
-				readOnly={props.readOnly}
-				spellcheck={false}
-				type="file"
-				value={props.value ?? undefined}
-			/>
+			<div class={wrapperClass}>
+				<input class={inputClass} name={props.name} type="file" />
+			</div>
 		</Label>
 	)
 }

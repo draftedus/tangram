@@ -53,7 +53,11 @@ export default function OrganizationIndexPage(props: Props) {
 						</ui.Button>
 					</ui.SpaceBetween>
 					<ui.Form>
-						<ui.TextField label="Organization Name" value={props.name} />
+						<ui.TextField
+							label="Organization Name"
+							readOnly={true}
+							value={props.name}
+						/>
 					</ui.Form>
 				</ui.S2>
 				<ui.S2>

@@ -25,6 +25,7 @@ let selectCss = css({
 		borderRadius: variables.border.radius,
 		boxSizing: 'border-box',
 		color: 'inherit',
+		cursor: 'pointer',
 		font: 'inherit',
 		fontSize: '1rem',
 		height: '2.5rem',

@@ -31,7 +31,7 @@ pub struct ModelResponse {
 	pub owner_name: String,
 }
 
-pub async fn page(_request: Request<Body>, _context: &Context) -> Result<Response<Body>> {
+pub async fn get(_request: Request<Body>, _context: &Context) -> Result<Response<Body>> {
 	let html = html!(<div>"Hello World"</div>);
 	Ok(Response::builder()
 		.status(StatusCode::OK)
