@@ -1,4 +1,4 @@
-use crate::app::Context;
+use crate::Context;
 use anyhow::Result;
 use html::html;
 use hyper::{Body, Request, Response, StatusCode};

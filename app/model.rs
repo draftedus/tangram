@@ -1,5 +1,5 @@
 use anyhow::Result;
-use tangram::{id::Id, types};
+use tangram_core::{id::Id, types};
 use tokio_postgres as postgres;
 
 /// Retrieves the model with the specified id. Errors if the model is not found.

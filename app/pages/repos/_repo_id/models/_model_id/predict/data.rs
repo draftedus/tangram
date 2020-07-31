@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	pages::repos::new::actions::get_repo_for_model,
 	types,
@@ -8,7 +8,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{header, Body, Request, Response, StatusCode};
 use serde::Serialize;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -92,13 +92,13 @@ pub async fn data(
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	let column_stats = match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram_core::types::Model::Classifier(model) => {
 			model.overall_column_stats.into_option().unwrap()
 		}
-		tangram::types::Model::Regressor(model) => {
+		tangram_core::types::Model::Regressor(model) => {
 			model.overall_column_stats.into_option().unwrap()
 		}
 		_ => return Err(Error::BadRequest.into()),
@@ -106,15 +106,15 @@ pub async fn data(
 	let columns = column_stats
 		.into_iter()
 		.map(|column_stats| match column_stats {
-			tangram::types::ColumnStats::Unknown(column_stats) => Column::Unknown(Unknown {
+			tangram_core::types::ColumnStats::Unknown(column_stats) => Column::Unknown(Unknown {
 				name: column_stats.column_name.as_option().unwrap().to_owned(),
 			}),
-			tangram::types::ColumnStats::Number(column_stats) => Column::Number(Number {
+			tangram_core::types::ColumnStats::Number(column_stats) => Column::Number(Number {
 				name: column_stats.column_name.as_option().unwrap().to_owned(),
 				max: *column_stats.max.as_option().unwrap(),
 				min: *column_stats.min.as_option().unwrap(),
 			}),
-			tangram::types::ColumnStats::Enum(column_stats) => {
+			tangram_core::types::ColumnStats::Enum(column_stats) => {
 				let histogram = column_stats.histogram.as_option().unwrap();
 				let options = histogram.iter().map(|(key, _)| key.to_owned()).collect();
 				Column::Enum(Enum {
@@ -122,10 +122,10 @@ pub async fn data(
 					options,
 				})
 			}
-			tangram::types::ColumnStats::Text(column_stats) => Column::Text(Text {
+			tangram_core::types::ColumnStats::Text(column_stats) => Column::Text(Text {
 				name: column_stats.column_name.as_option().unwrap().to_owned(),
 			}),
-			tangram::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
+			tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
 		})
 		.collect();
 	let response = PredictViewModel {

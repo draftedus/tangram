@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	cookies,
 	error::Error,
 	helpers::production_metrics,
@@ -14,7 +14,7 @@ use hyper::{header, Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use serde::Serialize;
 use std::collections::BTreeMap;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -26,7 +26,7 @@ pub async fn page(
 	let html = context
 		.pinwheel
 		.render(
-			"/repos/_repoId_/models/_modelId_/production_metrics/class_metrics",
+			"/repos/_repo_id/models/_model_id/production_metrics/class_metrics",
 			props,
 		)
 		.await?;
@@ -175,7 +175,7 @@ async fn props(
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let production_metrics = production_metrics::get_production_metrics(
 		&db,
@@ -187,7 +187,7 @@ async fn props(
 	.await?;
 
 	let model = match model {
-		tangram::types::Model::Classifier(model) => model,
+		tangram_core::types::Model::Classifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let classes = model.classes();

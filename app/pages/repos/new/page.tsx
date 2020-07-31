@@ -10,13 +10,15 @@ export default function ModelCreatePage(props: Props) {
 		<AppLayout>
 			<ui.S1>
 				<ui.H1>Upload Model</ui.H1>
-				<ui.Form post>
+				<ui.Form encType="multipart/form-data" post>
 					<ui.TextField label="Title" name="title" />
-					<ui.SelectField
-						label="Owner"
-						name="organization"
-						options={['root', ...props.organizations.map(org => org.name)]}
-					/>
+					<ui.SelectField label="Owner" name="organization_id">
+						{props.organizations.map(({ id, name }) => (
+							<option key={id} value={id}>
+								{name}
+							</option>
+						))}
+					</ui.SelectField>
 					<ui.FileField label="File" name="file" />
 					<ui.Button type="submit">Upload</ui.Button>
 				</ui.Form>

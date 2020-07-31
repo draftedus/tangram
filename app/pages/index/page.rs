@@ -1,4 +1,4 @@
-use crate::app::{error::Error, user::authorize_user, Context};
+use crate::{error::Error, user::authorize_user, Context};
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 

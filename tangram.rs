@@ -13,7 +13,7 @@ use std::{
 #[no_mangle]
 pub extern "C" fn tangram_version(version_ptr: *mut *const u8) -> isize {
 	let result = catch_unwind(|| unsafe {
-		let version = clap::crate_version!();
+		let version = env!("CARGO_PKG_VERSION");
 		let version = CString::new(version).unwrap();
 		*version_ptr = CString::into_raw(version) as *const u8;
 	});

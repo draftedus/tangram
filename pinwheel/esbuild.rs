@@ -38,7 +38,7 @@ pub fn esbuild_all_pages(root_dir: &Path, out_dir: &Path) -> Result<()> {
 }
 
 pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>]) -> Result<()> {
-	// delete the out_dir if it exists and create it
+	// remove the out_dir if it exists and create it
 	if out_dir.exists() {
 		std::fs::remove_dir_all(&out_dir)?;
 	}
@@ -48,7 +48,7 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 	let document_source_path = root_dir.join("document.tsx");
 	let mut args = vec![
 		"--format=esm".to_string(),
-		// "--minify".to_string(),
+		"--minify".to_string(),
 		"--bundle".to_string(),
 		"--splitting".to_string(),
 		"--resolve-extensions=.ts,.tsx,.svg,.png".to_string(),

@@ -74,7 +74,6 @@ async fn handle(
 	}
 	let result = match (&method, path_components.as_slice()) {
 		(&Method::GET, &["health"]) => pages::health::get(request, &context).await,
-
 		(&Method::POST, &["api", "track"]) => api::track::track(request, context).await,
 		// (
 		// 	&Method::POST,
@@ -105,10 +104,9 @@ async fn handle(
 		(&Method::GET, &["repos", _repo_id, "new"]) => {
 			pages::repos::_repo_id::models::new::page(request, &context).await
 		}
-		(&Method::POST, &["repos", _repo_id, "new"]) => {
-			pages::repos::_repo_id::models::new::actions(request, &context).await
+		(&Method::POST, &["repos", repo_id, "new"]) => {
+			pages::repos::_repo_id::models::new::actions(request, &context, repo_id).await
 		}
-
 		(&Method::GET, &["repos", _repo_id, "models", model_id, ""]) => {
 			pages::repos::_repo_id::models::_model_id::index::page(request, &context, model_id)
 				.await
@@ -206,7 +204,6 @@ async fn handle(
 			pages::repos::_repo_id::models::_model_id::tuning::page(request, &context, model_id)
 				.await
 		}
-
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", ""]) => {
 			pages::repos::_repo_id::models::_model_id::production_stats::index::page(
 				request,
@@ -229,17 +226,14 @@ async fn handle(
 			)
 			.await
 		}
-
 		(&Method::GET, &["user", ""]) => pages::user::index::page(request, &context).await,
 		(&Method::POST, &["user", ""]) => pages::user::index::actions(request, &context).await,
-
 		(&Method::GET, &["organizations", "new"]) => {
 			pages::organizations::new::page(request, &context).await
 		}
 		(&Method::POST, &["organizations", "new"]) => {
 			pages::organizations::new::actions(request, &context).await
 		}
-
 		(&Method::GET, &["organizations", organization_id, ""]) => {
 			pages::organizations::_organization_id::index::page(request, &context, organization_id)
 				.await
@@ -257,7 +251,6 @@ async fn handle(
 				.await
 		}
 		(&Method::GET, &["organizations", organization_id, "members", "new"]) => {
-
 			pages::organizations::_organization_id::members::new::page(
 				request,
 				&context,
@@ -281,7 +274,6 @@ async fn handle(
 			)
 			.await
 		}
-
 		_ => Err(Error::NotFound.into()),
 	};
 	let response = match result {
@@ -308,7 +300,7 @@ async fn handle(
 						.unwrap(),
 				}
 			} else {
-				log::error!("{}", error);
+				eprintln!("{}", error);
 				Response::builder()
 					.status(StatusCode::INTERNAL_SERVER_ERROR)
 					.body(Body::from("internal server error"))
@@ -316,19 +308,11 @@ async fn handle(
 			}
 		}
 	};
-	log::info!("{} {} {}", method, path, response.status().as_u16());
+	eprintln!("{} {} {}", method, path, response.status().as_u16());
 	Ok(response)
 }
 
 pub async fn start() -> Result<()> {
-	let env_filter = format!("{}=info", clap::crate_name!().replace("-", "_"));
-	let env = env_logger::Env::default().default_filter_or(env_filter);
-	env_logger::from_env(env)
-		.format_level(false)
-		.format_module_path(false)
-		.format_timestamp(None)
-		.init();
-
 	// get host and port
 	let host = std::env::var("HOST")
 		.map(|host| host.parse().expect("HOST environment variable invalid"))
@@ -407,7 +391,7 @@ pub async fn start() -> Result<()> {
 	let listener = std::net::TcpListener::bind(&addr).unwrap();
 	let mut listener = tokio::net::TcpListener::from_std(listener).unwrap();
 	let http = hyper::server::conn::Http::new();
-	log::info!("🚀 serving on port {}", port);
+	eprintln!("🚀 serving on port {}", port);
 
 	// wait for and handle each connection
 	loop {
@@ -415,7 +399,7 @@ pub async fn start() -> Result<()> {
 		let (socket, _) = match result {
 			Ok(s) => s,
 			Err(e) => {
-				log::error!("tcp error: {}", e);
+				eprintln!("tcp error: {}", e);
 				continue;
 			}
 		};
@@ -438,7 +422,7 @@ pub async fn start() -> Result<()> {
 			)
 			.map(|r| {
 				if let Err(e) = r {
-					log::error!("http error: {}", e);
+					eprintln!("http error: {}", e);
 				}
 			}),
 		);

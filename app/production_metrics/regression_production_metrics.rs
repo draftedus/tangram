@@ -1,6 +1,6 @@
-use crate::app::{monitor_event::NumberOrString, production_stats::NumberStats, types};
+use crate::{monitor_event::NumberOrString, production_stats::NumberStats, types};
 use num_traits::ToPrimitive;
-use tangram::metrics::RunningMetric;
+use tangram_core::metrics::RunningMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

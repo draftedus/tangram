@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	cookies,
 	error::Error,
 	helpers::production_metrics,
@@ -13,7 +13,7 @@ use chrono_tz::UTC;
 use hyper::{header, Body, Request, Response, StatusCode};
 use serde::Serialize;
 use std::collections::BTreeMap;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -25,7 +25,7 @@ pub async fn page(
 	let html = context
 		.pinwheel
 		.render(
-			"/repos/_repoId_/models/_modelId_/production_metrics/",
+			"/repos/_repo_id/models/_model_id/production_metrics/",
 			props,
 		)
 		.await?;
@@ -205,7 +205,7 @@ async fn props(
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let production_metrics = production_metrics::get_production_metrics(
 		&db,
@@ -217,7 +217,7 @@ async fn props(
 	.await?;
 
 	let inner = match &model {
-		tangram::types::Model::Regressor(model) => {
+		tangram_core::types::Model::Regressor(model) => {
 			let training_metrics = model.test_metrics.as_option().unwrap();
 			let true_values_count = production_metrics.overall.true_values_count;
 			let overall_production_metrics =
@@ -294,7 +294,7 @@ async fn props(
 				true_values_count_chart,
 			})
 		}
-		tangram::types::Model::Classifier(model) => {
+		tangram_core::types::Model::Classifier(model) => {
 			let training_metrics = model.test_metrics.as_option().unwrap();
 			let overall_production_metrics =
 				production_metrics

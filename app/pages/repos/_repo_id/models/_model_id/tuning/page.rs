@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	pages::repos::new::actions::get_repo_for_model,
 	types,
@@ -8,7 +8,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -18,7 +18,7 @@ pub async fn page(
 	let props = props(request, context, model_id).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repoId_/models/_modelId_/tuning", props)
+		.render("/repos/_repo_id/models/_model_id/tuning", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -90,13 +90,15 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 	let inner = match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram_core::types::Model::Classifier(model) => {
 			let classes = model.classes().to_owned();
 			match model.model.into_option().unwrap() {
-				tangram::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
-				tangram::types::ClassificationModel::LinearBinary(inner_model) => {
+				tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => {
+					unimplemented!()
+				}
+				tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
 					let class_metrics = inner_model.class_metrics.into_option().unwrap();
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
@@ -105,8 +107,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						classes,
 					})
 				}
-				tangram::types::ClassificationModel::LinearMulticlass(_) => None,
-				tangram::types::ClassificationModel::GbtBinary(inner_model) => {
+				tangram_core::types::ClassificationModel::LinearMulticlass(_) => None,
+				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
 					let class_metrics = inner_model.class_metrics.into_option().unwrap();
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
@@ -115,10 +117,10 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						classes,
 					})
 				}
-				tangram::types::ClassificationModel::GbtMulticlass(_) => None,
+				tangram_core::types::ClassificationModel::GbtMulticlass(_) => None,
 			}
 		}
-		tangram::types::Model::Regressor(_) => None,
+		tangram_core::types::Model::Regressor(_) => None,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let repo = get_repo_for_model(&db, model_id).await?;
@@ -132,7 +134,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 }
 
 fn build_threshold_class_metrics(
-	class_metrics: Vec<tangram::types::BinaryClassifierClassMetrics>,
+	class_metrics: Vec<tangram_core::types::BinaryClassifierClassMetrics>,
 ) -> Vec<Vec<Metrics>> {
 	class_metrics
 		.iter()

@@ -193,7 +193,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 				<ui.SideNavItem
 					href={`/models/${props.id}/training_stats/`}
 					selected={props.pagename.startsWith(
-						`/models/_modelId_/training_stats/`,
+						`/models/_model_id/training_stats/`,
 					)}
 				>
 					Training Stats
@@ -201,7 +201,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 				<ui.SideNavItem
 					href={`/models/${props.id}/training_metrics/`}
 					selected={props.pagename.startsWith(
-						`/models/_modelId_/training_metrics/`,
+						`/models/_model_id/training_metrics/`,
 					)}
 				>
 					Training Metrics
@@ -218,7 +218,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 				<ui.SideNavItem
 					href={`/models/${props.id}/production_stats/`}
 					selected={props.pagename.startsWith(
-						`/models/_modelId_/production_stats/`,
+						`/models/_model_id/production_stats/`,
 					)}
 				>
 					Production Stats
@@ -226,7 +226,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 				<ui.SideNavItem
 					href={`/models/${props.id}/production_metrics/`}
 					selected={props.pagename.startsWith(
-						`/models/_modelId_/production_metrics/`,
+						`/models/_model_id/production_metrics/`,
 					)}
 				>
 					Production Metrics

@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	helpers::organizations,
 	user::{authorize_user, authorize_user_for_organization},
@@ -7,7 +7,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,

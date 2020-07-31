@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	pages::repos::new::actions::get_repo_for_model,
 	types,
@@ -8,7 +8,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -18,7 +18,7 @@ pub async fn page(
 	let props = props(request, context, model_id).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repoId_/models/_modelId_/roc", props)
+		.render("/repos/_repo_id/models/_model_id/roc", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -78,16 +78,16 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram_core::types::Model::Classifier(model) => {
 			let (class_metrics, auc_roc) = match model.model.as_option().unwrap() {
-				tangram::types::ClassificationModel::LinearBinary(inner_model) => (
+				tangram_core::types::ClassificationModel::LinearBinary(inner_model) => (
 					inner_model.class_metrics.as_option().unwrap(),
 					inner_model.auc_roc.as_option().unwrap(),
 				),
-				tangram::types::ClassificationModel::GbtBinary(inner_model) => (
+				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => (
 					inner_model.class_metrics.as_option().unwrap(),
 					inner_model.auc_roc.as_option().unwrap(),
 				),

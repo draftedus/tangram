@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	pages::repos::new::actions::get_repo_for_model,
 	types,
@@ -10,7 +10,7 @@ use hyper::{Body, Request, Response, StatusCode};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -20,7 +20,7 @@ pub async fn page(
 	let props = props(request, context, model_id).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repoId_/models/_modelId_/introspect", props)
+		.render("/repos/_repo_id/models/_model_id/introspect", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -126,14 +126,16 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 	let inner = match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram_core::types::Model::Classifier(model) => {
 			let target_column_name = model.target_column_name.as_option().unwrap().to_owned();
 			let classes = model.classes().to_owned();
 			match model.model.into_option().unwrap() {
-				tangram::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
-				tangram::types::ClassificationModel::LinearBinary(inner_model) => {
+				tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => {
+					unimplemented!()
+				}
+				tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
 					let feature_groups = inner_model.feature_groups.as_option().unwrap();
 					let feature_names = compute_feature_names(feature_groups);
 					let weights = inner_model.weights.as_option().unwrap();
@@ -150,7 +152,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						weights,
 					})
 				}
-				tangram::types::ClassificationModel::LinearMulticlass(inner_model) => {
+				tangram_core::types::ClassificationModel::LinearMulticlass(inner_model) => {
 					let feature_groups = inner_model.feature_groups.as_option().unwrap();
 					let n_classes = inner_model
 						.n_classes
@@ -189,7 +191,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						weights,
 					})
 				}
-				tangram::types::ClassificationModel::GbtBinary(inner_model) => {
+				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
 					let feature_groups = inner_model.feature_groups.as_option().unwrap();
 					let feature_importances = inner_model
 						.feature_importances
@@ -208,7 +210,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						feature_importances,
 					})
 				}
-				tangram::types::ClassificationModel::GbtMulticlass(inner_model) => {
+				tangram_core::types::ClassificationModel::GbtMulticlass(inner_model) => {
 					let feature_groups = inner_model.feature_groups.as_option().unwrap();
 					let feature_importances = inner_model
 						.feature_importances
@@ -229,8 +231,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				}
 			}
 		}
-		tangram::types::Model::Regressor(model) => match model.model.as_option().unwrap() {
-			tangram::types::RegressionModel::Linear(inner_model) => {
+		tangram_core::types::Model::Regressor(model) => match model.model.as_option().unwrap() {
+			tangram_core::types::RegressionModel::Linear(inner_model) => {
 				let target_column_name = model.target_column_name.as_option().unwrap().to_owned();
 				let feature_groups = inner_model.feature_groups.as_option().unwrap();
 				let weights = inner_model.weights.as_option().unwrap();
@@ -247,7 +249,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					weights,
 				})
 			}
-			tangram::types::RegressionModel::Gbt(inner_model) => {
+			tangram_core::types::RegressionModel::Gbt(inner_model) => {
 				let feature_groups = inner_model.feature_groups.as_option().unwrap();
 				let feature_importances = inner_model
 					.feature_importances
@@ -265,7 +267,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					feature_importances,
 				})
 			}
-			tangram::types::RegressionModel::UnknownVariant(_, _, _) => unimplemented!(),
+			tangram_core::types::RegressionModel::UnknownVariant(_, _, _) => unimplemented!(),
 		},
 		_ => return Err(Error::BadRequest.into()),
 	};
@@ -282,36 +284,38 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	})
 }
 
-fn compute_feature_names(feature_groups: &[tangram::types::FeatureGroup]) -> Vec<String> {
+fn compute_feature_names(feature_groups: &[tangram_core::types::FeatureGroup]) -> Vec<String> {
 	feature_groups
 		.iter()
 		.flat_map(|feature_group| match feature_group {
-			tangram::types::FeatureGroup::Identity(feature_group) => vec![feature_group
+			tangram_core::types::FeatureGroup::Identity(feature_group) => vec![feature_group
 				.source_column_name
 				.as_option()
 				.unwrap()
 				.to_owned()],
-			tangram::types::FeatureGroup::Normalized(feature_group) => vec![feature_group
+			tangram_core::types::FeatureGroup::Normalized(feature_group) => vec![feature_group
 				.source_column_name
 				.as_option()
 				.unwrap()
 				.to_owned()],
-			tangram::types::FeatureGroup::OneHotEncoded(feature_group) => vec!["OOV".to_string()]
-				.iter()
-				.chain(feature_group.categories.as_option().unwrap().iter())
-				.map(|category| {
-					format!(
-						"{} = {}",
-						feature_group
-							.source_column_name
-							.as_option()
-							.unwrap()
-							.to_owned(),
-						category.to_owned()
-					)
-				})
-				.collect(),
-			tangram::types::FeatureGroup::BagOfWords(feature_group) => feature_group
+			tangram_core::types::FeatureGroup::OneHotEncoded(feature_group) => {
+				vec!["OOV".to_string()]
+					.iter()
+					.chain(feature_group.categories.as_option().unwrap().iter())
+					.map(|category| {
+						format!(
+							"{} = {}",
+							feature_group
+								.source_column_name
+								.as_option()
+								.unwrap()
+								.to_owned(),
+							category.to_owned()
+						)
+					})
+					.collect()
+			}
+			tangram_core::types::FeatureGroup::BagOfWords(feature_group) => feature_group
 				.tokens
 				.as_option()
 				.unwrap()
@@ -328,7 +332,7 @@ fn compute_feature_names(feature_groups: &[tangram::types::FeatureGroup]) -> Vec
 					)
 				})
 				.collect(),
-			tangram::types::FeatureGroup::UnknownVariant(_, _, _) => unimplemented!(),
+			tangram_core::types::FeatureGroup::UnknownVariant(_, _, _) => unimplemented!(),
 		})
 		.collect()
 }

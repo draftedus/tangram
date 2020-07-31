@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	pages::repos::new::actions::get_repo_for_model,
 	types,
@@ -8,7 +8,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -20,7 +20,7 @@ pub async fn page(
 	let html = context
 		.pinwheel
 		.render(
-			"/repos/_repoId_/models/_modelId_/training_stats/columns/_columnName_",
+			"/repos/_repo_id/models/_model_id/training_stats/columns/_column_name",
 			props,
 		)
 		.await?;
@@ -118,14 +118,14 @@ async fn props(
 	let row = rows.iter().next().unwrap();
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let (mut column_stats, target_column_stats) = match model {
-		tangram::types::Model::Classifier(model) => (
+		tangram_core::types::Model::Classifier(model) => (
 			model.overall_column_stats.into_option().unwrap(),
 			model.overall_target_column_stats.into_option().unwrap(),
 		),
-		tangram::types::Model::Regressor(model) => (
+		tangram_core::types::Model::Regressor(model) => (
 			model.overall_column_stats.into_option().unwrap(),
 			model.overall_target_column_stats.into_option().unwrap(),
 		),
@@ -148,9 +148,9 @@ async fn props(
 	};
 
 	let inner = match column {
-		tangram::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
-		tangram::types::ColumnStats::Unknown(_) => unimplemented!(),
-		tangram::types::ColumnStats::Number(column) => Inner::Number(Number {
+		tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
+		tangram_core::types::ColumnStats::Unknown(_) => unimplemented!(),
+		tangram_core::types::ColumnStats::Number(column) => Inner::Number(Number {
 			histogram: column.histogram.into_option().unwrap(),
 			invalid_count: column.invalid_count.as_option().unwrap().to_owned(),
 			min: *column.min.as_option().unwrap(),
@@ -163,13 +163,13 @@ async fn props(
 			std: *column.std.as_option().unwrap(),
 			unique_count: *column.unique_count.as_option().unwrap(),
 		}),
-		tangram::types::ColumnStats::Enum(column) => Inner::Enum(Enum {
+		tangram_core::types::ColumnStats::Enum(column) => Inner::Enum(Enum {
 			histogram: column.histogram.into_option(),
 			invalid_count: column.invalid_count.as_option().unwrap().to_owned(),
 			name: column.column_name.as_option().unwrap().to_owned(),
 			unique_count: *column.unique_count.as_option().unwrap(),
 		}),
-		tangram::types::ColumnStats::Text(column) => Inner::Text(Text {
+		tangram_core::types::ColumnStats::Text(column) => Inner::Text(Text {
 			name: column.column_name.as_option().unwrap().to_owned(),
 			tokens: column.top_tokens.into_option().unwrap(),
 		}),

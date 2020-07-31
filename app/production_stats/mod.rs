@@ -1,9 +1,9 @@
 use self::{column_stats::ProductionColumnStats, prediction_stats::PredictionStats};
-use crate::app::{monitor_event::PredictionMonitorEvent, types};
+use crate::{monitor_event::PredictionMonitorEvent, types};
 use chrono::prelude::*;
 use num_traits::ToPrimitive;
 use rand::random;
-use tangram::metrics::{self, RunningMetric};
+use tangram_core::metrics::{self, RunningMetric};
 
 mod column_stats;
 mod prediction_stats;
@@ -20,17 +20,17 @@ pub struct ProductionStats {
 
 impl ProductionStats {
 	pub fn new(
-		model: &tangram::types::Model,
+		model: &tangram_core::types::Model,
 		start_date: DateTime<Utc>,
 		end_date: DateTime<Utc>,
 	) -> Self {
 		let (train_column_stats, feature_groups) = match &model {
-			tangram::types::Model::Regressor(model) => {
+			tangram_core::types::Model::Regressor(model) => {
 				let feature_groups = match model.model.as_option().unwrap() {
-					tangram::types::RegressionModel::Linear(model) => {
+					tangram_core::types::RegressionModel::Linear(model) => {
 						model.feature_groups.as_option().unwrap()
 					}
-					tangram::types::RegressionModel::Gbt(model) => {
+					tangram_core::types::RegressionModel::Gbt(model) => {
 						model.feature_groups.as_option().unwrap()
 					}
 					_ => unimplemented!(),
@@ -38,18 +38,18 @@ impl ProductionStats {
 				let train_column_stats = model.train_column_stats.as_option().unwrap().as_slice();
 				(train_column_stats, feature_groups)
 			}
-			tangram::types::Model::Classifier(model) => {
+			tangram_core::types::Model::Classifier(model) => {
 				let feature_groups = match model.model.as_option().unwrap() {
-					tangram::types::ClassificationModel::LinearBinary(model) => {
+					tangram_core::types::ClassificationModel::LinearBinary(model) => {
 						model.feature_groups.as_option().unwrap()
 					}
-					tangram::types::ClassificationModel::GbtBinary(model) => {
+					tangram_core::types::ClassificationModel::GbtBinary(model) => {
 						model.feature_groups.as_option().unwrap()
 					}
-					tangram::types::ClassificationModel::LinearMulticlass(model) => {
+					tangram_core::types::ClassificationModel::LinearMulticlass(model) => {
 						model.feature_groups.as_option().unwrap()
 					}
-					tangram::types::ClassificationModel::GbtMulticlass(model) => {
+					tangram_core::types::ClassificationModel::GbtMulticlass(model) => {
 						model.feature_groups.as_option().unwrap()
 					}
 					_ => unimplemented!(),

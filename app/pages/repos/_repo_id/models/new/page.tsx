@@ -6,11 +6,11 @@ export default function ModelCreatePage() {
 		<AppLayout>
 			<ui.S1>
 				<ui.H1>Upload Model</ui.H1>
-				<form method="post">
+				<ui.Form post>
 					<input name="title" type="text" />
 					<input name="file" type="file" />
 					<ui.Button type="submit">Upload</ui.Button>
-				</form>
+				</ui.Form>
 			</ui.S1>
 		</AppLayout>
 	)

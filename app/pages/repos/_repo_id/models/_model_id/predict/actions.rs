@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -8,7 +8,7 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::ops::Neg;
-use tangram::{id::Id, types, *};
+use tangram_core::{id::Id, types, *};
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "action")]
@@ -19,8 +19,8 @@ pub enum Action {
 
 #[derive(serde::Deserialize, Debug)]
 pub struct PredictAction {
-	pub examples: tangram::predict::PredictInput,
-	pub options: Option<tangram::predict::PredictOptions>,
+	pub examples: tangram_core::predict::PredictInput,
+	pub options: Option<tangram_core::predict::PredictOptions>,
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -114,9 +114,9 @@ async fn predict(
 	let bytes: Vec<u8> = row.get(0);
 	let model = types::Model::from_slice(bytes.as_slice()).unwrap();
 	let predict_model: predict::PredictModel = model.try_into().unwrap();
-	let output = tangram::predict::predict(&predict_model, request.examples, request.options);
+	let output = tangram_core::predict::predict(&predict_model, request.examples, request.options);
 	let output: PredictOutput = match output {
-		tangram::predict::PredictOutput::Classification(output) => {
+		tangram_core::predict::PredictOutput::Classification(output) => {
 			// get baseline probabliities
 			let softmax = |logits: &[f32]| {
 				let mut probabilities = logits.to_owned();
@@ -182,7 +182,7 @@ async fn predict(
 					.collect(),
 			)
 		}
-		tangram::predict::PredictOutput::Regression(output) => PredictOutput::Regression(
+		tangram_core::predict::PredictOutput::Regression(output) => PredictOutput::Regression(
 			output
 				.into_iter()
 				.map(|output| {

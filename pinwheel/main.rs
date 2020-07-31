@@ -46,20 +46,12 @@ async fn handle(
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap();
-	log::info!("{} {} {}", method, path, response.status().as_u16());
+	eprintln!("{} {} {}", method, path, response.status().as_u16());
 	Ok(response)
 }
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-	let env_filter = format!("{}=info", clap::crate_name!().replace("-", "_"));
-	let env = env_logger::Env::default().default_filter_or(env_filter);
-	env_logger::from_env(env)
-		.format_level(false)
-		.format_module_path(false)
-		.format_timestamp(None)
-		.init();
-
 	// get host and port
 	let host = std::env::var("HOST")
 		.map(|host| host.parse().expect("HOST environment variable invalid"))
@@ -78,7 +70,7 @@ pub async fn main() -> Result<()> {
 	let listener = std::net::TcpListener::bind(&addr).unwrap();
 	let mut listener = tokio::net::TcpListener::from_std(listener).unwrap();
 	let http = hyper::server::conn::Http::new();
-	log::info!("🚀 serving on port {}", port);
+	eprintln!("🚀 serving on port {}", port);
 
 	// wait for and handle each connection
 	loop {
@@ -86,7 +78,7 @@ pub async fn main() -> Result<()> {
 		let (socket, _) = match result {
 			Ok(s) => s,
 			Err(e) => {
-				log::error!("tcp error: {}", e);
+				eprintln!("tcp error: {}", e);
 				continue;
 			}
 		};
@@ -109,7 +101,7 @@ pub async fn main() -> Result<()> {
 			)
 			.map(|r| {
 				if let Err(e) = r {
-					log::error!("http error: {}", e);
+					eprintln!("http error: {}", e);
 				}
 			}),
 		);

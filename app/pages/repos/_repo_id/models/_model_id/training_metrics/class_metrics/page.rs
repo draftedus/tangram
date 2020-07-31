@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	pages::repos::new::actions::get_repo_for_model,
 	types,
@@ -9,7 +9,7 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use std::collections::BTreeMap;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -20,7 +20,7 @@ pub async fn page(
 	let props = props(request, context, model_id, search_params).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repoId_/models/_modelId_", props)
+		.render("/repos/_repo_id/models/_model_id", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -114,22 +114,22 @@ async fn props(
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let inner = match model {
-		tangram::types::Model::Classifier(model) => match model.model.as_option().unwrap() {
-			tangram::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
-			tangram::types::ClassificationModel::LinearBinary(_) => {
+		tangram_core::types::Model::Classifier(model) => match model.model.as_option().unwrap() {
+			tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
+			tangram_core::types::ClassificationModel::LinearBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram::types::ClassificationModel::LinearMulticlass(_) => {
+			tangram_core::types::ClassificationModel::LinearMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
-			tangram::types::ClassificationModel::GbtBinary(_) => {
+			tangram_core::types::ClassificationModel::GbtBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram::types::ClassificationModel::GbtMulticlass(_) => {
+			tangram_core::types::ClassificationModel::GbtMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
 		},
@@ -146,7 +146,7 @@ async fn props(
 }
 
 fn build_inner_binary(
-	model: tangram::types::Classifier,
+	model: tangram_core::types::Classifier,
 	id: Id,
 	class: Option<String>,
 ) -> BinaryClassifier {
@@ -178,7 +178,7 @@ fn build_inner_binary(
 }
 
 fn build_inner_multiclass(
-	model: tangram::types::Classifier,
+	model: tangram_core::types::Classifier,
 	id: Id,
 	class: Option<String>,
 ) -> MulticlassClassifier {

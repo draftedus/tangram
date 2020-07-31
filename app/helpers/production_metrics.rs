@@ -1,13 +1,13 @@
-use crate::app::{production_metrics::ProductionMetrics, types};
+use crate::{production_metrics::ProductionMetrics, types};
 use anyhow::Result;
 use chrono::{prelude::*, Duration};
 use chrono_tz::Tz;
 use num_traits::ToPrimitive;
-use tangram::metrics::RunningMetric;
+use tangram_core::metrics::RunningMetric;
 
 pub async fn get_production_metrics(
 	db: &deadpool_postgres::Transaction<'_>,
-	model: &tangram::types::Model,
+	model: &tangram_core::types::Model,
 	date_window: types::DateWindow,
 	date_window_interval: types::DateWindowInterval,
 	timezone: Tz,

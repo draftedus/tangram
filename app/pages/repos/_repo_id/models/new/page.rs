@@ -1,4 +1,4 @@
-use crate::app::Context;
+use crate::Context;
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 
@@ -9,7 +9,7 @@ pub async fn page(_request: Request<Body>, context: &Context) -> Result<Response
 	let props = Props {};
 	let html = context
 		.pinwheel
-		.render("/repos/_repoId_/models/_modelId_/new", props)
+		.render("/repos/_repo_id/models/_model_id/new", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)

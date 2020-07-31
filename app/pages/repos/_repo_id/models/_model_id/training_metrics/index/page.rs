@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	pages::repos::new::actions::get_repo_for_model,
 	types,
@@ -8,7 +8,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -18,7 +18,7 @@ pub async fn page(
 	let props = props(request, context, model_id).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repoId_/models/_modelId/training_metrics/", props)
+		.render("/repos/_repo_id/models/_modelId/training_metrics/", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -117,25 +117,25 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	let inner = match model {
-		tangram::types::Model::Classifier(model) => match model.model.as_option().unwrap() {
-			tangram::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
-			tangram::types::ClassificationModel::LinearBinary(_) => {
+		tangram_core::types::Model::Classifier(model) => match model.model.as_option().unwrap() {
+			tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
+			tangram_core::types::ClassificationModel::LinearBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id))
 			}
-			tangram::types::ClassificationModel::LinearMulticlass(_) => {
+			tangram_core::types::ClassificationModel::LinearMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id))
 			}
-			tangram::types::ClassificationModel::GbtBinary(_) => {
+			tangram_core::types::ClassificationModel::GbtBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id))
 			}
-			tangram::types::ClassificationModel::GbtMulticlass(_) => {
+			tangram_core::types::ClassificationModel::GbtMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id))
 			}
 		},
-		tangram::types::Model::Regressor(model) => {
+		tangram_core::types::Model::Regressor(model) => {
 			let test_metrics = model.test_metrics.as_option().unwrap();
 			Inner::Regressor(Regressor {
 				id: id.to_string(),
@@ -157,7 +157,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	})
 }
 
-fn build_inner_binary(model: tangram::types::Classifier, id: Id) -> BinaryClassifier {
+fn build_inner_binary(model: tangram_core::types::Classifier, id: Id) -> BinaryClassifier {
 	let test_metrics = model.test_metrics.as_option().unwrap();
 	let class_metrics = test_metrics.class_metrics.as_option().unwrap();
 	let classes = model.classes().to_owned();
@@ -169,10 +169,10 @@ fn build_inner_binary(model: tangram::types::Classifier, id: Id) -> BinaryClassi
 		})
 		.collect::<Vec<ClassMetrics>>();
 	let losses = match model.model.into_option().unwrap() {
-		tangram::types::ClassificationModel::LinearBinary(inner_model) => {
+		tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
 			inner_model.losses.into_option().unwrap()
 		}
-		tangram::types::ClassificationModel::GbtBinary(inner_model) => {
+		tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
 			inner_model.losses.into_option().unwrap()
 		}
 		_ => unreachable!(),
@@ -187,7 +187,7 @@ fn build_inner_binary(model: tangram::types::Classifier, id: Id) -> BinaryClassi
 	}
 }
 
-fn build_inner_multiclass(model: tangram::types::Classifier, id: Id) -> MulticlassClassifier {
+fn build_inner_multiclass(model: tangram_core::types::Classifier, id: Id) -> MulticlassClassifier {
 	let test_metrics = model.test_metrics.as_option().unwrap();
 	let classes = model.classes().to_owned();
 	let class_metrics = test_metrics.class_metrics.as_option().unwrap();
@@ -199,10 +199,10 @@ fn build_inner_multiclass(model: tangram::types::Classifier, id: Id) -> Multicla
 		})
 		.collect::<Vec<ClassMetrics>>();
 	let losses = match model.model.into_option().unwrap() {
-		tangram::types::ClassificationModel::LinearMulticlass(inner_model) => {
+		tangram_core::types::ClassificationModel::LinearMulticlass(inner_model) => {
 			inner_model.losses.into_option().unwrap()
 		}
-		tangram::types::ClassificationModel::GbtMulticlass(inner_model) => {
+		tangram_core::types::ClassificationModel::GbtMulticlass(inner_model) => {
 			inner_model.losses.into_option().unwrap()
 		}
 		_ => unreachable!(),

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use tangram::id::Id;
+use tangram_core::id::Id;
 use tokio_postgres as postgres;
 
 #[derive(serde::Serialize, Clone, Debug)]

@@ -1,13 +1,15 @@
-use crate::app::types;
-use crate::app::{
+use crate::{
 	error::Error,
-	user::{authorize_user, authorize_user_for_organization, User},
+	types,
+	user::{authorize_user, authorize_user_for_organization},
 	Context,
 };
 use anyhow::Result;
+use bytes::Buf;
 use chrono::prelude::*;
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use tangram::id::Id;
+use hyper::{header, Body, Request, Response, StatusCode};
+use multer::Multipart;
+use tangram_core::id::Id;
 
 #[derive(serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -17,7 +19,7 @@ pub struct Action {
 	pub title: String,
 }
 
-pub async fn actions(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn actions(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
 		.database_pool
 		.get()
@@ -27,57 +29,50 @@ pub async fn actions(mut request: Request<Body>, context: &Context) -> Result<Re
 	let user = authorize_user(&request, &db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-	create_repo(action, db, user).await
-}
-
-async fn create_repo(
-	action: Action,
-	db: deadpool_postgres::Transaction<'_>,
-	user: User,
-) -> Result<Response<Body>> {
-	let Action {
-		title,
-		data,
-		organization_id,
-	} = action;
-
-	let organization_id: Option<Id> = if let Some(organization_id) = organization_id {
-		match organization_id.parse() {
-			Ok(organization_id) => {
-				if !authorize_user_for_organization(&db, &user, organization_id).await? {
-					return Err(Error::Unauthorized.into());
-				}
-				Some(organization_id)
-			}
-			_ => return Err(Error::BadRequest.into()),
+	let boundary = request
+		.headers()
+		.get(header::CONTENT_TYPE)
+		.and_then(|ct| ct.to_str().ok())
+		.and_then(|ct| multer::parse_boundary(ct).ok());
+	let boundary = boundary.ok_or_else(|| Error::BadRequest)?;
+	let mut title: Option<String> = None;
+	let mut organization_id: Option<String> = None;
+	let mut file: Option<Vec<u8>> = None;
+	let mut multipart = Multipart::new(request.into_body(), boundary);
+	while let Some(mut field) = multipart.next_field().await? {
+		let name = field.name().ok_or_else(|| Error::BadRequest)?.to_owned();
+		let mut field_data = Vec::new();
+		while let Some(chunk) = field.chunk().await? {
+			field_data.extend(chunk.bytes());
 		}
-	} else {
-		None
-	};
-
-	let model_data: Vec<u8> = base64::decode(&data).map_err(|_| Error::BadRequest)?;
-	let model = tangram::types::Model::from_slice(&model_data).map_err(|_| Error::BadRequest)?;
-
+		match name.as_str() {
+			"title" => title = Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?),
+			"organization_id" => {
+				organization_id =
+					Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?)
+			}
+			"file" => file = Some(field_data),
+			_ => return Err(Error::BadRequest.into()),
+		};
+	}
+	let title = title.ok_or_else(|| Error::BadRequest)?;
+	let organization_id: Id = organization_id
+		.ok_or(Error::BadRequest)?
+		.parse()
+		.map_err(|_| Error::BadRequest)?;
+	let file = file.ok_or_else(|| Error::BadRequest)?;
+	if !authorize_user_for_organization(&db, &user, organization_id).await? {
+		return Err(Error::Unauthorized.into());
+	}
+	let model = tangram_core::types::Model::from_slice(&file).map_err(|_| Error::BadRequest)?;
 	let created_at: DateTime<Utc> = Utc::now();
-
-	let user_id = if organization_id.is_none() {
-		Some(user.id)
-	} else {
-		None
-	};
-
-	// create the repo
 	let repo_id: Id = db
 		.query_one(
 			"
 				insert into repos (
-					id, created_at, title, organization_id, user_id
+					id, created_at, title, organization_id
 				) values (
-					$1, $2, $3, $4, $5
+					$1, $2, $3, $4
 				)
 				returning id
 			",
@@ -86,13 +81,10 @@ async fn create_repo(
 				&created_at,
 				&title,
 				&organization_id,
-				&user_id,
 			],
 		)
 		.await?
 		.get(0);
-
-	// insert the model
 	db.execute(
 		"
 			insert into models
@@ -100,18 +92,10 @@ async fn create_repo(
 			values
 				($1, $2, $3, $4, $5, $6)
 		",
-		&[
-			&model.id(),
-			&repo_id,
-			&title,
-			&created_at,
-			&model_data,
-			&true,
-		],
+		&[&model.id(), &repo_id, &title, &created_at, &file, &true],
 	)
 	.await?;
 	db.commit().await?;
-
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, format!("/repos/{}", repo_id))

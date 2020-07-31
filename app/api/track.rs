@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	monitor_event::{
 		ClassificationOutput, MonitorEvent, NumberOrString, Output, PredictionMonitorEvent,
@@ -13,8 +13,8 @@ use chrono::prelude::*;
 use hyper::{body::to_bytes, Body, Request, Response, StatusCode};
 use std::collections::BTreeMap as Map;
 use std::sync::Arc;
-use tangram::id::Id;
-use tangram::{metrics::RunningMetric, types};
+use tangram_core::id::Id;
+use tangram_core::{metrics::RunningMetric, types};
 use tokio_postgres as postgres;
 
 #[derive(Debug, serde::Deserialize)]
@@ -74,7 +74,7 @@ async fn handle_prediction_monitor_event(
 	let model = match models.get(&model_id) {
 		Some(m) => m,
 		None => {
-			let model = crate::app::model::get_model(&tx, model_id).await?;
+			let model = crate::model::get_model(&tx, model_id).await?;
 			models.insert(model_id, model);
 			models.get(&model_id).unwrap()
 		}
@@ -94,7 +94,7 @@ async fn handle_true_value_monitor_event(
 	let model = match models.get(&model_id) {
 		Some(m) => m,
 		None => {
-			let model = crate::app::model::get_model(&tx, monitor_event.model_id).await?;
+			let model = crate::model::get_model(&tx, monitor_event.model_id).await?;
 			models.insert(model_id, model);
 			models.get(&model_id).unwrap()
 		}

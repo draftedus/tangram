@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	cookies,
 	error::Error,
 	helpers::production_stats,
@@ -13,7 +13,7 @@ use chrono_tz::UTC;
 use hyper::{header, Body, Request, Response, StatusCode};
 use serde::Serialize;
 use std::collections::BTreeMap;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -24,7 +24,7 @@ pub async fn page(
 	let props = props(request, context, model_id, search_params).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repoId_/models/_modelId_/production_stats/", props)
+		.render("/repos/_repo_id/models/_model_id/production_stats/", props)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -191,7 +191,7 @@ async fn props(
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let production_stats = production_stats::get_production_stats(
 		&db,
@@ -203,13 +203,13 @@ async fn props(
 	.await?;
 
 	let target_column_stats = match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram_core::types::Model::Classifier(model) => {
 			model.overall_target_column_stats.into_option().unwrap()
 		}
-		tangram::types::Model::Regressor(model) => {
+		tangram_core::types::Model::Regressor(model) => {
 			model.overall_target_column_stats.into_option().unwrap()
 		}
-		tangram::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
+		tangram_core::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
 	};
 
 	let overall_column_stats_table = production_stats
@@ -367,7 +367,7 @@ async fn props(
 }
 
 fn compute_production_training_quantiles(
-	target_column_stats: &tangram::types::NumberColumnStats,
+	target_column_stats: &tangram_core::types::NumberColumnStats,
 	prediction_stats: &types::RegressionProductionPredictionStats,
 ) -> ProductionTrainingQuantiles {
 	ProductionTrainingQuantiles {

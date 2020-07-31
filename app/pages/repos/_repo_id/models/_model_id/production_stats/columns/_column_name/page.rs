@@ -1,5 +1,5 @@
-use crate::app::Context;
-use crate::app::{
+use crate::Context;
+use crate::{
 	cookies,
 	error::Error,
 	helpers::production_stats,
@@ -14,7 +14,7 @@ use hyper::{header, Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use serde::Serialize;
 use std::collections::BTreeMap;
-use tangram::id::Id;
+use tangram_core::id::Id;
 
 pub async fn page(
 	request: Request<Body>,
@@ -27,7 +27,7 @@ pub async fn page(
 	let html = context
 		.pinwheel
 		.render(
-			"/repos/_repoId_/models/_modelId_/production_stats/columns/_columnName_",
+			"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
 			props,
 		)
 		.await?;
@@ -229,7 +229,7 @@ async fn props(
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
 	let data: Vec<u8> = row.get(3);
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let production_stats = production_stats::get_production_column_stats(
 		&db,
@@ -242,7 +242,7 @@ async fn props(
 	.await?;
 
 	let (train_column_stats, train_row_count) = match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram_core::types::Model::Classifier(model) => {
 			let overall_column_stats = model.overall_column_stats.into_option().unwrap();
 			(
 				overall_column_stats
@@ -251,7 +251,7 @@ async fn props(
 				model.row_count.into_option().unwrap(),
 			)
 		}
-		tangram::types::Model::Regressor(model) => {
+		tangram_core::types::Model::Regressor(model) => {
 			let overall_column_stats = model.overall_column_stats.into_option().unwrap();
 			(
 				overall_column_stats
@@ -260,12 +260,12 @@ async fn props(
 				model.row_count.into_option().unwrap(),
 			)
 		}
-		tangram::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
+		tangram_core::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
 	};
 
 	let inner = match (train_column_stats.unwrap(), production_stats) {
 		(
-			tangram::types::ColumnStats::Number(train_column_stats),
+			tangram_core::types::ColumnStats::Number(train_column_stats),
 			types::ProductionStatsSingleColumnResponse::Number(production_stats),
 		) => Inner::Number(build_production_column_number_stats(
 			production_stats,
@@ -275,7 +275,7 @@ async fn props(
 			timezone,
 		)),
 		(
-			tangram::types::ColumnStats::Enum(train_column_stats),
+			tangram_core::types::ColumnStats::Enum(train_column_stats),
 			types::ProductionStatsSingleColumnResponse::Enum(production_stats),
 		) => Inner::Enum(build_production_column_enum_stats(
 			production_stats,
@@ -286,7 +286,7 @@ async fn props(
 			timezone,
 		)),
 		(
-			tangram::types::ColumnStats::Text(train_column_stats),
+			tangram_core::types::ColumnStats::Text(train_column_stats),
 			types::ProductionStatsSingleColumnResponse::Text(production_stats),
 		) => Inner::Text(build_production_column_text_stats(
 			production_stats,
@@ -312,7 +312,7 @@ async fn props(
 
 fn build_production_column_number_stats(
 	production_stats: types::NumberProductionStatsSingleColumnResponse,
-	train_column_stats: tangram::types::NumberColumnStats,
+	train_column_stats: tangram_core::types::NumberColumnStats,
 	date_window: types::DateWindow,
 	date_window_interval: types::DateWindowInterval,
 	timezone: Tz,
@@ -376,7 +376,7 @@ fn build_production_column_number_stats(
 
 fn build_production_column_enum_stats(
 	production_stats: types::EnumProductionStatsSingleColumnResponse,
-	train_column_stats: tangram::types::EnumColumnStats,
+	train_column_stats: tangram_core::types::EnumColumnStats,
 	train_row_count: u64,
 	date_window: types::DateWindow,
 	date_window_interval: types::DateWindowInterval,
@@ -444,7 +444,7 @@ fn build_production_column_enum_stats(
 
 fn build_production_column_text_stats(
 	production_stats: types::TextProductionStatsSingleColumnResponse,
-	_train_column_stats: tangram::types::TextColumnStats,
+	_train_column_stats: tangram_core::types::TextColumnStats,
 	date_window: types::DateWindow,
 	date_window_interval: types::DateWindowInterval,
 	timezone: Tz,

@@ -1,8 +1,8 @@
 use super::NumberStats;
-use crate::app::types;
+use crate::types;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap as Map;
-use tangram::metrics::RunningMetric;
+use tangram_core::metrics::RunningMetric;
 
 const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
 const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
@@ -76,20 +76,20 @@ pub struct TextProductionColumnStats {
 
 impl ProductionColumnStats {
 	pub fn new(
-		feature_group: &tangram::types::FeatureGroup,
-		column_stats: &tangram::types::ColumnStats,
+		feature_group: &tangram_core::types::FeatureGroup,
+		column_stats: &tangram_core::types::ColumnStats,
 	) -> Self {
 		match column_stats {
-			tangram::types::ColumnStats::Unknown(stats) => {
+			tangram_core::types::ColumnStats::Unknown(stats) => {
 				ProductionColumnStats::Unknown(UnknownProductionColumnStats::new(stats))
 			}
-			tangram::types::ColumnStats::Text(stats) => {
+			tangram_core::types::ColumnStats::Text(stats) => {
 				ProductionColumnStats::Text(TextProductionColumnStats::new(feature_group, stats))
 			}
-			tangram::types::ColumnStats::Number(stats) => {
+			tangram_core::types::ColumnStats::Number(stats) => {
 				ProductionColumnStats::Number(NumberProductionColumnStats::new(stats))
 			}
-			tangram::types::ColumnStats::Enum(stats) => {
+			tangram_core::types::ColumnStats::Enum(stats) => {
 				ProductionColumnStats::Enum(EnumProductionColumnStats::new(stats))
 			}
 			_ => unimplemented!(),
@@ -154,7 +154,7 @@ impl<'a> RunningMetric<'a, '_> for ProductionColumnStats {
 }
 
 impl UnknownProductionColumnStats {
-	fn new(column_stats: &tangram::types::UnknownColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::types::UnknownColumnStats) -> Self {
 		Self {
 			column_name: column_stats.column_name.as_option().unwrap().clone(),
 			invalid_count: 0,
@@ -204,7 +204,7 @@ impl<'a> RunningMetric<'a, '_> for UnknownProductionColumnStats {
 }
 
 impl NumberProductionColumnStats {
-	fn new(column_stats: &tangram::types::NumberColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::types::NumberColumnStats) -> Self {
 		Self {
 			column_name: column_stats.column_name.as_option().unwrap().clone(),
 			absent_count: 0,
@@ -291,7 +291,7 @@ impl<'a, 'b> RunningMetric<'a, 'b> for NumberProductionColumnStats {
 }
 
 impl EnumProductionColumnStats {
-	fn new(column_stats: &tangram::types::EnumColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::types::EnumColumnStats) -> Self {
 		let column_name = column_stats.column_name.as_option().unwrap();
 		let histogram = column_stats
 			.histogram
@@ -399,19 +399,19 @@ impl<'a> RunningMetric<'a, '_> for EnumProductionColumnStats {
 
 impl TextProductionColumnStats {
 	fn new(
-		feature_group: &tangram::types::FeatureGroup,
-		column_stats: &tangram::types::TextColumnStats,
+		feature_group: &tangram_core::types::FeatureGroup,
+		column_stats: &tangram_core::types::TextColumnStats,
 	) -> Self {
 		let tokenizer = match feature_group {
-			tangram::types::FeatureGroup::BagOfWords(feature_group) => {
+			tangram_core::types::FeatureGroup::BagOfWords(feature_group) => {
 				match feature_group.tokenizer.as_option().unwrap() {
-					tangram::types::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
-					tangram::types::Tokenizer::UnknownVariant(_, _, _) => unimplemented!(),
+					tangram_core::types::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
+					tangram_core::types::Tokenizer::UnknownVariant(_, _, _) => unimplemented!(),
 				}
 			}
-			tangram::types::FeatureGroup::Identity(_) => unreachable!(),
-			tangram::types::FeatureGroup::Normalized(_) => unreachable!(),
-			tangram::types::FeatureGroup::OneHotEncoded(_) => unreachable!(),
+			tangram_core::types::FeatureGroup::Identity(_) => unreachable!(),
+			tangram_core::types::FeatureGroup::Normalized(_) => unreachable!(),
+			tangram_core::types::FeatureGroup::OneHotEncoded(_) => unreachable!(),
 			_ => unimplemented!(),
 		};
 		Self {
@@ -456,9 +456,9 @@ impl<'a> RunningMetric<'a, '_> for TextProductionColumnStats {
 		};
 		match self.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = tangram::util::text::AlphanumericTokenizer;
+				let tokenizer = tangram_core::util::text::AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
-				let bigrams = tangram::util::text::bigrams(&tokens);
+				let bigrams = tangram_core::util::text::bigrams(&tokens);
 				for token in tokens.iter().chain(bigrams.iter()) {
 					// insert the token into the histogram
 					match self.token_histogram.get_mut(token) {

@@ -1,4 +1,4 @@
-use crate::app::types;
+use crate::types;
 use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
 

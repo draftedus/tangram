@@ -1,7 +1,7 @@
-use crate::app::user::User;
+use crate::user::User;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use tangram::id::Id;
+use tangram_core::id::Id;
 use tokio_postgres as postgres;
 
 #[derive(serde::Serialize, Debug)]

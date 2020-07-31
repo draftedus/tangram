@@ -1,14 +1,15 @@
-import { css, cssClass, h, useCss } from '../deps'
+import { Children, css, cssClass, h, useCss } from '../deps'
 import { border, variables } from '../theme'
 import { Label } from './label'
 
 export type SelectProps = {
+	children?: Children
 	disabled?: boolean
 	id?: string
 	label?: string
 	name?: string
 	onChange?: (newValue: string | null) => void
-	options: string[]
+	options?: string[]
 	placeholder?: string
 	value?: string | null
 }
@@ -61,9 +62,9 @@ export function SelectField(props: SelectProps) {
 				placeholder={props.placeholder}
 				value={props.value ?? undefined}
 			>
-				{props.options.map(option => (
-					<option key={option}>{option}</option>
-				))}
+				{props.options
+					? props.options.map(option => <option key={option}>{option}</option>)
+					: props.children}
 			</select>
 		</Label>
 	)

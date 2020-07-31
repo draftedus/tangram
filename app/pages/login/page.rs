@@ -1,5 +1,5 @@
 use super::super::super::layouts::AuthLayout;
-use crate::app::Context;
+use crate::Context;
 use anyhow::Result;
 use html::{component, html};
 use hyper::{Body, Request, Response, StatusCode};

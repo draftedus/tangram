@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	error::Error,
 	user::{authorize_user, User},
 	Context,

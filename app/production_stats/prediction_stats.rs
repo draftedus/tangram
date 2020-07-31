@@ -1,7 +1,7 @@
 use super::NumberStats;
-use crate::app::{monitor_event::Output, types};
+use crate::{monitor_event::Output, types};
 use std::collections::BTreeMap as Map;
-use tangram::metrics::RunningMetric;
+use tangram_core::metrics::RunningMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", tag = "id", content = "value")]
@@ -23,12 +23,12 @@ pub struct ClassificationPredictionStats {
 }
 
 impl PredictionStats {
-	pub fn new(model: &tangram::types::Model) -> Self {
+	pub fn new(model: &tangram_core::types::Model) -> Self {
 		match &model {
-			tangram::types::Model::Regressor(_) => {
+			tangram_core::types::Model::Regressor(_) => {
 				PredictionStats::Regression(RegressionPredictionStats::new())
 			}
-			tangram::types::Model::Classifier(model) => {
+			tangram_core::types::Model::Classifier(model) => {
 				let classes = model.classes();
 				PredictionStats::Classification(ClassificationPredictionStats::new(classes))
 			}
