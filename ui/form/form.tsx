@@ -22,7 +22,11 @@ type FormProps = {
 
 let formClass = cssClass()
 let formCss = css({
-	[`.${formClass}`]: { display: 'grid', gridRowGap: '1rem', margin: '0' },
+	[`.${formClass}`]: {
+		display: 'grid',
+		gridRowGap: '1rem',
+		margin: '0',
+	},
 })
 
 export function Form(props: FormProps) {

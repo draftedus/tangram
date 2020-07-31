@@ -155,12 +155,14 @@ async fn props(
 		"this_year" => types::DateWindow::ThisYear,
 		_ => return Err(Error::BadRequest.into()),
 	};
+
 	// choose the interval to use for the date window
 	let date_window_interval = match date_window {
 		types::DateWindow::Today => types::DateWindowInterval::Hourly,
 		types::DateWindow::ThisMonth => types::DateWindowInterval::Daily,
 		types::DateWindow::ThisYear => types::DateWindowInterval::Monthly,
 	};
+
 	// get the timezone
 	let timezone = request
 		.headers()
@@ -185,7 +187,6 @@ async fn props(
 		return Err(Error::NotFound.into());
 	}
 
-	// get the necessary data from the model
 	let rows = db
 		.query(
 			"

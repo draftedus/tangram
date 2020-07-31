@@ -2,7 +2,7 @@ use crate::user::User;
 use crate::{error::Error, user::authorize_user, Context};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use hyper::{Body, Request, Response, StatusCode};
+use hyper::{header, Body, Request, Response, StatusCode};
 use tangram_core::id::Id;
 use tokio_postgres as postgres;
 
@@ -92,4 +92,11 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap())
+}
+
+pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	Ok(Response::builder()
+		.status(StatusCode::SEE_OTHER)
+		.header(header::LOCATION, "/")
+		.body(Body::empty())?)
 }

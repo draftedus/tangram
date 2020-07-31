@@ -30,19 +30,21 @@ export default function HomePage(props: Props) {
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>
-							{props.repos.map(repoItem => (
-								<ui.TableRow key={repoItem.id}>
+							{props.repos.map(repo => (
+								<ui.TableRow key={repo.id}>
 									<ui.TableCell>
-										<ui.Link href={`/models/${repoItem.mainModelId}/`}>
-											{repoItem.ownerName}/{repoItem.title}
+										<ui.Link href={`/models/${repo.mainModelId}/`}>
+											{repo.ownerName}/{repo.title}
 										</ui.Link>
 									</ui.TableCell>
-									<ui.TableCell>{repoItem.ownerName}</ui.TableCell>
-									<ui.TableCell>{repoItem.createdAt}</ui.TableCell>
+									<ui.TableCell>{repo.ownerName}</ui.TableCell>
+									<ui.TableCell>{repo.createdAt}</ui.TableCell>
 									<ui.TableCell>
-										<ui.Form>
+										<form method="post">
+											<input name="action" type="hidden" value="delete_repo" />
+											<input name="repo_id" type="hidden" value={repo.id} />
 											<ui.Button color={ui.colors.red}>Delete</ui.Button>
-										</ui.Form>
+										</form>
 									</ui.TableCell>
 								</ui.TableRow>
 							))}
