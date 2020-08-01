@@ -381,17 +381,19 @@ fn print_error(scope: &mut v8::HandleScope, exception: v8::Local<v8::Value>) {
 			.source_map
 			.as_ref()
 			.unwrap()
-			.lookup_token(source_line as u32, source_column as u32)
+			.lookup_token((source_line - 1) as u32, (source_column - 1) as u32)
 			.unwrap();
 		eprintln!(
-			"{} {} {} {}",
+			"{}:{}:{} -> {}:{}:{}",
 			stack_trace_frame
 				.get_script_name(scope)
 				.unwrap()
 				.to_rust_string_lossy(scope),
 			stack_trace_frame.get_line_number(),
 			stack_trace_frame.get_column(),
-			token,
+			token.get_source().unwrap_or("<unknown>"),
+			token.get_src_line() + 1,
+			token.get_src_col() + 1,
 		);
 	}
 }
