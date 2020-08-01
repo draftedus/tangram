@@ -1,7 +1,7 @@
 use crate::{
 	error::Error,
 	helpers::organizations,
-	user::{authorize_user, authorize_user_for_organization},
+	user::{authorize_user, authorize_user_for_organization, User},
 	Context,
 };
 use anyhow::Result;
@@ -204,6 +204,8 @@ enum Action {
 	ChangePlan(ChangePlanAction),
 	#[serde(rename = "delete_member")]
 	DeleteMember(DeleteMemberAction),
+	StartStripeCheckout,
+	FinishStripeCheckout(FinishStripeCheckoutAction),
 }
 
 #[derive(serde::Deserialize)]
@@ -215,6 +217,12 @@ struct ChangePlanAction {
 struct DeleteMemberAction {
 	#[serde(rename = "memberId")]
 	member_id: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct FinishStripeCheckoutAction {
+	#[serde(rename = "stripeCheckoutSessionId")]
+	pub stripe_checkout_session_id: String,
 }
 
 pub async fn post(
@@ -241,8 +249,14 @@ pub async fn post(
 	}
 	let response = match action {
 		Action::DeleteOrganization => delete_organization(&db, organization_id).await?,
-		Action::DeleteMember(action) => delete_member(action, &db, organization_id).await?,
-		Action::ChangePlan(action) => change_plan(action, &db, organization_id).await?,
+		Action::DeleteMember(action) => delete_member(&db, organization_id, action).await?,
+		Action::ChangePlan(action) => change_plan(&db, organization_id, action).await?,
+		Action::StartStripeCheckout => {
+			start_stripe_checkout(&db, organization_id, user, context).await?
+		}
+		Action::FinishStripeCheckout(action) => {
+			finish_stripe_checkout(&db, organization_id, action, context).await?
+		}
 	};
 	db.commit().await?;
 	Ok(response)
@@ -268,9 +282,9 @@ async fn delete_organization(
 }
 
 async fn delete_member(
-	action: DeleteMemberAction,
 	db: &postgres::Transaction<'_>,
 	organization_id: Id,
+	action: DeleteMemberAction,
 ) -> Result<Response<Body>> {
 	let DeleteMemberAction { member_id } = action;
 	let member_id: Id = member_id.parse().map_err(|_| Error::NotFound)?;
@@ -291,9 +305,9 @@ async fn delete_member(
 }
 
 async fn change_plan(
-	action: ChangePlanAction,
 	db: &postgres::Transaction<'_>,
 	organization_id: Id,
+	action: ChangePlanAction,
 ) -> Result<Response<Body>> {
 	let ChangePlanAction { plan } = action;
 	db.execute(
@@ -320,30 +334,12 @@ pub struct StartStripeCheckoutResponse {
 	pub stripe_checkout_session_id: String,
 }
 
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FinishStripeCheckoutRequest {
-	pub stripe_checkout_session_id: String,
-}
-
 pub async fn start_stripe_checkout(
-	request: Request<Body>,
+	db: &postgres::Transaction<'_>,
+	organization_id: Id,
+	user: User,
 	context: &Context,
 ) -> Result<Response<Body>> {
-	let mut db = context
-		.database_pool
-		.get()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	// TODO
-	let organization_id = Id::new();
-	if !authorize_user_for_organization(&db, &user, organization_id).await? {
-		return Err(Error::NotFound.into());
-	}
 	// retrieve the existing stripe customer id for the organization
 	let existing_stripe_customer_id: Option<String> = db
 		.query_one(
@@ -420,29 +416,11 @@ pub async fn start_stripe_checkout(
 }
 
 pub async fn finish_stripe_checkout(
-	mut request: Request<Body>,
+	db: &postgres::Transaction<'_>,
+	organization_id: Id,
+	action: FinishStripeCheckoutAction,
 	context: &Context,
-	organization_id: &str,
 ) -> Result<Response<Body>> {
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let data: FinishStripeCheckoutRequest =
-		serde_json::from_slice(&data).map_err(|_| Error::BadRequest)?;
-	let session_id = data.stripe_checkout_session_id;
-	let mut db = context
-		.database_pool
-		.get()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_organization(&db, &user, organization_id).await? {
-		return Err(Error::NotFound.into());
-	}
 	#[derive(serde::Deserialize)]
 	struct SessionResponse {
 		setup_intent: PaymentMethod,
@@ -454,7 +432,10 @@ pub async fn finish_stripe_checkout(
 	let json = json!({
 		"expand[]": "setup_intent"
 	});
-	let url = format!("https://api.stripe.com/v1/checkout/sessions/{}", session_id);
+	let url = format!(
+		"https://api.stripe.com/v1/checkout/sessions/{}",
+		action.stripe_checkout_session_id
+	);
 	let client = reqwest::Client::new();
 	let response = client
 		.get(&url)

@@ -46,7 +46,7 @@ create table models (
 	repo_id char(32) references repos (id) on delete cascade not null,
 	created_at timestamp with time zone not null,
 	title varchar(64) not null,
-	data bytea not null,
+	data text not null,
 	is_main bool not null
 );
 
@@ -67,8 +67,8 @@ create table predictions (
 	date timestamp with time zone not null,
 	created_at timestamp with time zone not null,
 	identifier varchar(64) not null,
-	input bytea not null,
-	output bytea not null
+	input text not null,
+	output text not null
 );
 
 create table true_values (
@@ -84,12 +84,12 @@ create table production_stats (
 	model_id char(32) references models (id) on delete cascade not null,
 	hour timestamp with time zone not null,
 	primary key (model_id, hour),
-	data bytea not null
+	data text not null
 );
 
 create table production_metrics (
 	model_id char(32) references models (id) on delete cascade not null,
 	hour timestamp with time zone not null,
 	primary key (model_id, hour),
-	data bytea not null
+	data text not null
 );

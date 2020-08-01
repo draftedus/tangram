@@ -4,7 +4,7 @@ use tangram_core::id::Id;
 use tokio_postgres as postgres;
 
 pub async fn get_model_layout_props(
-	db: &deadpool_postgres::Transaction<'_>,
+	db: &postgres::Transaction<'_>,
 	model_id: Id,
 ) -> Result<types::ModelLayoutProps> {
 	let row = db

@@ -73,33 +73,15 @@ async fn handle(
 	let result = match (&method, path_components.as_slice()) {
 		(&Method::GET, &["health"]) => pages::health::get(request, &context).await,
 		(&Method::POST, &["api", "track"]) => api::track::track(request, context).await,
-		// (
-		// 	&Method::POST,
-		// 	&["start-stripe-checkout"],
-		// ) => {
-		// 	api::organizations::id::billing::start_stripe_checkout(
-		// 		request,
-		// 		context,
-		// 	)
-		// 	.await
-		// }
-		// (
-		// 	&Method::POST,
-		// 	&["finish-stripe-checkout"],
-		// ) => {
-		// 	api::organizations::id::billing::finish_stripe_checkout(
-		// 		request,
-		// 		context,
-		// 	)
-		// 	.await
-		// }
 		(&Method::GET, &["login"]) => pages::login::get(request, context, search_params).await,
 		(&Method::POST, &["login"]) => pages::login::post(request, &context).await,
 		(&Method::GET, &[""]) => pages::index::get(request, &context).await,
 		(&Method::POST, &[""]) => pages::index::post(request, &context).await,
 		(&Method::GET, &["repos", "new"]) => pages::repos::new::get(request, &context).await,
 		(&Method::POST, &["repos", "new"]) => pages::repos::new::post(request, &context).await,
-		(&Method::GET, &["repos", _repo_id]) => pages::repos::get(request, &context).await,
+		(&Method::GET, &["repos", _repo_id]) => {
+			pages::repos::_repo_id::get(request, &context).await
+		}
 		(&Method::GET, &["repos", _repo_id, "models", "new"]) => {
 			pages::repos::_repo_id::models::new::get(request, &context).await
 		}
