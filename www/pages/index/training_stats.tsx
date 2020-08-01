@@ -1,8 +1,7 @@
-import { css, cssClass, h, ui, useCss } from 'deps'
+import { css, h, ui, useCss } from 'deps'
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.training-stats-wrapper`]: {
 		display: 'grid',
 		grid: 'auto / auto auto',
 		gridGap: '1rem',
@@ -32,7 +31,7 @@ export function TrainingStats() {
 	]
 	return (
 		<ui.Window>
-			<div class={wrapperClass}>
+			<div class="training-stats-wrapper">
 				<div style={{ gridArea: 'mean' }}>
 					<ui.Card>
 						<ui.NumberChart title="Mean" value="54.4389" />

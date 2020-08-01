@@ -16,7 +16,7 @@ import { TrainingStats } from './training_stats'
 import trainingStats from './training_stats.svg'
 import { Tuning } from './tuning'
 import tuning from './tuning.svg'
-import { Client, css, cssClass, h, ui, useCss } from 'deps'
+import { Client, css, h, ui, useCss } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
 
 export default function Home() {
@@ -30,60 +30,56 @@ export default function Home() {
 	)
 }
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: { color: ui.variables.colors.text },
+	[`.index-wrapper`]: { color: ui.variables.colors.text },
 })
 
-let innerClass = cssClass()
 let innerCss = css({
-	[`.${innerClass}`]: {
+	[`.index-inner`]: {
 		display: 'grid',
 		grid: 'auto auto / minmax(0, 1fr)',
 	},
 	[ui.mobile]: {
-		[`.${innerClass}`]: {
+		[`.index-inner`]: {
 			gridRowGap: '1rem',
 		},
 	},
 	[ui.desktop]: {
-		[`.${innerClass}`]: {
+		[`.index-inner`]: {
 			gridRowGap: '2rem',
 		},
 	},
 })
 
-let titleClass = cssClass()
 let titleCss = css({
-	[`.${titleClass}`]: {
+	[`.index-title`]: {
 		margin: '0',
 		textAlign: 'center',
 	},
 	[ui.mobile]: {
-		[`.${titleClass}`]: {
+		[`.index-title`]: {
 			fontSize: '2rem',
 		},
 	},
 	[ui.desktop]: {
-		[`.${titleClass}`]: {
+		[`.index-title`]: {
 			fontSize: '3rem',
 		},
 	},
 })
 
-let subtitleClass = cssClass()
 let subtitleCss = css({
-	[`.${subtitleClass}`]: {
+	[`.index-subtitle`]: {
 		lineHeight: '1.5',
 		textAlign: 'center',
 	},
 	[ui.mobile]: {
-		[`.${subtitleClass}`]: {
+		[`.index-subtitle`]: {
 			fontSize: '1.25rem',
 		},
 	},
 	[ui.desktop]: {
-		[`.${subtitleClass}`]: {
+		[`.index-subtitle`]: {
 			fontSize: '1.5rem',
 		},
 	},
@@ -92,10 +88,10 @@ let subtitleCss = css({
 function Hero() {
 	useCss(wrapperCss, innerCss, titleCss, subtitleCss)
 	return (
-		<div class={wrapperClass}>
-			<div class={innerClass}>
-				<h1 class={titleClass}>Machine Learning for Developers</h1>
-				<div class={subtitleClass}>
+		<div class="index-wrapper">
+			<div class="index-inner">
+				<h1 class="index-title">Machine Learning for Developers</h1>
+				<div class="index-subtitle">
 					Train a model on the command line and make predictions in any
 					programming language. Understand how your model works, tune it, and
 					monitor it in production.
@@ -107,9 +103,8 @@ function Hero() {
 }
 
 let aspectRatio = 16 / 9
-let placeholderClass = cssClass()
 let placeholderCss = css({
-	[`.${placeholderClass}`]: {
+	[`.index-placeholder`]: {
 		backgroundColor: '#282c34',
 		borderRadius: ui.variables.border.radius,
 		overflow: 'hidden',
@@ -133,8 +128,8 @@ function Video() {
 		width: '100%',
 	}
 	return (
-		<div class={wrapperClass}>
-			<div class={placeholderClass}>
+		<div class="index-wrapper">
+			<div class="index-placeholder">
 				<iframe
 					allowFullScreen
 					src="https://player.vimeo.com/video/385352664"
@@ -146,19 +141,18 @@ function Video() {
 	)
 }
 
-let featuresGridClass = cssClass()
 let featuresGridCss = css({
-	[`.${featuresGridClass}`]: {
+	[`.index-features-grid`]: {
 		display: 'grid',
 	},
 	[ui.mobile]: {
-		[`.${featuresGridClass}`]: {
+		[`.index-features-grid`]: {
 			grid: 'auto / minmax(0, 1fr)',
 			gridRowGap: '2rem',
 		},
 	},
 	[ui.desktop]: {
-		[`.${featuresGridClass}`]: {
+		[`.index-features-grid`]: {
 			grid: 'auto / minmax(0, 2fr) minmax(0, 1fr)',
 			gridAutoFlow: 'dense',
 			gridColumnGap: '4rem',
@@ -167,28 +161,26 @@ let featuresGridCss = css({
 	},
 })
 
-let stepClass = cssClass()
 let stepCss = css({
-	[`.${stepClass}`]: {
+	[`.index-step`]: {
 		alignContent: 'start',
 		display: 'grid',
 		gridGap: '0.5rem',
 	},
 	[ui.mobile]: {
-		[`.${stepClass}`]: {
+		[`.index-step`]: {
 			gridColumn: '1',
 		},
 	},
 	[ui.desktop]: {
-		[`.${stepClass}`]: {
+		[`.index-step`]: {
 			gridColumn: '2',
 		},
 	},
 })
 
-let stepTitleWrapperClass = cssClass()
 let stepTitleWrapperCss = css({
-	[`.${stepTitleWrapperClass}`]: {
+	[`.index-step-title-wrapper`]: {
 		alignItems: 'center',
 		display: 'grid',
 		grid: 'auto / auto auto',
@@ -197,14 +189,12 @@ let stepTitleWrapperCss = css({
 	},
 })
 
-let stepIconClass = cssClass()
 let stepIconCss = css({
-	[`.${stepIconClass}`]: { height: '2rem', width: '2rem' },
+	[`.index-step-icon`]: { height: '2rem', width: '2rem' },
 })
 
-let stepTitleClass = cssClass()
 let stepTitleCss = css({
-	[`.${stepTitleClass}`]: {
+	[`.index-step-title`]: {
 		fontSize: '1.5rem',
 		fontWeight: 'bold',
 		margin: '0',
@@ -220,11 +210,11 @@ function Features() {
 		stepTitleCss,
 	)
 	return (
-		<div class={featuresGridClass}>
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
-					<img alt="training icon" class={stepIconClass} src={training} />
-					<div class={stepTitleClass}>Training</div>
+		<div class="index-features-grid">
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
+					<img alt="training icon" class="index-step-icon" src={training} />
+					<div class="index-step-title">Training</div>
 				</div>
 				<ui.S2>
 					<ui.P>
@@ -244,10 +234,10 @@ function Features() {
 				</ui.S2>
 			</div>
 			<Client component={Training} id="training" props={{}} />
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
-					<img alt="prediction icon" class={stepIconClass} src={prediction} />
-					<div class={stepTitleClass}>Prediction</div>
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
+					<img alt="prediction icon" class="index-step-icon" src={prediction} />
+					<div class="index-step-title">Prediction</div>
 				</div>
 				<ui.S2>
 					<ui.P>
@@ -270,14 +260,14 @@ function Features() {
 			<div>
 				<Prediction />
 			</div>
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
 					<img
 						alt="training stats icon"
-						class={stepIconClass}
+						class="index-step-icon"
 						src={trainingStats}
 					/>
-					<div class={stepTitleClass}>Training Stats</div>
+					<div class="index-step-title">Training Stats</div>
 				</div>
 				<ui.S2>
 					<ui.P>
@@ -302,14 +292,14 @@ function Features() {
 				</ui.S2>
 			</div>
 			<Client component={TrainingStats} id="training-stats" props={{}} />
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
 					<img
 						alt="training metrics icon"
-						class={stepIconClass}
+						class="index-step-icon"
 						src={trainingMetrics}
 					/>
-					<div class={stepTitleClass}>Training Metrics</div>
+					<div class="index-step-title">Training Metrics</div>
 				</div>
 				<ui.S2>
 					<ui.P>
@@ -330,14 +320,14 @@ function Features() {
 				</ui.S2>
 			</div>
 			<Client component={TrainingMetrics} id="training-metrics" props={{}} />
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
 					<img
 						alt="introspection icon"
-						class={stepIconClass}
+						class="index-step-icon"
 						src={introspection}
 					/>
-					<div class={stepTitleClass}>Introspection</div>
+					<div class="index-step-title">Introspection</div>
 				</div>
 				<ui.S2>
 					<ui.P>
@@ -351,14 +341,14 @@ function Features() {
 				</ui.S2>
 			</div>
 			<Client component={Introspection} id="introspection" props={{}} />
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
 					<img
 						alt="explainability icon"
-						class={stepIconClass}
+						class="index-step-icon"
 						src={explanations}
 					/>
-					<div class={stepTitleClass}>Explanations</div>
+					<div class="index-step-title">Explanations</div>
 				</div>
 				<ui.S2>
 					<ui.P>
@@ -377,10 +367,10 @@ function Features() {
 				</ui.S2>
 			</div>
 			<Client component={Explanations} id="explanations" props={{}} />
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
-					<img alt="tuning icon" class={stepIconClass} src={tuning} />
-					<div class={stepTitleClass}>Tuning</div>
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
+					<img alt="tuning icon" class="index-step-icon" src={tuning} />
+					<div class="index-step-title">Tuning</div>
 				</div>
 				<ui.S2>
 					<ui.P>
@@ -400,14 +390,14 @@ function Features() {
 				</ui.S2>
 			</div>
 			<Client component={Tuning} id="tuning" props={{}} />
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
 					<img
 						alt="production stats icon"
-						class={stepIconClass}
+						class="index-step-icon"
 						src={productionStats}
 					/>
-					<div class={stepTitleClass}>Production Stats</div>
+					<div class="index-step-title">Production Stats</div>
 				</div>
 				<ui.S2>
 					<ui.P>
@@ -428,14 +418,14 @@ function Features() {
 				</ui.S2>
 			</div>
 			<Client component={ProductionStats} id="production-stats" props={{}} />
-			<div class={stepClass}>
-				<div class={stepTitleWrapperClass}>
+			<div class="index-step">
+				<div class="index-step-title-wrapper">
 					<img
 						alt="production metrics icon"
-						class={stepIconClass}
+						class="index-step-icon"
 						src={productionMetrics}
 					/>
-					<div class={stepTitleClass}>Production Metrics</div>
+					<div class="index-step-title">Production Metrics</div>
 				</div>
 				<ui.S2>
 					<ui.P>

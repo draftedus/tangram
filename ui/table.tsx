@@ -1,4 +1,4 @@
-import { Children, css, cssClass, cx, h, useCss } from './deps'
+import { Children, css, cx, h, useCss } from './deps'
 import { border, variables } from './theme'
 
 export type TableProps = {
@@ -6,14 +6,12 @@ export type TableProps = {
 	width?: string
 }
 
-let tableWrapperClass = cssClass()
 let tableWrapperCss = css({
-	[`.${tableWrapperClass}`]: { overflow: 'auto' },
+	[`.table-wrapper`]: { overflow: 'auto' },
 })
 
-let tableClass = cssClass()
 let tableCss = css({
-	[`.${tableClass}`]: {
+	[`.table`]: {
 		backgroundColor: variables.colors.surface,
 		border,
 		borderRadius: variables.border.radius,
@@ -25,8 +23,8 @@ let tableCss = css({
 export function Table(props: TableProps) {
 	useCss(tableWrapperCss, tableCss)
 	return (
-		<div class={tableWrapperClass}>
-			<table class={tableClass} style={{ width: props.width ?? 'auto' }}>
+		<div class="table-wrapper">
+			<table class="table" style={{ width: props.width ?? 'auto' }}>
 				{props.children}
 			</table>
 		</div>
@@ -37,9 +35,8 @@ export type TableHeaderProps = {
 	children?: Children
 }
 
-let tableHeaderClass = cssClass()
 let tableHeaderCss = css({
-	[`.${tableHeaderClass}`]: {
+	[`.table-header`]: {
 		borderTopLeftRadius: variables.border.radius,
 		borderTopRightRadius: variables.border.radius,
 	},
@@ -47,7 +44,7 @@ let tableHeaderCss = css({
 
 export function TableHeader(props: TableHeaderProps) {
 	useCss(tableHeaderCss)
-	return <thead class={tableHeaderClass}>{props.children}</thead>
+	return <thead class="table-header">{props.children}</thead>
 }
 
 export type TableBodyProps = {
@@ -74,9 +71,8 @@ export type TableCellProps = {
 	textAlign?: 'left' | 'center' | 'right' | null
 }
 
-let tableHeaderCellClass = cssClass()
 let tableHeaderCellCss = css({
-	[`.${tableHeaderCellClass}`]: {
+	[`.table-header-cell`]: {
 		backgroundColor: variables.colors.header,
 		borderBottom: border,
 		color: variables.colors.text,
@@ -86,24 +82,20 @@ let tableHeaderCellCss = css({
 	},
 })
 
-let alignLeftClass = cssClass()
 let alignLeftCss = css({
-	[`.${alignLeftClass}`]: { textAlign: 'left' },
+	[`.table-align-left`]: { textAlign: 'left' },
 })
 
-let alignRightClass = cssClass()
 let alignRightCss = css({
-	[`.${alignRightClass}`]: { textAlign: 'right' },
+	[`.table-align-right`]: { textAlign: 'right' },
 })
 
-let alignCenterClass = cssClass()
 let alignCenterCss = css({
-	[`.${alignCenterClass}`]: { textAlign: 'center' },
+	[`.table-align-center`]: { textAlign: 'center' },
 })
 
-let expandClass = cssClass()
 let expandCss = css({
-	[`.${expandClass}`]: { width: '100%' },
+	[`.table-expand`]: { width: '100%' },
 })
 
 export function TableHeaderCell(props: TableCellProps) {
@@ -118,24 +110,24 @@ export function TableHeaderCell(props: TableCellProps) {
 	let alignClass
 	switch (props.textAlign) {
 		case 'left': {
-			alignClass = alignLeftClass
+			alignClass = 'table-align-left'
 			break
 		}
 		case 'right': {
-			alignClass = alignRightClass
+			alignClass = 'table-align-right'
 			break
 		}
 		case 'center': {
-			alignClass = alignCenterClass
+			alignClass = 'table-align-center'
 			break
 		}
 	}
 	return (
 		<th
 			class={cx(
-				tableHeaderCellClass,
-				props.textAlign ? alignClass : alignLeftClass,
-				props.expand && expandClass,
+				'table-header-cell',
+				props.textAlign ? alignClass : 'table-align-left',
+				props.expand && 'table-expand',
 			)}
 		>
 			{props.children}
@@ -143,9 +135,8 @@ export function TableHeaderCell(props: TableCellProps) {
 	)
 }
 
-let tableCellClass = cssClass()
 let tableCellCss = css({
-	[`.${tableCellClass}`]: {
+	[`.table-cell`]: {
 		padding: '1rem 1rem',
 		whiteSpace: 'nowrap',
 		width: undefined,
@@ -158,7 +149,7 @@ export function TableCell(props: TableCellProps) {
 		backgroundColor: props.color as any,
 	}
 	return (
-		<td class={tableCellClass} style={style}>
+		<td class="table-cell" style={style}>
 			{props.children}
 		</td>
 	)

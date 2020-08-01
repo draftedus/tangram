@@ -1,4 +1,4 @@
-import { Children, css, cssClass, h, ui, useCss } from '../deps'
+import { Children, css, h, ui, useCss } from '../deps'
 import { Layout } from './layout'
 
 type PageLayoutProps = {
@@ -6,9 +6,8 @@ type PageLayoutProps = {
 	children?: Children
 }
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.page-layout-wrapper`]: {
 		boxSizing: 'border-box',
 		margin: '0 auto',
 		maxWidth: ui.variables.width.max,
@@ -21,7 +20,7 @@ export function PageLayout(props: PageLayoutProps) {
 	useCss(wrapperCss)
 	return (
 		<Layout background={props.background}>
-			<div class={wrapperClass}>{props.children}</div>
+			<div class="page-layout-wrapper">{props.children}</div>
 		</Layout>
 	)
 }

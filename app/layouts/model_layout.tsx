@@ -1,5 +1,5 @@
 import { TopbarLayout } from './topbar_layout'
-import { Children, css, cssClass, h, r, ui, useCss } from 'deps'
+import { Children, css, h, r, ui, useCss } from 'deps'
 
 export type ModelLayoutProps = {
 	children?: Children
@@ -17,17 +17,16 @@ export type ModelLayoutProps = {
 	title: string
 }
 
-let modelLayoutClass = cssClass()
 let modelLayoutCss = css({
 	[ui.mobile]: {
-		[`.${modelLayoutClass}`]: {
+		[`.model-layout`]: {
 			display: 'grid',
 			grid: '"model-group-topbar" auto  "model" auto / minmax(0, 1fr)',
 			overflow: 'hidden',
 		},
 	},
 	[ui.desktop]: {
-		[`.${modelLayoutClass}`]: {
+		[`.model-layout`]: {
 			display: 'grid',
 			grid: '"model-group-topbar" auto "model" 1fr / minmax(0, 1fr)',
 			overflow: 'hidden',
@@ -35,10 +34,9 @@ let modelLayoutCss = css({
 	},
 })
 
-let modelGridClass = cssClass()
 let modelGridCss = css({
 	[ui.mobile]: {
-		[`.${modelGridClass}`]: {
+		[`.model-layout-grid`]: {
 			display: 'grid',
 			grid:
 				'"model-topbar" auto "side-nav" auto "content" auto / minmax(0, 1fr)',
@@ -48,7 +46,7 @@ let modelGridCss = css({
 		},
 	},
 	[ui.desktop]: {
-		[`.${modelGridClass}`]: {
+		[`.model-layout-grid`]: {
 			display: 'grid',
 			grid:
 				'"model-topbar model-topbar" auto "side-nav content" 1fr / auto minmax(0, 1fr)',
@@ -60,9 +58,8 @@ let modelGridCss = css({
 	},
 })
 
-let modelGroupTopbarClass = cssClass()
 let modelGroupTopbarCss = css({
-	[`.${modelGroupTopbarClass}`]: {
+	[`.model-layout-model-group-topbar`]: {
 		alignItems: 'center',
 		backgroundColor: ui.variables.colors.surface,
 		display: 'grid',
@@ -73,9 +70,8 @@ let modelGroupTopbarCss = css({
 	},
 })
 
-let modelTopbarClass = cssClass()
 let modelTopbarCss = css({
-	[`.${modelTopbarClass}`]: {
+	[`.model-layout-model-topbar`]: {
 		alignItems: 'end',
 		display: 'grid',
 		grid: 'auto / 1fr auto auto',
@@ -83,21 +79,18 @@ let modelTopbarCss = css({
 	},
 })
 
-let repoTitleClass = cssClass()
 let repoTitleCss = css({
-	[`.${repoTitleClass}`]: { fontSize: '1.25rem' },
+	[`.model-layout-repo-title`]: { fontSize: '1.25rem' },
 })
 
-let ownerTitleClass = cssClass()
 let ownerTitleCss = css({
-	[`.${ownerTitleClass}`]: {
+	[`.model-layout-owner-title`]: {
 		color: `${ui.variables.colors.text} !important`,
 	},
 })
 
-let innerClass = cssClass()
 let innerCss = css({
-	[`.${innerClass}`]: {
+	[`.model-layout-inner`]: {
 		boxSizing: 'border-box',
 		margin: '0 auto',
 		maxWidth: ui.variables.width.max,
@@ -121,26 +114,29 @@ export function ModelLayout(props: ModelLayoutProps) {
 
 	return (
 		<TopbarLayout>
-			<div class={modelLayoutClass}>
+			<div class="model-layout">
 				<div
-					class={modelGroupTopbarClass}
+					class="model-layout-model-group-topbar"
 					style={{ gridArea: 'model-group-topbar' }}
 				>
-					<div class={repoTitleClass}>
-						<ui.Link className={ownerTitleClass} href={props.ownerUrl}>
+					<div class="model-layout-repo-title">
+						<ui.Link className="model-layout-owner-title" href={props.ownerUrl}>
 							{props.ownerName}
 						</ui.Link>
 						/
 						<ui.Link
-							className={ownerTitleClass}
+							className="model-layout-owner-title"
 							href={`/repos/${props.id}/models/${props.modelId}/`}
 						>
 							{props.title}
 						</ui.Link>
 					</div>
 				</div>
-				<div class={modelGridClass} style={{ gridArea: 'model' }}>
-					<div class={modelTopbarClass} style={{ gridArea: 'model-topbar' }}>
+				<div class="model-layout-grid" style={{ gridArea: 'model' }}>
+					<div
+						class="model-layout-model-topbar"
+						style={{ gridArea: 'model-topbar' }}
+					>
 						<div>
 							<ui.Details
 								options={
@@ -170,7 +166,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 						/>
 					</div>
 					<div style={{ gridArea: 'content' }}>
-						<div class={innerClass}>{props.children}</div>
+						<div class="model-layout-inner">{props.children}</div>
 					</div>
 				</div>
 			</div>

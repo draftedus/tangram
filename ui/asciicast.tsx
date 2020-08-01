@@ -1,4 +1,4 @@
-import { css, cssClass, h, useCss, useEffect, useRef } from './deps'
+import { css, h, useCss, useEffect, useRef } from './deps'
 import { terminalColors, variables } from './theme'
 
 type AsciicastProps = {
@@ -10,9 +10,8 @@ type AsciicastProps = {
 
 export type AsciicastEvent = [number, string]
 
-let asciicastClass = cssClass()
 let asciicastCss = css({
-	[`.${asciicastClass}`]: {
+	[`.asciicast`]: {
 		backgroundColor: terminalColors.background,
 		borderRadius: variables.border.radius,
 		color: terminalColors.text,
@@ -44,7 +43,7 @@ export function Asciicast(props: AsciicastProps) {
 
 	let style = { height: props.height }
 
-	return <div class={asciicastClass} ref={termRef} style={style} />
+	return <div class="asciicast" ref={termRef} style={style} />
 }
 
 type AsciicastPlayerOptions = {

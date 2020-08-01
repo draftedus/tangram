@@ -1,11 +1,10 @@
 import { TopbarLayout } from './topbar_layout'
-import { Children, css, cssClass, h, ui, useCss } from 'deps'
+import { Children, css, h, ui, useCss } from 'deps'
 
 type AppLayoutProps = { children?: Children }
 
-let appLayoutClass = cssClass()
 let appLayoutCss = css({
-	[`.${appLayoutClass}`]: {
+	[`.app-layout`]: {
 		boxSizing: 'border-box',
 		margin: '0 auto',
 		maxWidth: ui.variables.width.max,
@@ -18,7 +17,7 @@ export function AppLayout(props: AppLayoutProps) {
 	useCss(appLayoutCss)
 	return (
 		<TopbarLayout>
-			<div class={appLayoutClass}>{props.children}</div>
+			<div class="app-layout">{props.children}</div>
 		</TopbarLayout>
 	)
 }

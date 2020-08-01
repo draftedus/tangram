@@ -1,4 +1,4 @@
-import { Children, css, cssClass, h, useCss, useEffect, useRef } from '../deps'
+import { Children, css, h, useCss, useEffect, useRef } from '../deps'
 import { DrawBarChartOptions, createBarChart } from './bar_chart'
 import { DrawBoxChartOptions, createBoxChart } from './box_chart'
 import { chartConfig } from './config'
@@ -7,9 +7,8 @@ import { DrawShapChartOptions, createShapChart } from './shap_chart'
 
 export type BarChartProps = DrawBarChartOptions & { title?: string }
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: { display: 'grid', gridRowGap: '1rem' },
+	[`.chart-wrapper`]: { display: 'grid', gridRowGap: '1rem' },
 })
 
 export function BarChart(props: BarChartProps) {
@@ -31,7 +30,7 @@ export function BarChart(props: BarChartProps) {
 	}
 
 	return (
-		<div class={wrapperClass}>
+		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
 			<ChartLegend items={props.data} />
 			<div ref={containerRef} style={containerStyle} />
@@ -61,7 +60,7 @@ export function BoxChart(props: BoxChartProps) {
 	}
 
 	return (
-		<div class={wrapperClass}>
+		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
 			<ChartLegend items={props.data} />
 			<div ref={containerRef} style={containerStyle} />
@@ -91,7 +90,7 @@ export function LineChart(props: LineChartProps) {
 	}
 
 	return (
-		<div class={wrapperClass}>
+		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
 			<ChartLegend items={props.data} />
 			<div ref={containerRef} style={containerStyle} />
@@ -135,7 +134,7 @@ export function ShapChart(props: ShapChartProps) {
 	}
 
 	return (
-		<div class={wrapperClass}>
+		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
 			<div ref={containerRef} style={containerStyle} />
 		</div>
@@ -143,15 +142,13 @@ export function ShapChart(props: ShapChartProps) {
 }
 
 type ChartTitleProps = { children?: Children }
-
-let chartTitleClass = cssClass()
 let chartTitleCss = css({
-	[`.${chartTitleClass}`]: { fontSize: '1.25rem', textAlign: 'center' },
+	[`.chart-title`]: { fontSize: '1.25rem', textAlign: 'center' },
 })
 
 export function ChartTitle(props: ChartTitleProps) {
 	useCss(chartTitleCss)
-	return <div class={chartTitleClass}>{props.children}</div>
+	return <div class="chart-title">{props.children}</div>
 }
 
 type ChartLegendProps = {
@@ -163,9 +160,8 @@ export type LegendItem = {
 	title: string
 }
 
-let chartLegendWrapperClass = cssClass()
 let chartLegendWrapperCss = css({
-	[`.${chartLegendWrapperClass}`]: {
+	[`.chart-legend-wrapper`]: {
 		alignItems: 'center',
 		display: 'flex',
 		flexWrap: 'wrap',
@@ -176,7 +172,7 @@ let chartLegendWrapperCss = css({
 export function ChartLegend(props: ChartLegendProps) {
 	useCss(chartLegendWrapperCss)
 	return (
-		<div class={chartLegendWrapperClass}>
+		<div class="chart-legend-wrapper">
 			{props.items.map(category => (
 				<ChartLegendItemCell
 					color={category.color}
@@ -193,9 +189,8 @@ type LegendItemCellProps = {
 	title: string
 }
 
-let chartLegendItemClass = cssClass()
 let chartLegendItemCss = css({
-	[`.${chartLegendItemClass}`]: {
+	[`.chart-legend-item`]: {
 		alignItems: 'center',
 		display: 'grid',
 		grid: 'auto / auto auto',
@@ -205,9 +200,8 @@ let chartLegendItemCss = css({
 	},
 })
 
-let chartLegendIndicatorClass = cssClass()
 let chartLegendIndicatorCss = css({
-	[`.${chartLegendIndicatorClass}`]: {
+	[`.chart-legend-indicator`]: {
 		borderRadius: '4px',
 		boxSizing: 'border-box',
 		height: '1rem',
@@ -215,9 +209,8 @@ let chartLegendIndicatorCss = css({
 	},
 })
 
-let chartLegendTitleClass = cssClass()
 let chartLegendTitleCss = css({
-	[`.${chartLegendTitleClass}`]: { whiteSpace: 'nowrap' },
+	[`.chart-legend-title`]: { whiteSpace: 'nowrap' },
 })
 
 function ChartLegendItemCell(props: LegendItemCellProps) {
@@ -226,9 +219,9 @@ function ChartLegendItemCell(props: LegendItemCellProps) {
 		backgroundColor: props.color,
 	}
 	return (
-		<div class={chartLegendItemClass}>
-			<div class={chartLegendIndicatorClass} style={style} />
-			<div class={chartLegendTitleClass}>{props.title}</div>
+		<div class="chart-legend-item">
+			<div class="chart-legend-indicator" style={style} />
+			<div class="chart-legend-titel">{props.title}</div>
 		</div>
 	)
 }

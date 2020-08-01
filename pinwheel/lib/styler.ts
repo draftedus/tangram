@@ -46,9 +46,9 @@ function reset() {
 	styler.insertedRules.clear()
 }
 
-export function cssClass(): string {
-	return '_' + Math.random().toString(36).substr(2, 6)
-}
+// export function cssClass(): string {
+// 	return '_' + Math.random().toString(36).substr(2, 6)
+// }
 
 export function cx(
 	...classes: Array<string | null | undefined | false>

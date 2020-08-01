@@ -1,4 +1,4 @@
-import { css, cssClass, h, useCss } from '../deps'
+import { css, h, useCss } from '../deps'
 import { border, variables } from '../theme'
 import { Label } from './label'
 
@@ -13,9 +13,8 @@ type TextFieldProps = {
 	value?: string | null
 }
 
-let textFieldClass = cssClass()
 let textFieldCss = css({
-	[`.${textFieldClass}`]: {
+	[`.form-text-field`]: {
 		MozAppearance: 'none',
 		WebkitAppearance: 'none',
 		WebkitTextFillColor: 'inherit',
@@ -33,13 +32,13 @@ let textFieldCss = css({
 		userSelect: 'text',
 		width: '100%',
 	},
-	[`.${textFieldClass}:hover`]: {
+	[`.form-text-field:hover`]: {
 		borderColor: variables.colors.hover,
 	},
-	[`.${textFieldClass}:focus`]: {
+	[`.form-text-field:focus`]: {
 		borderColor: variables.colors.accent,
 	},
-	[`.${textFieldClass}::-webkit-input-placeholder`]: {
+	[`.form-text-field::-webkit-input-placeholder`]: {
 		WebkitTextFillColor: variables.colors.mutedText,
 		color: variables.colors.mutedText,
 	},
@@ -52,7 +51,7 @@ export function TextField(props: TextFieldProps) {
 			{props.label}
 			<input
 				autocomplete={props.autocomplete}
-				class={textFieldClass}
+				class="form-text-field"
 				name={props.name}
 				placeholder={props.placeholder}
 				readOnly={props.readOnly}

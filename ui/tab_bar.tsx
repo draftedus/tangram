@@ -1,11 +1,10 @@
-import { Children, Link, css, cssClass, cx, h, useCss } from './deps'
+import { Children, Link, css, cx, h, useCss } from './deps'
 import { border, variables } from './theme'
 
 type TabBarProps = { children?: Children }
 
-let tabBarClass = cssClass()
 let tabBarCss = css({
-	[`.${tabBarClass}`]: {
+	[`.tab-bar`]: {
 		borderBottom: border,
 		display: 'grid',
 		gridAutoFlow: 'column',
@@ -16,7 +15,7 @@ let tabBarCss = css({
 
 export function TabBar(props: TabBarProps) {
 	useCss(tabBarCss)
-	return <div class={tabBarClass}>{props.children}</div>
+	return <div class="tab-bar">{props.children}</div>
 }
 
 type TabProps = {
@@ -26,9 +25,8 @@ type TabProps = {
 	selected?: boolean
 }
 
-let tabClass = cssClass()
 let tabCss = css({
-	[`.${tabClass}`]: {
+	[`.tab-bar-tab`]: {
 		borderBottom: `${variables.border.width} solid ${variables.colors.border}`,
 		color: variables.colors.mutedText,
 		cursor: 'pointer',
@@ -37,25 +35,23 @@ let tabCss = css({
 		position: 'relative',
 		userSelect: 'none',
 	},
-	[`.${tabClass}:hover`]: {
+	[`.tab-bar-tab:hover`]: {
 		filter: `brightness(90%)`,
 	},
 })
 
-let selectedTabClass = cssClass()
 let selectedTabCss = css({
-	[`.${selectedTabClass}`]: {
+	[`.tab-bar-tab-selected`]: {
 		borderBottomColor: variables.colors.accent,
 		color: variables.colors.accent,
 	},
-	[`.${selectedTabClass}:hover`]: {
+	[`.tab-bar-tab-selected:hover`]: {
 		filter: 'none',
 	},
 })
 
-let disabledTabClass = cssClass()
 let disabledTabCss = css({
-	[`.${disabledTabClass}`]: { cursor: 'not-allowed' },
+	[`.tab-bar-tab-disabled`]: { cursor: 'not-allowed' },
 })
 
 export function Tab(props: TabProps) {
@@ -63,9 +59,9 @@ export function Tab(props: TabProps) {
 	return (
 		<div
 			class={cx(
-				tabClass,
-				props.selected && selectedTabClass,
-				props.disabled && disabledTabClass,
+				'tab-bar-tab',
+				props.selected && 'tab-bar-tab-selected',
+				props.disabled && 'tab-bar-tab-disbaled',
 			)}
 			onClick={!props.disabled ? props.onClick : undefined}
 		>
@@ -80,9 +76,8 @@ type TabLinkProps = {
 	href: string
 }
 
-let tabLinkClass = cssClass()
 let tabLinkCss = css({
-	[`.${tabLinkClass}`]: {
+	[`.tab-bar-tab-link`]: {
 		color: 'inherit',
 		display: 'block',
 		height: '100%',
@@ -95,7 +90,7 @@ export function TabLink(props: TabLinkProps) {
 	useCss(tabLinkCss)
 	return (
 		<Tab selected={selected}>
-			<Link class={tabLinkClass} href={props.href}>
+			<Link class="tab-bar-tab-link" href={props.href}>
 				{props.children}
 			</Link>
 		</Tab>

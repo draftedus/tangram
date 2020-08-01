@@ -1,27 +1,25 @@
-import { css, cssClass, h, useCss } from './deps'
+import { css, h, useCss } from './deps'
 import { variables } from './theme'
 
 type AvatarProps = {
 	src?: string
 }
 
-let avatarClass = cssClass()
 let avatarCss = css({
-	[`.${avatarClass}`]: {
+	[`.avatar`]: {
 		backgroundColor: variables.colors.surface,
 		borderRadius: '50%',
 		height: '2rem',
 		overflow: 'hidden',
 		width: '2rem',
 	},
-	[`${avatarClass}:hover}`]: {
+	[`.avatar:hover`]: {
 		filter: 'brightness(90%)',
 	},
 })
 
-let imgClass = cssClass()
 let imgCss = css({
-	[`.${imgClass}`]: {
+	[`.avatar-img`]: {
 		border: 'none',
 		height: '100%',
 		outline: 'none',
@@ -29,9 +27,8 @@ let imgCss = css({
 	},
 })
 
-let placeholderClass = cssClass()
 let placeholderCss = css({
-	[`.${placeholderClass}`]: {
+	[`.avatar-placeholder`]: {
 		backgroundColor: variables.colors.surface,
 		height: '100%',
 		width: '100%',
@@ -41,13 +38,13 @@ let placeholderCss = css({
 export function Avatar(props: AvatarProps) {
 	useCss(avatarCss, imgCss, placeholderCss)
 	return (
-		<div class={avatarClass}>
+		<div class="avatar">
 			{props.src ? (
-				<div class={imgClass}>
+				<div class="avatar-img">
 					<img alt="avatar" src={props.src} />
 				</div>
 			) : (
-				<div class={placeholderClass}>
+				<div class="avatar-placeholder">
 					<DefaultAvatar />
 				</div>
 			)}

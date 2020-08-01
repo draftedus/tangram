@@ -1,4 +1,4 @@
-import { Children, css, cssClass, h, useCss } from '../deps'
+import { Children, css, h, useCss } from '../deps'
 import { variables } from '../theme'
 
 type Props = {
@@ -6,9 +6,8 @@ type Props = {
 	for?: string
 }
 
-let labelClass = cssClass()
 let labelCss = css({
-	[`.${labelClass}`]: {
+	[`.form-label`]: {
 		color: variables.colors.text,
 		display: 'grid',
 		gridGap: '0.5rem',
@@ -19,7 +18,7 @@ let labelCss = css({
 export function Label(props: Props) {
 	useCss(labelCss)
 	return (
-		<label class={labelClass} htmlFor={props.for}>
+		<label class="form-label" htmlFor={props.for}>
 			{props.children}
 		</label>
 	)

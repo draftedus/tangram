@@ -1,13 +1,4 @@
-import {
-	Children,
-	Fragment,
-	css,
-	cssClass,
-	cx,
-	h,
-	useCss,
-	useEffect,
-} from './deps'
+import { Children, Fragment, css, h, useCss, useEffect } from './deps'
 import { Language, grammars, highlight } from './syntax/mod'
 import { syntaxColors, variables } from './theme'
 import { times } from './util'
@@ -25,9 +16,8 @@ type CodeProps = {
 	language?: Language
 }
 
-let codeClass = cssClass()
 let codeCss = css({
-	[`.${codeClass}`]: {
+	[`.code`]: {
 		MozTabSize: '2',
 		backgroundColor: variables.colors.header,
 		borderRadius: variables.border.radius,
@@ -39,13 +29,13 @@ let codeCss = css({
 export function Code(props: CodeProps) {
 	useCss(codeCss, codeInnerWrapperCss, codeInnerValueCss)
 	return (
-		<div class={codeClass}>
-			<div class={codeInnerWrapperClass} style={{ display: 'block' }}>
+		<div class="code">
+			<div class="code-inner-wrapper" style={{ display: 'block' }}>
 				{!props.hideLineNumbers && (
 					<LineNumbers count={countLines(props.code)} />
 				)}
 				<div
-					class={codeInnerValueClass}
+					class="code-inner-code"
 					dangerouslySetInnerHTML={{
 						__html: props.language
 							? highlight(props.code, grammars[props.language], syntaxColors)
@@ -62,9 +52,8 @@ type CodeSelectProps = {
 	languages?: CodeForLanguage
 }
 
-let codeGridClass = cssClass()
 let codeGridCss = css({
-	[`.${codeGridClass}`]: {
+	[`.code-grid`]: {
 		display: 'grid',
 		gridColumnGap: '1rem',
 		gridRowGap: '0.5rem',
@@ -98,7 +87,7 @@ export function CodeSelect(props: CodeSelectProps) {
 		})
 	})
 	return (
-		<div class={cx(codeClass, codeGridClass)}>
+		<div class="code code-grid">
 			{props.languages && (
 				<Fragment>
 					<CodeOption
@@ -136,9 +125,8 @@ type CodeOptionProps = {
 	name: string
 }
 
-let codeInnerWrapperClass = cssClass()
 let codeInnerWrapperCss = css({
-	[`.${codeInnerWrapperClass}`]: {
+	[`.code-inner-wrapper`]: {
 		backgroundColor: syntaxColors.background,
 		display: 'none',
 		grid: 'auto / auto minmax(0, 1fr)',
@@ -149,9 +137,8 @@ let codeInnerWrapperCss = css({
 	},
 })
 
-let codeRadioInputClass = cssClass()
 let codeRadioInputCss = css({
-	[`.${codeRadioInputClass}`]: {
+	[`.code-radio-input`]: {
 		height: '0',
 		margin: '0',
 		opacity: '0',
@@ -160,45 +147,43 @@ let codeRadioInputCss = css({
 		top: '0',
 		width: '0',
 	},
-	[`.${codeRadioInputClass}[data-lang="go"]:checked ~ label[data-lang="go"]`]: {
+	[`.code-radio-input[data-lang="go"]:checked ~ label[data-lang="go"]`]: {
 		color: variables.colors.accent,
 	},
-	[`.${codeRadioInputClass}[data-lang="javascript"]:checked ~ label[data-lang="javascript"]`]: {
+	[`.code-radio-input[data-lang="javascript"]:checked ~ label[data-lang="javascript"]`]: {
 		color: variables.colors.accent,
 	},
-	[`.${codeRadioInputClass}[data-lang="python"]:checked ~ label[data-lang="python"]`]: {
+	[`.code-radio-input[data-lang="python"]:checked ~ label[data-lang="python"]`]: {
 		color: variables.colors.accent,
 	},
-	[`.${codeRadioInputClass}[data-lang="ruby"]:checked ~ label[data-lang="ruby"]`]: {
+	[`.code-radio-input[data-lang="ruby"]:checked ~ label[data-lang="ruby"]`]: {
 		color: variables.colors.accent,
 	},
-	[`.${codeRadioInputClass}[data-lang="go"]:checked ~ .${codeInnerWrapperClass}[data-lang="go"]`]: {
+	[`.code-radio-input[data-lang="go"]:checked ~ .code-inner-wrapper[data-lang="go"]`]: {
 		display: 'grid',
 	},
-	[`.${codeRadioInputClass}[data-lang="javascript"]:checked ~ .${codeInnerWrapperClass}[data-lang="javascript"]`]: {
+	[`.code-radio-input[data-lang="javascript"]:checked ~ .code-inner-wrapper[data-lang="javascript"]`]: {
 		display: 'grid',
 	},
-	[`.${codeRadioInputClass}[data-lang="python"]:checked ~ .${codeInnerWrapperClass}[data-lang="python"]`]: {
+	[`.code-radio-input[data-lang="python"]:checked ~ .code-inner-wrapper[data-lang="python"]`]: {
 		display: 'grid',
 	},
-	[`.${codeRadioInputClass}[data-lang="ruby"]:checked ~ .${codeInnerWrapperClass}[data-lang="ruby"]`]: {
+	[`.code-radio-input[data-lang="ruby"]:checked ~ .code-inner-wrapper[data-lang="ruby"]`]: {
 		display: 'grid',
 	},
 })
 
-let codeRadioLabelClass = cssClass()
 let codeRadioLabelCss = css({
-	[`.${codeRadioLabelClass}`]: {
+	[`.code-radio-label`]: {
 		cursor: 'pointer',
 	},
-	[`.${codeRadioLabelClass}:first-of-type`]: {
+	[`.code-radio-label:first-of-type`]: {
 		paddingLeft: '0.5rem',
 	},
 })
 
-let codeInnerValueClass = cssClass()
 let codeInnerValueCss = css({
-	[`.${codeInnerValueClass}`]: {
+	[`.code-inner-code`]: {
 		MozTabSize: '2',
 		boxSizing: 'border-box',
 		caretColor: 'black',
@@ -222,7 +207,7 @@ function CodeOption(props: CodeOptionProps) {
 		<Fragment>
 			<input
 				checked={props.checked ?? undefined}
-				class={codeRadioInputClass}
+				class="code-radio-input"
 				data-lang={props.language}
 				id={optionId}
 				name={props.name}
@@ -230,7 +215,7 @@ function CodeOption(props: CodeOptionProps) {
 				value={props.language}
 			/>
 			<label
-				class={codeRadioLabelClass}
+				class="code-radio-label"
 				data-lang={props.language}
 				for={optionId}
 				style={{
@@ -239,12 +224,12 @@ function CodeOption(props: CodeOptionProps) {
 			>
 				{props.language}
 			</label>
-			<div class={codeInnerWrapperClass} data-lang={props.language}>
+			<div class="code-inner-wrapper" data-lang={props.language}>
 				{!props.hideLineNumbers && (
 					<LineNumbers count={countLines(props.code)} />
 				)}
 				<div
-					class={codeInnerValueClass}
+					class="code-inner-code"
 					dangerouslySetInnerHTML={{
 						__html: props.language
 							? highlight(props.code, grammars[props.language], syntaxColors)
@@ -260,18 +245,16 @@ type LineNumbersProps = {
 	count: number
 }
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.code-line-numbers-wrapper`]: {
 		marginRight: '0.5rem',
 		textAlign: 'right',
 		userSelect: 'none',
 	},
 })
 
-let lineNumberClass = cssClass()
 let lineNumberCss = css({
-	[`.${lineNumberClass}`]: {
+	[`.code-line-numbers`]: {
 		color: syntaxColors.lineNumbers,
 		fontSize: '1rem',
 		lineHeight: '1.5',
@@ -281,9 +264,9 @@ let lineNumberCss = css({
 function LineNumbers(props: LineNumbersProps) {
 	useCss(wrapperCss, lineNumberCss)
 	return (
-		<div class={wrapperClass}>
+		<div class="code-line-numbers-wrapper">
 			{times(props.count, index => (
-				<div class={lineNumberClass} key={index}>
+				<div class="code-line-numbers" key={index}>
 					{index + 1}
 				</div>
 			))}
@@ -293,9 +276,8 @@ function LineNumbers(props: LineNumbersProps) {
 
 type InlineCodeProps = { children?: Children }
 
-let containerClass = cssClass()
 let containerCss = css({
-	[`.${containerClass}`]: {
+	[`.inline-code-wrapper`]: {
 		backgroundColor: syntaxColors.background,
 		borderRadius: variables.border.radius,
 		color: syntaxColors.foreground,
@@ -306,7 +288,7 @@ let containerCss = css({
 
 export function InlineCode(props: InlineCodeProps) {
 	useCss(containerCss)
-	return <span class={containerClass}>{props.children}</span>
+	return <span class="inline-code-wrapper">{props.children}</span>
 }
 
 function countLines(text: string) {

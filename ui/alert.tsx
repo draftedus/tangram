@@ -1,4 +1,4 @@
-import { Children, css, cssClass, cx, h, useCss } from './deps'
+import { Children, css, h, useCss } from './deps'
 import { colors, variables } from './theme'
 
 export enum Level {
@@ -13,77 +13,70 @@ export type AlertProps = {
 	title?: string
 }
 
-let wrapperClass = cssClass()
-let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+let alertWrapperCss = css({
+	[`.alert-wrapper`]: {
 		borderRadius: variables.border.radius,
 		padding: '1rem',
 	},
 })
 
-let infoClass = cssClass()
 let infoCss = css({
-	[`.${infoClass}`]: {
+	[`.alert-level-info`]: {
 		backgroundColor: colors.teal,
 		color: variables.colors.funText,
 	},
 })
 
-let warningClass = cssClass()
 let warningCss = css({
-	[`.${warningClass}`]: {
+	[`.alert-level-warning`]: {
 		backgroundColor: colors.yellow,
 		color: variables.colors.funText,
 	},
 })
 
-let dangerClass = cssClass()
 let dangerCss = css({
-	[`.${dangerClass}`]: {
+	[`.alert-level-danger`]: {
 		backgroundColor: colors.red,
 		color: variables.colors.funText,
 	},
 })
 
-let titleClass = cssClass()
 let titleCss = css({
-	[`.${titleClass}`]: {
+	[`.alert-title`]: {
 		color: variables.colors.funText,
 		fontWeight: 'bold',
 		marginBottom: '1rem',
 	},
 })
 
-let textClass = cssClass()
 let textCss = css({
-	[`.${textClass}`]: {
+	[`.alert-text`]: {
 		lineHeight: '1.5',
 	},
 })
 
 export function Alert(props: AlertProps) {
-	useCss(wrapperCss, titleCss, textCss)
+	useCss(alertWrapperCss, titleCss, textCss)
 	let levelClass
 	let levelCss
 	switch (props.level) {
 		case Level.Info:
 			levelCss = infoCss
-			levelClass = infoClass
+			levelClass = 'alert-level-info'
 			break
 		case Level.Warning:
 			levelCss = warningCss
-			levelClass = warningClass
+			levelClass = 'alert-level-warning'
 			break
 		case Level.Danger:
 			levelCss = dangerCss
-			levelClass = dangerClass
+			levelClass = 'alert-level-danger'
 			break
 	}
 	useCss(levelCss)
 	return (
-		<div class={cx(wrapperClass, levelClass)}>
-			{props.title && <div class={titleClass}>{props.title}</div>}
-			<div class={textClass}>{props.children}</div>
+		<div class={`alert-wrapper ${levelClass}`}>
+			{props.title && <div class="alert-title">{props.title}</div>}
 		</div>
 	)
 }

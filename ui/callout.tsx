@@ -1,5 +1,5 @@
 import { Level } from './alert'
-import { Children, css, cssClass, h, useCss } from './deps'
+import { Children, css, h, useCss } from './deps'
 import { colors, variables } from './theme'
 
 type CalloutProps = {
@@ -8,50 +8,44 @@ type CalloutProps = {
 	title?: string
 }
 
-let layoutWrapperClass = cssClass()
 let layoutWrapperCss = css({
-	[`.${layoutWrapperClass}`]: {
+	[`.callout-wrapper`]: {
 		display: 'grid',
 		gridGap: '.5rem',
 		padding: '1rem',
 	},
 })
 
-let infoWrapperClass = cssClass()
 let infoWrapperCss = css({
-	[`.${infoWrapperClass}`]: {
+	[`.callout-level-info-wrapper`]: {
 		backgroundColor: colors.teal,
 		borderLeft: `4px solid ${colors.teal}`,
 	},
 })
 
-let warningWrapperClass = cssClass()
 let warningWrapperCss = css({
-	[`.${warningWrapperClass}`]: {
+	[`.callout-level-warning-wrapper`]: {
 		backgroundColor: colors.yellow,
 		borderLeft: `4px solid ${colors.yellow}`,
 	},
 })
 
-let dangerWrapperClass = cssClass()
 let dangerWrapperCss = css({
-	[`.${dangerWrapperClass}`]: {
+	[`.callout-level-danger-wrapper`]: {
 		backgroundColor: colors.red,
 		borderLeft: `4px solid ${colors.red}`,
 	},
 })
 
-let titleClass = cssClass()
 let titleCss = css({
-	[`.${titleClass}`]: {
+	[`.callout-title`]: {
 		color: variables.colors.funText,
 		fontWeight: 'bold',
 	},
 })
 
-let innerClass = cssClass()
 let innerCss = css({
-	[`.${innerClass}`]: {
+	[`.callout-inner`]: {
 		color: variables.colors.funText,
 		lineHeight: '1.5',
 	},
@@ -63,24 +57,24 @@ export function Callout(props: CalloutProps) {
 	switch (props.level) {
 		case Level.Danger:
 			wrapperCss = dangerWrapperCss
-			wrapperClass = dangerWrapperClass
+			wrapperClass = 'callout-level-danger-wrapper'
 			break
 		case Level.Info:
 			wrapperCss = infoWrapperCss
-			wrapperClass = infoWrapperClass
+			wrapperClass = 'callout-level-info-wrapper'
 			break
 		case Level.Warning:
 			wrapperCss = warningWrapperCss
-			wrapperClass = warningWrapperClass
+			wrapperClass = 'callout-level-warning-wrapper'
 			break
 	}
 	useCss(wrapperCss, layoutWrapperCss, titleCss, innerCss)
 
 	return (
 		<div class={wrapperClass}>
-			<div class={layoutWrapperClass}>
-				{props.title && <div class={titleClass}>{props.title}</div>}
-				<div class={innerClass}>{props.children}</div>
+			<div class="callout-wrapper">
+				{props.title && <div class="callout-title">{props.title}</div>}
+				<div class="callout-inner">{props.children}</div>
 			</div>
 		</div>
 	)

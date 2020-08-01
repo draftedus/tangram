@@ -1,11 +1,10 @@
 import { Logo, LogoScheme } from '../../www/components/logo'
-import { Children, css, cssClass, h, ui, useCss } from 'deps'
+import { Children, css, h, ui, useCss } from 'deps'
 
 type AuthLayoutProps = { children?: Children }
 
-let authLayoutClass = cssClass()
 let authLayoutCss = css({
-	[`.${authLayoutClass}`]: {
+	[`.auth-layout`]: {
 		display: 'grid',
 		gridRowGap: '1rem',
 		justifyContent: 'center',
@@ -25,7 +24,7 @@ export function AuthLayout(props: AuthLayoutProps) {
 		width: '300px',
 	}
 	return (
-		<div class={authLayoutClass}>
+		<div class="auth-layout">
 			<div style={logoStyle}>
 				<Logo color={ui.variables.colors.text} colorScheme={LogoScheme.Multi} />
 			</div>

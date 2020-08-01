@@ -1,4 +1,4 @@
-import { Children, Link, css, cssClass, h, useCss } from './deps'
+import { Children, Link, css, h, useCss } from './deps'
 import { variables } from './theme'
 
 export type ButtonProps = {
@@ -12,9 +12,8 @@ export type ButtonProps = {
 	type?: 'submit' | 'button'
 }
 
-let buttonClass = cssClass()
 let buttonCss = css({
-	[`.${buttonClass}`]: {
+	[`.button`]: {
 		appearance: 'none',
 		backgroundColor: variables.colors.accent,
 		border: 'none',
@@ -36,13 +35,13 @@ let buttonCss = css({
 		whiteSpace: 'nowrap',
 		width: '100%',
 	},
-	[`.${buttonClass}:hover`]: {
+	[`.button:hover`]: {
 		filter: 'brightness(90%)',
 	},
-	[`.${buttonClass}:active`]: {
+	[`.button:active`]: {
 		filter: 'brightness(90%)',
 	},
-	[`.${buttonClass}::-moz-focus-inner`]: {
+	[`.button::-moz-focus-inner`]: {
 		border: 'none',
 	},
 })
@@ -56,7 +55,7 @@ export function Button(props: ButtonProps) {
 	if (props.href) {
 		return (
 			<Link
-				class={buttonClass}
+				class="button"
 				download={props.download}
 				href={props.href}
 				style={style}
@@ -66,12 +65,7 @@ export function Button(props: ButtonProps) {
 		)
 	} else {
 		return (
-			<button
-				class={buttonClass}
-				onClick={onClick}
-				style={style}
-				type={props.type}
-			>
+			<button class="button" onClick={onClick} style={style} type={props.type}>
 				{props.children}
 			</button>
 		)

@@ -1,8 +1,11 @@
-import { css, cssClass, h, ui, useCss } from 'deps'
+import { css, h, ui, useCss } from 'deps'
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: { display: 'grid', gridGap: '1rem', padding: '1rem' },
+	[`.introspection-wrapper`]: {
+		display: 'grid',
+		gridGap: '1rem',
+		padding: '1rem',
+	},
 })
 
 export function Introspection() {
@@ -91,7 +94,7 @@ export function Introspection() {
 	]
 	return (
 		<ui.Window>
-			<div class={wrapperClass}>
+			<div class="introspection-wrapper">
 				<ui.Card>
 					<ui.BarChart
 						data={series}

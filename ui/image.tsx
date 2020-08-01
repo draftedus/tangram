@@ -1,13 +1,12 @@
-import { Fragment, css, cssClass, h, useCss } from './deps'
+import { Fragment, css, h, useCss } from './deps'
 
 type ImageProps = {
 	alt: string
 	src: string
 }
 
-let detailsClass = cssClass()
 let detailsCss = css({
-	['.${detailsClass}[open] > summary::before']: {
+	['.image-details[open] > summary::before']: {
 		background: 'transparent',
 		bottom: '0',
 		content: '" "',
@@ -21,19 +20,17 @@ let detailsCss = css({
 	},
 })
 
-let summaryClass = cssClass()
 let summaryCss = css({
-	[`.${summaryClass}`]: {
+	[`.image-details-summary`]: {
 		display: 'grid',
 	},
-	[`.${summaryClass}:-webkit-details-marker`]: {
+	[`.image-details-summary:-webkit-details-marker`]: {
 		display: 'none',
 	},
 })
 
-let viewerClass = cssClass()
 let viewerCss = css({
-	[`.${viewerClass}`]: {
+	[`.image-viewer`]: {
 		backgroundColor: 'rgba(0, 0, 0, 0.8)',
 		bottom: '0',
 		left: '0',
@@ -44,30 +41,28 @@ let viewerCss = css({
 	},
 })
 
-let viewerImgClass = cssClass()
 let viewerImgCss = css({
-	[`.${viewerImgClass}`]: {
+	[`.image-viewer-img`]: {
 		height: '100%',
 		objectFit: 'contain',
 		width: '100%',
 	},
 })
 
-let imgClass = cssClass()
 let imgCss = css({
-	[`.${imgClass}`]: { borderRadius: '4px', cursor: 'zoom-in', width: '100%' },
+	[`.image-img`]: { borderRadius: '4px', cursor: 'zoom-in', width: '100%' },
 })
 
 export function Img(props: ImageProps) {
 	useCss(detailsCss, summaryCss, viewerCss, viewerImgCss, imgCss)
 	return (
 		<Fragment>
-			<details class={detailsClass}>
-				<summary class={summaryClass}>
-					<img alt={props.alt} class={imgClass} src={props.src} />
+			<details class="image-details">
+				<summary class="image-details-summary">
+					<img alt={props.alt} class="image-img" src={props.src} />
 				</summary>
-				<div class={viewerClass}>
-					<img alt={props.alt} class={viewerImgClass} src={props.src} />
+				<div class="image-viewer">
+					<img alt={props.alt} class="image-viewer-img" src={props.src} />
 				</div>
 			</details>
 		</Fragment>

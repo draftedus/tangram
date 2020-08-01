@@ -1,15 +1,14 @@
-import { Children, css, cssClass, h, useCss } from '../deps'
+import { Children, css, h, useCss } from '../deps'
 
 type FormTitleProps = { children?: Children }
 
-let titleClass = cssClass()
 let titleCss = css({
-	[`.${titleClass}`]: { textAlign: 'center' },
+	[`.form-title`]: { textAlign: 'center' },
 })
 
 export function FormTitle(props: FormTitleProps) {
 	useCss(titleCss)
-	return <legend class={titleClass}>{props.children}</legend>
+	return <legend class="form-title">{props.children}</legend>
 }
 
 type FormProps = {
@@ -21,9 +20,8 @@ type FormProps = {
 	post?: boolean
 }
 
-let formClass = cssClass()
 let formCss = css({
-	[`.${formClass}`]: {
+	[`.form`]: {
 		display: 'grid',
 		gridRowGap: '1rem',
 		margin: '0',
@@ -35,7 +33,7 @@ export function Form(props: FormProps) {
 	return (
 		<form
 			action={props.action}
-			class={formClass}
+			class="form"
 			encType={props.encType}
 			method={props.post ? 'post' : undefined}
 			onSubmit={props.onSubmit}

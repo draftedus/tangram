@@ -1,24 +1,22 @@
-import { css, cssClass, h, ui, useCss, useState } from 'deps'
+import { css, h, ui, useCss, useState } from 'deps'
 
-let gridClass = cssClass()
 let gridCss = css({
-	[`.${gridClass}`]: { display: 'grid', gridGap: '1rem', padding: '1rem' },
+	[`.tuning-grid`]: { display: 'grid', gridGap: '1rem', padding: '1rem' },
 })
 
-let numberChartGridClass = cssClass()
 let numberChartGridCss = css({
-	[`.${numberChartGridClass}`]: {
+	[`.tuning-number-chart-grid`]: {
 		display: 'grid',
 		gridGap: '1rem',
 	},
 	[ui.mobile]: {
-		[`.${numberChartGridClass}`]: {
+		[`.tuning-number-chart-grid`]: {
 			grid:
 				'"accuracy accuracy" auto "precision recall" auto / minmax(0, 1fr) minmax(0, 1fr)',
 		},
 	},
 	[ui.desktop]: {
-		[`.${numberChartGridClass}`]: {
+		[`.tuning-number-chart-grid`]: {
 			grid:
 				'"accuracy precision recall" auto / minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)',
 		},
@@ -42,7 +40,7 @@ export function Tuning() {
 
 	return (
 		<ui.Window>
-			<div class={gridClass}>
+			<div class="tuning-grid">
 				<div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
 					Select a threshold.
 				</div>
@@ -55,7 +53,7 @@ export function Tuning() {
 					value={thresholdIndex}
 					valueFormatter={formatter}
 				/>
-				<div class={numberChartGridClass}>
+				<div class="tuning-number-chart-grid">
 					<div style={{ gridArea: 'accuracy' }}>
 						<ui.Card>
 							<ui.NumberChart title="Accuracy" value={accuracy} />

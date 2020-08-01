@@ -193,6 +193,9 @@ export default function ProductionMetricsPage(props: Props) {
 							options={props.classes}
 							value={props.class}
 						/>
+						<noscript>
+							<ui.Button>Submit</ui.Button>
+						</noscript>
 					</ui.Form>
 				</div>
 				{selectedOverallClassMetrics !== null && (

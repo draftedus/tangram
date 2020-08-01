@@ -1,8 +1,7 @@
-import { css, cssClass, h, ui, useCss } from 'deps'
+import { css, h, ui, useCss } from 'deps'
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.production-stats-wrapper`]: {
 		display: 'grid',
 		grid: 'auto auto / auto',
 		gridGap: '1rem',
@@ -46,7 +45,7 @@ export function ProductionStats() {
 	]
 	return (
 		<ui.Window>
-			<div class={wrapperClass}>
+			<div class="production-stats-wrapper">
 				<div style={{ gridArea: 'alert' }}>
 					<ui.Alert level={ui.Level.Danger}>High Invalid Count</ui.Alert>
 				</div>

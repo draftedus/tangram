@@ -1,4 +1,4 @@
-import { css, cssClass, h, useCss } from './deps'
+import { css, h, useCss } from './deps'
 import { border, variables } from './theme'
 
 export type DetailsSelectProps = {
@@ -11,16 +11,15 @@ export type DetailsSelectOption = {
 	name: string
 }
 
-let detailsClass = cssClass()
 let detailsCss = css({
-	[`.${detailsClass}`]: {
+	[`.details`]: {
 		boxSizing: 'border-box',
 		position: 'relative',
 	},
-	[`.${detailsClass}[open] > summary`]: {
+	[`.details[open] > summary`]: {
 		borderColor: variables.colors.accent,
 	},
-	[`.${detailsClass}[open] > summary::before`]: {
+	[`.details[open] > summary::before`]: {
 		background: 'transparent',
 		bottom: '0',
 		content: '" "',
@@ -34,9 +33,8 @@ let detailsCss = css({
 	},
 })
 
-let summaryClass = cssClass()
 let summaryCss = css({
-	[`.${summaryClass}`]: {
+	[`.details-summary`]: {
 		WebkitTextFillColor: 'inherit',
 		alignItems: 'center',
 		appearance: 'none',
@@ -57,17 +55,16 @@ let summaryCss = css({
 		userSelect: 'text',
 		width: '100%',
 	},
-	[`.${summaryClass}:hover`]: {
+	[`.details-summary:hover`]: {
 		borderColor: variables.colors.hover,
 	},
-	[`.${summaryClass}::-webkit-details-marker`]: {
+	[`.details-summary::-webkit-details-marker`]: {
 		display: 'none',
 	},
 })
 
-let detailsListClass = cssClass()
 let detailsListCss = css({
-	[`.${detailsListClass}`]: {
+	[`.details-list`]: {
 		backgroundColor: variables.colors.surface,
 		boxSizing: 'border-box',
 		fontSize: '1rem',
@@ -80,16 +77,15 @@ let detailsListCss = css({
 	},
 })
 
-let detailsListItemClass = cssClass()
 let detailsListItemCss = css({
-	[`.${detailsListItemClass}`]: {
+	[`.details-list-item`]: {
 		color: variables.colors.text,
 		display: 'block',
 		listStyle: 'none',
 		padding: '0.5rem',
 		textDecoration: 'none',
 	},
-	[`.${detailsListItemClass}:hover`]: {
+	[`.details-list-item:hover`]: {
 		backgroundColor: variables.colors.hover,
 	},
 })
@@ -98,13 +94,13 @@ export function Details(props: DetailsSelectProps) {
 	useCss(detailsCss, summaryCss, detailsListCss, detailsListItemCss)
 
 	return (
-		<details class={detailsClass}>
-			<summary class={summaryClass} role="button">
+		<details class="details">
+			<summary class="details-summary" role="button">
 				{props.summary}
 			</summary>
-			<div class={detailsListClass}>
+			<div class="details-list">
 				{props.options?.map(option => (
-					<a class={detailsListItemClass} href={option.href} key={option.name}>
+					<a class="details-list-item" href={option.href} key={option.name}>
 						{option.name}
 					</a>
 				))}

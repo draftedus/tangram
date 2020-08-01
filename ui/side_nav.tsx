@@ -1,11 +1,10 @@
-import { Children, Link, css, cssClass, cx, h, useCss } from './deps'
+import { Children, Link, css, cx, h, useCss } from './deps'
 import { variables } from './theme'
 
 type SideNavProps = { children?: Children }
 
-let sideNavClass = cssClass()
 let sideNavCss = css({
-	[`.${sideNavClass}`]: {
+	[`.side-nav`]: {
 		alignContent: 'start',
 		display: 'grid',
 		gridGap: '1rem',
@@ -15,26 +14,24 @@ let sideNavCss = css({
 
 export function SideNav(props: SideNavProps) {
 	useCss(sideNavCss)
-	return <div class={sideNavClass}>{props.children}</div>
+	return <div class="side-nav">{props.children}</div>
 }
 
 type SideNavSectionProps = { children?: Children }
 
-let sectionClass = cssClass()
 let sectionCss = css({
-	[`.${sectionClass}`]: { display: 'grid' },
+	[`.side-nav-section`]: { display: 'grid' },
 })
 
 export function SideNavSection(props: SideNavSectionProps) {
 	useCss(sectionCss)
-	return <div class={sectionClass}>{props.children}</div>
+	return <div class="side-nav-section">{props.children}</div>
 }
 
 type SideNavTitleProps = { children?: Children }
 
-let titleClass = cssClass()
 let titleCss = css({
-	[`.${titleClass}`]: {
+	[`.side-nav-title`]: {
 		fontSize: '1rem',
 		fontWeight: 'bold',
 		paddingTop: '1rem',
@@ -43,7 +40,7 @@ let titleCss = css({
 
 export function SideNavTitle(props: SideNavTitleProps) {
 	useCss(titleCss)
-	return <div class={titleClass}>{props.children}</div>
+	return <div class="side-nav-title">{props.children}</div>
 }
 
 type SideNavItemProps = {
@@ -52,9 +49,8 @@ type SideNavItemProps = {
 	selected?: boolean
 }
 
-let itemClass = cssClass()
 let itemCss = css({
-	[`.${itemClass}`]: {
+	[`.side-nav-item`]: {
 		color: variables.colors.text,
 		cursor: 'pointer',
 		filter: 'none',
@@ -64,12 +60,11 @@ let itemCss = css({
 	},
 })
 
-let selectedClass = cssClass()
 let selectedCss = css({
-	[`.${selectedClass}`]: {
+	[`.side-nav-item-selected`]: {
 		color: variables.colors.accent,
 	},
-	[`.${selectedClass}:hover`]: {
+	[`.side-nav-item-selected:hover`]: {
 		filter: 'brightness(90%)',
 	},
 })
@@ -78,7 +73,10 @@ export function SideNavItem(props: SideNavItemProps) {
 	useCss(itemCss, selectedCss)
 	let selected = false
 	return (
-		<Link class={cx(itemClass, selected && selectedClass)} href={props.href}>
+		<Link
+			class={cx('side-nav-item', selected && 'side-nav-item-selected')}
+			href={props.href}
+		>
 			{props.children}
 		</Link>
 	)

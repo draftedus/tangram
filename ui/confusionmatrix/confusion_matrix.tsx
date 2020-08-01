@@ -1,4 +1,4 @@
-import { Children, css, cssClass, cx, h, useCss } from '../deps'
+import { Children, css, cx, h, useCss } from '../deps'
 import { border, desktop, mobile, variables } from '../theme'
 import { Token } from '../token'
 import { formatPercent } from '../util'
@@ -26,9 +26,8 @@ type ConfusionMatrixProps = {
 	truePositives: number | null
 }
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.confusion-matrix-wrapper`]: {
 		display: 'grid',
 		grid: 'auto 1fr 1fr / auto 1fr 1fr',
 		gridGap: '1rem',
@@ -54,7 +53,7 @@ export function ConfusionMatrix(props: ConfusionMatrixProps) {
 			props.falseNegatives
 	}
 	return (
-		<div class={wrapperClass}>
+		<div class="confusion-matrix-wrapper">
 			<ConfusionMatrixLabel area="actual-true-label">
 				<div>Actual</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
@@ -109,9 +108,8 @@ type ConfusionMatrixItemProps = {
 	value: number | null
 }
 
-let itemWrapperClass = cssClass()
 let itemWrapperCss = css({
-	[`.${itemWrapperClass}`]: {
+	[`.confusion-matrix-item-wrapper`]: {
 		alignContent: 'center',
 		border,
 		borderRadius: config.borderRadius,
@@ -124,48 +122,55 @@ let itemWrapperCss = css({
 	},
 })
 
-let positiveItemWrapperClass = cssClass()
 let positiveItemWrapperCss = css({
-	[`.${positiveItemWrapperClass}`]: {
+	[`.confusion-matrix-item-positive-wrapper`]: {
 		backgroundColor: config.trueBackgroundColor,
 		color: config.trueForegroundColor,
 	},
 })
-let negativeItemWrapperClass = cssClass()
 let negativeItemWrapperCss = css({
-	[`.${negativeItemWrapperClass}`]: {
+	[`.confusion-matrix-item-negative-wrapper`]: {
 		backgroundColor: config.falseBackgroundColor,
 		color: config.falseForegroundColor,
 	},
 })
 
-let titleClass = cssClass()
 let titleCss = css({
 	[desktop]: {
-		fontSize: '1.25rem',
+		[`.confusion-matrix-item-title`]: {
+			fontSize: '1.25rem',
+		},
 	},
 	[mobile]: {
-		fontSize: '1rem',
+		[`.confusion-matrix-item-title`]: {
+			fontSize: '1rem',
+		},
 	},
 })
 
-let valueClass = cssClass()
 let valueCss = css({
 	[desktop]: {
-		fontSize: '2rem',
+		[`.confusion-matrix-item-value`]: {
+			fontSize: '2rem',
+		},
 	},
 	[mobile]: {
-		fontSize: '1.5rem',
+		[`.confusion-matrix-item-value`]: {
+			fontSize: '1.5rem',
+		},
 	},
 })
 
-let percentClass = cssClass()
 let percentCss = css({
 	[desktop]: {
-		fontSize: '1.25rem',
+		[`.confusion-matrix-item-percent`]: {
+			fontSize: '1.25rem',
+		},
 	},
 	[mobile]: {
-		fontSize: '1rem',
+		[`.confusion-matrix-item-percent`]: {
+			fontSize: '1rem',
+		},
 	},
 })
 
@@ -183,14 +188,18 @@ function ConfusionMatrixItem(props: ConfusionMatrixItemProps) {
 	return (
 		<div
 			class={cx(
-				itemWrapperClass,
-				props.positive ? positiveItemWrapperClass : negativeItemWrapperClass,
+				'confusion-matrix-item-wrapper',
+				props.positive
+					? 'confusion-matrix-item-positive-wrapper'
+					: 'confusion-matrix-item-negative-wrapper',
 			)}
 			style={itemWrapperStyle}
 		>
-			<div class={titleClass}>{props.title}</div>
-			<div class={valueClass}>{defaultValueFormatter(props.value)}</div>
-			<div class={percentClass}>
+			<div class="confusion-matrix-item-title">{props.title}</div>
+			<div class="confusion-matrix-item-value">
+				{defaultValueFormatter(props.value)}
+			</div>
+			<div class="confusion-matrix-item-percent">
 				{props.value === null || props.total === null
 					? 'N/A'
 					: formatPercent(props.value / props.total, 2)}
@@ -209,9 +218,8 @@ type ConfusionMatrixLabelProps = {
 	left?: boolean
 }
 
-let labelClass = cssClass()
 let labelCss = css({
-	[`.${labelClass}`]: {
+	[`.confusion-matrix-label`]: {
 		alignSelf: 'center',
 		display: 'grid',
 		fontWeight: 'bold',
@@ -227,7 +235,7 @@ function ConfusionMatrixLabel(props: ConfusionMatrixLabelProps) {
 		justifyItems: props.left ? 'end' : 'auto',
 	}
 	return (
-		<div class={labelClass} style={style}>
+		<div class="confusion-matrix-label" style={style}>
 			{props.children}
 		</div>
 	)

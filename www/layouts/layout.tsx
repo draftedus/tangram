@@ -1,5 +1,5 @@
 import { Logo, LogoScheme } from '../components/logo'
-import { Children, css, cssClass, h, ui, useCss } from '../deps'
+import { Children, css, h, ui, useCss } from '../deps'
 import backgroundImage from './background.svg'
 import { Footer } from './footer'
 
@@ -8,9 +8,8 @@ type LayoutProps = {
 	children?: Children
 }
 
-let layoutClass = cssClass()
 let layoutCss = css({
-	[`.${layoutClass}`]: {
+	[`.layout`]: {
 		backgroundColor: ui.variables.colors.background,
 		color: ui.variables.colors.text,
 		display: 'grid',
@@ -25,7 +24,7 @@ export function Layout(props: LayoutProps) {
 		background: props.background && (`url(${backgroundImage})` as any),
 	}
 	return (
-		<div class={layoutClass} style={wrapperStyle}>
+		<div class="layout" style={wrapperStyle}>
 			<header>
 				<Topbar />
 			</header>
@@ -72,9 +71,8 @@ type GithubIconLinkProps = {
 	color: string
 }
 
-let githubIconClass = cssClass()
 let githubIconCss = css({
-	[`.${githubIconClass}:hover`]: {
+	[`.github-icon:hover`]: {
 		filter: 'brightness(90%)',
 	},
 })
@@ -84,7 +82,7 @@ function GithubIconLink(props: GithubIconLinkProps) {
 	return (
 		<ui.Link href="https://github.com/tangram-hq">
 			<svg
-				class={githubIconClass}
+				class="github-icon"
 				fill={props.color}
 				height="24"
 				viewBox="0 0 16 16"

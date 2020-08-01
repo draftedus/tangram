@@ -1,20 +1,19 @@
-import { css, cssClass, h, ui, useCss } from 'deps'
+import { css, h, ui, useCss } from 'deps'
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.training-metrics-wrapper`]: {
 		display: 'grid',
 		gridGap: '1rem',
 		padding: '1rem',
 	},
 	[ui.mobile]: {
-		[`.${wrapperClass}`]: {
+		[`.training-metrics-wrapper`]: {
 			grid: 'auto auto auto / auto',
 			gridTemplateAreas: `"accuracy" "pr" "roc"`,
 		},
 	},
 	[ui.desktop]: {
-		[`.${wrapperClass}`]: {
+		[`.training-metrics-wrapper`]: {
 			grid: 'auto auto / minmax(0, 1fr) minmax(0, 1fr)',
 			gridTemplateAreas: `"accuracy accuracy" "pr roc"`,
 		},
@@ -52,7 +51,7 @@ export function TrainingMetrics() {
 	]
 	return (
 		<ui.Window>
-			<div class={wrapperClass}>
+			<div class="training-metrics-wrapper">
 				<div style={{ gridArea: 'accuracy' }}>
 					<ui.Card>
 						<ui.NumberComparisonChart

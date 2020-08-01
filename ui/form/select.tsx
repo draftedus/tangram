@@ -1,4 +1,4 @@
-import { Children, css, cssClass, h, useCss } from '../deps'
+import { Children, css, h, useCss } from '../deps'
 import { border, variables } from '../theme'
 import { Label } from './label'
 
@@ -14,9 +14,8 @@ export type SelectProps = {
 	value?: string | null
 }
 
-let selectClass = cssClass()
 let selectCss = css({
-	[`.${selectClass}`]: {
+	[`.form-select`]: {
 		MozAppearance: 'none',
 		WebkitTextFillColor: 'inherit',
 		appearance: 'none',
@@ -34,13 +33,13 @@ let selectCss = css({
 		userSelect: 'text',
 		width: '100%',
 	},
-	[`.${selectClass}:hover`]: {
+	[`.form-select:hover`]: {
 		borderColor: variables.colors.hover,
 	},
-	[`.${selectClass}:focus`]: {
+	[`.form-select:focus`]: {
 		borderColor: variables.colors.accent,
 	},
-	[`.${selectClass}::-webkit-input-placeholder`]: {
+	[`.form-select::-webkit-input-placeholder`]: {
 		WebkitTextFillColor: variables.colors.mutedText,
 		color: variables.colors.mutedText,
 	},
@@ -52,7 +51,7 @@ export function SelectField(props: SelectProps) {
 		<Label>
 			{props.label}
 			<select
-				class={selectClass}
+				class="form-select"
 				disabled={props.disabled}
 				id={props.id}
 				name={props.name}

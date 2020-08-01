@@ -1,5 +1,5 @@
 import { Level } from './alert'
-import { css, cssClass, cx, h, useCss } from './deps'
+import { css, cx, h, useCss } from './deps'
 import { colors, variables } from './theme'
 
 type AlertProps = {
@@ -7,17 +7,15 @@ type AlertProps = {
 	level: Level
 }
 
-let alertContainerClass = cssClass()
-let alertContainerCss = css({
-	[`.${alertContainerClass}`]: {
+let alertWrapperCss = css({
+	[`.alert-icon-wrapper`]: {
 		cursor: 'pointer',
 		position: 'relative',
 	},
 })
 
-let alertMessageClass = cssClass()
 let alertMessageCss = css({
-	[`.${alertMessageClass}`]: {
+	[`.alert-icon-message`]: {
 		borderRadius: variables.border.radius,
 		bottom: '1rem',
 		color: variables.colors.funText,
@@ -26,14 +24,13 @@ let alertMessageCss = css({
 		position: 'absolute',
 		visibility: 'hidden',
 	},
-	[`.${alertMessageClass}:hover`]: {
+	[`.alert-icon-message:hover`]: {
 		visibility: 'visible',
 	},
 })
 
-let alertIconClass = cssClass()
 let alertIconCss = css({
-	[`.${alertIconClass}`]: {
+	[`.alert-icon`]: {
 		alignContent: 'center',
 		borderRadius: '.5rem',
 		color: variables.colors.funText,
@@ -43,57 +40,54 @@ let alertIconCss = css({
 		justifyContent: 'center',
 		width: '1rem',
 	},
-	[`.${alertIconClass}:hover`]: {
+	[`.alert-icon:hover`]: {
 		filter: 'brightness(90%)',
 	},
 })
 
-let infoClass = cssClass()
 let infoCss = css({
-	[`.${infoClass}`]: {
+	[`.alert-icon-level-info`]: {
 		backgroundColor: colors.teal,
 	},
 })
 
-let warningClass = cssClass()
 let warningCss = css({
-	[`.${warningClass}`]: {
+	[`.alert-icon-level-warning`]: {
 		backgroundColor: colors.yellow,
 	},
 })
 
-let dangerClass = cssClass()
 let dangerCss = css({
-	[`.${dangerClass}`]: {
+	[`.alert-icon-level-danger`]: {
 		backgroundColor: colors.red,
 	},
 })
 
 export function AlertIcon(props: AlertProps) {
-	useCss(alertContainerCss, alertMessageCss, alertIconCss)
+	useCss(alertWrapperCss, alertMessageCss, alertIconCss)
 	let levelClass
 	let levelCss
 	switch (props.level) {
 		case Level.Info:
-			levelClass = infoClass
+			levelClass = 'alert-icon-level-info'
 			levelCss = infoCss
 			break
 		case Level.Warning:
-			levelClass = warningClass
+			levelClass = 'alert-icon-level-warning'
 			levelCss = warningCss
 			break
 		case Level.Danger:
-			levelClass = dangerClass
+			levelClass = 'alert-icon-level-danger'
 			levelCss = dangerCss
 			break
 	}
 	useCss(levelCss)
 
-	let alertMessageClassCombined = cx(alertMessageClass, levelClass)
-	let alertIconClassCombined = cx(alertIconClass, levelClass)
+	let alertMessageClassCombined = cx('alert-icon-message', levelClass)
+	let alertIconClassCombined = cx('alert-icon', levelClass)
 
 	return (
-		<div class={alertContainerClass}>
+		<div class="alert-icon-container">
 			<div class={alertMessageClassCombined}>{props.alert}</div>
 			<div class={alertIconClassCombined}>!</div>
 		</div>

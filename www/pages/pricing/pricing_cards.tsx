@@ -1,4 +1,4 @@
-import { JSX, css, cssClass, cx, h, ui, useCss } from 'deps'
+import { JSX, css, cx, h, ui, useCss } from 'deps'
 
 type PricingCardsProps = {
 	enterpriseCta: JSX.Element
@@ -11,19 +11,18 @@ type PricingCardsProps = {
 	teamSelected?: boolean
 }
 
-let gridClass = cssClass()
 let gridCss = css({
-	[`.${gridClass}`]: {
+	[`.pricing-cards-grid`]: {
 		display: 'grid',
 		gridGap: '0.5rem',
 	},
 	[ui.mobile]: {
-		[`.${gridClass}`]: {
+		[`.pricing-cards-grid`]: {
 			grid: 'repeat(4, auto)/ minmax(0, 1fr)',
 		},
 	},
 	[ui.desktop]: {
-		[`.${gridClass}`]: {
+		[`.pricing-cards-grid`]: {
 			grid: 'auto / repeat(4, minmax(0, 1fr))',
 		},
 	},
@@ -32,7 +31,7 @@ let gridCss = css({
 export function PricingCards(props: PricingCardsProps) {
 	useCss(gridCss)
 	return (
-		<div class={gridClass}>
+		<div class="pricing-cards-grid">
 			<PricingCard
 				color={ui.colors.indigo}
 				cta={props.freeCta}
@@ -101,9 +100,8 @@ type PricingCardProps = {
 	title: string
 }
 
-let pricingGridClass = cssClass()
 let pricingGridCss = css({
-	[`.${pricingGridClass}`]: {
+	[`.pricing-card-grid`]: {
 		alignContent: 'space-between',
 		backgroundColor: ui.variables.colors.surface,
 		border: `${ui.variables.border.width} solid ${ui.variables.colors.border}`,
@@ -114,62 +112,56 @@ let pricingGridCss = css({
 	},
 })
 
-let pricingGridSelectedClass = cssClass()
 let pricingGridSelectedCss = css({
-	[`${pricingGridSelectedClass}`]: {
+	[`pricing-card-grid-selected`]: {
 		border: `${ui.variables.border.width} solid ${ui.variables.colors.accent}`,
 	},
 })
 
-let pricingTopGridClass = cssClass()
 let pricingTopGridCss = css({
-	[`.${pricingTopGridClass}`]: {
+	[`.pricing-card-content-grid`]: {
 		display: 'grid',
 		gridGap: '1rem',
 		justifyItems: 'center',
 	},
 })
 
-let priceClass = cssClass()
-let priceCss = css({
-	[`.${priceClass}`]: { fontSize: '2rem' },
-})
-
-let priceAndPriceSubtitleClass = cssClass()
-let priceAndPriceSubtitleCss = css({
-	[`.${priceAndPriceSubtitleClass}`]: {
+let pricingCardPriceWrapper = css({
+	[`.pricing-card-price-wrapper`]: {
 		display: 'grid',
 		gridGap: '0.5rem',
+		justifyContent: 'center',
 		justifyItems: 'center',
 	},
 })
 
-let priceSubtitleClass = cssClass()
+let priceCss = css({
+	[`.pricing-card-price`]: { fontSize: '2rem' },
+})
+
 let priceSubtitleCss = css({
-	[`.${priceSubtitleClass}`]: {
+	[`.pricing-card-subtitle`]: {
 		color: ui.variables.colors.mutedText,
 		fontSize: '1rem',
 	},
 })
 
-let featureClass = cssClass()
 let featureCss = css({
-	[`.${featureClass}`]: {
+	[`.pricing-card-feature`]: {
 		display: 'grid',
 		gridAutoFlow: 'column',
 		gridGap: '0.5rem',
 		justifyContent: 'start',
 		lineHeight: '1.5',
 	},
-	[`.${featureClass}:before`]: {
+	[`.pricing-card-feature:before`]: {
 		color: ui.colors.blue,
 		content: "'✔'",
 	},
 })
 
-let featureListClass = cssClass()
 let featureListCss = css({
-	[`.${featureListClass}`]: { display: 'grid', gridGap: '0.5rem' },
+	[`.pricing-card-features-list`]: { display: 'grid', gridGap: '0.5rem' },
 })
 
 function PricingCard(props: PricingCardProps) {
@@ -177,7 +169,7 @@ function PricingCard(props: PricingCardProps) {
 		pricingGridCss,
 		pricingGridSelectedCss,
 		pricingTopGridCss,
-		priceAndPriceSubtitleCss,
+		pricingCardPriceWrapper,
 		priceCss,
 		priceSubtitleCss,
 		featureListCss,
@@ -185,21 +177,24 @@ function PricingCard(props: PricingCardProps) {
 	)
 	return (
 		<div
-			class={cx(pricingGridClass, props.selected && pricingGridSelectedClass)}
+			class={cx(
+				'pricing-card-grid',
+				props.selected && 'pricing-card-grid-selected',
+			)}
 		>
-			<div class={pricingTopGridClass}>
+			<div class="pricing-card-content-grid">
 				<div>
 					<ui.Token color={props.color}>{props.title}</ui.Token>
 				</div>
-				<div class={priceAndPriceSubtitleClass}>
-					<div class={priceClass}>{props.price}</div>
+				<div class="pricing-card-price-wrapper">
+					<div class="pricing-card-price">{props.price}</div>
 					{props.priceSubtitle && (
-						<div class={priceSubtitleClass}>{props.priceSubtitle}</div>
+						<div class="pricing-card-subtitle">{props.priceSubtitle}</div>
 					)}
 				</div>
-				<div class={featureListClass}>
+				<div class="pricing-card-features-list">
 					{props.features.map((feature, i) => (
-						<div class={featureClass} key={i}>
+						<div class="pricing-card-feature" key={i}>
 							{feature}
 						</div>
 					))}

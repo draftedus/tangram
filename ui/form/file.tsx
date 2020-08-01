@@ -1,4 +1,4 @@
-import { css, cssClass, h, useCss } from '../deps'
+import { css, h, useCss } from '../deps'
 import { border, variables } from '../theme'
 import { Label } from './label'
 
@@ -8,10 +8,8 @@ type FileFieldProps = {
 	name?: string
 }
 
-let wrapperClass = cssClass()
-let fileClass = cssClass()
 let fileFieldCss = css({
-	[`.${wrapperClass}`]: {
+	[`.form-file-field-wrapper`]: {
 		backgroundColor: variables.colors.surface,
 		border,
 		borderRadius: variables.border.radius,
@@ -26,7 +24,13 @@ let fileFieldCss = css({
 		userSelect: 'text',
 		width: '100%',
 	},
-	[`.${fileClass}`]: {
+	[`.form-file-field-wrapper:hover`]: {
+		borderColor: variables.colors.hover,
+	},
+	[`.form-file-field-wrapper:focus`]: {
+		borderColor: variables.colors.accent,
+	},
+	[`.form-file-input`]: {
 		bottom: 0,
 		left: 0,
 		position: 'absolute',
@@ -35,12 +39,6 @@ let fileFieldCss = css({
 		visibility: 'hidden',
 		width: '100%',
 	},
-	[`.${wrapperClass}:hover`]: {
-		borderColor: variables.colors.hover,
-	},
-	[`.${wrapperClass}:focus`]: {
-		borderColor: variables.colors.accent,
-	},
 })
 
 export function FileField(props: FileFieldProps) {
@@ -48,14 +46,10 @@ export function FileField(props: FileFieldProps) {
 	return (
 		<Label>
 			{props.label}
-			<div class={wrapperClass}>
+			<div class="form-file-field-wrapper">
 				Choose File
-				<input class={fileClass} name={props.name} type="file" />
+				<input class="form-file-input" name={props.name} type="file" />
 			</div>
 		</Label>
 	)
-}
-
-export function hydrateFileFields() {
-	fileClass
 }

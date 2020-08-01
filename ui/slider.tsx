@@ -1,4 +1,4 @@
-import { css, cssClass, h, useCss } from './deps'
+import { css, h, useCss } from './deps'
 import { border, colors, variables } from './theme'
 
 type SliderProps = {
@@ -12,18 +12,16 @@ type SliderProps = {
 	valueFormatter?: (value: number) => string
 }
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.slider-wrapper`]: {
 		height: '1rem',
 		position: 'relative',
 	},
-	[`.${wrapperClass}:hover > .tooltip`]: { display: 'block' },
+	[`.slider-wrapper:hover > .tooltip`]: { display: 'block' },
 })
 
-let rangeClass = cssClass()
 let rangeCss = css({
-	[`.${rangeClass}`]: {
+	[`.slider-range`]: {
 		appearance: 'none',
 		background: 'transparent',
 		boxSizing: 'border-box',
@@ -35,16 +33,16 @@ let rangeCss = css({
 		width: '100%',
 	},
 
-	[`.${rangeClass}:focus`]: {
+	[`.slider-range:focus`]: {
 		outline: 'none',
 	},
-	[`.${rangeClass}::-webkit-slider-runnable-track`]: {
+	[`.slider-range::-webkit-slider-runnable-track`]: {
 		backgroundColor: variables.colors.border,
 		borderRadius: variables.border.radius,
 		boxSizing: 'border-box',
 		height: '4px',
 	},
-	[`.${rangeClass}::-webkit-slider-thumb`]: {
+	[`.slider-range::-webkit-slider-thumb`]: {
 		WebkitAppearance: 'none',
 		backgroundColor: colors.blue,
 		borderRadius: '0.5rem',
@@ -53,19 +51,19 @@ let rangeCss = css({
 		position: 'relative',
 		width: '1rem',
 	},
-	[`.${rangeClass}::-moz-range-track`]: {
+	[`.slider-range::-moz-range-track`]: {
 		backgroundColor: variables.colors.border,
 		borderRadius: variables.border.radius,
 		boxSizing: 'border-box',
 		height: '4px',
 	},
-	[`.${rangeClass}::-moz-range-progress`]: {
+	[`.slider-range::-moz-range-progress`]: {
 		backgroundColor: variables.colors.accent,
 		borderRadius: variables.border.radius,
 		boxSizing: 'border-box',
 		height: '4px',
 	},
-	[`.${rangeClass}::-moz-range-thumb`]: {
+	[`.slider-range::-moz-range-thumb`]: {
 		backgroundColor: variables.colors.accent,
 		border: 'none',
 		borderRadius: '0.5rem',
@@ -76,9 +74,8 @@ let rangeCss = css({
 	},
 })
 
-let tooltipClass = cssClass()
 let tooltipCss = css({
-	[`.${tooltipClass}`]: {
+	[`.slider-tooltip`]: {
 		backgroundColor: variables.colors.surface,
 		border,
 		borderRadius: variables.border.radius,
@@ -92,9 +89,8 @@ let tooltipCss = css({
 	},
 })
 
-let progressClass = cssClass()
 let progressCss = css({
-	[`.${progressClass}`]: {
+	[`.slider-progress`]: {
 		backgroundColor: variables.colors.accent,
 		borderRadius: variables.border.radius,
 		height: '4px',
@@ -118,16 +114,16 @@ export function Slider(props: SliderProps) {
 		props.onChange?.(parseFloat(event.currentTarget.value))
 	}
 	return (
-		<div class={wrapperClass}>
+		<div class="slider-wrapper">
 			<input
-				class={rangeClass}
+				class="slider-range"
 				max={props.max}
 				min={props.min}
 				onInput={onInput}
 				type="range"
 			/>
-			<div class={progressClass} style={progressStyle} />
-			<div class={'tooltip ' + tooltipClass} style={tooltipStyle}>
+			<div class="slider-progress" style={progressStyle} />
+			<div class="tooltip slider-tooltip" style={tooltipStyle}>
 				{value}
 			</div>
 		</div>

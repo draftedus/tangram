@@ -1,4 +1,4 @@
-import { Children, css, cssClass, h, useCss } from './deps'
+import { Children, css, h, useCss } from './deps'
 import { border, colors, variables } from './theme'
 
 export enum WindowShade {
@@ -10,9 +10,8 @@ type WindowProps = {
 	children?: Children
 }
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.window-wrapper`]: {
 		backgroundColor: variables.colors.background,
 		borderRadius: variables.border.radius,
 		display: 'grid',
@@ -20,9 +19,8 @@ let wrapperCss = css({
 	},
 })
 
-let topbarClass = cssClass()
 let topbarCss = css({
-	[`.${topbarClass}`]: {
+	[`.window-topbar`]: {
 		backgroundColor: variables.colors.surface,
 		borderLeft: border,
 		borderRight: border,
@@ -37,9 +35,8 @@ let topbarCss = css({
 	},
 })
 
-let topbarButtonClass = cssClass()
 let topbarButtonCss = css({
-	[`.${topbarButtonClass}`]: {
+	[`.window-topbar-button`]: {
 		borderRadius: '.375rem',
 		boxSizing: 'border-box',
 		height: '.75rem',
@@ -47,9 +44,8 @@ let topbarButtonCss = css({
 	},
 })
 
-let bodyClass = cssClass()
 let bodyCss = css({
-	[`.${bodyClass}`]: {
+	[`.window-body`]: {
 		backgroundColor: variables.colors.surface,
 		borderBottom: border,
 		borderBottomLeftRadius: variables.border.radius,
@@ -62,22 +58,22 @@ let bodyCss = css({
 export function Window(props: WindowProps) {
 	useCss(wrapperCss, topbarCss, topbarButtonCss, bodyCss)
 	return (
-		<div class={wrapperClass}>
-			<div class={topbarClass}>
+		<div class="window-wrapper">
+			<div class="window-topbar">
 				<div
-					class={topbarButtonClass}
+					class="window-topbar-button"
 					style={{ backgroundColor: colors.red }}
 				/>
 				<div
-					class={topbarButtonClass}
+					class="window-topbar-button"
 					style={{ backgroundColor: colors.yellow }}
 				/>
 				<div
-					class={topbarButtonClass}
+					class="window-topbar-button"
 					style={{ backgroundColor: colors.green }}
 				/>
 			</div>
-			<div class={bodyClass}>{props.children}</div>
+			<div class="window-body">{props.children}</div>
 		</div>
 	)
 }

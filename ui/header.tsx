@@ -1,10 +1,9 @@
-import { Children, css, cssClass, h, useCss } from './deps'
+import { Children, css, h, useCss } from './deps'
 
 type HeaderProps = { children?: Children }
 
-let headerClass = cssClass()
 let headerCss = css({
-	[`.${headerClass}`]: {
+	[`.header`]: {
 		alignItems: 'center',
 		display: 'grid',
 		grid: 'auto / 1fr auto',
@@ -15,5 +14,5 @@ let headerCss = css({
 
 export function Header(props: HeaderProps) {
 	useCss(headerCss)
-	return <div class={headerClass}>{props.children}</div>
+	return <div class="header">{props.children}</div>
 }

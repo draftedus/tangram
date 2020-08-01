@@ -1,4 +1,4 @@
-import { css, cssClass, h, useCss } from './deps'
+import { css, h, useCss } from './deps'
 import { mobile, variables } from './theme'
 
 type NumberChartProps = {
@@ -6,9 +6,8 @@ type NumberChartProps = {
 	value: string
 }
 
-let containerClass = cssClass()
-let containerCss = css({
-	[`.${containerClass}`]: {
+let wrapperCss = css({
+	[`.number-chart-wrapper`]: {
 		color: variables.colors.text,
 		display: 'flex',
 		flexDirection: 'column',
@@ -17,29 +16,27 @@ let containerCss = css({
 	},
 })
 
-let valueClass = cssClass()
 let valueCss = css({
-	[`.${valueClass}`]: {
+	[`.number-chart-value`]: {
 		fontSize: '2rem',
 		marginBottom: '1rem',
 	},
 	[mobile]: {
-		[`.${valueClass}`]: {
+		[`.number-chart-value`]: {
 			fontSize: '1.5rem',
 		},
 	},
 })
-let titleClass = cssClass()
 let titleCss = css({
-	[`.${titleClass}`]: { color: variables.colors.text },
+	[`.number-chart-title`]: { color: variables.colors.text },
 })
 
 export function NumberChart(props: NumberChartProps) {
-	useCss(containerCss, valueCss, titleCss)
+	useCss(wrapperCss, valueCss, titleCss)
 	return (
-		<div class={containerClass}>
-			<div class={valueClass}>{props.value}</div>
-			<div class={titleClass}>{props.title}</div>
+		<div class="number-chart-wrapper">
+			<div class="number-chart-value">{props.value}</div>
+			<div class="number-chart-title">{props.title}</div>
 		</div>
 	)
 }

@@ -1,13 +1,12 @@
-import { Children, css, cssClass, h, useCss } from './deps'
+import { Children, css, h, useCss } from './deps'
 import { border, variables } from './theme'
 
 export type CardProps = {
 	children?: Children
 }
 
-let cardClass = cssClass()
 let cardCss = css({
-	[`.${cardClass}`]: {
+	[`.card`]: {
 		backgroundColor: variables.colors.surface,
 		border,
 		borderRadius: variables.border.radius,
@@ -17,5 +16,5 @@ let cardCss = css({
 
 export function Card(props: CardProps) {
 	useCss(cardCss)
-	return <div class={cardClass}>{props.children}</div>
+	return <div class="card">{props.children}</div>
 }

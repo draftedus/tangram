@@ -1,11 +1,10 @@
-import { Children, css, cssClass, h, ui, useCss } from '../deps'
+import { Children, css, h, ui, useCss } from '../deps'
 import { Layout } from './layout'
 
 type DocsLayoutProps = { children?: Children }
 
-let wrapperClass = cssClass()
 let wrapperCss = css({
-	[`.${wrapperClass}`]: {
+	[`.docs-layout-wrapper`]: {
 		alignContent: 'start',
 		alignItems: 'start',
 		boxSizing: 'border-box',
@@ -16,13 +15,13 @@ let wrapperCss = css({
 		width: '100%',
 	},
 	[ui.mobile]: {
-		[`.${wrapperClass}`]: {
+		[`.docs-layout-wrapper`]: {
 			grid: '"page-nav" auto "content" auto / minmax(0, 1fr)',
 			gridGap: '2rem',
 		},
 	},
 	[ui.desktop]: {
-		[`.${wrapperClass}`]: {
+		[`.docs-layout-wrapper`]: {
 			grid: '"page-nav content" auto / 200px minmax(0, 1fr)',
 			gridGap: '1rem',
 		},
@@ -33,7 +32,7 @@ export function DocsLayout(props: DocsLayoutProps) {
 	useCss(wrapperCss)
 	return (
 		<Layout>
-			<div class={wrapperClass}>
+			<div class="docs-layout-wrapper">
 				<PageNav />
 				<div>{props.children}</div>
 			</div>

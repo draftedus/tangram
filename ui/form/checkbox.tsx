@@ -1,4 +1,4 @@
-import { css, cssClass, h, useCss } from '../deps'
+import { css, h, useCss } from '../deps'
 import { border, variables } from '../theme'
 import { Label } from './label'
 
@@ -13,9 +13,8 @@ type CheckboxFieldProps = {
 	value?: string | null
 }
 
-let checkboxFieldClass = cssClass()
 let checkboxFieldCss = css({
-	[`.${checkboxFieldClass}`]: {
+	[`.form-checkbox-field`]: {
 		MozAppearance: 'none',
 		WebkitAppearance: 'none',
 		alignItems: 'center',
@@ -26,21 +25,21 @@ let checkboxFieldCss = css({
 		justifyItems: 'center',
 		width: '2.5rem',
 	},
-	[`.${checkboxFieldClass}:checked`]: {
+	[`.form-checkbox-field:checked`]: {
 		backgroundColor: variables.colors.accent,
 		borderColor: variables.colors.accent,
 	},
-	[`.${checkboxFieldClass}:checked:after`]: {
+	[`.form-checkbox-field:checked:after`]: {
 		color: variables.colors.funText,
 		content: '"✔"',
 	},
-	[`.${checkboxFieldClass}:hover`]: {
+	[`.form-checkbox-field:hover`]: {
 		borderColor: variables.colors.hover,
 	},
-	[`.${checkboxFieldClass}:focus`]: {
+	[`.form-checkbox-field:focus`]: {
 		borderColor: variables.colors.accent,
 	},
-	[`.${checkboxFieldClass}::-webkit-input-placeholder`]: {
+	[`.form-checkbox-field::-webkit-input-placeholder`]: {
 		WebkitTextFillColor: variables.colors.mutedText,
 		color: variables.colors.mutedText,
 	},
@@ -52,7 +51,7 @@ export function CheckboxField(props: CheckboxFieldProps) {
 		<Label>
 			{props.label}
 			<input
-				class={checkboxFieldClass}
+				class="form-checkbox-field"
 				name={props.name}
 				placeholder={props.placeholder}
 				readOnly={props.readOnly}

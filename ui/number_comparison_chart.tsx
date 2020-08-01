@@ -1,4 +1,4 @@
-import { css, cssClass, cx, h, useCss } from './deps'
+import { css, cx, h, useCss } from './deps'
 import { colors, mobile, variables } from './theme'
 import { Token } from './token'
 
@@ -19,9 +19,8 @@ function defaultValueFormatter(value: number) {
 	return value === null ? 'N/A' : value.toString()
 }
 
-let containerClass = cssClass()
-let containerCss = css({
-	[`.${containerClass}`]: {
+let numberComparisonWrapper = css({
+	[`.number-comparison-wrapper`]: {
 		color: variables.colors.text,
 		display: 'grid',
 		gridGap: '1rem',
@@ -29,15 +28,14 @@ let containerCss = css({
 		textAlign: 'center',
 	},
 	[mobile]: {
-		[`.${containerClass}`]: {
+		[`.number-comparison-wrapper`]: {
 			gridGap: '.5rem',
 		},
 	},
 })
 
-let numberComparisonContainerClass = cssClass()
-let numberComparisonContainerCss = css({
-	[`.${numberComparisonContainerClass}`]: {
+let numberComparisonInnerWrapper = css({
+	[`.number-comparison-inner-wrapper`]: {
 		alignItems: 'center',
 		display: 'grid',
 		grid: '1fr 1fr / 1fr 1fr',
@@ -46,54 +44,48 @@ let numberComparisonContainerCss = css({
 		justifyItems: 'center',
 	},
 	[mobile]: {
-		[`.${numberComparisonContainerClass}`]: {
+		[`.number-comparison-inner-wrapper`]: {
 			gridColumnGap: '0.5rem',
 		},
 	},
 })
 
-let titleClass = cssClass()
 let titleCss = css({
-	[`.${titleClass}`]: {
+	[`.number-comparison-title`]: {
 		fontSize: '1.25rem',
 	},
 	[mobile]: {
-		[`.${titleClass}`]: {
+		[`.number-comparison-title`]: {
 			fontSize: '1rem',
 		},
 	},
 })
 
-let valueClass = cssClass()
 let valueCss = css({
-	[`.${valueClass}`]: {
+	[`.number-comparison-value`]: {
 		fontSize: '2rem',
 	},
 	[mobile]: {
-		[`.${valueClass}`]: {
+		[`.number-comparison-value`]: {
 			fontSize: '1.25rem',
 		},
 	},
 })
 
-let positiveClass = cssClass()
 let positiveCss = css({
-	[`.${positiveClass}`]: { color: colors.green, display: 'flex' },
+	[`.number-comparison-positive`]: { color: colors.green, display: 'flex' },
 })
 
-let negativeClass = cssClass()
 let negativeCss = css({
-	[`.${negativeClass}`]: { color: colors.red },
+	[`.number-comparison-negative`]: { color: colors.red },
 })
 
-let equalsClass = cssClass()
 let equalsCss = css({
-	[`.${equalsClass}`]: { color: colors.gray },
+	[`.number-comparison-equals`]: { color: colors.gray },
 })
 
-let differenceClass = cssClass()
 let differenceCss = css({
-	[`.${differenceClass}`]: {
+	[`.number-comparison-difference`]: {
 		alignContent: 'center',
 		display: 'grid',
 		gridAutoFlow: 'column',
@@ -102,8 +94,8 @@ let differenceCss = css({
 
 export function NumberComparisonChart(props: NumberComparisonChartProps) {
 	useCss(
-		containerCss,
-		numberComparisonContainerCss,
+		numberComparisonWrapper,
+		numberComparisonInnerWrapper,
 		titleCss,
 		valueCss,
 		differenceCss,
@@ -114,16 +106,16 @@ export function NumberComparisonChart(props: NumberComparisonChartProps) {
 	let valueFormatter = props.valueFormatter ?? defaultValueFormatter
 	let difference = Number(props.valueB) - Number(props.valueA)
 	return (
-		<div class={containerClass}>
-			<div class={titleClass}>{props.title}</div>
+		<div class="number-comparison-wrapper">
+			<div class="number-comparison-title">{props.title}</div>
 			<div
 				class={cx(
-					differenceClass,
+					'number-comparison-difference',
 					difference > 0
-						? positiveClass
+						? 'number-comparison-positive'
 						: difference < 0
-						? negativeClass
-						: equalsClass,
+						? 'number-comparison-negative'
+						: 'number-comparison-equals',
 				)}
 			>
 				{props.valueA === null || props.valueB === null
@@ -132,11 +124,11 @@ export function NumberComparisonChart(props: NumberComparisonChartProps) {
 					? 'equal'
 					: valueFormatter(difference)}
 			</div>
-			<div class={numberComparisonContainerClass}>
-				<div class={valueClass}>
+			<div class="number-comparison-inner-wrapper">
+				<div class="number-comparison-value">
 					{props.valueA !== null ? valueFormatter(props.valueA) : 'N/A'}
 				</div>
-				<div class={valueClass}>
+				<div class="number-comparison-value">
 					{props.valueB !== null ? valueFormatter(props.valueB) : 'N/A'}
 				</div>
 				<div>

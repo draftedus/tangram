@@ -1,5 +1,5 @@
 import { Button } from './button'
-import { Children, css, cssClass, h, useCss } from './deps'
+import { Children, css, h, useCss } from './deps'
 import { colors } from './theme'
 
 export type PaginationProps = {
@@ -49,9 +49,8 @@ export function Pagination(props: PaginationProps) {
 
 type PaginationWrapperProps = { children?: Children }
 
-let paginationClass = cssClass()
 let paginationCss = css({
-	[`.${paginationClass}`]: {
+	[`.pagination`]: {
 		alignItems: 'center',
 		display: 'grid',
 		grid: 'auto / auto auto auto',
@@ -62,7 +61,7 @@ let paginationCss = css({
 
 function PaginationWrapper(props: PaginationWrapperProps) {
 	useCss(paginationCss)
-	return <div class={paginationClass}>{props.children}</div>
+	return <div class="pagination">{props.children}</div>
 }
 
 type PaginationButtonProps = {
@@ -71,9 +70,8 @@ type PaginationButtonProps = {
 	onClick: () => void
 }
 
-let paginationButtonClass = cssClass()
 let paginationButtonCss = css({
-	[`.${paginationButtonClass}`]: {
+	[`.pagination-button`]: {
 		alignItems: 'center',
 		display: 'grid',
 		gridAutoFlow: 'column',
@@ -89,7 +87,7 @@ function PaginationButton(props: PaginationButtonProps) {
 			disabled={props.disabled}
 			onClick={props.onClick}
 		>
-			<div class={paginationButtonClass}>{props.children}</div>
+			<div class="pagination-button">{props.children}</div>
 		</Button>
 	)
 }

@@ -1,10 +1,9 @@
 import { PricingCards } from './pricing_cards'
-import { css, cssClass, h, ui, useCss } from 'deps'
+import { css, h, ui, useCss } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
 
-let subtitleClass = cssClass()
 let subtitleCss = css({
-	[`.${subtitleClass}`]: {
+	[`.pricing-subtitle`]: {
 		fontSize: '1.5rem',
 		fontWeight: 'normal',
 		lineHeight: '1.5',
@@ -19,7 +18,7 @@ export default function Pricing() {
 		<PageLayout background>
 			<ui.S1>
 				<ui.H1 center>Pricing</ui.H1>
-				<h2 class={subtitleClass}>
+				<h2 class="pricing-subtitle">
 					Training and prediction are free forever.
 					<br />
 					Reporting, tuning, and monitoring are paid after a free trial.

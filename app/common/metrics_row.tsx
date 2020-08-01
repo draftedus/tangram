@@ -1,22 +1,21 @@
-import { Children, css, cssClass, h, ui, useCss } from 'deps'
+import { Children, css, h, ui, useCss } from 'deps'
 
 type MetricsRowProps = {
 	children: Children
 }
 
-let metricsRowClass = cssClass()
 let metricsRowCss = css({
-	[`.${metricsRowClass}`]: {
+	[`.metrics-row`]: {
 		display: 'grid',
 		gridGap: '1rem',
 	},
 	[ui.desktop]: {
-		[`.${metricsRowClass}`]: {
+		[`.metrics-row`]: {
 			gridAutoFlow: 'column',
 		},
 	},
 	[ui.mobile]: {
-		[`.${metricsRowClass}`]: {
+		[`.metrics-row`]: {
 			gridAutoFlow: 'row',
 		},
 	},
@@ -24,5 +23,5 @@ let metricsRowCss = css({
 
 export function MetricsRow(props: MetricsRowProps) {
 	useCss(metricsRowCss)
-	return <div class={metricsRowClass}>{props.children}</div>
+	return <div class="metrics-row">{props.children}</div>
 }

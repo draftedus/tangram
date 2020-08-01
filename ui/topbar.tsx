@@ -1,5 +1,5 @@
 import { Button } from './button'
-import { Children, JSX, css, cssClass, h, useCss } from './deps'
+import { Children, JSX, css, h, useCss } from './deps'
 import { desktop, mobile, variables } from './theme'
 
 type TopbarProps = {
@@ -22,12 +22,8 @@ export type TopbarItem = {
 	title: string
 }
 
-let hamburgerIconClass = cssClass()
-let xIconClass = cssClass()
-
-let topbarWrapperClass = cssClass()
 let topbarWrapperCss = css({
-	[`.${topbarWrapperClass}`]: {
+	[`.topbar-wrapper`]: {
 		alignItems: 'center',
 		display: 'grid',
 		gridAutoFlow: 'column',
@@ -41,21 +37,19 @@ let topbarWrapperCss = css({
 	},
 })
 
-let topbarLinkClass = cssClass()
 let topbarLinkCss = css({
-	[`.${topbarLinkClass}`]: {
+	[`.topbar-link`]: {
 		color: variables.colors.text,
 		cursor: 'pointer',
 		textDecoration: 'none',
 	},
-	[`.${topbarLinkClass}:hover`]: {
+	[`.topbar-link:hover`]: {
 		filter: 'brightness(90%)',
 	},
 })
 
-let detailsClass = cssClass()
 let detailsCss = css({
-	[`.${detailsClass}[open] > summary::before`]: {
+	[`.topbar-details[open] > summary::before`]: {
 		background: 'transparent',
 		bottom: '0',
 		content: '" "',
@@ -68,27 +62,26 @@ let detailsCss = css({
 		zIndex: 1,
 	},
 	[desktop]: {
-		[`.${detailsClass}`]: {
+		[`.topbar-details`]: {
 			display: 'none',
 		},
 	},
 	[mobile]: {
-		[`.${detailsClass}`]: {
+		[`.topbar-details`]: {
 			display: 'block',
 		},
 	},
-	[`.${detailsClass}[open] .${hamburgerIconClass}`]: {
+	[`.topbar-details[open] .topbar-hamburger-icon`]: {
 		color: 'blue',
 		display: 'none',
 	},
-	[`.${detailsClass}:not([open]) .${xIconClass}`]: {
+	[`.topbar-details:not([open]) .topbar-x-icon`]: {
 		display: 'none',
 	},
 })
 
-let summaryClass = cssClass()
 let summaryCss = css({
-	[`.${summaryClass}`]: {
+	[`.topbar-details-summary`]: {
 		['appearance' as any]: 'none',
 		alignItems: 'center',
 		boxSizing: 'border-box',
@@ -104,7 +97,7 @@ let summaryCss = css({
 		userSelect: 'text',
 		width: '100%',
 	},
-	[`.${summaryClass}::-webkit-details-marker`]: {
+	[`.topbar-details-summary::-webkit-details-marker`]: {
 		display: 'none',
 	},
 })
@@ -117,7 +110,7 @@ export function Topbar(props: TopbarProps) {
 		color: props.foregroundColor,
 	}
 	return (
-		<div class={topbarWrapperClass} style={wrapperStyle}>
+		<div class="topbar-wrapper" style={wrapperStyle}>
 			<TopbarBrand
 				logoElement={props.logo}
 				logoHref={props.logoHref}
@@ -131,15 +124,15 @@ export function Topbar(props: TopbarProps) {
 						item.element ? (
 							item.element
 						) : (
-							<a class={topbarLinkClass} href={item.href} key={item.title}>
+							<a class="topbar-link" href={item.href} key={item.title}>
 								{item.title}
 							</a>
 						),
 					)}
 				</TopbarItemsWrapper>
 			)}
-			<details class={detailsClass}>
-				<summary class={summaryClass}>
+			<details class="topbar-details">
+				<summary class="topbar-details-summary">
 					<TopbarHamburger textColor={props.foregroundColor} />
 				</summary>
 				<TopbarDropdown
@@ -162,33 +155,29 @@ type TopbarBrandProps = {
 	title?: string
 }
 
-let topbarBrandWrapperClass = cssClass()
 let topbarBrandWrapperCss = css({
-	[`.${topbarBrandWrapperClass}`]: {
+	[`.topbar-brand-wrapper`]: {
 		alignItems: 'center',
 		display: 'grid',
 		grid: 'auto / auto auto',
 		gridGap: '0.5rem',
 		height: '2.5rem',
 	},
-	[`.${topbarBrandWrapperClass}:hover`]: {
+	[`.topbar-brand-wrapper:hover`]: {
 		filter: 'brightness(90%)',
 	},
 })
 
-let topbarBrandImgClass = cssClass()
 let topbarBrandImgCss = css({
-	[`.${topbarBrandImgClass}`]: { height: '2.5rem', width: '2.5rem' },
+	[`.topbar-brand-img`]: { height: '2.5rem', width: '2.5rem' },
 })
 
-let topbarBrandSvgClass = cssClass()
 let topbarBrandSvgCss = css({
-	[`.${topbarBrandSvgClass}`]: { height: '2.5rem', width: '2.5rem' },
+	[`.topbar-brand-svg`]: { height: '2.5rem', width: '2.5rem' },
 })
 
-let topbarBrandTitleClass = cssClass()
 let topbarBrandTitleCss = css({
-	[`.${topbarBrandTitleClass}`]: {
+	[`.topbar-brand-title`]: {
 		fontSize: '1.75rem',
 		fontWeight: 'bold',
 		userSelect: 'none',
@@ -206,15 +195,15 @@ export function TopbarBrand(props: TopbarBrandProps) {
 		color: props.textColor,
 	}
 	return (
-		<a class={topbarLinkClass} href={props.logoHref ?? '/'}>
-			<div class={topbarBrandWrapperClass}>
+		<a class="topbar-link" href={props.logoHref ?? '/'}>
+			<div class="topbar-brand-wrapper">
 				{props.logoImgUrl ? (
-					<img class={topbarBrandImgClass} srcset={`${props.logoImgUrl} 3x`} />
+					<img class="topbar-brand-img" srcset={`${props.logoImgUrl} 3x`} />
 				) : (
-					<div class={topbarBrandSvgClass}>{props.logoElement}</div>
+					<div class="topbar-brand-svg">{props.logoElement}</div>
 				)}
 				{props.title && (
-					<div class={topbarBrandTitleClass} style={titleStyle}>
+					<div class="topbar-brand-title" style={titleStyle}>
 						{props.title}
 					</div>
 				)}
@@ -225,9 +214,8 @@ export function TopbarBrand(props: TopbarBrandProps) {
 
 type TopbarItemsWrapperProps = { children?: Children }
 
-let itemsWrapperClass = cssClass()
 let itemsWrapperCss = css({
-	[`.${itemsWrapperClass}`]: {
+	[`.topbar-items-wrapper`]: {
 		alignItems: 'center',
 		display: 'grid',
 		gridAutoFlow: 'column',
@@ -235,7 +223,7 @@ let itemsWrapperCss = css({
 		userSelect: 'none',
 	},
 	[mobile]: {
-		[`.${itemsWrapperClass}`]: {
+		[`.topbar-items-wrapper`]: {
 			display: 'none',
 		},
 	},
@@ -243,16 +231,15 @@ let itemsWrapperCss = css({
 
 function TopbarItemsWrapper(props: TopbarItemsWrapperProps) {
 	useCss(itemsWrapperCss)
-	return <nav class={itemsWrapperClass}>{props.children}</nav>
+	return <nav class="topbar-items-wrapper">{props.children}</nav>
 }
 
 type HamburgerMenuProps = {
 	textColor: string
 }
 
-let hamburgerClass = cssClass()
 let hamburgerCss = css({
-	[`.${hamburgerClass}`]: {
+	[`.topbar-hamburger`]: {
 		alignContent: 'space-between',
 		cursor: 'pointer',
 		display: 'grid',
@@ -262,7 +249,7 @@ let hamburgerCss = css({
 		padding: '1rem',
 		width: '15px',
 	},
-	[`.${hamburgerClass}:hover`]: {
+	[`.topbar-hamburger:hover`]: {
 		filter: 'brightness(90%)',
 	},
 })
@@ -271,9 +258,9 @@ function TopbarHamburger(props: HamburgerMenuProps) {
 	useCss(hamburgerCss)
 
 	return (
-		<div class={hamburgerClass}>
+		<div class="topbar-hamburger">
 			<svg
-				class={hamburgerIconClass}
+				class="topbar-hamburger-icon"
 				height="15px"
 				overflow="visible"
 				viewBox="0 0 1 1"
@@ -293,7 +280,7 @@ function TopbarHamburger(props: HamburgerMenuProps) {
 				))}
 			</svg>
 			<svg
-				class={xIconClass}
+				class="topbar-x-icon"
 				height="15px"
 				overflow="visible"
 				viewBox="0 0 1 1"
@@ -331,9 +318,8 @@ type TopbarMenuProps = {
 	textColor: string
 }
 
-let topbarDropdownWrapperClass = cssClass()
 let topbarDropdownWrapperCss = css({
-	[`.${topbarDropdownWrapperClass}`]: {
+	[`.topbar-dropdown-wrapper`]: {
 		left: '0',
 		padding: '1rem',
 		position: 'absolute',
@@ -343,20 +329,18 @@ let topbarDropdownWrapperCss = css({
 	},
 })
 
-let topbarDropdownItemClass = cssClass()
 let topbarDropdownItemCss = css({
-	[`.${topbarDropdownItemClass}`]: {
+	[`.topbar-dropdown-item`]: {
 		fontSize: '1.25rem',
 		padding: '0.5rem 1rem',
 	},
-	[`.${topbarDropdownItemClass}:hover`]: {
+	[`.topbar-dropdown-item:hover`]: {
 		backgroundColor: variables.colors.hover,
 	},
 })
 
-let topbarDropdownLinkClass = cssClass()
 let topbarDropdownLinkCss = css({
-	[`.${topbarDropdownLinkClass}`]: {
+	[`.topbar-dropdown-link`]: {
 		color: variables.colors.text,
 		cursor: 'pointer',
 		textDecoration: 'none',
@@ -370,17 +354,17 @@ function TopbarDropdown(props: TopbarMenuProps) {
 		borderBottom: props.border as any,
 	}
 	return (
-		<div class={topbarDropdownWrapperClass} style={wrapperStyle}>
+		<div class="topbar-dropdown-wrapper" style={wrapperStyle}>
 			{props.items &&
 				props.items.map(item => (
-					<a class={topbarDropdownLinkClass} href={item.href} key={item.title}>
-						<div class={topbarDropdownItemClass} key={item.title}>
+					<a class="topbar-dropdown-link" href={item.href} key={item.title}>
+						<div class="topbar-dropdown-item" key={item.title}>
 							{item.title}
 						</div>
 					</a>
 				))}
 			{props.cta && (
-				<div class={topbarDropdownItemClass}>
+				<div class="topbar-dropdown-item">
 					<Button color={variables.colors.accent} href={props.cta.href}>
 						{props.cta.title}
 					</Button>

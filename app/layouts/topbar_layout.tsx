@@ -1,11 +1,10 @@
 import { Logo, LogoScheme } from '../../www/components/logo'
-import { Children, css, cssClass, h, ui, useCss } from 'deps'
+import { Children, css, h, ui, useCss } from 'deps'
 
 type TopbarLayoutProps = { children?: Children }
 
-let gridClass = cssClass()
 let gridCss = css({
-	[`.${gridClass}`]: {
+	[`.topbar-layout-grid`]: {
 		color: ui.variables.colors.text,
 		display: 'grid',
 		grid: 'auto 1fr / auto',
@@ -17,7 +16,7 @@ let gridCss = css({
 export function TopbarLayout(props: TopbarLayoutProps) {
 	useCss(gridCss)
 	return (
-		<div class={gridClass}>
+		<div class="topbar-layout-grid">
 			<Topbar />
 			<div>{props.children}</div>
 		</div>

@@ -1,17 +1,15 @@
-import { css, cssClass, h, ui, useCss } from 'deps'
+import { css, h, ui, useCss } from 'deps'
 
-let explanationsWrapperClass = cssClass()
 let explanationsWrapperCss = css({
-	[`.${explanationsWrapperClass}`]: {
+	[`.explanations-wrapper`]: {
 		display: 'grid',
 		gridGap: '1rem',
 		padding: '1rem',
 	},
 })
 
-let innerWrapperClass = cssClass()
 let innerWrapperCss = css({
-	[`.${innerWrapperClass}`]: {
+	[`.inner-wrapper`]: {
 		display: 'grid',
 		grid: 'auto / 1fr 1fr',
 		gridGap: '1rem',
@@ -64,8 +62,8 @@ export function Explanations() {
 
 	return (
 		<ui.Window>
-			<div class={explanationsWrapperClass}>
-				<div class={innerWrapperClass}>
+			<div class="explanations-wrapper">
+				<div class="inner-wrapper">
 					<ui.Card>
 						<ui.NumberChart title="Predicted Class" value={data.className} />
 					</ui.Card>

@@ -1,4 +1,4 @@
-import { Children, css, cssClass, h, useCss } from './deps'
+import { Children, css, h, useCss } from './deps'
 import { variables } from './theme'
 
 export type TokenProps = {
@@ -8,9 +8,8 @@ export type TokenProps = {
 	textColor?: string
 }
 
-let tokenClass = cssClass()
 let tokenCss = css({
-	[`.${tokenClass}`]: {
+	[`.token`]: {
 		alignItems: 'center',
 		borderRadius: '4px',
 		boxSizing: 'border-box',
@@ -30,7 +29,7 @@ export function Token(props: TokenProps) {
 	}
 
 	return (
-		<div class={tokenClass} style={style}>
+		<div class="token" style={style}>
 			{props.children}
 		</div>
 	)

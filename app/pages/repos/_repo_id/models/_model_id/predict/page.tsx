@@ -1,4 +1,4 @@
-import { css, cssClass, h, ui, useCss } from 'deps'
+import { css, h, ui, useCss } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
@@ -85,18 +85,16 @@ type ClassificationPrediction = {
 	xAxisLabelFormatter: (i: number) => string
 }
 
-let predictClass = cssClass()
 let predictCss = css({
-	[`.${predictClass}`]: {
+	[`.predict-wrapper`]: {
 		display: 'grid',
 		grid: 'auto auto / 1fr',
 		gridGap: '2rem',
 	},
 })
 
-let predictOutputContainerClass = cssClass()
 let predictOutputContainerCss = css({
-	[`.${predictOutputContainerClass}`]: {
+	[`.predict-output-wrapper`]: {
 		display: 'grid',
 		grid: 'auto / 1fr 1fr',
 		gridGap: '1rem',
@@ -112,7 +110,7 @@ export default function PredictPage(props: Props) {
 		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
 				<ui.H1>Predict</ui.H1>
-				<div class={predictClass}>
+				<div class="predict-wrapper">
 					<ui.Form>
 						{props.columns.map(column => {
 							let name = column.name
@@ -141,7 +139,7 @@ export default function PredictPage(props: Props) {
 						props.prediction.type === PredictionType.Classification ? (
 							<div style={{ display: 'grid', gridGap: '2rem' }}>
 								<ui.H2>Prediction Output</ui.H2>
-								<div class={predictOutputContainerClass}>
+								<div class="predict-output-wrapper">
 									<ui.Card>
 										<ui.NumberChart
 											title="Predicted Class"
