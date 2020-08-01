@@ -49,9 +49,8 @@ impl Pinwheel {
 		let document_js_url = Url::parse("dst:/document.js")?;
 		let page_js_url =
 			Url::parse("dst:/")?.join(&("pages/".to_string() + page_entry + "/page.js"))?;
-		let client_js_url = Url::parse("dst:/")?
-			.join("pages")?
-			.join(&("pages/".to_string() + page_entry + "/client.js"))?;
+		let client_js_url =
+			Url::parse("dst:/")?.join(&("pages/".to_string() + page_entry + "/client.js"))?;
 		let client_js_pathname = if self.fs.exists(&client_js_url) {
 			Some(PathBuf::from("/pages").join(&page_entry).join("client.js"))
 		} else {
@@ -408,7 +407,9 @@ struct RealFileSystem {
 
 impl VirtualFileSystem for RealFileSystem {
 	fn exists(&self, url: &Url) -> bool {
-		self.dst_dir.join(url.path()).exists()
+		self.dst_dir
+			.join(url.path().strip_prefix('/').unwrap())
+			.exists()
 	}
 	fn read(&self, url: &Url) -> Result<Cow<'static, [u8]>> {
 		std::fs::read(self.dst_dir.join(url.path().strip_prefix('/').unwrap()))
