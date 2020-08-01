@@ -189,7 +189,6 @@ fn build_inner_multiclass(
 	let test_metrics = model.test_metrics.as_option().unwrap();
 	let classes = model.classes().to_owned();
 	let class_metrics = test_metrics.class_metrics.as_option().unwrap();
-
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {

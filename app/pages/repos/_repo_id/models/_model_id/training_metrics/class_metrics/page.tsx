@@ -6,7 +6,7 @@ import {
 	MulticlassClassifierClassMetricsPage,
 	Props as MulticlassClassifierProps,
 } from './multiclass_classifier'
-import { h, ui } from 'deps'
+import { h } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
@@ -40,25 +40,4 @@ export default function ClassMetricsPage(props: Props) {
 			break
 	}
 	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
-}
-
-type ClassSelectProps = {
-	class: string
-	classes: string[]
-}
-
-export function ClassSelect(props: ClassSelectProps) {
-	return (
-		<div>
-			<ui.Form>
-				<ui.SelectField
-					label="class"
-					name="class"
-					options={props.classes}
-					value={props.class}
-				/>
-				<ui.Button>Submit</ui.Button>
-			</ui.Form>
-		</div>
-	)
 }

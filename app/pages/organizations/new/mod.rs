@@ -41,6 +41,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let response = create_organization(action, user, &db).await?;
+	db.commit().await?;
 	Ok(response)
 }
 

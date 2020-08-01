@@ -8,6 +8,7 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
+use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
 #[derive(Serialize)]
@@ -19,6 +20,7 @@ struct Props {
 	roc_curve_data: Vec<Vec<ROCCurveData>>,
 	classes: Vec<String>,
 	model_layout_props: types::ModelLayoutProps,
+	class: String,
 }
 
 #[derive(Serialize)]
@@ -32,11 +34,16 @@ pub async fn get(
 	request: Request<Body>,
 	context: &Context,
 	model_id: &str,
+	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
+	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
+	let props = props(request, context, model_id, class).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repo_id/models/_model_id/roc", props)
+		.render(
+			"/repos/_repo_id/models/_model_id/training_metrics/roc",
+			props,
+		)
 		.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
@@ -44,7 +51,12 @@ pub async fn get(
 		.unwrap())
 }
 
-async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
+async fn props(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+	class: Option<String>,
+) -> Result<Props> {
 	let mut db = context
 		.database_pool
 		.get()
@@ -74,6 +86,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			&[&model_id],
 		)
 		.await?;
+
 	let row = rows.iter().next().ok_or(Error::NotFound)?;
 	let id: Id = row.get(0);
 	let title: String = row.get(1);
@@ -114,12 +127,24 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						.collect()
 				})
 				.collect();
+
 			let model_layout_props = get_model_layout_props(&db, model_id).await?;
+
 			db.commit().await?;
+
+			let classes = model.classes().to_owned();
+			let class_index = if let Some(class) = &class {
+				classes.iter().position(|c| c == class).unwrap()
+			} else {
+				1
+			};
+			let class = class.unwrap_or_else(|| classes[class_index].to_owned());
+
 			Ok(Props {
 				id: id.to_string(),
 				title,
-				classes: model.classes().to_owned(),
+				classes,
+				class,
 				auc_roc: *auc_roc,
 				roc_curve_data,
 				model_layout_props,

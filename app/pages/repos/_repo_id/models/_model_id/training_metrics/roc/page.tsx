@@ -1,9 +1,11 @@
+import { ClassSelect } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { h, ui } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
 	aucRoc: number
+	class: string
 	classes: string[]
 	modelId: string
 	modelLayoutProps: ModelLayoutProps
@@ -13,12 +15,11 @@ export type Props = {
 			truePositiveRate: number
 		}>
 	>
-	selectedClass: string
 	title: string
 }
 
 export default function TrainingMetricsIndexPage(props: Props) {
-	let selectedClassIndex = props.classes.indexOf(props.selectedClass)
+	let selectedClassIndex = props.classes.indexOf(props.class)
 	let rocData = props.rocCurveData[selectedClassIndex].map(
 		({ falsePositiveRate, truePositiveRate }) => ({
 			x: falsePositiveRate,
@@ -52,7 +53,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					<ui.TabLink href="./precision_recall">PR Curve</ui.TabLink>
 					<ui.TabLink href="./roc">ROC Curve</ui.TabLink>
 				</ui.TabBar>
-				<ui.SelectField options={props.classes} />
+				<ClassSelect class={props.class} classes={props.classes} />
 				<ui.S2>
 					<ui.H2>Area Under the Receiver Operating Characteristic</ui.H2>
 					<ui.P>{definitions.aucRoc}</ui.P>

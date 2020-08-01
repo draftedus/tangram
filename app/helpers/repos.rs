@@ -49,7 +49,7 @@ pub async fn get_model_layout_props(
 
 	let (owner_name, owner_url) = match owner {
 		types::RepoOwner::Organization(organization) => {
-			let owner_url = format!("/organizations/{}", organization.id);
+			let owner_url = format!("/organizations/{}/", organization.id);
 			(organization.name, owner_url)
 		}
 		types::RepoOwner::User(user) => {

@@ -371,7 +371,7 @@ async fn props(
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {
-		0
+		1
 	};
 	let class = class
 		.unwrap_or_else(|| classes[class_index].to_owned())

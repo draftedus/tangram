@@ -1,4 +1,4 @@
-import { ClassSelect } from './page'
+import { ClassSelect } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { h, ui } from 'deps'

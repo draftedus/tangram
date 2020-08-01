@@ -225,7 +225,7 @@ function ConfusionMatrixComparisonItem(props: ConfusionMatrixItemProps) {
 	return (
 		<div
 			class={cx(
-				wrapperClass,
+				itemWrapperClass,
 				props.true ? trueItemWrapperClass : falseItemWrapperClass,
 			)}
 			style={wrapperStyle}

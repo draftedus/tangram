@@ -8,6 +8,7 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
+use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
 #[derive(Serialize)]
@@ -19,6 +20,7 @@ struct Props {
 	non_parametric_precision_recall_curve_data: Vec<Vec<NonParametricPrecisionRecallCurveData>>,
 	parametric_precision_recall_curve_data: Vec<Vec<ParametricPrecisionRecallCurveData>>,
 	model_layout_props: types::ModelLayoutProps,
+	class: String,
 }
 
 #[derive(Serialize)]
@@ -40,8 +42,10 @@ pub async fn get(
 	request: Request<Body>,
 	context: &Context,
 	model_id: &str,
+	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
+	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
+	let props = props(request, context, model_id, class).await?;
 	let html = context
 		.pinwheel
 		.render(
@@ -55,7 +59,12 @@ pub async fn get(
 		.unwrap())
 }
 
-async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
+async fn props(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+	class: Option<String>,
+) -> Result<Props> {
 	let mut db = context
 		.database_pool
 		.get()
@@ -134,6 +143,15 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				})
 				.collect();
 			let model_layout_props = get_model_layout_props(&db, model_id).await?;
+
+			let classes = model.classes().to_owned();
+			let class_index = if let Some(class) = &class {
+				classes.iter().position(|c| c == class).unwrap()
+			} else {
+				1
+			};
+			let class = class.unwrap_or_else(|| classes[class_index].to_owned());
+
 			db.commit().await?;
 			Ok(Props {
 				id: id.to_string(),
@@ -142,6 +160,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				non_parametric_precision_recall_curve_data,
 				parametric_precision_recall_curve_data,
 				model_layout_props,
+				class,
 			})
 		}
 		_ => {

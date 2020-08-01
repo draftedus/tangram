@@ -1,8 +1,10 @@
+import { ClassSelect } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { h, ui } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
+	class: string
 	classes: string[]
 	modelId: string
 	modelLayoutProps: ModelLayoutProps
@@ -15,7 +17,6 @@ export type Props = {
 		precision: number
 		recall: number
 	}>
-	selectedClass: string
 }
 
 export default function TrainingMetricsIndexPage(props: Props) {
@@ -81,14 +82,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					<ui.TabLink href="./precision_recall">PR Curve</ui.TabLink>
 					<ui.TabLink href="./roc">ROC Curve</ui.TabLink>
 				</ui.TabBar>
-				<ui.Form>
-					<ui.SelectField
-						label="Select Class"
-						name="class"
-						options={props.classes}
-						value={props.selectedClass}
-					/>
-				</ui.Form>
+				<ClassSelect class={props.class} classes={props.classes} />
 				<ui.S2>
 					<ui.H2>Precision Recall Curve</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>

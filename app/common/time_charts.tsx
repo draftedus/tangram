@@ -51,7 +51,6 @@ export function DateWindowSelectField(props: DateWindowSelectFieldProps) {
 					options={Object.values(DateWindow)}
 					value={props.dateWindow}
 				/>
-				<ui.Button>Submit</ui.Button>
 			</ui.Form>
 		</div>
 	)

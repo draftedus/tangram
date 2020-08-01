@@ -171,13 +171,19 @@ async fn handle(
 			&["repos", _repo_id, "models", model_id, "training_metrics", "precision_recall"],
 		) => {
 			pages::repos::_repo_id::models::_model_id::training_metrics::precision_recall::get(
-				request, &context, model_id,
+				request,
+				&context,
+				model_id,
+				search_params,
 			)
 			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", "roc"]) => {
 			pages::repos::_repo_id::models::_model_id::training_metrics::roc::get(
-				request, &context, model_id,
+				request,
+				&context,
+				model_id,
+				search_params,
 			)
 			.await
 		}

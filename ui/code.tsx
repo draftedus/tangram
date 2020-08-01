@@ -84,8 +84,9 @@ export function CodeSelect(props: CodeSelectProps) {
 	useEffect(() => {
 		let radioElements = document.querySelectorAll('input[type=radio]')
 		radioElements.forEach(radioElement => {
-			radioElement.addEventListener('click', (event: any) => {
-				let lang = event.target.dataset.lang
+			radioElement.addEventListener('click', event => {
+				if (!(event.currentTarget instanceof HTMLInputElement)) throw Error()
+				let lang = event.currentTarget.dataset.lang
 				let langElements = document.querySelectorAll(
 					`input[type=radio][data-lang=${lang}]`,
 				)
