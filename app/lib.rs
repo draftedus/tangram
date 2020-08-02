@@ -332,7 +332,7 @@ pub async fn start() -> Result<()> {
 	}
 	#[cfg(not(debug_assertions))]
 	fn pinwheel() -> Pinwheel {
-		Pinwheel::prod(include_dir::include_dir!("target/js"))
+		Pinwheel::prod(include_dir::include_dir!("../target/js"))
 	}
 	let pinwheel = pinwheel();
 

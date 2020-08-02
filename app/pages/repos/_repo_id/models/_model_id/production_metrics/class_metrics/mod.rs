@@ -373,9 +373,7 @@ async fn props(
 	} else {
 		1
 	};
-	let class = class
-		.unwrap_or_else(|| classes[class_index].to_owned())
-		.to_owned();
+	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
 
 	Ok(Props {
 		id: id.to_string(),
