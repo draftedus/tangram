@@ -1,6 +1,6 @@
 import { Body, DocumentProps, Head, h } from './deps'
 
-let globalCss = `body { background-color: var(--background); color: var(--text); font-family: JetBrains Mono, monospace, sans-serif; margin: 0; line-height: 1; } @font-face { font-family: "JetBrains Mono"; src: url("/jetbrainsmono.woff2") format("woff2"); font-display: swap; } a, button { outline: none } :root { --background: #FFFFFF; --border: #F2F2F2; --header: #EEEEEE; --hover: #CCCCCC; --surface: #FAFAFA; --muted-text: #666666; --text: #222222; --accent: #0A84FF; --fun-text: #111111 } @media (prefers-color-scheme: dark) { :root { --background: #111111; --border: #212121; --header: #232323; --hover: #333333; --surface: #181818; --muted-text: #8B8B8B; --text: #E8E8E8; --accent: #0A84FF; --fun-text: #111111 } }`
+let globalCss = `body { background-color: var(--background); color: var(--text); font-family: JetBrains Mono, monospace, sans-serif; margin: 0; line-height: 1; } @font-face { font-family: "JetBrains Mono"; src: url("/jetbrainsmono.woff2") format("woff2"); font-display: swap; } a, button { outline: none } :root { --background: #FFFFFF; --border: #F2F2F2; --header: #EEEEEE; --hover: #CCCCCC; --surface: #FAFAFA; --muted-text: #666666; --text: #222222; --accent: #0A84FF; --fun-text: #ffffff } @media (prefers-color-scheme: dark) { :root { --background: #111111; --border: #212121; --header: #232323; --hover: #333333; --surface: #181818; --muted-text: #8B8B8B; --text: #E8E8E8; --accent: #0A84FF; --fun-text: #111111 } }`
 
 // :root {
 // 	scrollbar-width: 4px;
