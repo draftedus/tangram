@@ -10,6 +10,7 @@ export function ClassSelect(props: ClassSelectProps) {
 		<div>
 			<ui.Form>
 				<ui.SelectField
+					id="class-select"
 					label="Select Class"
 					name="class"
 					options={props.classes}
@@ -21,4 +22,17 @@ export function ClassSelect(props: ClassSelectProps) {
 			</ui.Form>
 		</div>
 	)
+}
+
+export function bootClassSelectField() {
+	let selectElements = document.querySelectorAll('#class-select')
+	selectElements.forEach(selectElement => {
+		if (!(selectElement instanceof HTMLSelectElement)) throw Error()
+		selectElement.addEventListener('change', event => {
+			if (!(event.currentTarget instanceof HTMLSelectElement)) throw Error()
+			let form = event.currentTarget.closest('form')
+			if (!(form instanceof HTMLFormElement)) throw Error()
+			form.submit()
+		})
+	})
 }

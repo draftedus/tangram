@@ -46,6 +46,7 @@ export function DateWindowSelectField(props: DateWindowSelectFieldProps) {
 		<div>
 			<ui.Form>
 				<ui.SelectField
+					id="date-window-select"
 					label="Date Window"
 					name="date_window"
 					options={Object.values(DateWindow)}
@@ -57,6 +58,19 @@ export function DateWindowSelectField(props: DateWindowSelectFieldProps) {
 			</ui.Form>
 		</div>
 	)
+}
+
+export function bootDateWindowSelectField() {
+	let selectElements = document.querySelectorAll('#date-window-select')
+	selectElements.forEach(selectElement => {
+		if (!(selectElement instanceof HTMLSelectElement)) throw Error()
+		selectElement.addEventListener('change', event => {
+			if (!(event.currentTarget instanceof HTMLSelectElement)) throw Error()
+			let form = event.currentTarget.closest('form')
+			if (!(form instanceof HTMLFormElement)) throw Error()
+			form.submit()
+		})
+	})
 }
 
 export function formatDateWindowInterval(

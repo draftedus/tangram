@@ -182,12 +182,14 @@ export default function ProductionMetricsPage(props: Props) {
 				<div>
 					<ui.Form>
 						<ui.SelectField
+							id="date-window-select"
 							label="Date Window"
 							name="date_window"
 							options={Object.values(DateWindow)}
 							value={props.dateWindow}
 						/>
 						<ui.SelectField
+							id="class-select"
 							label="class"
 							name="class"
 							options={props.classes}
