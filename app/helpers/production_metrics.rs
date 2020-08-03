@@ -7,7 +7,7 @@ use tangram_core::metrics::RunningMetric;
 use tokio_postgres as postgres;
 
 pub async fn get_production_metrics(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model: &tangram_core::types::Model,
 	date_window: types::DateWindow,
 	date_window_interval: types::DateWindowInterval,

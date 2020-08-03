@@ -90,6 +90,29 @@ impl postgres_types::ToSql for Id {
 	postgres_types::to_sql_checked!();
 }
 
+// impl sqlx::Type<sqlx::Any> for Id {
+// 	fn type_info() -> sqlx::any::AnyTypeInfo {
+// 		<String as sqlx::Type<sqlx::Any>>::type_info()
+// 	}
+// }
+
+// impl<'q> sqlx::Encode<'q, sqlx::Any> for Id {
+// 	fn encode(self, args: &mut sqlx::any::AnyArgumentBuffer<'q>) -> sqlx::encode::IsNull {
+// 		<String as sqlx::Encode<'q, sqlx::Any>>::encode(self.to_string(), args)
+// 	}
+// 	fn encode_by_ref(&self, args: &mut sqlx::any::AnyArgumentBuffer<'q>) -> sqlx::encode::IsNull {
+// 		<String as sqlx::Encode<'q, sqlx::Any>>::encode_by_ref(&self.to_string(), args)
+// 	}
+// }
+
+// impl<'r> sqlx::Decode<'r, sqlx::Any> for Id {
+// 	fn decode(value: sqlx::any::AnyValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+// 		let string = <String as sqlx::Decode<'r, sqlx::Any>>::decode(value)?;
+// 		let id = string.parse()?;
+// 		Ok(id)
+// 	}
+// }
+
 #[test]
 fn test_parse() {
 	let s = "00000000000000000000000000000000";

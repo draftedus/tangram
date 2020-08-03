@@ -1,22 +1,25 @@
 use anyhow::Result;
 use tangram_core::{id::Id, types};
-use tokio_postgres as postgres;
 
 /// Retrieves the model with the specified id. Errors if the model is not found.
-pub async fn get_model(db: &postgres::Transaction<'_>, model_id: Id) -> Result<types::Model> {
-	let data: Vec<u8> = db
-		.query_one(
-			"
-				select
-					data
-				from models
-				where
-					models.id = $1
-			",
-			&[&model_id.to_string()],
-		)
-		.await?
-		.get(0);
-	let model = types::Model::from_slice(&data)?;
+pub async fn get_model(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	model_id: Id,
+) -> Result<types::Model> {
+	let data: String = sqlx::query(
+		"
+			select
+				data
+			from models
+			where
+				models.id = ?1
+		",
+	)
+	.bind(&model_id.to_string())
+	.fetch_one(&mut *db)
+	.await?
+	.get(0);
+	let data = base64::decode(data);
+	let model = types::Model::from_slice(&data.as_slice())?;
 	Ok(model)
 }

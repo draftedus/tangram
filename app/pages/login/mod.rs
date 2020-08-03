@@ -1,11 +1,12 @@
 use crate::{error::Error, Context};
 use anyhow::Result;
+use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use rand::Rng;
 use serde_json::json;
+use sqlx::prelude::*;
 use std::{collections::BTreeMap, sync::Arc};
 use tangram_core::id::Id;
-use tokio_postgres as postgres;
 
 #[derive(serde::Serialize)]
 struct LoginProps {
@@ -59,14 +60,13 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 	let request_body: Action =
 		serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
 	let response = match request_body {
-		Action::Email(request_body) => email(request_body, &db, context).await?,
-		Action::Code(request_body) => code(request_body, &db, context).await?,
+		Action::Email(request_body) => email(request_body, &mut db, context).await?,
+		Action::Code(request_body) => code(request_body, &mut db, context).await?,
 	};
 	db.commit().await?;
 	Ok(response)
@@ -74,39 +74,46 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 
 pub async fn email(
 	request_body: EmailAction,
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	context: &Context,
 ) -> Result<Response<Body>> {
 	let EmailAction { email } = request_body;
-	let user_id: Id = db
-		.query_one(
-			"
-				insert into users (
-					id, created_at, email
-				) values (
-					$1, now(), $2
-				)
-				on conflict (email) do update set email = excluded.email
-				returning id
-			",
-			&[&Id::new().to_string(), &email],
-		)
-		.await?
-		.get(0);
+	let user_id = Id::new();
+	let now = Utc::now().timestamp();
+	sqlx::query(
+		"
+			insert into users (
+				id, created_at, email
+			) values (
+				?1, ?2, ?3
+			)
+			on conflict (email) do update set email = excluded.email
+		",
+	)
+	.bind(user_id.to_string())
+	.bind(&now)
+	.bind(&email)
+	.execute(&mut *db)
+	.await?;
 	if context.auth_enabled {
 		let code: u64 = rand::thread_rng().gen_range(0, 1_000_000);
 		let code = format!("{:06}", code);
+		let now = Utc::now().timestamp();
 		let code_id = Id::new();
-		db.execute(
+		sqlx::query(
 			"
 				insert into codes (
 					id, created_at, user_id, code
 				) values (
-					$1, now(), $2, $3
+					?1, ?2, ?3, ?4
 				)
 			",
-			&[&code_id.to_string(), &user_id, &code],
 		)
+		.bind(code_id.to_string())
+		.bind(now)
+		.bind(user_id.to_string())
+		.bind(&code)
+		.execute(&mut *db)
 		.await?;
 		if let Some(sendgrid_api_token) = context.sendgrid_api_token.clone() {
 			tokio::spawn(send_code_email(email.to_owned(), code, sendgrid_api_token));
@@ -120,16 +127,21 @@ pub async fn email(
 		// create the token
 		let id = Id::new();
 		let token = Id::new();
-		db.execute(
+		let now = Utc::now().timestamp();
+		sqlx::query(
 			"
-			insert into tokens (
-				id, created_at, token, user_id
-			) values (
-				$1, now(), $2, $3
-			)
-		",
-			&[&id, &token, &user_id],
+				insert into tokens (
+					id, created_at, token, user_id
+				) values (
+					?1, ?2, ?3, ?4
+				)
+			",
 		)
+		.bind(id.to_string())
+		.bind(now)
+		.bind(token.to_string())
+		.bind(user_id.to_string())
+		.execute(db)
 		.await?;
 		let set_cookie = set_cookie_header_value(token, context.cookie_domain.as_deref());
 		let response = Response::builder()
@@ -143,77 +155,86 @@ pub async fn email(
 
 pub async fn code(
 	request_body: CodeAction,
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	context: &Context,
 ) -> Result<Response<Body>> {
 	let CodeAction { email, code } = request_body;
 	let user_id = if context.auth_enabled {
-		let rows = db
-			.query(
-				"
-					select
-						users.id as user_id,
-						codes.id as code_id
-					from users
-					join codes
-					on codes.user_id = users.id
-					where
-						codes.deleted_at is null and
-						age(now(), codes.created_at) < interval '10 minutes' and
-						users.email = $1 and
-						codes.code = $2
-				",
-				&[&email, &code],
-			)
-			.await?;
-		let row = rows.iter().next().ok_or(Error::Unauthorized)?;
+		let row = sqlx::query(
+			"
+				select
+					users.id as user_id,
+					codes.id as code_id
+				from users
+				join codes
+				on codes.user_id = users.id
+				where
+					codes.deleted_at is null and
+					age(now(), codes.created_at) < interval '10 minutes' and
+					users.email = ?1 and
+					codes.code = ?2
+			",
+		)
+		.bind(&email)
+		.bind(&code)
+		.fetch_one(&mut *db)
+		.await?;
 		let user_id: String = row.get(0);
 		let user_id: Id = user_id.parse()?;
-		let code_id: Id = row.get(1);
+		let code_id: String = row.get(1);
+		let code_id: Id = code_id.parse()?;
+		let now = Utc::now().timestamp();
 		// delete the code
-		db.execute(
+		sqlx::query(
 			"
 				update codes
 				set
-					deleted_at = now()
+					deleted_at = ?1
 				where
-					id = $1
+					id = ?2
 			",
-			&[&code_id.to_string()],
 		)
+		.bind(now)
+		.bind(&code_id.to_string())
+		.execute(&mut *db)
 		.await?;
 		user_id
 	} else {
-		let rows = db
-			.query(
-				"
-					select
-						id
-					from users
-					where
-						users.email = $1
-				",
-				&[&email],
-			)
-			.await?;
-		let row = rows.iter().next().ok_or(Error::Unauthorized)?;
-		let user_id: Id = row.get(0);
+		let row = sqlx::query(
+			"
+				select
+					id
+				from users
+				where
+					users.email = ?1
+			",
+		)
+		.bind(&email)
+		.fetch_one(&mut *db)
+		.await?;
+		let user_id: String = row.get(0);
+		let user_id: Id = user_id.parse().unwrap();
 		user_id
 	};
 
 	// create the token
 	let id = Id::new();
 	let token = Id::new();
-	db.execute(
+	let now = Utc::now().timestamp();
+	sqlx::query(
 		"
 			insert into tokens (
 				id, created_at, token, user_id
 			) values (
-				$1, now(), $2, $3
+				?1, ?2, ?3, ?4
 			)
 		",
-		&[&id, &token, &user_id],
 	)
+	.bind(&id.to_string())
+	.bind(now)
+	.bind(&token.to_string())
+	.bind(&user_id.to_string())
+	.execute(db)
 	.await?;
 	let set_cookie = set_cookie_header_value(token, context.cookie_domain.as_deref());
 

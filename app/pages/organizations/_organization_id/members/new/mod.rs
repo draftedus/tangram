@@ -7,7 +7,6 @@ use anyhow::{format_err, Result};
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use tangram_core::id::Id;
-use tokio_postgres as postgres;
 
 #[derive(serde::Serialize)]
 struct Props {}
@@ -46,18 +45,17 @@ pub async fn post(
 	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	authorize_user_for_organization(&db, &user, organization_id)
+	authorize_user_for_organization(&mut db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
-	let response = add_member(action, user, &db, context, organization_id).await?;
+	let response = add_member(action, user, &mut db, context, organization_id).await?;
 	db.commit().await?;
 	Ok(response)
 }
@@ -65,7 +63,7 @@ pub async fn post(
 async fn add_member(
 	action: Action,
 	user: User,
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	context: &Context,
 	organization_id: Id,
 ) -> Result<Response<Body>> {
@@ -78,36 +76,39 @@ async fn add_member(
 			sendgrid_api_token,
 		));
 	}
-	let user_id: Id = db
-		.query_one(
-			"
-				insert into users (
-					id, created_at, email
-				) values (
-					$1, now(), $2
-				)
-				on conflict (email) do update set email = excluded.email
-				returning id
-			",
-			&[&Id::new(), &email],
+	let user_id = Id::new();
+	sqlx::query(
+		"
+		insert into users (
+			id, created_at, email
+		) values (
+			$1, now(), ?2
 		)
-		.await?
-		.get(0);
+		on conflict (email) do update set email = excluded.email
+	",
+	)
+	.bind(&user_id.to_string())
+	.bind(&email)
+	.execute(&mut *db)
+	.await?;
 	let is_admin = if let Some(is_admin) = action.is_admin {
 		is_admin == "on"
 	} else {
 		false
 	};
-	db.execute(
+	sqlx::query(
 		"
-			insert into organizations_users
-				(organization_id, user_id, is_admin)
-			values
-				($1, $2, $3)
-			on conflict (organization_id, user_id) do nothing
+		insert into organizations_users
+			(organization_id, user_id, is_admin)
+		values
+			(?1, ?2, ?3)
+		on conflict (organization_id, user_id) do nothing
     ",
-		&[&organization_id, &user_id, &is_admin],
 	)
+	.bind(&organization_id.to_string())
+	.bind(&user_id.to_string())
+	.bind(&is_admin)
+	.execute(&mut *db)
 	.await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)

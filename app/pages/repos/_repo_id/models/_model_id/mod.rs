@@ -6,7 +6,6 @@ use crate::{
 use anyhow::Result;
 use hyper::{header, Body, Request, Response, StatusCode};
 use tangram_core::id::Id;
-use tokio_postgres as postgres;
 
 pub mod index;
 pub mod introspect;
@@ -32,32 +31,35 @@ pub async fn post(
 	model_id: &str,
 ) -> Result<Response<Body>> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_model(&db, &user, model_id).await? {
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let response = delete_model(&db, model_id).await?;
+	let response = delete_model(&mut db, model_id).await?;
 	db.commit().await?;
 	Ok(response)
 }
 
-async fn delete_model(db: &postgres::Transaction<'_>, model_id: Id) -> Result<Response<Body>> {
-	db.execute(
+async fn delete_model(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	model_id: Id,
+) -> Result<Response<Body>> {
+	sqlx::query(
 		"
-			delete from models
-			where
-				models.id = $1
-		",
-		&[&model_id],
+		delete from models
+		where
+			models.id = $1
+	",
 	)
+	.bind(&model_id.to_string())
+	.execute(&mut *db)
 	.await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
@@ -71,34 +73,32 @@ pub async fn download(
 	model_id: &str,
 ) -> Result<Response<Body>> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_model(&db, &user, model_id).await? {
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let row = db
-		.query_one(
-			"
-				select
-					data
-				from models
-				where
-					models.id = $1
-			",
-			&[&model_id],
-		)
-		.await?;
+	let row = sqlx::query(
+		"
+		select
+			data
+		from models
+		where
+			models.id = $1
+		",
+	)
+	.bind(&model_id.to_string())
+	.fetch_one(&mut *db)
+	.await?;
 	db.commit().await?;
-	let data: Vec<u8> = row.get(0);
 	Ok(Response::builder()
 		.status(StatusCode::OK)
-		.body(Body::from(data))
+		.body(Body::empty())
 		.unwrap())
 }

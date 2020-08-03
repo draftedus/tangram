@@ -8,8 +8,8 @@ use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde::Serialize;
 use serde_json::json;
+use sqlx::prelude::*;
 use tangram_core::id::Id;
-use tokio_postgres as postgres;
 
 pub async fn get(
 	request: Request<Body>,
@@ -60,28 +60,27 @@ pub struct Card {
 
 async fn props(request: Request<Body>, context: &Context, organization_id: &str) -> Result<Props> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_organization(&db, &user, organization_id).await? {
+	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let organization = organizations::get_organization(organization_id, &db)
+	let organization = organizations::get_organization(organization_id, &mut db)
 		.await?
 		.ok_or(Error::NotFound)?;
 	let card = get_card(
-		&db,
+		&mut db,
 		organization_id,
 		context.stripe_secret_key.as_ref().unwrap(),
 	)
 	.await?;
-	let repos = get_organization_repositories(&db, organization_id).await?;
+	let repos = get_organization_repositories(&mut db, organization_id).await?;
 	Ok(Props {
 		id: organization_id.to_string(),
 		name: organization.name,
@@ -94,12 +93,11 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 }
 
 async fn get_organization_repositories(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 ) -> Result<Vec<Repo>> {
-	let rows = db
-		.query(
-			"
+	let rows = sqlx::query(
+		"
 				select
 					repos.id,
 					repos.title,
@@ -108,21 +106,22 @@ async fn get_organization_repositories(
 				join models
 					on models.repo_id = repos.id
 					and models.is_main = 'true'
-				where repos.organization_id = $1
+				where repos.organization_id = ?1
       ",
-			&[&organization_id],
-		)
-		.await?;
+	)
+	.bind(&organization_id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
 	Ok(rows
 		.iter()
 		.map(|row| {
-			let id: Id = row.get(0);
+			let id: String = row.get(0);
 			let title: String = row.get(1);
-			let main_model_id: Id = row.get(2);
+			let main_model_id: String = row.get(2);
 			Repo {
-				id: id.to_string(),
+				id,
 				title,
-				main_model_id: main_model_id.to_string(),
+				main_model_id,
 			}
 		})
 		.collect())
@@ -150,24 +149,23 @@ struct StripeCard {
 }
 
 pub async fn get_card(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	stripe_secret_key: &str,
 ) -> Result<Option<Card>> {
-	let stripe_payment_method_id: Option<String> = db
-		.query_one(
-			"
-        select
-          organizations.stripe_payment_method_id
-        from organizations
-        where
-          id = $1
-      ",
-			&[&organization_id],
-		)
-		.await?
-		.try_get(0)
-		.ok();
+	let row = sqlx::query(
+		"
+			select
+				organizations.stripe_payment_method_id
+			from organizations
+			where
+				id = ?1
+		",
+	)
+	.bind(&organization_id.to_string())
+	.fetch_optional(&mut *db)
+	.await?;
+	let stripe_payment_method_id: Option<String> = row.map(|r| r.get(0));
 	match stripe_payment_method_id {
 		Some(stripe_payment_method_id) => {
 			let url = format!(
@@ -235,27 +233,26 @@ pub async fn post(
 		.map_err(|_| Error::BadRequest)?;
 	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_organization(&db, &user, organization_id).await? {
+	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
 		return Err(Error::NotFound.into());
 	}
 	let response = match action {
-		Action::DeleteOrganization => delete_organization(&db, organization_id).await?,
-		Action::DeleteMember(action) => delete_member(&db, organization_id, action).await?,
-		Action::ChangePlan(action) => change_plan(&db, organization_id, action).await?,
+		Action::DeleteOrganization => delete_organization(&mut db, organization_id).await?,
+		Action::DeleteMember(action) => delete_member(&mut db, organization_id, action).await?,
+		Action::ChangePlan(action) => change_plan(&mut db, organization_id, action).await?,
 		Action::StartStripeCheckout => {
-			start_stripe_checkout(&db, organization_id, user, context).await?
+			start_stripe_checkout(&mut db, organization_id, user, context).await?
 		}
 		Action::FinishStripeCheckout(action) => {
-			finish_stripe_checkout(&db, organization_id, action, context).await?
+			finish_stripe_checkout(&mut db, organization_id, action, context).await?
 		}
 	};
 	db.commit().await?;
@@ -263,17 +260,18 @@ pub async fn post(
 }
 
 async fn delete_organization(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 ) -> Result<Response<Body>> {
-	db.query(
+	sqlx::query(
 		"
-			delete from organizations
-			where
-				id = $1
-		",
-		&[&organization_id],
+		delete from organizations
+		where
+			id = ?1
+	",
 	)
+	.bind(&organization_id.to_string())
+	.execute(&mut *db)
 	.await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
@@ -282,21 +280,23 @@ async fn delete_organization(
 }
 
 async fn delete_member(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	action: DeleteMemberAction,
 ) -> Result<Response<Body>> {
 	let DeleteMemberAction { member_id } = action;
 	let member_id: Id = member_id.parse().map_err(|_| Error::NotFound)?;
-	db.execute(
+	sqlx::query(
 		"
-			delete from organizations_users
-			where
-				organization_id = $1
-				and user_id = $2
-		",
-		&[&organization_id, &member_id],
+		delete from organizations_users
+		where
+			organization_id = ?1
+			and user_id = ?2
+	",
 	)
+	.bind(&organization_id.to_string())
+	.bind(&member_id.to_string())
+	.execute(&mut *db)
 	.await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
@@ -305,19 +305,27 @@ async fn delete_member(
 }
 
 async fn change_plan(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	action: ChangePlanAction,
 ) -> Result<Response<Body>> {
 	let ChangePlanAction { plan } = action;
-	db.execute(
+	let plan = match plan {
+		organizations::Plan::Trial => "trial",
+		organizations::Plan::Startup => "startup",
+		organizations::Plan::Team => "team",
+		organizations::Plan::Enterprise => "Enterprise",
+	};
+	sqlx::query(
 		"
-			update organizations
-				set plan = $1
-			where organizations.id = $2
-		",
-		&[&plan, &organization_id],
+		update organizations
+			set plan = $1
+		where organizations.id = $2
+	",
 	)
+	.bind(&plan)
+	.bind(&organization_id.to_string())
+	.execute(&mut *db)
 	.await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
@@ -335,26 +343,26 @@ pub struct StartStripeCheckoutResponse {
 }
 
 pub async fn start_stripe_checkout(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	user: User,
 	context: &Context,
 ) -> Result<Response<Body>> {
 	// retrieve the existing stripe customer id for the organization
-	let existing_stripe_customer_id: Option<String> = db
-		.query_one(
-			"
+	let existing_stripe_customer_id: Option<String> = sqlx::query(
+		"
         select
           organizations.stripe_customer_id
         from organizations
         where
           id = $1
-      ",
-			&[&organization_id],
-		)
-		.await?
-		.try_get(0)
-		.ok();
+			",
+	)
+	.bind(&organization_id.to_string())
+	.fetch_one(&mut *db)
+	.await?
+	.try_get(0)
+	.ok();
 	// retrieve or create the stripe customer
 	let stripe_customer_id = match existing_stripe_customer_id {
 		Some(s) => s,
@@ -374,15 +382,17 @@ pub async fn start_stripe_checkout(
 				.await?;
 			let stripe_customer_id = response.get("id").unwrap().as_str().unwrap().to_owned();
 			// save the stripe customer id with the tangram user
-			db.execute(
+			sqlx::query(
 				"
           update organizations
-            set stripe_customer_id = $1
+            set stripe_customer_id = ?1
           where
-            id = $2
+            id = ?2
         ",
-				&[&stripe_customer_id, &organization_id],
 			)
+			.bind(&stripe_customer_id)
+			.bind(&organization_id.to_string())
+			.execute(&mut *db)
 			.await?;
 			stripe_customer_id
 		}
@@ -416,7 +426,7 @@ pub async fn start_stripe_checkout(
 }
 
 pub async fn finish_stripe_checkout(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	action: FinishStripeCheckoutAction,
 	context: &Context,
@@ -446,15 +456,17 @@ pub async fn finish_stripe_checkout(
 		.json::<SessionResponse>()
 		.await?;
 	let stripe_payment_method_id = response.setup_intent.payment_method;
-	db.execute(
+	sqlx::query(
 		"
       update organizations
-        set stripe_payment_method_id = $1
+        set stripe_payment_method_id = ?1
       where
-        id = $2
+        id = ?2
     ",
-		&[&stripe_payment_method_id, &organization_id],
 	)
+	.bind(&stripe_payment_method_id)
+	.bind(&organization_id.to_string())
+	.execute(&mut *db)
 	.await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)

@@ -5,6 +5,7 @@ use crate::{
 	Context,
 };
 use anyhow::Result;
+use chrono::Utc;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde::Serialize;
 use tangram_core::id::Id;
@@ -28,15 +29,14 @@ pub struct Repo {
 
 pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let props = props(&db, user).await?;
+	let props = props(&mut db, user).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render("/user/", props).await?;
 	Ok(Response::builder()
@@ -45,7 +45,7 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.unwrap())
 }
 
-pub async fn props(db: &postgres::Transaction<'_>, user: User) -> Result<Props> {
+pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<Props> {
 	let organizations = helpers::organizations::get_organizations(&db, user.id).await?;
 	let repos = get_user_repositories(&db, user.id).await?;
 	Ok(Props {
@@ -82,15 +82,19 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 	Ok(response)
 }
 
-pub async fn logout(user: User, db: &postgres::Transaction<'_>) -> Result<Response<Body>> {
+pub async fn logout(
+	user: User,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+) -> Result<Response<Body>> {
+	let now = Utc::now().timestamp();
 	db.execute(
 		"
 			update
 				tokens
 			set
-				deleted_at = now()
+				deleted_at = ?1
 			where
-				token = $1
+				token = ?2
 		",
 		&[&user.token],
 	)
@@ -103,7 +107,7 @@ pub async fn logout(user: User, db: &postgres::Transaction<'_>) -> Result<Respon
 }
 
 pub async fn get_user_repositories(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user_id: Id,
 ) -> Result<Vec<Repo>> {
 	let rows = db

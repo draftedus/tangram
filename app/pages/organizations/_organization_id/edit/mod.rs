@@ -36,19 +36,18 @@ struct Props {
 
 async fn props(request: Request<Body>, context: &Context, organization_id: &str) -> Result<Props> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
-	authorize_user_for_organization(&db, &user, organization_id)
+	authorize_user_for_organization(&mut db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
-	let organization = organizations::get_organization(organization_id, &db)
+	let organization = organizations::get_organization(organization_id, &mut db)
 		.await?
 		.ok_or(Error::NotFound)?;
 	Ok(Props {
@@ -74,29 +73,30 @@ pub async fn post(
 		.map_err(|_| Error::BadRequest)?;
 	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
-	authorize_user_for_organization(&db, &user, organization_id)
+	authorize_user_for_organization(&mut db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
 
 	let Action { name } = action;
 
-	db.execute(
+	sqlx::query(
 		"
 			update organizations
-				set name = $1
-			where organizations.id = $2
+				set name = ?1
+			where organizations.id = ?2
 		",
-		&[&name, &organization_id],
 	)
+	.bind(&name)
+	.bind(&organization_id.to_string())
+	.execute(&mut *db)
 	.await?;
 	db.commit().await?;
 

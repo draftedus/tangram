@@ -9,6 +9,7 @@ use chrono::prelude::*;
 use hyper::{header, Body, Request, Response, StatusCode};
 use multer::Multipart;
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::*;
 use tangram_core::id::Id;
 
 #[derive(Serialize)]
@@ -26,38 +27,34 @@ struct Organization {
 
 pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let rows = db
-		.query(
-			"
-        select
-          organizations.id,
-          organizations.name
-				from organizations
-				join organizations_users
-					on organizations_users.organization_id = organizations.id
-					and organizations_users.user_id = $1
-      ",
-			&[&user.id],
-		)
-		.await?;
+	let rows = sqlx::query(
+		"
+		select
+			organizations.id,
+			organizations.name
+		from organizations
+		join organizations_users
+			on organizations_users.organization_id = organizations.id
+			and organizations_users.user_id = ?1
+		",
+	)
+	.bind(&user.id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
 	db.commit().await?;
 	let items: Vec<_> = rows
 		.iter()
 		.map(|row| {
-			let id: Id = row.get(0);
+			let id: String = row.get(0);
 			let name: String = row.get(1);
-			Organization {
-				id: id.to_string(),
-				name,
-			}
+			Organization { id, name }
 		})
 		.collect();
 	let props = ReposNewProps {
@@ -80,12 +77,11 @@ pub struct Action {
 
 pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let boundary = request
@@ -120,39 +116,43 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		.parse()
 		.map_err(|_| Error::BadRequest)?;
 	let file = file.ok_or_else(|| Error::BadRequest)?;
-	if !authorize_user_for_organization(&db, &user, organization_id).await? {
+	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
 		return Err(Error::Unauthorized.into());
 	}
 	let model = tangram_core::types::Model::from_slice(&file).map_err(|_| Error::BadRequest)?;
-	let created_at: DateTime<Utc> = Utc::now();
-	let repo_id: Id = db
-		.query_one(
-			"
-				insert into repos (
-					id, created_at, title, organization_id
-				) values (
-					$1, $2, $3, $4
-				)
-				returning id
-			",
-			&[
-				&Id::new().to_string(),
-				&created_at,
-				&title,
-				&organization_id,
-			],
-		)
-		.await?
-		.get(0);
-	db.execute(
+	let now = Utc::now().timestamp();
+	let repo_id = Id::new();
+	sqlx::query(
+		"
+			insert into repos (
+				id, created_at, title, organization_id
+			) values (
+				?1, ?2, ?3, ?4
+			)
+			returning id
+		",
+	)
+	.bind(repo_id.to_string())
+	.bind(now)
+	.bind(&title)
+	.bind(&organization_id.to_string())
+	.execute(&mut *db)
+	.await?;
+	sqlx::query(
 		"
 			insert into models
 				(id, repo_id, title, created_at, data, is_main)
 			values
-				($1, $2, $3, $4, $5, $6)
+				(?1, ?2, ?3, ?4, ?5, ?6)
 		",
-		&[&model.id(), &repo_id, &title, &created_at, &file, &true],
 	)
+	.bind(&model.id().to_string())
+	.bind(&repo_id.to_string())
+	.bind(&title)
+	.bind(&now)
+	.bind(&base64::encode(file))
+	.bind(&true)
+	.execute(&mut *db)
 	.await?;
 	db.commit().await?;
 	Ok(Response::builder()

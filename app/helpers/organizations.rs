@@ -1,4 +1,5 @@
 use anyhow::{format_err, Result};
+use sqlx::prelude::*;
 use tangram_core::id::Id;
 use tokio_postgres as postgres;
 
@@ -82,49 +83,50 @@ impl postgres_types::ToSql for Plan {
 
 pub async fn get_organization(
 	organization_id: Id,
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 ) -> Result<Option<OrganizationResponse>> {
-	let rows = db
-		.query(
-			"
+	let row = sqlx::query(
+		"
         select
 					organizations.name,
 					organizations.plan
 				from organizations
-					where organizations.id = $1
+					where organizations.id = ?1
       ",
-			&[&organization_id.to_string()],
-		)
-		.await?;
-	// TODO error handling
-	let row = if let Some(row) = rows.iter().next() {
-		row
-	} else {
-		return Ok(None);
-	};
+	)
+	.bind(&organization_id.to_string())
+	.fetch_one(&mut *db)
+	.await?;
 	let organization_name: String = row.get(0);
-	let plan = row.get(1);
-	let user_rows = db
-		.query(
-			"
+	let plan: String = row.get(1);
+	let plan = match plan.as_str() {
+		"trial" => Plan::Trial,
+		"team" => Plan::Team,
+		"startup" => Plan::Startup,
+		"enterprise" => Plan::Enterprise,
+		_ => return Err(format_err!("bad plan {}", plan)),
+	};
+	let user_rows = sqlx::query(
+		"
         select
           users.id,
 					users.email,
 					organizations_users.is_admin
 				from users
 				join organizations_users
-					on organizations_users.organization_id = $1
+					on organizations_users.organization_id = ?1
 					and organizations_users.user_id = users.id
       ",
-			&[&organization_id.to_string()],
-		)
-		.await?;
+	)
+	.bind(&organization_id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
 	let members = user_rows
 		.iter()
 		.map(|row| {
-			let user_id: Id = row.get(0);
+			let user_id: String = row.get(0);
 			Member {
-				id: user_id.to_string(),
+				id: user_id,
 				email: row.get(1),
 				is_admin: row.get(2),
 			}
@@ -140,7 +142,7 @@ pub async fn get_organization(
 }
 
 pub async fn get_organizations(
-	db: &postgres::Transaction<'_>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user_id: Id,
 ) -> Result<Vec<Organization>> {
 	let rows = db

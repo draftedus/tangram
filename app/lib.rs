@@ -23,7 +23,8 @@ mod production_metrics;
 mod production_stats;
 mod time;
 mod types;
-mod user;
+
+pub use helpers::user;
 
 pub struct Context {
 	pinwheel: Pinwheel,
@@ -33,6 +34,7 @@ pub struct Context {
 	sendgrid_api_token: Option<String>,
 	stripe_secret_key: Option<String>,
 	app_url: Option<String>,
+	pool: sqlx::AnyPool,
 }
 
 fn content_type(path: &str) -> Option<&'static str> {
@@ -333,14 +335,11 @@ pub async fn start() -> Result<()> {
 	}
 	let pinwheel = pinwheel();
 
-	// use sqlx::postgres::PgPool;
-	// let pool = PgPool::builder()
-	// 	.max_size(database_pool_max_size as u32)
-	// 	.build(&database_url)
-	// 	.await?;
+	let pool = sqlx::AnyPool::connect("sqlite:data/tangram.db").await?;
+	// let pool = sqlx::AnyPool::connect(&database_url).await?;
 
 	// run any pending migrations
-	migrations::run(&database_pool).await?;
+	migrations::run(&pool).await?;
 
 	// create the context
 	let cookie_domain = std::env::var("COOKIE_DOMAIN").ok();
@@ -361,6 +360,7 @@ pub async fn start() -> Result<()> {
 		sendgrid_api_token,
 		stripe_secret_key,
 		app_url,
+		pool,
 	});
 
 	// start the server
