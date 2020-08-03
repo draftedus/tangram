@@ -45,7 +45,9 @@ export default function UserPage(props: Props) {
 								{props.repos.map(repo => (
 									<ui.TableRow key={repo.id}>
 										<ui.TableCell>
-											<ui.Link href={`/models/${repo.mainModelId}/`}>
+											<ui.Link
+												href={`/repos/${repo.id}/models/${repo.mainModelId}/`}
+											>
 												{repo.title}
 											</ui.Link>
 										</ui.TableCell>

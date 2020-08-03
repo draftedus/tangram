@@ -6,9 +6,11 @@ type SideNavProps = { children?: Children }
 let sideNavCss = css({
 	[`.side-nav`]: {
 		alignContent: 'start',
+		backgroundColor: variables.colors.surface,
 		display: 'grid',
 		gridGap: '1rem',
 		height: '100%',
+		padding: '1rem 2rem 2rem 2rem',
 	},
 })
 
@@ -57,6 +59,9 @@ let itemCss = css({
 		paddingBottom: '.5rem',
 		paddingTop: '.5rem',
 		textDecoration: 'none',
+	},
+	[`.side-nav-item:hover`]: {
+		filter: 'brightness(90%)',
 	},
 })
 

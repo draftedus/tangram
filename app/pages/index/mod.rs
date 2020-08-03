@@ -1,5 +1,8 @@
-use crate::user::User;
-use crate::{error::Error, user::authorize_user, Context};
+use crate::{
+	error::Error,
+	user::{authorize_user, User},
+	Context,
+};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use hyper::{header, Body, Request, Response, StatusCode};

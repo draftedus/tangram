@@ -68,16 +68,23 @@ pub async fn post(
 	let data = data.ok_or_else(|| Error::BadRequest)?;
 	let model = tangram_core::types::Model::from_slice(&data).map_err(|_| Error::BadRequest)?;
 	let created_at: DateTime<Utc> = Utc::now();
-	db.execute(
-		"
+	let result = db
+		.execute(
+			"
 			insert into models
 				(id, repo_id, title, created_at, data, is_main)
 			values
 				($1, $2, $3, $4, $5, $6)
 		",
-		&[&model.id(), &repo_id, &title, &created_at, &data, &false],
-	)
-	.await?;
+			&[&model.id(), &repo_id, &title, &created_at, &data, &false],
+		)
+		.await;
+	if result.is_err() {
+		return Ok(Response::builder()
+			.status(StatusCode::SEE_OTHER)
+			.header(header::LOCATION, format!("/repos/{}/models/new", repo_id))
+			.body(Body::empty())?);
+	};
 	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)

@@ -29,6 +29,7 @@ let modelLayoutCss = css({
 		[`.model-layout`]: {
 			display: 'grid',
 			grid: '"model-group-topbar" auto "model" 1fr / minmax(0, 1fr)',
+			height: '100%',
 			overflow: 'hidden',
 		},
 	},
@@ -38,22 +39,19 @@ let modelGridCss = css({
 	[ui.mobile]: {
 		[`.model-layout-grid`]: {
 			display: 'grid',
-			grid:
-				'"model-topbar" auto "side-nav" auto "content" auto / minmax(0, 1fr)',
+			grid: '"side-nav" auto "content" auto / minmax(0, 1fr)',
 			gridGap: '2rem',
+			height: '100%',
 			overflow: 'hidden',
-			padding: '2rem 2rem',
 		},
 	},
 	[ui.desktop]: {
 		[`.model-layout-grid`]: {
 			display: 'grid',
-			grid:
-				'"model-topbar model-topbar" auto "side-nav content" 1fr / auto minmax(0, 1fr)',
+			grid: '"side-nav content" 1fr / auto minmax(0, 1fr)',
 			gridGap: '2rem',
 			height: '100%',
 			overflow: 'hidden',
-			padding: '2rem 2rem',
 		},
 	},
 })
@@ -63,19 +61,10 @@ let modelGroupTopbarCss = css({
 		alignItems: 'center',
 		backgroundColor: ui.variables.colors.surface,
 		display: 'grid',
+		grid: 'auto / auto 1fr auto auto',
 		gridAutoFlow: 'column',
 		gridGap: '1rem',
-		justifyContent: 'space-between',
 		padding: '2rem 1rem',
-	},
-})
-
-let modelTopbarCss = css({
-	[`.model-layout-model-topbar`]: {
-		alignItems: 'end',
-		display: 'grid',
-		grid: 'auto / 1fr auto auto',
-		gridGap: '2rem',
 	},
 })
 
@@ -89,11 +78,12 @@ let ownerTitleCss = css({
 	},
 })
 
-let innerCss = css({
-	[`.model-layout-inner`]: {
+let contentCss = css({
+	[`.model-layout-content`]: {
 		boxSizing: 'border-box',
 		margin: '0 auto',
 		maxWidth: ui.variables.width.max,
+		padding: '2rem 2rem',
 		width: '100%',
 	},
 })
@@ -103,10 +93,10 @@ export function ModelLayout(props: ModelLayoutProps) {
 		modelLayoutCss,
 		modelGridCss,
 		modelGroupTopbarCss,
-		modelTopbarCss,
+		// modelTopbarCss,
 		repoTitleCss,
 		ownerTitleCss,
-		innerCss,
+		contentCss,
 	)
 
 	let selectedModel = r(props.models.find(model => model.id == props.modelId))
@@ -120,45 +110,46 @@ export function ModelLayout(props: ModelLayoutProps) {
 					style={{ gridArea: 'model-group-topbar' }}
 				>
 					<div class="model-layout-repo-title">
-						<ui.Link className="model-layout-owner-title" href={props.ownerUrl}>
+						<ui.Link
+							className="model-layout-owner-title"
+							href={props.ownerUrl}
+							title="owner"
+						>
 							{props.ownerName}
 						</ui.Link>
 						/
 						<ui.Link
 							className="model-layout-owner-title"
 							href={`/repos/${props.id}/models/${props.modelId}/`}
+							title="repo"
 						>
 							{props.title}
 						</ui.Link>
 					</div>
+					<ui.Details
+						options={
+							props.models.map(model => ({
+								href: `/repos/${props.id}/models/${model.id}/`,
+								name: model.title,
+							})) ?? []
+						}
+						summary={selectedModel}
+					/>
+					<ui.Button
+						download={`${props.modelTitle}.tangram`}
+						href={`/repos/${props.id}/models/${props.modelId}/download`}
+					>
+						Download Model
+					</ui.Button>
+					<ui.Button href={`/repos/${props.id}/models/new`}>
+						Upload new model version
+					</ui.Button>
 				</div>
 				<div class="model-layout-grid" style={{ gridArea: 'model' }}>
 					<div
-						class="model-layout-model-topbar"
-						style={{ gridArea: 'model-topbar' }}
+						class="model-layout-sidenav-wrapper"
+						style={{ gridArea: 'side-nav' }}
 					>
-						<div>
-							<ui.Details
-								options={
-									props.models.map(model => ({
-										href: `/repos/${props.id}/models/${model.id}/`,
-										name: model.title,
-									})) ?? []
-								}
-								summary={selectedModel}
-							/>
-						</div>
-						<ui.Button
-							download={`${props.modelTitle}.tangram`}
-							href={`/repos/${props.id}/models/${props.modelId}/download`}
-						>
-							Download Model
-						</ui.Button>
-						<ui.Button href={`/repos/${props.id}/models/new`}>
-							Upload new model version
-						</ui.Button>
-					</div>
-					<div style={{ gridArea: 'side-nav' }}>
 						<ModelSideNav
 							id={props.modelId}
 							pagename={props.pagename}
@@ -166,7 +157,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 						/>
 					</div>
 					<div style={{ gridArea: 'content' }}>
-						<div class="model-layout-inner">{props.children}</div>
+						<div class="model-layout-content">{props.children}</div>
 					</div>
 				</div>
 			</div>

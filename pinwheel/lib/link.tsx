@@ -7,6 +7,7 @@ export type LinkProps = {
 	download?: string
 	href?: string
 	style?: CSS.Properties
+	title?: string
 }
 
 export function Link(props: LinkProps) {
@@ -16,6 +17,7 @@ export function Link(props: LinkProps) {
 			download={props.download}
 			href={props.href}
 			style={props.style as any}
+			title={props.title}
 		>
 			{props.children}
 		</a>
