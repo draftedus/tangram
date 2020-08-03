@@ -1,6 +1,9 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_model_layout_props,
+	helpers::{
+		model::{get_model, Model},
+		repos::get_model_layout_props,
+	},
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -59,37 +62,18 @@ struct Text {
 
 async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_model(&db, &user, model_id).await? {
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let rows = db
-		.query(
-			"
-				select
-					id,
-					title,
-					created_at,
-					data
-				from models
-				where
-					models.id = $1
-			",
-			&[&model_id],
-		)
-		.await?;
-	let row = rows.iter().next().ok_or(Error::NotFound)?;
-	let id: Id = row.get(0);
-	let title: String = row.get(1);
-	let data: Vec<u8> = row.get(3);
+	let Model { id, title, data } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let column_stats = match model {
 		tangram_core::types::Model::Classifier(model) => {
@@ -125,7 +109,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
 		})
 		.collect();
-	let model_layout_props = get_model_layout_props(&db, id).await?;
+	let model_layout_props = get_model_layout_props(&mut db, id).await?;
 	db.commit().await?;
 	Ok(Props {
 		model_layout_props,
@@ -220,16 +204,15 @@ async fn predict(
 	model_id: &str,
 ) -> Result<Response<Body>> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_model(&db, &user, model_id).await? {
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
 	let data = to_bytes(request.body_mut())
@@ -237,23 +220,10 @@ async fn predict(
 		.map_err(|_| Error::BadRequest)?;
 	let request: PredictAction =
 		serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-	// get the necessary data from the model
-	let rows = db
-		.query(
-			"
-				select
-					data
-				from models
-				where
-					models.id = $1
-			",
-			&[&model_id],
-		)
-		.await?;
-	db.commit().await?;
-	let row = rows.iter().next().ok_or(Error::NotFound)?;
-	let bytes: Vec<u8> = row.get(0);
-	let model = tangram_core::types::Model::from_slice(bytes.as_slice()).unwrap();
+
+	let Model { data, .. } = get_model(&mut db, model_id).await?;
+	let model = tangram_core::types::Model::from_slice(data.as_slice()).unwrap();
+
 	let predict_model: predict::PredictModel = model.try_into().unwrap();
 	let output = tangram_core::predict::predict(&predict_model, request.examples, request.options);
 	let output: PredictOutput = match output {

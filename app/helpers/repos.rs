@@ -1,10 +1,11 @@
 use crate::types;
 use anyhow::Result;
+use serde::Serialize;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
 pub async fn get_model_layout_props(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
 ) -> Result<types::ModelLayoutProps> {
 	let row = sqlx::query(
@@ -30,8 +31,9 @@ pub async fn get_model_layout_props(
 	.fetch_one(&mut *db)
 	.await?;
 	let id: String = row.get(0);
+	let id: Id = id.parse()?;
 	let title: String = row.get(1);
-	let models = get_models_for_repo(&db, id).await?;
+	let models = get_models_for_repo(&mut db, id).await?;
 	let organization_id: Option<String> = row.get(2);
 	let organization_name: Option<String> = row.get(3);
 	let user_id: Option<String> = row.get(4);
@@ -99,7 +101,7 @@ async fn get_models_for_repo(
 		",
 	)
 	.bind(&repo_id.to_string())
-	.execute(&mut *db)
+	.fetch_all(&mut *db)
 	.await?
 	.iter()
 	.map(|row| {
@@ -109,4 +111,47 @@ async fn get_models_for_repo(
 		types::RepoModel { id, title, is_main }
 	})
 	.collect())
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Repo {
+	pub id: String,
+	pub title: String,
+	pub main_model_id: String,
+}
+
+pub async fn get_organization_repositories(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	organization_id: Id,
+) -> Result<Vec<Repo>> {
+	let rows = sqlx::query(
+		"
+				select
+					repos.id,
+					repos.title,
+					models.id
+				from repos
+				join models
+					on models.repo_id = repos.id
+					and models.is_main = 'true'
+				where repos.organization_id = ?1
+      ",
+	)
+	.bind(&organization_id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
+	Ok(rows
+		.iter()
+		.map(|row| {
+			let id: String = row.get(0);
+			let title: String = row.get(1);
+			let main_model_id: String = row.get(2);
+			Repo {
+				id,
+				title,
+				main_model_id,
+			}
+		})
+		.collect())
 }

@@ -67,7 +67,7 @@ pub async fn post(
 	let file = file.ok_or_else(|| Error::BadRequest)?;
 	let model = tangram_core::types::Model::from_slice(&file).map_err(|_| Error::BadRequest)?;
 	let now = Utc::now().timestamp();
-	sqlx::query(
+	let result = sqlx::query(
 		"
 		insert into models
 			(id, repo_id, title, created_at, data, is_main)
@@ -82,7 +82,7 @@ pub async fn post(
 	.bind(base64::encode(file))
 	.bind(&false)
 	.execute(&mut *db)
-	.await?;
+	.await;
 	if result.is_err() {
 		return Ok(Response::builder()
 			.status(StatusCode::SEE_OTHER)
@@ -92,6 +92,9 @@ pub async fn post(
 	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, format!("/repos/{}", repo_id))
+		.header(
+			header::LOCATION,
+			format!("/repos/{}/models/{}/", repo_id, model.id().to_string()),
+		)
 		.body(Body::empty())?)
 }

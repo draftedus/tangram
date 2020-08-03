@@ -1,6 +1,7 @@
 use crate::{
 	error::Error,
 	helpers::organizations,
+	helpers::repos,
 	user::{authorize_user, authorize_user_for_organization, User},
 	Context,
 };
@@ -36,15 +37,7 @@ struct Props {
 	name: String,
 	plan: organizations::Plan,
 	user_id: String,
-	repos: Vec<Repo>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Repo {
-	id: String,
-	title: String,
-	main_model_id: String,
+	repos: Vec<repos::Repo>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
@@ -80,7 +73,7 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 		context.stripe_secret_key.as_ref().unwrap(),
 	)
 	.await?;
-	let repos = get_organization_repositories(&mut db, organization_id).await?;
+	let repos = repos::get_organization_repositories(&mut db, organization_id).await?;
 	Ok(Props {
 		id: organization_id.to_string(),
 		name: organization.name,
@@ -90,41 +83,6 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 		card,
 		repos,
 	})
-}
-
-async fn get_organization_repositories(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	organization_id: Id,
-) -> Result<Vec<Repo>> {
-	let rows = sqlx::query(
-		"
-				select
-					repos.id,
-					repos.title,
-					models.id
-				from repos
-				join models
-					on models.repo_id = repos.id
-					and models.is_main = 'true'
-				where repos.organization_id = ?1
-      ",
-	)
-	.bind(&organization_id.to_string())
-	.fetch_all(&mut *db)
-	.await?;
-	Ok(rows
-		.iter()
-		.map(|row| {
-			let id: String = row.get(0);
-			let title: String = row.get(1);
-			let main_model_id: String = row.get(2);
-			Repo {
-				id,
-				title,
-				main_model_id,
-			}
-		})
-		.collect())
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -160,12 +118,15 @@ pub async fn get_card(
 			from organizations
 			where
 				id = ?1
+			and organizations.stripe_payment_method_id is not null
 		",
 	)
 	.bind(&organization_id.to_string())
 	.fetch_optional(&mut *db)
 	.await?;
+
 	let stripe_payment_method_id: Option<String> = row.map(|r| r.get(0));
+
 	match stripe_payment_method_id {
 		Some(stripe_payment_method_id) => {
 			let url = format!(
@@ -319,8 +280,8 @@ async fn change_plan(
 	sqlx::query(
 		"
 		update organizations
-			set plan = $1
-		where organizations.id = $2
+			set plan = ?1
+		where organizations.id = ?2
 	",
 	)
 	.bind(&plan)
@@ -355,7 +316,7 @@ pub async fn start_stripe_checkout(
           organizations.stripe_customer_id
         from organizations
         where
-          id = $1
+          id = ?1
 			",
 	)
 	.bind(&organization_id.to_string())

@@ -50,7 +50,7 @@ pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> Re
 				and users.id = ?1
 			join models
 				on models.repo_id = repos.id
-				and models.is_main = 'true'
+				and models.is_main = 1
 			where organizations_users.user_id = ?1 or users.id = ?1
 			order by repos.created_at
 		",

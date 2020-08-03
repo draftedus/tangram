@@ -1,6 +1,9 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_model_layout_props,
+	helpers::{
+		model::{get_model, Model},
+		repos::get_model_layout_props,
+	},
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -9,7 +12,6 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use serde::Serialize;
-use sqlx::prelude::*;
 use tangram_core::id::Id;
 
 #[derive(Serialize)]
@@ -76,26 +78,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let rows = sqlx::query(
-		"
-			select
-				id,
-				title,
-				created_at,
-				data
-			from models
-			where
-				models.id = ?1
-			",
-	)
-	.bind(&model_id.to_string())
-	.fetch_all(&mut *db)
-	.await?;
-	// TODO error handling
-	let row = rows.iter().next().unwrap();
-	let title: String = row.get(1);
-	let data: String = row.get(3);
-	let data: Vec<u8> = base64::decode(data).unwrap();
+
+	let Model { title, data, .. } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let props = match model {

@@ -2,7 +2,10 @@ use crate::{
 	cookies,
 	error::Error,
 	helpers::production_metrics,
-	helpers::repos::get_model_layout_props,
+	helpers::{
+		model::{get_model, Model},
+		repos::get_model_layout_props,
+	},
 	time::format_date_window_interval,
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -174,42 +177,23 @@ async fn props(
 		.unwrap_or(UTC);
 
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_model(&db, &user, model_id).await? {
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
 
-	let rows = db
-		.query(
-			"
-				select
-					id,
-					title,
-					created_at,
-					data
-				from models
-				where
-					models.id = $1
-			",
-			&[&model_id],
-		)
-		.await?;
-	let row = rows.iter().next().ok_or(Error::NotFound)?;
-	let id: Id = row.get(0);
-	let title: String = row.get(1);
-	let data: Vec<u8> = row.get(3);
+	let Model { id, title, data } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let production_metrics = production_metrics::get_production_metrics(
-		&db,
+		&mut db,
 		&model,
 		date_window,
 		date_window_interval,
@@ -409,7 +393,7 @@ async fn props(
 		_ => unimplemented!(),
 	};
 
-	let model_layout_props = get_model_layout_props(&db, model_id).await?;
+	let model_layout_props = get_model_layout_props(&mut db, model_id).await?;
 	db.commit().await?;
 
 	Ok(Props {

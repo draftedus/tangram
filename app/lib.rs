@@ -28,7 +28,6 @@ pub use helpers::user;
 
 pub struct Context {
 	pinwheel: Pinwheel,
-	database_pool: Pool,
 	auth_enabled: bool,
 	cookie_domain: Option<String>,
 	sendgrid_api_token: Option<String>,
@@ -354,7 +353,6 @@ pub async fn start() -> Result<()> {
 	let app_url = std::env::var("APP_URL").ok();
 	let context = Arc::new(Context {
 		pinwheel,
-		database_pool,
 		auth_enabled,
 		cookie_domain,
 		sendgrid_api_token,

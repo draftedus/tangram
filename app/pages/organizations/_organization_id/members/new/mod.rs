@@ -4,6 +4,7 @@ use crate::{
 	Context,
 };
 use anyhow::{format_err, Result};
+use chrono::Utc;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use tangram_core::id::Id;
@@ -77,17 +78,19 @@ async fn add_member(
 		));
 	}
 	let user_id = Id::new();
+	let now = Utc::now().timestamp();
 	sqlx::query(
 		"
 		insert into users (
 			id, created_at, email
 		) values (
-			$1, now(), ?2
+			?1, ?2, ?2
 		)
 		on conflict (email) do update set email = excluded.email
 	",
 	)
 	.bind(&user_id.to_string())
+	.bind(&now)
 	.bind(&email)
 	.execute(&mut *db)
 	.await?;

@@ -1,7 +1,6 @@
 use anyhow::{format_err, Result};
 use sqlx::prelude::*;
 use tangram_core::id::Id;
-use tokio_postgres as postgres;
 
 #[derive(serde::Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -145,29 +144,26 @@ pub async fn get_organizations(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user_id: Id,
 ) -> Result<Vec<Organization>> {
-	let rows = db
-		.query(
-			"
-        select
-          organizations.id,
-          organizations.name
-				from organizations
-				join organizations_users
-					on organizations_users.organization_id = organizations.id
-					and organizations_users.user_id = $1
-      ",
-			&[&user_id],
-		)
-		.await?;
+	let rows = sqlx::query(
+		"
+			select
+				organizations.id,
+				organizations.name
+			from organizations
+			join organizations_users
+				on organizations_users.organization_id = organizations.id
+				and organizations_users.user_id = ?1
+		",
+	)
+	.bind(&user_id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
 	Ok(rows
 		.iter()
 		.map(|row| {
-			let id: Id = row.get(0);
+			let id: String = row.get(0);
 			let name: String = row.get(1);
-			Organization {
-				id: id.to_string(),
-				name,
-			}
+			Organization { id, name }
 		})
 		.collect())
 }

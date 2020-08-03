@@ -129,7 +129,6 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			) values (
 				?1, ?2, ?3, ?4
 			)
-			returning id
 		",
 	)
 	.bind(repo_id.to_string())
@@ -157,6 +156,9 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, format!("/repos/{}", repo_id))
+		.header(
+			header::LOCATION,
+			format!("/repos/{}/models/{}/", repo_id, model.id().to_string()),
+		)
 		.body(Body::empty())?)
 }

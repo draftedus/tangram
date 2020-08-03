@@ -1,6 +1,9 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_model_layout_props,
+	helpers::{
+		model::{get_model, Model},
+		repos::get_model_layout_props,
+	},
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -8,7 +11,6 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
-use sqlx::prelude::*;
 use tangram_core::id::Id;
 
 #[derive(Serialize)]
@@ -71,26 +73,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let rows = sqlx::query(
-		"
-			select
-				id,
-				title,
-				created_at,
-				data
-			from models
-			where
-				models.id = ?1
-		",
-	)
-	.bind(&model_id.to_string())
-	.fetch_all(&mut *db)
-	.await?;
-	let row = rows.iter().next().ok_or(Error::NotFound)?;
-	let id: String = row.get(0);
-	let title: String = row.get(1);
-	let data: String = row.get(3);
-	let data: Vec<u8> = base64::decode(data);
+	let Model { title, data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let inner = match model {
 		tangram_core::types::Model::Classifier(model) => {

@@ -5,6 +5,7 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{header, Body, Request, Response, StatusCode};
+use sqlx::prelude::*;
 use tangram_core::id::Id;
 
 pub mod index;
@@ -55,7 +56,7 @@ async fn delete_model(
 		"
 		delete from models
 		where
-			models.id = $1
+			models.id = ?1
 	",
 	)
 	.bind(&model_id.to_string())
@@ -90,15 +91,17 @@ pub async fn download(
 			data
 		from models
 		where
-			models.id = $1
+			models.id = ?1
 		",
 	)
 	.bind(&model_id.to_string())
 	.fetch_one(&mut *db)
 	.await?;
+	let data: String = row.get(0);
+	let data = base64::decode(data)?;
 	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
-		.body(Body::empty())
+		.body(Body::from(data))
 		.unwrap())
 }

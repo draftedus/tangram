@@ -1,6 +1,9 @@
 use crate::{
 	error::Error,
-	helpers::repos::get_model_layout_props,
+	helpers::{
+		model::{get_model, Model},
+		repos::get_model_layout_props,
+	},
 	types,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
@@ -83,39 +86,19 @@ struct ClassMetrics {
 
 async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
 	let mut db = context
-		.database_pool
-		.get()
+		.pool
+		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let db = db.transaction().await?;
-	let user = authorize_user(&request, &db)
+	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
 
-	if !authorize_user_for_model(&db, &user, model_id).await? {
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	// get the necessary data from the model
-	let rows = db
-		.query(
-			"
-				select
-					id,
-					title,
-					created_at,
-					data
-				from models
-				where
-					models.id = $1
-			",
-			&[&model_id],
-		)
-		.await?;
-	let row = rows.iter().next().ok_or(Error::NotFound)?;
-	let id: Id = row.get(0);
-	let title: String = row.get(1);
-	let data: Vec<u8> = row.get(3);
+	let Model { title, data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	let training_summary = training_summary(&model);
@@ -159,7 +142,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		_ => return Err(Error::BadRequest.into()),
 	};
 
-	let model_layout_props = get_model_layout_props(&db, id).await?;
+	let model_layout_props = get_model_layout_props(&mut db, id).await?;
 	db.commit().await?;
 
 	Ok(Props {
