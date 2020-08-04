@@ -134,7 +134,7 @@ pub async fn get_organization_repositories(
 				from repos
 				join models
 					on models.repo_id = repos.id
-					and models.is_main = 'true'
+					and models.is_main = 1
 				where repos.organization_id = ?1
       ",
 	)

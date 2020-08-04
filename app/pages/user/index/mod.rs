@@ -120,7 +120,7 @@ pub async fn get_user_repositories(
 			from repos
 			join models
 				on models.repo_id = repos.id
-				and models.is_main = 'true'
+				and models.is_main = 1
 			where repos.user_id = ?1
 		",
 	)

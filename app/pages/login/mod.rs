@@ -159,6 +159,8 @@ pub async fn code(
 	context: &Context,
 ) -> Result<Response<Body>> {
 	let CodeAction { email, code } = request_body;
+	let ten_minutes_in_seconds = 10 * 60;
+	let now = Utc::now().timestamp();
 	let user_id = if context.auth_enabled {
 		let row = sqlx::query(
 			"
@@ -170,11 +172,13 @@ pub async fn code(
 				on codes.user_id = users.id
 				where
 					codes.deleted_at is null and
-					age(now(), codes.created_at) < interval '10 minutes' and
-					users.email = ?1 and
-					codes.code = ?2
+					?1 - codes.created_at < ?2
+					users.email = ?3 and
+					codes.code = ?4
 			",
 		)
+		.bind(now)
+		.bind(ten_minutes_in_seconds)
 		.bind(&email)
 		.bind(&code)
 		.fetch_one(&mut *db)

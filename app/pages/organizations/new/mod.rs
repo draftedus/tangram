@@ -71,7 +71,7 @@ async fn create_organization(
 			insert into organizations_users
 				(organization_id, user_id, is_admin)
 			values
-				(?1, ?2, true)
+				(?1, ?2, 1)
 		",
 	)
 	.bind(&organization_id.to_string())
