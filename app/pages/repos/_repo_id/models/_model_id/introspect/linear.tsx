@@ -18,7 +18,7 @@ export function LinearFeatureWeights(props: Props) {
 	]
 	return (
 		<ui.S2>
-			<ui.H2>Feature Weights</ui.H2>
+			<ui.H2>{'Feature Weights'}</ui.H2>
 			<ui.Card>
 				<ui.BarChart
 					data={data}
@@ -31,8 +31,8 @@ export function LinearFeatureWeights(props: Props) {
 			</ui.Card>
 			<ui.Table width="100%">
 				<ui.TableHeader>
-					<ui.TableHeaderCell>Feature</ui.TableHeaderCell>
-					<ui.TableHeaderCell>Weight</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'Feature'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'Weight'}</ui.TableHeaderCell>
 				</ui.TableHeader>
 				<ui.TableBody>
 					{props.values.map(([feature, weight], i) => (

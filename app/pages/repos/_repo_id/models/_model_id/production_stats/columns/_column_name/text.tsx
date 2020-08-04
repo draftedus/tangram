@@ -71,12 +71,12 @@ export function Text(props: Props) {
 					/>
 				</ui.Card>
 			</MetricsRow>
-			<ui.H2>Unique Tokens</ui.H2>
+			<ui.H2>{'Unique Tokens'}</ui.H2>
 			<ui.Table width="100%">
 				<ui.TableHeader>
 					<ui.TableRow>
-						<ui.TableHeaderCell>Token</ui.TableHeaderCell>
-						<ui.TableHeaderCell>Count</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Token'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
 					</ui.TableRow>
 				</ui.TableHeader>
 				<ui.TableBody>

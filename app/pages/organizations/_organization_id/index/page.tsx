@@ -44,12 +44,12 @@ export default function OrganizationIndexPage(props: Props) {
 				<ui.H1>{props.name}</ui.H1>
 				<ui.S2>
 					<ui.SpaceBetween>
-						<ui.H2>Details</ui.H2>
+						<ui.H2>{'Details'}</ui.H2>
 						<ui.Button
 							color={ui.colors.gray}
 							href={`/organizations/${props.id}/edit`}
 						>
-							Edit
+							{'Edit'}
 						</ui.Button>
 					</ui.SpaceBetween>
 					<ui.Form>
@@ -62,14 +62,14 @@ export default function OrganizationIndexPage(props: Props) {
 				</ui.S2>
 				<ui.S2>
 					<ui.SpaceBetween>
-						<ui.H2>Repos</ui.H2>
-						<ui.Button href="/repos/new">Create New Repo</ui.Button>
+						<ui.H2>{'Repos'}</ui.H2>
+						<ui.Button href="/repos/new">{'Create New Repo'}</ui.Button>
 					</ui.SpaceBetween>
 					{props.repos.length > 0 ? (
 						<ui.Table width="100%">
 							<ui.TableHeader>
 								<ui.TableRow>
-									<ui.TableHeaderCell>Repo Title</ui.TableHeaderCell>
+									<ui.TableHeaderCell>{'Repo Title'}</ui.TableHeaderCell>
 								</ui.TableRow>
 							</ui.TableHeader>
 							<ui.TableBody>
@@ -88,35 +88,35 @@ export default function OrganizationIndexPage(props: Props) {
 						</ui.Table>
 					) : (
 						<ui.Card>
-							<ui.P>Organization does not have any repos.</ui.P>
+							<ui.P>{'Organization does not have any repos.'}</ui.P>
 						</ui.Card>
 					)}
 				</ui.S2>
 				<ui.S2>
 					<ui.SpaceBetween>
-						<ui.H2>Members</ui.H2>
+						<ui.H2>{'Members'}</ui.H2>
 						<ui.Button href={`/organizations/${props.id}/members/new`}>
-							Invite Team Member
+							{'Invite Team Member'}
 						</ui.Button>
 					</ui.SpaceBetween>
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>Email</ui.TableHeaderCell>
-								<ui.TableHeaderCell>Role</ui.TableHeaderCell>
-								<ui.TableHeaderCell>Remove</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Email'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Role'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Remove'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>
 							{props.members.map(member => (
 								<ui.TableRow key={member.id}>
-									<ui.TableCell expand>{member.email}</ui.TableCell>
+									<ui.TableCell expand={true}>{member.email}</ui.TableCell>
 									<ui.TableCell>
 										{member.isAdmin ? 'Admin' : 'Member'}
 									</ui.TableCell>
 									<ui.TableCell>
 										{props.userId != member.id ? (
-											<ui.Form post>
+											<ui.Form post={true}>
 												<input
 													name="action"
 													type="hidden"
@@ -128,7 +128,7 @@ export default function OrganizationIndexPage(props: Props) {
 													value={member.id}
 												/>
 												<ui.Button color={ui.colors.red} type="submit">
-													Remove
+													{'Remove'}
 												</ui.Button>
 											</ui.Form>
 										) : null}
@@ -139,11 +139,15 @@ export default function OrganizationIndexPage(props: Props) {
 					</ui.Table>
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>Plan</ui.H2>
-					<ui.P>You are currently on the {props.plan} plan.</ui.P>
+					<ui.H2>{'Plan'}</ui.H2>
+					<ui.P>
+						{'You are currently on the '}
+						{props.plan}
+						{' plan.'}
+					</ui.P>
 					<PricingCards
 						enterpriseCta={
-							<ui.Form post>
+							<ui.Form post={true}>
 								<input name="action" type="hidden" value="change_plan" />
 								<input name="plan" type="hidden" value={Plan.Enterprise} />
 								<ui.Button
@@ -157,7 +161,7 @@ export default function OrganizationIndexPage(props: Props) {
 						}
 						enterpriseSelected={props.plan === Plan.Enterprise}
 						freeCta={
-							<ui.Form post>
+							<ui.Form post={true}>
 								<input name="action" type="hidden" value="change_plan" />
 								<input name="plan" type="hidden" value={Plan.Free} />
 								<ui.Button
@@ -171,7 +175,7 @@ export default function OrganizationIndexPage(props: Props) {
 						}
 						freeSelected={props.plan === Plan.Free}
 						startupCta={
-							<ui.Form post>
+							<ui.Form post={true}>
 								<input name="action" type="hidden" value="change_plan" />
 								<input name="plan" type="hidden" value={Plan.Startup} />
 								<ui.Button
@@ -185,7 +189,7 @@ export default function OrganizationIndexPage(props: Props) {
 						}
 						startupSelected={props.plan === Plan.Startup}
 						teamCta={
-							<ui.Form post>
+							<ui.Form post={true}>
 								<input name="action" type="hidden" value="change_plan" />
 								<input name="plan" type="hidden" value={Plan.Team} />
 								<ui.Button
@@ -202,43 +206,45 @@ export default function OrganizationIndexPage(props: Props) {
 				</ui.S2>
 				<ui.S2>
 					<ui.SpaceBetween>
-						<ui.H2>Billing</ui.H2>
-						<ui.Button color={ui.colors.blue}>Set Payment Method</ui.Button>
+						<ui.H2>{'Billing'}</ui.H2>
+						<ui.Button color={ui.colors.blue}>{'Set Payment Method'}</ui.Button>
 					</ui.SpaceBetween>
 					{props.card ? (
 						<ui.Table width="100%">
 							<ui.TableBody>
 								<ui.TableRow>
-									<ui.TableCell>Name</ui.TableCell>
+									<ui.TableCell>{'Name'}</ui.TableCell>
 									<ui.TableCell>{props.card.name}</ui.TableCell>
 								</ui.TableRow>
 								<ui.TableRow>
-									<ui.TableCell>Brand</ui.TableCell>
+									<ui.TableCell>{'Brand'}</ui.TableCell>
 									<ui.TableCell>{props.card.brand}</ui.TableCell>
 								</ui.TableRow>
 								<ui.TableRow>
-									<ui.TableCell>Last 4 Digits</ui.TableCell>
+									<ui.TableCell>{'Last 4 Digits'}</ui.TableCell>
 									<ui.TableCell>{props.card.last4}</ui.TableCell>
 								</ui.TableRow>
 								<ui.TableRow>
-									<ui.TableCell>Expiration Date</ui.TableCell>
+									<ui.TableCell>{'Expiration Date'}</ui.TableCell>
 									<ui.TableCell>
-										{props.card.expMonth} / {props.card.expYear}
+										{props.card.expMonth}
+										{' / '}
+										{props.card.expYear}
 									</ui.TableCell>
 								</ui.TableRow>
 							</ui.TableBody>
 						</ui.Table>
 					) : (
 						<ui.Card>
-							<ui.P>You do not have a payment method.</ui.P>
+							<ui.P>{'You do not have a payment method.'}</ui.P>
 						</ui.Card>
 					)}
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>Danger Zone</ui.H2>
-					<ui.Form post>
+					<ui.H2>{'Danger Zone'}</ui.H2>
+					<ui.Form post={true}>
 						<input name="action" type="hidden" value="delete_organization" />
-						<ui.Button color={ui.colors.red}>Delete Organization</ui.Button>
+						<ui.Button color={ui.colors.red}>{'Delete Organization'}</ui.Button>
 					</ui.Form>
 				</ui.S2>
 			</ui.S1>

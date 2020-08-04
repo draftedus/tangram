@@ -38,7 +38,7 @@ export function Logo(props: LogoProps) {
 	}
 	return (
 		<svg class={props.class} height="100%" viewBox="0 0 200 200" width="100%">
-			<desc>tangram</desc>
+			<desc>{'tangram'}</desc>
 			<polygon
 				fill={trapezoid}
 				points="4 9.657 4 98.343 46 140.343 46 51.657"

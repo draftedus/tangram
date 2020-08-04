@@ -15,7 +15,7 @@ export let selectedThresholdTextColor = ui.variables.colors.funText
 export function UnknownColumnToken() {
 	return (
 		<ui.Token color={ui.colors.gray} textColor={ui.variables.colors.funText}>
-			Unknown
+			{'Unknown'}
 		</ui.Token>
 	)
 }
@@ -23,7 +23,7 @@ export function UnknownColumnToken() {
 export function NumberColumnToken() {
 	return (
 		<ui.Token color={ui.colors.teal} textColor={ui.variables.colors.funText}>
-			Number
+			{'Number'}
 		</ui.Token>
 	)
 }
@@ -31,7 +31,7 @@ export function NumberColumnToken() {
 export function EnumColumnToken() {
 	return (
 		<ui.Token color={ui.colors.purple} textColor={ui.variables.colors.funText}>
-			Enum
+			{'Enum'}
 		</ui.Token>
 	)
 }
@@ -39,7 +39,7 @@ export function EnumColumnToken() {
 export function TextColumnToken() {
 	return (
 		<ui.Token color={ui.colors.orange} textColor={ui.variables.colors.funText}>
-			Text
+			{'Text'}
 		</ui.Token>
 	)
 }

@@ -47,7 +47,7 @@ export function FileField(props: FileFieldProps) {
 		<Label>
 			{props.label}
 			<div class="form-file-field-wrapper">
-				Choose File
+				{'Choose File'}
 				<input class="form-file-input" name={props.name} type="file" />
 			</div>
 		</Label>

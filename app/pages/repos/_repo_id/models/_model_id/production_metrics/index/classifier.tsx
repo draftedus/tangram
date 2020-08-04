@@ -72,10 +72,10 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 	)
 	return (
 		<ui.S1>
-			<ui.H1>Production Metrics</ui.H1>
+			<ui.H1>{'Production Metrics'}</ui.H1>
 			<ui.TabBar>
-				<ui.TabLink href="./">Overview</ui.TabLink>
-				<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
+				<ui.TabLink href="./">{'Overview'}</ui.TabLink>
+				<ui.TabLink href="./class_metrics">{'Class Metrics'}</ui.TabLink>
 			</ui.TabBar>
 			<ui.S2>
 				<DateWindowSelectField dateWindow={props.dateWindow} />
@@ -94,7 +94,7 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 				</MetricsRow>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>Accuracy</ui.H2>
+				<ui.H2>{'Accuracy'}</ui.H2>
 				<ui.P>{definitions.accuracy}</ui.P>
 				<ui.Card>
 					<ui.NumberComparisonChart
@@ -122,16 +122,18 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 			</ui.S2>
 			{props.overall.classMetricsTable !== null ? (
 				<ui.S2>
-					<ui.H2>Precision and Recall</ui.H2>
+					<ui.H2>{'Precision and Recall'}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>Class</ui.TableHeaderCell>
-								<ui.TableHeaderCell>Training Precision</ui.TableHeaderCell>
-								<ui.TableHeaderCell>Training Recall</ui.TableHeaderCell>
-								<ui.TableHeaderCell>Production Precision</ui.TableHeaderCell>
-								<ui.TableHeaderCell>Production Recall</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Class'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Training Precision'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Training Recall'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>
+									{'Production Precision'}
+								</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Production Recall'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>

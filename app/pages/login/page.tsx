@@ -10,7 +10,7 @@ export type LoginProps = {
 export default function Login(props: LoginProps) {
 	return (
 		<AuthLayout>
-			<ui.Form post>
+			<ui.Form post={true}>
 				{props.error && (
 					<ui.Alert level={ui.Level.Danger}>{props.error}</ui.Alert>
 				)}
@@ -22,10 +22,10 @@ export default function Login(props: LoginProps) {
 					value={props.email}
 				/>
 				{props.code && <ui.TextField name="code" placeholder="Code" />}
-				<ui.Button type="submit">Login</ui.Button>
+				<ui.Button type="submit">{'Login'}</ui.Button>
 				{props.code && (
 					<div style={{ lineHeight: '1.5', textAlign: 'center' }}>
-						We emailed you a code. Copy and paste it above to log in.
+						{'We emailed you a code. Copy and paste it above to log in.'}
 					</div>
 				)}
 			</ui.Form>

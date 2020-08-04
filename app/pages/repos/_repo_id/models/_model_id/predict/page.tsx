@@ -109,7 +109,7 @@ export default function PredictPage(props: Props) {
 	return (
 		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
-				<ui.H1>Predict</ui.H1>
+				<ui.H1>{'Predict'}</ui.H1>
 				<div class="predict-wrapper">
 					<ui.Form>
 						{props.columns.map(column => {
@@ -132,13 +132,13 @@ export default function PredictPage(props: Props) {
 							}
 						})}
 						<input name="action" type="hidden" value="predict" />
-						<ui.Button type="submit">Predict</ui.Button>
+						<ui.Button type="submit">{'Predict'}</ui.Button>
 					</ui.Form>
 					<div>
 						{props.prediction &&
 						props.prediction.type === PredictionType.Classification ? (
 							<div style={{ display: 'grid', gridGap: '2rem' }}>
-								<ui.H2>Prediction Output</ui.H2>
+								<ui.H2>{'Prediction Output'}</ui.H2>
 								<div class="predict-output-wrapper">
 									<ui.Card>
 										<ui.NumberChart
@@ -170,18 +170,18 @@ export default function PredictPage(props: Props) {
 										}
 									/>
 								)}
-								<ui.H2>Explanation</ui.H2>
+								<ui.H2>{'Explanation'}</ui.H2>
 								<ui.P>
-									The baseline value is the mean value observed in the training
-									dataset. Each feature in the example influences the model's
-									output, either positively or negatively.
+									{
+										"The baseline value is the mean value observed in the training dataset. Each feature in the example influences the model's output, either positively or negatively."
+									}
 								</ui.P>
 								<ui.Card>
 									<ui.ShapChart
 										data={props.prediction.value.shapChartData}
-										includeXAxisTitle
-										includeYAxisLabels
-										includeYAxisTitle
+										includeXAxisTitle={true}
+										includeYAxisLabels={true}
+										includeYAxisTitle={true}
 										negativeColor={ui.colors.red}
 										positiveColor={ui.colors.green}
 									/>
@@ -190,25 +190,23 @@ export default function PredictPage(props: Props) {
 						) : props.prediction &&
 						  props.prediction.type === PredictionType.Regression ? (
 							<div style={{ display: 'grid', gridGap: '2rem' }}>
-								<ui.H2>Prediction Output</ui.H2>
+								<ui.H2>{'Prediction Output'}</ui.H2>
 								<ui.Card>
 									<ui.NumberChart
 										title="Predicted"
 										value={props.prediction.value.value.toString()}
 									/>
 								</ui.Card>
-								<ui.H2>Explanation</ui.H2>
+								<ui.H2>{'Explanation'}</ui.H2>
 								<ui.P>
-									Each class has a baseline likelihood of being predicted equal
-									to that class's proportion in the training dataset. The
-									learned model adjust its output based on what features it sees
-									in the example. The chart below shows which features were most
-									influential in making the model's decision.
+									{
+										"Each class has a baseline likelihood of being predicted equal to that class's proportion in the training dataset. The learned model adjust its output based on what features it sees in the example. The chart below shows which features were most influential in making the model's decision."
+									}
 								</ui.P>
 								<ui.Card>
 									<ui.ShapChart
 										data={props.prediction.value.shapChartData}
-										includeXAxisTitle
+										includeXAxisTitle={true}
 										includeYAxisLabels={false}
 										includeYAxisTitle={false}
 										negativeColor={ui.colors.red}

@@ -47,7 +47,7 @@ export function ProductionStats() {
 		<ui.Window>
 			<div class="production-stats-wrapper">
 				<div style={{ gridArea: 'alert' }}>
-					<ui.Alert level={ui.Level.Danger}>High Invalid Count</ui.Alert>
+					<ui.Alert level={ui.Level.Danger}>{'High Invalid Count'}</ui.Alert>
 				</div>
 				<div style={{ gridArea: 'comparison' }}>
 					<ui.Card>

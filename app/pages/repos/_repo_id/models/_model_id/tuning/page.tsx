@@ -40,7 +40,7 @@ export default function TuningPage(props: Props) {
 	} else {
 		inner = (
 			<ui.S1>
-				<ui.P>Tuning is not supported for this model.</ui.P>
+				<ui.P>{'Tuning is not supported for this model.'}</ui.P>
 			</ui.S1>
 		)
 	}
@@ -74,11 +74,13 @@ export function TuningPageInner(props: InnerProps) {
 
 	return (
 		<ui.S1>
-			<ui.H1>Tuning</ui.H1>
+			<ui.H1>{'Tuning'}</ui.H1>
 			<ui.S2>
 				<ui.P>
-					Drag the silder to see how metrics change with varying settings of the
-					threshold.
+					{
+						'Drag the silder to see how metrics change with varying settings of the'
+					}
+					{'threshold.'}
 				</ui.P>
 				<ui.Slider
 					color={ui.variables.colors.accent}
@@ -100,13 +102,15 @@ export function TuningPageInner(props: InnerProps) {
 			</ui.S2>
 			{selectedThreshold == '0.0' ? (
 				<ui.Alert level={ui.Level.Info}>
-					A selected threshold of 0 makes your model predict the same class for
-					every input.
+					{
+						'A selected threshold of 0 makes your model predict the same class for every input.'
+					}
 				</ui.Alert>
 			) : selectedThreshold == '1.0' ? (
 				<ui.Alert level={ui.Level.Info}>
-					A threshold of 1 makes your model predict the same class for every
-					input.
+					{
+						'A threshold of 1 makes your model predict the same class for every input.'
+					}
 				</ui.Alert>
 			) : null}
 			<ui.S2>

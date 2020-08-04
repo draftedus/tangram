@@ -46,16 +46,16 @@ export default function TrainingMetricsIndexPage(props: Props) {
 	return (
 		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
-				<ui.H1>Training Metrics</ui.H1>
+				<ui.H1>{'Training Metrics'}</ui.H1>
 				<ui.TabBar>
-					<ui.TabLink href="./">Overview</ui.TabLink>
-					<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
-					<ui.TabLink href="./precision_recall">PR Curve</ui.TabLink>
-					<ui.TabLink href="./roc">ROC Curve</ui.TabLink>
+					<ui.TabLink href="./">{'Overview'}</ui.TabLink>
+					<ui.TabLink href="./class_metrics">{'Class Metrics'}</ui.TabLink>
+					<ui.TabLink href="./precision_recall">{'PR Curve'}</ui.TabLink>
+					<ui.TabLink href="./roc">{'ROC Curve'}</ui.TabLink>
 				</ui.TabBar>
 				<ClassSelect class={props.class} classes={props.classes} />
 				<ui.S2>
-					<ui.H2>Area Under the Receiver Operating Characteristic</ui.H2>
+					<ui.H2>{'Area Under the Receiver Operating Characteristic'}</ui.H2>
 					<ui.P>{definitions.aucRoc}</ui.P>
 					<ui.Card>
 						<ui.NumberChart
@@ -66,7 +66,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					</ui.Card>
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>Receiver Operating Characteristic Curve</ui.H2>
+					<ui.H2>{'Receiver Operating Characteristic Curve'}</ui.H2>
 					<ui.P>{definitions.receiverOperatingCharacteristic}</ui.P>
 					<ui.Card>
 						<ui.LineChart

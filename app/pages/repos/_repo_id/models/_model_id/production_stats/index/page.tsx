@@ -110,7 +110,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 	return (
 		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
-				<ui.H1>Production Stats</ui.H1>
+				<ui.H1>{'Production Stats'}</ui.H1>
 				<DateWindowSelectField dateWindow={props.dateWindow} />
 				{props.predictionStatsIntervalChart.type === Task.Regression ? (
 					<ui.Card>
@@ -155,10 +155,10 @@ export default function ProductionStatsIndexPage(props: Props) {
 					<ui.TableHeader>
 						<ui.TableRow>
 							<ui.TableHeaderCell>{/* alert */}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>Column</ui.TableHeaderCell>
-							<ui.TableHeaderCell>Type</ui.TableHeaderCell>
-							<ui.TableHeaderCell>Absent Count</ui.TableHeaderCell>
-							<ui.TableHeaderCell>Invalid Count</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{'Column'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{'Type'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{'Absent Count'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{'Invalid Count'}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>

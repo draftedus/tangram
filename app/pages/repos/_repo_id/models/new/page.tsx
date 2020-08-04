@@ -8,11 +8,11 @@ export default function ModelCreatePage() {
 				return (
 					<AppLayout>
 						<ui.S1>
-							<ui.H1>Upload Model</ui.H1>
-							<ui.Form encType="multipart/form-data" post>
+							<ui.H1>{'Upload Model'}</ui.H1>
+							<ui.Form encType="multipart/form-data" post={true}>
 								<ui.TextField label="Title" name="title" />
 								<ui.FileField label="File" name="file" />
-								<ui.Button type="submit">Upload</ui.Button>
+								<ui.Button type="submit">{'Upload'}</ui.Button>
 							</ui.Form>
 						</ui.S1>
 					</AppLayout>

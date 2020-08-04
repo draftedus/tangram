@@ -31,8 +31,8 @@ export function TextColumnDetail(props: Props) {
 				</ui.Card>
 				<ui.Table width="100%">
 					<ui.TableHeader>
-						<ui.TableHeaderCell>Token</ui.TableHeaderCell>
-						<ui.TableHeaderCell>Count</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Token'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
 					</ui.TableHeader>
 					<ui.TableBody>
 						{props.tokens.map(([token, count], i) => (

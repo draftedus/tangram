@@ -21,14 +21,14 @@ export type Props = {
 export function MulticlassClassifierClassMetricsPage(props: Props) {
 	return (
 		<ui.S1>
-			<ui.H1>Training Metrics</ui.H1>
+			<ui.H1>{'Training Metrics'}</ui.H1>
 			<ui.TabBar>
-				<ui.TabLink href="./">Overview</ui.TabLink>
-				<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
+				<ui.TabLink href="./">{'Overview'}</ui.TabLink>
+				<ui.TabLink href="./class_metrics">{'Class Metrics'}</ui.TabLink>
 			</ui.TabBar>
 			<ClassSelect class={props.class} classes={props.classes} />
 			<ui.S2>
-				<ui.H2>Precision and Recall</ui.H2>
+				<ui.H2>{'Precision and Recall'}</ui.H2>
 				<ui.P>{definitions.precisionRecall}</ui.P>
 				<MetricsRow>
 					<ui.Card>
@@ -57,7 +57,7 @@ export function MulticlassClassifierClassMetricsPage(props: Props) {
 				</MetricsRow>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>Confusion Matrix</ui.H2>
+				<ui.H2>{'Confusion Matrix'}</ui.H2>
 				<ui.P>{definitions.confusionMatrix}</ui.P>
 				<ui.ConfusionMatrix
 					classLabel={props.class}

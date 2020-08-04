@@ -17,7 +17,7 @@ export function ClassSelect(props: ClassSelectProps) {
 					value={props.class}
 				/>
 				<noscript>
-					<ui.Button>Submit</ui.Button>
+					<ui.Button>{'Submit'}</ui.Button>
 				</noscript>
 			</ui.Form>
 		</div>

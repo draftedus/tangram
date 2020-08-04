@@ -117,7 +117,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 						>
 							{props.ownerName}
 						</ui.Link>
-						/
+						{'/'}
 						<ui.Link
 							className="model-layout-owner-title"
 							href={`/repos/${props.id}/models/${props.modelId}/`}
@@ -139,10 +139,10 @@ export function ModelLayout(props: ModelLayoutProps) {
 						download={`${props.modelTitle}.tangram`}
 						href={`/repos/${props.id}/models/${props.modelId}/download`}
 					>
-						Download Model
+						{'Download Model'}
 					</ui.Button>
 					<ui.Button href={`/repos/${props.id}/models/new`}>
-						Upload new model version
+						{'Upload new model version'}
 					</ui.Button>
 				</div>
 				<div class="model-layout-grid" style={{ gridArea: 'model' }}>
@@ -176,7 +176,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 		<ui.SideNav>
 			<ui.SideNavSection>
 				<ui.SideNavItem href={`/repos/${props.id}/models/${props.id}/`}>
-					Overview
+					{'Overview'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/training_stats/`}
@@ -184,7 +184,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 					// 	`/models/_model_id/training_stats/`,
 					// )}
 				>
-					Training Stats
+					{'Training Stats'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/training_metrics/`}
@@ -192,18 +192,18 @@ function ModelSideNav(props: ModelSideNavProps) {
 					// 	`/models/_model_id/training_metrics/`,
 					// )}
 				>
-					Training Metrics
+					{'Training Metrics'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/introspect`}
 				>
-					Introspect
+					{'Introspect'}
 				</ui.SideNavItem>
 				<ui.SideNavItem href={`/repos/${props.id}/models/${props.id}/predict`}>
-					Predict
+					{'Predict'}
 				</ui.SideNavItem>
 				<ui.SideNavItem href={`/repos/${props.id}/models/${props.id}/tuning`}>
-					Tuning
+					{'Tuning'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/production_stats/`}
@@ -211,7 +211,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 					// 	`/models/_model_id/production_stats/`,
 					// )}
 				>
-					Production Stats
+					{'Production Stats'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/production_metrics/`}
@@ -219,7 +219,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 					// 	`/models/_model_id/production_metrics/`,
 					// )}
 				>
-					Production Metrics
+					{'Production Metrics'}
 				</ui.SideNavItem>
 			</ui.SideNavSection>
 		</ui.SideNav>

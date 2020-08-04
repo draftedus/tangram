@@ -60,19 +60,19 @@ export function ConfusionMatrixComparison(
 	return (
 		<div class="confusion-matrix-comparison-wrapper">
 			<ConfusionMatrixLabel area="actual-true-label">
-				<div>Actual</div>
+				<div>{'Actual'}</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="actual-false-label">
-				<div>Actual Not</div>
+				<div>{'Actual Not'}</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area="predicted-true-label" left>
-				<div>Predicted</div>
+			<ConfusionMatrixLabel area="predicted-true-label" left={true}>
+				<div>{'Predicted'}</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area="predicted-false-label" left>
-				<div>Predicted Not</div>
+			<ConfusionMatrixLabel area="predicted-false-label" left={true}>
+				<div>{'Predicted Not'}</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixComparisonItem
@@ -82,7 +82,7 @@ export function ConfusionMatrixComparison(
 				label="True Positives"
 				textColorA={props.textColorA}
 				textColorB={props.textColorB}
-				true
+				true={true}
 				valueA={props.valueA.truePositive}
 				valueATitle={props.valueATitle}
 				valueB={props.valueB.truePositive}
@@ -122,7 +122,7 @@ export function ConfusionMatrixComparison(
 				label="True Negatives"
 				textColorA={props.textColorA}
 				textColorB={props.textColorB}
-				true
+				true={true}
 				valueA={props.valueA.trueNegative}
 				valueATitle={props.valueATitle}
 				valueB={props.valueB.trueNegative}

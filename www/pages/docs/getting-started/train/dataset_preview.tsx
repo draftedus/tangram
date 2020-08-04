@@ -5,20 +5,22 @@ export function DatasetPreview() {
 		<ui.Table>
 			<ui.TableHeader>
 				<ui.TableRow>
-					<ui.TableHeaderCell>age</ui.TableHeaderCell>
-					<ui.TableHeaderCell>gender</ui.TableHeaderCell>
-					<ui.TableHeaderCell>chest_pain</ui.TableHeaderCell>
-					<ui.TableHeaderCell>resting_blood_pressure</ui.TableHeaderCell>
-					<ui.TableHeaderCell>cholesterol</ui.TableHeaderCell>
-					<ui.TableHeaderCell>fasting_blood_sugar</ui.TableHeaderCell>
-					<ui.TableHeaderCell>resting_ecg_result</ui.TableHeaderCell>
-					<ui.TableHeaderCell>exercise_max_heart_rate</ui.TableHeaderCell>
-					<ui.TableHeaderCell>exercise_induced_angina</ui.TableHeaderCell>
-					<ui.TableHeaderCell>exercise_st_depression</ui.TableHeaderCell>
-					<ui.TableHeaderCell>exercise_st_slope</ui.TableHeaderCell>
-					<ui.TableHeaderCell>fluoroscopy_vessels_colored</ui.TableHeaderCell>
-					<ui.TableHeaderCell>thal</ui.TableHeaderCell>
-					<ui.TableHeaderCell>diagnosis</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'age'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'gender'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'chest_pain'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'resting_blood_pressure'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'cholesterol'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'fasting_blood_sugar'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'resting_ecg_result'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'exercise_max_heart_rate'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'exercise_induced_angina'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'exercise_st_depression'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'exercise_st_slope'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>
+						{'fluoroscopy_vessels_colored'}
+					</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'thal'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'diagnosis'}</ui.TableHeaderCell>
 				</ui.TableRow>
 			</ui.TableHeader>
 			<ui.TableBody>

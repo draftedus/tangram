@@ -28,10 +28,10 @@ export function RegressorIndexPage(props: Props) {
 	return (
 		<ui.S1>
 			<ui.SpaceBetween>
-				<ui.H1>Overview</ui.H1>
+				<ui.H1>{'Overview'}</ui.H1>
 			</ui.SpaceBetween>
 			<ui.S2>
-				<ui.H2>Training Summary</ui.H2>
+				<ui.H2>{'Training Summary'}</ui.H2>
 				<ui.P>
 					{'Your dataset included '}
 					<b>{props.trainingSummary.rowCount}</b>
@@ -45,16 +45,18 @@ export function RegressorIndexPage(props: Props) {
 					{'The model with the highest '}
 					<b>{props.trainingSummary.modelComparisonMetricTypeName}</b>
 					{' was chosen. The model is a '}
-					<b>{props.trainingSummary.chosenModelTypeName}</b>.
+					<b>{props.trainingSummary.chosenModelTypeName}</b>
+					{'.'}
 				</ui.P>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>Metrics</ui.H2>
+				<ui.H2>{'Metrics'}</ui.H2>
 				<ui.P>
 					{
 						'Your model was evaluated on the test dataset and had a root mean squared error of '
 					}
-					<b>{ui.formatNumber(props.metrics.rmse)}</b>.
+					<b>{ui.formatNumber(props.metrics.rmse)}</b>
+					{'.'}
 					{' This is compared with the baseline root mean squared error of '}
 					<b>{ui.formatNumber(props.metrics.baselineRmse)}</b>
 					{

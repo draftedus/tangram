@@ -90,9 +90,9 @@ export function Explanations() {
 				<ui.Card>
 					<ui.ShapChart
 						data={data.shapChartData}
-						includeXAxisTitle
-						includeYAxisLabels
-						includeYAxisTitle
+						includeXAxisTitle={true}
+						includeYAxisLabels={true}
+						includeYAxisTitle={true}
 						negativeColor={ui.colors.red}
 						positiveColor={ui.colors.green}
 					/>

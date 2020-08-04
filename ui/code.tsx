@@ -91,7 +91,7 @@ export function CodeSelect(props: CodeSelectProps) {
 			{props.languages && (
 				<Fragment>
 					<CodeOption
-						checked
+						checked={true}
 						code={props.languages[Language.Go]}
 						language={Language.Go}
 						name={name}

@@ -130,15 +130,15 @@ export function Enum(props: Props) {
 					/>
 				</ui.Card>
 			</MetricsRow>
-			<ui.H2>Unique Values</ui.H2>
+			<ui.H2>{'Unique Values'}</ui.H2>
 			<ui.Table width="100%">
 				<ui.TableHeader>
 					<ui.TableRow>
-						<ui.TableHeaderCell>Value</ui.TableHeaderCell>
-						<ui.TableHeaderCell>Training Count</ui.TableHeaderCell>
-						<ui.TableHeaderCell>Production Count</ui.TableHeaderCell>
-						<ui.TableHeaderCell>Training Fraction</ui.TableHeaderCell>
-						<ui.TableHeaderCell>Production Fraction</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Training Count'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Production Count'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Training Fraction'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Production Fraction'}</ui.TableHeaderCell>
 					</ui.TableRow>
 				</ui.TableHeader>
 				<ui.TableBody>
@@ -163,12 +163,12 @@ export function Enum(props: Props) {
 			</ui.Table>
 			{props.overall.invalidHistogram && (
 				<Fragment>
-					<ui.H2>Invalid Values</ui.H2>
+					<ui.H2>{'Invalid Values'}</ui.H2>
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>Value</ui.TableHeaderCell>
-								<ui.TableHeaderCell>Count</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>

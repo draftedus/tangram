@@ -53,7 +53,7 @@ export function DateWindowSelectField(props: DateWindowSelectFieldProps) {
 					value={props.dateWindow}
 				/>
 				<noscript>
-					<ui.Button>Submit</ui.Button>
+					<ui.Button>{'Submit'}</ui.Button>
 				</noscript>
 			</ui.Form>
 		</div>

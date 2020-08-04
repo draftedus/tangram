@@ -55,7 +55,7 @@ export function Avatar(props: AvatarProps) {
 function DefaultAvatar() {
 	return (
 		<svg height="100%" viewBox="0 0 100 100" width="100%">
-			<desc>avatar</desc>
+			<desc>{'avatar'}</desc>
 			<circle cx="50" cy="50" fill={variables.colors.accent} r="50"></circle>
 			<circle cx="50" cy="40" fill={variables.colors.surface} r="16"></circle>
 			<circle cx="50" cy="96" fill={variables.colors.surface} r="36"></circle>

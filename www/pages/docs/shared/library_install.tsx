@@ -2,7 +2,7 @@ import { h, ui } from 'deps'
 import { Language } from 'layouts/language'
 
 export function LibraryInstall() {
-	return <ui.CodeSelect hideLineNumbers languages={codeForLanguage} />
+	return <ui.CodeSelect hideLineNumbers={true} languages={codeForLanguage} />
 }
 
 let codeForLanguage = {

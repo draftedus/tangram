@@ -89,7 +89,7 @@ export function AlertIcon(props: AlertProps) {
 	return (
 		<div class="alert-icon-container">
 			<div class={alertMessageClassCombined}>{props.alert}</div>
-			<div class={alertIconClassCombined}>!</div>
+			<div class={alertIconClassCombined}>{'!'}</div>
 		</div>
 	)
 }

@@ -34,14 +34,14 @@ export function Pagination(props: PaginationProps) {
 				disabled={prevButtonDisabled}
 				onClick={props.onPreviousPressed}
 			>
-				Previous
+				{'Previous'}
 			</PaginationButton>
 			<div>{pageString}</div>
 			<PaginationButton
 				disabled={nextButtonDisabled}
 				onClick={props.onNextPressed}
 			>
-				Next
+				{'Next'}
 			</PaginationButton>
 		</PaginationWrapper>
 	)

@@ -67,7 +67,7 @@ export function RegressorProductionMetricsPage(props: Props) {
 	)
 	return (
 		<ui.S1>
-			<ui.H1>Production Metrics</ui.H1>
+			<ui.H1>{'Production Metrics'}</ui.H1>
 			<ui.S2>
 				<DateWindowSelectField dateWindow={props.dateWindow} />
 				<ui.P>

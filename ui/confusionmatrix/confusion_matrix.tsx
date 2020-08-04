@@ -55,24 +55,24 @@ export function ConfusionMatrix(props: ConfusionMatrixProps) {
 	return (
 		<div class="confusion-matrix-wrapper">
 			<ConfusionMatrixLabel area="actual-true-label">
-				<div>Actual</div>
+				<div>{'Actual'}</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="actual-false-label">
-				<div>Actual Not</div>
+				<div>{'Actual Not'}</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area="predicted-true-label" left>
-				<div>Predicted</div>
+			<ConfusionMatrixLabel area="predicted-true-label" left={true}>
+				<div>{'Predicted'}</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area="predicted-false-label" left>
-				<div>Predicted Not</div>
+			<ConfusionMatrixLabel area="predicted-false-label" left={true}>
+				<div>{'Predicted Not'}</div>
 				<Token color={variables.colors.accent}>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixItem
 				area="true-positive"
-				positive
+				positive={true}
 				title="True Positives"
 				total={total}
 				value={props.truePositives}
@@ -91,7 +91,7 @@ export function ConfusionMatrix(props: ConfusionMatrixProps) {
 			/>
 			<ConfusionMatrixItem
 				area="true-negative"
-				positive
+				positive={true}
 				title="True Negatives"
 				total={total}
 				value={props.trueNegatives}

@@ -35,7 +35,7 @@ export default function Document(props: DocumentProps) {
 					type="font/woff2"
 				/>
 				<style dangerouslySetInnerHTML={{ __html: globalCss }} />
-				<title>Tangram</title>
+				<title>{'Tangram'}</title>
 				<meta content="Tangram" name="description" />
 			</head>
 			<body>

@@ -42,7 +42,7 @@ export function Tuning() {
 		<ui.Window>
 			<div class="tuning-grid">
 				<div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-					Select a threshold.
+					{'Select a threshold.'}
 				</div>
 				<ui.Slider
 					color={ui.colors.blue}

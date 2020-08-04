@@ -174,10 +174,10 @@ export default function ProductionMetricsPage(props: Props) {
 	return (
 		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>
-				<ui.H1>Production Metrics</ui.H1>
+				<ui.H1>{'Production Metrics'}</ui.H1>
 				<ui.TabBar>
-					<ui.TabLink href="./">Overview</ui.TabLink>
-					<ui.TabLink href="./class_metrics">Class Metrics</ui.TabLink>
+					<ui.TabLink href="./">{'Overview'}</ui.TabLink>
+					<ui.TabLink href="./class_metrics">{'Class Metrics'}</ui.TabLink>
 				</ui.TabBar>
 				<div>
 					<ui.Form>
@@ -196,14 +196,14 @@ export default function ProductionMetricsPage(props: Props) {
 							value={props.class}
 						/>
 						<noscript>
-							<ui.Button>Submit</ui.Button>
+							<ui.Button>{'Submit'}</ui.Button>
 						</noscript>
 					</ui.Form>
 				</div>
 				{selectedOverallClassMetrics !== null && (
 					<Fragment>
 						<ui.S2>
-							<ui.H2>Precision and Recall</ui.H2>
+							<ui.H2>{'Precision and Recall'}</ui.H2>
 							<ui.P>{definitions.precisionRecall}</ui.P>
 							<MetricsRow>
 								<ui.Card>
@@ -286,7 +286,7 @@ export default function ProductionMetricsPage(props: Props) {
 							</ui.Card>
 						</ui.S2>
 						<ui.S2>
-							<ui.H2>Confusion Matrix</ui.H2>
+							<ui.H2>{'Confusion Matrix'}</ui.H2>
 							<ui.P>{definitions.confusionMatrix}</ui.P>
 							<ui.ConfusionMatrix
 								classLabel={props.class}
@@ -305,7 +305,7 @@ export default function ProductionMetricsPage(props: Props) {
 							/>
 						</ui.S2>
 						<ui.S2>
-							<ui.H2>Production v. Training Confusion Matrix</ui.H2>
+							<ui.H2>{'Production v. Training Confusion Matrix'}</ui.H2>
 							<ui.P>{definitions.confusionMatrix}</ui.P>
 							{selectedOverallClassMetrics.comparison && (
 								<ui.ConfusionMatrixComparison

@@ -31,10 +31,10 @@ export function ClassifierIndexPage(props: Props) {
 	return (
 		<ui.S1>
 			<ui.SpaceBetween>
-				<ui.H1>Overview</ui.H1>
+				<ui.H1>{'Overview'}</ui.H1>
 			</ui.SpaceBetween>
 			<ui.S2>
-				<ui.H2>Training Summary</ui.H2>
+				<ui.H2>{'Training Summary'}</ui.H2>
 				<ui.P>
 					{'Your dataset contained '}
 					<b>{props.trainingSummary.rowCount}</b>
@@ -49,11 +49,12 @@ export function ClassifierIndexPage(props: Props) {
 					<b>{props.trainingSummary.modelComparisonMetricTypeName}</b>
 					{' was chosen. '}
 					{'The best model is a '}
-					<b>{props.trainingSummary.chosenModelTypeName}</b>.
+					<b>{props.trainingSummary.chosenModelTypeName}</b>
+					{'.'}
 				</ui.P>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>Metrics</ui.H2>
+				<ui.H2>{'Metrics'}</ui.H2>
 				<ui.P>
 					{
 						'Your model was evaluated on the test dataset and accurately classified '
@@ -82,9 +83,9 @@ export function ClassifierIndexPage(props: Props) {
 				<ui.Table width="100%">
 					<ui.TableHeader>
 						<ui.TableRow>
-							<ui.TableHeaderCell>Class</ui.TableHeaderCell>
-							<ui.TableHeaderCell>Precision</ui.TableHeaderCell>
-							<ui.TableHeaderCell>Recall</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{'Class'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{'Precision'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{'Recall'}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>
