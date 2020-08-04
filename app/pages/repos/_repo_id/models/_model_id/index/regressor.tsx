@@ -41,8 +41,7 @@ export function RegressorIndexPage(props: Props) {
 					<b>{ui.formatPercent(1 - props.trainingSummary.testFraction)}</b>
 					{' of the rows were used in training and '}
 					<b>{ui.formatPercent(props.trainingSummary.testFraction)}</b>
-					{' were used in testing. '}
-					{'The model with the highest '}
+					{' were used in testing.  The model with the highest '}
 					<b>{props.trainingSummary.modelComparisonMetricTypeName}</b>
 					{' was chosen. The model is a '}
 					<b>{props.trainingSummary.chosenModelTypeName}</b>
@@ -56,8 +55,7 @@ export function RegressorIndexPage(props: Props) {
 						'Your model was evaluated on the test dataset and had a root mean squared error of '
 					}
 					<b>{ui.formatNumber(props.metrics.rmse)}</b>
-					{'.'}
-					{' This is compared with the baseline root mean squared error of '}
+					{'.  This is compared with the baseline root mean squared error of '}
 					<b>{ui.formatNumber(props.metrics.baselineRmse)}</b>
 					{
 						', which is the accuracy achieved if the model always predicted the mean of the target column.'

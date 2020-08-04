@@ -33,11 +33,12 @@ function MacOS() {
 	return (
 		<ui.OrderedList>
 			<ui.ListItem>
-				{'Download the executable for macOS from'}
-				{'https://github.com/tangram-hq/tangram/releases/latest.'}
+				{
+					'Download the executable for macOS from https://github.com/tangram-hq/tangram/releases/latest.'
+				}
 			</ui.ListItem>
 			<ui.ListItem>
-				{'Unzip it:'}{' '}
+				{'Unzip it:  '}
 				<ui.InlineCode>
 					{'tar -xvf tangram-cli-X.X.X-macos-x86_64.tar.gz'}
 				</ui.InlineCode>
@@ -45,9 +46,8 @@ function MacOS() {
 			<ui.ListItem>{'Run the unzipped executable.'}</ui.ListItem>
 			<ui.ListItem>
 				{
-					'You will probably want to move the executable somewhere in your `$PATH`'
+					'You will probably want to move the executable somewhere in your `$PATH` such as `/usr/local/bin`.'
 				}
-				{'such as `/usr/local/bin`.'}
 			</ui.ListItem>
 		</ui.OrderedList>
 	)
@@ -57,11 +57,12 @@ function Linux() {
 	return (
 		<ui.OrderedList>
 			<ui.ListItem>
-				{'Download the executable for Linux from'}
-				{'https://github.com/tangram-hq/tangram/releases/latest.'}
+				{
+					'Download the executable for Linux from https://github.com/tangram-hq/tangram/releases/latest.'
+				}
 			</ui.ListItem>
 			<ui.ListItem>
-				{'Unzip it:'}{' '}
+				{'Unzip it:  '}
 				<ui.InlineCode>
 					{'tar -xvf tangram-cli-X.X.X-linux-x86_64.tar.gz'}
 				</ui.InlineCode>
@@ -69,9 +70,8 @@ function Linux() {
 			<ui.ListItem>{'Run the unzipped executable.'}</ui.ListItem>
 			<ui.ListItem>
 				{
-					'You will probably want to move the executable somewhere in your `$PATH`'
+					'You will probably want to move the executable somewhere in your `$PATH` such as `/usr/local/bin`.'
 				}
-				{'such as `/usr/local/bin`.'}
 			</ui.ListItem>
 		</ui.OrderedList>
 	)
@@ -81,8 +81,9 @@ function Windows() {
 	return (
 		<ui.OrderedList>
 			<ui.ListItem>
-				{'Download the executable for Windows from'}
-				{'https://github.com/tangram-hq/tangram/releases/latest.'}
+				{
+					'Download the executable for Windows from https://github.com/tangram-hq/tangram/releases/latest.'
+				}
 			</ui.ListItem>
 			<ui.ListItem>{'Unzip it.'}</ui.ListItem>
 			<ui.ListItem>{'Run the unzipped executable.'}</ui.ListItem>

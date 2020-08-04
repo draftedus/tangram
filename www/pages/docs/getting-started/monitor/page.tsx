@@ -21,21 +21,13 @@ export default () => (
 			<ui.S2>
 				<ui.P>
 					{
-						'Once our model is deployed, we want to make sure that it performs as'
+						'Once our model is deployed, we want to make sure that it performs as well in production as it did in training. Tangram makes this easy by providing an API to log predictions and true values so you can view production stats and metrics.'
 					}
-					{
-						'well in production as it did in training. Tangram makes this easy by'
-					}
-					{
-						'providing an API to log predictions and true values so you can view'
-					}
-					{'production stats and metrics.'}
 				</ui.P>
 				<ui.P>
 					{
-						'First, we need to get an API token from the reporting and monitoring'
+						'First, we need to get an API token from the reporting and monitoring app. In the topbar, click '
 					}
-					{'app. In the topbar, click '}
 					<b>{'Tokens'}</b>
 					{'.'}
 				</ui.P>
@@ -49,9 +41,8 @@ export default () => (
 				<LogPrediction />
 				<ui.P>
 					{
-						'Later on, we may get official diagnoses for patients. In our code, we'
+						'Later on, we may get official diagnoses for patients. In our code, we can log true values.'
 					}
-					{'can log true values.'}
 				</ui.P>
 				<LogTrueValue />
 			</ui.S2>
@@ -59,20 +50,7 @@ export default () => (
 				<ui.H2>{'Batching'}</ui.H2>
 				<ui.P>
 					{
-						'For simplicity, the default logging functions make a network request'
-					}
-					{'each time they are called. In most applications, you will want to'}
-					{
-						'batch these calls to reduce latency along your critical path. To do'
-					}
-					{
-						'so, you can call the batched logging functions with the same arguments'
-					}
-					{
-						'as their non-batched alternatives. When your application is ready to'
-					}
-					{
-						'send all logs to the server in a single request, you can flush the queue.'
+						'For simplicity, the default logging functions make a network request each time they are called. In most applications, you will want to batch these calls to reduce latency along your critical path. To do so, you can call the batched logging functions with the same arguments as their non-batched alternatives. When your application is ready to send all logs to the server in a single request, you can flush the queue.'
 					}
 				</ui.P>
 				<LogPredictionBatched />
@@ -80,8 +58,9 @@ export default () => (
 			<ui.S2>
 				<ui.H2>{'Production Stats'}</ui.H2>
 				<ui.P>
-					{'Under **Production Stats**, we can compare production stats with'}
-					{'training stats.'}
+					{
+						'Under **Production Stats**, we can compare production stats with training stats.'
+					}
 				</ui.P>
 				<ui.Img alt="column stats" src={productionStatsColumnStats} />
 				<ui.P>
@@ -102,8 +81,7 @@ export default () => (
 				<ui.Img alt="unique values" src={productionColumnStatsUniqueValues} />
 				<ui.P>
 					<ui.InlineCode>{'asx'}</ui.InlineCode>
-					{' is a common medical abbreviation'}
-					{'for '}
+					{' is a common medical abbreviation for '}
 					<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
 					{' so it looks like'}
 					<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
@@ -120,55 +98,47 @@ export default () => (
 				<ui.H2>{'Production Metrics'}</ui.H2>
 				<ui.P>
 					{'Under '}
-					<b>{'Production Metrics'}</b>{' '}
-					{'we can ensure our model is as accurate'}
+					<b>{'Production Metrics'}</b>
 					{
-						'in production as it was in training. We can view accuracy, precision,'
+						'  we can ensure our model is as accurate in production as it was in training. We can view accuracy, precision, recall and compare each of these metrics with their values in training.'
 					}
-					{'recall and compare each of these metrics with their values in'}
-					{'training.'}
 				</ui.P>
 				<ui.Img
 					alt="production metrics overview"
 					src={productionMetricsOverview}
 				/>
 				<ui.P>
-					{'In this case, it looks like our production accuracy is a bit lower'}
-					{'than we expected. This could be due to the mislabeling of'}{' '}
+					{
+						'In this case, it looks like our production accuracy is a bit lower than we expected. This could be due to the mislabeling of  '
+					}
 					<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
 					{' as'} <ui.InlineCode>{'asx'}</ui.InlineCode>
-					{". To support this theory, let's see"}
-					{'how important this feature was to our model.'}
+					{
+						". To support this theory, let's see how important this feature was to our model."
+					}
 				</ui.P>
 				<ui.P>
 					{'Under '}
 					<b>{'Model'}</b>
 					{', we can view feature and column importances. The'}
-					<ui.InlineCode>{'chest_pain=asymptomatic'}</ui.InlineCode>{' '}
-					{'feature is by'}
-					{'far the most important to our model, so it makes sense that'}
-					{'mislabeling '}
+					<ui.InlineCode>{'chest_pain=asymptomatic'}</ui.InlineCode>
+					{
+						'  feature is by far the most important to our model, so it makes sense that mislabeling '
+					}
 					<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
-					{' as'} <ui.InlineCode>{'asx'}</ui.InlineCode>{' '}
-					{'would cause a drop in accuracy.'}
+					{' as'} <ui.InlineCode>{'asx'}</ui.InlineCode>
+					{'  would cause a drop in accuracy.'}
 				</ui.P>
 				<ui.Img alt="feature importances" src={featureImportances} />
 				<ui.P>
-					{"We're done! We just trained and deployed a custom machine learning"}
 					{
-						'model using the tangram cli and language libraries. Then, we learned'
+						"We're done! We just trained and deployed a custom machine learning model using the tangram cli and language libraries. Then, we learned more about our model and debugged an issue in production using the reporting and monitoring app."
 					}
-					{'more about our model and debugged an issue in production using the'}
-					{'reporting and monitoring app.'}
 				</ui.P>
 				<ui.P>
 					{
-						"You're now ready to train and deploy your first model. If you run into"
+						"You're now ready to train and deploy your first model. If you run into any issues or want some hands-on help getting set up, send us an email at help@tangramhq.com or use the chat bubble on this page."
 					}
-					{
-						'any issues or want some hands-on help getting set up, send us an email'
-					}
-					{'at help@tangramhq.com or use the chat bubble on this page.'}
 				</ui.P>
 			</ui.S2>
 		</ui.S1>

@@ -32,13 +32,8 @@ export function MulticlassClassifierTrainingMetricsIndexPage(props: Props) {
 			<ui.S2>
 				<ui.P>
 					{
-						'At the end of training, your model was evaluated on a test dataset.'
+						'At the end of training, your model was evaluated on a test dataset. All metrics in this section are from that evaluation. You can use these metrics to see how your model might perform on unseen production data.'
 					}
-					{'All metrics in this section are from that evaluation. You can use'}
-					{
-						'these metrics to see how your model might perform on unseen production'
-					}
-					{'data.'}
 				</ui.P>
 			</ui.S2>
 			<ui.S2>

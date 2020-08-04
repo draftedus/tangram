@@ -78,9 +78,8 @@ export function TuningPageInner(props: InnerProps) {
 			<ui.S2>
 				<ui.P>
 					{
-						'Drag the silder to see how metrics change with varying settings of the'
+						'Drag the silder to see how metrics change with varying settings of the threshold.'
 					}
-					{'threshold.'}
 				</ui.P>
 				<ui.Slider
 					color={ui.variables.colors.accent}
