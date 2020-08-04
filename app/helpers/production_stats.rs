@@ -190,7 +190,7 @@ pub async fn get_production_stats(
 		",
 	)
 	.bind(&model.id().to_string())
-	.bind(start_date.to_string())
+	.bind(&start_date.timestamp())
 	.fetch_all(&mut *db)
 	.await?;
 	// compute the number of intervals

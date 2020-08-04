@@ -44,42 +44,6 @@ pub enum Plan {
 	Enterprise,
 }
 
-impl<'a> postgres_types::FromSql<'a> for Plan {
-	fn from_sql(
-		_: &postgres_types::Type,
-		raw: &[u8],
-	) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-		let plan = match raw {
-			b"trial" => Plan::Trial,
-			b"startup" => Plan::Startup,
-			b"team" => Plan::Team,
-			b"enterprise" => Plan::Enterprise,
-			_ => return Err(format_err!("bad plan {:?}", raw).into()),
-		};
-		Ok(plan)
-	}
-	postgres_types::accepts!(TEXT);
-}
-
-impl postgres_types::ToSql for Plan {
-	fn to_sql(
-		&self,
-		_: &postgres_types::Type,
-		w: &mut bytes::BytesMut,
-	) -> Result<postgres_types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
-		let bytes = match self {
-			Self::Trial => "trial",
-			Self::Startup => "startup",
-			Self::Team => "team",
-			Self::Enterprise => "enterprise",
-		};
-		bytes::BufMut::put_slice(w, bytes.as_bytes());
-		Ok(postgres_types::IsNull::No)
-	}
-	postgres_types::accepts!(TEXT);
-	postgres_types::to_sql_checked!();
-}
-
 pub async fn get_organization(
 	organization_id: Id,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,

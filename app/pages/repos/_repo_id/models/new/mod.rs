@@ -79,7 +79,7 @@ pub async fn post(
 	.bind(&repo_id.to_string())
 	.bind(&title)
 	.bind(&now)
-	.bind(base64::encode(file))
+	.bind(&base64::encode(file))
 	.bind(&false)
 	.execute(&mut *db)
 	.await;

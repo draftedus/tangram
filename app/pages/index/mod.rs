@@ -55,7 +55,7 @@ pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> Re
 			order by repos.created_at
 		",
 	)
-	.bind(user.id.to_string())
+	.bind(&user.id.to_string())
 	.fetch_all(db)
 	.await?;
 	let repos = rows

@@ -14,7 +14,6 @@ export function FormTitle(props: FormTitleProps) {
 type FormProps = {
 	action?: string
 	children?: Children
-	directive?: string
 	encType?: string
 	onSubmit?: (event: Event) => void
 	post?: boolean
@@ -38,9 +37,6 @@ export function Form(props: FormProps) {
 			method={props.post ? 'post' : undefined}
 			onSubmit={props.onSubmit}
 		>
-			{props.directive && (
-				<input name="action" style="display: none" value={props.directive} />
-			)}
 			{props.children}
 		</form>
 	)

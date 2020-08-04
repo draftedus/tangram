@@ -2,14 +2,10 @@
 
 use self::error::Error;
 use anyhow::Result;
-use deadpool_postgres::{Manager, Pool};
 use futures::FutureExt;
 use hyper::{header, service::service_fn, Body, Method, Request, Response, StatusCode};
-use native_tls::{Certificate, TlsConnector};
 use pinwheel::Pinwheel;
-use postgres_native_tls::MakeTlsConnector;
 use std::{collections::BTreeMap, panic::AssertUnwindSafe, path::PathBuf, sync::Arc};
-use tokio_postgres as postgres;
 
 mod api;
 mod cookies;
@@ -302,27 +298,28 @@ pub async fn start() -> Result<()> {
 	// configure the database pool
 	let database_url =
 		std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
-	let database_cert = std::env::var("DATABASE_CERT").ok().map(|c| c.into_bytes());
-	let database_pool_max_size = std::env::var("DATABASE_POOL_MAX_SIZE")
-		.map(|s| {
-			s.parse()
-				.expect("DATABASE_POOL_MAX_SIZE environment variable invalid")
-		})
-		.unwrap_or(10);
-	let database_config = database_url.parse().unwrap();
-	let database_pool = if let Some(database_cert) = database_cert {
-		let tls = MakeTlsConnector::new(
-			TlsConnector::builder()
-				.add_root_certificate(Certificate::from_pem(&database_cert).unwrap())
-				.build()
-				.unwrap(),
-		);
-		let database_manager = Manager::new(database_config, tls);
-		Pool::new(database_manager, database_pool_max_size)
-	} else {
-		let database_manager = Manager::new(database_config, postgres::NoTls);
-		Pool::new(database_manager, database_pool_max_size)
-	};
+	// let database_cert = std::env::var("DATABASE_CERT").ok().map(|c| c.into_bytes());
+	// let database_pool_max_size = std::env::var("DATABASE_POOL_MAX_SIZE")
+	// 	.map(|s| {
+	// 		s.parse()
+	// 			.expect("DATABASE_POOL_MAX_SIZE environment variable invalid")
+	// 	})
+	// 	.unwrap_or(10);
+	// let database_config = database_url.parse().unwrap();
+	// let database_pool = if let Some(database_cert) = database_cert {
+	// 	let tls = MakeTlsConnector::new(
+	// 		TlsConnector::builder()
+	// 			.add_root_certificate(Certificate::from_pem(&database_cert).unwrap())
+	// 			.build()
+	// 			.unwrap(),
+	// 	);
+	// 	let database_manager = Manager::new(database_config, tls);
+	// 	Pool::new(database_manager, database_pool_max_size)
+	// } else {
+	// 	let database_manager = Manager::new(database_config, postgres::NoTls);
+	// 	Pool::new(database_manager, database_pool_max_size)
+	// };
+	let pool = sqlx::AnyPool::connect(&database_url).await?;
 
 	#[cfg(debug_assertions)]
 	fn pinwheel() -> Pinwheel {
@@ -333,9 +330,6 @@ pub async fn start() -> Result<()> {
 		Pinwheel::prod(include_dir::include_dir!("../target/js"))
 	}
 	let pinwheel = pinwheel();
-
-	let pool = sqlx::AnyPool::connect("sqlite:data/tangram.db").await?;
-	// let pool = sqlx::AnyPool::connect(&database_url).await?;
 
 	// run any pending migrations
 	migrations::run(&pool).await?;

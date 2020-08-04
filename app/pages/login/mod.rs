@@ -34,50 +34,24 @@ pub async fn get(
 }
 
 #[derive(serde::Deserialize)]
-#[serde(tag = "action")]
-pub enum Action {
-	#[serde(rename = "email")]
-	Email(EmailAction),
-	#[serde(rename = "code")]
-	Code(CodeAction),
-}
-
-#[derive(serde::Deserialize)]
-pub struct EmailAction {
+pub struct Action {
 	pub email: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct CodeAction {
-	pub email: String,
-	pub code: String,
+	pub code: Option<String>,
 }
 
 pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	// read the post data
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
-	let request_body: Action =
+	let Action { email, code } =
 		serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
 	let mut db = context
 		.pool
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let response = match request_body {
-		Action::Email(request_body) => email(request_body, &mut db, context).await?,
-		Action::Code(request_body) => code(request_body, &mut db, context).await?,
-	};
-	db.commit().await?;
-	Ok(response)
-}
-
-pub async fn email(
-	request_body: EmailAction,
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	context: &Context,
-) -> Result<Response<Body>> {
-	let EmailAction { email } = request_body;
+	// upsert the user
 	let user_id = Id::new();
 	let now = Utc::now().timestamp();
 	sqlx::query(
@@ -90,138 +64,124 @@ pub async fn email(
 			on conflict (email) do update set email = excluded.email
 		",
 	)
-	.bind(user_id.to_string())
+	.bind(&user_id.to_string())
 	.bind(&now)
 	.bind(&email)
 	.execute(&mut *db)
 	.await?;
+	// retrieve the user's id
+	let user_id: String = sqlx::query(
+		"
+			select
+				id
+			from users
+			where
+				email = ?1
+		",
+	)
+	.bind(&email)
+	.fetch_one(&mut *db)
+	.await?
+	.get(0);
+	let user_id: Id = user_id.parse()?;
 	if context.auth_enabled {
-		let code: u64 = rand::thread_rng().gen_range(0, 1_000_000);
-		let code = format!("{:06}", code);
-		let now = Utc::now().timestamp();
-		let code_id = Id::new();
-		sqlx::query(
-			"
-				insert into codes (
-					id, created_at, user_id, code
-				) values (
-					?1, ?2, ?3, ?4
-				)
-			",
-		)
-		.bind(code_id.to_string())
-		.bind(now)
-		.bind(user_id.to_string())
-		.bind(&code)
-		.execute(&mut *db)
-		.await?;
-		if let Some(sendgrid_api_token) = context.sendgrid_api_token.clone() {
-			tokio::spawn(send_code_email(email.to_owned(), code, sendgrid_api_token));
+		if let Some(code) = code {
+			// verify the code
+			let ten_minutes_in_seconds: i32 = 10 * 60;
+			let now = Utc::now().timestamp();
+			let row = sqlx::query(
+				"
+					select
+						codes.id as code_id
+					from users
+					join codes
+					on codes.user_id = users.id
+					where
+						codes.deleted_at is null and
+						?1 - codes.created_at < ?2
+						users.email = ?3 and
+						codes.code = ?4
+				",
+			)
+			.bind(&now)
+			.bind(&ten_minutes_in_seconds)
+			.bind(&email)
+			.bind(&code)
+			.fetch_optional(&mut db)
+			.await?;
+			let row = if let Some(row) = row {
+				row
+			} else {
+				let response = Response::builder()
+					.status(StatusCode::SEE_OTHER)
+					.header(header::LOCATION, format!("/login?email={}", email))
+					.body(Body::empty())?;
+				return Ok(response);
+			};
+			let code_id: String = row.get(0);
+			let code_id: Id = code_id.parse()?;
+			let now = Utc::now().timestamp();
+			// delete the code
+			sqlx::query(
+				"
+					update codes
+					set
+						deleted_at = ?1
+					where
+						id = ?2
+				",
+			)
+			.bind(&now)
+			.bind(&code_id.to_string())
+			.execute(&mut db)
+			.await?;
+		} else {
+			// generate a code and redirect back to the login form
+			let code: u64 = rand::thread_rng().gen_range(0, 1_000_000);
+			let code = format!("{:06}", code);
+			let now = Utc::now().timestamp();
+			let code_id = Id::new();
+			sqlx::query(
+				"
+					insert into codes (
+						id, created_at, user_id, code
+					) values (
+						?1, ?2, ?3, ?4
+					)
+				",
+			)
+			.bind(&code_id.to_string())
+			.bind(&now)
+			.bind(&user_id.to_string())
+			.bind(&code)
+			.execute(&mut *db)
+			.await?;
+			if let Some(sendgrid_api_token) = context.sendgrid_api_token.clone() {
+				tokio::spawn(send_code_email(email.to_owned(), code, sendgrid_api_token));
+			}
+			let response = Response::builder()
+				.status(StatusCode::SEE_OTHER)
+				.header(header::LOCATION, format!("/login?email={}", email))
+				.body(Body::empty())?;
+			return Ok(response);
 		}
-		let response = Response::builder()
-			.status(StatusCode::SEE_OTHER)
-			.header(header::LOCATION, format!("/login?email={}", email))
-			.body(Body::empty())?;
-		Ok(response)
-	} else {
-		// create the token
-		let id = Id::new();
-		let token = Id::new();
-		let now = Utc::now().timestamp();
-		sqlx::query(
-			"
-				insert into tokens (
-					id, created_at, token, user_id
-				) values (
-					?1, ?2, ?3, ?4
-				)
-			",
-		)
-		.bind(id.to_string())
-		.bind(now)
-		.bind(token.to_string())
-		.bind(user_id.to_string())
-		.execute(db)
-		.await?;
-		let set_cookie = set_cookie_header_value(token, context.cookie_domain.as_deref());
-		let response = Response::builder()
-			.status(StatusCode::SEE_OTHER)
-			.header(header::LOCATION, "/")
-			.header(header::SET_COOKIE, set_cookie)
-			.body(Body::empty())?;
-		Ok(response)
 	}
+
+	let token = create_token(&mut db, user_id).await?;
+
+	db.commit().await?;
+
+	let set_cookie = set_cookie_header_value(token, context.cookie_domain.as_deref());
+	let response = Response::builder()
+		.status(StatusCode::SEE_OTHER)
+		.header(header::LOCATION, "/")
+		.header(header::SET_COOKIE, set_cookie)
+		.body(Body::empty())?;
+
+	Ok(response)
 }
 
-pub async fn code(
-	request_body: CodeAction,
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	context: &Context,
-) -> Result<Response<Body>> {
-	let CodeAction { email, code } = request_body;
-	let ten_minutes_in_seconds = 10 * 60;
-	let now = Utc::now().timestamp();
-	let user_id = if context.auth_enabled {
-		let row = sqlx::query(
-			"
-				select
-					users.id as user_id,
-					codes.id as code_id
-				from users
-				join codes
-				on codes.user_id = users.id
-				where
-					codes.deleted_at is null and
-					?1 - codes.created_at < ?2
-					users.email = ?3 and
-					codes.code = ?4
-			",
-		)
-		.bind(now)
-		.bind(ten_minutes_in_seconds)
-		.bind(&email)
-		.bind(&code)
-		.fetch_one(&mut *db)
-		.await?;
-		let user_id: String = row.get(0);
-		let user_id: Id = user_id.parse()?;
-		let code_id: String = row.get(1);
-		let code_id: Id = code_id.parse()?;
-		let now = Utc::now().timestamp();
-		// delete the code
-		sqlx::query(
-			"
-				update codes
-				set
-					deleted_at = ?1
-				where
-					id = ?2
-			",
-		)
-		.bind(now)
-		.bind(&code_id.to_string())
-		.execute(&mut *db)
-		.await?;
-		user_id
-	} else {
-		let row = sqlx::query(
-			"
-				select
-					id
-				from users
-				where
-					users.email = ?1
-			",
-		)
-		.bind(&email)
-		.fetch_one(&mut *db)
-		.await?;
-		let user_id: String = row.get(0);
-		let user_id: Id = user_id.parse().unwrap();
-		user_id
-	};
-
-	// create the token
+async fn create_token(db: &mut sqlx::Transaction<'_, sqlx::Any>, user_id: Id) -> Result<Id> {
 	let id = Id::new();
 	let token = Id::new();
 	let now = Utc::now().timestamp();
@@ -235,18 +195,12 @@ pub async fn code(
 		",
 	)
 	.bind(&id.to_string())
-	.bind(now)
+	.bind(&now)
 	.bind(&token.to_string())
 	.bind(&user_id.to_string())
 	.execute(db)
 	.await?;
-	let set_cookie = set_cookie_header_value(token, context.cookie_domain.as_deref());
-
-	Ok(Response::builder()
-		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, "/")
-		.header(header::SET_COOKIE, set_cookie)
-		.body(Body::empty())?)
+	Ok(token)
 }
 
 fn set_cookie_header_value(token: Id, domain: Option<&str>) -> String {

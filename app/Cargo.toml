@@ -19,8 +19,6 @@ buffy = { git = "https://github.com/tangram-hq/buffy" }
 bytes = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.5", features = ["serde"] }
-deadpool = { version = "0.5" }
-deadpool-postgres = { version = "0.5" }
 derive_more = "0.99"
 futures = { version = "0.3" }
 futures-util = { version = "0.3" }
@@ -34,16 +32,12 @@ native-tls = { version = "0.2", features = ["vendored"] }
 ndarray = { version = "0.13", features = ["serde"] }
 num-traits = "0.2"
 pinwheel = { path = "../pinwheel" }
-postgres-derive = "0.4"
-postgres-native-tls = "0.3"
-postgres-types = "0.1"
 rand = "0.7"
 reqwest = { version = "0.10", features = ["blocking", "json", "native-tls-vendored"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_urlencoded = "0.6"
-sqlx = { version = "0.4.0-beta.1", features = ["any", "sqlite", "postgres", "chrono"] }
+sqlx = { version = "0.4.0-beta.1", default-features = false, features = ["runtime-tokio", "any", "sqlite", "chrono"] }
 tangram-core = { path = "../core" }
 tokio = { version = "0.2", features = ["rt-threaded", "tcp", "macros"] }
-tokio-postgres = { version = "0.5", features = ["with-chrono-0_4", "with-serde_json-1"] }
 url = "2"

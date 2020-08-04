@@ -1,9 +1,9 @@
 {
 	"devDependencies": {
-		"@tangramhq/eslint-plugin": "0.1.17",
+		"@tangramhq/eslint-plugin": "0.1.19",
 		"csstype": "3.0.2",
-		"esbuild": "0.6.12",
-		"eslint": "7.5.0",
+		"esbuild": "0.6.16",
+		"eslint": "7.6.0",
 		"preact": "10.4.6",
 		"preact-render-to-string": "5.1.10",
 		"prettier": "2.0.5",

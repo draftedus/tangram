@@ -131,8 +131,8 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			)
 		",
 	)
-	.bind(repo_id.to_string())
-	.bind(now)
+	.bind(&repo_id.to_string())
+	.bind(&now)
 	.bind(&title)
 	.bind(&organization_id.to_string())
 	.execute(&mut *db)

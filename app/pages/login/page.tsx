@@ -10,7 +10,7 @@ export type LoginProps = {
 export default function Login(props: LoginProps) {
 	return (
 		<AuthLayout>
-			<ui.Form directive={props.code ? 'code' : 'email'} post>
+			<ui.Form post>
 				{props.error && (
 					<ui.Alert level={ui.Level.Danger}>{props.error}</ui.Alert>
 				)}
