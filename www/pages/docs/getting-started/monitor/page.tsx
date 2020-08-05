@@ -89,7 +89,8 @@ export default () => (
 					<ui.InlineCode>{'asx'}</ui.InlineCode>
 					{' in production. We can fix this by mapping '}
 					<ui.InlineCode>{'asx'}</ui.InlineCode>
-					{' to'} <ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
+					{' to '}
+					<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
 					{' in our code. That fix could look something like this:'}
 				</ui.P>
 				<CodeFix />
@@ -112,7 +113,8 @@ export default () => (
 						'In this case, it looks like our production accuracy is a bit lower than we expected. This could be due to the mislabeling of  '
 					}
 					<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
-					{' as'} <ui.InlineCode>{'asx'}</ui.InlineCode>
+					{' as '}
+					<ui.InlineCode>{'asx'}</ui.InlineCode>
 					{
 						". To support this theory, let's see how important this feature was to our model."
 					}
@@ -126,7 +128,8 @@ export default () => (
 						'  feature is by far the most important to our model, so it makes sense that mislabeling '
 					}
 					<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
-					{' as'} <ui.InlineCode>{'asx'}</ui.InlineCode>
+					{' as '}
+					<ui.InlineCode>{'asx'}</ui.InlineCode>
 					{'  would cause a drop in accuracy.'}
 				</ui.P>
 				<ui.Img alt="feature importances" src={featureImportances} />

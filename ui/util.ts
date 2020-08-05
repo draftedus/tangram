@@ -4,9 +4,13 @@
  * @param value should be between 0 and 1
  */
 export function formatPercent(value: number, precision?: number) {
-	let v = value * 100
-	let p = precision !== undefined ? precision + 2 : 2
-	return v.toPrecision(p) + '%'
+	if (value === 1.0) {
+		return '100%'
+	} else {
+		let v = value * 100
+		let p = precision !== undefined ? precision + 2 : 2
+		return v.toPrecision(p) + '%'
+	}
 }
 
 export function formatNumber(

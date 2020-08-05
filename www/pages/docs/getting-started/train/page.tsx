@@ -44,7 +44,8 @@ export default () => (
 				<ui.P>
 					{'We can train a model to predict the  '}
 					<ui.InlineCode>{'diagnosis'}</ui.InlineCode>
-					{' column using the'} <ui.InlineCode>{'tangram train'}</ui.InlineCode>
+					{' column using the '}
+					<ui.InlineCode>{'tangram train'}</ui.InlineCode>
 					{
 						'  command, passing in the path to the CSV file and the name of the column we want to predict, called the '
 					}
@@ -73,7 +74,8 @@ export default () => (
 						' if they are equal to the empty string, whether or not they are wrapped in quotes. For example, in the following CSV, each value in  '
 					}
 					<ui.InlineCode>{'column_b'}</ui.InlineCode>
-					{' is considered to be'} <ui.InlineCode>{'null'}</ui.InlineCode>
+					{' is considered to be '}
+					<ui.InlineCode>{'null'}</ui.InlineCode>
 					{'.'}
 				</ui.P>
 				<ui.Code
@@ -85,7 +87,8 @@ export default () => (
 						'It is possible your CSV data will have other ways of indicating a null value, such as '
 					}
 					<ui.InlineCode>{'NULL'}</ui.InlineCode>
-					{' or'} <ui.InlineCode>{'?'}</ui.InlineCode>
+					{' or '}
+					<ui.InlineCode>{'?'}</ui.InlineCode>
 					{
 						'. If that is the case, you need to preprocess your CSV file before using the Tangram CLI.'
 					}
@@ -98,41 +101,50 @@ export default () => (
 						'The CLI will assign each column one of three possible column types:  '
 					}
 					<ui.InlineCode>{'Number'}</ui.InlineCode>
-					{','} <ui.InlineCode>{'Bool'}</ui.InlineCode>
-					{','} <ui.InlineCode>{'Enum'}</ui.InlineCode>
-					{', or'} <ui.InlineCode>{'Text'}</ui.InlineCode>
+					{', '}
+					<ui.InlineCode>{'Bool'}</ui.InlineCode>
+					{', '}
+					<ui.InlineCode>{'Enum'}</ui.InlineCode>
+					{', or '}
+					<ui.InlineCode>{'Text'}</ui.InlineCode>
 					{'.'}
 				</ui.P>
 				<ui.List>
 					<ui.ListItem>
 						<ui.InlineCode>{'Number'}</ui.InlineCode>
-						{': A column is a'} <ui.InlineCode>{'Number'}</ui.InlineCode>
+						{': A column is a '}
+						<ui.InlineCode>{'Number'}</ui.InlineCode>
 						{
-							'  column if every non-null value in the column parses as a finite floating point number.'
+							' column if every non-null value in the column parses as a finite floating point number.'
 						}
 					</ui.ListItem>
 					<ui.ListItem>
 						<ui.InlineCode>{'Bool'}</ui.InlineCode>
-						{': A column is a'} <ui.InlineCode>{'Bool'}</ui.InlineCode>
+						{': A column is a '}
+						<ui.InlineCode>{'Bool'}</ui.InlineCode>
 						{
-							'  column if every non-null value in the column is either true/false, yes/no, or 0/1.'
+							' column if every non-null value in the column is either true/false, yes/no, or 0/1.'
 						}
 					</ui.ListItem>
 					<ui.ListItem>
 						<ui.InlineCode>{'Enum'}</ui.InlineCode>
-						{': A column is an'} <ui.InlineCode>{'Enum'}</ui.InlineCode>
-						{' column if it is not a'} <ui.InlineCode>{'Number'}</ui.InlineCode>
+						{': A column is an '}
+						<ui.InlineCode>{'Enum'}</ui.InlineCode>
+						{' column if it is not a '}
+						<ui.InlineCode>{'Number'}</ui.InlineCode>
 						{
-							'  column and the count of unique non-null values is less than 100.'
+							' column and the count of unique non-null values is less than 100.'
 						}
 					</ui.ListItem>
 					<ui.ListItem>
 						<ui.InlineCode>{'Text'}</ui.InlineCode>
-						{': A column is a'} <ui.InlineCode>{'Text'}</ui.InlineCode>
+						{': A column is a '}
+						<ui.InlineCode>{'Text'}</ui.InlineCode>
 						{' column if it is neither a  '}
 						<ui.InlineCode>{'Number'}</ui.InlineCode>
-						{' column nor an'} <ui.InlineCode>{'Enum'}</ui.InlineCode>
-						{'  column.'}
+						{' column nor an '}
+						<ui.InlineCode>{'Enum'}</ui.InlineCode>
+						{' column.'}
 					</ui.ListItem>
 				</ui.List>
 			</ui.S2>
@@ -151,7 +163,8 @@ export default () => (
 						' and a classification model when the inferred type of the target column is  '
 					}
 					<ui.InlineCode>{'Enum'}</ui.InlineCode>
-					{' or'} <ui.InlineCode>{'Bool'}</ui.InlineCode>
+					{' or '}
+					<ui.InlineCode>{'Bool'}</ui.InlineCode>
 					{'.'}
 				</ui.P>
 			</ui.S2>
