@@ -1,11 +1,11 @@
 use crate::{
 	error::Error,
-	user::{authorize_user, User},
+	user::{authorize_user, authorize_user_for_repo, User},
 	Context,
 };
 use anyhow::Result;
 use chrono::{DateTime, TimeZone, Utc};
-use hyper::{header, Body, Request, Response, StatusCode};
+use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
@@ -99,8 +99,53 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.unwrap())
 }
 
-pub async fn post(_request: Request<Body>, _context: &Context) -> Result<Response<Body>> {
-	// TODO
+#[derive(serde::Deserialize)]
+#[serde(tag = "action")]
+enum Action {
+	#[serde(rename = "delete_repo")]
+	DeleteRepo(DeleteRepoAction),
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DeleteRepoAction {
+	pub repo_id: String,
+}
+
+pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	let data = to_bytes(request.body_mut())
+		.await
+		.map_err(|_| Error::BadRequest)?;
+	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
+	let mut db = context
+		.pool
+		.begin()
+		.await
+		.map_err(|_| Error::ServiceUnavailable)?;
+	let user = authorize_user(&request, &mut db)
+		.await?
+		.map_err(|_| Error::Unauthorized)?;
+
+	match action {
+		Action::DeleteRepo(DeleteRepoAction { repo_id, .. }) => {
+			let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
+			authorize_user_for_repo(&mut db, &user, repo_id)
+				.await
+				.map_err(|_| Error::NotFound)?;
+			sqlx::query(
+				"
+					delete from repos
+					where id = ?1
+				",
+			)
+			.bind(&repo_id.to_string())
+			.execute(&mut *db)
+			.await?;
+		}
+	}
+
+	db.commit().await?;
+
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/")
