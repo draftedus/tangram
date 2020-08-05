@@ -32,7 +32,7 @@ type NetworkConfig = {
 
 let heartDisease: Config = {
 	csvPath: './data/heart-disease.csv',
-	modelId: 'eb1f5bacbc88a53bada8cbe0d2a5a4a0',
+	modelId: '72a0da7a03930c16547e4397d039b354',
 	name: 'heart-disease',
 	target: 'diagnosis',
 	targetValues: ['Positive', 'Negative'],
@@ -54,7 +54,7 @@ let iris: Config = {
 }
 
 let networkConfig: NetworkConfig = {
-	url: 'http://localhost:8001/api/track',
+	url: 'http://localhost:8080/track',
 }
 
 let config = heartDisease
@@ -77,7 +77,7 @@ async function track(data: Prediction | TrueValue) {
 	await response.blob()
 }
 
-for (let i = 0; i < 10_000; i++) {
+for (let i = 0; i < 100; i++) {
 	let input = rows[i % nRows]
 	let startTime = 1577836800000 // Jan 1 2020 00:00:00
 	let endTime = Date.now()

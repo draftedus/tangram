@@ -25,11 +25,14 @@ enum MonitorEventSet {
 }
 
 pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<Response<Body>> {
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let monitor_events: MonitorEventSet =
-		serde_json::from_slice(&data).map_err(|_| Error::BadRequest)?;
+	let data = to_bytes(request.body_mut()).await.map_err(|e| {
+		println!("{:?}", e);
+		return Error::BadRequest;
+	})?;
+	let monitor_events: MonitorEventSet = serde_json::from_slice(&data).map_err(|e| {
+		println!("{:?}", e);
+		return Error::BadRequest;
+	})?;
 	let monitor_events = match monitor_events {
 		MonitorEventSet::Single(s) => vec![s],
 		MonitorEventSet::Multiple(m) => m,
@@ -46,6 +49,7 @@ pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<
 				let handle_prediction_result =
 					handle_prediction_monitor_event(&mut db, &mut models, monitor_event).await;
 				if handle_prediction_result.is_err() {
+					println!("{:?}", handle_prediction_result);
 					return Err(Error::BadRequest.into());
 				}
 			}
@@ -53,6 +57,7 @@ pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<
 				let handle_true_value_result =
 					handle_true_value_monitor_event(&mut db, &mut models, monitor_event).await;
 				if handle_true_value_result.is_err() {
+					println!("{:?}", handle_true_value_result);
 					return Err(Error::BadRequest.into());
 				}
 			}
@@ -110,7 +115,7 @@ async fn write_prediction_monitor_event(
 	monitor_event: &PredictionMonitorEvent,
 ) -> Result<()> {
 	let prediction_monitor_event_id = Id::new();
-	let created_at: DateTime<Utc> = Utc::now();
+	let now = Utc::now().timestamp();
 	let identifier = monitor_event.identifier.as_string().to_string();
 	let date = &monitor_event.date;
 	let input = serde_json::to_vec(&monitor_event.input)?;
@@ -126,7 +131,7 @@ async fn write_prediction_monitor_event(
 	.bind(&prediction_monitor_event_id.to_string())
 	.bind(&model_id.to_string())
 	.bind(&date.timestamp())
-	.bind(&created_at.timestamp())
+	.bind(&now)
 	.bind(&identifier)
 	.bind(&base64::encode(input))
 	.bind(&base64::encode(output))
@@ -234,6 +239,7 @@ async fn insert_or_update_production_stats_for_monitor_event(
 	}
 	Ok(())
 }
+
 async fn insert_or_update_production_metrics_for_monitor_event(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,

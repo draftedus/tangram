@@ -7,7 +7,6 @@ use hyper::{header, service::service_fn, Body, Method, Request, Response, Status
 use pinwheel::Pinwheel;
 use std::{collections::BTreeMap, panic::AssertUnwindSafe, path::PathBuf, sync::Arc};
 
-mod api;
 mod cookies;
 mod error;
 mod helpers;
@@ -18,6 +17,7 @@ mod pages;
 mod production_metrics;
 mod production_stats;
 mod time;
+mod track;
 mod types;
 
 pub use helpers::user;
@@ -69,7 +69,7 @@ async fn handle(
 	}
 	let result = match (&method, path_components.as_slice()) {
 		(&Method::GET, &["health"]) => pages::health::get(request, &context).await,
-		(&Method::POST, &["api", "track"]) => api::track::track(request, context).await,
+		(&Method::POST, &["track"]) => track::track(request, context).await,
 		(&Method::GET, &["login"]) => pages::login::get(request, context, search_params).await,
 		(&Method::POST, &["login"]) => pages::login::post(request, &context).await,
 		(&Method::GET, &[""]) => pages::index::get(request, &context).await,

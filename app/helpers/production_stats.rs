@@ -228,8 +228,8 @@ pub async fn get_production_stats(
 	for row in rows {
 		let data: String = row.get(0);
 		let data: Vec<u8> = base64::decode(data)?;
-		let hour: String = row.get(1);
-		let hour: DateTime<Utc> = Utc.datetime_from_str(hour.as_str(), "%s")?;
+		let hour: i64 = row.get(1);
+		let hour: DateTime<Utc> = Utc.datetime_from_str(hour.to_string().as_str(), "%s")?;
 		let hour: DateTime<Tz> = hour.with_timezone(&timezone);
 		let interval = match date_window_interval {
 			types::DateWindowInterval::Hourly => {
