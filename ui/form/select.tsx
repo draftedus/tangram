@@ -11,6 +11,7 @@ export type SelectProps = {
 	onChange?: (newValue: string | null) => void
 	options?: string[]
 	placeholder?: string
+	required?: boolean
 	value?: string | null
 }
 
@@ -59,6 +60,7 @@ export function SelectField(props: SelectProps) {
 					props.onChange?.(event.currentTarget.value)
 				}}
 				placeholder={props.placeholder}
+				required={props.required}
 				value={props.value ?? undefined}
 			>
 				{props.options

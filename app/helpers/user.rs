@@ -1,4 +1,4 @@
-use crate::{cookies, error::Error};
+use crate::cookies;
 use anyhow::Result;
 use hyper::{header, Body, Request};
 use sqlx::prelude::*;

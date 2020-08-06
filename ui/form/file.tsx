@@ -6,6 +6,7 @@ type FileFieldProps = {
 	disabled?: boolean
 	label?: string
 	name?: string
+	required?: boolean
 }
 
 let fileFieldCss = css({
@@ -47,7 +48,12 @@ export function FileField(props: FileFieldProps) {
 			{props.label}
 			<div class="form-file-wrapper">
 				{'Choose File'}
-				<input class="form-file-input" name={props.name} type="file" />
+				<input
+					class="form-file-input"
+					name={props.name}
+					required={props.required}
+					type="file"
+				/>
 			</div>
 		</Label>
 	)

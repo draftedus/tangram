@@ -7,8 +7,8 @@ export default function ModelCreatePage() {
 			<ui.S1>
 				<ui.H1>{'Upload Model'}</ui.H1>
 				<ui.Form encType="multipart/form-data" post={true}>
-					<ui.TextField label="Title" name="title" />
-					<ui.FileField label="File" name="file" />
+					<ui.TextField label="Title" name="title" required={true} />
+					<ui.FileField label="File" name="file" required={true} />
 					<ui.Button type="submit">{'Upload'}</ui.Button>
 				</ui.Form>
 			</ui.S1>
