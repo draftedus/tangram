@@ -1,4 +1,4 @@
-use crate::cookies;
+use crate::{cookies, error::Error};
 use anyhow::Result;
 use hyper::{header, Body, Request};
 use sqlx::prelude::*;
@@ -85,12 +85,12 @@ pub async fn authorize_user_for_organization(
 ) -> Result<bool> {
 	Ok(sqlx::query(
 		"
-				select
-					count(*) > 0
-				from organizations_users
-				where organizations_users.user_id = ?1
-					and organizations_users.organization_id = ?2
-			",
+			select
+				count(*) > 0
+			from organizations_users
+			where organizations_users.user_id = ?1
+				and organizations_users.organization_id = ?2
+		",
 	)
 	.bind(&user.id.to_string())
 	.bind(&organization_id.to_string())

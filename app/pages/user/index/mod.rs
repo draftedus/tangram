@@ -11,22 +11,6 @@ use serde::Serialize;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Props {
-	email: String,
-	organizations: Vec<Organization>,
-	repos: Vec<Repo>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Repo {
-	id: String,
-	title: String,
-	main_model_id: String,
-}
-
 pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
 		.pool
@@ -43,6 +27,22 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap())
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Props {
+	email: String,
+	organizations: Vec<Organization>,
+	repos: Vec<Repo>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Repo {
+	id: String,
+	title: String,
+	main_model_id: String,
 }
 
 pub async fn props(mut db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<Props> {

@@ -419,8 +419,8 @@ pub async fn finish_stripe_checkout(
 	let stripe_payment_method_id = response.setup_intent.payment_method;
 	sqlx::query(
 		"
-      update organizations
-        set stripe_payment_method_id = ?1
+			update organizations set
+				stripe_payment_method_id = ?1
       where
         id = ?2
     ",

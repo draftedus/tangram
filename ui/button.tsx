@@ -38,8 +38,11 @@ let buttonCss = css({
 	[`.button:hover`]: {
 		filter: 'brightness(90%)',
 	},
-	[`.button:active`]: {
+	[`.button:focus`]: {
 		filter: 'brightness(90%)',
+	},
+	[`.button:active`]: {
+		filter: 'brightness(80%)',
 	},
 	[`.button::-moz-focus-inner`]: {
 		border: 'none',

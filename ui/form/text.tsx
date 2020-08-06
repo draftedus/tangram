@@ -10,6 +10,7 @@ type TextFieldProps = {
 	onChange?: (newValue: string | null) => void
 	placeholder?: string
 	readOnly?: boolean
+	required?: boolean
 	value?: string | null
 }
 
@@ -55,6 +56,7 @@ export function TextField(props: TextFieldProps) {
 				name={props.name}
 				placeholder={props.placeholder}
 				readOnly={props.readOnly}
+				required={props.required}
 				spellcheck={false}
 				value={props.value ?? undefined}
 			/>

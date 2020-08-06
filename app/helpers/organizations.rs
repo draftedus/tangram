@@ -50,12 +50,12 @@ pub async fn get_organization(
 ) -> Result<Option<OrganizationResponse>> {
 	let row = sqlx::query(
 		"
-        select
-					organizations.name,
-					organizations.plan
-				from organizations
-					where organizations.id = ?1
-      ",
+			select
+				organizations.name,
+				organizations.plan
+			from organizations
+				where organizations.id = ?1
+		",
 	)
 	.bind(&organization_id.to_string())
 	.fetch_one(&mut *db)

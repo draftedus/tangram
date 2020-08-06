@@ -15,6 +15,22 @@ use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use tangram_core::id::Id;
 
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id).await?;
+	let html = context
+		.pinwheel
+		.render("/repos/_repo_id/models/_model_id/introspect", props)
+		.await?;
+	Ok(Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap())
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
@@ -250,22 +266,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		inner,
 		model_layout_props,
 	})
-}
-
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
-	let html = context
-		.pinwheel
-		.render("/repos/_repo_id/models/_model_id/introspect", props)
-		.await?;
-	Ok(Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap())
 }
 
 fn compute_feature_names(feature_groups: &[tangram_core::types::FeatureGroup]) -> Vec<String> {

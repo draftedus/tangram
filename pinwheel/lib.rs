@@ -506,17 +506,14 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 			.join("pages")
 			.join(page_entry.as_ref())
 			.join("client.tsx");
-		let client_js_path = if client_js_path.exists() {
-			Some(client_js_path)
-		} else {
-			None
-		};
 		args.push(format!("{}", page_source_path.display()));
-		if let Some(client_js_path) = client_js_path {
+		if client_js_path.exists() {
 			args.push(format!("{}", client_js_path.display()));
 		}
 	}
-	let mut process = std::process::Command::new("esbuild").args(&args).spawn()?;
+	let mut process = std::process::Command::new("./node_modules/.bin/esbuild")
+		.args(&args)
+		.spawn()?;
 	let status = process.wait()?;
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));

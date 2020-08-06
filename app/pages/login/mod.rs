@@ -8,13 +8,6 @@ use sqlx::prelude::*;
 use std::{collections::BTreeMap, sync::Arc};
 use tangram_core::id::Id;
 
-#[derive(serde::Serialize)]
-struct LoginProps {
-	code: bool,
-	email: Option<String>,
-	error: Option<String>,
-}
-
 pub async fn get(
 	_request: Request<Body>,
 	context: Arc<Context>,
@@ -31,6 +24,13 @@ pub async fn get(
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap())
+}
+
+#[derive(serde::Serialize)]
+struct LoginProps {
+	code: bool,
+	email: Option<String>,
+	error: Option<String>,
 }
 
 #[derive(serde::Deserialize)]

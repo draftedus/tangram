@@ -9,6 +9,24 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
+pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	let mut db = context
+		.pool
+		.begin()
+		.await
+		.map_err(|_| Error::ServiceUnavailable)?;
+	let user = authorize_user(&request, &mut db)
+		.await?
+		.map_err(|_| Error::Unauthorized)?;
+	let props = props(&mut db, &user).await?;
+	db.commit().await?;
+	let html = context.pinwheel.render("/", props).await?;
+	Ok(Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap())
+}
+
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
@@ -79,24 +97,6 @@ pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> Re
 		})
 		.collect();
 	Ok(Props { repos })
-}
-
-pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let props = props(&mut db, &user).await?;
-	db.commit().await?;
-	let html = context.pinwheel.render("/", props).await?;
-	Ok(Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap())
 }
 
 #[derive(serde::Deserialize)]

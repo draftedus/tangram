@@ -5,7 +5,7 @@ use anyhow::Result;
 use futures::FutureExt;
 use hyper::{header, service::service_fn, Body, Method, Request, Response, StatusCode};
 use pinwheel::Pinwheel;
-use std::{collections::BTreeMap, panic::AssertUnwindSafe, path::PathBuf, sync::Arc};
+use std::{collections::BTreeMap, panic::AssertUnwindSafe, path::PathBuf, str::FromStr, sync::Arc};
 
 mod cookies;
 mod error;
@@ -298,13 +298,13 @@ pub async fn start() -> Result<()> {
 	// configure the database pool
 	let database_url =
 		std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
+	let database_pool_max_size: u32 = std::env::var("DATABASE_POOL_MAX_SIZE")
+		.map(|s| {
+			s.parse()
+				.expect("DATABASE_POOL_MAX_SIZE environment variable invalid")
+		})
+		.unwrap_or(10);
 	// let database_cert = std::env::var("DATABASE_CERT").ok().map(|c| c.into_bytes());
-	// let database_pool_max_size = std::env::var("DATABASE_POOL_MAX_SIZE")
-	// 	.map(|s| {
-	// 		s.parse()
-	// 			.expect("DATABASE_POOL_MAX_SIZE environment variable invalid")
-	// 	})
-	// 	.unwrap_or(10);
 	// let database_config = database_url.parse().unwrap();
 	// let database_pool = if let Some(database_cert) = database_cert {
 	// 	let tls = MakeTlsConnector::new(
@@ -319,8 +319,27 @@ pub async fn start() -> Result<()> {
 	// 	let database_manager = Manager::new(database_config, postgres::NoTls);
 	// 	Pool::new(database_manager, database_pool_max_size)
 	// };
-	let pool = sqlx::AnyPool::connect(&database_url).await?;
+	let options = match database_url {
+		_ if database_url.starts_with("sqlite:") => sqlx::any::AnyConnectOptions::from(
+			sqlx::sqlite::SqliteConnectOptions::from_str(&database_url)?
+				.create_if_missing(true)
+				.foreign_keys(true)
+				.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),
+		),
+		_ if database_url.starts_with("postgres:") => sqlx::any::AnyConnectOptions::from(
+			sqlx::postgres::PgConnectOptions::from_str(&database_url)?,
+		),
+		_ => panic!("DATABASE_URL must be a sqlite or postgres database url"),
+	};
+	let pool = sqlx::any::AnyPoolOptions::new()
+		.max_connections(database_pool_max_size)
+		.connect_with(options)
+		.await?;
 
+	// run any pending migrations
+	migrations::run(&pool).await?;
+
+	// create the pinwheel
 	#[cfg(debug_assertions)]
 	fn pinwheel() -> Pinwheel {
 		Pinwheel::dev(PathBuf::from("app"), PathBuf::from("target/js"))
@@ -330,9 +349,6 @@ pub async fn start() -> Result<()> {
 		Pinwheel::prod(include_dir::include_dir!("../target/js"))
 	}
 	let pinwheel = pinwheel();
-
-	// run any pending migrations
-	migrations::run(&pool).await?;
 
 	// create the context
 	let cookie_domain = std::env::var("COOKIE_DOMAIN").ok();

@@ -9,9 +9,6 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use tangram_core::id::Id;
 
-#[derive(serde::Serialize)]
-struct Props {}
-
 pub async fn get(
 	_request: Request<Body>,
 	context: &Context,
@@ -27,6 +24,9 @@ pub async fn get(
 		.body(Body::from(html))
 		.unwrap())
 }
+
+#[derive(serde::Serialize)]
+struct Props {}
 
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Action {

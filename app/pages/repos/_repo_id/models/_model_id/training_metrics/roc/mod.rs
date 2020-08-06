@@ -14,25 +14,6 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Props {
-	id: String,
-	title: String,
-	auc_roc: f32,
-	roc_curve_data: Vec<Vec<ROCCurveData>>,
-	classes: Vec<String>,
-	model_layout_props: types::ModelLayoutProps,
-	class: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ROCCurveData {
-	false_positive_rate: f32,
-	true_positive_rate: f32,
-}
-
 pub async fn get(
 	request: Request<Body>,
 	context: &Context,
@@ -52,6 +33,25 @@ pub async fn get(
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap())
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Props {
+	id: String,
+	title: String,
+	auc_roc: f32,
+	roc_curve_data: Vec<Vec<ROCCurveData>>,
+	classes: Vec<String>,
+	model_layout_props: types::ModelLayoutProps,
+	class: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ROCCurveData {
+	false_positive_rate: f32,
+	true_positive_rate: f32,
 }
 
 async fn props(

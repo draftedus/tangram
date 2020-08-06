@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	user::{authorize_user, authorize_user_for_organization},
+	user::{authorize_user, authorize_user_for_organization, User},
 	Context,
 };
 use anyhow::Result;
@@ -12,9 +12,27 @@ use serde::{Deserialize, Serialize};
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
+pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	let mut db = context
+		.pool
+		.begin()
+		.await
+		.map_err(|_| Error::ServiceUnavailable)?;
+	let user = authorize_user(&request, &mut db)
+		.await?
+		.map_err(|_| Error::Unauthorized)?;
+	let props = props(&mut db, user).await?;
+	db.commit().await?;
+	let html = context.pinwheel.render("/repos/new", props).await?;
+	Ok(Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap())
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ReposNewProps {
+struct Props {
 	organizations: Vec<Organization>,
 }
 
@@ -25,15 +43,7 @@ struct Organization {
 	name: String,
 }
 
-pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
+async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<Props> {
 	let rows = sqlx::query(
 		"
 		select
@@ -48,7 +58,6 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	.bind(&user.id.to_string())
 	.fetch_all(&mut *db)
 	.await?;
-	db.commit().await?;
 	let items: Vec<_> = rows
 		.iter()
 		.map(|row| {
@@ -57,14 +66,9 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 			Organization { id, name }
 		})
 		.collect();
-	let props = ReposNewProps {
+	Ok(Props {
 		organizations: items,
-	};
-	let html = context.pinwheel.render("/repos/new", props).await?;
-	Ok(Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap())
+	})
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]

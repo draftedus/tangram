@@ -8,9 +8,6 @@ use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use tangram_core::id::Id;
 
-#[derive(serde::Serialize)]
-struct Props {}
-
 pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let props = Props {};
 	let html = context.pinwheel.render("/organizations/new", props).await?;
@@ -19,6 +16,9 @@ pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<
 		.body(Body::from(html))
 		.unwrap())
 }
+
+#[derive(serde::Serialize)]
+struct Props {}
 
 #[derive(serde::Deserialize, Clone, Debug)]
 pub struct Action {

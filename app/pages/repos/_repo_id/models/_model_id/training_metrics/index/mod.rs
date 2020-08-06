@@ -13,6 +13,22 @@ use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use tangram_core::id::Id;
 
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id).await?;
+	let html = context
+		.pinwheel
+		.render("/repos/_repo_id/models/_model_id/training_metrics/", props)
+		.await?;
+	Ok(Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap())
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
@@ -68,22 +84,6 @@ struct MulticlassClassifier {
 	classes: Vec<String>,
 	losses: Vec<f32>,
 	id: String,
-}
-
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
-	let html = context
-		.pinwheel
-		.render("/repos/_repo_id/models/_model_id/training_metrics/", props)
-		.await?;
-	Ok(Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap())
 }
 
 async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {

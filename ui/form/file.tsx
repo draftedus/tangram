@@ -9,7 +9,7 @@ type FileFieldProps = {
 }
 
 let fileFieldCss = css({
-	[`.form-file-field-wrapper`]: {
+	[`.form-file-wrapper`]: {
 		backgroundColor: variables.colors.surface,
 		border,
 		borderRadius: variables.border.radius,
@@ -24,19 +24,19 @@ let fileFieldCss = css({
 		userSelect: 'text',
 		width: '100%',
 	},
-	[`.form-file-field-wrapper:hover`]: {
+	'.form-file-wrapper:hover': {
 		borderColor: variables.colors.hover,
 	},
-	[`.form-file-field-wrapper:focus`]: {
+	[`.form-file-wrapper:focus-within`]: {
 		borderColor: variables.colors.accent,
 	},
 	[`.form-file-input`]: {
 		bottom: 0,
 		left: 0,
+		opacity: 0,
 		position: 'absolute',
 		right: 0,
 		top: 0,
-		visibility: 'hidden',
 		width: '100%',
 	},
 })
@@ -46,10 +46,30 @@ export function FileField(props: FileFieldProps) {
 	return (
 		<Label>
 			{props.label}
-			<div class="form-file-field-wrapper">
+			<div class="form-file-wrapper">
 				{'Choose File'}
 				<input class="form-file-input" name={props.name} type="file" />
 			</div>
 		</Label>
 	)
+}
+
+export function bootFileFields() {
+	let fileInputElements = document.querySelectorAll('input[type=file]')
+	fileInputElements.forEach(fileInputElement => {
+		if (!(fileInputElement instanceof HTMLInputElement)) throw Error()
+		updateFileInputElement(fileInputElement)
+		fileInputElement.addEventListener('change', () =>
+			updateFileInputElement(fileInputElement),
+		)
+	})
+}
+
+function updateFileInputElement(fileInputElement: HTMLInputElement) {
+	let file = fileInputElement.files?.item(0)
+	if (file) {
+		fileInputElement.parentElement?.firstChild?.replaceWith(
+			document.createTextNode(file.name),
+		)
+	}
 }

@@ -14,6 +14,22 @@ use num_traits::cast::ToPrimitive;
 use serde::Serialize;
 use tangram_core::id::Id;
 
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id).await?;
+	let html = context
+		.pinwheel
+		.render("/repos/_repo_id/models/_model_id/", props)
+		.await?;
+	Ok(Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap())
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
@@ -151,22 +167,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		inner,
 		model_layout_props,
 	})
-}
-
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
-	let html = context
-		.pinwheel
-		.render("/repos/_repo_id/models/_model_id/", props)
-		.await?;
-	Ok(Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap())
 }
 
 fn training_summary(model: &tangram_core::types::Model) -> TrainingSummary {
