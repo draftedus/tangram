@@ -1,0 +1,10 @@
+.production-metrics-wrapper {
+	padding: 1rem;
+}
+
+@media (max-width: 1199px) {
+	.production-metrics-wrapper {
+		grid: auto / auto;
+		grid-template-areas: 'accuracy' 'monthly';
+	}
+}

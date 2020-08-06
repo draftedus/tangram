@@ -1,0 +1,40 @@
+.nested-nav {
+	display: grid;
+	gap: 1.5rem;
+}
+
+.nested-nav-section {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.nested-nav-section-title {
+	font-size: 1rem;
+	font-weight: bold;
+}
+
+.nested-nav-item {
+	border-left: var(--border);
+	display: grid;
+	gap: 0.5rem;
+	outline: none;
+	overflow: hidden;
+	padding-left: 1rem;
+	text-overflow: ellipsis;
+	user-select: none;
+}
+.nested-nav-item > a {
+	color: var(--muted-text);
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.nested-nav-highlight {
+	border-left-color: var(--accent);
+}
+.nested-nav-highlight > a {
+	color: var(--accent);
+}
+.nested-nav-highlight > a:hover {
+	filter: brightness(90%);
+}

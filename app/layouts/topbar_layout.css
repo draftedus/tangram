@@ -1,0 +1,7 @@
+.topbar-layout-grid {
+	color: var(--text);
+	display: grid;
+	grid: auto 1fr / auto;
+	height: 100vh;
+	overflow-x: hidden;
+}

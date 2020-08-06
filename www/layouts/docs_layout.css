@@ -1,0 +1,22 @@
+.docs-layout-wrapper {
+	align-content: start;
+	align-items: start;
+	box-sizing: border-box;
+	display: grid;
+	margin: 0 auto;
+	max-width: var(--max-width);
+	padding: 2rem 1rem;
+	width: 100%;
+}
+@media (max-width: 1199px) {
+	.docs-layout-wrapper {
+		grid: 'page-nav' auto 'content' auto / minmax(0, 1fr);
+		grid-gap: 2rem;
+	}
+}
+@media (min-width: 1200px) {
+	.docs-layout-wrapper {
+		grid: 'page-nav content' auto / 200px minmax(0, 1fr);
+		grid-gap: 1rem;
+	}
+}

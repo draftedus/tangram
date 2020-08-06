@@ -2,7 +2,6 @@ import { Children, css, cx, h, useCss } from '../deps'
 import { border, desktop, mobile, variables } from '../theme'
 import { Token } from '../token'
 import { formatPercent } from '../util'
-import { config } from './config'
 
 // |---------------------------------------------------------|
 // |           ||     |                Actual                |
@@ -112,7 +111,7 @@ let itemWrapperCss = css({
 	[`.confusion-matrix-item-wrapper`]: {
 		alignContent: 'center',
 		border,
-		borderRadius: config.borderRadius,
+		borderRadius: variables.border.radius,
 		display: 'grid',
 		gridGap: '1rem',
 		justifyContent: 'center',
@@ -124,14 +123,14 @@ let itemWrapperCss = css({
 
 let positiveItemWrapperCss = css({
 	[`.confusion-matrix-item-positive-wrapper`]: {
-		backgroundColor: config.trueBackgroundColor,
-		color: config.trueForegroundColor,
+		backgroundColor: variables.colors.header,
+		color: variables.colors.text,
 	},
 })
 let negativeItemWrapperCss = css({
 	[`.confusion-matrix-item-negative-wrapper`]: {
-		backgroundColor: config.falseBackgroundColor,
-		color: config.falseForegroundColor,
+		backgroundColor: variables.colors.surface,
+		color: variables.colors.text,
 	},
 })
 

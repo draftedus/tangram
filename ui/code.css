@@ -1,0 +1,7 @@
+.code {
+	--moz-tab-size: 2;
+	background-color: var(--header);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+	tab-size: 2;
+}

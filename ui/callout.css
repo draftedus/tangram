@@ -1,0 +1,36 @@
+.callout-wrapper {
+	display: grid;
+	grid-gap: 0.5rem;
+	padding: 1rem;
+}
+
+.callout-level-info-wrapper {
+	background-color: var(--teal);
+	border-left-width: 4px;
+	border-left-style: solid;
+	border-left-color: var(--teal);
+}
+
+.callout-level-warning-wrapper {
+	background-color: var(--yellow);
+	border-left-width: 4px;
+	border-left-style: solid;
+	border-left-color: var(--yellow);
+}
+
+.callout-level-danger-wrapper {
+	background-color: var(--red);
+	border-left-width: 4px;
+	border-left-style: solid;
+	border-left-color: var(--red);
+}
+
+.callout-title {
+	color: var(--fun-text);
+	font-weight: bold;
+}
+
+.callout-inner {
+	color: var(--fun-text);
+	line-height: 1.5;
+}

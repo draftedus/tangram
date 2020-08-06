@@ -1,0 +1,7 @@
+.header {
+	align-items: center;
+	display: grid;
+	grid: auto / 1fr auto;
+	grid-column-gap: 10px;
+	justify-items: stretch;
+}

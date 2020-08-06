@@ -1,0 +1,69 @@
+.pricing-cards-grid {
+	display: grid;
+	grid-gap: 0.5rem;
+}
+
+@media (max-width: 1199px) {
+	.pricing-cards-grid {
+		grid: repeat(4, auto) / minmax(0, 1fr);
+	}
+}
+@media (min-width: 1200px) {
+	.pricing-cards-grid {
+		grid: auto / repeat(4, minmax(0, 1fr));
+	}
+}
+
+.pricing-card-grid {
+	align-content: space-between;
+	background-color: var(--surface);
+	border: var(--border);
+	border-radius: var(--border-radius);
+	display: grid;
+	grid-gap: 2rem;
+	padding: 2rem;
+}
+
+pricing-card-grid-selected {
+	border: var(--border);
+	border-color: var(--accent);
+}
+
+.pricing-card-content-grid {
+	display: grid;
+	grid-gap: 1rem;
+	justify-items: center;
+}
+
+.pricing-card-price-wrapper {
+	display: grid;
+	grid-gap: 0.5rem;
+	justify-content: center;
+	justify-items: center;
+}
+
+.pricing-card-price {
+	font-size: 2rem;
+}
+
+.pricing-card-subtitle {
+	color: var(--muted-text);
+	font-size: 1rem;
+}
+
+.pricing-card-feature {
+	display: grid;
+	grid-auto-flow: column;
+	grid-gap: 0.5rem;
+	justify-content: start;
+	line-height: 1.5;
+}
+.pricing-card-feature:before {
+	color: var(--blue);
+	content: '✔';
+}
+
+.pricing-card-features-list {
+	display: grid;
+	grid-gap: 0.5rem;
+}

@@ -1,0 +1,74 @@
+.details {
+	box-sizing: border-box;
+	position: relative;
+}
+
+.details[open] > summary {
+	border-color: var(--accent-color);
+}
+
+.details[open] > summary::before {
+	background: transparent;
+	bottom: 0;
+	content: ;
+	cursor: default;
+	display: block;
+	left: 0;
+	position: fixed;
+	right: 0;
+	top: 0;
+	z-index: 1;
+}
+
+.details-summary {
+	--webkit-text-fill-color: inherit;
+	align-items: center;
+	appearance: none;
+	background-color: var(--surface);
+	border-width: var(--border);
+	box-sizing: border-box;
+	color: inherit;
+	cursor: pointer;
+	display: grid;
+	font: inherit;
+	font-size: 1rem;
+	height: 2.5rem;
+	letter-spacing: normal;
+	outline: none;
+	padding: 0.5rem 1rem;
+	position: relative;
+	user-select: text;
+	width: 100%;
+}
+
+.details-summary:hover {
+	border-color: var(--hover);
+}
+
+.details-summary::-webkit-details-marker {
+	display: none;
+}
+
+.details-list {
+	background-color: var(--surface);
+	box-sizing: border-box;
+	font-size: 1rem;
+	margin-top: 2.5rem;
+	padding: 0rem;
+	position: absolute;
+	top: 0;
+	width: 100%;
+	z-index: 1;
+}
+
+.details-list-item {
+	color: var(--text);
+	display: block;
+	list-style: none;
+	padding: 0.5rem;
+	text-decoration: none;
+}
+
+.details-list-item:hover {
+	background-color: var(--hover);
+}

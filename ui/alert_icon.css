@@ -1,0 +1,43 @@
+.alert-icon-wrapper {
+	cursor: pointer;
+	position: relative;
+}
+
+.alert-icon-message {
+	border-radius: var(--border-radius);
+	bottom: 1rem;
+	color: var(--fun-text);
+	left: 1rem;
+	padding: 0.5rem;
+	position: absolute;
+	visibility: hidden;
+}
+.alert-icon-message:hover {
+	visibility: visible;
+}
+
+.alert-icon {
+	align-content: center;
+	border-radius: 0.5rem;
+	color: var(--fun-text);
+	display: inline-grid;
+	font-size: 0.8rem;
+	height: 1rem;
+	justify-content: center;
+	width: 1rem;
+}
+.alert-icon:hover {
+	filter: brightness(90%);
+}
+
+.alert-icon-level-info {
+	background-color: var(--teal);
+}
+
+.alert-icon-level-warning {
+	background-color: var(--yellow);
+}
+
+.alert-icon-level-danger {
+	background-color: var(--red);
+}

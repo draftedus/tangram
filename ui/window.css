@@ -1,0 +1,36 @@
+.window-wrapper {
+	background-color: var(--background);
+	border-radius: var(--border-radius);
+	display: grid;
+	grid: auto 1fr / minmax(0, 1fr);
+}
+
+.window-topbar {
+	background-color: var(--surface);
+	border-left: var(--border);
+	border-right: var(--border);
+	border-top: var(--border);
+	border-top-left-radius: var(--border-radius);
+	border-top-right-radius: var(--border-radius);
+	display: grid;
+	grid: auto / auto auto auto;
+	grid-column-gap: 0.5rem;
+	justify-content: start;
+	padding: 0.75rem;
+}
+
+.window-topbar-button {
+	border-radius: 0.375rem;
+	box-sizing: border-box;
+	height: 0.75rem;
+	width: 0.75rem;
+}
+
+.window-body {
+	background-color: var(--surface);
+	border-bottom: var(--border);
+	border-bottom-left-radius: var(--border-radius);
+	border-bottom-right-radius: var(--border-radius);
+	border-left: var(--border);
+	border-right: var(--border);
+}

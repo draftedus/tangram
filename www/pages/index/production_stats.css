@@ -1,0 +1,7 @@
+.production-stats-wrapper {
+	display: grid;
+	grid: auto auto / auto;
+	grid-gap: 1rem;
+	grid-template-areas: 'alert comparison';
+	padding: 1rem;
+}

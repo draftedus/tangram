@@ -1,0 +1,11 @@
+.predict-wrapper {
+	display: grid;
+	grid: auto auto / 1fr;
+	grid-gap: 2rem;
+}
+
+.predict-output-wrapper {
+	display: grid;
+	grid: auto / 1fr 1fr;
+	grid-gap: 1rem;
+}

@@ -1,0 +1,21 @@
+.number-chart-wrapper {
+	color: var(--text);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	text-align: center;
+}
+
+.number-chart-value {
+	font-size: 2rem;
+	margin-bottom: 1rem;
+}
+@media (max-width: 1199px) {
+	.number-chart-value {
+		font-size: 1.5rem;
+	}
+}
+
+.number-chart-title {
+	color: var(--text);
+}

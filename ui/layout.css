@@ -1,0 +1,48 @@
+.s1 {
+	align-content: start;
+	display: grid;
+	grid-row-gap: 2rem;
+}
+
+.s2 {
+	display: grid;
+	grid-row-gap: 1rem;
+}
+
+.space-between {
+	align-items: center;
+	display: grid;
+	grid-auto-flow: column;
+	justify-content: space-between;
+}
+
+.h1 {
+	font-size: 2.5rem;
+	font-weight: normal;
+	margin: 0;
+}
+
+.h2 {
+	font-size: 1.5rem;
+	font-weight: normal;
+	margin: 0;
+}
+
+.p {
+	line-height: 1.5;
+	margin: 0;
+}
+
+.list {
+	line-height: 1.5;
+	list-style-position: inside;
+	margin: 0;
+	padding: 0;
+}
+
+.ordered-list {
+	line-height: 1.5;
+	list-style-position: inside;
+	margin: 0;
+	padding: 0;
+}

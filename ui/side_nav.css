@@ -1,0 +1,37 @@
+.side-nav {
+	align-content: start;
+	background-color: var(--surface);
+	display: grid;
+	grid-gap: 1rem;
+	height: 100%;
+	padding: 1rem 2rem 2rem 2rem;
+}
+
+.side-nav-section {
+	display: grid;
+}
+
+.side-nav-title {
+	font-size: 1rem;
+	font-weight: bold;
+	padding-top: 1rem;
+}
+
+.side-nav-item {
+	color: var(--text);
+	cursor: pointer;
+	filter: none;
+	padding-bottom: 0.5rem;
+	padding-top: 0.5rem;
+	text-decoration: none;
+}
+.side-nav-item:hover {
+	filter: brightness(90%);
+}
+
+.side-nav-item-selected {
+	color: var(--accent);
+}
+.side-nav-item-selected:hover {
+	filter: brightness(90%);
+}

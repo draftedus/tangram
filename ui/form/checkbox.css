@@ -1,0 +1,34 @@
+.form-checkbox-field {
+	--moz-appearance: none;
+	--webkit-appearance: none;
+	align-items: center;
+	border: var(--border);
+	border-radius: var(--border-radius);
+	display: grid;
+	height: 2.5rem;
+	justify-items: center;
+	width: 2.5rem;
+}
+
+.form-checkbox-field:checked {
+	background-color: var(--accent);
+	border-color: var(--accent);
+}
+
+.form-checkbox-field:checked:after {
+	color: var(--fun-text);
+	content: ✔;
+}
+
+.form-checkbox-field:hover {
+	border-color: var(--hover);
+}
+
+.form-checkbox-field:focus {
+	border-color: var(--accent);
+}
+
+.form-checkbox-field::-webkit-input-placeholder {
+	--webkit-text-fill-color: var(--muted-text);
+	color: var(--muted-text);
+}

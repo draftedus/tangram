@@ -1,0 +1,28 @@
+.footer-grid {
+	align-items: center;
+	box-sizing: border-box;
+	display: grid;
+	grid: auto auto auto / auto;
+	grid-gap: 1rem;
+	justify-items: center;
+	margin: 0 auto;
+	max-width: var(--max-width);
+	padding: 2rem 1rem;
+}
+
+.footer-links-wrapper {
+	display: grid;
+	grid: auto / auto auto auto;
+	grid-gap: 1rem;
+}
+
+.footer-copyright {
+	color: gray;
+	font-size: 0.9rem;
+	margin: 0;
+}
+
+.footer-logo {
+	height: 4rem;
+	width: 4rem;
+}
