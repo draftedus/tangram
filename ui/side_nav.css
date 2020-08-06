@@ -1,6 +1,6 @@
 .side-nav {
 	align-content: start;
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	display: grid;
 	grid-gap: 1rem;
 	height: 100%;
@@ -18,7 +18,7 @@
 }
 
 .side-nav-item {
-	color: var(--text);
+	color: var(--text-color);
 	cursor: pointer;
 	filter: none;
 	padding-bottom: 0.5rem;
@@ -31,7 +31,7 @@
 }
 
 .side-nav-item-selected {
-	color: var(--accent);
+	color: var(--accent-color);
 }
 
 .side-nav-item-selected:hover {

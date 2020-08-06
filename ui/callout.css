@@ -26,11 +26,11 @@
 }
 
 .callout-title {
-	color: var(--fun-text);
+	color: var(--fun-text-color);
 	font-weight: bold;
 }
 
 .callout-inner {
-	color: var(--fun-text);
+	color: var(--fun-text-color);
 	line-height: 1.5;
 }

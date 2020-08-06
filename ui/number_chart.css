@@ -1,5 +1,5 @@
 .number-chart-wrapper {
-	color: var(--text);
+	color: var(--text-color);
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -18,5 +18,5 @@
 }
 
 .number-chart-title {
-	color: var(--text);
+	color: var(--text-color);
 }

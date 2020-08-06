@@ -3,7 +3,7 @@
 }
 
 .table {
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	border: var(--border);
 	border-radius: var(--border-radius);
 	border-spacing: 0;
@@ -16,9 +16,9 @@
 }
 
 .table-header-cell {
-	background-color: var(--header);
-	border-bottom: var(--border);
-	color: var(--text);
+	background-color: var(--header-color);
+	border-bottom: var(--border-color);
+	color: var(--text-color);
 	font-weight: normal;
 	padding: 0.5rem 1rem;
 	white-space: nowrap;

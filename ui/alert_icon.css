@@ -6,7 +6,7 @@
 .alert-icon-message {
 	border-radius: var(--border-radius);
 	bottom: 1rem;
-	color: var(--fun-text);
+	color: var(--fun-text-color);
 	left: 1rem;
 	padding: 0.5rem;
 	position: absolute;
@@ -20,7 +20,7 @@
 .alert-icon {
 	align-content: center;
 	border-radius: 0.5rem;
-	color: var(--fun-text);
+	color: var(--fun-text-color);
 	display: inline-grid;
 	font-size: 0.8rem;
 	height: 1rem;

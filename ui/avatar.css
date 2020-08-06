@@ -1,5 +1,5 @@
 .avatar {
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	border-radius: 50%;
 	height: 2rem;
 	overflow: hidden;
@@ -18,7 +18,7 @@
 }
 
 .avatar-placeholder {
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	height: 100%;
 	width: 100%;
 }

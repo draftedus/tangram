@@ -11,24 +11,24 @@
 }
 
 .form-checkbox-field:checked {
-	background-color: var(--accent);
-	border-color: var(--accent);
+	background-color: var(--accent-color);
+	border-color: var(--accent-color);
 }
 
 .form-checkbox-field:checked:after {
-	color: var(--fun-text);
+	color: var(--fun-text-color);
 	content: ✔;
 }
 
 .form-checkbox-field:hover {
-	border-color: var(--hover);
+	border-color: var(--hover-color);
 }
 
 .form-checkbox-field:focus {
-	border-color: var(--accent);
+	border-color: var(--accent-color);
 }
 
 .form-checkbox-field::-webkit-input-placeholder {
-	--webkit-text-fill-color: var(--muted-text);
-	color: var(--muted-text);
+	--webkit-text-fill-color: var(--muted-text-color);
+	color: var(--muted-text-color);
 }

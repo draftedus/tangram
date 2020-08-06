@@ -24,8 +24,8 @@
 	--webkit-text-fill-color: inherit;
 	align-items: center;
 	appearance: none;
-	background-color: var(--surface);
-	border-width: var(--border);
+	background-color: var(--surface-color);
+	border-width: var(--border-color);
 	box-sizing: border-box;
 	color: inherit;
 	cursor: pointer;
@@ -42,7 +42,7 @@
 }
 
 .details-summary:hover {
-	border-color: var(--hover);
+	border-color: var(--hover-color);
 }
 
 .details-summary::-webkit-details-marker {
@@ -50,7 +50,7 @@
 }
 
 .details-list {
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	box-sizing: border-box;
 	font-size: 1rem;
 	margin-top: 2.5rem;
@@ -62,7 +62,7 @@
 }
 
 .details-list-item {
-	color: var(--text);
+	color: var(--text-color);
 	display: block;
 	list-style: none;
 	padding: 0.5rem;
@@ -70,5 +70,5 @@
 }
 
 .details-list-item:hover {
-	background-color: var(--hover);
+	background-color: var(--hover-color);
 }

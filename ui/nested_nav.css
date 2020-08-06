@@ -14,7 +14,7 @@
 }
 
 .nested-nav-item {
-	border-left: var(--border);
+	border-left: var(--border-color);
 	display: grid;
 	gap: 0.5rem;
 	outline: none;
@@ -25,17 +25,17 @@
 }
 
 .nested-nav-item > a {
-	color: var(--muted-text);
+	color: var(--muted-text-color);
 	cursor: pointer;
 	text-decoration: none;
 }
 
 .nested-nav-highlight {
-	border-left-color: var(--accent);
+	border-left-color: var(--accent-color);
 }
 
 .nested-nav-highlight > a {
-	color: var(--accent);
+	color: var(--accent-color);
 }
 
 .nested-nav-highlight > a:hover {

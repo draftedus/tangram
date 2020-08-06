@@ -2,7 +2,7 @@
 	--moz-appearance: none;
 	--webkit-text-fill-color: inherit;
 	appearance: none;
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	border: var(--border);
 	border-radius: var(--border-radius);
 	box-sizing: border-box;
@@ -18,14 +18,14 @@
 }
 
 .form-select:hover {
-	border-color: var(--hover);
+	border-color: var(--hover-color);
 }
 
 .form-select:focus {
-	border-color: var(--accent);
+	border-color: var(--accent-color);
 }
 
 .form-select::-webkit-input-placeholder {
-	--webkit-text-fill-color: var(--muted-text);
-	color: var(--muted-text);
+	--webkit-text-fill-color: var(--muted-text-color);
+	color: var(--muted-text-color);
 }

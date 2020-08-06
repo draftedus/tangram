@@ -1,5 +1,5 @@
 .tab-bar {
-	border-bottom: var(--border);
+	border-bottom: var(--border-color);
 	display: grid;
 	grid-auto-flow: column;
 	grid-column-gap: 2rem;
@@ -7,8 +7,8 @@
 }
 
 .tab-bar-tab {
-	border-bottom: var(--border);
-	color: var(--muted-text);
+	border-bottom: var(--border-color);
+	color: var(--muted-text-color);
 	cursor: pointer;
 	height: 1.5rem;
 	margin-bottom: var(--border-width);
@@ -21,8 +21,8 @@
 }
 
 .tab-bar-tab-selected {
-	border-bottom-color: var(--accent);
-	color: var(--accent);
+	border-bottom-color: var(--accent-color);
+	color: var(--accent-color);
 }
 
 .tab-bar-tab-selected:hover {

@@ -1,5 +1,5 @@
 .form-file-wrapper {
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	border: var(--border);
 	border-radius: var(--border-radius);
 	box-sizing: border-box;
@@ -15,11 +15,11 @@
 }
 
 .form-file-wrapper:hover {
-	border-color: var(--hover);
+	border-color: var(--hover-color);
 }
 
 .form-file-wrapper:focus-within {
-	border-color: var(--accent);
+	border-color: var(--accent-color);
 }
 
 .form-file-input {

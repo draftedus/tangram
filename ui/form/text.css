@@ -3,13 +3,13 @@
 	--webkit-appearance: none;
 	--webkit-text-fill-color: inherit;
 	appearance: none;
-	background-color: var(--surface);
+	background-color: var(--surface-color);
+	border-radius: var(--border-radius-color);
 	border: var(--border);
-	border-radius: var(--border-radius);
 	box-sizing: border-box;
 	color: inherit;
-	font: inherit;
 	font-size: 1rem;
+	font: inherit;
 	height: 2.5rem;
 	outline: none;
 	padding: calc(0.5rem - var(--border-width)) 1rem;
@@ -18,14 +18,14 @@
 }
 
 .form-text-field:hover {
-	border-color: var(--hover);
+	border-color: var(--hover-color);
 }
 
 .form-text-field:focus {
-	border-color: var(--accent);
+	border-color: var(--accent-color);
 }
 
 .form-text-field::-webkit-input-placeholder {
-	--webkit-text-fill-color: var(--muted-text);
-	color: var(--muted-text);
+	--webkit-text-fill-color: var(--muted-text-color);
+	color: var(--muted-text-color);
 }

@@ -12,7 +12,7 @@
 }
 
 .topbar-link {
-	color: var(--text);
+	color: var(--text-color);
 	cursor: pointer;
 	text-decoration: none;
 }
@@ -148,11 +148,11 @@
 }
 
 .topbar-dropdown-item:hover {
-	background-color: var(--hover);
+	background-color: var(--hover-color);
 }
 
 .topbar-dropdown-link {
-	color: var(--text);
+	color: var(--text-color);
 	cursor: pointer;
 	text-decoration: none;
 }

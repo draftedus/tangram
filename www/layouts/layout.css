@@ -1,6 +1,6 @@
 .layout {
-	background-color: var(--background);
-	color: var(--text);
+	background-color: var(--background-color);
+	color: var(--text-color);
 	display: grid;
 	grid: auto 1fr auto / auto;
 	min-height: 100vh;

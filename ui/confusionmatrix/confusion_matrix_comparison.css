@@ -20,13 +20,13 @@
 }
 
 .confusion-matrix-comparison-item-positive-wrapper {
-	background-color: var(--header);
-	color: var(--text);
+	background-color: var(--header-color);
+	color: var(--text-color);
 }
 
 .confusion-matrix-comparison-item-negative-wrapper {
-	background-color: var(--surface);
-	color: var(--text);
+	background-color: var(--surface-color);
+	color: var(--text-color);
 }
 
 .confusion-matrix-comparison-number-comparison-wrapper {

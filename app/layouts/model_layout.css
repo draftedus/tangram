@@ -37,7 +37,7 @@
 
 .model-layout-model-group-topbar {
 	align-items: center;
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	display: grid;
 	grid: auto / auto 1fr auto auto;
 	grid-auto-flow: column;
@@ -50,7 +50,7 @@
 }
 
 .model-layout-owner-title {
-	color: var(--text);
+	color: var(--text-color);
 }
 
 .model-layout-content {

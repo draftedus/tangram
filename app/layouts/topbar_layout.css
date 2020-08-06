@@ -1,5 +1,5 @@
 .topbar-layout-grid {
-	color: var(--text);
+	color: var(--text-color);
 	display: grid;
 	grid: auto 1fr / auto;
 	height: 100vh;

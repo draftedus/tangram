@@ -17,7 +17,7 @@
 
 .pricing-card-grid {
 	align-content: space-between;
-	background-color: var(--surface);
+	background-color: var(--surface-color);
 	border: var(--border);
 	border-radius: var(--border-radius);
 	display: grid;
@@ -27,7 +27,7 @@
 
 pricing-card-grid-selected {
 	border: var(--border);
-	border-color: var(--accent);
+	border-color: var(--accent-color);
 }
 
 .pricing-card-content-grid {
@@ -48,7 +48,7 @@ pricing-card-grid-selected {
 }
 
 .pricing-card-subtitle {
-	color: var(--muted-text);
+	color: var(--muted-text-color);
 	font-size: 1rem;
 }
 
