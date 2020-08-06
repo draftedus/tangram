@@ -14,7 +14,6 @@ let fileFieldCss = css({
 		border,
 		borderRadius: variables.border.radius,
 		boxSizing: 'border-box',
-		cursor: 'pointer',
 		fontSize: '1rem',
 		height: '2.5rem',
 		lineHeight: 1.5,
