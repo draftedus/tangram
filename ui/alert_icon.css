@@ -12,6 +12,7 @@
 	position: absolute;
 	visibility: hidden;
 }
+
 .alert-icon-message:hover {
 	visibility: visible;
 }
@@ -26,6 +27,7 @@
 	justify-content: center;
 	width: 1rem;
 }
+
 .alert-icon:hover {
 	filter: brightness(90%);
 }

@@ -5,6 +5,7 @@
 	overflow: hidden;
 	width: 2rem;
 }
+
 .avatar:hover {
 	filter: brightness(90%);
 }

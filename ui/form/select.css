@@ -12,17 +12,19 @@
 	font-size: 1rem;
 	height: 2.5rem;
 	outline: 1px none;
-	/* todo */
 	padding: calc(0.5rem - var(--border-width)) 1rem;
 	user-select: text;
 	width: 100%;
 }
+
 .form-select:hover {
 	border-color: var(--hover);
 }
+
 .form-select:focus {
 	border-color: var(--accent);
 }
+
 .form-select::-webkit-input-placeholder {
 	--webkit-text-fill-color: var(--muted-text);
 	color: var(--muted-text);

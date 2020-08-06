@@ -2,6 +2,7 @@
 	height: 1rem;
 	position: relative;
 }
+
 .slider-wrapper:hover > .tooltip {
 	display: block;
 }
@@ -21,12 +22,14 @@
 .slider-range:focus {
 	outline: none;
 }
+
 .slider-range::-webkit-slider-runnable-track {
 	background-color: var(--border);
 	border-radius: var(--border-radius);
 	box-sizing: border-box;
 	height: 4px;
 }
+
 .slider-range::-webkit-slider-thumb {
 	--webkit-appearance: none;
 	background-color: var(--blue);
@@ -36,18 +39,21 @@
 	position: relative;
 	width: 1rem;
 }
+
 .slider-range::-moz-range-track {
 	background-color: var(--border);
 	border-radius: var(--border-radius);
 	box-sizing: border-box;
 	height: 4px;
 }
+
 .slider-range::-moz-range-progress {
 	background-color: var(--accent);
 	border-radius: var(--border-radius);
 	box-sizing: border-box;
 	height: 4px;
 }
+
 .slider-range::-moz-range-thumb {
 	background-color: var(--accent);
 	border: none;

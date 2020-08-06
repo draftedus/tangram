@@ -5,6 +5,7 @@
 	justify-items: center;
 	text-align: center;
 }
+
 @media (max-width: 1199px) {
 	.number-comparison-wrapper {
 		grid-gap: 0.5rem;
@@ -19,6 +20,7 @@
 	grid-row-gap: 0.5rem;
 	justify-items: center;
 }
+
 @media (max-width: 1199px) {
 	.number-comparison-inner-wrapper {
 		grid-column-gap: 0.5rem;
@@ -28,6 +30,7 @@
 .number-comparison-title {
 	font-size: 1.25rem;
 }
+
 @media (max-width: 1199px) {
 	.number-comparison-title {
 		font-size: 1rem;
@@ -37,6 +40,7 @@
 .number-comparison-value {
 	font-size: 2rem;
 }
+
 @media (max-width: 1199px) {
 	.number-comparison-value {
 		font-size: 1.25rem;

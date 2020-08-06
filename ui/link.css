@@ -3,9 +3,11 @@
 	cursor: pointer;
 	text-decoration: none;
 }
+
 .link:hover {
 	filter: brightness(90%);
 }
+
 .link:focus {
 	filter: brightness(90%);
 }

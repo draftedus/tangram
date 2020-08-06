@@ -37,6 +37,7 @@
 		font-size: 1.25rem;
 	}
 }
+
 @media (max-width: 1199px) {
 	.confusion-matrix-item-title {
 		font-size: 1rem;
@@ -48,6 +49,7 @@
 		font-size: 2rem;
 	}
 }
+
 @media (max-width: 1199px) {
 	.confusion-matrix-item-value {
 		font-size: 1.5rem;
@@ -59,6 +61,7 @@
 		font-size: 1.25rem;
 	}
 }
+
 @media (max-width: 1199px) {
 	.confusion-matrix-item-percent {
 		font-size: 1rem;

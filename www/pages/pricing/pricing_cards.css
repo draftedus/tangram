@@ -8,6 +8,7 @@
 		grid: repeat(4, auto) / minmax(0, 1fr);
 	}
 }
+
 @media (min-width: 1200px) {
 	.pricing-cards-grid {
 		grid: auto / repeat(4, minmax(0, 1fr));
@@ -58,6 +59,7 @@ pricing-card-grid-selected {
 	justify-content: start;
 	line-height: 1.5;
 }
+
 .pricing-card-feature:before {
 	color: var(--blue);
 	content: '✔';

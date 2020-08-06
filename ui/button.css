@@ -20,15 +20,19 @@
 	white-space: nowrap;
 	width: 100%;
 }
+
 .button:hover {
 	filter: brightness(90%);
 }
+
 .button:focus {
 	filter: brightness(90%);
 }
+
 .button:active {
 	filter: brightness(80%);
 }
+
 .button::-moz-focus-inner {
 	border: none;
 }

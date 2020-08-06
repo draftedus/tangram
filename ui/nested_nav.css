@@ -23,6 +23,7 @@
 	text-overflow: ellipsis;
 	user-select: none;
 }
+
 .nested-nav-item > a {
 	color: var(--muted-text);
 	cursor: pointer;
@@ -32,9 +33,11 @@
 .nested-nav-highlight {
 	border-left-color: var(--accent);
 }
+
 .nested-nav-highlight > a {
 	color: var(--accent);
 }
+
 .nested-nav-highlight > a:hover {
 	filter: brightness(90%);
 }

@@ -16,6 +16,7 @@
 	cursor: pointer;
 	text-decoration: none;
 }
+
 .topbar-link:hover {
 	filter: brightness(90%);
 }
@@ -23,7 +24,7 @@
 .topbar-details[open] > summary::before {
 	background: transparent;
 	bottom: 0;
-	content: ;
+	content: ' ';
 	cursor: default;
 	display: block;
 	left: 0;
@@ -32,20 +33,24 @@
 	top: 0;
 	z-index: 1;
 }
+
 @media (min-width: 1200px) {
 	.topbar-details {
 		display: none;
 	}
 }
+
 @media (max-width: 1199px) {
 	.topbar-details {
 		display: block;
 	}
 }
+
 .topbar-details[open] .topbar-hamburger-icon {
 	color: blue;
 	display: none;
 }
+
 .topbar-details:not([open]) .topbar-x-icon {
 	display: none;
 }
@@ -66,6 +71,7 @@
 	user-select: text;
 	width: 100%;
 }
+
 .topbar-details-summary::-webkit-details-marker {
 	display: none;
 }
@@ -77,6 +83,7 @@
 	grid-gap: 0.5rem;
 	height: 2.5rem;
 }
+
 .topbar-brand-wrapper:hover {
 	filter: brightness(90%);
 }
@@ -104,6 +111,7 @@
 	grid-column-gap: 2rem;
 	user-select: none;
 }
+
 @media (max-width: 1199px) {
 	.topbar-items-wrapper {
 		display: none;
@@ -138,6 +146,7 @@
 	font-size: 1.25rem;
 	padding: 0.5rem 1rem;
 }
+
 .topbar-dropdown-item:hover {
 	background-color: var(--hover);
 }

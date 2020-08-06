@@ -8,7 +8,6 @@
 	height: 2.5rem;
 	line-height: 1.5;
 	outline: none;
-	/* todo */
 	padding: calc(0.5rem - var(--border-width)) 1rem;
 	position: relative;
 	user-select: text;

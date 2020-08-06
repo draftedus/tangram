@@ -25,6 +25,7 @@
 	padding-top: 0.5rem;
 	text-decoration: none;
 }
+
 .side-nav-item:hover {
 	filter: brightness(90%);
 }
@@ -32,6 +33,7 @@
 .side-nav-item-selected {
 	color: var(--accent);
 }
+
 .side-nav-item-selected:hover {
 	filter: brightness(90%);
 }

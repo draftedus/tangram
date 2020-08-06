@@ -5,6 +5,7 @@
 		overflow: hidden;
 	}
 }
+
 @media (min-width: 1200px) {
 	.model-layout {
 		display: grid;
@@ -23,6 +24,7 @@
 		overflow: hidden;
 	}
 }
+
 @media (min-width: 1200px) {
 	.model-layout-grid {
 		display: grid;
