@@ -33,7 +33,7 @@ export let variables: Variables = {
 	colors: {
 		accent: 'var(--accent)',
 		background: 'var(--background)',
-		border: 'var(--border)',
+		border: 'var(--border-color)',
 		funText: 'var(--fun-text)',
 		header: 'var(--header)',
 		hover: 'var(--hover)',
