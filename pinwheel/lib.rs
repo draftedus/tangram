@@ -445,6 +445,7 @@ pub fn esbuild_single_page(root_dir: &Path, out_dir: &Path, page_entry: &str) ->
 }
 
 pub fn esbuild_all_pages(root_dir: &Path, out_dir: &Path) -> Result<()> {
+	// collect all pages in the pages directory
 	let mut page_entries = Vec::new();
 	let pattern = root_dir.join("pages/**/page.tsx");
 	let pattern = pattern.to_str().unwrap();
@@ -460,7 +461,9 @@ pub fn esbuild_all_pages(root_dir: &Path, out_dir: &Path) -> Result<()> {
 		let entry = entry.to_str().unwrap().to_owned().into();
 		page_entries.push(entry)
 	}
+	// build the pages
 	esbuild_pages(root_dir, out_dir, &page_entries)?;
+	// copy static files
 	let static_dir = root_dir.join("static");
 	for path in walkdir::WalkDir::new(&static_dir) {
 		let path = path?;
