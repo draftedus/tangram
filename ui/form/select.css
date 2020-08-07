@@ -1,6 +1,6 @@
 .form-select {
-	--moz-appearance: none;
-	--webkit-text-fill-color: inherit;
+	-moz-appearance: none;
+	-webkit-text-fill-color: inherit;
 	appearance: none;
 	background-color: var(--surface-color);
 	border: var(--border);
@@ -26,6 +26,6 @@
 }
 
 .form-select::-webkit-input-placeholder {
-	--webkit-text-fill-color: var(--muted-text-color);
+	-webkit-text-fill-color: var(--muted-text-color);
 	color: var(--muted-text-color);
 }

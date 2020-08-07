@@ -5,7 +5,7 @@ export function Training() {
 }
 
 let asciicast: ui.AsciicastEvent[] = [
-	[0.0, `<span style="color: ${ui.colors.red}; font-weight: bold">$</span> `],
+	[0.0, `<span style="color: ${'var(--red)'}; font-weight: bold">$</span> `],
 	[0.231235, 't'],
 	[0.344881, 'a'],
 	[0.478167, 'n'],

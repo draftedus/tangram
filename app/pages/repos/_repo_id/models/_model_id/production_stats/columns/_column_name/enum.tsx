@@ -63,14 +63,14 @@ export function Enum(props: Props) {
 
 	let categories = props.intervals[0].histogram.map(x => x[0])
 	let colorOptions = [
-		ui.colors.green,
-		ui.colors.blue,
-		ui.colors.indigo,
-		ui.colors.purple,
-		ui.colors.pink,
-		ui.colors.red,
-		ui.colors.orange,
-		ui.colors.yellow,
+		'var(--green)',
+		'var(--blue)',
+		'var(--indigo)',
+		'var(--purple)',
+		'var(--pink)',
+		'var(--red)',
+		'var(--orange)',
+		'var(--yellow)',
 	]
 	let intervalChartData = ui.times(props.intervals[0].histogram.length, i => ({
 		color: colorOptions[i % colorOptions.length],

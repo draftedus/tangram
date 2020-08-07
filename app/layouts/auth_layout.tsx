@@ -14,7 +14,7 @@ export function AuthLayout(props: AuthLayoutProps) {
 	return (
 		<div class="auth-layout">
 			<div style={logoStyle}>
-				<Logo color={ui.variables.colors.text} colorScheme={LogoScheme.Multi} />
+				<Logo color="var(--text-color)" colorScheme={LogoScheme.Multi} />
 			</div>
 			<div style={cardStyle}>
 				<ui.Card>{props.children}</ui.Card>

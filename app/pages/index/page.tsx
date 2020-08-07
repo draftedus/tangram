@@ -47,7 +47,7 @@ export default function HomePage(props: Props) {
 										<form method="post">
 											<input name="action" type="hidden" value="delete_repo" />
 											<input name="repoId" type="hidden" value={repo.id} />
-											<ui.Button color={ui.colors.red}>{'Delete'}</ui.Button>
+											<ui.Button color="var(--red)">{'Delete'}</ui.Button>
 										</form>
 									</ui.TableCell>
 								</ui.TableRow>

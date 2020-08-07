@@ -20,7 +20,6 @@ export type ModelLayoutProps = {
 export function ModelLayout(props: ModelLayoutProps) {
 	let selectedModel = r(props.models.find(model => model.id == props.modelId))
 		?.title
-
 	return (
 		<TopbarLayout>
 			<div class="model-layout">
@@ -28,22 +27,22 @@ export function ModelLayout(props: ModelLayoutProps) {
 					class="model-layout-model-group-topbar"
 					style={{ gridArea: 'model-group-topbar' }}
 				>
-					<div class="model-layout-repo-title">
-						<ui.Link
-							className="model-layout-owner-title"
+					<div class="model-layout-owner-slash-repo-wrapper">
+						<a
+							className="model-layout-owner-slash-repo-link"
 							href={props.ownerUrl}
 							title="owner"
 						>
 							{props.ownerName}
-						</ui.Link>
-						{'/'}
-						<ui.Link
-							className="model-layout-owner-title"
+						</a>
+						<span className="model-layout-owner-slash-repo-link">{'/'}</span>
+						<a
+							className="model-layout-owner-slash-repo-link"
 							href={`/repos/${props.id}/models/${props.modelId}/`}
 							title="repo"
 						>
 							{props.title}
-						</ui.Link>
+						</a>
 					</div>
 					<ui.Details
 						options={

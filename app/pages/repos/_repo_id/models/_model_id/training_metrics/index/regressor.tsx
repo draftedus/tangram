@@ -1,10 +1,5 @@
 import { MetricsRow } from 'common/metrics_row'
-import {
-	baselineColor,
-	baselineTextColor,
-	trainingColor,
-	trainingTextColor,
-} from 'common/tokens'
+import { baselineColor, trainingColor } from 'common/tokens'
 import { h, ui } from 'deps'
 
 export type Props = {
@@ -32,8 +27,6 @@ export function RegressorTrainingMetricsIndexPage(props: Props) {
 						<ui.NumberComparisonChart
 							colorA={baselineColor}
 							colorB={trainingColor}
-							textColorA={baselineTextColor}
-							textColorB={trainingTextColor}
 							title="Root Mean Squared Error"
 							valueA={props.baselineRmse}
 							valueATitle="Baseline Mean Squared Error"
@@ -46,8 +39,6 @@ export function RegressorTrainingMetricsIndexPage(props: Props) {
 						<ui.NumberComparisonChart
 							colorA={baselineColor}
 							colorB={trainingColor}
-							textColorA={baselineTextColor}
-							textColorB={trainingTextColor}
 							title="Mean Squared Error"
 							valueA={props.baselineMse}
 							valueATitle="Mean Squared Error"

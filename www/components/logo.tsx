@@ -1,4 +1,4 @@
-import { h, ui } from '../deps'
+import { h } from '../deps'
 
 export enum LogoScheme {
 	Multi,
@@ -20,13 +20,13 @@ export function Logo(props: LogoProps) {
 	let largeTriangle1
 	let largeTriangle2
 	if (props.colorScheme === LogoScheme.Multi) {
-		trapezoid = ui.colors.pink
-		square = ui.colors.yellow
-		mediumTriangle = ui.colors.teal
-		smallTriangle1 = ui.colors.purple
-		smallTriangle2 = ui.colors.indigo
-		largeTriangle1 = ui.colors.blue
-		largeTriangle2 = ui.colors.green
+		trapezoid = 'var(--pink)'
+		square = 'var(--yellow)'
+		mediumTriangle = 'var(--teal)'
+		smallTriangle1 = 'var(--purple)'
+		smallTriangle2 = 'var(--indigo)'
+		largeTriangle1 = 'var(--blue)'
+		largeTriangle2 = 'var(--green)'
 	} else {
 		trapezoid = props.color
 		square = props.color

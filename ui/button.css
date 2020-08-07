@@ -1,5 +1,4 @@
 .button {
-	appearance: none;
 	background-color: var(--accent-color);
 	border: none;
 	border-radius: var(--border-radius);

@@ -5,12 +5,7 @@ import {
 	DateWindowSelectField,
 	intervalChartTitle,
 } from 'common/time_charts'
-import {
-	productionColor,
-	productionTextColor,
-	trainingColor,
-	trainingTextColor,
-} from 'common/tokens'
+import { productionColor, trainingColor } from 'common/tokens'
 import { h, ui } from 'deps'
 
 export type Props = {
@@ -98,8 +93,6 @@ export function RegressorProductionMetricsPage(props: Props) {
 						<ui.NumberComparisonChart
 							colorA={trainingColor}
 							colorB={productionColor}
-							textColorA={trainingTextColor}
-							textColorB={productionTextColor}
 							title="Root Mean Squared Error"
 							valueA={props.overall.rmse?.training}
 							valueATitle="Training"
@@ -112,8 +105,6 @@ export function RegressorProductionMetricsPage(props: Props) {
 						<ui.NumberComparisonChart
 							colorA={trainingColor}
 							colorB={productionColor}
-							textColorA={trainingTextColor}
-							textColorB={productionTextColor}
 							title="Mean Squared Error"
 							valueA={props.overall.mse?.training}
 							valueATitle="Training"

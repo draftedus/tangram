@@ -1,6 +1,5 @@
 import { Button } from './button'
 import { Children, JSX, h } from './deps'
-import { variables } from './theme'
 
 type TopbarProps = {
 	activeTextColor: string
@@ -185,9 +184,7 @@ function TopbarDropdown(props: TopbarMenuProps) {
 				))}
 			{props.cta && (
 				<div class="topbar-dropdown-item">
-					<Button color={variables.colors.accent} href={props.cta.href}>
-						{props.cta.title}
-					</Button>
+					<Button href={props.cta.href}>{props.cta.title}</Button>
 				</div>
 			)}
 		</div>

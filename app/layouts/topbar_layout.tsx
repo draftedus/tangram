@@ -15,10 +15,10 @@ export function TopbarLayout(props: TopbarLayoutProps) {
 function Topbar() {
 	return (
 		<ui.Topbar
-			activeTextColor={ui.colors.blue}
-			backgroundColor={ui.variables.colors.header}
-			dropdownBackgroundColor={ui.variables.colors.surface}
-			foregroundColor={ui.variables.colors.text}
+			activeTextColor="var(--blue)"
+			backgroundColor="var(--header-color)"
+			dropdownBackgroundColor="var(--surface-color)"
+			foregroundColor="var(--text-color)"
 			items={[
 				{
 					element: (
@@ -32,7 +32,7 @@ function Topbar() {
 			]}
 			logo={<Logo colorScheme={LogoScheme.Multi} />}
 			logoHref="/"
-			menuSeparatorColor={ui.variables.colors.mutedText}
+			menuSeparatorColor="var(--muted-text-color)"
 			title="tangram"
 		/>
 	)

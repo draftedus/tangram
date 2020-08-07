@@ -1,5 +1,3 @@
-import { colors, variables } from './theme'
-
 type Toast = {
 	backgroundColor: string
 	message: string
@@ -44,9 +42,9 @@ async function show(toast: Toast) {
 	element.style.pointerEvents = 'none'
 	let inner = document.createElement('div')
 	inner.style.padding = '1rem'
-	inner.style.borderRadius = variables.border.radius
+	inner.style.borderRadius = 'var(--border-radius)'
 	inner.style.backgroundColor = toast.backgroundColor
-	inner.style.color = toast.textColor ?? variables.colors.funText
+	inner.style.color = toast.textColor ?? 'var(--fun-text-color)'
 	inner.appendChild(document.createTextNode(toast.message))
 	element.appendChild(inner)
 	document.body.appendChild(element)
@@ -58,14 +56,14 @@ async function show(toast: Toast) {
 
 function showMessage(message: string) {
 	show({
-		backgroundColor: variables.colors.accent,
+		backgroundColor: 'var(--accent-color)',
 		message,
 	})
 }
 
 function showError(message: string) {
 	show({
-		backgroundColor: colors.red,
+		backgroundColor: 'var(--red)',
 		message,
 	})
 }

@@ -22,7 +22,7 @@ export default function UserPage(props: Props) {
 					<ui.H1>{'User'}</ui.H1>
 					<ui.Form post={true}>
 						<input name="action" type="hidden" value="logout" />
-						<ui.Button color={ui.colors.red}>{'Logout'}</ui.Button>
+						<ui.Button color="var(--red)">{'Logout'}</ui.Button>
 					</ui.Form>
 				</ui.SpaceBetween>
 				<ui.S2>

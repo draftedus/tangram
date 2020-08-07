@@ -1,7 +1,9 @@
 .token {
+	background-color: var(--accent-color);
 	align-items: center;
 	border-radius: 4px;
 	box-sizing: border-box;
+	color: var(--fun-text-color);
 	display: inline-flex;
 	font-size: 1rem;
 	height: 1.5rem;

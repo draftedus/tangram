@@ -5,12 +5,7 @@ import {
 	DateWindowInterval,
 	intervalChartTitle,
 } from 'common/time_charts'
-import {
-	productionColor,
-	productionTextColor,
-	trainingColor,
-	trainingTextColor,
-} from 'common/tokens'
+import { productionColor, trainingColor } from 'common/tokens'
 import { Fragment, h, ui } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
@@ -210,8 +205,6 @@ export default function ProductionMetricsPage(props: Props) {
 									<ui.NumberComparisonChart
 										colorA={trainingColor}
 										colorB={productionColor}
-										textColorA={trainingTextColor}
-										textColorB={productionTextColor}
 										title="Precision"
 										valueA={selectedOverallClassMetrics.precision.training}
 										valueATitle="Training"
@@ -224,8 +217,6 @@ export default function ProductionMetricsPage(props: Props) {
 									<ui.NumberComparisonChart
 										colorA={trainingColor}
 										colorB={productionColor}
-										textColorA={trainingTextColor}
-										textColorB={productionTextColor}
 										title="Recall"
 										valueA={selectedOverallClassMetrics.recall.training}
 										valueATitle="Training"
@@ -262,8 +253,6 @@ export default function ProductionMetricsPage(props: Props) {
 									<ui.NumberComparisonChart
 										colorA={trainingColor}
 										colorB={productionColor}
-										textColorA={trainingTextColor}
-										textColorB={productionTextColor}
 										title="F1 Score"
 										valueA={selectedOverallClassMetrics.f1Score.training}
 										valueATitle="Training"
@@ -312,8 +301,6 @@ export default function ProductionMetricsPage(props: Props) {
 									classLabel={props.class}
 									colorA={trainingColor}
 									colorB={productionColor}
-									textColorA={trainingTextColor}
-									textColorB={productionTextColor}
 									valueA={{
 										falseNegative:
 											selectedOverallClassMetrics.comparison

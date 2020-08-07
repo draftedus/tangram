@@ -20,7 +20,7 @@ export function Tuning() {
 					{'Select a threshold.'}
 				</div>
 				<ui.Slider
-					color={ui.colors.blue}
+					color="var(--blue)"
 					max={18}
 					min={0}
 					onChange={setThresholdIndex}

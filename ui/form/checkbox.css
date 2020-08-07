@@ -1,6 +1,6 @@
 .form-checkbox-field {
-	--moz-appearance: none;
-	--webkit-appearance: none;
+	-moz-appearance: none;
+	-webkit-appearance: none;
 	align-items: center;
 	border: var(--border);
 	border-radius: var(--border-radius);
@@ -29,6 +29,6 @@
 }
 
 .form-checkbox-field::-webkit-input-placeholder {
-	--webkit-text-fill-color: var(--muted-text-color);
+	-webkit-text-fill-color: var(--muted-text-color);
 	color: var(--muted-text-color);
 }

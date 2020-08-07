@@ -6,12 +6,7 @@ import {
 	DateWindowSelectField,
 	intervalChartTitle,
 } from 'common/time_charts'
-import {
-	productionColor,
-	productionTextColor,
-	trainingColor,
-	trainingTextColor,
-} from 'common/tokens'
+import { productionColor, trainingColor } from 'common/tokens'
 import { h, ui } from 'deps'
 
 export type Props = {
@@ -100,8 +95,6 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 					<ui.NumberComparisonChart
 						colorA={trainingColor}
 						colorB={productionColor}
-						textColorA={trainingTextColor}
-						textColorB={productionTextColor}
 						title="Accuracy"
 						valueA={props.overall.accuracy?.training}
 						valueATitle="Training"

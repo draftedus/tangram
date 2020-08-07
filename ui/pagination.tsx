@@ -1,6 +1,5 @@
 import { Button } from './button'
 import { Children, h } from './deps'
-import { colors } from './theme'
 
 export type PaginationProps = {
 	children?: Children
@@ -62,7 +61,7 @@ type PaginationButtonProps = {
 function PaginationButton(props: PaginationButtonProps) {
 	return (
 		<Button
-			color={colors.blue}
+			color="var(--blue)"
 			disabled={props.disabled}
 			onClick={props.onClick}
 		>

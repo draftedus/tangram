@@ -1,5 +1,5 @@
 import * as cookies from './cookies'
-import { styler, ui } from './deps'
+import { ui } from './deps'
 
 // set the tangram-timezone cookie
 let timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -15,6 +15,3 @@ cookies.set({
 // set chart font
 ui.chartConfig.font = '14px JetBrains Mono'
 ui.chartConfig.fontSize = 14
-
-// initialize the styler based on the css in the document's head
-styler.init()

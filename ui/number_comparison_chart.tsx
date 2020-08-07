@@ -4,8 +4,6 @@ import { Token } from './token'
 type NumberComparisonChartProps = {
 	colorA: string
 	colorB: string
-	textColorA?: string
-	textColorB?: string
 	title: string
 	valueA: number | null
 	valueATitle: string
@@ -48,14 +46,10 @@ export function NumberComparisonChart(props: NumberComparisonChartProps) {
 					{props.valueB !== null ? valueFormatter(props.valueB) : 'N/A'}
 				</div>
 				<div>
-					<Token color={props.colorA} textColor={props.textColorA}>
-						{props.valueATitle}
-					</Token>
+					<Token color={props.colorA}>{props.valueATitle}</Token>
 				</div>
 				<div>
-					<Token color={props.colorB} textColor={props.textColorB}>
-						{props.valueBTitle}
-					</Token>
+					<Token color={props.colorB}>{props.valueBTitle}</Token>
 				</div>
 			</div>
 		</div>

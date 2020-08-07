@@ -1,5 +1,5 @@
 .code {
-	--moz-tab-size: 2;
+	-moz-tab-size: 2;
 	background-color: var(--header-color);
 	border-radius: var(--border-radius);
 	overflow: hidden;

@@ -14,18 +14,18 @@ export default function Pricing() {
 				</h2>
 				<PricingCards
 					enterpriseCta={
-						<ui.Button color={ui.colors.blue} href="mailto:hello@tangramhq.com">
+						<ui.Button color="var(--blue)" href="mailto:hello@tangramhq.com">
 							{'Contact us'}
 						</ui.Button>
 					}
 					freeCta={
-						<ui.Button color={ui.colors.indigo} href="/docs">
+						<ui.Button color="var(--indigo)" href="/docs">
 							{'Read the Docs'}
 						</ui.Button>
 					}
 					startupCta={
 						<ui.Button
-							color={ui.colors.teal}
+							color="var(--teal)"
 							href="https://app.tangramhq.com/login"
 						>
 							{'Free Trial'}
@@ -33,7 +33,7 @@ export default function Pricing() {
 					}
 					teamCta={
 						<ui.Button
-							color={ui.colors.green}
+							color="var(--green)"
 							href="https://app.tangramhq.com/login"
 						>
 							{'Free Trial'}

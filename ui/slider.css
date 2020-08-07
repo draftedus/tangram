@@ -31,7 +31,7 @@
 }
 
 .slider-range::-webkit-slider-thumb {
-	--webkit-appearance: none;
+	-webkit-appearance: none;
 	background-color: var(--blue);
 	border-radius: 0.5rem;
 	height: 1rem;

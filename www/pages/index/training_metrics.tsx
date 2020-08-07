@@ -3,13 +3,13 @@ import { h, ui } from 'deps'
 export function TrainingMetrics() {
 	let rocData = [
 		{
-			color: ui.colors.blue,
+			color: 'var(--blue)',
 			data: data.rocData,
 			pointStyle: ui.PointStyle.Hidden,
 			title: 'ROC',
 		},
 		{
-			color: ui.colors.gray,
+			color: 'var(--gray)',
 			data: [
 				{ x: 0, y: 0 },
 				{ x: 1, y: 1 },
@@ -21,7 +21,7 @@ export function TrainingMetrics() {
 	]
 	let prData = [
 		{
-			color: ui.colors.blue,
+			color: 'var(--blue)',
 			data: data.prData,
 			pointStyle: ui.PointStyle.Circle,
 			title: 'PR',
@@ -33,8 +33,8 @@ export function TrainingMetrics() {
 				<div style={{ gridArea: 'accuracy' }}>
 					<ui.Card>
 						<ui.NumberComparisonChart
-							colorA={ui.colors.gray}
-							colorB={ui.colors.blue}
+							colorA="var(--gray)"
+							colorB="var(--blue)"
 							title="Accuracy"
 							valueA={data.baselineAccuracy}
 							valueATitle="Baseline"

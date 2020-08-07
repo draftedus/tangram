@@ -1,7 +1,19 @@
 import { Children, Fragment, h, useEffect } from './deps'
-import { Language, grammars, highlight } from './syntax/mod'
-import { syntaxColors } from './theme'
+import { Language, SyntaxColors, grammars, highlight } from './syntax/mod'
 import { times } from './util'
+
+let syntaxColors: SyntaxColors = {
+	background: 'var(--header-color)',
+	builtin: 'var(--indigo)',
+	comment: 'var(--muted-text-color)',
+	foreground: 'var(--text-color)',
+	function: 'var(--blue)',
+	keyword: 'var(--purple)',
+	lineNumbers: 'var(--muted-text-color)',
+	literalBool: 'var(--orange)',
+	literalNumber: 'var(--yellow)',
+	literalString: 'var(--green)',
+}
 
 type CodeForLanguage = {
 	[Language.JavaScript]: string

@@ -15,7 +15,7 @@ export function PricingCards(props: PricingCardsProps) {
 	return (
 		<div class="pricing-cards-grid">
 			<PricingCard
-				color={ui.colors.indigo}
+				color="var(--indigo)"
 				cta={props.freeCta}
 				features={[
 					'Training with the CLI',
@@ -27,7 +27,7 @@ export function PricingCards(props: PricingCardsProps) {
 				title="Free"
 			/>
 			<PricingCard
-				color={ui.colors.teal}
+				color="var(--teal)"
 				cta={props.startupCta}
 				features={[
 					'Everything in the Free plan',
@@ -42,7 +42,7 @@ export function PricingCards(props: PricingCardsProps) {
 				title="Startup"
 			/>
 			<PricingCard
-				color={ui.colors.green}
+				color="var(--green)"
 				cta={props.teamCta}
 				features={[
 					'Everything in the Free plan',
@@ -57,7 +57,7 @@ export function PricingCards(props: PricingCardsProps) {
 				title="Team"
 			/>
 			<PricingCard
-				color={ui.colors.blue}
+				color="var(--blue)"
 				cta={props.enterpriseCta}
 				features={[
 					'Everything in the Team plan',

@@ -39,7 +39,7 @@
 	--muted-text-color: #666666;
 	--text-color: #222222;
 	--accent-color: #0a84ff;
-	--fun-text-color: #111111;
+	--fun-text-color: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {

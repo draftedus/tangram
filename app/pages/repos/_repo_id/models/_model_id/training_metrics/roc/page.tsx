@@ -28,12 +28,12 @@ export default function TrainingMetricsIndexPage(props: Props) {
 	)
 	let data = [
 		{
-			color: ui.colors.blue,
+			color: 'var(--blue)',
 			data: rocData,
 			title: 'ROC',
 		},
 		{
-			color: ui.colors.gray,
+			color: 'var(--gray)',
 			data: [
 				{ x: 0, y: 0 },
 				{ x: 1, y: 1 },

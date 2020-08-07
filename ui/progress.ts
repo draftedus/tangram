@@ -1,5 +1,3 @@
-import { colors } from './theme'
-
 enum Status {
 	Running,
 	Stopping,
@@ -28,7 +26,7 @@ function start() {
 	element.style.top = '0'
 	element.style.left = '0'
 	element.style.right = '100%'
-	element.style.background = `linear-gradient(to left, ${colors.purple}, ${colors.red}, ${colors.orange}, ${colors.yellow}, ${colors.green}, ${colors.teal}, ${colors.blue}, ${colors.indigo})`
+	element.style.background = `linear-gradient(to left, var(--purple), var(--red), var(--orange), var(--yellow), var(--green), var(--teal), var(--blue), var(--indigo))`
 	element.style.transition = 'right 0.2s, opacity 0.2s'
 	element.style.opacity = '0'
 	document.body.appendChild(element)

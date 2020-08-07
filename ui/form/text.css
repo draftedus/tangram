@@ -1,7 +1,7 @@
 .form-text-field {
-	--moz-appearance: none;
-	--webkit-appearance: none;
-	--webkit-text-fill-color: inherit;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	-webkit-text-fill-color: inherit;
 	appearance: none;
 	background-color: var(--surface-color);
 	border-radius: var(--border-radius);
@@ -26,6 +26,6 @@
 }
 
 .form-text-field::-webkit-input-placeholder {
-	--webkit-text-fill-color: var(--muted-text-color);
+	-webkit-text-fill-color: var(--muted-text-color);
 	color: var(--muted-text-color);
 }

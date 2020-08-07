@@ -5,12 +5,7 @@ import {
 	intervalChartTitle,
 	overallChartTitle,
 } from 'common/time_charts'
-import {
-	productionColor,
-	productionTextColor,
-	trainingColor,
-	trainingTextColor,
-} from 'common/tokens'
+import { productionColor, trainingColor } from 'common/tokens'
 import { h, ui } from 'deps'
 
 export type Props = {
@@ -167,8 +162,6 @@ export function Number(props: Props) {
 					<ui.NumberComparisonChart
 						colorA={trainingColor}
 						colorB={productionColor}
-						textColorA={trainingTextColor}
-						textColorB={productionTextColor}
 						title="Min"
 						valueA={props.overall.stats.training.min}
 						valueATitle="Training"
@@ -181,8 +174,6 @@ export function Number(props: Props) {
 					<ui.NumberComparisonChart
 						colorA={trainingColor}
 						colorB={productionColor}
-						textColorA={trainingTextColor}
-						textColorB={productionTextColor}
 						title="Max"
 						valueA={props.overall.stats.training.max}
 						valueATitle="Training"
@@ -197,8 +188,6 @@ export function Number(props: Props) {
 					<ui.NumberComparisonChart
 						colorA={trainingColor}
 						colorB={productionColor}
-						textColorA={trainingTextColor}
-						textColorB={productionTextColor}
 						title="Mean"
 						valueA={props.overall.stats.training.mean}
 						valueATitle="Training"
@@ -211,8 +200,6 @@ export function Number(props: Props) {
 					<ui.NumberComparisonChart
 						colorA={trainingColor}
 						colorB={productionColor}
-						textColorA={trainingTextColor}
-						textColorB={productionTextColor}
 						title="Standard Deviation"
 						valueA={props.overall.stats.training.std}
 						valueATitle="Training"

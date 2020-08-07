@@ -45,12 +45,20 @@
 	padding: 2rem 1rem;
 }
 
-.model-layout-repo-title {
-	font-size: 1.25rem;
+.model-layout-owner-slash-repo-wrapper {
+	display: grid;
+	grid: auto / auto auto auto;
+	gap: 0.25rem;
 }
 
-.model-layout-owner-title {
+.model-layout-owner-slash-repo-link {
+	font-size: 1.25rem;
+	text-decoration: none;
 	color: var(--text-color);
+}
+
+.model-layout-owner-slash-repo-link:hover {
+	filter: brightness(90%);
 }
 
 .model-layout-content {

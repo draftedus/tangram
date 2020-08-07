@@ -1,10 +1,5 @@
 import { MetricsRow } from 'common/metrics_row'
-import {
-	baselineColor,
-	baselineTextColor,
-	selectedThresholdColor,
-	selectedThresholdTextColor,
-} from 'common/tokens'
+import { baselineColor, selectedThresholdColor } from 'common/tokens'
 import { Client, h, r, ui, useState } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
@@ -82,7 +77,7 @@ export function TuningPageInner(props: InnerProps) {
 					}
 				</ui.P>
 				<ui.Slider
-					color={ui.variables.colors.accent}
+					color="var(--accent-color)"
 					max={thresholds.length - 1}
 					min={1}
 					onChange={setSelectedThresholdIndex}
@@ -118,8 +113,6 @@ export function TuningPageInner(props: InnerProps) {
 						<ui.NumberComparisonChart
 							colorA={baselineColor}
 							colorB={selectedThresholdColor}
-							textColorA={baselineTextColor}
-							textColorB={selectedThresholdTextColor}
 							title="Accuracy"
 							valueA={baselineMetrics.accuracy}
 							valueATitle="Baseline"
@@ -132,8 +125,6 @@ export function TuningPageInner(props: InnerProps) {
 						<ui.NumberComparisonChart
 							colorA={baselineColor}
 							colorB={selectedThresholdColor}
-							textColorA={baselineTextColor}
-							textColorB={selectedThresholdTextColor}
 							title="F1 Score"
 							valueA={
 								baselineMetrics.f1Score !== null ? baselineMetrics.f1Score : NaN
@@ -154,8 +145,6 @@ export function TuningPageInner(props: InnerProps) {
 						<ui.NumberComparisonChart
 							colorA={baselineColor}
 							colorB={selectedThresholdColor}
-							textColorA={baselineTextColor}
-							textColorB={selectedThresholdTextColor}
 							title="Precision"
 							valueA={
 								baselineMetrics.precision !== null
@@ -176,8 +165,6 @@ export function TuningPageInner(props: InnerProps) {
 						<ui.NumberComparisonChart
 							colorA={baselineColor}
 							colorB={selectedThresholdColor}
-							textColorA={baselineTextColor}
-							textColorB={selectedThresholdTextColor}
 							title="Recall"
 							valueA={baselineMetrics.recall}
 							valueATitle="Baseline"
@@ -193,8 +180,6 @@ export function TuningPageInner(props: InnerProps) {
 					classLabel={props.classes[selectedClassIndex]}
 					colorA={baselineColor}
 					colorB={selectedThresholdColor}
-					textColorA={baselineTextColor}
-					textColorB={selectedThresholdTextColor}
 					valueA={{
 						falseNegative: baselineMetrics.falseNegatives,
 						falsePositive: baselineMetrics.falsePositives,

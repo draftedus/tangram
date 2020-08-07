@@ -1,6 +1,6 @@
 export {}
 // ui.toaster.show({
-// 	backgroundColor: ui.colors.blue,
+// 	backgroundColor: 'var(--blue)',
 // 	message: `🎉 You are now on the ${plan} plan!`,
 // })
 

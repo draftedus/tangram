@@ -46,7 +46,7 @@ export default function OrganizationIndexPage(props: Props) {
 					<ui.SpaceBetween>
 						<ui.H2>{'Details'}</ui.H2>
 						<ui.Button
-							color={ui.colors.gray}
+							color="var(--gray)"
 							href={`/organizations/${props.id}/edit`}
 						>
 							{'Edit'}
@@ -127,7 +127,7 @@ export default function OrganizationIndexPage(props: Props) {
 													type="hidden"
 													value={member.id}
 												/>
-												<ui.Button color={ui.colors.red} type="submit">
+												<ui.Button color="var(--red)" type="submit">
 													{'Remove'}
 												</ui.Button>
 											</ui.Form>
@@ -151,7 +151,7 @@ export default function OrganizationIndexPage(props: Props) {
 								<input name="action" type="hidden" value="change_plan" />
 								<input name="plan" type="hidden" value={Plan.Enterprise} />
 								<ui.Button
-									color={ui.colors.blue}
+									color="var(--blue)"
 									disabled={props.plan === Plan.Enterprise}
 									type="submit"
 								>
@@ -165,7 +165,7 @@ export default function OrganizationIndexPage(props: Props) {
 								<input name="action" type="hidden" value="change_plan" />
 								<input name="plan" type="hidden" value={Plan.Free} />
 								<ui.Button
-									color={ui.colors.indigo}
+									color="var(--indigo)"
 									disabled={props.plan === Plan.Free}
 									type="submit"
 								>
@@ -179,7 +179,7 @@ export default function OrganizationIndexPage(props: Props) {
 								<input name="action" type="hidden" value="change_plan" />
 								<input name="plan" type="hidden" value={Plan.Startup} />
 								<ui.Button
-									color={ui.colors.teal}
+									color="var(--teal)"
 									disabled={props.plan === Plan.Startup}
 									type="submit"
 								>
@@ -193,7 +193,7 @@ export default function OrganizationIndexPage(props: Props) {
 								<input name="action" type="hidden" value="change_plan" />
 								<input name="plan" type="hidden" value={Plan.Team} />
 								<ui.Button
-									color={ui.colors.green}
+									color="var(--green)"
 									disabled={props.plan === Plan.Team}
 									type="submit"
 								>
@@ -207,7 +207,7 @@ export default function OrganizationIndexPage(props: Props) {
 				<ui.S2>
 					<ui.SpaceBetween>
 						<ui.H2>{'Billing'}</ui.H2>
-						<ui.Button color={ui.colors.blue}>{'Set Payment Method'}</ui.Button>
+						<ui.Button color="var(--blue)">{'Set Payment Method'}</ui.Button>
 					</ui.SpaceBetween>
 					{props.card ? (
 						<ui.Table width="100%">
@@ -244,7 +244,7 @@ export default function OrganizationIndexPage(props: Props) {
 					<ui.H2>{'Danger Zone'}</ui.H2>
 					<ui.Form post={true}>
 						<input name="action" type="hidden" value="delete_organization" />
-						<ui.Button color={ui.colors.red}>{'Delete Organization'}</ui.Button>
+						<ui.Button color="var(--red)">{'Delete Organization'}</ui.Button>
 					</ui.Form>
 				</ui.S2>
 			</ui.S1>

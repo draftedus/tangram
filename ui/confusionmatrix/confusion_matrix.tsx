@@ -1,5 +1,4 @@
 import { Children, cx, h } from '../deps'
-import { variables } from '../theme'
 import { Token } from '../token'
 import { formatPercent } from '../util'
 
@@ -43,19 +42,19 @@ export function ConfusionMatrix(props: ConfusionMatrixProps) {
 		<div class="confusion-matrix-wrapper">
 			<ConfusionMatrixLabel area="actual-true-label">
 				<div>{'Actual'}</div>
-				<Token color={variables.colors.accent}>{props.classLabel}</Token>
+				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="actual-false-label">
 				<div>{'Actual Not'}</div>
-				<Token color={variables.colors.accent}>{props.classLabel}</Token>
+				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="predicted-true-label" left={true}>
 				<div>{'Predicted'}</div>
-				<Token color={variables.colors.accent}>{props.classLabel}</Token>
+				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="predicted-false-label" left={true}>
 				<div>{'Predicted Not'}</div>
-				<Token color={variables.colors.accent}>{props.classLabel}</Token>
+				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixItem
 				area="true-positive"

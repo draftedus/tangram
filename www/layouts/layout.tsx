@@ -28,7 +28,7 @@ export function Layout(props: LayoutProps) {
 export function Topbar() {
 	let topbarItems: ui.TopbarItem[] = [
 		{
-			element: <GithubIconLink color={ui.variables.colors.text} />,
+			element: <GithubIconLink color={'var(--text-color)'} />,
 			href: 'https://github.com/tangram-hq',
 			title: 'Github',
 		},
@@ -43,14 +43,14 @@ export function Topbar() {
 	]
 	return (
 		<ui.Topbar
-			activeTextColor={ui.variables.colors.accent}
+			activeTextColor={'var(--accent-color)'}
 			backgroundColor="transparent"
 			border="none"
-			dropdownBackgroundColor={ui.variables.colors.surface}
-			foregroundColor={ui.variables.colors.text}
+			dropdownBackgroundColor={'var(--surface-color)'}
+			foregroundColor={'var(--text-color)'}
 			items={topbarItems}
 			logo={<Logo colorScheme={LogoScheme.Multi} />}
-			menuSeparatorColor={ui.variables.colors.text}
+			menuSeparatorColor={'var(--text-color)'}
 			title="tangram"
 		/>
 	)

@@ -1,4 +1,4 @@
-import { Children, h, ui } from '../deps'
+import { Children, h } from '../deps'
 import { Layout } from './layout'
 
 type PageLayoutProps = {

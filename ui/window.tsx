@@ -1,5 +1,4 @@
 import { Children, h } from './deps'
-import { colors } from './theme'
 
 export enum WindowShade {
 	Code,
@@ -16,15 +15,15 @@ export function Window(props: WindowProps) {
 			<div class="window-topbar">
 				<div
 					class="window-topbar-button"
-					style={{ backgroundColor: colors.red }}
+					style={{ backgroundColor: 'var(--red)' }}
 				/>
 				<div
 					class="window-topbar-button"
-					style={{ backgroundColor: colors.yellow }}
+					style={{ backgroundColor: 'var(--yellow)' }}
 				/>
 				<div
 					class="window-topbar-button"
-					style={{ backgroundColor: colors.green }}
+					style={{ backgroundColor: 'var(--green)' }}
 				/>
 			</div>
 			<div class="window-body">{props.children}</div>

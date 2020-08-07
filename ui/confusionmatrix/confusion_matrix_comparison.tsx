@@ -1,5 +1,4 @@
 import { Children, cx, h } from '../deps'
-import { variables } from '../theme'
 import { Token } from '../token'
 
 // |-----------------------------------------------------------|
@@ -20,8 +19,6 @@ type ConfusionMatrixComparisonProps = {
 	classLabel: string
 	colorA: string
 	colorB: string
-	textColorA: string
-	textColorB: string
 	valueA: {
 		falseNegative: number | null
 		falsePositive: number | null
@@ -48,27 +45,25 @@ export function ConfusionMatrixComparison(
 		<div class="confusion-matrix-comparison-wrapper">
 			<ConfusionMatrixLabel area="actual-true-label">
 				<div>{'Actual'}</div>
-				<Token color={variables.colors.accent}>{props.classLabel}</Token>
+				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="actual-false-label">
 				<div>{'Actual Not'}</div>
-				<Token color={variables.colors.accent}>{props.classLabel}</Token>
+				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="predicted-true-label" left={true}>
 				<div>{'Predicted'}</div>
-				<Token color={variables.colors.accent}>{props.classLabel}</Token>
+				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="predicted-false-label" left={true}>
 				<div>{'Predicted Not'}</div>
-				<Token color={variables.colors.accent}>{props.classLabel}</Token>
+				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixComparisonItem
 				area="true-positive"
 				colorA={props.colorA}
 				colorB={props.colorB}
 				label="True Positives"
-				textColorA={props.textColorA}
-				textColorB={props.textColorB}
 				true={true}
 				valueA={props.valueA.truePositive}
 				valueATitle={props.valueATitle}
@@ -81,8 +76,6 @@ export function ConfusionMatrixComparison(
 				colorA={props.colorA}
 				colorB={props.colorB}
 				label="False Positives"
-				textColorA={props.textColorA}
-				textColorB={props.textColorB}
 				valueA={props.valueA.falsePositive}
 				valueATitle={props.valueATitle}
 				valueB={props.valueB.falsePositive}
@@ -94,8 +87,6 @@ export function ConfusionMatrixComparison(
 				colorA={props.colorA}
 				colorB={props.colorB}
 				label="False Negatives"
-				textColorA={props.textColorA}
-				textColorB={props.textColorB}
 				valueA={props.valueA.falseNegative}
 				valueATitle={props.valueATitle}
 				valueB={props.valueB.falseNegative}
@@ -107,8 +98,6 @@ export function ConfusionMatrixComparison(
 				colorA={props.colorA}
 				colorB={props.colorB}
 				label="True Negatives"
-				textColorA={props.textColorA}
-				textColorB={props.textColorB}
 				true={true}
 				valueA={props.valueA.trueNegative}
 				valueATitle={props.valueATitle}
@@ -125,8 +114,6 @@ type ConfusionMatrixItemProps = {
 	colorA: string
 	colorB: string
 	label: string
-	textColorA: string
-	textColorB: string
 	true?: boolean
 	valueA: number | null
 	valueATitle: string
@@ -159,14 +146,10 @@ function ConfusionMatrixComparisonItem(props: ConfusionMatrixItemProps) {
 					{props.valueB === null ? 'N/A' : valueFormatter(props.valueB)}
 				</div>
 				<div>
-					<Token color={props.colorA} textColor={props.textColorA}>
-						{props.valueATitle}
-					</Token>
+					<Token color={props.colorA}>{props.valueATitle}</Token>
 				</div>
 				<div>
-					<Token color={props.colorB} textColor={props.textColorB}>
-						{props.valueBTitle}
-					</Token>
+					<Token color={props.colorB}>{props.valueBTitle}</Token>
 				</div>
 			</div>
 		</div>

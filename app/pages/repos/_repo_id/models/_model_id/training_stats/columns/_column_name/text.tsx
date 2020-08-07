@@ -8,7 +8,7 @@ export type Props = {
 export function TextColumnDetail(props: Props) {
 	let data = [
 		{
-			color: ui.colors.blue,
+			color: 'var(--blue)',
 			data: props.tokens.map(([_value, count], i) => ({
 				x: i,
 				y: count,

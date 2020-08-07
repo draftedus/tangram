@@ -21,7 +21,7 @@
 }
 
 .details-summary {
-	--webkit-text-fill-color: inherit;
+	-webkit-text-fill-color: inherit;
 	align-items: center;
 	appearance: none;
 	background-color: var(--surface-color);

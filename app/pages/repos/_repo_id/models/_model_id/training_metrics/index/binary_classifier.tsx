@@ -1,10 +1,5 @@
 import * as definitions from 'common/definitions'
-import {
-	baselineColor,
-	baselineTextColor,
-	trainingColor,
-	trainingTextColor,
-} from 'common/tokens'
+import { baselineColor, trainingColor } from 'common/tokens'
 import { h, ui } from 'deps'
 
 export type Props = {
@@ -44,8 +39,6 @@ export function BinaryClassifierTrainingMetricsIndexPage(props: Props) {
 					<ui.NumberComparisonChart
 						colorA={baselineColor}
 						colorB={trainingColor}
-						textColorA={baselineTextColor}
-						textColorB={trainingTextColor}
 						title="Accuracy"
 						valueA={props.baselineAccuracy}
 						valueATitle="Baseline"

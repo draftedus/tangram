@@ -11,7 +11,7 @@ export type Props = {
 export function EnumColumnDetail(props: Props) {
 	let histogramData = [
 		{
-			color: ui.colors.blue,
+			color: 'var(--blue)',
 			data: props.histogram.map(([_value, count], i) => ({
 				x: i,
 				y: count,
