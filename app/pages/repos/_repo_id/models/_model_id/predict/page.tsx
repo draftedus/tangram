@@ -1,4 +1,4 @@
-import { css, h, ui, useCss } from 'deps'
+import { h, ui } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
@@ -85,27 +85,7 @@ type ClassificationPrediction = {
 	xAxisLabelFormatter: (i: number) => string
 }
 
-let predictCss = css({
-	[`.predict-wrapper`]: {
-		display: 'grid',
-		grid: 'auto auto / 1fr',
-		gridGap: '2rem',
-	},
-})
-
-let predictOutputContainerCss = css({
-	[`.predict-output-wrapper`]: {
-		display: 'grid',
-		grid: 'auto / 1fr 1fr',
-		gridGap: '1rem',
-	},
-})
-
 export default function PredictPage(props: Props) {
-	useCss(predictCss)
-
-	useCss(predictOutputContainerCss)
-
 	return (
 		<ModelLayout {...props.modelLayoutProps}>
 			<ui.S1>

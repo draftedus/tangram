@@ -1,16 +1,6 @@
-import { css, h, ui, useCss } from 'deps'
+import { h, ui } from 'deps'
 
-let wrapperCss = css({
-	[`.training-stats-wrapper`]: {
-		display: 'grid',
-		grid: 'auto / auto auto',
-		gridGap: '1rem',
-		gridTemplateAreas: `"mean std" "age age"`,
-		padding: '1rem',
-	},
-})
 export function TrainingStats() {
-	useCss(wrapperCss)
 	let series = [
 		{
 			color: ui.colors.blue,

@@ -1,5 +1,5 @@
 import { TopbarLayout } from './topbar_layout'
-import { Children, css, h, r, ui, useCss } from 'deps'
+import { Children, h, r, ui } from 'deps'
 
 export type ModelLayoutProps = {
 	children?: Children
@@ -17,88 +17,7 @@ export type ModelLayoutProps = {
 	title: string
 }
 
-let modelLayoutCss = css({
-	[ui.mobile]: {
-		[`.model-layout`]: {
-			display: 'grid',
-			grid: '"model-group-topbar" auto  "model" auto / minmax(0, 1fr)',
-			overflow: 'hidden',
-		},
-	},
-	[ui.desktop]: {
-		[`.model-layout`]: {
-			display: 'grid',
-			grid: '"model-group-topbar" auto "model" 1fr / minmax(0, 1fr)',
-			height: '100%',
-			overflow: 'hidden',
-		},
-	},
-})
-
-let modelGridCss = css({
-	[ui.mobile]: {
-		[`.model-layout-grid`]: {
-			display: 'grid',
-			grid: '"side-nav" auto "content" auto / minmax(0, 1fr)',
-			gridGap: '2rem',
-			height: '100%',
-			overflow: 'hidden',
-		},
-	},
-	[ui.desktop]: {
-		[`.model-layout-grid`]: {
-			display: 'grid',
-			grid: '"side-nav content" 1fr / auto minmax(0, 1fr)',
-			gridGap: '2rem',
-			height: '100%',
-			overflow: 'hidden',
-		},
-	},
-})
-
-let modelGroupTopbarCss = css({
-	[`.model-layout-model-group-topbar`]: {
-		alignItems: 'center',
-		backgroundColor: ui.variables.colors.surface,
-		display: 'grid',
-		grid: 'auto / auto 1fr auto auto',
-		gridAutoFlow: 'column',
-		gridGap: '1rem',
-		padding: '2rem 1rem',
-	},
-})
-
-let repoTitleCss = css({
-	[`.model-layout-repo-title`]: { fontSize: '1.25rem' },
-})
-
-let ownerTitleCss = css({
-	[`.model-layout-owner-title`]: {
-		color: `${ui.variables.colors.text} !important`,
-	},
-})
-
-let contentCss = css({
-	[`.model-layout-content`]: {
-		boxSizing: 'border-box',
-		margin: '0 auto',
-		maxWidth: ui.variables.width.max,
-		padding: '2rem 2rem',
-		width: '100%',
-	},
-})
-
 export function ModelLayout(props: ModelLayoutProps) {
-	useCss(
-		modelLayoutCss,
-		modelGridCss,
-		modelGroupTopbarCss,
-		// modelTopbarCss,
-		repoTitleCss,
-		ownerTitleCss,
-		contentCss,
-	)
-
 	let selectedModel = r(props.models.find(model => model.id == props.modelId))
 		?.title
 

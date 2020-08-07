@@ -1,4 +1,4 @@
-import { Children, css, h, useCss, useEffect, useRef } from '../deps'
+import { Children, h, useEffect, useRef } from '../deps'
 import { DrawBarChartOptions, createBarChart } from './bar_chart'
 import { DrawBoxChartOptions, createBoxChart } from './box_chart'
 import { chartConfig } from './config'
@@ -6,10 +6,6 @@ import { DrawLineChartOptions, createLineChart } from './line_chart'
 import { DrawShapChartOptions, createShapChart } from './shap_chart'
 
 export type BarChartProps = DrawBarChartOptions & { title?: string }
-
-let wrapperCss = css({
-	[`.chart-wrapper`]: { display: 'grid', gridRowGap: '1rem' },
-})
 
 export function BarChart(props: BarChartProps) {
 	let containerRef = useRef<HTMLDivElement | null>(null)
@@ -23,7 +19,6 @@ export function BarChart(props: BarChartProps) {
 
 	useEffect(() => chartRef.current?.draw(props))
 
-	useCss(wrapperCss)
 	let containerStyle = {
 		paddingTop: '50%',
 		width: '100%',
@@ -52,8 +47,6 @@ export function BoxChart(props: BoxChartProps) {
 
 	useEffect(() => chartRef.current?.draw(props))
 
-	useCss(wrapperCss)
-
 	let containerStyle = {
 		paddingTop: '50%',
 		width: '100%',
@@ -81,8 +74,6 @@ export function LineChart(props: LineChartProps) {
 	}, [])
 
 	useEffect(() => chartRef.current?.draw(props))
-
-	useCss(wrapperCss)
 
 	let containerStyle = {
 		paddingTop: '50%',
@@ -126,8 +117,6 @@ export function ShapChart(props: ShapChartProps) {
 		fontSize +
 		bottomPadding
 
-	useCss(wrapperCss)
-
 	let containerStyle = {
 		height: `${height}px`,
 		width: '100%',
@@ -142,12 +131,8 @@ export function ShapChart(props: ShapChartProps) {
 }
 
 type ChartTitleProps = { children?: Children }
-let chartTitleCss = css({
-	[`.chart-title`]: { fontSize: '1.25rem', textAlign: 'center' },
-})
 
 export function ChartTitle(props: ChartTitleProps) {
-	useCss(chartTitleCss)
 	return <div class="chart-title">{props.children}</div>
 }
 
@@ -160,17 +145,7 @@ export type LegendItem = {
 	title: string
 }
 
-let chartLegendWrapperCss = css({
-	[`.chart-legend-wrapper`]: {
-		alignItems: 'center',
-		display: 'flex',
-		flexWrap: 'wrap',
-		justifyContent: 'center',
-	},
-})
-
 export function ChartLegend(props: ChartLegendProps) {
-	useCss(chartLegendWrapperCss)
 	return (
 		<div class="chart-legend-wrapper">
 			{props.items.map(category => (
@@ -189,32 +164,7 @@ type LegendItemCellProps = {
 	title: string
 }
 
-let chartLegendItemCss = css({
-	[`.chart-legend-item`]: {
-		alignItems: 'center',
-		display: 'grid',
-		grid: 'auto / auto auto',
-		gridColumnGap: '0.5rem',
-		justifyContent: 'start',
-		margin: '0.5rem',
-	},
-})
-
-let chartLegendIndicatorCss = css({
-	[`.chart-legend-indicator`]: {
-		borderRadius: '4px',
-		boxSizing: 'border-box',
-		height: '1rem',
-		width: '1rem',
-	},
-})
-
-let chartLegendTitleCss = css({
-	[`.chart-legend-title`]: { whiteSpace: 'nowrap' },
-})
-
 function ChartLegendItemCell(props: LegendItemCellProps) {
-	useCss(chartLegendItemCss, chartLegendIndicatorCss, chartLegendTitleCss)
 	let style = {
 		backgroundColor: props.color,
 	}

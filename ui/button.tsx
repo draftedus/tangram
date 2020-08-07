@@ -1,5 +1,4 @@
-import { Children, Link, css, h, useCss } from './deps'
-import { variables } from './theme'
+import { Children, Link, h } from './deps'
 
 export type ButtonProps = {
 	block?: boolean
@@ -12,45 +11,7 @@ export type ButtonProps = {
 	type?: 'submit' | 'button'
 }
 
-let buttonCss = css({
-	[`.button`]: {
-		appearance: 'none',
-		backgroundColor: variables.colors.accent,
-		border: 'none',
-		borderRadius: variables.border.radius,
-		boxSizing: 'border-box',
-		color: variables.colors.funText,
-		cursor: 'pointer',
-		display: 'block',
-		fontSize: '1rem',
-		lineHeight: '1',
-		margin: '0',
-		outline: 'none',
-		overflow: 'hidden',
-		padding: '0.75rem 1rem',
-		textAlign: 'center',
-		textDecoration: 'none',
-		textOverflow: 'ellipsis',
-		userSelect: 'none',
-		whiteSpace: 'nowrap',
-		width: '100%',
-	},
-	[`.button:hover`]: {
-		filter: 'brightness(90%)',
-	},
-	[`.button:focus`]: {
-		filter: 'brightness(90%)',
-	},
-	[`.button:active`]: {
-		filter: 'brightness(80%)',
-	},
-	[`.button::-moz-focus-inner`]: {
-		border: 'none',
-	},
-})
-
 export function Button(props: ButtonProps) {
-	useCss(buttonCss)
 	let style = {
 		backgroundColor: props.color as any,
 	}

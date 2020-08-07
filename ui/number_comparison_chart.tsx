@@ -1,5 +1,4 @@
-import { css, cx, h, useCss } from './deps'
-import { colors, mobile, variables } from './theme'
+import { cx, h } from './deps'
 import { Token } from './token'
 
 type NumberComparisonChartProps = {
@@ -19,90 +18,7 @@ function defaultValueFormatter(value: number) {
 	return value === null ? 'N/A' : value.toString()
 }
 
-let numberComparisonWrapper = css({
-	[`.number-comparison-wrapper`]: {
-		color: variables.colors.text,
-		display: 'grid',
-		gridGap: '1rem',
-		justifyItems: 'center',
-		textAlign: 'center',
-	},
-	[mobile]: {
-		[`.number-comparison-wrapper`]: {
-			gridGap: '.5rem',
-		},
-	},
-})
-
-let numberComparisonInnerWrapper = css({
-	[`.number-comparison-inner-wrapper`]: {
-		alignItems: 'center',
-		display: 'grid',
-		grid: '1fr 1fr / 1fr 1fr',
-		gridColumnGap: '1rem',
-		gridRowGap: '.5rem',
-		justifyItems: 'center',
-	},
-	[mobile]: {
-		[`.number-comparison-inner-wrapper`]: {
-			gridColumnGap: '0.5rem',
-		},
-	},
-})
-
-let titleCss = css({
-	[`.number-comparison-title`]: {
-		fontSize: '1.25rem',
-	},
-	[mobile]: {
-		[`.number-comparison-title`]: {
-			fontSize: '1rem',
-		},
-	},
-})
-
-let valueCss = css({
-	[`.number-comparison-value`]: {
-		fontSize: '2rem',
-	},
-	[mobile]: {
-		[`.number-comparison-value`]: {
-			fontSize: '1.25rem',
-		},
-	},
-})
-
-let positiveCss = css({
-	[`.number-comparison-positive`]: { color: colors.green, display: 'flex' },
-})
-
-let negativeCss = css({
-	[`.number-comparison-negative`]: { color: colors.red },
-})
-
-let equalsCss = css({
-	[`.number-comparison-equals`]: { color: colors.gray },
-})
-
-let differenceCss = css({
-	[`.number-comparison-difference`]: {
-		alignContent: 'center',
-		display: 'grid',
-		gridAutoFlow: 'column',
-	},
-})
-
 export function NumberComparisonChart(props: NumberComparisonChartProps) {
-	useCss(
-		numberComparisonWrapper,
-		numberComparisonInnerWrapper,
-		titleCss,
-		valueCss,
-		differenceCss,
-		positiveCss,
-		negativeCss,
-		equalsCss,
-	)
 	let valueFormatter = props.valueFormatter ?? defaultValueFormatter
 	let difference = Number(props.valueB) - Number(props.valueA)
 	return (

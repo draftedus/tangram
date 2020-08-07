@@ -1,23 +1,6 @@
-import { css, h, ui, useCss } from 'deps'
-
-let explanationsWrapperCss = css({
-	[`.explanations-wrapper`]: {
-		display: 'grid',
-		gridGap: '1rem',
-		padding: '1rem',
-	},
-})
-
-let innerWrapperCss = css({
-	[`.inner-wrapper`]: {
-		display: 'grid',
-		grid: 'auto / 1fr 1fr',
-		gridGap: '1rem',
-	},
-})
+import { h, ui } from 'deps'
 
 export function Explanations() {
-	useCss(explanationsWrapperCss, innerWrapperCss)
 	let xAxisLabelFormatter = (i: number) => data.classes[i]
 	let data = {
 		chartData: [

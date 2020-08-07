@@ -1,5 +1,4 @@
-import { Children, Link as PinwheelLink, css, cx, h, useCss } from './deps'
-import { colors } from './theme'
+import { Children, Link as PinwheelLink, cx, h } from './deps'
 
 export type LinkProps = {
 	children?: Children
@@ -8,23 +7,8 @@ export type LinkProps = {
 	title?: string
 }
 
-let linkCss = css({
-	[`.link`]: {
-		color: colors.blue,
-		cursor: 'pointer',
-		textDecoration: 'none',
-	},
-	[`.link:hover`]: {
-		filter: 'brightness(90%)',
-	},
-	[`.link:focus`]: {
-		filter: 'brightness(90%)',
-	},
-})
-
 export function Link(props: LinkProps) {
-	useCss(linkCss)
-	let className = cx(props.className, 'link')
+	let className = cx('link', props.className)
 	return (
 		<PinwheelLink class={className} href={props.href} title={props.title}>
 			{props.children}

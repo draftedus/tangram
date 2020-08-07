@@ -1,6 +1,6 @@
-import { Children, Fragment, css, h, useCss, useEffect } from './deps'
+import { Children, Fragment, h, useEffect } from './deps'
 import { Language, grammars, highlight } from './syntax/mod'
-import { syntaxColors, variables } from './theme'
+import { syntaxColors } from './theme'
 import { times } from './util'
 
 type CodeForLanguage = {
@@ -16,18 +16,7 @@ type CodeProps = {
 	language?: Language
 }
 
-let codeCss = css({
-	[`.code`]: {
-		MozTabSize: '2',
-		backgroundColor: variables.colors.header,
-		borderRadius: variables.border.radius,
-		overflow: 'hidden',
-		tabSize: '2',
-	},
-})
-
 export function Code(props: CodeProps) {
-	useCss(codeCss, codeInnerWrapperCss, codeInnerValueCss)
 	return (
 		<div class="code">
 			<div class="code-inner-wrapper" style={{ display: 'block' }}>
@@ -52,24 +41,8 @@ type CodeSelectProps = {
 	languages?: CodeForLanguage
 }
 
-let codeGridCss = css({
-	[`.code-grid`]: {
-		display: 'grid',
-		gridColumnGap: '1rem',
-		gridRowGap: '0.5rem',
-		gridTemplateAreas: "'go javascript python ruby' 'code code code code'",
-		gridTemplateColumns: 'auto auto auto 1fr',
-		gridTemplateRows: 'auto',
-		justifyContent: 'start',
-		justifyItems: 'start',
-		paddingTop: '0.5rem',
-		position: 'relative',
-	},
-})
-
 export function CodeSelect(props: CodeSelectProps) {
 	let name = Math.random().toString()
-	useCss(codeCss, codeGridCss)
 	useEffect(() => {
 		let radioElements = document.querySelectorAll('input[type=radio]')
 		radioElements.forEach(radioElement => {
@@ -125,84 +98,8 @@ type CodeOptionProps = {
 	name: string
 }
 
-let codeInnerWrapperCss = css({
-	[`.code-inner-wrapper`]: {
-		backgroundColor: syntaxColors.background,
-		display: 'none',
-		grid: 'auto / auto minmax(0, 1fr)',
-		gridArea: 'code',
-		overflow: 'auto',
-		padding: '0.5rem',
-		width: '100%',
-	},
-})
-
-let codeRadioInputCss = css({
-	[`.code-radio-input`]: {
-		height: '0',
-		margin: '0',
-		opacity: '0',
-		position: 'absolute',
-		right: '0',
-		top: '0',
-		width: '0',
-	},
-	[`.code-radio-input[data-lang="go"]:checked ~ label[data-lang="go"]`]: {
-		color: variables.colors.accent,
-	},
-	[`.code-radio-input[data-lang="javascript"]:checked ~ label[data-lang="javascript"]`]: {
-		color: variables.colors.accent,
-	},
-	[`.code-radio-input[data-lang="python"]:checked ~ label[data-lang="python"]`]: {
-		color: variables.colors.accent,
-	},
-	[`.code-radio-input[data-lang="ruby"]:checked ~ label[data-lang="ruby"]`]: {
-		color: variables.colors.accent,
-	},
-	[`.code-radio-input[data-lang="go"]:checked ~ .code-inner-wrapper[data-lang="go"]`]: {
-		display: 'grid',
-	},
-	[`.code-radio-input[data-lang="javascript"]:checked ~ .code-inner-wrapper[data-lang="javascript"]`]: {
-		display: 'grid',
-	},
-	[`.code-radio-input[data-lang="python"]:checked ~ .code-inner-wrapper[data-lang="python"]`]: {
-		display: 'grid',
-	},
-	[`.code-radio-input[data-lang="ruby"]:checked ~ .code-inner-wrapper[data-lang="ruby"]`]: {
-		display: 'grid',
-	},
-})
-
-let codeRadioLabelCss = css({
-	[`.code-radio-label`]: {
-		cursor: 'pointer',
-	},
-	[`.code-radio-label:first-of-type`]: {
-		paddingLeft: '0.5rem',
-	},
-})
-
-let codeInnerValueCss = css({
-	[`.code-inner-code`]: {
-		MozTabSize: '2',
-		boxSizing: 'border-box',
-		caretColor: 'black',
-		color: variables.colors.text,
-		fontSize: '1rem',
-		lineHeight: '1.5',
-		tabSize: '2',
-		whiteSpace: 'pre',
-	},
-})
-
 function CodeOption(props: CodeOptionProps) {
 	let optionId = Math.random().toString()
-	useCss(
-		codeInnerWrapperCss,
-		codeInnerValueCss,
-		codeRadioInputCss,
-		codeRadioLabelCss,
-	)
 	return (
 		<Fragment>
 			<input
@@ -245,24 +142,7 @@ type LineNumbersProps = {
 	count: number
 }
 
-let wrapperCss = css({
-	[`.code-line-numbers-wrapper`]: {
-		marginRight: '0.5rem',
-		textAlign: 'right',
-		userSelect: 'none',
-	},
-})
-
-let lineNumberCss = css({
-	[`.code-line-numbers`]: {
-		color: syntaxColors.lineNumbers,
-		fontSize: '1rem',
-		lineHeight: '1.5',
-	},
-})
-
 function LineNumbers(props: LineNumbersProps) {
-	useCss(wrapperCss, lineNumberCss)
 	return (
 		<div class="code-line-numbers-wrapper">
 			{times(props.count, index => (
@@ -276,18 +156,7 @@ function LineNumbers(props: LineNumbersProps) {
 
 type InlineCodeProps = { children?: Children }
 
-let containerCss = css({
-	[`.inline-code-wrapper`]: {
-		backgroundColor: syntaxColors.background,
-		borderRadius: variables.border.radius,
-		color: syntaxColors.foreground,
-		fontSize: '0.8rem',
-		padding: '0.1rem 0.2rem',
-	},
-})
-
 export function InlineCode(props: InlineCodeProps) {
-	useCss(containerCss)
 	return <span class="inline-code-wrapper">{props.children}</span>
 }
 

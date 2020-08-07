@@ -10,7 +10,7 @@
 .details[open] > summary::before {
 	background: transparent;
 	bottom: 0;
-	content: ;
+	content: '';
 	cursor: default;
 	display: block;
 	left: 0;
@@ -25,7 +25,7 @@
 	align-items: center;
 	appearance: none;
 	background-color: var(--surface-color);
-	border-width: var(--border-color);
+	border: var(--border);
 	box-sizing: border-box;
 	color: inherit;
 	cursor: pointer;

@@ -4,7 +4,7 @@
 	--webkit-text-fill-color: inherit;
 	appearance: none;
 	background-color: var(--surface-color);
-	border-radius: var(--border-radius-color);
+	border-radius: var(--border-radius);
 	border: var(--border);
 	box-sizing: border-box;
 	color: inherit;

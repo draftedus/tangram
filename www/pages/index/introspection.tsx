@@ -1,15 +1,6 @@
-import { css, h, ui, useCss } from 'deps'
-
-let wrapperCss = css({
-	[`.introspection-wrapper`]: {
-		display: 'grid',
-		gridGap: '1rem',
-		padding: '1rem',
-	},
-})
+import { h, ui } from 'deps'
 
 export function Introspection() {
-	useCss(wrapperCss)
 	let series = [
 		{
 			color: '#0A84FF',

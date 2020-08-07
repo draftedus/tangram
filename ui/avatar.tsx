@@ -1,42 +1,11 @@
-import { css, h, useCss } from './deps'
+import { h } from './deps'
 import { variables } from './theme'
 
 type AvatarProps = {
 	src?: string
 }
 
-let avatarCss = css({
-	[`.avatar`]: {
-		backgroundColor: variables.colors.surface,
-		borderRadius: '50%',
-		height: '2rem',
-		overflow: 'hidden',
-		width: '2rem',
-	},
-	[`.avatar:hover`]: {
-		filter: 'brightness(90%)',
-	},
-})
-
-let imgCss = css({
-	[`.avatar-img`]: {
-		border: 'none',
-		height: '100%',
-		outline: 'none',
-		width: '100%',
-	},
-})
-
-let placeholderCss = css({
-	[`.avatar-placeholder`]: {
-		backgroundColor: variables.colors.surface,
-		height: '100%',
-		width: '100%',
-	},
-})
-
 export function Avatar(props: AvatarProps) {
-	useCss(avatarCss, imgCss, placeholderCss)
 	return (
 		<div class="avatar">
 			{props.src ? (

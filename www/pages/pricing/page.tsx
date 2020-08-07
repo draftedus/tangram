@@ -1,19 +1,8 @@
 import { PricingCards } from './pricing_cards'
-import { css, h, ui, useCss } from 'deps'
+import { h, ui } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
 
-let subtitleCss = css({
-	[`.pricing-subtitle`]: {
-		fontSize: '1.5rem',
-		fontWeight: 'normal',
-		lineHeight: '1.5',
-		margin: '0',
-		textAlign: 'center',
-	},
-})
-
 export default function Pricing() {
-	useCss(subtitleCss)
 	return (
 		<PageLayout background={true}>
 			<ui.S1>

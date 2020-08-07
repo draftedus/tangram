@@ -1,5 +1,5 @@
 import { Logo, LogoScheme } from '../components/logo'
-import { Children, css, h, ui, useCss } from '../deps'
+import { Children, h, ui } from '../deps'
 import backgroundImage from './background.svg'
 import { Footer } from './footer'
 
@@ -8,18 +8,7 @@ type LayoutProps = {
 	children?: Children
 }
 
-let layoutCss = css({
-	[`.layout`]: {
-		backgroundColor: ui.variables.colors.background,
-		color: ui.variables.colors.text,
-		display: 'grid',
-		grid: 'auto 1fr auto / auto',
-		minHeight: '100vh',
-	},
-})
-
 export function Layout(props: LayoutProps) {
-	useCss(layoutCss)
 	let wrapperStyle = {
 		background: props.background && (`url(${backgroundImage})` as any),
 	}
@@ -71,14 +60,7 @@ type GithubIconLinkProps = {
 	color: string
 }
 
-let githubIconCss = css({
-	[`.github-icon:hover`]: {
-		filter: 'brightness(90%)',
-	},
-})
-
 function GithubIconLink(props: GithubIconLinkProps) {
-	useCss(githubIconCss)
 	return (
 		<ui.Link href="https://github.com/tangram-hq">
 			<svg

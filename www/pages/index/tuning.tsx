@@ -1,31 +1,6 @@
-import { css, h, ui, useCss, useState } from 'deps'
-
-let gridCss = css({
-	[`.tuning-grid`]: { display: 'grid', gridGap: '1rem', padding: '1rem' },
-})
-
-let numberChartGridCss = css({
-	[`.tuning-number-chart-grid`]: {
-		display: 'grid',
-		gridGap: '1rem',
-	},
-	[ui.mobile]: {
-		[`.tuning-number-chart-grid`]: {
-			grid:
-				'"accuracy accuracy" auto "precision recall" auto / minmax(0, 1fr) minmax(0, 1fr)',
-		},
-	},
-	[ui.desktop]: {
-		[`.tuning-number-chart-grid`]: {
-			grid:
-				'"accuracy precision recall" auto / minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)',
-		},
-	},
-})
+import { h, ui, useState } from 'deps'
 
 export function Tuning() {
-	useCss(gridCss, numberChartGridCss)
-
 	let [thresholdIndex, setThresholdIndex] = useState(9)
 
 	function formatter(thresholdIndex: number) {

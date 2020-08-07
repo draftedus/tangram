@@ -1,19 +1,6 @@
-import { css, h, ui, useCss } from 'deps'
-
-let wrapperCss = css({
-	[`.production-metrics-wrapper`]: {
-		padding: '1rem',
-	},
-	[ui.desktop]: {
-		[`.production-metrics-wrapper`]: {
-			grid: 'auto / auto',
-			gridTemplateAreas: `"accuracy" "monthly"`,
-		},
-	},
-})
+import { h, ui } from 'deps'
 
 export function ProductionMetrics() {
-	useCss(wrapperCss)
 	return (
 		<ui.Window>
 			<div class="production-metrics-wrapper">

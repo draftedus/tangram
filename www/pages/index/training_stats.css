@@ -2,6 +2,6 @@
 	display: grid;
 	grid: auto / auto auto;
 	grid-gap: 1rem;
-	grid-template-areas: ` mean std age age `;
+	grid-template-areas: 'mean std age age';
 	padding: 1rem;
 }

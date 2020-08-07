@@ -1,20 +1,9 @@
 import { Logo, LogoScheme } from '../../www/components/logo'
-import { Children, css, h, ui, useCss } from 'deps'
+import { Children, h, ui } from 'deps'
 
 type TopbarLayoutProps = { children?: Children }
 
-let gridCss = css({
-	[`.topbar-layout-grid`]: {
-		color: ui.variables.colors.text,
-		display: 'grid',
-		grid: 'auto 1fr / auto',
-		height: '100vh',
-		overflowX: 'hidden',
-	},
-})
-
 export function TopbarLayout(props: TopbarLayoutProps) {
-	useCss(gridCss)
 	return (
 		<div class="topbar-layout-grid">
 			<Topbar />

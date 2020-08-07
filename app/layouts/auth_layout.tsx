@@ -1,21 +1,9 @@
 import { Logo, LogoScheme } from '../../www/components/logo'
-import { Children, css, h, ui, useCss } from 'deps'
+import { Children, h, ui } from 'deps'
 
 type AuthLayoutProps = { children?: Children }
 
-let authLayoutCss = css({
-	[`.auth-layout`]: {
-		display: 'grid',
-		gridRowGap: '1rem',
-		justifyContent: 'center',
-		justifyItems: 'center',
-		paddingTop: '1rem',
-	},
-})
-
 export function AuthLayout(props: AuthLayoutProps) {
-	useCss(authLayoutCss)
-
 	let logoStyle = {
 		height: '5rem',
 		width: '5rem',

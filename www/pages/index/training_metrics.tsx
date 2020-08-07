@@ -1,28 +1,6 @@
-import { css, h, ui, useCss } from 'deps'
-
-let wrapperCss = css({
-	[`.training-metrics-wrapper`]: {
-		display: 'grid',
-		gridGap: '1rem',
-		padding: '1rem',
-	},
-	[ui.mobile]: {
-		[`.training-metrics-wrapper`]: {
-			grid: 'auto auto auto / auto',
-			gridTemplateAreas: `"accuracy" "pr" "roc"`,
-		},
-	},
-	[ui.desktop]: {
-		[`.training-metrics-wrapper`]: {
-			grid: 'auto auto / minmax(0, 1fr) minmax(0, 1fr)',
-			gridTemplateAreas: `"accuracy accuracy" "pr roc"`,
-		},
-	},
-})
+import { h, ui } from 'deps'
 
 export function TrainingMetrics() {
-	useCss(wrapperCss)
-
 	let rocData = [
 		{
 			color: ui.colors.blue,

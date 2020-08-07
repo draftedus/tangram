@@ -1,5 +1,5 @@
-import { Children, css, cx, h, useCss } from '../deps'
-import { border, desktop, mobile, variables } from '../theme'
+import { Children, cx, h } from '../deps'
+import { variables } from '../theme'
 import { Token } from '../token'
 import { formatPercent } from '../util'
 
@@ -25,19 +25,7 @@ type ConfusionMatrixProps = {
 	truePositives: number | null
 }
 
-let wrapperCss = css({
-	[`.confusion-matrix-wrapper`]: {
-		display: 'grid',
-		grid: 'auto 1fr 1fr / auto 1fr 1fr',
-		gridGap: '1rem',
-		gridTemplateAreas: `"empty actual-true-label actual-false-label" "predicted-true-label true-positive false-positive" "predicted-false-label false-negative true-negative"`,
-		maxWidth: '100%',
-		overflow: 'auto',
-	},
-})
-
 export function ConfusionMatrix(props: ConfusionMatrixProps) {
-	useCss(wrapperCss)
 	let total = null
 	if (
 		props.truePositives !== null &&
@@ -107,80 +95,7 @@ type ConfusionMatrixItemProps = {
 	value: number | null
 }
 
-let itemWrapperCss = css({
-	[`.confusion-matrix-item-wrapper`]: {
-		alignContent: 'center',
-		border,
-		borderRadius: variables.border.radius,
-		display: 'grid',
-		gridGap: '1rem',
-		justifyContent: 'center',
-		justifyItems: 'center',
-		padding: '2rem',
-		textAlign: 'center',
-	},
-})
-
-let positiveItemWrapperCss = css({
-	[`.confusion-matrix-item-positive-wrapper`]: {
-		backgroundColor: variables.colors.header,
-		color: variables.colors.text,
-	},
-})
-let negativeItemWrapperCss = css({
-	[`.confusion-matrix-item-negative-wrapper`]: {
-		backgroundColor: variables.colors.surface,
-		color: variables.colors.text,
-	},
-})
-
-let titleCss = css({
-	[desktop]: {
-		[`.confusion-matrix-item-title`]: {
-			fontSize: '1.25rem',
-		},
-	},
-	[mobile]: {
-		[`.confusion-matrix-item-title`]: {
-			fontSize: '1rem',
-		},
-	},
-})
-
-let valueCss = css({
-	[desktop]: {
-		[`.confusion-matrix-item-value`]: {
-			fontSize: '2rem',
-		},
-	},
-	[mobile]: {
-		[`.confusion-matrix-item-value`]: {
-			fontSize: '1.5rem',
-		},
-	},
-})
-
-let percentCss = css({
-	[desktop]: {
-		[`.confusion-matrix-item-percent`]: {
-			fontSize: '1.25rem',
-		},
-	},
-	[mobile]: {
-		[`.confusion-matrix-item-percent`]: {
-			fontSize: '1rem',
-		},
-	},
-})
-
 function ConfusionMatrixItem(props: ConfusionMatrixItemProps) {
-	useCss(
-		itemWrapperCss,
-		titleCss,
-		valueCss,
-		percentCss,
-		props.positive ? positiveItemWrapperCss : negativeItemWrapperCss,
-	)
 	let itemWrapperStyle = {
 		gridArea: props.area,
 	}
@@ -217,18 +132,7 @@ type ConfusionMatrixLabelProps = {
 	left?: boolean
 }
 
-let labelCss = css({
-	[`.confusion-matrix-label`]: {
-		alignSelf: 'center',
-		display: 'grid',
-		fontWeight: 'bold',
-		gridGap: '0.25rem',
-		justifyItems: 'center',
-	},
-})
-
 function ConfusionMatrixLabel(props: ConfusionMatrixLabelProps) {
-	useCss(labelCss)
 	let style = {
 		gridArea: props.area,
 		justifyItems: props.left ? 'end' : 'auto',

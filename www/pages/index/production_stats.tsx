@@ -1,17 +1,6 @@
-import { css, h, ui, useCss } from 'deps'
-
-let wrapperCss = css({
-	[`.production-stats-wrapper`]: {
-		display: 'grid',
-		grid: 'auto auto / auto',
-		gridGap: '1rem',
-		gridTemplateAreas: `"alert" "comparison"`,
-		padding: '1rem',
-	},
-})
+import { h, ui } from 'deps'
 
 export function ProductionStats() {
-	useCss(wrapperCss)
 	let xAxisLabelFormatter = (index: number): string => {
 		let categories: string[] = [
 			'asymptomatic',

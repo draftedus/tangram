@@ -1,6 +1,6 @@
 import { Button } from './button'
-import { Children, JSX, css, h, useCss } from './deps'
-import { desktop, mobile, variables } from './theme'
+import { Children, JSX, h } from './deps'
+import { variables } from './theme'
 
 type TopbarProps = {
 	activeTextColor: string
@@ -22,88 +22,7 @@ export type TopbarItem = {
 	title: string
 }
 
-let topbarWrapperCss = css({
-	[`.topbar-wrapper`]: {
-		alignItems: 'center',
-		display: 'grid',
-		gridAutoFlow: 'column',
-		height: '4.5rem',
-		justifyContent: 'space-between',
-		left: '0',
-		padding: '0 1rem',
-		position: 'relative',
-		right: '0',
-		top: '0',
-	},
-})
-
-let topbarLinkCss = css({
-	[`.topbar-link`]: {
-		color: variables.colors.text,
-		cursor: 'pointer',
-		textDecoration: 'none',
-	},
-	[`.topbar-link:hover`]: {
-		filter: 'brightness(90%)',
-	},
-})
-
-let detailsCss = css({
-	[`.topbar-details[open] > summary::before`]: {
-		background: 'transparent',
-		bottom: '0',
-		content: '" "',
-		cursor: 'default',
-		display: 'block',
-		left: '0',
-		position: 'fixed',
-		right: '0',
-		top: '0',
-		zIndex: 1,
-	},
-	[desktop]: {
-		[`.topbar-details`]: {
-			display: 'none',
-		},
-	},
-	[mobile]: {
-		[`.topbar-details`]: {
-			display: 'block',
-		},
-	},
-	[`.topbar-details[open] .topbar-hamburger-icon`]: {
-		color: 'blue',
-		display: 'none',
-	},
-	[`.topbar-details:not([open]) .topbar-x-icon`]: {
-		display: 'none',
-	},
-})
-
-let summaryCss = css({
-	[`.topbar-details-summary`]: {
-		['appearance' as any]: 'none',
-		alignItems: 'center',
-		boxSizing: 'border-box',
-		color: 'inherit',
-		cursor: 'pointer',
-		display: 'grid',
-		font: 'inherit',
-		fontSize: '1rem',
-		height: '100%',
-		outline: 'none',
-		padding: '0rem 0.5rem',
-		textAlign: 'center',
-		userSelect: 'text',
-		width: '100%',
-	},
-	[`.topbar-details-summary::-webkit-details-marker`]: {
-		display: 'none',
-	},
-})
-
 export function Topbar(props: TopbarProps) {
-	useCss(topbarWrapperCss, topbarLinkCss, detailsCss, summaryCss)
 	let wrapperStyle = {
 		backgroundColor: props.backgroundColor,
 		borderBottom: props.border as any,
@@ -155,42 +74,7 @@ type TopbarBrandProps = {
 	title?: string
 }
 
-let topbarBrandWrapperCss = css({
-	[`.topbar-brand-wrapper`]: {
-		alignItems: 'center',
-		display: 'grid',
-		grid: 'auto / auto auto',
-		gridGap: '0.5rem',
-		height: '2.5rem',
-	},
-	[`.topbar-brand-wrapper:hover`]: {
-		filter: 'brightness(90%)',
-	},
-})
-
-let topbarBrandImgCss = css({
-	[`.topbar-brand-img`]: { height: '2.5rem', width: '2.5rem' },
-})
-
-let topbarBrandSvgCss = css({
-	[`.topbar-brand-svg`]: { height: '2.5rem', width: '2.5rem' },
-})
-
-let topbarBrandTitleCss = css({
-	[`.topbar-brand-title`]: {
-		fontSize: '1.75rem',
-		fontWeight: 'bold',
-		userSelect: 'none',
-	},
-})
-
 export function TopbarBrand(props: TopbarBrandProps) {
-	useCss(
-		topbarBrandWrapperCss,
-		topbarBrandImgCss,
-		topbarBrandSvgCss,
-		topbarBrandTitleCss,
-	)
 	let titleStyle = {
 		color: props.textColor,
 	}
@@ -214,23 +98,7 @@ export function TopbarBrand(props: TopbarBrandProps) {
 
 type TopbarItemsWrapperProps = { children?: Children }
 
-let itemsWrapperCss = css({
-	[`.topbar-items-wrapper`]: {
-		alignItems: 'center',
-		display: 'grid',
-		gridAutoFlow: 'column',
-		gridColumnGap: '2rem',
-		userSelect: 'none',
-	},
-	[mobile]: {
-		[`.topbar-items-wrapper`]: {
-			display: 'none',
-		},
-	},
-})
-
 function TopbarItemsWrapper(props: TopbarItemsWrapperProps) {
-	useCss(itemsWrapperCss)
 	return <nav class="topbar-items-wrapper">{props.children}</nav>
 }
 
@@ -238,25 +106,7 @@ type HamburgerMenuProps = {
 	textColor: string
 }
 
-let hamburgerCss = css({
-	[`.topbar-hamburger`]: {
-		alignContent: 'space-between',
-		cursor: 'pointer',
-		display: 'grid',
-		height: '15px',
-		justifySelf: 'end',
-		margin: '-1rem',
-		padding: '1rem',
-		width: '15px',
-	},
-	[`.topbar-hamburger:hover`]: {
-		filter: 'brightness(90%)',
-	},
-})
-
 function TopbarHamburger(props: HamburgerMenuProps) {
-	useCss(hamburgerCss)
-
 	return (
 		<div class="topbar-hamburger">
 			<svg
@@ -318,37 +168,7 @@ type TopbarMenuProps = {
 	textColor: string
 }
 
-let topbarDropdownWrapperCss = css({
-	[`.topbar-dropdown-wrapper`]: {
-		left: '0',
-		padding: '1rem',
-		position: 'absolute',
-		right: '0',
-		top: '4.5rem',
-		zIndex: 1,
-	},
-})
-
-let topbarDropdownItemCss = css({
-	[`.topbar-dropdown-item`]: {
-		fontSize: '1.25rem',
-		padding: '0.5rem 1rem',
-	},
-	[`.topbar-dropdown-item:hover`]: {
-		backgroundColor: variables.colors.hover,
-	},
-})
-
-let topbarDropdownLinkCss = css({
-	[`.topbar-dropdown-link`]: {
-		color: variables.colors.text,
-		cursor: 'pointer',
-		textDecoration: 'none',
-	},
-})
-
 function TopbarDropdown(props: TopbarMenuProps) {
-	useCss(topbarDropdownWrapperCss, topbarDropdownItemCss, topbarDropdownLinkCss)
 	let wrapperStyle = {
 		backgroundColor: props.backgroundColor,
 		borderBottom: props.border as any,

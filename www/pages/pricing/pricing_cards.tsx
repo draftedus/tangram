@@ -1,4 +1,4 @@
-import { JSX, css, cx, h, ui, useCss } from 'deps'
+import { JSX, cx, h, ui } from 'deps'
 
 type PricingCardsProps = {
 	enterpriseCta: JSX.Element
@@ -11,25 +11,7 @@ type PricingCardsProps = {
 	teamSelected?: boolean
 }
 
-let gridCss = css({
-	[`.pricing-cards-grid`]: {
-		display: 'grid',
-		gridGap: '0.5rem',
-	},
-	[ui.mobile]: {
-		[`.pricing-cards-grid`]: {
-			grid: 'repeat(4, auto)/ minmax(0, 1fr)',
-		},
-	},
-	[ui.desktop]: {
-		[`.pricing-cards-grid`]: {
-			grid: 'auto / repeat(4, minmax(0, 1fr))',
-		},
-	},
-})
-
 export function PricingCards(props: PricingCardsProps) {
-	useCss(gridCss)
 	return (
 		<div class="pricing-cards-grid">
 			<PricingCard
@@ -100,81 +82,7 @@ type PricingCardProps = {
 	title: string
 }
 
-let pricingGridCss = css({
-	[`.pricing-card-grid`]: {
-		alignContent: 'space-between',
-		backgroundColor: ui.variables.colors.surface,
-		border: `${ui.variables.border.width} solid ${ui.variables.colors.border}`,
-		borderRadius: ui.variables.border.radius,
-		display: 'grid',
-		gridGap: '2rem',
-		padding: '2rem',
-	},
-})
-
-let pricingGridSelectedCss = css({
-	[`pricing-card-grid-selected`]: {
-		border: `${ui.variables.border.width} solid ${ui.variables.colors.accent}`,
-	},
-})
-
-let pricingTopGridCss = css({
-	[`.pricing-card-content-grid`]: {
-		display: 'grid',
-		gridGap: '1rem',
-		justifyItems: 'center',
-	},
-})
-
-let pricingCardPriceWrapper = css({
-	[`.pricing-card-price-wrapper`]: {
-		display: 'grid',
-		gridGap: '0.5rem',
-		justifyContent: 'center',
-		justifyItems: 'center',
-	},
-})
-
-let priceCss = css({
-	[`.pricing-card-price`]: { fontSize: '2rem' },
-})
-
-let priceSubtitleCss = css({
-	[`.pricing-card-subtitle`]: {
-		color: ui.variables.colors.mutedText,
-		fontSize: '1rem',
-	},
-})
-
-let featureCss = css({
-	[`.pricing-card-feature`]: {
-		display: 'grid',
-		gridAutoFlow: 'column',
-		gridGap: '0.5rem',
-		justifyContent: 'start',
-		lineHeight: '1.5',
-	},
-	[`.pricing-card-feature:before`]: {
-		color: ui.colors.blue,
-		content: "'✔'",
-	},
-})
-
-let featureListCss = css({
-	[`.pricing-card-features-list`]: { display: 'grid', gridGap: '0.5rem' },
-})
-
 function PricingCard(props: PricingCardProps) {
-	useCss(
-		pricingGridCss,
-		pricingGridSelectedCss,
-		pricingTopGridCss,
-		pricingCardPriceWrapper,
-		priceCss,
-		priceSubtitleCss,
-		featureListCss,
-		featureCss,
-	)
 	return (
 		<div
 			class={cx(

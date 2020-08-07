@@ -1,5 +1,5 @@
-import { Children, css, cx, h, useCss } from '../deps'
-import { border, mobile, variables } from '../theme'
+import { Children, cx, h } from '../deps'
+import { variables } from '../theme'
 import { Token } from '../token'
 
 // |-----------------------------------------------------------|
@@ -41,21 +41,9 @@ type ConfusionMatrixComparisonProps = {
 	valueFormatter?: (value: number) => string
 }
 
-let wrapperCss = css({
-	[`.confusion-matrix-comparison-wrapper`]: {
-		display: 'grid',
-		grid: 'auto 1fr 1fr / auto 1fr 1fr',
-		gridGap: '1rem',
-		gridTemplateAreas: `"empty actual-true-label actual-false-label" "predicted-true-label true-positive false-positive" "predicted-false-label false-negative true-negative"`,
-		maxWidth: '100%',
-		overflow: 'auto',
-	},
-})
-
 export function ConfusionMatrixComparison(
 	props: ConfusionMatrixComparisonProps,
 ) {
-	useCss(wrapperCss)
 	return (
 		<div class="confusion-matrix-comparison-wrapper">
 			<ConfusionMatrixLabel area="actual-true-label">
@@ -147,70 +135,7 @@ type ConfusionMatrixItemProps = {
 	valueFormatter?: (value: number) => string
 }
 
-let itemWrapperCss = css({
-	[`.confusion-matrix-comparison-item-wrapper`]: {
-		alignContent: 'center',
-		border,
-		borderRadius: variables.border.radius,
-		display: 'grid',
-		gridGap: '1rem',
-		justifyContent: 'center',
-		justifyItems: 'center',
-		padding: '2rem',
-		textAlign: 'center',
-	},
-})
-
-let positiveItemWrapperCss = css({
-	[`.confusion-matrix-comparison-item-positive-wrapper`]: {
-		backgroundColor: variables.colors.header,
-		color: variables.colors.text,
-	},
-})
-
-let negativeItemWrapperCss = css({
-	[`.confusion-matrix-comparison-item-negative-wrapper`]: {
-		backgroundColor: variables.colors.surface,
-		color: variables.colors.text,
-	},
-})
-
-let numberComparisonWrapperCss = css({
-	[`.confusion-matrix-comparison-number-comparison-wrapper`]: {
-		alignItems: 'center',
-		display: 'grid',
-		gridColumnGap: '2rem',
-		gridRowGap: '.5rem',
-		gridTemplateColumns: 'auto auto',
-		justifyContent: 'center',
-		justifyItems: 'center',
-	},
-})
-
-let titleCss = css({
-	[`.confusion-matrix-comparison-item-title`]: { fontSize: '1.25rem' },
-})
-
-let valueCss = css({
-	[`.confusion-matrix-comparison-item-value`]: {
-		fontSize: '2rem',
-	},
-	[mobile]: {
-		[`.confusion-matrix-comparison-item-value`]: {
-			fontSize: '1.5rem',
-		},
-	},
-})
-
 function ConfusionMatrixComparisonItem(props: ConfusionMatrixItemProps) {
-	useCss(
-		itemWrapperCss,
-		positiveItemWrapperCss,
-		negativeItemWrapperCss,
-		numberComparisonWrapperCss,
-		titleCss,
-		valueCss,
-	)
 	let valueFormatter = props.valueFormatter || (v => v.toString())
 	let wrapperStyle = {
 		gridArea: props.area,
@@ -254,18 +179,7 @@ type ConfusionMatrixLabelProps = {
 	left?: boolean
 }
 
-let labelCss = css({
-	[`.confusion-matrix-comparison-label`]: {
-		alignSelf: 'center',
-		display: 'grid',
-		fontWeight: 'bold',
-		gridGap: '0.5rem',
-		textAlign: 'center',
-	},
-})
-
 function ConfusionMatrixLabel(props: ConfusionMatrixLabelProps) {
-	useCss(labelCss)
 	let style = {
 		gridArea: props.area,
 		justifyItems: props.left ? 'end' : 'center',

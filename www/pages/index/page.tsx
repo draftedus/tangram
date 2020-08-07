@@ -16,7 +16,7 @@ import { TrainingStats } from './training_stats'
 import trainingStats from './training_stats.svg'
 import { Tuning } from './tuning'
 import tuning from './tuning.svg'
-import { Client, css, h, ui, useCss } from 'deps'
+import { Client, h, ui } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
 
 export default function Home() {
@@ -30,63 +30,7 @@ export default function Home() {
 	)
 }
 
-let wrapperCss = css({
-	[`.index-wrapper`]: { color: ui.variables.colors.text },
-})
-
-let innerCss = css({
-	[`.index-inner`]: {
-		display: 'grid',
-		grid: 'auto auto / minmax(0, 1fr)',
-	},
-	[ui.mobile]: {
-		[`.index-inner`]: {
-			gridRowGap: '1rem',
-		},
-	},
-	[ui.desktop]: {
-		[`.index-inner`]: {
-			gridRowGap: '2rem',
-		},
-	},
-})
-
-let titleCss = css({
-	[`.index-title`]: {
-		margin: '0',
-		textAlign: 'center',
-	},
-	[ui.mobile]: {
-		[`.index-title`]: {
-			fontSize: '2rem',
-		},
-	},
-	[ui.desktop]: {
-		[`.index-title`]: {
-			fontSize: '3rem',
-		},
-	},
-})
-
-let subtitleCss = css({
-	[`.index-subtitle`]: {
-		lineHeight: '1.5',
-		textAlign: 'center',
-	},
-	[ui.mobile]: {
-		[`.index-subtitle`]: {
-			fontSize: '1.25rem',
-		},
-	},
-	[ui.desktop]: {
-		[`.index-subtitle`]: {
-			fontSize: '1.5rem',
-		},
-	},
-})
-
 function Hero() {
-	useCss(wrapperCss, innerCss, titleCss, subtitleCss)
 	return (
 		<div class="index-wrapper">
 			<div class="index-inner">
@@ -102,20 +46,7 @@ function Hero() {
 	)
 }
 
-let aspectRatio = 16 / 9
-let placeholderCss = css({
-	[`.index-placeholder`]: {
-		backgroundColor: '#282c34',
-		borderRadius: ui.variables.border.radius,
-		overflow: 'hidden',
-		paddingTop: `${(1 / aspectRatio) * 100}%`,
-		position: 'relative',
-		width: '100%',
-	},
-})
-
 function Video() {
-	useCss(wrapperCss, placeholderCss)
 	let videoStyle = {
 		border: 'none',
 		bottom: '0',
@@ -141,74 +72,7 @@ function Video() {
 	)
 }
 
-let featuresGridCss = css({
-	[`.index-features-grid`]: {
-		display: 'grid',
-	},
-	[ui.mobile]: {
-		[`.index-features-grid`]: {
-			grid: 'auto / minmax(0, 1fr)',
-			gridRowGap: '2rem',
-		},
-	},
-	[ui.desktop]: {
-		[`.index-features-grid`]: {
-			grid: 'auto / minmax(0, 2fr) minmax(0, 1fr)',
-			gridAutoFlow: 'dense',
-			gridColumnGap: '4rem',
-			gridRowGap: '4rem',
-		},
-	},
-})
-
-let stepCss = css({
-	[`.index-step`]: {
-		alignContent: 'start',
-		display: 'grid',
-		gridGap: '0.5rem',
-	},
-	[ui.mobile]: {
-		[`.index-step`]: {
-			gridColumn: '1',
-		},
-	},
-	[ui.desktop]: {
-		[`.index-step`]: {
-			gridColumn: '2',
-		},
-	},
-})
-
-let stepTitleWrapperCss = css({
-	[`.index-step-title-wrapper`]: {
-		alignItems: 'center',
-		display: 'grid',
-		grid: 'auto / auto auto',
-		gridGap: '0.5rem',
-		justifyContent: 'start',
-	},
-})
-
-let stepIconCss = css({
-	[`.index-step-icon`]: { height: '2rem', width: '2rem' },
-})
-
-let stepTitleCss = css({
-	[`.index-step-title`]: {
-		fontSize: '1.5rem',
-		fontWeight: 'bold',
-		margin: '0',
-	},
-})
-
 function Features() {
-	useCss(
-		featuresGridCss,
-		stepCss,
-		stepTitleWrapperCss,
-		stepIconCss,
-		stepTitleCss,
-	)
 	return (
 		<div class="index-features-grid">
 			<div class="index-step">
