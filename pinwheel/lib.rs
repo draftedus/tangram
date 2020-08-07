@@ -521,6 +521,11 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
 	}
+	// concat css
+	let output = std::process::Command::new("fd")
+		.args(&["-e", "css", "-E", "app/static/tangram.css", "-x", "cat"])
+		.output()?;
+	std::fs::write("app/static/tangram.css", output.stdout)?;
 	Ok(())
 }
 

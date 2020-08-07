@@ -1,10 +1,7 @@
 import { Fragment, h } from './react'
-import { styler } from './styler'
 import { DocumentProps } from './types'
 
 export function Head(props: DocumentProps) {
-	let css = Array.from(styler.insertedRules).join(' ')
-	styler.reset()
 	return (
 		<Fragment>
 			<meta charSet="utf-8" />
@@ -12,7 +9,6 @@ export function Head(props: DocumentProps) {
 			{props.preloadJsPaths?.map(modulePath => (
 				<link href={modulePath} key={modulePath} rel="modulepreload" />
 			))}
-			<style dangerouslySetInnerHTML={{ __html: css }} id="styler" />
 		</Fragment>
 	)
 }

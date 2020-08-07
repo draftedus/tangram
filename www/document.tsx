@@ -12,9 +12,9 @@ export default function Document(props: DocumentProps) {
 					rel="preload"
 					type="font/woff2"
 				/>
-				<style src="/global.css" />
+				<link href="/tangram.css" rel="stylesheet" />
 				<title>{'Tangram'}</title>
-				<meta content="Tangram" name="description" />
+				<meta content="Machine Learning for Developers" name="description" />
 			</head>
 			<body>
 				<Body {...props} />
