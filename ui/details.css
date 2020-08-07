@@ -26,6 +26,7 @@
 	appearance: none;
 	background-color: var(--surface-color);
 	border: var(--border);
+	border-radius: var(--border-radius);
 	box-sizing: border-box;
 	color: inherit;
 	cursor: pointer;

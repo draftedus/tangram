@@ -1,17 +1,20 @@
 .tab-bar {
-	border-bottom: var(--border-color);
+	border-bottom: var(--border);
+	box-sizing: border-box;
+	column-gap: 2rem;
 	display: grid;
 	grid-auto-flow: column;
-	grid-column-gap: 2rem;
+	height: 1.5rem;
 	justify-content: start;
 }
 
 .tab-bar-tab {
-	border-bottom: var(--border-color);
+	border-bottom: var(--border);
+	box-sizing: border-box;
 	color: var(--muted-text-color);
 	cursor: pointer;
 	height: 1.5rem;
-	margin-bottom: var(--border-width);
+	margin-bottom: -var(--border-width);
 	position: relative;
 	user-select: none;
 }

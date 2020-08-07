@@ -1,6 +1,7 @@
 .chart-wrapper {
 	display: grid;
-	grid-row-gap: 1rem;
+	row-gap: 1rem;
+	position: relative;
 }
 
 .chart-title {
@@ -19,7 +20,7 @@
 	align-items: center;
 	display: grid;
 	grid: auto / auto auto;
-	grid-column-gap: 0.5rem;
+	column-gap: 0.5rem;
 	justify-content: start;
 	margin: 0.5rem;
 }
@@ -33,4 +34,16 @@
 
 .chart-legend-title {
 	white-space: nowrap;
+}
+
+.chart-noscript {
+	align-content: center;
+	bottom: 0;
+	color: var(--muted-text-color);
+	display: grid;
+	justify-content: center;
+	left: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
 }

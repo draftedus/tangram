@@ -69,8 +69,8 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 		<ui.S1>
 			<ui.H1>{'Production Metrics'}</ui.H1>
 			<ui.TabBar>
-				<ui.TabLink href="./">{'Overview'}</ui.TabLink>
-				<ui.TabLink href="./class_metrics">{'Class Metrics'}</ui.TabLink>
+				<ui.TabLink href="">{'Overview'}</ui.TabLink>
+				<ui.TabLink href="class_metrics">{'Class Metrics'}</ui.TabLink>
 			</ui.TabBar>
 			<ui.S2>
 				<DateWindowSelectField dateWindow={props.dateWindow} />

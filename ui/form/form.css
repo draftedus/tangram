@@ -4,6 +4,6 @@
 
 .form {
 	display: grid;
-	grid-row-gap: 1rem;
+	row-gap: 1rem;
 	margin: 0;
 }

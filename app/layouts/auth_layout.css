@@ -1,6 +1,6 @@
 .auth-layout {
 	display: grid;
-	grid-row-gap: 1rem;
+	row-gap: 1rem;
 	justify-content: center;
 	justify-items: center;
 	padding-top: 1rem;

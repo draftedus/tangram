@@ -1,1 +1,1 @@
-export { default } from '../www/document'
+export { default, renderPage } from '../www/document'

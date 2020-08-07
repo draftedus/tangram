@@ -1,5 +1,7 @@
 import { Body, DocumentProps, Head, h } from './deps'
 
+export * from '../pinwheel/lib/mod'
+
 export default function Document(props: DocumentProps) {
 	return (
 		<html lang="en">

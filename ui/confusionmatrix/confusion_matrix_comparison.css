@@ -32,8 +32,8 @@
 .confusion-matrix-comparison-number-comparison-wrapper {
 	align-items: center;
 	display: grid;
-	grid-column-gap: 2rem;
-	grid-row-gap: 0.5rem;
+	column-gap: 2rem;
+	row-gap: 0.5rem;
 	grid-template-columns: auto auto;
 	justify-content: center;
 	justify-items: center;

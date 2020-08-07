@@ -5,7 +5,10 @@ import { chartConfig } from './config'
 import { DrawLineChartOptions, createLineChart } from './line_chart'
 import { DrawShapChartOptions, createShapChart } from './shap_chart'
 
-export type BarChartProps = DrawBarChartOptions & { title?: string }
+export type BarChartProps = DrawBarChartOptions & {
+	id?: string
+	title?: string
+}
 
 export function BarChart(props: BarChartProps) {
 	let containerRef = useRef<HTMLDivElement | null>(null)
@@ -28,12 +31,26 @@ export function BarChart(props: BarChartProps) {
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
 			<ChartLegend items={props.data} />
-			<div ref={containerRef} style={containerStyle} />
+			<div
+				data-options={props.id && JSON.stringify(props)}
+				id={props.id}
+				ref={containerRef}
+				style={containerStyle}
+			>
+				<noscript>
+					<div class="chart-noscript">
+						{'Please enable JavaScript to view charts.'}
+					</div>
+				</noscript>
+			</div>
 		</div>
 	)
 }
 
-export type BoxChartProps = DrawBoxChartOptions & { title?: string }
+export type BoxChartProps = DrawBoxChartOptions & {
+	id?: string
+	title?: string
+}
 
 export function BoxChart(props: BoxChartProps) {
 	let containerRef = useRef<HTMLDivElement | null>(null)
@@ -56,12 +73,26 @@ export function BoxChart(props: BoxChartProps) {
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
 			<ChartLegend items={props.data} />
-			<div ref={containerRef} style={containerStyle} />
+			<div
+				data-options={props.id && JSON.stringify(props)}
+				id={props.id}
+				ref={containerRef}
+				style={containerStyle}
+			>
+				<noscript>
+					<div class="chart-noscript">
+						{'Please enable JavaScript to view charts.'}
+					</div>
+				</noscript>
+			</div>
 		</div>
 	)
 }
 
-export type LineChartProps = DrawLineChartOptions & { title?: string }
+export type LineChartProps = DrawLineChartOptions & {
+	id?: string
+	title?: string
+}
 
 export function LineChart(props: LineChartProps) {
 	let containerRef = useRef<HTMLDivElement | null>(null)
@@ -84,12 +115,26 @@ export function LineChart(props: LineChartProps) {
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
 			<ChartLegend items={props.data} />
-			<div ref={containerRef} style={containerStyle} />
+			<div
+				data-options={props.id && JSON.stringify(props)}
+				id={props.id}
+				ref={containerRef}
+				style={containerStyle}
+			>
+				<noscript>
+					<div class="chart-noscript">
+						{'Please enable JavaScript to view charts.'}
+					</div>
+				</noscript>
+			</div>
 		</div>
 	)
 }
 
-export type ShapChartProps = DrawShapChartOptions & { title?: string }
+export type ShapChartProps = DrawShapChartOptions & {
+	id?: string
+	title?: string
+}
 
 export function ShapChart(props: ShapChartProps) {
 	let containerRef = useRef<HTMLDivElement | null>(null)
@@ -125,7 +170,18 @@ export function ShapChart(props: ShapChartProps) {
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			<div ref={containerRef} style={containerStyle} />
+			<div
+				data-options={props.id && JSON.stringify(props)}
+				id={props.id}
+				ref={containerRef}
+				style={containerStyle}
+			>
+				<noscript>
+					<div class="chart-noscript">
+						{'Please enable JavaScript to view charts.'}
+					</div>
+				</noscript>
+			</div>
 		</div>
 	)
 }

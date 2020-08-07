@@ -29,15 +29,15 @@ export function ModelLayout(props: ModelLayoutProps) {
 				>
 					<div class="model-layout-owner-slash-repo-wrapper">
 						<a
-							className="model-layout-owner-slash-repo-link"
+							class="model-layout-owner-slash-repo-link"
 							href={props.ownerUrl}
 							title="owner"
 						>
 							{props.ownerName}
 						</a>
-						<span className="model-layout-owner-slash-repo-link">{'/'}</span>
+						<span class="model-layout-owner-slash-repo-link">{'/'}</span>
 						<a
-							className="model-layout-owner-slash-repo-link"
+							class="model-layout-owner-slash-repo-link"
 							href={`/repos/${props.id}/models/${props.modelId}/`}
 							title="repo"
 						>
@@ -60,7 +60,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 						{'Download Model'}
 					</ui.Button>
 					<ui.Button href={`/repos/${props.id}/models/new`}>
-						{'Upload new model version'}
+						{'Upload New Model Version'}
 					</ui.Button>
 				</div>
 				<div class="model-layout-grid" style={{ gridArea: 'model' }}>

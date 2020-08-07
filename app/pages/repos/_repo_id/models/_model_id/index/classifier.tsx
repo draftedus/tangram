@@ -25,9 +25,7 @@ export type Props = {
 export function ClassifierIndexPage(props: Props) {
 	return (
 		<ui.S1>
-			<ui.SpaceBetween>
-				<ui.H1>{'Overview'}</ui.H1>
-			</ui.SpaceBetween>
+			<ui.H1>{'Overview'}</ui.H1>
 			<ui.S2>
 				<ui.H2>{'Training Summary'}</ui.H2>
 				<ui.P>

@@ -14,7 +14,7 @@
 	border-top-right-radius: var(--border-radius);
 	display: grid;
 	grid: auto / auto auto auto;
-	grid-column-gap: 0.5rem;
+	column-gap: 0.5rem;
 	justify-content: start;
 	padding: 0.75rem;
 }
