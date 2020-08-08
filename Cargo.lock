@@ -556,23 +556,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "html"
-version = "0.0.0"
-dependencies = [
- "derive_more 0.99.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "html-macro 0.0.0",
-]
-
-[[package]]
-name = "html-macro"
-version = "0.0.0"
-dependencies = [
- "proc-macro2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
- "quote 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn 1.0.38 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "http"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1660,7 +1643,6 @@ dependencies = [
  "derive_more 0.99.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-util 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "html 0.0.0",
  "hyper 0.13.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "include_dir 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "insta 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",

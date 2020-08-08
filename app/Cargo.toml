@@ -22,7 +22,6 @@ chrono-tz = { version = "0.5", features = ["serde"] }
 derive_more = "0.99"
 futures = { version = "0.3" }
 futures-util = { version = "0.3" }
-html = { path = "../html" }
 hyper =  { version = "0.13", features = ["stream"] }
 include_dir = "0.6"
 itertools = "0.9"

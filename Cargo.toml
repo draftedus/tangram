@@ -2,8 +2,6 @@
 members = [
 	"app",
 	"core",
-	"html",
-	"html-macro",
 	"pinwheel",
 	"term-ui",
 ]

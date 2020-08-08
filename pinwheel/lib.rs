@@ -47,7 +47,7 @@ impl Pinwheel {
 		}
 		let document_js_url = Url::parse("dst:/document.js")?;
 		let page_js_url =
-			Url::parse("dst:/")?.join(&("pages/".to_string() + page_entry + "/page.js"))?;
+			Url::parse("dst:/")?.join(&("pages/".to_string() + page_entry + "/static.js"))?;
 		let client_js_url =
 			Url::parse("dst:/")?.join(&("pages/".to_string() + page_entry + "/client.js"))?;
 		let client_js_pathname = if self.fs.exists(&client_js_url) {
@@ -499,7 +499,7 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 		let page_source_path = root_dir
 			.join("pages")
 			.join(page_entry.as_ref())
-			.join("page.tsx");
+			.join("static.tsx");
 		let client_js_path = root_dir
 			.join("pages")
 			.join(page_entry.as_ref())
