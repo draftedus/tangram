@@ -58,3 +58,8 @@ export let zip = <T1, T2>(a: T1[], b: T2[]): Array<[T1, T2]> => {
 	}
 	return result
 }
+
+export function getCssVariableValue(variable: string): String {
+	let root = document.documentElement
+	return window.getComputedStyle(root).getPropertyValue(variable)
+}

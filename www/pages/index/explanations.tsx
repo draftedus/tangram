@@ -61,7 +61,7 @@ export function Explanations() {
 					<ui.BarChart
 						data={[
 							{
-								color: 'var(--blue)',
+								color: '#0a84ff',
 								data: data.chartData,
 								title: 'probabilities',
 							},

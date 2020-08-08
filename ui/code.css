@@ -25,7 +25,7 @@
 	color: var(--text-color);
 	display: none;
 	grid: auto / auto minmax(0, 1fr);
-	grid-area: code;
+	grid-area: 'code';
 	overflow: auto;
 	padding: 0.5rem;
 	width: 100%;
@@ -74,6 +74,7 @@
 .code-radio-label {
 	cursor: pointer;
 }
+
 .code-radio-label:first-of-type {
 	padding-left: 0.5rem;
 }

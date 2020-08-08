@@ -3,7 +3,7 @@ import { h, ui } from 'deps'
 export function Introspection() {
 	let series = [
 		{
-			color: '#0A84FF',
+			color: '#0a84ff',
 			data: [
 				{ x: 0, y: 0.7830284833908081 },
 				{ x: 1, y: 0.5727340579032898 },
