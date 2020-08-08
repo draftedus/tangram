@@ -43,13 +43,18 @@ impl Pinwheel {
 				self.src_dir.as_ref().unwrap(),
 				self.dst_dir.as_ref().unwrap(),
 				page_entry,
-			)?;
+			)
+			.unwrap();
 		}
-		let document_js_url = Url::parse("dst:/document.js")?;
-		let page_js_url =
-			Url::parse("dst:/")?.join(&("pages/".to_string() + page_entry + "/static.js"))?;
-		let client_js_url =
-			Url::parse("dst:/")?.join(&("pages/".to_string() + page_entry + "/client.js"))?;
+		let document_js_url = Url::parse("dst:/document.js").unwrap();
+		let page_js_url = Url::parse("dst:/")
+			.unwrap()
+			.join(&("pages/".to_string() + page_entry + "/static.js"))
+			.unwrap();
+		let client_js_url = Url::parse("dst:/")
+			.unwrap()
+			.join(&("pages/".to_string() + page_entry + "/client.js"))
+			.unwrap();
 		let client_js_pathname = if self.fs.exists(&client_js_url) {
 			Some(PathBuf::from("/pages").join(&page_entry).join("client.js"))
 		} else {
@@ -80,24 +85,25 @@ impl Pinwheel {
 
 			// get default export from page
 			let page_module_namespace =
-				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone())?;
+				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone()).unwrap();
 			let document_module_namespace =
-				run_module(&mut scope, self.fs.as_ref(), document_js_url)?;
+				run_module(&mut scope, self.fs.as_ref(), document_js_url).unwrap();
 			let default_string = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_string)
-				.ok_or_else(|| {
-					format_err!("failed to find default export of page {}", page_js_url)
-				})?;
+				.ok_or_else(|| format_err!("failed to find default export of page {}", page_js_url))
+				.unwrap();
 
 			// get default and renderPage export from document
 			let document_module_default_export = document_module_namespace
 				.get(&mut scope, default_string)
-				.ok_or_else(|| format_err!("failed to find default export from document"))?;
+				.ok_or_else(|| format_err!("failed to find default export from document"))
+				.unwrap();
 			let render_page_string = v8::String::new(&mut scope, "renderPage").unwrap().into();
 			let pinwheel_module_render_page_export = document_module_namespace
 				.get(&mut scope, render_page_string)
-				.ok_or_else(|| format_err!("failed to find renderPage export from document"))?;
+				.ok_or_else(|| format_err!("failed to find renderPage export from document"))
+				.unwrap();
 			if !pinwheel_module_render_page_export.is_function() {
 				return Err(format_err!(
 					"renderPage export of document is not a function"
@@ -107,7 +113,7 @@ impl Pinwheel {
 				unsafe { v8::Local::cast(pinwheel_module_render_page_export) };
 
 			// send the props to v8
-			let json = serde_json::to_string(&props)?;
+			let json = serde_json::to_string(&props).unwrap();
 			let json = v8::String::new(&mut scope, &json).unwrap();
 			let props = v8::json::parse(&mut scope, json).unwrap();
 			let undefined = v8::undefined(&mut scope).into();
@@ -223,7 +229,7 @@ fn run_module<'s>(
 	fs: &dyn VirtualFileSystem,
 	url: Url,
 ) -> Result<v8::Local<'s, v8::Object>> {
-	let module_id = load_module(scope, fs, url)?;
+	let module_id = load_module(scope, fs, url).unwrap();
 	let state = get_state(scope);
 	let state = state.borrow();
 	let module = &get_module_handle_with_id(&state, module_id).unwrap().module;
@@ -284,18 +290,19 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	);
 
 	// read the source
-	let code = fs.read(&url)?;
-	let code = std::str::from_utf8(code.as_ref())?;
+	let code = fs.read(&url).unwrap();
+	let code = std::str::from_utf8(code.as_ref()).unwrap();
 	let source = v8::script_compiler::Source::new(v8::String::new(scope, code).unwrap(), &origin);
 
 	// read the source map
-	let source_map_url = match sourcemap::locate_sourcemap_reference_slice(code.as_bytes())? {
-		Some(s) => Some(url.join(s.get_url())?),
+	let source_map_url = match sourcemap::locate_sourcemap_reference_slice(code.as_bytes()).unwrap()
+	{
+		Some(s) => Some(url.join(s.get_url()).unwrap()),
 		None => None,
 	};
 	let source_map = if let Some(source_map_url) = source_map_url {
-		let source_map = fs.read(&source_map_url)?;
-		let source_map = sourcemap::SourceMap::from_slice(source_map.as_ref())?;
+		let source_map = fs.read(&source_map_url).unwrap();
+		let source_map = sourcemap::SourceMap::from_slice(source_map.as_ref()).unwrap();
 		Some(source_map)
 	} else {
 		None
@@ -332,9 +339,9 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 		let state = get_state(scope);
 		let state = state.borrow();
 		let referrer_url = &get_module_handle_with_id(&state, id).unwrap().url;
-		let url = referrer_url.join(&specifier)?;
+		let url = referrer_url.join(&specifier).unwrap();
 		drop(state);
-		load_module(scope, fs, url)?;
+		load_module(scope, fs, url).unwrap();
 	}
 
 	Ok(id)
@@ -441,8 +448,9 @@ pub fn build(root_dir: &Path, out_dir: &Path) -> Result<()> {
 	let mut page_entries = Vec::new();
 	let pattern = root_dir.join("pages/**/page.tsx");
 	let pattern = pattern.to_str().unwrap();
-	for entry in glob(pattern)? {
-		let entry = entry?
+	for entry in glob(pattern).unwrap() {
+		let entry = entry
+			.unwrap()
 			.strip_prefix(root_dir)
 			.unwrap()
 			.strip_prefix("pages/")
@@ -454,16 +462,16 @@ pub fn build(root_dir: &Path, out_dir: &Path) -> Result<()> {
 		page_entries.push(entry)
 	}
 	// build the pages
-	esbuild_pages(root_dir, out_dir, &page_entries)?;
+	esbuild_pages(root_dir, out_dir, &page_entries).unwrap();
 	// copy static files
 	let static_dir = root_dir.join("static");
 	for path in walkdir::WalkDir::new(&static_dir) {
-		let path = path?;
+		let path = path.unwrap();
 		let path = path.path();
 		if path.is_file() {
 			let out_path = out_dir.join(path.strip_prefix(&static_dir).unwrap());
-			std::fs::create_dir_all(out_path.parent().unwrap())?;
-			std::fs::copy(path, out_path)?;
+			std::fs::create_dir_all(out_path.parent().unwrap()).unwrap();
+			std::fs::copy(path, out_path).unwrap();
 		}
 	}
 	// statically render pages
@@ -477,12 +485,15 @@ pub fn esbuild_single_page(root_dir: &Path, out_dir: &Path, page_entry: &str) ->
 pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>]) -> Result<()> {
 	// remove the out_dir if it exists and create it
 	if out_dir.exists() {
-		std::fs::remove_dir_all(&out_dir)?;
+		std::fs::remove_dir_all(&out_dir).unwrap();
 	}
-	std::fs::create_dir_all(&out_dir)?;
+	std::fs::create_dir_all(&out_dir).unwrap();
 	let manifest_path = out_dir.join("manifest.json");
 	let document_source_path = root_dir.join("document.tsx");
 	let mut args = vec![
+		"run".to_string(),
+		"-s".to_string(),
+		"esbuild".to_string(),
 		"--format=esm".to_string(),
 		"--minify".to_string(),
 		"--bundle".to_string(),
@@ -509,18 +520,60 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 			args.push(format!("{}", client_js_path.display()));
 		}
 	}
-	let mut process = std::process::Command::new("./node_modules/.bin/esbuild")
+	let mut process = std::process::Command::new("yarn")
 		.args(&args)
-		.spawn()?;
-	let status = process.wait()?;
+		.spawn()
+		.unwrap();
+	let status = process.wait().unwrap();
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
 	}
 	// concat css
-	let output = std::process::Command::new("fd")
-		.args(&["-e", "css", "-E", "app/static/tangram.css", "-x", "cat"])
-		.output()?;
-	std::fs::write("app/static/tangram.css", output.stdout)?;
+	if std::env::current_dir()
+		.unwrap()
+		.components()
+		.last()
+		.unwrap()
+		== std::path::Component::Normal(std::ffi::OsStr::new("www"))
+	{
+		let output = std::process::Command::new("fd")
+			.args(&[
+				"-e",
+				"css",
+				".",
+				"global.css",
+				"../ui",
+				"pages",
+				"-x",
+				"cat",
+			])
+			.output()
+			.unwrap();
+		std::fs::write(out_dir.join("tangram.css"), output.stdout).unwrap();
+	} else if std::env::current_dir()
+		.unwrap()
+		.components()
+		.last()
+		.unwrap()
+		== std::path::Component::Normal(std::ffi::OsStr::new("tangram"))
+	{
+		let output = std::process::Command::new("fd")
+			.args(&[
+				"-e",
+				"css",
+				".",
+				"www/global.css",
+				"ui",
+				"app/pages",
+				"-x",
+				"cat",
+			])
+			.output()
+			.unwrap();
+		std::fs::write(out_dir.join("tangram.css"), output.stdout).unwrap();
+	} else {
+		panic!()
+	}
 	Ok(())
 }
 
