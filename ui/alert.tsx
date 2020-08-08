@@ -28,6 +28,7 @@ export function Alert(props: AlertProps) {
 	return (
 		<div class={`alert-wrapper ${levelClass}`}>
 			{props.title && <div class="alert-title">{props.title}</div>}
+			{props.children}
 		</div>
 	)
 }

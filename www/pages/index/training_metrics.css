@@ -7,13 +7,18 @@
 @media (max-width: 1199px) {
 	.training-metrics-wrapper {
 		grid: auto auto auto / auto;
-		grid-template-areas: 'accuracy pr roc';
+		grid-template-areas:
+			'accuracy'
+			'pr'
+			'roc';
 	}
 }
 
 @media (min-width: 1200px) {
 	.training-metrics-wrapper {
 		grid: auto auto / minmax(0, 1fr) minmax(0, 1fr);
-		grid-template-areas: 'accuracy accuracy pr roc';
+		grid-template-areas:
+			'accuracy accuracy'
+			'pr roc';
 	}
 }
