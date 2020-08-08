@@ -537,16 +537,7 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 		== std::path::Component::Normal(std::ffi::OsStr::new("www"))
 	{
 		let output = std::process::Command::new("fd")
-			.args(&[
-				"-e",
-				"css",
-				".",
-				"global.css",
-				"../ui",
-				"pages",
-				"-x",
-				"cat",
-			])
+			.args(&["-e", "css", ".", "../ui", ".", "-x", "cat"])
 			.output()
 			.unwrap();
 		std::fs::write(out_dir.join("tangram.css"), output.stdout).unwrap();
@@ -558,16 +549,7 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 		== std::path::Component::Normal(std::ffi::OsStr::new("tangram"))
 	{
 		let output = std::process::Command::new("fd")
-			.args(&[
-				"-e",
-				"css",
-				".",
-				"www/global.css",
-				"ui",
-				"app/pages",
-				"-x",
-				"cat",
-			])
+			.args(&["-e", "css", ".", "ui", "app", "-x", "cat"])
 			.output()
 			.unwrap();
 		std::fs::write(out_dir.join("tangram.css"), output.stdout).unwrap();
