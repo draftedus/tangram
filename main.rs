@@ -8,7 +8,7 @@ use std::{
 #[cfg(feature = "train")]
 mod progress;
 
-fn cli<'a, 'b>() -> clap::App<'a, 'b> {
+fn main() {
 	let mut app = clap::App::new("tangram")
 		.version(clap::crate_version!())
 		.about("Train and deploy a machine learning model in minutes.")
@@ -55,13 +55,9 @@ fn cli<'a, 'b>() -> clap::App<'a, 'b> {
 			clap::SubCommand::with_name("app")
 				.about("run the reporting and monitoring app")
 				.long_about("run the reporting and monitoring app"),
-		)
+		);
 	}
-	app
-}
-
-fn main() {
-	let matches = cli().get_matches();
+	let matches = app.get_matches();
 	let result = match matches.subcommand() {
 		#[cfg(feature = "train")]
 		("train", Some(train_matches)) => {

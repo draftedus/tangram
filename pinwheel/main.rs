@@ -52,6 +52,22 @@ async fn handle(
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
+	let mut app = clap::App::new("pinwheel")
+		.version(clap::crate_version!())
+		.setting(clap::AppSettings::SubcommandRequiredElseHelp);
+	app = app.subcommand(clap::SubCommand::with_name("dev").about("run the development server"));
+	app = app.subcommand(
+		clap::SubCommand::with_name("build").about("build the application for production"),
+	);
+	let matches = app.get_matches();
+	match matches.subcommand() {
+		("dev", Some(_)) => dev().await,
+		("build", Some(_)) => build().await,
+		_ => unreachable!(),
+	}
+}
+
+async fn dev() -> Result<()> {
 	// get host and port
 	let host = std::env::var("HOST")
 		.map(|host| host.parse().expect("HOST environment variable invalid"))
@@ -83,27 +99,26 @@ pub async fn main() -> Result<()> {
 			}
 		};
 		let context = context.clone();
-		tokio::spawn(
-			http.serve_connection(
-				socket,
-				service_fn(move |request| {
-					let context = context.clone();
-					AssertUnwindSafe(handle(request, context))
-						.catch_unwind()
-						.map(|result| match result {
-							Err(_) => Ok(Response::builder()
-								.status(StatusCode::INTERNAL_SERVER_ERROR)
-								.body(Body::from("internal server error"))
-								.unwrap()),
-							Ok(response) => response,
-						})
-				}),
-			)
-			.map(|r| {
-				if let Err(e) = r {
-					eprintln!("http error: {}", e);
-				}
-			}),
-		);
+		let service = service_fn(move |request| {
+			let context = context.clone();
+			AssertUnwindSafe(handle(request, context))
+				.catch_unwind()
+				.map(|result| match result {
+					Ok(response) => response,
+					Err(_) => Ok(Response::builder()
+						.status(StatusCode::INTERNAL_SERVER_ERROR)
+						.body(Body::from("internal server error"))
+						.unwrap()),
+				})
+		});
+		tokio::spawn(http.serve_connection(socket, service).map(|r| {
+			if let Err(e) = r {
+				eprintln!("http error: {}", e);
+			}
+		}));
 	}
+}
+
+async fn build() -> Result<()> {
+	Ok(())
 }

@@ -45,7 +45,6 @@ impl Pinwheel {
 				page_entry,
 			)?;
 		}
-		let pinwheel_js_url = Url::parse("dst:/pinwheel.js")?;
 		let document_js_url = Url::parse("dst:/document.js")?;
 		let page_js_url =
 			Url::parse("dst:/")?.join(&("pages/".to_string() + page_entry + "/page.js"))?;
@@ -79,32 +78,33 @@ impl Pinwheel {
 				.global(&mut scope)
 				.set(&mut scope, console_string.into(), console.into());
 
-			let pinwheel_module_namespace =
-				run_module(&mut scope, self.fs.as_ref(), pinwheel_js_url)?;
-			let render_page_string = v8::String::new(&mut scope, "renderPage").unwrap().into();
-			let pinwheel_module_render_page_export = pinwheel_module_namespace
-				.get(&mut scope, render_page_string)
-				.ok_or_else(|| format_err!("failed to find renderPage export of pinwheel.js"))?;
-			if !pinwheel_module_render_page_export.is_function() {
-				return Err(format_err!(
-					"renderPage export of pinwheel.js is not a function"
-				));
-			}
-			let pinwheel_module_render_page_function: v8::Local<v8::Function> =
-				unsafe { v8::Local::cast(pinwheel_module_render_page_export) };
-
+			// get default export from page
 			let page_module_namespace =
 				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone())?;
-			let document_namespace = run_module(&mut scope, self.fs.as_ref(), document_js_url)?;
+			let document_module_namespace =
+				run_module(&mut scope, self.fs.as_ref(), document_js_url)?;
 			let default_string = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_string)
 				.ok_or_else(|| {
 					format_err!("failed to find default export of page {}", page_js_url)
 				})?;
-			let document_module_default_export = document_namespace
+
+			// get default and renderPage export from document
+			let document_module_default_export = document_module_namespace
 				.get(&mut scope, default_string)
-				.ok_or_else(|| format_err!("failed to find default export of document.js"))?;
+				.ok_or_else(|| format_err!("failed to find default export from document"))?;
+			let render_page_string = v8::String::new(&mut scope, "renderPage").unwrap().into();
+			let pinwheel_module_render_page_export = document_module_namespace
+				.get(&mut scope, render_page_string)
+				.ok_or_else(|| format_err!("failed to find renderPage export from document"))?;
+			if !pinwheel_module_render_page_export.is_function() {
+				return Err(format_err!(
+					"renderPage export of document is not a function"
+				));
+			}
+			let pinwheel_module_render_page_function: v8::Local<v8::Function> =
+				unsafe { v8::Local::cast(pinwheel_module_render_page_export) };
 
 			// send the props to v8
 			let json = serde_json::to_string(&props)?;
@@ -437,14 +437,6 @@ impl VirtualFileSystem for IncludedFileSystem {
 }
 
 pub fn build(root_dir: &Path, out_dir: &Path) -> Result<()> {
-	esbuild_all_pages(root_dir, out_dir)
-}
-
-pub fn esbuild_single_page(root_dir: &Path, out_dir: &Path, page_entry: &str) -> Result<()> {
-	esbuild_pages(root_dir, out_dir, &[page_entry.into()])
-}
-
-pub fn esbuild_all_pages(root_dir: &Path, out_dir: &Path) -> Result<()> {
 	// collect all pages in the pages directory
 	let mut page_entries = Vec::new();
 	let pattern = root_dir.join("pages/**/page.tsx");
@@ -474,7 +466,12 @@ pub fn esbuild_all_pages(root_dir: &Path, out_dir: &Path) -> Result<()> {
 			std::fs::copy(path, out_path)?;
 		}
 	}
+	// statically render pages
 	Ok(())
+}
+
+pub fn esbuild_single_page(root_dir: &Path, out_dir: &Path, page_entry: &str) -> Result<()> {
+	esbuild_pages(root_dir, out_dir, &[page_entry.into()])
 }
 
 pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>]) -> Result<()> {
@@ -484,7 +481,6 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 	}
 	std::fs::create_dir_all(&out_dir)?;
 	let manifest_path = out_dir.join("manifest.json");
-	let pinwheel_source_path = root_dir.join("pinwheel.ts");
 	let document_source_path = root_dir.join("document.tsx");
 	let mut args = vec![
 		"--format=esm".to_string(),
@@ -497,7 +493,6 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 		"--sourcemap".to_string(),
 		format!("--metafile={}", manifest_path.display()),
 		format!("--outdir={}", out_dir.display()),
-		format!("{}", pinwheel_source_path.display()),
 		format!("{}", document_source_path.display()),
 	];
 	for page_entry in page_entries {
