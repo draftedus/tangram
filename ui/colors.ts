@@ -1,4 +1,4 @@
-export let baseColors = {
+export let colors = {
 	blue: '#0a84ff',
 	gray: '#8e8e93',
 	green: '#30d158',

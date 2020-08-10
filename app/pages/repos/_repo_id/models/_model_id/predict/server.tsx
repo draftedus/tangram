@@ -133,7 +133,7 @@ export default function PredictPage(props: Props) {
 							<ui.BarChart
 								data={[
 									{
-										color: ui.baseColors.blue,
+										color: ui.colors.blue,
 										data: props.prediction.value.chartData,
 										title: 'probabilities',
 									},
@@ -154,8 +154,8 @@ export default function PredictPage(props: Props) {
 								includeXAxisTitle={true}
 								includeYAxisLabels={true}
 								includeYAxisTitle={true}
-								negativeColor={ui.baseColors.red}
-								positiveColor={ui.baseColors.green}
+								negativeColor={ui.colors.red}
+								positiveColor={ui.colors.green}
 							/>
 						</ui.Card>
 					</ui.S2>
@@ -181,8 +181,8 @@ export default function PredictPage(props: Props) {
 								includeXAxisTitle={true}
 								includeYAxisLabels={false}
 								includeYAxisTitle={false}
-								negativeColor={ui.baseColors.red}
-								positiveColor={ui.baseColors.green}
+								negativeColor={ui.colors.red}
+								positiveColor={ui.colors.green}
 							/>
 						</ui.Card>
 					</ui.S2>

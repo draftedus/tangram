@@ -12,7 +12,7 @@ export function ProductionStats() {
 	}
 	let series = [
 		{
-			color: ui.baseColors.blue,
+			color: ui.colors.blue,
 			data: [
 				{ x: 0, y: 0.4752 },
 				{ x: 1, y: 0.165 },
@@ -22,7 +22,7 @@ export function ProductionStats() {
 			title: 'Training',
 		},
 		{
-			color: ui.baseColors.green,
+			color: ui.colors.green,
 			data: [
 				{ x: 0, y: 0 },
 				{ x: 1, y: 0.1622 },

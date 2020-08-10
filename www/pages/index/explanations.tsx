@@ -61,7 +61,7 @@ export function Explanations() {
 					<ui.BarChart
 						data={[
 							{
-								color: ui.baseColors.blue,
+								color: ui.colors.blue,
 								data: data.chartData,
 								title: 'probabilities',
 							},
@@ -76,8 +76,8 @@ export function Explanations() {
 						includeXAxisTitle={true}
 						includeYAxisLabels={true}
 						includeYAxisTitle={true}
-						negativeColor={ui.baseColors.red}
-						positiveColor={ui.baseColors.green}
+						negativeColor={ui.colors.red}
+						positiveColor={ui.colors.green}
 					/>
 				</ui.Card>
 			</div>

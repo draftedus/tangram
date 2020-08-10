@@ -35,7 +35,7 @@ let accuracyLabels = [
 
 let accuracyData = [
 	{
-		color: ui.baseColors.blue,
+		color: ui.colors.blue,
 		data: [
 			{ x: 0, y: 0.8360655903816223 },
 			{ x: 1, y: 0.8360655903816223 },
@@ -55,7 +55,7 @@ let accuracyData = [
 		title: 'Training Accuracy',
 	},
 	{
-		color: ui.baseColors.green,
+		color: ui.colors.green,
 		data: [
 			{ x: 0, y: 0.827037 },
 			{ x: 1, y: 0.83504676 },

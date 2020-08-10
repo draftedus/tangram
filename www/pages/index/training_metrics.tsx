@@ -3,13 +3,13 @@ import { h, ui } from 'deps'
 export function TrainingMetrics() {
 	let rocData = [
 		{
-			color: ui.baseColors.blue,
+			color: ui.colors.blue,
 			data: data.rocData,
 			pointStyle: ui.PointStyle.Hidden,
 			title: 'ROC',
 		},
 		{
-			color: ui.baseColors.gray,
+			color: ui.colors.gray,
 			data: [
 				{ x: 0, y: 0 },
 				{ x: 1, y: 1 },
@@ -21,7 +21,7 @@ export function TrainingMetrics() {
 	]
 	let prData = [
 		{
-			color: ui.baseColors.blue,
+			color: ui.colors.blue,
 			data: data.prData,
 			pointStyle: ui.PointStyle.Circle,
 			title: 'PR',
