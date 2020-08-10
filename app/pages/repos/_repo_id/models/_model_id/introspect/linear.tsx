@@ -8,7 +8,7 @@ export function LinearFeatureWeights(props: Props) {
 	let max = Math.max(...props.values.map(([, value]) => Math.abs(value)))
 	let data = [
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: props.values.map(([_, value], i) => ({
 				x: i,
 				y: value,

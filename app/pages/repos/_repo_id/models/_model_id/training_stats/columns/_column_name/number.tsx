@@ -18,7 +18,7 @@ export type Props = {
 export function NumberColumnDetail(props: Props) {
 	let quantilesData = [
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: [
 				{
 					x: 0,
@@ -36,7 +36,7 @@ export function NumberColumnDetail(props: Props) {
 	]
 	let histogramData = props.histogram && [
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: props.histogram.map(([_, count], i) => ({
 				x: i,
 				y: count,

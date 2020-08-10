@@ -55,19 +55,19 @@ export default function TrainingMetricsIndexPage(props: Props) {
 		.filter(v => v.x !== null && v.y !== null)
 	let data = [
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: prData,
 			title: 'PR',
 		},
 	]
 	let nonParametricData = [
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: ptData,
 			title: 'Precision',
 		},
 		{
-			color: 'var(--green)',
+			color: ui.colors.green,
 			data: rtData,
 			title: 'Recall',
 		},

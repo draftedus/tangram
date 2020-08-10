@@ -95,7 +95,7 @@ export enum ColumnType {
 export default function ProductionStatsIndexPage(props: Props) {
 	let predictionCountData = [
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: props.predictionCountChart.map((entry, i) => ({
 				x: i,
 				y: entry.count,
@@ -207,7 +207,7 @@ function RegressionProductionStatsChart(props: {
 }) {
 	let data = [
 		{
-			color: 'var(--green)',
+			color: ui.colors.green,
 			data: [
 				{
 					x: 0,
@@ -223,7 +223,7 @@ function RegressionProductionStatsChart(props: {
 			title: 'training quantiles',
 		},
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: [
 				{
 					x: 0,
@@ -262,7 +262,7 @@ function RegressionProductionStatsIntervalChart(props: {
 }) {
 	let data = [
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: props.chartData.map((entry, i) => ({
 				x: i,
 				y:
@@ -298,14 +298,14 @@ function ClassificationProductionStatsChart(props: {
 }) {
 	let categories = props.chartData.histogram.production.map(x => x[0])
 	let colorOptions = [
-		'var(--green)',
-		'var(--blue)',
-		'var(--indigo)',
-		'var(--purple)',
-		'var(--pink)',
-		'var(--red)',
-		'var(--orange)',
-		'var(--yellow)',
+		ui.colors.green,
+		ui.colors.blue,
+		ui.colors.indigo,
+		ui.colors.purple,
+		ui.colors.pink,
+		ui.colors.red,
+		ui.colors.orange,
+		ui.colors.yellow,
 	]
 	let data = ui.times(props.chartData.histogram.production.length, i => ({
 		color: colorOptions[i % colorOptions.length],
@@ -338,14 +338,14 @@ function ClassificationProductionStatsIntervalChart(props: {
 }) {
 	let categories = props.chartData[0].histogram.production.map(x => x[0])
 	let colorOptions = [
-		'var(--green)',
-		'var(--blue)',
-		'var(--indigo)',
-		'var(--purple)',
-		'var(--pink)',
-		'var(--red)',
-		'var(--orange)',
-		'var(--yellow)',
+		ui.colors.green,
+		ui.colors.blue,
+		ui.colors.indigo,
+		ui.colors.purple,
+		ui.colors.pink,
+		ui.colors.red,
+		ui.colors.orange,
+		ui.colors.yellow,
 	]
 	let data = ui.times(props.chartData[0].histogram.production.length, i => ({
 		color: colorOptions[i % colorOptions.length],

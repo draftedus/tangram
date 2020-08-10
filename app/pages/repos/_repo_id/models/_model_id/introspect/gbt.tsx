@@ -8,7 +8,7 @@ export function GBTFeatureImportances(props: Props) {
 	let max = Math.max(...props.values.map(([, value]) => Math.abs(value)))
 	let data = [
 		{
-			color: 'var(--blue)',
+			color: ui.colors.blue,
 			data: props.values
 				.filter(([_, value]) => value > 0)
 				.map(([_, value], i) => ({
