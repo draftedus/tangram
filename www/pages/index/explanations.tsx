@@ -76,8 +76,8 @@ export function Explanations() {
 						includeXAxisTitle={true}
 						includeYAxisLabels={true}
 						includeYAxisTitle={true}
-						negativeColor="var(--red)"
-						positiveColor="var(--green)"
+						negativeColor={ui.baseColors.red}
+						positiveColor={ui.baseColors.green}
 					/>
 				</ui.Card>
 			</div>
