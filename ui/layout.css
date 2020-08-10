@@ -9,6 +9,10 @@
 	row-gap: 1rem;
 }
 
+.center {
+	text-align: center;
+}
+
 .space-between {
 	align-items: center;
 	display: grid;

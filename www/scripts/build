@@ -1,1 +1,1 @@
-cargo run -p pinwheel build
+cargo run --release -p pinwheel -- build

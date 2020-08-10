@@ -27,13 +27,10 @@ pub async fn get(
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
 	let props = props(request, context, model_id, column_name, search_params).await?;
-	let html = context
-		.pinwheel
-		.render(
-			"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
-			props,
-		)
-		.await?;
+	let html = context.pinwheel.render(
+		"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
+		props,
+	)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))

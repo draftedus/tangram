@@ -70,13 +70,10 @@ pub async fn get(
 	column_name: &str,
 ) -> Result<Response<Body>> {
 	let props = props(request, context, model_id, column_name).await?;
-	let html = context
-		.pinwheel
-		.render(
-			"/repos/_repo_id/models/_model_id/training_stats/columns/_column_name",
-			props,
-		)
-		.await?;
+	let html = context.pinwheel.render(
+		"/repos/_repo_id/models/_model_id/training_stats/columns/_column_name",
+		props,
+	)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))

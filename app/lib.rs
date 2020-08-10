@@ -32,16 +32,6 @@ pub struct Context {
 	pool: sqlx::AnyPool,
 }
 
-fn content_type(path: &str) -> Option<&'static str> {
-	if path.ends_with(".js") {
-		Some("text/javascript")
-	} else if path.ends_with(".svg") {
-		Some("image/svg+xml")
-	} else {
-		None
-	}
-}
-
 #[allow(clippy::cognitive_complexity)]
 async fn handle(
 	request: Request<Body>,
@@ -58,15 +48,6 @@ async fn handle(
 				.into_owned()
 				.collect()
 		});
-	// serve static files from pinwheel
-	if let Some(data) = context.pinwheel.serve(path) {
-		let mut response = Response::builder();
-		if let Some(content_type) = content_type(path) {
-			response = response.header("content-type", content_type);
-		}
-		let response = response.body(Body::from(data)).unwrap();
-		return Ok(response);
-	}
 	let result = match (&method, path_components.as_slice()) {
 		(&Method::GET, &["health"]) => pages::health::get(request, &context).await,
 		(&Method::POST, &["track"]) => track::track(request, context).await,
@@ -247,7 +228,7 @@ async fn handle(
 			pages::organizations::_organization_id::edit::post(request, &context, organization_id)
 				.await
 		}
-		_ => Err(Error::NotFound.into()),
+		_ => Ok(context.pinwheel.handle(request).await),
 	};
 	let response = match result {
 		Ok(r) => r,

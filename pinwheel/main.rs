@@ -2,53 +2,13 @@
 
 use anyhow::Result;
 use futures::FutureExt;
-use hyper::{service::service_fn, Body, Request, Response, StatusCode};
+use hyper::{service::service_fn, Body, Response, StatusCode};
 use pinwheel::Pinwheel;
-use std::{panic::AssertUnwindSafe, path::PathBuf, sync::Arc};
-
-pub struct Context {
-	pinwheel: Pinwheel,
-}
-
-fn content_type(path: &str) -> Option<&'static str> {
-	if path.ends_with(".js") {
-		Some("text/javascript")
-	} else if path.ends_with(".svg") {
-		Some("image/svg+xml")
-	} else {
-		None
-	}
-}
-
-async fn handle(
-	request: Request<Body>,
-	context: Arc<Context>,
-) -> Result<Response<Body>, hyper::Error> {
-	let method = request.method().clone();
-	let uri = request.uri().clone();
-	let path_and_query = uri.path_and_query().unwrap();
-	let path = path_and_query.path();
-	// serve static files from pinwheel
-	if let Some(data) = context.pinwheel.serve(path) {
-		let mut response = Response::builder();
-		if let Some(content_type) = content_type(path) {
-			response = response.header("content-type", content_type);
-		}
-		let response = response.body(Body::from(data)).unwrap();
-		return Ok(response);
-	}
-	let html = context
-		.pinwheel
-		.render(path, serde_json::Value::Null)
-		.await
-		.unwrap();
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	eprintln!("{} {} {}", method, path, response.status().as_u16());
-	Ok(response)
-}
+use std::{
+	panic::AssertUnwindSafe,
+	path::{Path, PathBuf},
+	sync::Arc,
+};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
@@ -78,9 +38,7 @@ async fn dev() -> Result<()> {
 	let addr = std::net::SocketAddr::new(host, port);
 
 	let pinwheel = Pinwheel::dev(PathBuf::from("."), PathBuf::from("dist"));
-
-	// create the context
-	let context = Arc::new(Context { pinwheel });
+	let pinwheel = Arc::new(pinwheel);
 
 	// start the server
 	let listener = std::net::TcpListener::bind(&addr).unwrap();
@@ -98,18 +56,20 @@ async fn dev() -> Result<()> {
 				continue;
 			}
 		};
-		let context = context.clone();
+		let pinwheel = pinwheel.clone();
 		let service = service_fn(move |request| {
-			let context = context.clone();
-			AssertUnwindSafe(handle(request, context))
-				.catch_unwind()
-				.map(|result| match result {
-					Ok(response) => response,
-					Err(_) => Ok(Response::builder()
-						.status(StatusCode::INTERNAL_SERVER_ERROR)
-						.body(Body::from("internal server error"))
-						.unwrap()),
-				})
+			let pinwheel = pinwheel.clone();
+			AssertUnwindSafe(async move {
+				Result::<_, hyper::Error>::Ok(pinwheel.clone().handle(request).await)
+			})
+			.catch_unwind()
+			.map(|result| match result {
+				Ok(response) => response,
+				Err(_) => Ok(Response::builder()
+					.status(StatusCode::INTERNAL_SERVER_ERROR)
+					.body(Body::from("internal server error"))
+					.unwrap()),
+			})
 		});
 		tokio::spawn(http.serve_connection(socket, service).map(|r| {
 			if let Err(e) = r {
@@ -120,5 +80,6 @@ async fn dev() -> Result<()> {
 }
 
 async fn build() -> Result<()> {
+	pinwheel::build(Path::new("."), Path::new("dist"))?;
 	Ok(())
 }

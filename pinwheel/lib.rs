@@ -1,5 +1,5 @@
 use anyhow::{format_err, Result};
-use glob::glob;
+use hyper::{header, Body, Request, Response, StatusCode};
 use rusty_v8 as v8;
 use sourcemap::SourceMap;
 use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc};
@@ -28,16 +28,19 @@ impl Pinwheel {
 		}
 	}
 
-	pub async fn render<T>(&self, pagename: &str, props: T) -> Result<String>
+	pub fn render<T>(&self, pagename: &str, props: T) -> Result<String>
 	where
 		T: serde::Serialize,
 	{
+		// compute the page entry from the pagename
 		let page_entry = if pagename.ends_with('/') {
 			pagename.to_string() + "index"
 		} else {
 			pagename.to_string()
 		};
 		let page_entry = page_entry.strip_prefix('/').unwrap();
+
+		// in dev mode compile the page
 		if self.src_dir.is_some() {
 			esbuild_single_page(
 				self.src_dir.as_ref().unwrap(),
@@ -46,6 +49,8 @@ impl Pinwheel {
 			)
 			.unwrap();
 		}
+
+		// determine output urls
 		let document_js_url = Url::parse("dst:/document.js").unwrap();
 		let page_js_url = Url::parse("dst:/")
 			.unwrap()
@@ -155,37 +160,68 @@ impl Pinwheel {
 		})
 	}
 
-	pub fn serve(&self, path: &str) -> Option<Cow<'static, [u8]>> {
-		let mut path = path.to_string();
-		if path.ends_with('/') {
-			path.push_str("index.html");
+	pub async fn handle(&self, request: Request<Body>) -> Response<Body> {
+		let method = request.method();
+		let uri = request.uri();
+		let path_and_query = uri.path_and_query().unwrap();
+		let path = path_and_query.path();
+		// serve static files from pinwheel
+		let mut static_path = path.to_string();
+		if static_path.ends_with('/') {
+			static_path.push_str("index.html");
 		}
-		let path = path.strip_prefix('/').unwrap();
+		let static_path = static_path.strip_prefix('/').unwrap();
+		// serve from the static dir in dev
 		if let Some(src_dir) = self.src_dir.as_ref() {
-			let static_path = src_dir.join("static").join(path);
+			let static_path = src_dir.join("static").join(static_path);
 			if static_path.exists() {
-				return Some(std::fs::read(static_path).unwrap().into());
+				let body = std::fs::read(&static_path).unwrap();
+				let mut response = Response::builder();
+				if let Some(content_type) = content_type(static_path.to_str().unwrap()) {
+					response = response.header(header::CONTENT_TYPE, content_type);
+				}
+				let response = response.body(Body::from(body)).unwrap();
+				return response;
 			}
 		}
-		let url = Url::parse(&format!("dst:/{}", path)).unwrap();
+		// serve from the out_dir
+		let url = Url::parse(&format!("dst:/{}", static_path)).unwrap();
 		if self.fs.exists(&url) {
-			return Some(self.fs.read(&url).unwrap());
+			let data = self.fs.read(&url).unwrap();
+			let mut response = Response::builder();
+			if let Some(content_type) = content_type(static_path) {
+				response = response.header("content-type", content_type);
+			}
+			let response = response.body(Body::from(data)).unwrap();
+			return response;
 		}
+		let html = self.render(path, serde_json::Value::Null).unwrap();
+		let response = Response::builder()
+			.status(StatusCode::OK)
+			.body(Body::from(html))
+			.unwrap();
+		eprintln!("{} {} {}", method, path, response.status().as_u16());
+		response
+	}
+}
+
+fn content_type(path: &str) -> Option<&'static str> {
+	if path.ends_with(".js") {
+		Some("text/javascript")
+	} else if path.ends_with(".svg") {
+		Some("image/svg+xml")
+	} else {
 		None
 	}
 }
 
-fn init_v8() {
+thread_local!(static THREAD_LOCAL_ISOLATE: RefCell<v8::OwnedIsolate> = {
 	static V8_INIT: std::sync::Once = std::sync::Once::new();
 	V8_INIT.call_once(|| {
 		let platform = v8::new_default_platform().unwrap();
 		v8::V8::initialize_platform(platform);
 		v8::V8::initialize();
 	});
-}
-
-thread_local!(static THREAD_LOCAL_ISOLATE: RefCell<v8::OwnedIsolate> = {
-	init_v8();
 	let mut isolate = v8::Isolate::new(Default::default());
 	isolate.set_capture_stack_trace_for_uncaught_exceptions(true, 10);
 	let state = State {
@@ -443,38 +479,62 @@ impl VirtualFileSystem for IncludedFileSystem {
 	}
 }
 
-pub fn build(root_dir: &Path, out_dir: &Path) -> Result<()> {
+pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 	// collect all pages in the pages directory
 	let mut page_entries = Vec::new();
-	let pattern = root_dir.join("pages/**/page.tsx");
-	let pattern = pattern.to_str().unwrap();
-	for entry in glob(pattern).unwrap() {
-		let entry = entry
-			.unwrap()
-			.strip_prefix(root_dir)
-			.unwrap()
-			.strip_prefix("pages/")
-			.unwrap()
-			.parent()
-			.unwrap()
-			.to_owned();
-		let entry = entry.to_str().unwrap().to_owned().into();
-		page_entries.push(entry)
+	let pages_dir = src_dir.join("pages");
+	for path in walkdir::WalkDir::new(&pages_dir) {
+		let path = path.unwrap();
+		let path = path.path();
+		match path.file_stem().unwrap().to_str().unwrap() {
+			"static" | "server" => {
+				let page_entry = path
+					.strip_prefix(&pages_dir)
+					.unwrap()
+					.parent()
+					.unwrap()
+					.to_owned()
+					.to_str()
+					.unwrap()
+					.to_owned()
+					.into();
+				page_entries.push(page_entry)
+			}
+			_ => {}
+		}
 	}
 	// build the pages
-	esbuild_pages(root_dir, out_dir, &page_entries).unwrap();
+	esbuild_pages(src_dir, dst_dir, &page_entries).unwrap();
 	// copy static files
-	let static_dir = root_dir.join("static");
+	let static_dir = src_dir.join("static");
 	for path in walkdir::WalkDir::new(&static_dir) {
 		let path = path.unwrap();
 		let path = path.path();
 		if path.is_file() {
-			let out_path = out_dir.join(path.strip_prefix(&static_dir).unwrap());
+			let out_path = dst_dir.join(path.strip_prefix(&static_dir).unwrap());
 			std::fs::create_dir_all(out_path.parent().unwrap()).unwrap();
 			std::fs::copy(path, out_path).unwrap();
 		}
 	}
 	// statically render pages
+	let pinwheel = Pinwheel {
+		src_dir: None,
+		dst_dir: None,
+		fs: Box::new(RealFileSystem {
+			dst_dir: dst_dir.to_owned(),
+		}),
+	};
+	for page_entry in page_entries {
+		let mut pagename = String::from("/") + &page_entry;
+		if pagename.ends_with("/index") {
+			pagename = pagename.strip_suffix("index").unwrap().to_string();
+		}
+		let html = pinwheel.render(&pagename, serde_json::Value::Null)?;
+		let html_path = dst_dir.join(page_entry.to_string() + ".html");
+		let html_parent = html_path.parent().unwrap();
+		std::fs::create_dir_all(html_parent).unwrap();
+		std::fs::write(html_path, html).unwrap();
+	}
 	Ok(())
 }
 

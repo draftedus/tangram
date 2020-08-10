@@ -20,8 +20,7 @@ pub async fn get(
 	let props = props(request, context, organization_id).await?;
 	let html = context
 		.pinwheel
-		.render("/organizations/_organization_id/", props)
-		.await?;
+		.render("/organizations/_organization_id/", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
