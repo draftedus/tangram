@@ -1,4 +1,4 @@
-import { TuningPageInner } from './page'
+import { TuningPageInner } from './server'
 import { boot } from 'deps'
 
 boot('tuning', TuningPageInner)

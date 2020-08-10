@@ -52,10 +52,19 @@ impl Pinwheel {
 
 		// determine output urls
 		let document_js_url = Url::parse("dst:/document.js").unwrap();
-		let page_js_url = Url::parse("dst:/")
+		let static_js_url = Url::parse("dst:/")
 			.unwrap()
 			.join(&("pages/".to_string() + page_entry + "/static.js"))
 			.unwrap();
+		let server_js_url = Url::parse("dst:/")
+			.unwrap()
+			.join(&("pages/".to_string() + page_entry + "/server.js"))
+			.unwrap();
+		let page_js_url = if self.fs.exists(&static_js_url) {
+			static_js_url
+		} else {
+			server_js_url
+		};
 		let client_js_url = Url::parse("dst:/")
 			.unwrap()
 			.join(&("pages/".to_string() + page_entry + "/client.js"))
@@ -96,18 +105,18 @@ impl Pinwheel {
 			let default_string = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_string)
-				.ok_or_else(|| format_err!("failed to find default export of page {}", page_js_url))
+				.ok_or_else(|| format_err!("failed to get default export from {}", page_js_url))
 				.unwrap();
 
 			// get default and renderPage export from document
 			let document_module_default_export = document_module_namespace
 				.get(&mut scope, default_string)
-				.ok_or_else(|| format_err!("failed to find default export from document"))
+				.ok_or_else(|| format_err!("failed to get default export from document"))
 				.unwrap();
 			let render_page_string = v8::String::new(&mut scope, "renderPage").unwrap().into();
 			let pinwheel_module_render_page_export = document_module_namespace
 				.get(&mut scope, render_page_string)
-				.ok_or_else(|| format_err!("failed to find renderPage export from document"))
+				.ok_or_else(|| format_err!("failed to get renderPage export from document"))
 				.unwrap();
 			if !pinwheel_module_render_page_export.is_function() {
 				return Err(format_err!(
@@ -567,15 +576,24 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 		format!("{}", document_source_path.display()),
 	];
 	for page_entry in page_entries {
-		let page_source_path = root_dir
+		let static_source_path = root_dir
 			.join("pages")
 			.join(page_entry.as_ref())
 			.join("static.tsx");
+		if static_source_path.exists() {
+			args.push(format!("{}", static_source_path.display()));
+		}
+		let server_source_path = root_dir
+			.join("pages")
+			.join(page_entry.as_ref())
+			.join("server.tsx");
+		if server_source_path.exists() {
+			args.push(format!("{}", server_source_path.display()));
+		}
 		let client_js_path = root_dir
 			.join("pages")
 			.join(page_entry.as_ref())
 			.join("client.tsx");
-		args.push(format!("{}", page_source_path.display()));
 		if client_js_path.exists() {
 			args.push(format!("{}", client_js_path.display()));
 		}
@@ -588,26 +606,17 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
 	}
+
 	// concat css
-	if std::env::current_dir()
-		.unwrap()
-		.components()
-		.last()
-		.unwrap()
-		== std::path::Component::Normal(std::ffi::OsStr::new("www"))
-	{
+	let current_dir = std::env::current_dir().unwrap();
+	let current_dir_name = current_dir.components().last().unwrap();
+	if current_dir_name == std::path::Component::Normal(std::ffi::OsStr::new("www")) {
 		let output = std::process::Command::new("fd")
 			.args(&["-e", "css", ".", "../ui", ".", "-x", "cat"])
 			.output()
 			.unwrap();
 		std::fs::write(out_dir.join("tangram.css"), output.stdout).unwrap();
-	} else if std::env::current_dir()
-		.unwrap()
-		.components()
-		.last()
-		.unwrap()
-		== std::path::Component::Normal(std::ffi::OsStr::new("tangram"))
-	{
+	} else if current_dir_name == std::path::Component::Normal(std::ffi::OsStr::new("tangram")) {
 		let output = std::process::Command::new("fd")
 			.args(&["-e", "css", ".", "ui", "app", "-x", "cat"])
 			.output()

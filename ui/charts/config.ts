@@ -1,11 +1,13 @@
+import { font, fontSize } from '../theme'
+
 export let chartConfig = {
 	axisWidth: 2,
 	barGap: 2,
 	barGroupGap: 4,
 	barStrokeWidth: 2,
 	bottomPadding: 8,
-	font: '10px sans-serif',
-	fontSize: 10,
+	font,
+	fontSize,
 	labelPadding: 8,
 	leftPadding: 8,
 	maxCornerRadius: 8,

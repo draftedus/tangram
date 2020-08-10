@@ -18,3 +18,6 @@ export let colors = {
 	terminalYellow: '#ffd60a',
 	yellow: '#ffd60a',
 }
+
+export let font = '14px JetBrains Mono'
+export let fontSize = 14
