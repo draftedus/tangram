@@ -3,7 +3,7 @@ import { h, ui } from 'deps'
 export function TrainingStats() {
 	let series = [
 		{
-			color: 'var(--blue)',
+			color: ui.baseColors.blue,
 			data: [
 				{
 					x: 0,
