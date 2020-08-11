@@ -14,7 +14,9 @@
 }
 
 .nested-nav-item {
-	border-left: var(--border-color);
+	border-left: var(--muted-text-color);
+	border-left-width: 2px;
+	border-left-style: solid;
 	display: grid;
 	gap: 0.5rem;
 	outline: none;
