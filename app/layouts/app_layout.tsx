@@ -3,12 +3,12 @@ import { Children, PinwheelInfo, h } from 'deps'
 
 type AppLayoutProps = {
 	children?: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function AppLayout(props: AppLayoutProps) {
 	return (
-		<TopbarLayout info={props.info}>
+		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
 			<div class="app-layout">{props.children}</div>
 		</TopbarLayout>
 	)

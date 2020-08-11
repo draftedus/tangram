@@ -19,7 +19,7 @@ pub struct RegressionPredictionStats {
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ClassificationPredictionStats {
-	pub histogram: Map<String, u64>,
+	pub histogram: BTreeMap<String, u64>,
 }
 
 impl PredictionStats {

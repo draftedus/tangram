@@ -3,12 +3,12 @@ import { Layout } from './layout'
 
 type DocsLayoutProps = {
 	children?: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function DocsLayout(props: DocsLayoutProps) {
 	return (
-		<Layout info={props.info}>
+		<Layout pinwheelInfo={props.pinwheelInfo}>
 			<div class="docs-layout-wrapper">
 				<PageNav />
 				<div>{props.children}</div>

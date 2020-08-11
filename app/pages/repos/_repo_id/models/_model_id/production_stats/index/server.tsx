@@ -16,7 +16,6 @@ import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 export type Props = {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
-	info: PinwheelInfo
 	modelId: string
 	modelLayoutProps: ModelLayoutProps
 	overallColumnStatsTable: Array<{
@@ -26,6 +25,7 @@ export type Props = {
 		invalidCount: number
 		name: string
 	}>
+	pinwheelInfo: PinwheelInfo
 	predictionCountChart: Array<{
 		count: number
 		label: string
@@ -109,7 +109,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 		'Prediction Count',
 	)
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Production Stats'}</ui.H1>
 				<DateWindowSelectField dateWindow={props.dateWindow} />

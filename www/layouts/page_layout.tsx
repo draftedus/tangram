@@ -4,12 +4,12 @@ import { Layout } from './layout'
 type PageLayoutProps = {
 	background?: boolean
 	children?: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function PageLayout(props: PageLayoutProps) {
 	return (
-		<Layout background={props.background} info={props.info}>
+		<Layout background={props.background} pinwheelInfo={props.pinwheelInfo}>
 			<div class="page-layout-wrapper">{props.children}</div>
 		</Layout>
 	)

@@ -4,9 +4,9 @@ import { Client, PinwheelInfo, h, r, renderPage, ui, useState } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
-	info: PinwheelInfo
 	inner: InnerProps | null
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 }
 
 export type InnerProps = {
@@ -41,7 +41,7 @@ export default function TuningPage(props: Props) {
 		)
 	}
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			{inner}
 		</ModelLayout>,
 	)

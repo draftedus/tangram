@@ -2,7 +2,7 @@ import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 	repos: Array<{
 		createdAt: string
 		id: string
@@ -14,7 +14,7 @@ export type Props = {
 
 export default function HomePage(props: Props) {
 	return renderPage(
-		<AppLayout info={props.info}>
+		<AppLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.SpaceBetween>
 					<ui.H1>{'Repositories'}</ui.H1>

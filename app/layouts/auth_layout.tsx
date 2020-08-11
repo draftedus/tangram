@@ -3,7 +3,7 @@ import { Children, PinwheelInfo, h, ui } from 'deps'
 
 type AuthLayoutProps = {
 	children?: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function AuthLayout(props: AuthLayoutProps) {

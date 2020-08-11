@@ -5,12 +5,12 @@ import { Children, h, ui } from 'deps'
 
 type TopbarLayoutProps = {
 	children?: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function TopbarLayout(props: TopbarLayoutProps) {
 	return (
-		<Document info={props.info}>
+		<Document pinwheelInfo={props.pinwheelInfo}>
 			<div class="topbar-layout-grid">
 				<Topbar />
 				<div>{props.children}</div>

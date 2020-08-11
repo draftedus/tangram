@@ -9,9 +9,9 @@ import { LinearMulticlassClassifierModelPage } from './linear_multiclass_classif
 import { LinearRegressorModelPage } from './linear_regressor'
 
 export type Props = {
-	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 }
 
 export type Inner =
@@ -61,7 +61,7 @@ export enum Type {
 	GBTMulticlassClassifier = 'gbtMulticlassClassifier',
 }
 
-export default function ModelPage(props: Props) {
+export default function IntrospectionPage(props: Props) {
 	let inner
 	switch (props.inner.type) {
 		case Type.LinearRegressor: {
@@ -90,7 +90,7 @@ export default function ModelPage(props: Props) {
 		}
 	}
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			{inner}
 		</ModelLayout>,
 	)

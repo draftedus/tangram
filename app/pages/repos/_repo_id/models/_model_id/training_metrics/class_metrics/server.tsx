@@ -10,9 +10,9 @@ import { PinwheelInfo, h, renderPage } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
-	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 }
 
 export enum ModelType {
@@ -41,7 +41,7 @@ export default function ClassMetricsPage(props: Props) {
 			break
 	}
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			{inner}
 		</ModelLayout>,
 	)

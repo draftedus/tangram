@@ -33,12 +33,12 @@ export type Props = {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 	id: string
-	info: PinwheelInfo
 	modelLayoutProps: ModelLayoutProps
 	overall: {
 		classMetrics: OverallClassMetrics[]
 		label: string
 	}
+	pinwheelInfo: PinwheelInfo
 	title: string
 }
 
@@ -168,7 +168,10 @@ export default function ProductionMetricsPage(props: Props) {
 	]
 
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout
+			{...props.modelLayoutProps}
+			pinwheelpinwheelInfo={props.pinwheelInfo}
+		>
 			<ui.S1>
 				<ui.H1>{'Production Metrics'}</ui.H1>
 				<ui.TabBar>

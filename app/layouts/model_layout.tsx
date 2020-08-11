@@ -4,7 +4,6 @@ import { Children, PinwheelInfo, h, r, ui } from 'deps'
 export type ModelLayoutProps = {
 	children?: Children
 	id: string
-	info: PinwheelInfo
 	modelId: string
 	modelTitle: string
 	models: Array<{
@@ -14,15 +13,27 @@ export type ModelLayoutProps = {
 	}>
 	ownerName: string
 	ownerUrl: string
-	pagename: string
+	pinwheelInfo: PinwheelInfo
+	selectedItem: ModelSideNavItem
 	title: string
+}
+
+enum ModelSideNavItem {
+	Overview = 'overview',
+	TrainingStats = 'training_stats',
+	TrainingMetrics = 'training_metrics',
+	Introspection = 'introspection',
+	Predict = 'precict',
+	Tuning = 'tuning',
+	ProductionStats = 'production_stats',
+	ProductionMetrics = 'production_metrics',
 }
 
 export function ModelLayout(props: ModelLayoutProps) {
 	let selectedModel = r(props.models.find(model => model.id == props.modelId))
 		?.title
 	return (
-		<TopbarLayout info={props.info}>
+		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
 			<div class="model-layout">
 				<div
 					class="model-layout-model-group-topbar"
@@ -71,7 +82,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 					>
 						<ModelSideNav
 							id={props.modelId}
-							pagename={props.info.pagename}
+							selectedItem={props.selectedItem}
 							title={props.modelTitle}
 						/>
 					</div>
@@ -86,60 +97,59 @@ export function ModelLayout(props: ModelLayoutProps) {
 
 type ModelSideNavProps = {
 	id: string
-	pagename: string
+	selectedItem: ModelSideNavItem
 	title: string
 }
 
 function ModelSideNav(props: ModelSideNavProps) {
-	let path = props.pagename.replace('/repos/_repo_id/models/_model_id', '')
 	return (
 		<ui.SideNav>
 			<ui.SideNavSection>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/`}
-					selected={path === '/'}
+					selected={props.selectedItem === ModelSideNavItem.Overview}
 				>
 					{'Overview'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/training_stats/`}
-					selected={path.startsWith('/training_stats/')}
+					selected={props.selectedItem === ModelSideNavItem.Overview}
 				>
 					{'Training Stats'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/training_metrics/`}
-					selected={path.startsWith('/training_metrics/')}
+					selected={props.selectedItem === ModelSideNavItem.TrainingMetrics}
 				>
 					{'Training Metrics'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
-					href={`/repos/${props.id}/models/${props.id}/introspect`}
-					selected={path.startsWith('/introspect')}
+					href={`/repos/${props.id}/models/${props.id}/introspection`}
+					selected={props.selectedItem === ModelSideNavItem.Introspection}
 				>
-					{'Introspect'}
+					{'Introspection'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/predict`}
-					selected={path.startsWith('/predict')}
+					selected={props.selectedItem === ModelSideNavItem.Predict}
 				>
 					{'Predict'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/tuning`}
-					selected={path.startsWith('/tuning')}
+					selected={props.selectedItem === ModelSideNavItem.Tuning}
 				>
 					{'Tuning'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/production_stats/`}
-					selected={path.startsWith('/production_stats/')}
+					selected={props.selectedItem === ModelSideNavItem.ProductionStats}
 				>
 					{'Production Stats'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/production_metrics/`}
-					selected={path.startsWith('/production_metrics/')}
+					selected={props.selectedItem === ModelSideNavItem.ProductionMetrics}
 				>
 					{'Production Metrics'}
 				</ui.SideNavItem>

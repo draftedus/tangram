@@ -20,9 +20,9 @@ export enum Type {
 }
 
 export type Props = {
-	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 }
 
 export type Inner =
@@ -58,7 +58,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 	}
 
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			{inner}
 		</ModelLayout>,
 	)

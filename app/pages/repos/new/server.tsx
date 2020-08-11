@@ -2,13 +2,13 @@ import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
-	info: PinwheelInfo
 	organizations: Array<{ id: string; name: string }>
+	pinwheelInfo: PinwheelInfo
 }
 
 export default function RepoCreatePage(props: Props) {
 	return renderPage(
-		<AppLayout info={props.info}>
+		<AppLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Upload Model'}</ui.H1>
 				<ui.Form encType="multipart/form-data" post={true}>

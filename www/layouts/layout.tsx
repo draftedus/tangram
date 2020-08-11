@@ -5,7 +5,7 @@ import { Body, Children, Fragment, Head, PinwheelInfo, h, ui } from 'deps'
 
 export type DocumentProps = {
 	children: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function Document(props: DocumentProps) {
@@ -13,7 +13,7 @@ export function Document(props: DocumentProps) {
 		<Fragment>
 			<html lang="en">
 				<head>
-					<Head info={props.info} />
+					<Head pinwheelInfo={props.pinwheelInfo} />
 					<link
 						as="font"
 						crossOrigin="true"
@@ -26,7 +26,7 @@ export function Document(props: DocumentProps) {
 					<meta content="Machine Learning for Developers" name="description" />
 				</head>
 				<body>
-					<Body info={props.info}>{props.children}</Body>
+					<Body pinwheelInfo={props.pinwheelInfo}>{props.children}</Body>
 				</body>
 			</html>
 		</Fragment>
@@ -36,7 +36,7 @@ export function Document(props: DocumentProps) {
 type LayoutProps = {
 	background?: boolean
 	children?: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function Layout(props: LayoutProps) {
@@ -44,7 +44,7 @@ export function Layout(props: LayoutProps) {
 		background: props.background && (`url(${backgroundImage})` as any),
 	}
 	return (
-		<Document info={props.info}>
+		<Document pinwheelInfo={props.pinwheelInfo}>
 			<div class="layout" style={wrapperStyle}>
 				<header>
 					<Topbar />

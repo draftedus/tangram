@@ -12,9 +12,9 @@ export type { Props as RegressorProps } from './regressor'
 export type { Props as ClassifierProps } from './classifier'
 
 export type Props = {
-	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 }
 
 export type Inner =
@@ -46,7 +46,7 @@ export default function ProductionMetricsPage(props: Props) {
 		}
 	}
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			{inner}
 		</ModelLayout>,
 	)

@@ -135,9 +135,6 @@ impl Pinwheel {
 			let props = v8::json::parse(&mut scope, json).unwrap();
 			let props = props.to_object(&mut scope).unwrap();
 			let info = v8::Object::new(&mut scope);
-			let pagename_literal = v8::String::new(&mut scope, "pagename").unwrap();
-			let pagename_string = v8::String::new(&mut scope, pagename).unwrap();
-			info.set(&mut scope, pagename_literal.into(), pagename_string.into());
 			let client_js_src_literal = v8::String::new(&mut scope, "clientJsSrc").unwrap();
 			let client_js_src_string = if let Some(client_js_src) = client_js_src {
 				v8::String::new(&mut scope, &client_js_src).unwrap().into()
@@ -149,7 +146,7 @@ impl Pinwheel {
 				client_js_src_literal.into(),
 				client_js_src_string,
 			);
-			let info_literal = v8::String::new(&mut scope, "info").unwrap();
+			let info_literal = v8::String::new(&mut scope, "pinwheelInfo").unwrap();
 			props.set(&mut scope, info_literal.into(), info.into());
 			let props = props.into();
 

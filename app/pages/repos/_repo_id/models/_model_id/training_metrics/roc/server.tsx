@@ -7,9 +7,9 @@ export type Props = {
 	aucRoc: number
 	class: string
 	classes: string[]
-	info: PinwheelInfo
 	modelId: string
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 	rocCurveData: Array<
 		Array<{
 			falsePositiveRate: number
@@ -45,7 +45,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 		},
 	]
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Training Metrics'}</ui.H1>
 				<ui.TabBar>

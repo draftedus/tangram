@@ -5,12 +5,12 @@ export type LoginProps = {
 	code?: boolean
 	email?: string
 	error?: string
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export default function Login(props: LoginProps) {
 	return renderPage(
-		<AuthLayout info={props.info}>
+		<AuthLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.Form post={true}>
 				{props.error && (
 					<ui.Alert level={ui.Level.Danger}>{props.error}</ui.Alert>

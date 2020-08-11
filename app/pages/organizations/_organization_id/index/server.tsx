@@ -12,13 +12,13 @@ export type Props = {
 		name: string
 	} | null
 	id: string
-	info: PinwheelInfo
 	members: Array<{
 		email: string
 		id: string
 		isAdmin: boolean
 	}>
 	name: string
+	pinwheelInfo: PinwheelInfo
 	plan: Plan
 	repos: Array<{
 		id: string
@@ -40,7 +40,7 @@ export enum Plan {
 
 export default function OrganizationIndexPage(props: Props) {
 	return renderPage(
-		<AppLayout info={props.info}>
+		<AppLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{props.name}</ui.H1>
 				<ui.S2>

@@ -3,8 +3,8 @@ import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
 	columns: Column[]
-	info: PinwheelInfo
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 	prediction: Prediction | null
 }
 
@@ -88,7 +88,7 @@ type ClassificationPrediction = {
 
 export default function PredictPage(props: Props) {
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Predict'}</ui.H1>
 				<ui.Form>

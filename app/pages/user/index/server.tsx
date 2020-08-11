@@ -3,11 +3,11 @@ import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
 	email: string
-	info: PinwheelInfo
 	organizations: Array<{
 		id: string
 		name: string
 	}>
+	pinwheelInfo: PinwheelInfo
 	repos: Array<{
 		id: string
 		mainModelId: string
@@ -17,7 +17,7 @@ export type Props = {
 
 export default function UserPage(props: Props) {
 	return renderPage(
-		<AppLayout info={props.info}>
+		<AppLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.SpaceBetween>
 					<ui.H1>{'User'}</ui.H1>

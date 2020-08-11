@@ -15,12 +15,12 @@ import productionMetricsOverview from './screenshots/production_metrics_overview
 import productionStatsColumnStats from './screenshots/production_stats_column_stats.png'
 
 type Props = {
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export default (props: Props) =>
 	renderPage(
-		<DocsLayout info={props.info}>
+		<DocsLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Monitor'}</ui.H1>
 				<ui.S2>

@@ -5,12 +5,12 @@ import tuning from './screenshots/tuning.png'
 import tuningConfusionMatrix from './screenshots/tuning_confusion_matrix.png'
 
 type Props = {
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export default (props: Props) =>
 	renderPage(
-		<DocsLayout info={props.info}>
+		<DocsLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>
 				<ui.S2>

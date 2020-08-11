@@ -23,9 +23,9 @@ export type Props = {
 		uniqueCount: number | null
 		variance: number | null
 	}>
-	info: PinwheelInfo
 	modelId: string
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 	rowCount: number
 	targetColumnStats: {
 		columnType?: ColumnType
@@ -49,7 +49,7 @@ export enum ColumnType {
 
 export default function TrainingStatsIndexPage(props: Props) {
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Training Stats'}</ui.H1>
 				<ui.S2>

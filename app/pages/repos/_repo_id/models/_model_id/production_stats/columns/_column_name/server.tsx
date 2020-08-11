@@ -9,9 +9,9 @@ export type { Props as EnumProps } from './enum'
 export type Props = {
 	columnName: string
 	dateWindow: DateWindow
-	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
+	pinwheelInfo: PinwheelInfo
 }
 
 export type Inner =
@@ -49,7 +49,7 @@ export default function ProductionStatsColumnsPage(props: Props) {
 	}
 
 	return renderPage(
-		<ModelLayout info={props.info} {...props.modelLayoutProps}>
+		<ModelLayout pinwheelInfo={props.pinwheelInfo} {...props.modelLayoutProps}>
 			<ui.S1>
 				<ui.H1>{props.columnName}</ui.H1>
 				<DateWindowSelectField dateWindow={props.dateWindow} />

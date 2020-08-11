@@ -2,7 +2,7 @@ import { Children, Fragment, h } from './react'
 import { PinwheelInfo } from './types'
 
 export type HeadProps = {
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function Head(props: HeadProps) {
@@ -10,7 +10,7 @@ export function Head(props: HeadProps) {
 		<Fragment>
 			<meta charSet="utf-8" />
 			<meta content="width=device-width, initial-scale=1" name="viewport" />
-			{props.info.preloadJsSrcs?.map(modulePath => (
+			{props.pinwheelInfo.preloadJsSrcs?.map(modulePath => (
 				<link href={modulePath} key={modulePath} rel="modulepreload" />
 			))}
 		</Fragment>
@@ -19,15 +19,15 @@ export function Head(props: HeadProps) {
 
 export type BodyProps = {
 	children: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export function Body(props: BodyProps) {
 	return (
 		<Fragment>
 			{props.children}
-			{props.info.clientJsSrc && (
-				<script src={props.info.clientJsSrc} type="module" />
+			{props.pinwheelInfo.clientJsSrc && (
+				<script src={props.pinwheelInfo.clientJsSrc} type="module" />
 			)}
 		</Fragment>
 	)
@@ -35,7 +35,7 @@ export function Body(props: BodyProps) {
 
 export type DocumentProps = {
 	children: Children
-	info: PinwheelInfo
+	pinwheelInfo: PinwheelInfo
 }
 
 export default function Document(props: DocumentProps) {
@@ -43,10 +43,10 @@ export default function Document(props: DocumentProps) {
 		<Fragment>
 			<html>
 				<head>
-					<Head info={props.info} />
+					<Head pinwheelInfo={props.pinwheelInfo} />
 				</head>
 				<body>
-					<Body children={props.children} info={props.info} />
+					<Body children={props.children} pinwheelInfo={props.pinwheelInfo} />
 				</body>
 			</html>
 		</Fragment>
