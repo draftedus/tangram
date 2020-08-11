@@ -1,10 +1,10 @@
 use anyhow::{format_err, Result};
 use hyper::{header, Body, Request, Response, StatusCode};
+use num_traits::ToPrimitive;
 use rusty_v8 as v8;
 use sourcemap::SourceMap;
 use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc};
 use url::Url;
-use num_traits::ToPrimitive;
 
 pub struct Pinwheel {
 	src_dir: Option<PathBuf>,
@@ -197,7 +197,7 @@ impl Pinwheel {
 				return response;
 			}
 		}
-		// serve from the out_dir
+		// serve from the dst_dir
 		let url = Url::parse(&format!("dst:/{}", static_path)).unwrap();
 		if self.fs.exists(&url) {
 			let data = self.fs.read(&url).unwrap();
@@ -223,6 +223,8 @@ fn content_type(path: &str) -> Option<&'static str> {
 		Some("text/javascript")
 	} else if path.ends_with(".svg") {
 		Some("image/svg+xml")
+	} else if path.ends_with(".css") {
+		Some("text/css")
 	} else {
 		None
 	}
@@ -437,7 +439,10 @@ fn print_error(scope: &mut v8::HandleScope, exception: v8::Local<v8::Value>) {
 			.source_map
 			.as_ref()
 			.unwrap()
-			.lookup_token((source_line - 1).to_u32().unwrap(), (source_column - 1).to_u32().unwrap())
+			.lookup_token(
+				(source_line - 1).to_u32().unwrap(),
+				(source_column - 1).to_u32().unwrap(),
+			)
 			.unwrap();
 		eprintln!(
 			"{}:{}:{} -> {}:{}:{}",
@@ -551,17 +556,17 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 	Ok(())
 }
 
-pub fn esbuild_single_page(root_dir: &Path, out_dir: &Path, page_entry: &str) -> Result<()> {
-	esbuild_pages(root_dir, out_dir, &[page_entry.into()])
+pub fn esbuild_single_page(src_dir: &Path, dst_dir: &Path, page_entry: &str) -> Result<()> {
+	esbuild_pages(src_dir, dst_dir, &[page_entry.into()])
 }
 
-pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>]) -> Result<()> {
-	// remove the out_dir if it exists and create it
-	if out_dir.exists() {
-		std::fs::remove_dir_all(&out_dir).unwrap();
+pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[Cow<str>]) -> Result<()> {
+	// remove the dst_dir if it exists and create it
+	if dst_dir.exists() {
+		std::fs::remove_dir_all(&dst_dir).unwrap();
 	}
-	std::fs::create_dir_all(&out_dir).unwrap();
-	let manifest_path = out_dir.join("manifest.json");
+	std::fs::create_dir_all(&dst_dir).unwrap();
+	let manifest_path = dst_dir.join("manifest.json");
 	let mut args = vec![
 		"run".to_string(),
 		"-s".to_string(),
@@ -575,29 +580,34 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 		"--loader:.png=file".to_string(),
 		"--sourcemap".to_string(),
 		format!("--metafile={}", manifest_path.display()),
-		format!("--outdir={}", out_dir.display()),
+		format!("--outdir={}", dst_dir.display()),
 	];
 	for page_entry in page_entries {
-		let static_source_path = root_dir
+		let static_source_path = src_dir
 			.join("pages")
 			.join(page_entry.as_ref())
 			.join("static.tsx");
-		if static_source_path.exists() {
-			args.push(format!("{}", static_source_path.display()));
-		}
-		let server_source_path = root_dir
+		let server_source_path = src_dir
 			.join("pages")
 			.join(page_entry.as_ref())
 			.join("server.tsx");
-		if server_source_path.exists() {
-			args.push(format!("{}", server_source_path.display()));
-		}
-		let client_js_path = root_dir
+		let client_source_path = src_dir
 			.join("pages")
 			.join(page_entry.as_ref())
 			.join("client.tsx");
-		if client_js_path.exists() {
-			args.push(format!("{}", client_js_path.display()));
+		let static_source_path_exists = static_source_path.exists();
+		let server_source_path_exists = server_source_path.exists();
+		let client_source_path_exists = client_source_path.exists();
+		if !static_source_path_exists && !server_source_path_exists {
+			return Err(format_err!("not found"));
+		}
+		if static_source_path_exists {
+			args.push(format!("{}", static_source_path.display()));
+		} else if server_source_path_exists {
+			args.push(format!("{}", server_source_path.display()));
+		}
+		if client_source_path_exists {
+			args.push(format!("{}", client_source_path.display()));
 		}
 	}
 	let mut process = std::process::Command::new("yarn")
@@ -617,13 +627,13 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 			.args(&["-e", "css", ".", "../ui", ".", "-x", "cat"])
 			.output()
 			.unwrap();
-		std::fs::write(out_dir.join("tangram.css"), output.stdout).unwrap();
+		std::fs::write(dst_dir.join("tangram.css"), output.stdout).unwrap();
 	} else if current_dir_name == std::path::Component::Normal(std::ffi::OsStr::new("tangram")) {
 		let output = std::process::Command::new("fd")
 			.args(&["-e", "css", ".", "ui", "app", "-x", "cat"])
 			.output()
 			.unwrap();
-		std::fs::write(out_dir.join("tangram.css"), output.stdout).unwrap();
+		std::fs::write(dst_dir.join("tangram.css"), output.stdout).unwrap();
 	} else {
 		panic!()
 	}

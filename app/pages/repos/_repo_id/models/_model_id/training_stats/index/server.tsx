@@ -6,7 +6,11 @@ import {
 	UnknownColumnToken,
 } from 'common/tokens'
 import { Fragment, PinwheelInfo, h, renderPage, ui } from 'deps'
-import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
+import {
+	ModelLayout,
+	ModelLayoutInfo,
+	ModelSideNavItem,
+} from 'layouts/model_layout'
 
 let description = `The following are statistics for the columns in your dataset. A column is a Number column if every non-null value in the column parses as a finite floating point number. A column is an Enum column if it is not a Number column and the count of unique non-null values is less than 100. A column is a Text column if it is neither a Number column nor an Enum column.`
 
@@ -24,7 +28,7 @@ export type Props = {
 		variance: number | null
 	}>
 	modelId: string
-	modelLayoutProps: ModelLayoutProps
+	modelLayoutInfo: ModelLayoutInfo
 	pinwheelInfo: PinwheelInfo
 	rowCount: number
 	targetColumnStats: {
@@ -49,7 +53,11 @@ export enum ColumnType {
 
 export default function TrainingStatsIndexPage(props: Props) {
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
+		<ModelLayout
+			info={props.modelLayoutInfo}
+			pinwheelInfo={props.pinwheelInfo}
+			selectedItem={ModelSideNavItem.TrainingStats}
+		>
 			<ui.S1>
 				<ui.H1>{'Training Stats'}</ui.H1>
 				<ui.S2>

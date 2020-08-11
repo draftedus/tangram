@@ -2,7 +2,7 @@ use crate::{
 	error::Error,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_props,
+		repos::get_model_layout_info,
 	},
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -23,7 +23,7 @@ pub async fn get(
 	let props = props(request, context, model_id).await?;
 	let html = context
 		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/introspect", props)?;
+		.render_with("/repos/_repo_id/models/_model_id/introspection", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
@@ -36,7 +36,7 @@ struct Props {
 	id: String,
 	inner: Inner,
 	title: String,
-	model_layout_props: types::ModelLayoutProps,
+	model_layout_info: types::ModelLayoutInfo,
 }
 
 #[derive(Serialize)]
@@ -255,8 +255,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		_ => return Err(Error::BadRequest.into()),
 	};
 
-	let model_layout_props =
-		get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::Introspection).await?;
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 
 	db.commit().await?;
 
@@ -264,7 +263,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		id: id.to_string(),
 		title,
 		inner,
-		model_layout_props,
+		model_layout_info,
 	})
 }
 

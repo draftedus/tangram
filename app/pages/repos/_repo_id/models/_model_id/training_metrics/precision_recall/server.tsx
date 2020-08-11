@@ -1,13 +1,17 @@
 import { ClassSelect } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
+import {
+	ModelLayout,
+	ModelLayoutInfo,
+	ModelSideNavItem,
+} from 'layouts/model_layout'
 
 export type Props = {
 	class: string
 	classes: string[]
 	modelId: string
-	modelLayoutProps: ModelLayoutProps
+	modelLayoutInfo: ModelLayoutInfo
 	nonParametricPrecisionRecallCurveData: Array<{
 		precision: number
 		recall: number
@@ -74,7 +78,11 @@ export default function TrainingMetricsIndexPage(props: Props) {
 		},
 	]
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
+		<ModelLayout
+			info={props.modelLayoutInfo}
+			pinwheelInfo={props.pinwheelInfo}
+			selectedItem={ModelSideNavItem.TrainingMetrics}
+		>
 			<ui.S1>
 				<ui.H1>{'Training Metrics'}</ui.H1>
 				<ui.TabBar>

@@ -1,5 +1,9 @@
 import { PinwheelInfo, h, renderPage } from 'deps'
-import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
+import {
+	ModelLayout,
+	ModelLayoutInfo,
+	ModelSideNavItem,
+} from 'layouts/model_layout'
 
 import { GBTBinaryClassifierModelPage } from './gbt_binary_classifier'
 import { GBTMulticlassClassifierModelPage } from './gbt_multiclass_classifier'
@@ -10,7 +14,7 @@ import { LinearRegressorModelPage } from './linear_regressor'
 
 export type Props = {
 	inner: Inner
-	modelLayoutProps: ModelLayoutProps
+	modelLayoutInfo: ModelLayoutInfo
 	pinwheelInfo: PinwheelInfo
 }
 
@@ -90,7 +94,11 @@ export default function IntrospectionPage(props: Props) {
 		}
 	}
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
+		<ModelLayout
+			info={props.modelLayoutInfo}
+			pinwheelInfo={props.pinwheelInfo}
+			selectedItem={ModelSideNavItem.Introspection}
+		>
 			{inner}
 		</ModelLayout>,
 	)

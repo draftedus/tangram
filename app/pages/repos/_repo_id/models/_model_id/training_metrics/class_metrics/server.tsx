@@ -7,11 +7,15 @@ import {
 	Props as MulticlassClassifierProps,
 } from './multiclass_classifier'
 import { PinwheelInfo, h, renderPage } from 'deps'
-import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
+import {
+	ModelLayout,
+	ModelLayoutInfo,
+	ModelSideNavItem,
+} from 'layouts/model_layout'
 
 export type Props = {
 	inner: Inner
-	modelLayoutProps: ModelLayoutProps
+	modelLayoutInfo: ModelLayoutInfo
 	pinwheelInfo: PinwheelInfo
 }
 
@@ -41,7 +45,11 @@ export default function ClassMetricsPage(props: Props) {
 			break
 	}
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
+		<ModelLayout
+			info={props.modelLayoutInfo}
+			pinwheelInfo={props.pinwheelInfo}
+			selectedItem={ModelSideNavItem.TrainingMetrics}
+		>
 			{inner}
 		</ModelLayout>,
 	)

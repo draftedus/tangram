@@ -1,6 +1,6 @@
+import { Logo, LogoScheme } from '../components/logo'
 import backgroundImage from './background.svg'
 import { Footer } from './footer'
-import { Logo, LogoScheme } from 'components/logo'
 import { Body, Children, Fragment, Head, PinwheelInfo, h, ui } from 'deps'
 
 export type DocumentProps = {

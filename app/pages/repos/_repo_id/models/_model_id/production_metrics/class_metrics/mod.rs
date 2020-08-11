@@ -4,7 +4,7 @@ use crate::{
 	helpers::production_metrics,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_props,
+		repos::get_model_layout_info,
 	},
 	time::format_date_window_interval,
 	types,
@@ -46,7 +46,7 @@ struct Props {
 	date_window_interval: types::DateWindowInterval,
 	classes: Vec<String>,
 	overall: OverallClassMetrics,
-	model_layout_props: types::ModelLayoutProps,
+	model_layout_info: types::ModelLayoutInfo,
 	class: String,
 }
 
@@ -343,12 +343,7 @@ async fn props(
 		})
 		.collect();
 
-	let model_layout_props = get_model_layout_props(
-		&mut db,
-		model_id,
-		types::ModelSideNavItem::ProductionMetrics,
-	)
-	.await?;
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 
 	db.commit().await?;
 
@@ -368,7 +363,7 @@ async fn props(
 		date_window_interval,
 		classes: classes.to_owned(),
 		overall,
-		model_layout_props,
+		model_layout_info,
 		class,
 	})
 }

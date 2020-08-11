@@ -32,7 +32,7 @@ export function Slider(props: SliderProps) {
 				type="range"
 			/>
 			<div class="slider-progress" style={progressStyle} />
-			<div class="tooltip slider-tooltip" style={tooltipStyle}>
+			<div class="slider-tooltip" style={tooltipStyle}>
 				{value}
 			</div>
 		</div>

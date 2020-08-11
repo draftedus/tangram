@@ -4,11 +4,10 @@ use serde::Serialize;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
-pub async fn get_model_layout_props(
+pub async fn get_model_layout_info(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
-	selected_item: types::ModelSideNavItem,
-) -> Result<types::ModelLayoutProps> {
+) -> Result<types::ModelLayoutInfo> {
 	let row = sqlx::query(
 		"
 			select
@@ -73,7 +72,7 @@ pub async fn get_model_layout_props(
 	let model_id = model_id.clone();
 	let model_title = model_title.clone();
 
-	Ok(types::ModelLayoutProps {
+	Ok(types::ModelLayoutInfo {
 		id: id.to_string(),
 		title,
 		models,
@@ -81,7 +80,6 @@ pub async fn get_model_layout_props(
 		owner_url,
 		model_id,
 		model_title,
-		selected_item,
 	})
 }
 

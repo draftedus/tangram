@@ -90,18 +90,18 @@ async fn handle(
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "introspect"]) => {
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "introspection"]) => {
 			pages::repos::_repo_id::models::_model_id::introspection::get(
 				request, &context, model_id,
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "predict"]) => {
-			pages::repos::_repo_id::models::_model_id::predict::get(request, &context, model_id)
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "prediction"]) => {
+			pages::repos::_repo_id::models::_model_id::prediction::get(request, &context, model_id)
 				.await
 		}
-		(&Method::POST, &["repos", _repo_id, "models", model_id, "predict"]) => {
-			pages::repos::_repo_id::models::_model_id::predict::post(request, &context, model_id)
+		(&Method::POST, &["repos", _repo_id, "models", model_id, "prediction"]) => {
+			pages::repos::_repo_id::models::_model_id::prediction::post(request, &context, model_id)
 				.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
@@ -325,11 +325,11 @@ pub async fn start() -> Result<()> {
 	// create the pinwheel
 	#[cfg(debug_assertions)]
 	fn pinwheel() -> Pinwheel {
-		Pinwheel::dev(PathBuf::from("app"), PathBuf::from("target/js"))
+		Pinwheel::dev(PathBuf::from("app"), PathBuf::from("target/app"))
 	}
 	#[cfg(not(debug_assertions))]
 	fn pinwheel() -> Pinwheel {
-		Pinwheel::prod(include_dir::include_dir!("../target/js"))
+		Pinwheel::prod(include_dir::include_dir!("../target/app"))
 	}
 	let pinwheel = pinwheel();
 
@@ -371,27 +371,25 @@ pub async fn start() -> Result<()> {
 			}
 		};
 		let context = context.clone();
-		tokio::spawn(
-			http.serve_connection(
-				socket,
-				service_fn(move |request| {
-					let context = context.clone();
-					AssertUnwindSafe(handle(request, context))
-						.catch_unwind()
-						.map(|result| match result {
-							Err(_) => Ok(Response::builder()
-								.status(StatusCode::INTERNAL_SERVER_ERROR)
-								.body(Body::from("internal server error"))
-								.unwrap()),
-							Ok(response) => response,
-						})
-				}),
-			)
-			.map(|r| {
-				if let Err(e) = r {
-					eprintln!("http error: {}", e);
+		let service = service_fn(move |request| {
+			let context = context.clone();
+			async move {
+				let result = AssertUnwindSafe(handle(request, context))
+					.catch_unwind()
+					.await;
+				match result {
+					Err(_) => Ok(Response::builder()
+						.status(StatusCode::INTERNAL_SERVER_ERROR)
+						.body(Body::from("internal server error"))
+						.unwrap()),
+					Ok(response) => response,
 				}
-			}),
-		);
+			}
+		});
+		tokio::spawn(http.serve_connection(socket, service).map(|r| {
+			if let Err(e) = r {
+				eprintln!("http error: {}", e);
+			}
+		}));
 	}
 }

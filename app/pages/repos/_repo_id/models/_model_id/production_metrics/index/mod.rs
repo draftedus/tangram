@@ -4,7 +4,7 @@ use crate::{
 	helpers::production_metrics,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_props,
+		repos::get_model_layout_info,
 	},
 	time::format_date_window_interval,
 	types,
@@ -41,7 +41,7 @@ struct Props {
 	id: String,
 	inner: Inner,
 	title: String,
-	model_layout_props: types::ModelLayoutProps,
+	model_layout_info: types::ModelLayoutInfo,
 }
 
 #[derive(Serialize)]
@@ -390,18 +390,13 @@ async fn props(
 		_ => unimplemented!(),
 	};
 
-	let model_layout_props = get_model_layout_props(
-		&mut db,
-		model_id,
-		types::ModelSideNavItem::ProductionMetrics,
-	)
-	.await?;
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
 
 	Ok(Props {
 		id: id.to_string(),
 		inner,
 		title,
-		model_layout_props,
+		model_layout_info,
 	})
 }

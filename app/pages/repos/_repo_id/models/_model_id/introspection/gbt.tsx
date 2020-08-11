@@ -24,6 +24,7 @@ export function GBTFeatureImportances(props: Props) {
 			<ui.Card>
 				<ui.BarChart
 					data={data}
+					id="feature_importances"
 					title="Feature Importances"
 					xAxisLabelFormatter={i => props.values[i][0]}
 					xAxisTitle="Feature Name"

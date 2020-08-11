@@ -1,8 +1,14 @@
 import { TopbarLayout } from './topbar_layout'
 import { Children, PinwheelInfo, h, r, ui } from 'deps'
 
-export type ModelLayoutProps = {
+type ModelLayoutProps = {
 	children?: Children
+	info: ModelLayoutInfo
+	pinwheelInfo: PinwheelInfo
+	selectedItem: ModelSideNavItem
+}
+
+export type ModelLayoutInfo = {
 	id: string
 	modelId: string
 	modelTitle: string
@@ -13,25 +19,24 @@ export type ModelLayoutProps = {
 	}>
 	ownerName: string
 	ownerUrl: string
-	pinwheelInfo: PinwheelInfo
-	selectedItem: ModelSideNavItem
 	title: string
 }
 
-enum ModelSideNavItem {
+export enum ModelSideNavItem {
 	Overview = 'overview',
 	TrainingStats = 'training_stats',
 	TrainingMetrics = 'training_metrics',
 	Introspection = 'introspection',
-	Predict = 'precict',
+	Prediction = 'prediction',
 	Tuning = 'tuning',
 	ProductionStats = 'production_stats',
 	ProductionMetrics = 'production_metrics',
 }
 
 export function ModelLayout(props: ModelLayoutProps) {
-	let selectedModel = r(props.models.find(model => model.id == props.modelId))
-		?.title
+	let selectedModel = r(
+		props.info.models.find(model => model.id == props.info.modelId),
+	)?.title
 	return (
 		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
 			<div class="model-layout">
@@ -42,36 +47,36 @@ export function ModelLayout(props: ModelLayoutProps) {
 					<div class="model-layout-owner-slash-repo-wrapper">
 						<a
 							class="model-layout-owner-slash-repo-link"
-							href={props.ownerUrl}
+							href={props.info.ownerUrl}
 							title="owner"
 						>
-							{props.ownerName}
+							{props.info.ownerName}
 						</a>
 						<span class="model-layout-owner-slash-repo-link">{'/'}</span>
 						<a
 							class="model-layout-owner-slash-repo-link"
-							href={`/repos/${props.id}/models/${props.modelId}/`}
+							href={`/repos/${props.info.id}/models/${props.info.modelId}/`}
 							title="repo"
 						>
-							{props.title}
+							{props.info.title}
 						</a>
 					</div>
 					<ui.Details
 						options={
-							props.models.map(model => ({
-								href: `/repos/${props.id}/models/${model.id}/`,
+							props.info.models.map(model => ({
+								href: `/repos/${props.info.id}/models/${model.id}/`,
 								name: model.title,
 							})) ?? []
 						}
 						summary={selectedModel}
 					/>
 					<ui.Button
-						download={`${props.modelTitle}.tangram`}
-						href={`/repos/${props.id}/models/${props.modelId}/download`}
+						download={`${props.info.modelTitle}.tangram`}
+						href={`/repos/${props.info.id}/models/${props.info.modelId}/download`}
 					>
 						{'Download Model'}
 					</ui.Button>
-					<ui.Button href={`/repos/${props.id}/models/new`}>
+					<ui.Button href={`/repos/${props.info.id}/models/new`}>
 						{'Upload New Model Version'}
 					</ui.Button>
 				</div>
@@ -81,9 +86,9 @@ export function ModelLayout(props: ModelLayoutProps) {
 						style={{ gridArea: 'side-nav' }}
 					>
 						<ModelSideNav
-							id={props.modelId}
+							id={props.info.modelId}
 							selectedItem={props.selectedItem}
-							title={props.modelTitle}
+							title={props.info.modelTitle}
 						/>
 					</div>
 					<div style={{ gridArea: 'content' }}>
@@ -130,10 +135,10 @@ function ModelSideNav(props: ModelSideNavProps) {
 					{'Introspection'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
-					href={`/repos/${props.id}/models/${props.id}/predict`}
-					selected={props.selectedItem === ModelSideNavItem.Predict}
+					href={`/repos/${props.id}/models/${props.id}/prediction`}
+					selected={props.selectedItem === ModelSideNavItem.Prediction}
 				>
-					{'Predict'}
+					{'Prediction'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/tuning`}

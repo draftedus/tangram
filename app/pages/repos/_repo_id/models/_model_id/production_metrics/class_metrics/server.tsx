@@ -7,7 +7,11 @@ import {
 } from 'common/time_charts'
 import { productionColor, trainingColor } from 'common/tokens'
 import { Fragment, PinwheelInfo, h, renderPage, ui } from 'deps'
-import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
+import {
+	ModelLayout,
+	ModelLayoutInfo,
+	ModelSideNavItem,
+} from 'layouts/model_layout'
 
 export type Props = {
 	class: string
@@ -33,7 +37,7 @@ export type Props = {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 	id: string
-	modelLayoutProps: ModelLayoutProps
+	modelLayoutInfo: ModelLayoutInfo
 	overall: {
 		classMetrics: OverallClassMetrics[]
 		label: string
@@ -168,7 +172,11 @@ export default function ProductionMetricsPage(props: Props) {
 	]
 
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
+		<ModelLayout
+			info={props.modelLayoutInfo}
+			pinwheelInfo={props.pinwheelInfo}
+			selectedItem={ModelSideNavItem.ProductionMetrics}
+		>
 			<ui.S1>
 				<ui.H1>{'Production Metrics'}</ui.H1>
 				<ui.TabBar>

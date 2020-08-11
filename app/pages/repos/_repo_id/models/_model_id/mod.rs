@@ -10,7 +10,7 @@ use tangram_core::id::Id;
 
 pub mod index;
 pub mod introspection;
-pub mod predict;
+pub mod prediction;
 pub mod production_metrics;
 pub mod production_stats;
 pub mod training_metrics;

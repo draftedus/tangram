@@ -3,10 +3,6 @@
 	position: relative;
 }
 
-.slider-wrapper:hover > .tooltip {
-	display: block;
-}
-
 .slider-range {
 	appearance: none;
 	background: transparent;
@@ -75,6 +71,10 @@
 	top: -0.5rem;
 	transform: translateX(-50%) translateY(-100%);
 	user-select: none;
+}
+
+.slider-wrapper:hover > .slider-tooltip {
+	display: block;
 }
 
 .slider-progress {

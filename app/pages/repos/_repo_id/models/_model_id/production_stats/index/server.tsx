@@ -11,13 +11,17 @@ import {
 	TextColumnToken,
 } from 'common/tokens'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
+import {
+	ModelLayout,
+	ModelLayoutInfo,
+	ModelSideNavItem,
+} from 'layouts/model_layout'
 
 export type Props = {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 	modelId: string
-	modelLayoutProps: ModelLayoutProps
+	modelLayoutInfo: ModelLayoutInfo
 	overallColumnStatsTable: Array<{
 		absentCount: number
 		alert: string | null
@@ -109,7 +113,11 @@ export default function ProductionStatsIndexPage(props: Props) {
 		'Prediction Count',
 	)
 	return renderPage(
-		<ModelLayout {...props.modelLayoutProps} pinwheelInfo={props.pinwheelInfo}>
+		<ModelLayout
+			info={props.modelLayoutInfo}
+			pinwheelInfo={props.pinwheelInfo}
+			selectedItem={ModelSideNavItem.ProductionStats}
+		>
 			<ui.S1>
 				<ui.H1>{'Production Stats'}</ui.H1>
 				<DateWindowSelectField dateWindow={props.dateWindow} />

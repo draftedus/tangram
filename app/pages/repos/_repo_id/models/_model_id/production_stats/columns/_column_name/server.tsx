@@ -3,14 +3,18 @@ import { Number, Props as NumberProps } from './number'
 import { Text, Props as TextProps } from './text'
 import { DateWindow, DateWindowSelectField } from 'common/time_charts'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
+import {
+	ModelLayout,
+	ModelLayoutInfo,
+	ModelSideNavItem,
+} from 'layouts/model_layout'
 export type { Props as EnumProps } from './enum'
 
 export type Props = {
 	columnName: string
 	dateWindow: DateWindow
 	inner: Inner
-	modelLayoutProps: ModelLayoutProps
+	modelLayoutInfo: ModelLayoutInfo
 	pinwheelInfo: PinwheelInfo
 }
 
@@ -47,9 +51,12 @@ export default function ProductionStatsColumnsPage(props: Props) {
 			inner = <Text {...props.inner.value} />
 			break
 	}
-
 	return renderPage(
-		<ModelLayout pinwheelInfo={props.pinwheelInfo} {...props.modelLayoutProps}>
+		<ModelLayout
+			info={props.modelLayoutInfo}
+			pinwheelInfo={props.pinwheelInfo}
+			selectedItem={ModelSideNavItem.ProductionStats}
+		>
 			<ui.S1>
 				<ui.H1>{props.columnName}</ui.H1>
 				<DateWindowSelectField dateWindow={props.dateWindow} />

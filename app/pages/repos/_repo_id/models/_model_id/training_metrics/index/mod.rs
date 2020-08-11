@@ -2,7 +2,7 @@ use crate::{
 	error::Error,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_props,
+		repos::get_model_layout_info,
 	},
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -34,7 +34,7 @@ struct Props {
 	id: String,
 	inner: Inner,
 	title: String,
-	model_layout_props: types::ModelLayoutProps,
+	model_layout_info: types::ModelLayoutInfo,
 }
 
 #[derive(Serialize)]
@@ -100,7 +100,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 	let Model { title, data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
-	// assemble the response
 	let inner = match model {
 		tangram_core::types::Model::Classifier(model) => match model.model.as_option().unwrap() {
 			tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
@@ -129,14 +128,13 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 		_ => return Err(Error::NotFound.into()),
 	};
-	let model_layout_props =
-		get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::TrainingMetrics).await?;
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
 		id: id.to_string(),
 		title,
 		inner,
-		model_layout_props,
+		model_layout_info,
 	})
 }
 

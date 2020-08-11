@@ -2,7 +2,7 @@ use crate::{
 	error::Error,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_props,
+		repos::get_model_layout_info,
 	},
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -40,7 +40,7 @@ struct Props {
 	classes: Vec<String>,
 	non_parametric_precision_recall_curve_data: Vec<Vec<NonParametricPrecisionRecallCurveData>>,
 	parametric_precision_recall_curve_data: Vec<Vec<ParametricPrecisionRecallCurveData>>,
-	model_layout_props: types::ModelLayoutProps,
+	model_layout_info: types::ModelLayoutInfo,
 	class: String,
 }
 
@@ -122,9 +122,8 @@ async fn props(
 						.collect()
 				})
 				.collect();
-			let model_layout_props =
-				get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::TrainingMetrics)
-					.await?;
+
+			let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 
 			let classes = model.classes().to_owned();
 			let class_index = if let Some(class) = &class {
@@ -141,7 +140,7 @@ async fn props(
 				classes: model.classes().to_owned(),
 				non_parametric_precision_recall_curve_data,
 				parametric_precision_recall_curve_data,
-				model_layout_props,
+				model_layout_info,
 				class,
 			})
 		}

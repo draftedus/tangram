@@ -1,15 +1,16 @@
 import { AppLayout } from './app_layout'
-import { Children, h, ui } from 'deps'
+import { Children, PinwheelInfo, h, ui } from 'deps'
 
 type Props = {
 	children?: Children
 	id: string
 	name: string
+	pinwheelInfo: PinwheelInfo
 }
 
 export function OrganizationLayout(props: Props) {
 	return (
-		<AppLayout>
+		<AppLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{props.name}</ui.H1>
 				<ui.TabBar>

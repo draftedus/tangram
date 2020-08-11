@@ -2,7 +2,7 @@ use crate::{
 	error::Error,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_props,
+		repos::get_model_layout_info,
 	},
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -40,7 +40,7 @@ struct Props {
 	auc_roc: f32,
 	roc_curve_data: Vec<Vec<ROCCurveData>>,
 	classes: Vec<String>,
-	model_layout_props: types::ModelLayoutProps,
+	model_layout_info: types::ModelLayoutInfo,
 	class: String,
 }
 
@@ -108,9 +108,7 @@ async fn props(
 				})
 				.collect();
 
-			let model_layout_props =
-				get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::TrainingMetrics)
-					.await?;
+			let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 
 			db.commit().await?;
 
@@ -129,7 +127,7 @@ async fn props(
 				class,
 				auc_roc: *auc_roc,
 				roc_curve_data,
-				model_layout_props,
+				model_layout_info,
 			})
 		}
 		_ => {

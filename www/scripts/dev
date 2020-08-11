@@ -1,1 +1,1 @@
-PORT=8080 watchexec --exts rs --restart --watch .. -- cargo run -p pinwheel dev
+PORT=8080 watchexec --exts rs --restart --watch .. -- cargo run -p pinwheel -- dev --dst-dir ../target/www

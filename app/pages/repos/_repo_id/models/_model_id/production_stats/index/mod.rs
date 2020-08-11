@@ -3,7 +3,7 @@ use crate::{
 	error::Error,
 	helpers::model::{get_model, Model},
 	helpers::production_stats,
-	helpers::repos::get_model_layout_props,
+	helpers::repos::get_model_layout_info,
 	time::{format_date_window, format_date_window_interval},
 	types,
 	user::{authorize_user, authorize_user_for_model},
@@ -44,7 +44,7 @@ struct Props {
 	prediction_stats_chart: PredictionStatsChart,
 	prediction_stats_interval_chart: PredictionStatsIntervalChart,
 	title: String,
-	model_layout_props: types::ModelLayoutProps,
+	model_layout_info: types::ModelLayoutInfo,
 }
 
 #[derive(Serialize)]
@@ -331,8 +331,7 @@ async fn props(
 		}
 	};
 
-	let model_layout_props =
-		get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::ProductionStats).await?;
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
 
 	Ok(Props {
@@ -344,7 +343,7 @@ async fn props(
 		prediction_count_chart,
 		prediction_stats_chart,
 		prediction_stats_interval_chart,
-		model_layout_props,
+		model_layout_info,
 	})
 }
 
