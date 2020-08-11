@@ -26,15 +26,13 @@ export function NestedNavSectionTitle(props: NestedNavSectionTitleProps) {
 
 type NestedNavItemProps = {
 	children?: Children
-	highlight?: boolean
 	href: string
+	selected?: boolean
 }
 
 export function NestedNavItem(props: NestedNavItemProps) {
 	return (
-		<div
-			class={cx('nested-nav-item', props.highlight && 'nested-nav-highlight')}
-		>
+		<div class={cx('nested-nav-item', props.selected && 'nested-nav-selected')}>
 			<Link href={props.href}>{props.children}</Link>
 		</div>
 	)

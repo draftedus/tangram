@@ -8,7 +8,10 @@ type Props = {
 }
 export default (props: Props) =>
 	renderPage(
-		<DocsLayout pinwheelInfo={props.pinwheelInfo}>
+		<DocsLayout
+			pagename="/docs/getting-started/predict"
+			pinwheelInfo={props.pinwheelInfo}
+		>
 			<ui.S1>
 				<ui.H1>{'Predict'}</ui.H1>
 				<ui.S2>

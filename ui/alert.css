@@ -4,7 +4,7 @@
 }
 
 .alert-level-info {
-	background-color: var(--teal);
+	background-color: var(--blue);
 	color: var(--fun-text-color);
 }
 

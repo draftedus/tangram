@@ -7,7 +7,7 @@ type Props = {
 
 export default (props: Props) =>
 	renderPage(
-		<DocsLayout pinwheelInfo={props.pinwheelInfo}>
+		<DocsLayout pagename="/docs/" pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Docs'}</ui.H1>
 				<ui.P>

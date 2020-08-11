@@ -5,32 +5,32 @@
 }
 
 .callout-level-info-wrapper {
-	background-color: var(--teal);
+	background-color: var(--surface-color);
 	border-left-width: 4px;
 	border-left-style: solid;
-	border-left-color: var(--teal);
+	border-left-color: var(--blue);
 }
 
 .callout-level-warning-wrapper {
-	background-color: var(--yellow);
+	background-color: var(--surface-color);
 	border-left-width: 4px;
 	border-left-style: solid;
 	border-left-color: var(--yellow);
 }
 
 .callout-level-danger-wrapper {
-	background-color: var(--red);
+	background-color: var(--surface-color);
 	border-left-width: 4px;
 	border-left-style: solid;
 	border-left-color: var(--red);
 }
 
 .callout-title {
-	color: var(--fun-text-color);
+	color: var(--text);
 	font-weight: bold;
 }
 
 .callout-inner {
-	color: var(--fun-text-color);
+	color: var(--text);
 	line-height: 1.5;
 }

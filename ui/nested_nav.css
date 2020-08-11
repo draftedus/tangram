@@ -30,14 +30,14 @@
 	text-decoration: none;
 }
 
-.nested-nav-highlight {
+.nested-nav-selected {
 	border-left-color: var(--accent-color);
 }
 
-.nested-nav-highlight > a {
+.nested-nav-selected > a {
 	color: var(--accent-color);
 }
 
-.nested-nav-highlight > a:hover {
+.nested-nav-selected > a:hover {
 	filter: brightness(90%);
 }

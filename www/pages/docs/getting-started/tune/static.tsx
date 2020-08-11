@@ -10,7 +10,10 @@ type Props = {
 
 export default (props: Props) =>
 	renderPage(
-		<DocsLayout pinwheelInfo={props.pinwheelInfo}>
+		<DocsLayout
+			pagename="/docs/getting-started/tune"
+			pinwheelInfo={props.pinwheelInfo}
+		>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>
 				<ui.S2>
