@@ -16,17 +16,21 @@ import { TrainingStats } from './training_stats'
 import trainingStats from './training_stats.svg'
 import { Tuning } from './tuning'
 import tuning from './tuning.svg'
-import { Client, h, ui } from 'deps'
+import { Client, PinwheelInfo, h, renderPage, ui } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
 
-export default function Home() {
-	return (
-		<PageLayout background={true}>
+type Props = {
+	info: PinwheelInfo
+}
+
+export default function Home(props: Props) {
+	return renderPage(
+		<PageLayout background={true} info={props.info}>
 			<ui.S1>
 				<Hero />
 				<Features />
 			</ui.S1>
-		</PageLayout>
+		</PageLayout>,
 	)
 }
 

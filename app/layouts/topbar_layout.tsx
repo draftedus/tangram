@@ -1,14 +1,21 @@
+import { PinwheelInfo } from '../../ui/deps'
 import { Logo, LogoScheme } from '../../www/components/logo'
+import { Document } from '../../www/layouts/layout'
 import { Children, h, ui } from 'deps'
 
-type TopbarLayoutProps = { children?: Children }
+type TopbarLayoutProps = {
+	children?: Children
+	info: PinwheelInfo
+}
 
 export function TopbarLayout(props: TopbarLayoutProps) {
 	return (
-		<div class="topbar-layout-grid">
-			<Topbar />
-			<div>{props.children}</div>
-		</div>
+		<Document info={props.info}>
+			<div class="topbar-layout-grid">
+				<Topbar />
+				<div>{props.children}</div>
+			</div>
+		</Document>
 	)
 }
 

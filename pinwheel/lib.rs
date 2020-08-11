@@ -28,7 +28,11 @@ impl Pinwheel {
 		}
 	}
 
-	pub fn render<T>(&self, pagename: &str, props: T) -> Result<String>
+	pub fn render(&self, pagename: &str) -> Result<String> {
+		self.render_with(pagename, serde_json::Value::Object(Default::default()))
+	}
+
+	pub fn render_with<T>(&self, pagename: &str, props: T) -> Result<String>
 	where
 		T: serde::Serialize,
 	{
@@ -51,14 +55,21 @@ impl Pinwheel {
 		}
 
 		// determine output urls
-		let document_js_url = Url::parse("dst:/document.js").unwrap();
 		let static_js_url = Url::parse("dst:/")
 			.unwrap()
-			.join(&("pages/".to_string() + page_entry + "/static.js"))
+			.join(&if self.src_dir.is_some() {
+				"static.js".to_string()
+			} else {
+				page_entry.to_string() + "/static.js"
+			})
 			.unwrap();
 		let server_js_url = Url::parse("dst:/")
 			.unwrap()
-			.join(&("pages/".to_string() + page_entry + "/server.js"))
+			.join(&if self.src_dir.is_some() {
+				"server.js".to_string()
+			} else {
+				page_entry.to_string() + "/server.js"
+			})
 			.unwrap();
 		let page_js_url = if self.fs.exists(&static_js_url) {
 			static_js_url
@@ -67,10 +78,20 @@ impl Pinwheel {
 		};
 		let client_js_url = Url::parse("dst:/")
 			.unwrap()
-			.join(&("pages/".to_string() + page_entry + "/client.js"))
+			.join(&if self.src_dir.is_some() {
+				"client.js".to_string()
+			} else {
+				page_entry.to_string() + "/client.js"
+			})
 			.unwrap();
-		let client_js_pathname = if self.fs.exists(&client_js_url) {
-			Some(PathBuf::from("/pages").join(&page_entry).join("client.js"))
+		let client_js_src = if self.fs.exists(&client_js_url) {
+			Some(
+				if self.src_dir.is_some() {
+					"/".to_string()
+				} else {
+					page_entry.to_string() + "/"
+				} + "client.js",
+			)
 		} else {
 			None
 		};
@@ -89,69 +110,54 @@ impl Pinwheel {
 
 			// create console global
 			let console = v8::Object::new(&mut scope);
-			let log_string = v8::String::new(&mut scope, "log").unwrap();
+			let log_literal = v8::String::new(&mut scope, "log").unwrap();
 			let log = v8::Function::new(&mut scope, console_log).unwrap();
-			console.set(&mut scope, log_string.into(), log.into());
-			let console_string = v8::String::new(&mut scope, "console").unwrap();
+			console.set(&mut scope, log_literal.into(), log.into());
+			let console_literal = v8::String::new(&mut scope, "console").unwrap();
 			context
 				.global(&mut scope)
-				.set(&mut scope, console_string.into(), console.into());
+				.set(&mut scope, console_literal.into(), console.into());
 
 			// get default export from page
 			let page_module_namespace =
 				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone()).unwrap();
-			let document_module_namespace =
-				run_module(&mut scope, self.fs.as_ref(), document_js_url).unwrap();
-			let default_string = v8::String::new(&mut scope, "default").unwrap().into();
+			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
-				.get(&mut scope, default_string)
+				.get(&mut scope, default_literal)
 				.ok_or_else(|| format_err!("failed to get default export from {}", page_js_url))
 				.unwrap();
-
-			// get default and renderPage export from document
-			let document_module_default_export = document_module_namespace
-				.get(&mut scope, default_string)
-				.ok_or_else(|| format_err!("failed to get default export from document"))
-				.unwrap();
-			let render_page_string = v8::String::new(&mut scope, "renderPage").unwrap().into();
-			let pinwheel_module_render_page_export = document_module_namespace
-				.get(&mut scope, render_page_string)
-				.ok_or_else(|| format_err!("failed to get renderPage export from document"))
-				.unwrap();
-			if !pinwheel_module_render_page_export.is_function() {
-				return Err(format_err!(
-					"renderPage export of document is not a function"
-				));
-			}
-			let pinwheel_module_render_page_function: v8::Local<v8::Function> =
-				unsafe { v8::Local::cast(pinwheel_module_render_page_export) };
+			let page_module_default_export_function: v8::Local<v8::Function> =
+				unsafe { v8::Local::cast(page_module_default_export) };
 
 			// send the props to v8
 			let json = serde_json::to_string(&props).unwrap();
 			let json = v8::String::new(&mut scope, &json).unwrap();
 			let props = v8::json::parse(&mut scope, json).unwrap();
-			let undefined = v8::undefined(&mut scope).into();
-
-			let client_js_pathname = if let Some(client_js_pathname) = client_js_pathname {
-				v8::String::new(&mut scope, client_js_pathname.to_str().unwrap())
-					.unwrap()
-					.into()
+			let props = props.to_object(&mut scope).unwrap();
+			let info = v8::Object::new(&mut scope);
+			let pagename_literal = v8::String::new(&mut scope, "pagename").unwrap();
+			let pagename_string = v8::String::new(&mut scope, pagename).unwrap();
+			info.set(&mut scope, pagename_literal.into(), pagename_string.into());
+			let client_js_src_literal = v8::String::new(&mut scope, "clientJsSrc").unwrap();
+			let client_js_src_string = if let Some(client_js_src) = client_js_src {
+				v8::String::new(&mut scope, &client_js_src).unwrap().into()
 			} else {
 				v8::undefined(&mut scope).into()
 			};
+			info.set(
+				&mut scope,
+				client_js_src_literal.into(),
+				client_js_src_string,
+			);
+			let info_literal = v8::String::new(&mut scope, "info").unwrap();
+			props.set(&mut scope, info_literal.into(), info.into());
+			let props = props.into();
 
 			// call renderPage to render the page
 			let mut try_catch_scope = v8::TryCatch::new(&mut scope);
-			let html = pinwheel_module_render_page_function.call(
-				&mut try_catch_scope,
-				undefined,
-				&[
-					document_module_default_export,
-					page_module_default_export,
-					props,
-					client_js_pathname,
-				],
-			);
+			let undefined = v8::undefined(&mut try_catch_scope).into();
+			let html =
+				page_module_default_export_function.call(&mut try_catch_scope, undefined, &[props]);
 			if try_catch_scope.has_caught() {
 				let exception = try_catch_scope.exception().unwrap();
 				let mut scope = v8::HandleScope::new(&mut try_catch_scope);
@@ -204,7 +210,7 @@ impl Pinwheel {
 			let response = response.body(Body::from(data)).unwrap();
 			return response;
 		}
-		let html = self.render(path, serde_json::Value::Null).unwrap();
+		let html = self.render(path).unwrap();
 		let response = Response::builder()
 			.status(StatusCode::OK)
 			.body(Body::from(html))
@@ -538,7 +544,7 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 		if pagename.ends_with("/index") {
 			pagename = pagename.strip_suffix("index").unwrap().to_string();
 		}
-		let html = pinwheel.render(&pagename, serde_json::Value::Null)?;
+		let html = pinwheel.render(&pagename)?;
 		let html_path = dst_dir.join(page_entry.to_string() + ".html");
 		let html_parent = html_path.parent().unwrap();
 		std::fs::create_dir_all(html_parent).unwrap();
@@ -558,7 +564,6 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 	}
 	std::fs::create_dir_all(&out_dir).unwrap();
 	let manifest_path = out_dir.join("manifest.json");
-	let document_source_path = root_dir.join("document.tsx");
 	let mut args = vec![
 		"run".to_string(),
 		"-s".to_string(),
@@ -573,7 +578,6 @@ pub fn esbuild_pages(root_dir: &Path, out_dir: &Path, page_entries: &[Cow<str>])
 		"--sourcemap".to_string(),
 		format!("--metafile={}", manifest_path.display()),
 		format!("--outdir={}", out_dir.display()),
-		format!("{}", document_source_path.display()),
 	];
 	for page_entry in page_entries {
 		let static_source_path = root_dir

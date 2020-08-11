@@ -1,7 +1,10 @@
 import { Logo, LogoScheme } from '../../www/components/logo'
-import { Children, h, ui } from 'deps'
+import { Children, PinwheelInfo, h, ui } from 'deps'
 
-type AuthLayoutProps = { children?: Children }
+type AuthLayoutProps = {
+	children?: Children
+	info: PinwheelInfo
+}
 
 export function AuthLayout(props: AuthLayoutProps) {
 	let logoStyle = {

@@ -70,7 +70,7 @@ pub async fn get(
 	column_name: &str,
 ) -> Result<Response<Body>> {
 	let props = props(request, context, model_id, column_name).await?;
-	let html = context.pinwheel.render(
+	let html = context.pinwheel.render_with(
 		"/repos/_repo_id/models/_model_id/training_stats/columns/_column_name",
 		props,
 	)?;

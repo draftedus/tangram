@@ -1,9 +1,10 @@
 import { ClassifierIndexPage, Props as ClassifierProps } from './classifier'
 import { RegressorIndexPage, Props as RegressorProps } from './regressor'
-import { h } from 'deps'
+import { PinwheelInfo, h, renderPage } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
+	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
 }
@@ -29,5 +30,9 @@ export default function ModelIndexPage(props: Props) {
 			break
 		}
 	}
-	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
+	return renderPage(
+		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+			{inner}
+		</ModelLayout>,
+	)
 }

@@ -1,5 +1,5 @@
 import { TopbarLayout } from './topbar_layout'
-import { Children, h, r, ui } from 'deps'
+import { Children, PinwheelInfo, h, r, ui } from 'deps'
 
 export type ModelLayoutProps = {
 	children?: Children
@@ -13,15 +13,16 @@ export type ModelLayoutProps = {
 	}>
 	ownerName: string
 	ownerUrl: string
-	pagename: string
 	title: string
 }
 
-export function ModelLayout(props: ModelLayoutProps) {
+type Props = ModelLayoutProps & { info: PinwheelInfo }
+
+export function ModelLayout(props: Props) {
 	let selectedModel = r(props.models.find(model => model.id == props.modelId))
 		?.title
 	return (
-		<TopbarLayout>
+		<TopbarLayout info={props.info}>
 			<div class="model-layout">
 				<div
 					class="model-layout-model-group-topbar"
@@ -70,7 +71,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 					>
 						<ModelSideNav
 							id={props.modelId}
-							pagename={props.pagename}
+							pagename={props.info.pagename}
 							title={props.modelTitle}
 						/>
 					</div>
@@ -98,17 +99,17 @@ function ModelSideNav(props: ModelSideNavProps) {
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/training_stats/`}
-					// selected={props.pagename.startsWith(
-					// 	`/models/_model_id/training_stats/`,
-					// )}
+					selected={props.pagename.startsWith(
+						`/models/_model_id/training_stats/`,
+					)}
 				>
 					{'Training Stats'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/training_metrics/`}
-					// selected={props.pagename.startsWith(
-					// 	`/models/_model_id/training_metrics/`,
-					// )}
+					selected={props.pagename.startsWith(
+						`/models/_model_id/training_metrics/`,
+					)}
 				>
 					{'Training Metrics'}
 				</ui.SideNavItem>
@@ -125,17 +126,17 @@ function ModelSideNav(props: ModelSideNavProps) {
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/production_stats/`}
-					// selected={props.pagename.startsWith(
-					// 	`/models/_model_id/production_stats/`,
-					// )}
+					selected={props.pagename.startsWith(
+						`/models/_model_id/production_stats/`,
+					)}
 				>
 					{'Production Stats'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/production_metrics/`}
-					// selected={props.pagename.startsWith(
-					// 	`/models/_model_id/production_metrics/`,
-					// )}
+					selected={props.pagename.startsWith(
+						`/models/_model_id/production_metrics/`,
+					)}
 				>
 					{'Production Metrics'}
 				</ui.SideNavItem>

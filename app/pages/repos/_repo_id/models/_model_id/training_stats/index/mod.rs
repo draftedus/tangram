@@ -57,7 +57,7 @@ pub async fn get(
 	let props = props(request, context, model_id).await?;
 	let html = context
 		.pinwheel
-		.render("/repos/_repo_id/models/_model_id/training_stats/", props)?;
+		.render_with("/repos/_repo_id/models/_model_id/training_stats/", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))

@@ -1,11 +1,42 @@
-import { Logo, LogoScheme } from '../components/logo'
-import { Children, h, ui } from '../deps'
 import backgroundImage from './background.svg'
 import { Footer } from './footer'
+import { Logo, LogoScheme } from 'components/logo'
+import { Body, Children, Fragment, Head, PinwheelInfo, h, ui } from 'deps'
+
+export type DocumentProps = {
+	children: Children
+	info: PinwheelInfo
+}
+
+export function Document(props: DocumentProps) {
+	return (
+		<Fragment>
+			<html lang="en">
+				<head>
+					<Head info={props.info} />
+					<link
+						as="font"
+						crossOrigin="true"
+						href="/jetbrainsmono.woff2"
+						rel="preload"
+						type="font/woff2"
+					/>
+					<link href="/tangram.css" rel="stylesheet" />
+					<title>{'Tangram'}</title>
+					<meta content="Machine Learning for Developers" name="description" />
+				</head>
+				<body>
+					<Body info={props.info}>{props.children}</Body>
+				</body>
+			</html>
+		</Fragment>
+	)
+}
 
 type LayoutProps = {
 	background?: boolean
 	children?: Children
+	info: PinwheelInfo
 }
 
 export function Layout(props: LayoutProps) {
@@ -13,22 +44,24 @@ export function Layout(props: LayoutProps) {
 		background: props.background && (`url(${backgroundImage})` as any),
 	}
 	return (
-		<div class="layout" style={wrapperStyle}>
-			<header>
-				<Topbar />
-			</header>
-			<main>{props.children}</main>
-			<footer>
-				<Footer />
-			</footer>
-		</div>
+		<Document info={props.info}>
+			<div class="layout" style={wrapperStyle}>
+				<header>
+					<Topbar />
+				</header>
+				<main>{props.children}</main>
+				<footer>
+					<Footer />
+				</footer>
+			</div>
+		</Document>
 	)
 }
 
 export function Topbar() {
 	let topbarItems: ui.TopbarItem[] = [
 		{
-			element: <GithubIconLink color={'var(--text-color)'} />,
+			element: <GithubIconLink color="var(--text-color)" />,
 			href: 'https://github.com/tangram-hq',
 			title: 'Github',
 		},
@@ -43,14 +76,14 @@ export function Topbar() {
 	]
 	return (
 		<ui.Topbar
-			activeTextColor={'var(--accent-color)'}
+			activeTextColor="var(--accent-color)"
 			backgroundColor="transparent"
 			border="none"
-			dropdownBackgroundColor={'var(--surface-color)'}
-			foregroundColor={'var(--text-color)'}
+			dropdownBackgroundColor="var(--surface-color)"
+			foregroundColor="var(--text-color)"
 			items={topbarItems}
 			logo={<Logo colorScheme={LogoScheme.Multi} />}
-			menuSeparatorColor={'var(--text-color)'}
+			menuSeparatorColor="var(--text-color)"
 			title="tangram"
 		/>
 	)

@@ -1,10 +1,14 @@
 import { Install } from '../../shared/install'
 import { DatasetPreview } from './dataset_preview'
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, ui } from 'deps'
 import { DocsLayout } from 'layouts/docs_layout'
 
-export default () => (
-	<DocsLayout>
+type Props = {
+	info: PinwheelInfo
+}
+
+export default (props: Props) => (
+	<DocsLayout info={props.info}>
 		<ui.S1>
 			<ui.H1>{'Getting Started'}</ui.H1>
 			<ui.P>

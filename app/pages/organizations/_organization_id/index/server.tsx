@@ -1,5 +1,5 @@
 import { PricingCards } from '../../../../../www/pages/pricing/pricing_cards'
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
@@ -12,6 +12,7 @@ export type Props = {
 		name: string
 	} | null
 	id: string
+	info: PinwheelInfo
 	members: Array<{
 		email: string
 		id: string
@@ -39,7 +40,7 @@ export enum Plan {
 
 export default function OrganizationIndexPage(props: Props) {
 	return (
-		<AppLayout>
+		<AppLayout info={props.info}>
 			<ui.S1>
 				<ui.H1>{props.name}</ui.H1>
 				<ui.S2>

@@ -1,4 +1,4 @@
-import { h } from 'deps'
+import { PinwheelInfo, h } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 import { GBTBinaryClassifierModelPage } from './gbt_binary_classifier'
@@ -9,6 +9,7 @@ import { LinearMulticlassClassifierModelPage } from './linear_multiclass_classif
 import { LinearRegressorModelPage } from './linear_regressor'
 
 export type Props = {
+	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
 }
@@ -88,5 +89,9 @@ export default function ModelPage(props: Props) {
 			break
 		}
 	}
-	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
+	return (
+		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+			{inner}
+		</ModelLayout>
+	)
 }

@@ -57,11 +57,10 @@ export type PageModule<T> = {
 	getServerProps: GetServerProps<T>
 }
 
-export type DocumentProps = {
-	clientJsPath?: string
-	dev?: boolean
-	html?: string
-	preloadJsPaths?: string[]
+export type PinwheelInfo = {
+	clientJsSrc?: string
+	pagename: string
+	preloadJsSrcs?: string[]
 }
 
 export type ErrorProps = {

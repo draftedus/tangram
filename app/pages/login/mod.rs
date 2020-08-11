@@ -19,7 +19,7 @@ pub async fn get(
 		error: None,
 		email,
 	};
-	let html = context.pinwheel.render("/login", props)?;
+	let html = context.pinwheel.render_with("/login", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))

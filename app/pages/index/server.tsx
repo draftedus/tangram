@@ -1,7 +1,8 @@
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
+	info: PinwheelInfo
 	repos: Array<{
 		createdAt: string
 		id: string
@@ -12,8 +13,8 @@ export type Props = {
 }
 
 export default function HomePage(props: Props) {
-	return (
-		<AppLayout>
+	return renderPage(
+		<AppLayout info={props.info}>
 			<ui.S1>
 				<ui.SpaceBetween>
 					<ui.H1>{'Repositories'}</ui.H1>
@@ -60,6 +61,6 @@ export default function HomePage(props: Props) {
 					</ui.Card>
 				)}
 			</ui.S1>
-		</AppLayout>
+		</AppLayout>,
 	)
 }

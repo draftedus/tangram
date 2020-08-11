@@ -26,7 +26,7 @@ pub async fn get(
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
 	let props = props(request, context, model_id, search_params).await?;
-	let html = context.pinwheel.render(
+	let html = context.pinwheel.render_with(
 		"/repos/_repo_id/models/_model_id/production_metrics/class_metrics",
 		props,
 	)?;

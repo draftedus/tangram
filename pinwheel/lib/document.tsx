@@ -1,38 +1,54 @@
-import { Fragment, h } from './react'
-import { DocumentProps } from './types'
+import { Children, Fragment, h } from './react'
+import { PinwheelInfo } from './types'
 
-export function Head(props: DocumentProps) {
+export type HeadProps = {
+	info: PinwheelInfo
+}
+
+export function Head(props: HeadProps) {
 	return (
 		<Fragment>
 			<meta charSet="utf-8" />
 			<meta content="width=device-width, initial-scale=1" name="viewport" />
-			{props.preloadJsPaths?.map(modulePath => (
+			{props.info.preloadJsSrcs?.map(modulePath => (
 				<link href={modulePath} key={modulePath} rel="modulepreload" />
 			))}
 		</Fragment>
 	)
 }
 
-export function Body(props: DocumentProps) {
+export type BodyProps = {
+	children: Children
+	info: PinwheelInfo
+}
+
+export function Body(props: BodyProps) {
 	return (
 		<Fragment>
-			{props.html && (
-				<div dangerouslySetInnerHTML={{ __html: props.html }} id="root" />
+			{props.children}
+			{props.info.clientJsSrc && (
+				<script src={props.info.clientJsSrc} type="module" />
 			)}
-			{props.clientJsPath && <script src={props.clientJsPath} type="module" />}
 		</Fragment>
 	)
 }
 
+export type DocumentProps = {
+	children: Children
+	info: PinwheelInfo
+}
+
 export default function Document(props: DocumentProps) {
 	return (
-		<html>
-			<head>
-				<Head {...props} />
-			</head>
-			<body>
-				<Body {...props} />
-			</body>
-		</html>
+		<Fragment>
+			<html>
+				<head>
+					<Head info={props.info} />
+				</head>
+				<body>
+					<Body children={props.children} info={props.info} />
+				</body>
+			</html>
+		</Fragment>
 	)
 }

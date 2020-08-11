@@ -22,7 +22,7 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.map_err(|_| Error::Unauthorized)?;
 	let props = props(&mut db, user).await?;
 	db.commit().await?;
-	let html = context.pinwheel.render("/user/", props)?;
+	let html = context.pinwheel.render_with("/user/", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))

@@ -1,9 +1,13 @@
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { DocsLayout } from 'layouts/docs_layout'
 
-export default function OnPrem() {
-	return (
-		<DocsLayout>
+type Props = {
+	info: PinwheelInfo
+}
+
+export default function OnPrem(props: Props) {
+	return renderPage(
+		<DocsLayout info={props.info}>
 			<ui.S1>
 				<ui.H1>{'On-Prem Install Guide'}</ui.H1>
 				<ui.S2>
@@ -56,7 +60,7 @@ export default function OnPrem() {
 					</ui.P>
 				</ui.S2>
 			</ui.S1>
-		</DocsLayout>
+		</DocsLayout>,
 	)
 }
 

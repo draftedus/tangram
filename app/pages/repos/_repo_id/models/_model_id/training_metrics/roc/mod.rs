@@ -22,7 +22,7 @@ pub async fn get(
 ) -> Result<Response<Body>> {
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let props = props(request, context, model_id, class).await?;
-	let html = context.pinwheel.render(
+	let html = context.pinwheel.render_with(
 		"/repos/_repo_id/models/_model_id/training_metrics/roc",
 		props,
 	)?;

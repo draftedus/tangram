@@ -1,10 +1,11 @@
 import { EnumColumnDetail, Props as EnumProps } from './enum'
 import { NumberColumnDetail, Props as NumberProps } from './number'
 import { TextColumnDetail, Props as TextProps } from './text'
-import { h } from 'deps'
+import { PinwheelInfo, h } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
+	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
 }
@@ -42,5 +43,9 @@ export default function TrainingStatsColumnPage(props: Props) {
 			inner = <TextColumnDetail {...props.inner.value} />
 			break
 	}
-	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
+	return (
+		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+			{inner}
+		</ModelLayout>
+	)
 }

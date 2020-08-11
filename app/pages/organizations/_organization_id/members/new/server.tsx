@@ -1,9 +1,13 @@
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
-export default function MembersInvitePage() {
+type Props = {
+	info: PinwheelInfo
+}
+
+export default function MembersInvitePage(props: Props) {
 	return (
-		<AppLayout>
+		<AppLayout info={props.info}>
 			<ui.S1>
 				<ui.H1>{'Invite Team Member'}</ui.H1>
 				<ui.Form post={true}>

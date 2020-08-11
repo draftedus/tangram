@@ -6,12 +6,13 @@ import {
 	RegressorProductionMetricsPage,
 	Props as RegresssorProps,
 } from './regressor'
-import { assert, h } from 'deps'
+import { PinwheelInfo, assert, h } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 export type { Props as RegressorProps } from './regressor'
 export type { Props as ClassifierProps } from './classifier'
 
 export type Props = {
+	info: PinwheelInfo
 	inner: Inner
 	modelLayoutProps: ModelLayoutProps
 }
@@ -44,5 +45,9 @@ export default function ProductionMetricsPage(props: Props) {
 			break
 		}
 	}
-	return <ModelLayout {...props.modelLayoutProps}>{inner}</ModelLayout>
+	return (
+		<ModelLayout {...props.modelLayoutProps} info={props.info}>
+			{inner}
+		</ModelLayout>
+	)
 }

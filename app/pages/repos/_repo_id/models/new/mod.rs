@@ -17,7 +17,7 @@ pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<
 	let props = Props {};
 	let html = context
 		.pinwheel
-		.render("/repos/_repo_id/models/new", props)?;
+		.render_with("/repos/_repo_id/models/new", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))

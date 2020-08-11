@@ -1,8 +1,9 @@
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
 	email: string
+	info: PinwheelInfo
 	organizations: Array<{
 		id: string
 		name: string
@@ -16,7 +17,7 @@ export type Props = {
 
 export default function UserPage(props: Props) {
 	return (
-		<AppLayout>
+		<AppLayout info={props.info}>
 			<ui.S1>
 				<ui.SpaceBetween>
 					<ui.H1>{'User'}</ui.H1>

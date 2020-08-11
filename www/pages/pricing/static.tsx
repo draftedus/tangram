@@ -1,10 +1,14 @@
 import { PricingCards } from './pricing_cards'
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
 
-export default function Pricing() {
-	return (
-		<PageLayout background={true}>
+type Props = {
+	info: PinwheelInfo
+}
+
+export default function Pricing(props: Props) {
+	return renderPage(
+		<PageLayout background={true} info={props.info}>
 			<ui.S1>
 				<ui.H1 center={true}>{'Pricing'}</ui.H1>
 				<h2 class="pricing-subtitle">
@@ -42,7 +46,7 @@ export default function Pricing() {
 				/>
 				<FAQs />
 			</ui.S1>
-		</PageLayout>
+		</PageLayout>,
 	)
 }
 

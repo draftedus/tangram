@@ -1,11 +1,14 @@
-import { Children, h, ui } from '../deps'
+import { Children, PinwheelInfo, h, ui } from '../deps'
 import { Layout } from './layout'
 
-type DocsLayoutProps = { children?: Children }
+type DocsLayoutProps = {
+	children?: Children
+	info: PinwheelInfo
+}
 
 export function DocsLayout(props: DocsLayoutProps) {
 	return (
-		<Layout>
+		<Layout info={props.info}>
 			<div class="docs-layout-wrapper">
 				<PageNav />
 				<div>{props.children}</div>

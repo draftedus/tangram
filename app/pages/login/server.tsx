@@ -1,15 +1,16 @@
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AuthLayout } from 'layouts/auth_layout'
 
 export type LoginProps = {
 	code?: boolean
 	email?: string
 	error?: string
+	info: PinwheelInfo
 }
 
 export default function Login(props: LoginProps) {
-	return (
-		<AuthLayout>
+	return renderPage(
+		<AuthLayout info={props.info}>
 			<ui.Form post={true}>
 				{props.error && (
 					<ui.Alert level={ui.Level.Danger}>{props.error}</ui.Alert>
@@ -29,6 +30,6 @@ export default function Login(props: LoginProps) {
 					</div>
 				)}
 			</ui.Form>
-		</AuthLayout>
+		</AuthLayout>,
 	)
 }

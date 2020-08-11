@@ -10,7 +10,7 @@ use tangram_core::id::Id;
 
 pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let props = Props {};
-	let html = context.pinwheel.render("/organizations/new", props)?;
+	let html = context.pinwheel.render_with("/organizations/new", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
