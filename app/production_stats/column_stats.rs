@@ -1,7 +1,7 @@
 use super::NumberStats;
 use crate::types;
 use num_traits::ToPrimitive;
-use std::collections::BTreeMap as Map;
+use std::collections::BTreeMap;
 use tangram_core::metrics::RunningMetric;
 
 const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
@@ -57,9 +57,9 @@ pub enum Tokenizer {
 pub struct EnumProductionColumnStats {
 	pub absent_count: u64,
 	pub column_name: String,
-	pub histogram: Map<String, u64>,
+	pub histogram: BTreeMap<String, u64>,
 	pub invalid_count: u64,
-	pub invalid_histogram: Option<Map<String, u64>>,
+	pub invalid_histogram: Option<BTreeMap<String, u64>>,
 	pub count: u64,
 }
 
@@ -70,7 +70,7 @@ pub struct TextProductionColumnStats {
 	pub column_name: String,
 	pub invalid_count: u64,
 	pub count: u64,
-	pub token_histogram: Map<String, u64>,
+	pub token_histogram: BTreeMap<String, u64>,
 	pub tokenizer: Tokenizer,
 }
 
@@ -350,7 +350,7 @@ impl<'a> RunningMetric<'a, '_> for EnumProductionColumnStats {
 						}
 					},
 					None => {
-						let mut invalid_histogram: Map<String, u64> = Map::new();
+						let mut invalid_histogram: BTreeMap<String, u64> = BTreeMap::new();
 						invalid_histogram.insert(value.into(), 1);
 						self.invalid_histogram = Some(invalid_histogram)
 					}
@@ -419,7 +419,7 @@ impl TextProductionColumnStats {
 			absent_count: 0,
 			invalid_count: 0,
 			count: 0,
-			token_histogram: Map::new(),
+			token_histogram: BTreeMap::new(),
 			tokenizer,
 		}
 	}

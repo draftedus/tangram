@@ -122,7 +122,7 @@ pub fn train(
 			update_progress(Progress::Training(model_index, None));
 			let train_model_output = train_model(grid_item, &dataframe_train);
 			let comparison_progress_counter =
-				ProgressCounter::new(dataframe_comparison.nrows() as u64);
+				ProgressCounter::new(dataframe_comparison.nrows().to_u64().unwrap());
 			update_progress(Progress::Training(
 				model_index,
 				Some(TrainProgress::ComputingModelComparisonMetrics(
@@ -142,7 +142,7 @@ pub fn train(
 	let train_model_output = choose_best_model(outputs, &comparison_metric);
 
 	// test the best model
-	let progress = ProgressCounter::new(dataframe_test.nrows() as u64);
+	let progress = ProgressCounter::new(dataframe_test.nrows().to_u64().unwrap());
 	update_progress(Progress::Testing(progress));
 	let test_metrics = test_model(&train_model_output, &dataframe_test);
 
@@ -695,11 +695,11 @@ fn train_gbt_regressor(
 		early_stopping_options: None,
 		l2_regularization: 0.0,
 		learning_rate: options.learning_rate,
-		max_depth: options.max_depth as usize,
-		max_leaf_nodes: base.pow(options.max_depth as u32),
+		max_depth: options.max_depth.to_usize().unwrap(),
+		max_leaf_nodes: base.pow(options.max_depth.to_u32().unwrap()),
 		max_non_missing_bins: 255,
 		subsample_for_binning: 200_000,
-		max_rounds: options.max_rounds as usize,
+		max_rounds: options.max_rounds.to_usize().unwrap(),
 		min_examples_leaf: 20,
 		min_sum_hessians_in_leaf: 1e-3,
 		min_gain_to_split: 0.0,
@@ -770,11 +770,11 @@ fn train_gbt_binary_classifier(
 		early_stopping_options: None,
 		l2_regularization: 0.0,
 		learning_rate: options.learning_rate,
-		max_depth: options.max_depth as usize,
-		max_leaf_nodes: base.pow(options.max_depth as u32),
+		max_depth: options.max_depth.to_usize().unwrap(),
+		max_leaf_nodes: base.pow(options.max_depth.to_u32().unwrap()),
 		max_non_missing_bins: 255,
-		max_rounds: options.max_rounds as usize,
-		min_examples_leaf: options.min_examples_per_leaf as usize,
+		max_rounds: options.max_rounds.to_usize().unwrap(),
+		min_examples_leaf: options.min_examples_per_leaf.to_usize().unwrap(),
 		min_gain_to_split: 0.0,
 		min_sum_hessians_in_leaf: 1e-3,
 		subsample_for_binning: 200_000,
@@ -839,12 +839,12 @@ fn train_gbt_multiclass_classifier(
 		early_stopping_options: None,
 		l2_regularization: 0.0,
 		learning_rate: options.learning_rate,
-		max_depth: options.max_depth as usize,
-		max_leaf_nodes: base.pow(options.max_depth as u32),
+		max_depth: options.max_depth.to_usize().unwrap(),
+		max_leaf_nodes: base.pow(options.max_depth.to_u32().unwrap()),
 		max_non_missing_bins: 255,
 		subsample_for_binning: 200_000,
-		max_rounds: options.max_rounds as usize,
-		min_examples_leaf: options.min_examples_per_leaf as usize,
+		max_rounds: options.max_rounds.to_usize().unwrap(),
+		min_examples_leaf: options.min_examples_per_leaf.to_usize().unwrap(),
 		min_sum_hessians_in_leaf: 1e-3,
 		min_gain_to_split: 0.0,
 		discrete_smoothing_factor: 10.0,
@@ -1341,11 +1341,11 @@ impl Into<types::EnumColumnStats> for stats::EnumColumnStats {
 			histogram: Field::Present(
 				self.histogram
 					.into_iter()
-					.map(|(s, v)| (s, v as u64))
+					.map(|(s, v)| (s, v.to_u64().unwrap()))
 					.collect(),
 			),
-			invalid_count: Field::Present(self.invalid_count as u64),
-			unique_count: Field::Present(self.unique_count as u64),
+			invalid_count: Field::Present(self.invalid_count.to_u64().unwrap()),
+			unique_count: Field::Present(self.unique_count.to_u64().unwrap()),
 		}
 	}
 }

@@ -117,7 +117,8 @@ pub fn compute_stats(
 	// compute histograms
 	// first we collect the whole dataset into histograms
 	// then we will use these histograms to compute subsequent statistics
-	let progress_counter = ProgressCounter::new(n_cols as u64 * n_rows as u64);
+	let progress_counter =
+		ProgressCounter::new(n_cols.to_u64().unwrap() * n_rows.to_u64().unwrap());
 	update_progress(StatsProgress::DatasetStats(progress_counter));
 	let train_dataset_stats: Vec<DatasetStats> = dataframe_train
 		.columns
@@ -224,7 +225,7 @@ fn compute_column_stats_for_column(
 		(DatasetStats::Unknown(dataset_stats), _) => {
 			stats::ColumnStats::Unknown(stats::UnknownColumnStats {
 				column_name: column_name.to_owned(),
-				count: dataset_stats.count as u64,
+				count: dataset_stats.count.to_u64().unwrap(),
 			})
 		}
 		(DatasetStats::Text(dataset_stats), _) => {
@@ -261,7 +262,7 @@ fn compute_column_stats_number(
 	};
 	stats::ColumnStats::Number(stats::NumberColumnStats {
 		column_name: column_name.to_owned(),
-		count: dataset_stats.count as u64,
+		count: dataset_stats.count.to_u64().unwrap(),
 		histogram,
 		unique_count: unique_values_count,
 		max: histogram_stats.max,
@@ -283,7 +284,7 @@ fn compute_column_stats_enum(
 ) -> stats::ColumnStats {
 	stats::ColumnStats::Enum(stats::EnumColumnStats {
 		column_name: column_name.to_owned(),
-		count: dataset_stats.count as u64,
+		count: dataset_stats.count.to_u64().unwrap(),
 		invalid_count: dataset_stats.invalid_count,
 		unique_count: dataset_stats.options.len(),
 		histogram: dataset_stats
@@ -338,7 +339,7 @@ fn compute_column_stats_text(
 			if *document_frequency >= MIN_DOCUMENT_FREQUENCY.to_usize().unwrap() {
 				// idf = log (n + 1 / (1 + document_frequency))+ 1
 				let n_examples = dataset_stats.count;
-				let idf = ((1.0 + n_examples as f32)
+				let idf = ((1.0 + n_examples.to_f32().unwrap())
 					/ (1.0 + (document_frequency.to_f32().unwrap())))
 				.ln() + 1.0;
 				Some((token, count, idf))

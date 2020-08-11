@@ -12,7 +12,7 @@ impl RunningMetric<'_, '_> for Mean {
 	type Output = Option<f32>;
 
 	fn update(&mut self, value: f32) {
-		let value = value as f64;
+		let value = value.to_f64().unwrap();
 		let one = NonZeroU64::new(1u64).unwrap();
 		self.0 = match self.0 {
 			None => Some((one, value)),
@@ -37,7 +37,7 @@ impl RunningMetric<'_, '_> for Mean {
 	}
 
 	fn finalize(self) -> Option<f32> {
-		self.0.map(|(_, mean)| mean as f32)
+		self.0.map(|(_, mean)| mean.to_f32().unwrap())
 	}
 }
 

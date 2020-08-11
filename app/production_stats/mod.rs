@@ -132,7 +132,7 @@ impl NumberStats {
 			n: 1,
 			min: value,
 			max: value,
-			mean: value as f64,
+			mean: value.to_f64().unwrap(),
 			m2: 0.0,
 			reservoir: vec![value],
 			reservoir_size: 100,
@@ -146,7 +146,7 @@ impl RunningMetric<'_, '_> for NumberStats {
 
 	fn update(&mut self, value: Self::Input) {
 		let (new_mean, new_m2) =
-			metrics::merge_mean_m2(self.n, self.mean, self.m2, 1, value as f64, 0.0);
+			metrics::merge_mean_m2(self.n, self.mean, self.m2, 1, value.to_f64().unwrap(), 0.0);
 		self.n += 1;
 		self.mean = new_mean;
 		self.m2 = new_m2;
@@ -211,7 +211,7 @@ impl RunningMetric<'_, '_> for NumberStats {
 			p25: quantiles[0],
 			p50: quantiles[1],
 			p75: quantiles[2],
-			mean: self.mean as f32,
+			mean: self.mean.to_f32().unwrap(),
 			variance: metrics::m2_to_variance(self.m2, self.n),
 			std: metrics::m2_to_variance(self.m2, self.n).sqrt(),
 			min: self.min,

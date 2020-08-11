@@ -15,7 +15,7 @@ pub enum BinInfo {
 impl BinInfo {
 	pub fn n_valid_bins(&self) -> u8 {
 		match self {
-			Self::Number { thresholds } => (thresholds.len() + 1) as u8,
+			Self::Number { thresholds } => (thresholds.len() + 1).to_u8().unwrap(),
 			Self::Enum { n_options } => *n_options,
 		}
 	}

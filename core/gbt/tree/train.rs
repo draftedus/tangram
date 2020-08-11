@@ -42,17 +42,17 @@ pub fn train(
 	// Compute the sums of gradients and hessians for the root node.
 	let n_examples = gradients.len();
 	let examples_index_range = 0..n_examples;
-	let sum_gradients = gradients.into_par_iter().map(|v| *v as f64).sum();
+	let sum_gradients = gradients.into_par_iter().map(|v| v.to_f64().unwrap()).sum();
 	let sum_hessians = if hessians_are_constant {
 		n_examples.to_f64().unwrap()
 	} else {
-		hessians.into_par_iter().map(|v| *v as f64).sum()
+		hessians.into_par_iter().map(|v| v.to_f64().unwrap()).sum()
 	};
 
 	// If there are too few training examples or the hessians are too small,
 	// just return a tree with a single leaf.
 	if n_examples < 2 * options.min_examples_leaf
-		|| sum_hessians < 2.0 * options.min_sum_hessians_in_leaf as f64
+		|| sum_hessians < 2.0 * options.min_sum_hessians_in_leaf.to_f64().unwrap()
 	{
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 		let node = TrainNode::Leaf(TrainLeafNode {
@@ -116,7 +116,7 @@ pub fn train(
 		leaf_values.push((examples_index_range, value));
 		let node = TrainNode::Leaf(TrainLeafNode {
 			value,
-			examples_fraction: examples_count as f32 / n_examples as f32,
+			examples_fraction: examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap(),
 		});
 		tree.nodes.push(node);
 		// return the bin stats to the pool
@@ -155,7 +155,7 @@ pub fn train(
 			let examples_count = queue_item.examples_index_range.len();
 			let node = TrainNode::Leaf(TrainLeafNode {
 				value,
-				examples_fraction: examples_count as f32 / n_examples as f32,
+				examples_fraction: examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap(),
 			});
 			leaf_values.push((queue_item.examples_index_range.clone(), value));
 			tree.nodes.push(node);
@@ -178,7 +178,8 @@ pub fn train(
 			left_child_index: None,
 			right_child_index: None,
 			missing_values_direction,
-			examples_fraction: queue_item.examples_index_range.len() as f32 / n_examples as f32,
+			examples_fraction: queue_item.examples_index_range.len().to_f32().unwrap()
+				/ n_examples.to_f32().unwrap(),
 		}));
 
 		// rearrange the examples index
@@ -217,7 +218,8 @@ pub fn train(
 			);
 			let node = TrainNode::Leaf(TrainLeafNode {
 				value,
-				examples_fraction: queue_item.left_n_examples as f32 / n_examples as f32,
+				examples_fraction: queue_item.left_n_examples.to_f32().unwrap()
+					/ n_examples.to_f32().unwrap(),
 			});
 			leaf_values.push((left_examples_index_range.clone(), value));
 			tree.nodes.push(node);
@@ -241,7 +243,8 @@ pub fn train(
 			);
 			let node = TrainNode::Leaf(TrainLeafNode {
 				value,
-				examples_fraction: queue_item.right_n_examples as f32 / n_examples as f32,
+				examples_fraction: queue_item.right_n_examples.to_f32().unwrap()
+					/ n_examples.to_f32().unwrap(),
 			});
 			leaf_values.push((right_examples_index_range.clone(), value));
 			tree.nodes.push(node);
@@ -391,7 +394,8 @@ pub fn train(
 				leaf_values.push((left_examples_index_range, value));
 				let node = TrainNode::Leaf(TrainLeafNode {
 					value,
-					examples_fraction: queue_item.left_n_examples as f32 / n_examples as f32,
+					examples_fraction: queue_item.left_n_examples.to_f32().unwrap()
+						/ n_examples.to_f32().unwrap(),
 				});
 				tree.nodes.push(node);
 				// set the parent's left child index to the new node's index
@@ -436,7 +440,8 @@ pub fn train(
 				leaf_values.push((right_examples_index_range, value));
 				let node = TrainNode::Leaf(TrainLeafNode {
 					value,
-					examples_fraction: queue_item.right_n_examples as f32 / n_examples as f32,
+					examples_fraction: queue_item.right_n_examples.to_f32().unwrap()
+						/ n_examples.to_f32().unwrap(),
 				});
 				tree.nodes.push(node);
 				// set the parent's left child index to the new node's index
@@ -461,6 +466,8 @@ pub fn train(
 /// Compute the value for a leaf node.
 #[inline(always)]
 fn compute_leaf_value(sum_gradients: f64, sum_hessians: f64, options: &types::TrainOptions) -> f32 {
-	(-options.learning_rate as f64 * sum_gradients
-		/ (sum_hessians + options.l2_regularization as f64 + std::f64::EPSILON)) as f32
+	(-options.learning_rate.to_f64().unwrap() * sum_gradients
+		/ (sum_hessians + options.l2_regularization.to_f64().unwrap() + std::f64::EPSILON))
+		.to_f32()
+		.unwrap()
 }

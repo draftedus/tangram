@@ -1,6 +1,7 @@
 use super::super::bin::BinInfo;
 use ndarray::prelude::*;
 use ndarray::Zip;
+use num_traits::ToPrimitive;
 
 #[derive(Clone)]
 pub struct BinStatsPool {
@@ -191,7 +192,7 @@ fn compute_bin_stats_for_feature_root_no_hessian(
 		let ordered_gradient = unsafe { *gradients.uget(i) };
 		let bin_index = unsafe { *binned_feature_values.uget(i) as usize };
 		let bin_stats = unsafe { bin_stats_for_feature.uget_mut(bin_index) };
-		bin_stats.sum_gradients += ordered_gradient as f64;
+		bin_stats.sum_gradients += ordered_gradient.to_f64().unwrap();
 		bin_stats.sum_hessians += 1.0;
 		bin_stats.count += 1;
 	}
@@ -208,8 +209,8 @@ fn compute_bin_stats_for_feature_root(
 		let ordered_hessian = unsafe { *hessians.uget(i) };
 		let bin_index = unsafe { *binned_feature_values.uget(i) as usize };
 		let bin_stats = unsafe { bin_stats_for_feature.uget_mut(bin_index) };
-		bin_stats.sum_gradients += ordered_gradient as f64;
-		bin_stats.sum_hessians += ordered_hessian as f64;
+		bin_stats.sum_gradients += ordered_gradient.to_f64().unwrap();
+		bin_stats.sum_hessians += ordered_hessian.to_f64().unwrap();
 		bin_stats.count += 1;
 	}
 }
@@ -225,7 +226,7 @@ fn compute_bin_stats_for_feature_not_root_no_hessians(
 		let ordered_gradient = unsafe { *ordered_gradients.uget(i) };
 		let bin_index = unsafe { *binned_feature_values.uget(*examples_index.uget(i)) as usize };
 		let bin_stats = unsafe { bin_stats_for_feature.uget_mut(bin_index) };
-		bin_stats.sum_gradients += ordered_gradient as f64;
+		bin_stats.sum_gradients += ordered_gradient.to_f64().unwrap();
 		bin_stats.sum_hessians += 1.0;
 		bin_stats.count += 1;
 	}
@@ -244,8 +245,8 @@ fn compute_bin_stats_for_feature_not_root(
 		let ordered_hessian = unsafe { *ordered_hessians.uget(i) };
 		let bin_index = unsafe { *binned_feature_values.uget(*examples_index.uget(i)) as usize };
 		let bin_stats = unsafe { bin_stats_for_feature.uget_mut(bin_index) };
-		bin_stats.sum_gradients += ordered_gradient as f64;
-		bin_stats.sum_hessians += ordered_hessian as f64;
+		bin_stats.sum_gradients += ordered_gradient.to_f64().unwrap();
+		bin_stats.sum_hessians += ordered_hessian.to_f64().unwrap();
 		bin_stats.count += 1;
 	}
 }

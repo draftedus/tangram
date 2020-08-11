@@ -1,4 +1,4 @@
-cargo build --release -p tangram-api
+cargo build --release -p tangram
 
 # CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER="x86_64-linux-musl-gcc" \
 # CC=x86_64-linux-musl-gcc \

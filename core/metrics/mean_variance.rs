@@ -21,5 +21,5 @@ pub fn merge_mean_m2(
 }
 
 pub fn m2_to_variance(m2: f64, n: u64) -> f32 {
-	(m2 / n.to_f64().unwrap()) as f32
+	(m2 / n.to_f64().unwrap()).to_f32().unwrap()
 }

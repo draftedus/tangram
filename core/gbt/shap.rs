@@ -404,9 +404,9 @@ mod brute {
 						let mut subset = s.clone();
 						let subset_size = s.len();
 
-						let numerator = factorial(subset_size) as f64
-							* (factorial(n_features - subset_size - 1) as f64);
-						let denominator = factorial(n_features) as f64;
+						let numerator = factorial(subset_size).to_f64().unwrap()
+							* (factorial(n_features - subset_size - 1).to_f64().unwrap());
+						let denominator = factorial(n_features).to_f64().unwrap();
 						let shap_weight = numerator / denominator;
 
 						let subset_value_without_feature =
@@ -508,16 +508,16 @@ mod brute {
 					let right_node_examples_fraction =
 						tree.nodes[*right_child_index].examples_fraction();
 					let node_examples_fraction = node.examples_fraction();
-					let left_weight =
-						left_node_examples_fraction as f64 / node_examples_fraction as f64;
-					let right_weight =
-						right_node_examples_fraction as f64 / node_examples_fraction as f64;
+					let left_weight = left_node_examples_fraction.to_f64().unwrap()
+						/ node_examples_fraction.to_f64().unwrap();
+					let right_weight = right_node_examples_fraction.to_f64().unwrap()
+						/ node_examples_fraction.to_f64().unwrap();
 					compute_subset_value(example, tree, subset, *left_child_index) * left_weight
 						+ compute_subset_value(example, tree, subset, *right_child_index)
 							* right_weight
 				}
 			}
-			types::Node::Leaf(types::LeafNode { value, .. }) => *value as f64,
+			types::Node::Leaf(types::LeafNode { value, .. }) => value.to_f64().unwrap(),
 		}
 	}
 
@@ -538,7 +538,7 @@ mod brute {
 	impl<T: Clone> Iterator for PowersetIter<T> {
 		type Item = Vec<T>;
 		fn next(&mut self) -> Option<Self::Item> {
-			let item = if self.powerset_index == 2usize.pow(self.items.len() as u32) {
+			let item = if self.powerset_index == 2usize.pow(self.items.len().to_u32().unwrap()) {
 				None
 			} else {
 				let set = self

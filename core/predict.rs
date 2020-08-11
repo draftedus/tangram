@@ -180,7 +180,9 @@ pub fn predict(
 				dataframe::Column::Unknown(column) => column.len += 1,
 				dataframe::Column::Number(column) => {
 					let value = match input.get(&column.name) {
-						Some(serde_json::Value::Number(value)) => value.as_f64().unwrap() as f32,
+						Some(serde_json::Value::Number(value)) => {
+							value.as_f64().unwrap().to_f32().unwrap()
+						}
 						_ => std::f32::NAN,
 					};
 					column.data.push(value);

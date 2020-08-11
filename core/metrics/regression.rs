@@ -57,7 +57,7 @@ impl<'a, 'b> RunningMetric<'a, 'b> for RegressionMetrics {
 						mean_variance.mean,
 						mean_variance.m2,
 						1,
-						*label as f64,
+						label.to_f64().unwrap(),
 						0.0,
 					);
 					mean_variance.n += 1;
@@ -67,15 +67,15 @@ impl<'a, 'b> RunningMetric<'a, 'b> for RegressionMetrics {
 				None => {
 					self.mean_variance = Some(MeanVariance {
 						n: 1,
-						mean: *label as f64,
+						mean: label.to_f64().unwrap(),
 						m2: 0.0,
 					})
 				}
 			}
 			let absolute_error = prediction - label;
 			let squared_error = absolute_error * absolute_error;
-			self.absolute_error += absolute_error as f64;
-			self.squared_error += squared_error as f64;
+			self.absolute_error += absolute_error.to_f64().unwrap();
+			self.squared_error += squared_error.to_f64().unwrap();
 		}
 	}
 
@@ -116,12 +116,12 @@ impl<'a, 'b> RunningMetric<'a, 'b> for RegressionMetrics {
 		let baseline_mse = variance;
 		let baseline_rmse = baseline_mse.sqrt();
 		RegressionMetricsOutput {
-			mae: mae as f32,
-			mse: mse as f32,
-			r2: r2 as f32,
-			rmse: rmse as f32,
-			baseline_mse: baseline_mse as f32,
-			baseline_rmse: baseline_rmse as f32,
+			mae: mae.to_f32().unwrap(),
+			mse: mse.to_f32().unwrap(),
+			r2: r2.to_f32().unwrap(),
+			rmse: rmse.to_f32().unwrap(),
+			baseline_mse: baseline_mse.to_f32().unwrap(),
+			baseline_rmse: baseline_rmse.to_f32().unwrap(),
 		}
 	}
 }

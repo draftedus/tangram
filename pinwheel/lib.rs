@@ -4,6 +4,7 @@ use rusty_v8 as v8;
 use sourcemap::SourceMap;
 use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc};
 use url::Url;
+use num_traits::ToPrimitive;
 
 pub struct Pinwheel {
 	src_dir: Option<PathBuf>,
@@ -436,7 +437,7 @@ fn print_error(scope: &mut v8::HandleScope, exception: v8::Local<v8::Value>) {
 			.source_map
 			.as_ref()
 			.unwrap()
-			.lookup_token((source_line - 1) as u32, (source_column - 1) as u32)
+			.lookup_token((source_line - 1).to_u32().unwrap(), (source_column - 1).to_u32().unwrap())
 			.unwrap();
 		eprintln!(
 			"{}:{}:{} -> {}:{}:{}",

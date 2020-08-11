@@ -95,7 +95,7 @@ pub fn update_logits(
 pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
 	let mut total = 0.0;
 	for (label, logit) in labels.iter().zip(logits) {
-		let label = (*label - 1) as f32;
+		let label = (*label - 1).to_f32().unwrap();
 		let probability = 1.0 / (logit.neg().exp() + 1.0);
 		let probability_clamped = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
 		total += -1.0 * label * probability_clamped.ln()

@@ -207,12 +207,12 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 			break;
 		}
 
-		if left_sum_hessians < options.min_sum_hessians_in_leaf as f64 {
+		if left_sum_hessians < options.min_sum_hessians_in_leaf.to_f64().unwrap() {
 			// Hessians are positive so the left sum hessians will continue to increase,
 			// we can continue.
 			continue;
 		}
-		if right_sum_hessians < options.min_sum_hessians_in_leaf as f64 {
+		if right_sum_hessians < options.min_sum_hessians_in_leaf.to_f64().unwrap() {
 			// Hessians are positive so we will continue to violate the min_hessian_to_split
 			// condition for the right node, break.
 			break;
@@ -311,7 +311,7 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 	let mut left_n_examples = 0;
 
 	let categorical_bin_score = |bin: &BinStatsEntry| {
-		bin.sum_gradients / (bin.sum_hessians + options.discrete_smoothing_factor as f64)
+		bin.sum_gradients / (bin.sum_hessians + options.discrete_smoothing_factor.to_f64().unwrap())
 	};
 	let mut sorted_bin_stats: Vec<(usize, &BinStatsEntry)> = (0..bin_stats_for_feature.len())
 		.zip(bin_stats_for_feature.iter())
@@ -352,12 +352,12 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 			break;
 		}
 
-		if left_sum_hessians < options.min_sum_hessians_in_leaf as f64 {
+		if left_sum_hessians < options.min_sum_hessians_in_leaf.to_f64().unwrap() {
 			// Hessians are positive so the left sum hessians will continue to increase,
 			// we can continue.
 			continue;
 		}
-		if right_sum_hessians < options.min_sum_hessians_in_leaf as f64 {
+		if right_sum_hessians < options.min_sum_hessians_in_leaf.to_f64().unwrap() {
 			// Hessians are positive so we will continue to violate the min_hessian_to_split
 			// condition for the right node, break.
 			break;

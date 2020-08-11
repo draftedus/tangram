@@ -78,11 +78,11 @@ fn compute_number_histogram_stats(
 	while let Some((value, count)) = iter.next() {
 		let value = value.get();
 		let (new_mean, new_m2) = metrics::merge_mean_m2(
-			current_count as u64,
+			current_count.to_u64().unwrap(),
 			mean,
 			m2,
-			*count as u64,
-			value as f64,
+			count.to_u64().unwrap(),
+			value.to_f64().unwrap(),
 			0.0,
 		);
 		mean = new_mean;
@@ -117,8 +117,8 @@ fn compute_number_histogram_stats(
 		min,
 		max,
 		binned_histogram: None,
-		mean: mean as f32,
-		variance: metrics::m2_to_variance(m2, current_count as u64),
+		mean: mean.to_f32().unwrap(),
+		variance: metrics::m2_to_variance(m2, current_count.to_u64().unwrap()),
 	}
 }
 
