@@ -157,7 +157,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		_ => return Err(Error::BadRequest.into()),
 	};
 
-	let model_layout_props = get_model_layout_props(&mut db, id).await?;
+	let model_layout_props =
+		get_model_layout_props(&mut db, id, types::ModelSideNavItem::Overview).await?;
 	db.commit().await?;
 
 	Ok(Props {

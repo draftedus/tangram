@@ -91,8 +91,10 @@ async fn handle(
 			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "introspect"]) => {
-			pages::repos::_repo_id::models::_model_id::introspect::get(request, &context, model_id)
-				.await
+			pages::repos::_repo_id::models::_model_id::introspection::get(
+				request, &context, model_id,
+			)
+			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "predict"]) => {
 			pages::repos::_repo_id::models::_model_id::predict::get(request, &context, model_id)

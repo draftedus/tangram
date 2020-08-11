@@ -106,7 +106,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		tangram_core::types::Model::Regressor(_) => None,
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let model_layout_props = get_model_layout_props(&mut db, model_id).await?;
+	let model_layout_props =
+		get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::Tuning).await?;
 	db.commit().await?;
 	Ok(Props {
 		inner,

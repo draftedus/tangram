@@ -1,5 +1,5 @@
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { DocsLayout } from 'layouts/docs_layout'
+import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 
 import tuning from './screenshots/tuning.png'
 import tuningConfusionMatrix from './screenshots/tuning_confusion_matrix.png'
@@ -10,10 +10,7 @@ type Props = {
 
 export default (props: Props) =>
 	renderPage(
-		<DocsLayout
-			pagename="/docs/getting-started/tune"
-			pinwheelInfo={props.pinwheelInfo}
-		>
+		<DocsLayout pinwheelInfo={props.pinwheelInfo} selectedPage={DocsPage.Tune}>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>
 				<ui.S2>

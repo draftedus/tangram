@@ -15,6 +15,27 @@ pub struct ModelLayoutProps {
 	pub owner_url: String,
 	pub model_id: String,
 	pub model_title: String,
+	pub selected_item: ModelSideNavItem,
+}
+
+#[derive(serde::Serialize, Clone, Debug)]
+pub enum ModelSideNavItem {
+	#[serde(rename = "overview")]
+	Overview,
+	#[serde(rename = "training_stats")]
+	TrainingStats,
+	#[serde(rename = "training_metrics")]
+	TrainingMetrics,
+	#[serde(rename = "introspection")]
+	Introspection,
+	#[serde(rename = "predict")]
+	Predict,
+	#[serde(rename = "tuning")]
+	Tuning,
+	#[serde(rename = "production_stats")]
+	ProductionStats,
+	#[serde(rename = "production_metrics")]
+	ProductionMetrics,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]

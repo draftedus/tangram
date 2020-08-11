@@ -56,20 +56,7 @@ type CodeSelectProps = {
 export function CodeSelect(props: CodeSelectProps) {
 	let name = Math.random().toString()
 	useEffect(() => {
-		let radioElements = document.querySelectorAll('input[type=radio]')
-		radioElements.forEach(radioElement => {
-			radioElement.addEventListener('click', event => {
-				if (!(event.currentTarget instanceof HTMLInputElement)) throw Error()
-				let lang = event.currentTarget.dataset.lang
-				let langElements = document.querySelectorAll(
-					`input[type=radio][data-lang=${lang}]`,
-				)
-				langElements.forEach(langElement => {
-					if (!(langElement instanceof HTMLInputElement)) throw Error()
-					langElement.checked = true
-				})
-			})
-		})
+		bootCodeSelect()
 	})
 	return (
 		<div class="code code-grid">
@@ -100,6 +87,23 @@ export function CodeSelect(props: CodeSelectProps) {
 			)}
 		</div>
 	)
+}
+
+export function bootCodeSelect() {
+	let radioElements = document.querySelectorAll('input[type=radio]')
+	radioElements.forEach(radioElement => {
+		radioElement.addEventListener('click', event => {
+			if (!(event.currentTarget instanceof HTMLInputElement)) throw Error()
+			let lang = event.currentTarget.dataset.lang
+			let langElements = document.querySelectorAll(
+				`input[type=radio][data-lang=${lang}]`,
+			)
+			langElements.forEach(langElement => {
+				if (!(langElement instanceof HTMLInputElement)) throw Error()
+				langElement.checked = true
+			})
+		})
+	})
 }
 
 type CodeOptionProps = {

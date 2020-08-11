@@ -7,6 +7,7 @@ use tangram_core::id::Id;
 pub async fn get_model_layout_props(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
+	selected_item: types::ModelSideNavItem,
 ) -> Result<types::ModelLayoutProps> {
 	let row = sqlx::query(
 		"
@@ -80,6 +81,7 @@ pub async fn get_model_layout_props(
 		owner_url,
 		model_id,
 		model_title,
+		selected_item,
 	})
 }
 

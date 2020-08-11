@@ -1,5 +1,5 @@
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { DocsLayout } from 'layouts/docs_layout'
+import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 
 import overviewImageURL from './screenshots/overview.png'
 import trainingMetricsConfusionMatrixImageURL from './screenshots/training_metrics_confusion_matrix.png'
@@ -18,8 +18,8 @@ type Props = {
 export default (props: Props) =>
 	renderPage(
 		<DocsLayout
-			pagename="/docs/getting-started/report"
 			pinwheelInfo={props.pinwheelInfo}
+			selectedPage={DocsPage.Report}
 		>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>

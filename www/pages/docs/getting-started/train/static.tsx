@@ -1,7 +1,7 @@
 import { Install } from '../../shared/install'
 import { DatasetPreview } from './dataset_preview'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { DocsLayout } from 'layouts/docs_layout'
+import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 
 type Props = {
 	pinwheelInfo: PinwheelInfo
@@ -9,10 +9,7 @@ type Props = {
 
 export default (props: Props) =>
 	renderPage(
-		<DocsLayout
-			pagename="/docs/getting-started/train"
-			pinwheelInfo={props.pinwheelInfo}
-		>
+		<DocsLayout pinwheelInfo={props.pinwheelInfo} selectedPage={DocsPage.Train}>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>
 				<ui.P>

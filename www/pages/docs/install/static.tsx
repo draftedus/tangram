@@ -1,7 +1,7 @@
 import { Install } from '../shared/install'
 import { LibraryInstall } from '../shared/library_install'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { DocsLayout } from 'layouts/docs_layout'
+import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 
 type Props = {
 	pinwheelInfo: PinwheelInfo
@@ -9,7 +9,10 @@ type Props = {
 
 export default (props: Props) =>
 	renderPage(
-		<DocsLayout pagename="/docs/install" pinwheelInfo={props.pinwheelInfo}>
+		<DocsLayout
+			pinwheelInfo={props.pinwheelInfo}
+			selectedPage={DocsPage.Install}
+		>
 			<ui.S1>
 				<ui.H1>{'Install'}</ui.H1>
 				<ui.S2>

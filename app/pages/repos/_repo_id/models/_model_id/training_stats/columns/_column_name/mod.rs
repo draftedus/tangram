@@ -157,7 +157,8 @@ async fn props(
 		}),
 	};
 
-	let model_layout_props = get_model_layout_props(&mut db, model_id).await?;
+	let model_layout_props =
+		get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::TrainingStats).await?;
 	db.commit().await?;
 	Ok(Props {
 		id: model_id.to_string(),

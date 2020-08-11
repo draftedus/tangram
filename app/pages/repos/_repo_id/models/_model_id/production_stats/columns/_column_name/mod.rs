@@ -278,7 +278,8 @@ async fn props(
 		(_, _) => return Err(Error::BadRequest.into()),
 	};
 
-	let model_layout_props = get_model_layout_props(&mut db, model_id).await?;
+	let model_layout_props =
+		get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::ProductionStats).await?;
 	db.commit().await?;
 
 	Ok(Props {

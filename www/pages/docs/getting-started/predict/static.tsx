@@ -1,7 +1,7 @@
 import { LibraryInstall } from '../../shared/library_install'
 import { Predict } from './predict'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { DocsLayout } from 'layouts/docs_layout'
+import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 
 type Props = {
 	pinwheelInfo: PinwheelInfo
@@ -9,8 +9,8 @@ type Props = {
 export default (props: Props) =>
 	renderPage(
 		<DocsLayout
-			pagename="/docs/getting-started/predict"
 			pinwheelInfo={props.pinwheelInfo}
+			selectedPage={DocsPage.Predict}
 		>
 			<ui.S1>
 				<ui.H1>{'Predict'}</ui.H1>

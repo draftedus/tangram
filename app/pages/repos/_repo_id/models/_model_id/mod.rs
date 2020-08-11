@@ -9,7 +9,7 @@ use sqlx::prelude::*;
 use tangram_core::id::Id;
 
 pub mod index;
-pub mod introspect;
+pub mod introspection;
 pub mod predict;
 pub mod production_metrics;
 pub mod production_stats;

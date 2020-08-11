@@ -124,7 +124,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
 		})
 		.collect();
-	let model_layout_props = get_model_layout_props(&mut db, id).await?;
+	let model_layout_props =
+		get_model_layout_props(&mut db, id, types::ModelSideNavItem::Predict).await?;
 	db.commit().await?;
 	Ok(Props {
 		model_layout_props,

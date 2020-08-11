@@ -21,7 +21,9 @@ export function MulticlassClassifierTrainingMetricsIndexPage(props: Props) {
 		<ui.S1>
 			<ui.H1>{'Training Metrics'}</ui.H1>
 			<ui.TabBar>
-				<ui.TabLink href="training_metrics/">{'Overview'}</ui.TabLink>
+				<ui.TabLink href="./" selected={true}>
+					{'Overview'}
+				</ui.TabLink>
 				<ui.TabLink href="class_metrics">{'Class Metrics'}</ui.TabLink>
 			</ui.TabBar>
 			<ui.S2>

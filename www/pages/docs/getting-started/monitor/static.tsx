@@ -4,7 +4,7 @@ import { LogPrediction } from './log_prediction'
 import { LogPredictionBatched } from './log_prediction_batched'
 import { LogTrueValue } from './log_true_value'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
-import { DocsLayout } from 'layouts/docs_layout'
+import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 
 import featureImportances from './screenshots/feature_importances.png'
 import generateToken from './screenshots/generate_token.png'
@@ -21,8 +21,8 @@ type Props = {
 export default (props: Props) =>
 	renderPage(
 		<DocsLayout
-			pagename="/docs/getting-started/monitor"
 			pinwheelInfo={props.pinwheelInfo}
+			selectedPage={DocsPage.Monitor}
 		>
 			<ui.S1>
 				<ui.H1>{'Monitor'}</ui.H1>

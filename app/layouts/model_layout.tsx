@@ -113,7 +113,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/training_stats/`}
-					selected={props.selectedItem === ModelSideNavItem.Overview}
+					selected={props.selectedItem === ModelSideNavItem.TrainingStats}
 				>
 					{'Training Stats'}
 				</ui.SideNavItem>

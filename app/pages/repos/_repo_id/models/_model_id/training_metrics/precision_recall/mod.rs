@@ -122,7 +122,9 @@ async fn props(
 						.collect()
 				})
 				.collect();
-			let model_layout_props = get_model_layout_props(&mut db, model_id).await?;
+			let model_layout_props =
+				get_model_layout_props(&mut db, model_id, types::ModelSideNavItem::TrainingMetrics)
+					.await?;
 
 			let classes = model.classes().to_owned();
 			let class_index = if let Some(class) = &class {

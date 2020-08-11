@@ -96,7 +96,12 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					.iter()
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
-				model_layout_props: get_model_layout_props(&mut db, model_id).await?,
+				model_layout_props: get_model_layout_props(
+					&mut db,
+					model_id,
+					types::ModelSideNavItem::TrainingStats,
+				)
+				.await?,
 			}
 		}
 		tangram_core::types::Model::Regressor(model) => {
@@ -113,7 +118,12 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					.iter()
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
-				model_layout_props: get_model_layout_props(&mut db, model_id).await?,
+				model_layout_props: get_model_layout_props(
+					&mut db,
+					model_id,
+					types::ModelSideNavItem::TrainingStats,
+				)
+				.await?,
 			}
 		}
 		_ => unimplemented!(),
