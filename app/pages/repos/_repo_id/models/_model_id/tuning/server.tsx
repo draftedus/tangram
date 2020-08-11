@@ -1,6 +1,6 @@
 import { MetricsRow } from 'common/metrics_row'
 import { baselineColor, selectedThresholdColor } from 'common/tokens'
-import { Client, PinwheelInfo, h, r, ui, useState } from 'deps'
+import { Client, PinwheelInfo, h, r, renderPage, ui, useState } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
@@ -40,10 +40,10 @@ export default function TuningPage(props: Props) {
 			</ui.S1>
 		)
 	}
-	return (
+	return renderPage(
 		<ModelLayout {...props.modelLayoutProps} info={props.info}>
 			{inner}
-		</ModelLayout>
+		</ModelLayout>,
 	)
 }
 

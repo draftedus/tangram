@@ -1,4 +1,4 @@
-import { PinwheelInfo, h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
@@ -7,7 +7,7 @@ export type Props = {
 }
 
 export default function RepoCreatePage(props: Props) {
-	return (
+	return renderPage(
 		<AppLayout info={props.info}>
 			<ui.S1>
 				<ui.H1>{'Upload Model'}</ui.H1>
@@ -24,6 +24,6 @@ export default function RepoCreatePage(props: Props) {
 					<ui.Button type="submit">{'Upload'}</ui.Button>
 				</ui.Form>
 			</ui.S1>
-		</AppLayout>
+		</AppLayout>,
 	)
 }

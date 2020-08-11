@@ -14,13 +14,14 @@ type TabProps = {
 }
 
 export function Tab(props: TabProps) {
+	let className = cx(
+		'tab-bar-tab',
+		props.selected && 'tab-bar-tab-selected',
+		props.disabled && 'tab-bar-tab-disbaled',
+	)
 	return (
 		<div
-			class={cx(
-				'tab-bar-tab',
-				props.selected && 'tab-bar-tab-selected',
-				props.disabled && 'tab-bar-tab-disbaled',
-			)}
+			class={className}
 			onClick={!props.disabled ? props.onClick : undefined}
 		>
 			{props.children}
@@ -32,12 +33,12 @@ type TabLinkProps = {
 	children?: Children
 	disabled?: boolean
 	href: string
+	selected?: boolean
 }
 
 export function TabLink(props: TabLinkProps) {
-	let selected = false
 	return (
-		<Tab selected={selected}>
+		<Tab selected={props.selected}>
 			<Link class="tab-bar-tab-link" href={props.href}>
 				{props.children}
 			</Link>

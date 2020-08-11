@@ -25,12 +25,12 @@ type SideNavItemProps = {
 }
 
 export function SideNavItem(props: SideNavItemProps) {
-	let selected = false
+	let className = cx(
+		'side-nav-item',
+		props.selected && 'side-nav-item-selected',
+	)
 	return (
-		<Link
-			class={cx('side-nav-item', selected && 'side-nav-item-selected')}
-			href={props.href}
-		>
+		<Link class={className} href={props.href}>
 			{props.children}
 		</Link>
 	)

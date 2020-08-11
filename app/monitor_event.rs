@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::BTreeMap as Map};
+use std::{borrow::Cow, collections::BTreeMap};
 use tangram_core::{id::Id, util::finite::NotFiniteError};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -18,7 +18,7 @@ pub struct RegressionOutput {
 #[serde(rename_all = "camelCase")]
 pub struct ClassificationOutput {
 	pub class_name: String,
-	pub probabilities: Option<Map<String, f32>>,
+	pub probabilities: Option<BTreeMap<String, f32>>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -35,7 +35,7 @@ pub enum MonitorEvent {
 pub struct PredictionMonitorEvent {
 	pub model_id: Id,
 	pub identifier: NumberOrString,
-	pub input: Map<String, serde_json::Value>,
+	pub input: BTreeMap<String, serde_json::Value>,
 	pub output: Output,
 	pub date: chrono::DateTime<chrono::Utc>,
 }

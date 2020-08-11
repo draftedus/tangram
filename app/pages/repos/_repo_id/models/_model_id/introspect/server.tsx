@@ -1,4 +1,4 @@
-import { PinwheelInfo, h } from 'deps'
+import { PinwheelInfo, h, renderPage } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 import { GBTBinaryClassifierModelPage } from './gbt_binary_classifier'
@@ -89,9 +89,9 @@ export default function ModelPage(props: Props) {
 			break
 		}
 	}
-	return (
+	return renderPage(
 		<ModelLayout {...props.modelLayoutProps} info={props.info}>
 			{inner}
-		</ModelLayout>
+		</ModelLayout>,
 	)
 }

@@ -10,7 +10,7 @@ import {
 	Props as RegressorProps,
 	RegressorTrainingMetricsIndexPage,
 } from './regressor'
-import { PinwheelInfo, h } from 'deps'
+import { PinwheelInfo, h, renderPage } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export enum Type {
@@ -57,9 +57,9 @@ export default function TrainingMetricsIndexPage(props: Props) {
 			break
 	}
 
-	return (
+	return renderPage(
 		<ModelLayout {...props.modelLayoutProps} info={props.info}>
 			{inner}
-		</ModelLayout>
+		</ModelLayout>,
 	)
 }

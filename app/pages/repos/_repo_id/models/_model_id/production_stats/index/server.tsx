@@ -10,7 +10,7 @@ import {
 	NumberColumnToken,
 	TextColumnToken,
 } from 'common/tokens'
-import { PinwheelInfo, h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
@@ -108,7 +108,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 		props.dateWindowInterval,
 		'Prediction Count',
 	)
-	return (
+	return renderPage(
 		<ModelLayout {...props.modelLayoutProps} info={props.info}>
 			<ui.S1>
 				<ui.H1>{'Production Stats'}</ui.H1>
@@ -198,7 +198,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 					</ui.TableBody>
 				</ui.Table>
 			</ui.S1>
-		</ModelLayout>
+		</ModelLayout>,
 	)
 }
 

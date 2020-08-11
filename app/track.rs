@@ -12,7 +12,7 @@ use anyhow::{format_err, Result};
 use chrono::prelude::*;
 use hyper::{body::to_bytes, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use std::collections::BTreeMap as Map;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use tangram_core::id::Id;
 use tangram_core::{metrics::RunningMetric, types};
@@ -42,7 +42,7 @@ pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let mut models = Map::new();
+	let mut models = BTreeMap::new();
 	for monitor_event in monitor_events {
 		match monitor_event {
 			MonitorEvent::Prediction(monitor_event) => {
@@ -71,7 +71,7 @@ pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<
 
 async fn handle_prediction_monitor_event(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	models: &mut Map<Id, types::Model>,
+	models: &mut BTreeMap<Id, types::Model>,
 	monitor_event: PredictionMonitorEvent,
 ) -> Result<()> {
 	let model_id = monitor_event.model_id;
@@ -91,7 +91,7 @@ async fn handle_prediction_monitor_event(
 
 async fn handle_true_value_monitor_event(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	models: &mut Map<Id, types::Model>,
+	models: &mut BTreeMap<Id, types::Model>,
 	monitor_event: TrueValueMonitorEvent,
 ) -> Result<()> {
 	let model_id = monitor_event.model_id;

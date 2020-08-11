@@ -1,5 +1,5 @@
 import { PricingCards } from '../../../../../www/pages/pricing/pricing_cards'
-import { PinwheelInfo, h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
@@ -39,7 +39,7 @@ export enum Plan {
 }
 
 export default function OrganizationIndexPage(props: Props) {
-	return (
+	return renderPage(
 		<AppLayout info={props.info}>
 			<ui.S1>
 				<ui.H1>{props.name}</ui.H1>
@@ -249,6 +249,6 @@ export default function OrganizationIndexPage(props: Props) {
 					</ui.Form>
 				</ui.S2>
 			</ui.S1>
-		</AppLayout>
+		</AppLayout>,
 	)
 }

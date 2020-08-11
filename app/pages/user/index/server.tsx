@@ -1,4 +1,4 @@
-import { PinwheelInfo, h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
@@ -16,7 +16,7 @@ export type Props = {
 }
 
 export default function UserPage(props: Props) {
-	return (
+	return renderPage(
 		<AppLayout info={props.info}>
 			<ui.S1>
 				<ui.SpaceBetween>
@@ -96,6 +96,6 @@ export default function UserPage(props: Props) {
 					)}
 				</ui.S2>
 			</ui.S1>
-		</AppLayout>
+		</AppLayout>,
 	)
 }

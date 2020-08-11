@@ -1,4 +1,4 @@
-import { PinwheelInfo, h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
@@ -87,7 +87,7 @@ type ClassificationPrediction = {
 }
 
 export default function PredictPage(props: Props) {
-	return (
+	return renderPage(
 		<ModelLayout {...props.modelLayoutProps} info={props.info}>
 			<ui.S1>
 				<ui.H1>{'Predict'}</ui.H1>
@@ -189,6 +189,6 @@ export default function PredictPage(props: Props) {
 					</ui.S2>
 				) : null}
 			</ui.S1>
-		</ModelLayout>
+		</ModelLayout>,
 	)
 }

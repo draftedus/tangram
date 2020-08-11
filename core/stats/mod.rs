@@ -323,11 +323,11 @@ fn compute_column_stats_text(
 ) -> stats::ColumnStats {
 	let mut top_tokens = std::collections::BinaryHeap::new();
 	for (token, count) in dataset_stats.unigram_histogram.iter() {
-		let entry = TokenEntry(token.clone(), *count as u64);
+		let entry = TokenEntry(token.clone(), count.to_u64().unwrap());
 		top_tokens.push(entry);
 	}
 	for (token, count) in dataset_stats.bigram_histogram.iter() {
-		let entry = TokenEntry(token.clone(), *count as u64);
+		let entry = TokenEntry(token.clone(), count.to_u64().unwrap());
 		top_tokens.push(entry);
 	}
 	let top_tokens = (0..TOP_TOKENS_COUNT)
@@ -335,11 +335,12 @@ fn compute_column_stats_text(
 		.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
 		.filter_map(|(token, count)| {
 			let document_frequency = dataset_stats.per_example_histogram.get(&token).unwrap();
-			if *document_frequency >= MIN_DOCUMENT_FREQUENCY as usize {
+			if *document_frequency >= MIN_DOCUMENT_FREQUENCY.to_usize().unwrap() {
 				// idf = log (n + 1 / (1 + document_frequency))+ 1
 				let n_examples = dataset_stats.count;
-				let idf =
-					((1.0 + n_examples as f32) / (1.0 + (*document_frequency as f32))).ln() + 1.0;
+				let idf = ((1.0 + n_examples as f32)
+					/ (1.0 + (document_frequency.to_f32().unwrap())))
+				.ln() + 1.0;
 				Some((token, count, idf))
 			} else {
 				None
@@ -348,7 +349,7 @@ fn compute_column_stats_text(
 		.collect::<Vec<(String, u64, f32)>>();
 	stats::ColumnStats::Text(stats::TextColumnStats {
 		column_name: column_name.to_owned(),
-		count: dataset_stats.count as u64,
+		count: dataset_stats.count.to_u64().unwrap(),
 		top_tokens,
 	})
 }

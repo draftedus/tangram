@@ -6,7 +6,7 @@ import {
 	intervalChartTitle,
 } from 'common/time_charts'
 import { productionColor, trainingColor } from 'common/tokens'
-import { Fragment, PinwheelInfo, h, ui } from 'deps'
+import { Fragment, PinwheelInfo, h, renderPage, ui } from 'deps'
 import { ModelLayout, ModelLayoutProps } from 'layouts/model_layout'
 
 export type Props = {
@@ -167,7 +167,7 @@ export default function ProductionMetricsPage(props: Props) {
 		},
 	]
 
-	return (
+	return renderPage(
 		<ModelLayout {...props.modelLayoutProps} info={props.info}>
 			<ui.S1>
 				<ui.H1>{'Production Metrics'}</ui.H1>
@@ -341,6 +341,6 @@ export default function ProductionMetricsPage(props: Props) {
 					</Fragment>
 				)}
 			</ui.S1>
-		</ModelLayout>
+		</ModelLayout>,
 	)
 }

@@ -1,9 +1,13 @@
-import { h, ui } from 'deps'
+import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
-export default function ModelCreatePage() {
-	return (
-		<AppLayout>
+type Props = {
+	info: PinwheelInfo
+}
+
+export default function ModelCreatePage(props: Props) {
+	return renderPage(
+		<AppLayout info={props.info}>
 			<ui.S1>
 				<ui.H1>{'Upload Model'}</ui.H1>
 				<ui.Form encType="multipart/form-data" post={true}>
@@ -12,6 +16,6 @@ export default function ModelCreatePage() {
 					<ui.Button type="submit">{'Upload'}</ui.Button>
 				</ui.Form>
 			</ui.S1>
-		</AppLayout>
+		</AppLayout>,
 	)
 }

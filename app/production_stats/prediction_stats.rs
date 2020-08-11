@@ -1,6 +1,6 @@
 use super::NumberStats;
 use crate::{monitor_event::Output, types};
-use std::collections::BTreeMap as Map;
+use std::collections::BTreeMap;
 use tangram_core::metrics::RunningMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
