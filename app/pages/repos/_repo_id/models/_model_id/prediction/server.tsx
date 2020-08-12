@@ -114,33 +114,10 @@ export default function PredictPage(props: Props) {
 	)
 }
 
-function PredictionOutputInner(props: Props) {
-	return (
-		<ui.S1>
-			<ui.H1>{'Predict'}</ui.H1>
-			<div class="predict-output-items-wrapper">
-				{props.columns.map(column => (
-					<div key={column.name}>
-						<span style="color: var(--muted-text-color)">{column.name}</span>
-						{': '}
-						<span style="color: var(--text-color)">{column.value}</span>
-					</div>
-				))}
-			</div>
-			{props.prediction &&
-				(props.prediction.type === PredictionType.Classification ? (
-					<ClassificationPrediction {...props.prediction.value} />
-				) : props.prediction.type === PredictionType.Regression ? (
-					<RegressionPrediction {...props.prediction.value} />
-				) : null)}
-		</ui.S1>
-	)
-}
-
 function PredictionInputInner(props: Props) {
 	return (
 		<ui.S1>
-			<ui.H1>{'Predict'}</ui.H1>
+			<ui.H1>{'Prediction'}</ui.H1>
 			<ui.Form autoComplete="off">
 				<div class="predict-form-items-wrapper">
 					{props.columns.map(column => {
@@ -249,9 +226,32 @@ function PredictionInputInner(props: Props) {
 	)
 }
 
-type RegressionPredictionProps = RegressionPrediction
+function PredictionOutputInner(props: Props) {
+	return (
+		<ui.S1>
+			<ui.H1>{'Prediction'}</ui.H1>
+			<div class="predict-output-items-wrapper">
+				{props.columns.map(column => (
+					<div key={column.name}>
+						<span style="color: var(--muted-text-color)">{column.name}</span>
+						{': '}
+						<span style="color: var(--text-color)">{column.value}</span>
+					</div>
+				))}
+			</div>
+			{props.prediction &&
+				(props.prediction.type === PredictionType.Classification ? (
+					<ClassificationPredictionOutput {...props.prediction.value} />
+				) : props.prediction.type === PredictionType.Regression ? (
+					<RegressionPredictionOutput {...props.prediction.value} />
+				) : null)}
+		</ui.S1>
+	)
+}
 
-function RegressionPrediction(props: RegressionPredictionProps) {
+type RegressionPredictionOutputProps = RegressionPrediction
+
+function RegressionPredictionOutput(props: RegressionPredictionOutputProps) {
 	return (
 		<ui.S2>
 			<ui.H2>{'Prediction Output'}</ui.H2>
@@ -279,9 +279,11 @@ function RegressionPrediction(props: RegressionPredictionProps) {
 	)
 }
 
-type ClassificationPredictionProps = ClassificationPrediction
+type ClassificationPredictionOutputProps = ClassificationPrediction
 
-function ClassificationPrediction(props: ClassificationPredictionProps) {
+function ClassificationPredictionOutput(
+	props: ClassificationPredictionOutputProps,
+) {
 	let probabilityData = [
 		{
 			color: ui.colors.blue,

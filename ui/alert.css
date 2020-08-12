@@ -1,21 +1,23 @@
 .alert-wrapper {
 	border-radius: var(--border-radius);
+	color: var(--fun-text-color);
 	padding: 1rem;
 }
 
 .alert-level-info {
 	background-color: var(--blue);
-	color: var(--fun-text-color);
+}
+
+.alert-level-success {
+	background-color: var(--green);
 }
 
 .alert-level-warning {
 	background-color: var(--yellow);
-	color: var(--fun-text-color);
 }
 
 .alert-level-danger {
 	background-color: var(--red);
-	color: var(--fun-text-color);
 }
 
 .alert-title {

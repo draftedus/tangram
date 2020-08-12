@@ -12,13 +12,13 @@
 @media (max-width: 1199px) {
 	.docs-layout-wrapper {
 		grid: 'page-nav' auto 'content' auto / minmax(0, 1fr);
-		grid-gap: 2rem;
+		gap: 2rem;
 	}
 }
 
 @media (min-width: 1200px) {
 	.docs-layout-wrapper {
 		grid: 'page-nav content' auto / 200px minmax(0, 1fr);
-		grid-gap: 1rem;
+		gap: 1rem;
 	}
 }

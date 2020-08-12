@@ -1,12 +1,12 @@
 .tuning-grid {
 	display: grid;
-	grid-gap: 1rem;
+	gap: 1rem;
 	padding: 1rem;
 }
 
 .tuning-number-chart-grid {
 	display: grid;
-	grid-gap: 1rem;
+	gap: 1rem;
 }
 
 @media (max-width: 1199px) {

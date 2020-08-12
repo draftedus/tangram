@@ -40,11 +40,8 @@ export function ModelLayout(props: ModelLayoutProps) {
 	return (
 		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
 			<div class="model-layout">
-				<div
-					class="model-layout-model-group-topbar"
-					style={{ gridArea: 'model-group-topbar' }}
-				>
-					<div class="model-layout-owner-slash-repor-slash-model-wrapper">
+				<div class="model-layout-topbar" style={{ gridArea: 'topbar' }}>
+					<div class="model-layout-owner-slash-repo-slash-model-wrapper">
 						<div class="model-layout-owner-slash-repo-wrapper">
 							<a
 								class="model-layout-owner-slash-repo-link"
@@ -66,13 +63,13 @@ export function ModelLayout(props: ModelLayoutProps) {
 							options={
 								props.info.models.map(model => ({
 									href: `/repos/${props.info.id}/models/${model.id}/`,
-									name: model.title,
+									name: model.id,
 								})) ?? []
 							}
-							summary={selectedModel?.title ?? null}
+							summary={selectedModel?.id ?? null}
 						/>
 					</div>
-					<div class="model-layout-model-group-topbar-actions-wrapper">
+					<div class="model-layout-topbar-actions-wrapper">
 						<ui.Button
 							download={`${props.info.modelTitle}.tangram`}
 							href={`/repos/${props.info.id}/models/${props.info.modelId}/download`}
@@ -95,8 +92,8 @@ export function ModelLayout(props: ModelLayoutProps) {
 							title={props.info.modelTitle}
 						/>
 					</div>
-					<div style={{ gridArea: 'content' }}>
-						<div class="model-layout-content">{props.children}</div>
+					<div class="model-layout-content" style={{ gridArea: 'content' }}>
+						{props.children}
 					</div>
 				</div>
 			</div>

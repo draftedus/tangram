@@ -3,7 +3,7 @@
 	box-sizing: border-box;
 	display: grid;
 	grid: auto auto auto / auto;
-	grid-gap: 1rem;
+	gap: 1rem;
 	justify-items: center;
 	margin: 0 auto;
 	max-width: var(--max-width);
@@ -13,7 +13,7 @@
 .footer-links-wrapper {
 	display: grid;
 	grid: auto / auto auto auto;
-	grid-gap: 1rem;
+	gap: 1rem;
 }
 
 .footer-copyright {

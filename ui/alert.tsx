@@ -2,6 +2,7 @@ import { Children, h } from './deps'
 
 export enum Level {
 	Info,
+	Success,
 	Warning,
 	Danger,
 }
@@ -13,10 +14,13 @@ export type AlertProps = {
 }
 
 export function Alert(props: AlertProps) {
-	let levelClass
+	let levelClass: string
 	switch (props.level) {
 		case Level.Info:
 			levelClass = 'alert-level-info'
+			break
+		case Level.Success:
+			levelClass = 'alert-level-success'
 			break
 		case Level.Warning:
 			levelClass = 'alert-level-warning'

@@ -1,55 +1,54 @@
+.model-layout {
+	display: grid;
+	overflow: hidden;
+}
+
 @media (max-width: 1199px) {
 	.model-layout {
-		display: grid;
-		grid: 'model-group-topbar' auto 'model' auto / minmax(0, 1fr);
-		overflow: hidden;
+		grid: 'topbar' auto 'model' auto / minmax(0, 1fr);
 	}
 }
 
 @media (min-width: 1200px) {
 	.model-layout {
-		display: grid;
-		grid: 'model-group-topbar' auto 'model' 1fr / minmax(0, 1fr);
+		grid: 'topbar' auto 'model' 1fr / minmax(0, 1fr);
 		height: 100%;
-		overflow: hidden;
 	}
+}
+
+.model-layout-grid {
+	display: grid;
+	gap: 2rem;
+	height: 100%;
+	overflow: hidden;
 }
 
 @media (max-width: 1199px) {
 	.model-layout-grid {
-		display: grid;
 		grid: 'side-nav' auto 'content' auto / minmax(0, 1fr);
-		grid-gap: 2rem;
-		height: 100%;
-		overflow: hidden;
 	}
 }
 
 @media (min-width: 1200px) {
 	.model-layout-grid {
-		display: grid;
 		grid: 'side-nav content' 1fr / auto minmax(0, 1fr);
-		grid-gap: 2rem;
-		height: 100%;
-		overflow: hidden;
 	}
 }
 
-.model-layout-model-group-topbar {
+.model-layout-topbar {
 	align-items: center;
 	background-color: var(--surface-color);
 	display: grid;
 	grid: auto / auto auto;
-	grid-auto-flow: column;
 	justify-content: space-between;
-	grid-gap: 1rem;
+	gap: 1rem;
 	padding: 2rem 1rem;
 }
 
-.model-layout-owner-slash-repor-slash-model-wrapper {
+.model-layout-owner-slash-repo-slash-model-wrapper {
 	align-items: center;
 	display: grid;
-	grid-gap: 1rem;
+	gap: 1rem;
 	grid-auto-flow: column;
 }
 
@@ -69,9 +68,9 @@
 	filter: brightness(90%);
 }
 
-.model-layout-model-group-topbar-actions-wrapper {
+.model-layout-topbar-actions-wrapper {
 	display: grid;
-	grid-gap: 1rem;
+	gap: 1rem;
 	justify-self: end;
 	grid-auto-flow: column;
 }

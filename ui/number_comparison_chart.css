@@ -1,14 +1,14 @@
 .number-comparison-wrapper {
 	color: var(--text-color);
 	display: grid;
-	grid-gap: 1rem;
+	gap: 1rem;
 	justify-items: center;
 	text-align: center;
 }
 
 @media (max-width: 1199px) {
 	.number-comparison-wrapper {
-		grid-gap: 0.5rem;
+		gap: 0.5rem;
 	}
 }
 

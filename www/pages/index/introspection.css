@@ -1,5 +1,5 @@
 .introspection-wrapper {
 	display: grid;
-	grid-gap: 1rem;
+	gap: 1rem;
 	padding: 1rem;
 }

@@ -1,11 +1,11 @@
 .explanations-wrapper {
 	display: grid;
-	grid-gap: 1rem;
+	gap: 1rem;
 	padding: 1rem;
 }
 
 .inner-wrapper {
 	display: grid;
 	grid: auto / 1fr 1fr;
-	grid-gap: 1rem;
+	gap: 1rem;
 }

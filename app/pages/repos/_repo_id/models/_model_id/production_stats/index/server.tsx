@@ -164,7 +164,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 				<ui.Table width="100%">
 					<ui.TableHeader>
 						<ui.TableRow>
-							<ui.TableHeaderCell>{/* alert */}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{'Status'}</ui.TableHeaderCell>
 							<ui.TableHeaderCell>{'Column'}</ui.TableHeaderCell>
 							<ui.TableHeaderCell>{'Type'}</ui.TableHeaderCell>
 							<ui.TableHeaderCell>{'Absent Count'}</ui.TableHeaderCell>
@@ -175,11 +175,14 @@ export default function ProductionStatsIndexPage(props: Props) {
 						{props.overallColumnStatsTable.map(column => (
 							<ui.TableRow key={column.name}>
 								<ui.TableCell>
-									{column.alert && (
-										<ui.AlertIcon
-											alert={column.alert}
-											level={ui.Level.Warning}
-										/>
+									{column.alert ? (
+										<ui.AlertIcon alert={column.alert} level={ui.Level.Warning}>
+											{'!'}
+										</ui.AlertIcon>
+									) : (
+										<ui.AlertIcon alert="All good" level={ui.Level.Success}>
+											{'✓'}
+										</ui.AlertIcon>
 									)}
 								</ui.TableCell>
 								<ui.TableCell>

@@ -13,7 +13,7 @@
 	visibility: hidden;
 }
 
-.alert-icon-message:hover {
+.alert-wrapper:hover .alert-icon-message {
 	visibility: visible;
 }
 
@@ -25,15 +25,16 @@
 	font-size: 0.8rem;
 	height: 1rem;
 	justify-content: center;
+	user-select: none;
 	width: 1rem;
-}
-
-.alert-icon:hover {
-	filter: brightness(90%);
 }
 
 .alert-icon-level-info {
 	background-color: var(--blue);
+}
+
+.alert-icon-level-success {
+	background-color: var(--green);
 }
 
 .alert-icon-level-warning {

@@ -196,7 +196,7 @@ export default function ProductionMetricsPage(props: Props) {
 						/>
 						<ui.SelectField
 							id="class-select"
-							label="class"
+							label="Class"
 							name="class"
 							options={props.classes}
 							value={props.class}

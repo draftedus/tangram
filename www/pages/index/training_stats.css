@@ -1,7 +1,7 @@
 .training-stats-wrapper {
 	display: grid;
 	grid: auto / auto auto;
-	grid-gap: 1rem;
+	gap: 1rem;
 	grid-template-areas:
 		'mean std'
 		'age age';

@@ -1,13 +1,13 @@
 .predict-wrapper {
 	display: grid;
 	grid: auto auto / 1fr;
-	grid-gap: 2rem;
+	gap: 2rem;
 }
 
 .predict-output-wrapper {
 	display: grid;
 	grid: auto / 1fr 1fr;
-	grid-gap: 1rem;
+	gap: 1rem;
 }
 
 .predict-form-items-wrapper {
@@ -15,7 +15,7 @@
 	grid: auto / 1fr 20%;
 	align-content: center;
 	align-items: center;
-	grid-gap: 1rem;
+	gap: 1rem;
 }
 
 .predict-output-items-wrapper {
@@ -23,12 +23,12 @@
 	grid: auto / minmax(0, 1fr);
 	align-content: center;
 	align-items: center;
-	grid-gap: 1rem;
+	gap: 1rem;
 }
 
 .predict-form-buttons-wrapper {
 	display: grid;
-	grid-gap: 1rem;
+	gap: 1rem;
 	grid: auto / 1fr auto;
 }
 
