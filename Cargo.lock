@@ -1058,7 +1058,7 @@ dependencies = [
  "instant 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.74 (registry+https://github.com/rust-lang/crates.io-index)",
  "redox_syscall 0.1.57 (registry+https://github.com/rust-lang/crates.io-index)",
- "smallvec 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1466,7 +1466,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "smallvec"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -1548,7 +1548,7 @@ dependencies = [
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha-1 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "smallvec 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "sqlformat 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sqlx-rt 0.1.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)",
  "stringprep 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2308,7 +2308,7 @@ dependencies = [
 "checksum sha-1 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "170a36ea86c864a3f16dd2687712dd6646f7019f301e57537c7f4dc9f5916770"
 "checksum sha2 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2933378ddfeda7ea26f48c555bdad8bb446bf8a3d17832dc83e380d444cfb8c1"
 "checksum slab 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
-"checksum smallvec 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3757cb9d89161a2f24e1cf78efa0c1fcff485d18e3f55e0aa3480824ddaa0f3f"
+"checksum smallvec 1.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "fbee7696b84bbf3d89a1c2eccff0850e3047ed46bfcd2e92c29a2d074d57e252"
 "checksum socket2 0.3.12 (registry+https://github.com/rust-lang/crates.io-index)" = "03088793f677dce356f3ccc2edb1b314ad191ab702a5de3faf49304f7e104918"
 "checksum sourcemap 6.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6e031f2463ecbdd5f34c950f89f5c1e1032f22c0f8e3dc4bdb2e8b6658cf61eb"
 "checksum sqlformat 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5ce64a4576e1720a2e511bf3ccdb8c0f6cfed0fc265bcbaa0bd369485e02c631"
