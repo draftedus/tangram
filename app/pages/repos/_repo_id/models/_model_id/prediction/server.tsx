@@ -191,15 +191,17 @@ function ClassificationPrediction(props: ClassificationPredictionProps) {
 			<ui.Card>
 				<ui.NumberChart
 					title="Probability"
-					value={ui.formatPercent(props.probability)}
+					value={ui.formatPercent(props.probability, 2)}
 				/>
 			</ui.Card>
-			<ui.BarChart
-				data={probabilityData}
-				id="probabilities"
-				title="Predicted Probabilities"
-				xAxisLabelFormatter={i => props.probabilities[i][0]}
-			/>
+			{props.probabilities.length > 2 && (
+				<ui.BarChart
+					data={probabilityData}
+					id="probabilities"
+					title="Predicted Probabilities"
+					xAxisLabelFormatter={i => props.probabilities[i][0]}
+				/>
+			)}
 			<ui.H2>{'Explanation'}</ui.H2>
 			<ui.P>
 				{

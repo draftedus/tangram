@@ -286,6 +286,7 @@ fn predict(
 				_ => unreachable!(),
 			};
 			let output = output.remove(0);
+			let output_probabilities = output.probabilities;
 			let shap_values = output.shap_values.unwrap();
 			let baselines = shap_values
 				.iter()
@@ -293,35 +294,37 @@ fn predict(
 				.collect::<Vec<f32>>();
 			let baseline_probabilities = get_baseline_probabilities(baselines.as_slice());
 			let class_name = output.class_name.clone();
-			let probability = output.probabilities.get(&class_name).unwrap().to_owned();
+			let probability = output_probabilities.get(&class_name).unwrap().to_owned();
+			let shap_chart_data = shap_values
+				.into_iter()
+				.zip(baseline_probabilities)
+				.map(|((class, shap_values), baseline_probability)| {
+					let output_probability = output_probabilities.get(&class).unwrap();
+					let output = shap_values.baseline
+						+ shap_values.values.iter().fold(0.0, |mut sum, shap_value| {
+							sum += shap_value.1;
+							sum
+						});
+					ClassificationShapValuesOutput {
+						baseline: shap_values.baseline,
+						baseline_probability,
+						baseline_label: format!("{:.2}%", baseline_probability * 100.0),
+						output,
+						label: class.to_string(),
+						output_label: format!("{:.2}%", output_probability * 100.0),
+						values: shap_values
+							.values
+							.into_iter()
+							.map(|(feature, value)| ShapValue { feature, value })
+							.collect(),
+					}
+				})
+				.collect::<Vec<_>>();
 			let prediction = ClassificationPrediction {
 				class_name,
 				probability,
-				probabilities: output.probabilities.into_iter().collect(),
-				shap_chart_data: shap_values
-					.into_iter()
-					.zip(baseline_probabilities)
-					.map(|((class, shap_values), baseline_probability)| {
-						let output = shap_values.baseline
-							+ shap_values.values.iter().fold(0.0, |mut sum, shap_value| {
-								sum += shap_value.1;
-								sum
-							});
-						ClassificationShapValuesOutput {
-							baseline: shap_values.baseline,
-							baseline_probability,
-							baseline_label: shap_values.baseline.to_string(),
-							output,
-							label: class.to_string(),
-							output_label: output.to_string(),
-							values: shap_values
-								.values
-								.into_iter()
-								.map(|(feature, value)| ShapValue { feature, value })
-								.collect(),
-						}
-					})
-					.collect::<Vec<_>>(),
+				probabilities: output_probabilities.into_iter().collect(),
+				shap_chart_data,
 			};
 			Prediction::Classification(prediction)
 		}
