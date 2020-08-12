@@ -163,7 +163,7 @@ async fn props(
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let columns: Vec<Column> = column_stats
-		.into_iter()
+		.iter()
 		.map(|column_stats| match column_stats {
 			tangram_core::types::ColumnStats::Unknown(column_stats) => Column::Unknown(Unknown {
 				name: column_stats.column_name.as_option().unwrap().to_owned(),
@@ -249,9 +249,7 @@ fn predict(
 					};
 					example.insert(
 						key,
-						serde_json::Value::Number(
-							serde_json::Number::from_f64(value.into()).unwrap(),
-						),
+						serde_json::Value::Number(serde_json::Number::from_f64(value).unwrap()),
 					);
 				}
 				_ => unreachable!(),
@@ -293,8 +291,10 @@ fn predict(
 				.map(|(_, shap_values)| shap_values.baseline)
 				.collect::<Vec<f32>>();
 			let baseline_probabilities = get_baseline_probabilities(baselines.as_slice());
-			let class_name = output.class_name.clone();
-			let probability = output_probabilities.get(&class_name).unwrap().to_owned();
+			let probability = output_probabilities
+				.get(&output.class_name)
+				.unwrap()
+				.to_owned();
 			let shap_chart_data = shap_values
 				.into_iter()
 				.zip(baseline_probabilities)
@@ -321,7 +321,7 @@ fn predict(
 				})
 				.collect::<Vec<_>>();
 			let prediction = ClassificationPrediction {
-				class_name,
+				class_name: output.class_name,
 				probability,
 				probabilities: output_probabilities.into_iter().collect(),
 				shap_chart_data,

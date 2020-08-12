@@ -1,9 +1,13 @@
-import { h, ui } from './deps'
+import { PinwheelInfo, h, ui } from './deps'
 import { PageLayout } from './layouts/page_layout'
 
-export default function NotFoundPage() {
+type Props = {
+	pinwheelInfo: PinwheelInfo
+}
+
+export default function NotFoundPage(props: Props) {
 	return (
-		<PageLayout>
+		<PageLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Not Found'}</ui.H1>
 				<ui.P>{'We were unable to find the page you requested.'}</ui.P>

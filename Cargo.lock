@@ -1508,14 +1508,16 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.4.0-beta.1"
+source = "git+https://github.com/nitsky/sqlx?branch=from_any_connect_options#8e184dcec9111d3671b89094bd51d23bd6d66484"
 dependencies = [
- "sqlx-core 0.4.0-beta.1",
- "sqlx-macros 0.4.0-beta.1",
+ "sqlx-core 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)",
+ "sqlx-macros 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)",
 ]
 
 [[package]]
 name = "sqlx-core"
 version = "0.4.0-beta.1"
+source = "git+https://github.com/nitsky/sqlx?branch=from_any_connect_options#8e184dcec9111d3671b89094bd51d23bd6d66484"
 dependencies = [
  "atoi 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1548,7 +1550,7 @@ dependencies = [
  "sha2 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sqlformat 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sqlx-rt 0.1.1",
+ "sqlx-rt 0.1.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)",
  "stringprep 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1558,6 +1560,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.4.0-beta.1"
+source = "git+https://github.com/nitsky/sqlx?branch=from_any_connect_options#8e184dcec9111d3671b89094bd51d23bd6d66484"
 dependencies = [
  "dotenv 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "either 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1565,8 +1568,8 @@ dependencies = [
  "heck 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "sqlx-core 0.4.0-beta.1",
- "sqlx-rt 0.1.1",
+ "sqlx-core 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)",
+ "sqlx-rt 0.1.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)",
  "syn 1.0.38 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1574,6 +1577,7 @@ dependencies = [
 [[package]]
 name = "sqlx-rt"
 version = "0.1.1"
+source = "git+https://github.com/nitsky/sqlx?branch=from_any_connect_options#8e184dcec9111d3671b89094bd51d23bd6d66484"
 dependencies = [
  "native-tls 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1658,7 +1662,7 @@ dependencies = [
  "serde 1.0.115 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.57 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_urlencoded 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "sqlx 0.4.0-beta.1",
+ "sqlx 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)",
  "tangram-core 0.2.0-dev",
  "tokio 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2308,6 +2312,10 @@ dependencies = [
 "checksum socket2 0.3.12 (registry+https://github.com/rust-lang/crates.io-index)" = "03088793f677dce356f3ccc2edb1b314ad191ab702a5de3faf49304f7e104918"
 "checksum sourcemap 6.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6e031f2463ecbdd5f34c950f89f5c1e1032f22c0f8e3dc4bdb2e8b6658cf61eb"
 "checksum sqlformat 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5ce64a4576e1720a2e511bf3ccdb8c0f6cfed0fc265bcbaa0bd369485e02c631"
+"checksum sqlx 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)" = "<none>"
+"checksum sqlx-core 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)" = "<none>"
+"checksum sqlx-macros 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)" = "<none>"
+"checksum sqlx-rt 0.1.1 (git+https://github.com/nitsky/sqlx?branch=from_any_connect_options)" = "<none>"
 "checksum static_assertions 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 "checksum stringprep 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "8ee348cb74b87454fff4b551cbf727025810a004f88aeacae7f85b87f4e9a1c1"
 "checksum strsim 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"

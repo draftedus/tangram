@@ -1,9 +1,13 @@
-import { h, ui } from './deps'
+import { PinwheelInfo, h, ui } from './deps'
 import { PageLayout } from './layouts/page_layout'
 
-export default function ErrorPage() {
+type Props = {
+	pinwheelInfo: PinwheelInfo
+}
+
+export default function ErrorPage(props: Props) {
 	return (
-		<PageLayout>
+		<PageLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.S1>
 				<ui.H1>{'Error'}</ui.H1>
 				<ui.P>

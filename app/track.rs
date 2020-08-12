@@ -25,14 +25,11 @@ enum MonitorEventSet {
 }
 
 pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<Response<Body>> {
-	let data = to_bytes(request.body_mut()).await.map_err(|e| {
-		println!("{:?}", e);
-		return Error::BadRequest;
-	})?;
-	let monitor_events: MonitorEventSet = serde_json::from_slice(&data).map_err(|e| {
-		println!("{:?}", e);
-		return Error::BadRequest;
-	})?;
+	let data = to_bytes(request.body_mut())
+		.await
+		.map_err(|_| Error::BadRequest)?;
+	let monitor_events: MonitorEventSet =
+		serde_json::from_slice(&data).map_err(|_| Error::BadRequest)?;
 	let monitor_events = match monitor_events {
 		MonitorEventSet::Single(s) => vec![s],
 		MonitorEventSet::Multiple(m) => m,
