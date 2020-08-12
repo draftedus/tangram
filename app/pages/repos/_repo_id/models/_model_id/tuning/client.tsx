@@ -1,4 +1,4 @@
-import { TuningPageInner } from './server'
-import { boot } from 'deps'
+import { Tuning } from './tuning'
+import { hydrateComponent } from 'deps'
 
-boot('tuning', TuningPageInner)
+hydrateComponent('tuning', Tuning)
