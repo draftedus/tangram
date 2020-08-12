@@ -1,3 +1,3 @@
-ssh -t tangram@router.tangramhq.com "sudo systemctl stop tangram-api"
-rsync --progress --archive --chown=api:api --chmod=770 ../target/release/tangram-api tangram@router.tangramhq.com:/var/lib/api/api
-ssh -t tangram@router.tangramhq.com "sudo systemctl start tangram-api"
+ssh -t tangram@router.tangramhq.com "sudo systemctl stop tangram"
+rsync --progress --archive --chown=api:api --chmod=770 target/release/tangram tangram@router.tangramhq.com:/var/lib/tangram/tangram
+ssh -t tangram@router.tangramhq.com "sudo systemctl start tangram"

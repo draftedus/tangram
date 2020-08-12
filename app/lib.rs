@@ -6,6 +6,7 @@ use futures::FutureExt;
 use hyper::{header, service::service_fn, Body, Method, Request, Response, StatusCode};
 use pinwheel::Pinwheel;
 use std::{collections::BTreeMap, panic::AssertUnwindSafe, path::PathBuf, str::FromStr, sync::Arc};
+use url::Url;
 
 mod cookies;
 mod error;
@@ -28,7 +29,7 @@ pub struct Context {
 	cookie_domain: Option<String>,
 	sendgrid_api_token: Option<String>,
 	stripe_secret_key: Option<String>,
-	app_url: Option<String>,
+	url: Option<Url>,
 	pool: sqlx::AnyPool,
 }
 
@@ -344,14 +345,16 @@ pub async fn start() -> Result<()> {
 		panic!("SENDGRID_API_TOKEN environment variable must be set when AUTH_ENABLED = 1");
 	}
 	let stripe_secret_key = std::env::var("STRIPE_SECRET_KEY").ok();
-	let app_url = std::env::var("APP_URL").ok();
+	let url = std::env::var("URL")
+		.ok()
+		.map(|url| url.parse().expect("URL environment variable invalid"));
 	let context = Arc::new(Context {
 		pinwheel,
 		auth_enabled,
 		cookie_domain,
 		sendgrid_api_token,
 		stripe_secret_key,
-		app_url,
+		url,
 		pool,
 	});
 

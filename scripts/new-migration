@@ -1,1 +1,1 @@
-touch src/migrations/$(date -u +"%Y-%m-%d-%H%M%S")-$1.sql
+touch app/migrations/$(date -u +"%Y-%m-%d-%H%M%S")-$1.sql

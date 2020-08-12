@@ -362,8 +362,8 @@ pub async fn start_stripe_checkout(
 		"payment_method_types[]": "card",
 		"mode": "setup",
 		"customer": stripe_customer_id,
-		"success_url": format!("{}/organizations/{}/?session_id={{CHECKOUT_SESSION_ID}}", context.app_url.as_ref().unwrap(), organization_id),
-		"cancel_url": format!("{}/organizations/{}/", context.app_url.as_ref().unwrap(), organization_id)
+		"success_url": format!("{}/organizations/{}/?session_id={{CHECKOUT_SESSION_ID}}", context.url.as_ref().unwrap(), organization_id),
+		"cancel_url": format!("{}/organizations/{}/", context.url.as_ref().unwrap(), organization_id)
 	});
 	let client = reqwest::Client::new();
 	let response = client
