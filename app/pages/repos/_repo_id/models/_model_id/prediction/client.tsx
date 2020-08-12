@@ -1,6 +1,8 @@
 import { ui } from 'deps'
 
-ui.hydrateBarChart('probabilities')
+if (document.getElementById('probabilities')) {
+	ui.hydrateBarChart('probabilities')
+}
 if (document.getElementById('regression_shap')) {
 	ui.hydrateShapChart('regression_shap')
 }

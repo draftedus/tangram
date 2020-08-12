@@ -97,12 +97,13 @@ async fn handle(
 			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "prediction"]) => {
-			pages::repos::_repo_id::models::_model_id::prediction::get(request, &context, model_id)
-				.await
-		}
-		(&Method::POST, &["repos", _repo_id, "models", model_id, "prediction"]) => {
-			pages::repos::_repo_id::models::_model_id::prediction::post(request, &context, model_id)
-				.await
+			pages::repos::_repo_id::models::_model_id::prediction::get(
+				request,
+				&context,
+				model_id,
+				search_params,
+			)
+			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
 			pages::repos::_repo_id::models::_model_id::training_metrics::index::get(

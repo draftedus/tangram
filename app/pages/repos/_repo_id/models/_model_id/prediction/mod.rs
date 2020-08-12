@@ -9,7 +9,7 @@ use crate::{
 	Context,
 };
 use anyhow::Result;
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
+use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
@@ -20,8 +20,9 @@ pub async fn get(
 	request: Request<Body>,
 	context: &Context,
 	model_id: &str,
+	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
+	let props = props(request, context, model_id, search_params).await?;
 	let html = context
 		.pinwheel
 		.render_with("/repos/_repo_id/models/_model_id/prediction", props)?;
@@ -38,6 +39,7 @@ struct Props {
 	title: String,
 	id: String,
 	model_layout_info: types::ModelLayoutInfo,
+	prediction: Option<Prediction>,
 }
 
 #[derive(Serialize)]
@@ -75,7 +77,68 @@ struct Text {
 	name: String,
 }
 
-async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
+#[derive(serde::Serialize, Debug)]
+pub struct PredictResponse {
+	pub output: Prediction,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase", tag = "type", content = "value")]
+pub enum Prediction {
+	Regression(RegressionPredictOutput),
+	Classification(ClassificationPrediction),
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RegressionPredictOutput {
+	pub value: f32,
+	pub shap_chart_data: Vec<RegressionShapValuesOutput>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ClassificationPrediction {
+	pub class_name: String,
+	pub probabilities: Vec<(String, f32)>,
+	pub probability: f32,
+	pub shap_chart_data: Vec<ClassificationShapValuesOutput>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ClassificationShapValuesOutput {
+	pub label: String,
+	pub baseline: f32,
+	pub baseline_label: String,
+	pub baseline_probability: f32,
+	pub output: f32,
+	pub output_label: String,
+	pub values: Vec<ShapValue>,
+}
+
+#[derive(serde::Serialize, Debug)]
+pub struct RegressionShapValuesOutput {
+	pub baseline: f32,
+	pub baseline_label: String,
+	pub label: String,
+	pub output: f32,
+	pub output_label: String,
+	pub values: Vec<ShapValue>,
+}
+
+#[derive(serde::Serialize, Debug)]
+pub struct ShapValue {
+	feature: String,
+	value: f32,
+}
+
+async fn props(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+	search_params: Option<BTreeMap<String, String>>,
+) -> Result<Props> {
 	let mut db = context
 		.pool
 		.begin()
@@ -90,16 +153,16 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 	let Model { id, title, data } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
-	let column_stats = match model {
+	let column_stats = match &model {
 		tangram_core::types::Model::Classifier(model) => {
-			model.overall_column_stats.into_option().unwrap()
+			model.overall_column_stats.as_option().unwrap()
 		}
 		tangram_core::types::Model::Regressor(model) => {
-			model.overall_column_stats.into_option().unwrap()
+			model.overall_column_stats.as_option().unwrap()
 		}
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let columns = column_stats
+	let columns: Vec<Column> = column_stats
 		.into_iter()
 		.map(|column_stats| match column_stats {
 			tangram_core::types::ColumnStats::Unknown(column_stats) => Column::Unknown(Unknown {
@@ -125,108 +188,82 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		})
 		.collect();
 	let model_layout_info = get_model_layout_info(&mut db, id).await?;
+
+	// fill in prediction information
+	let prediction = if let Some(search_params) = search_params {
+		Some(predict(model, columns.as_slice(), search_params))
+	} else {
+		None
+	};
+
 	db.commit().await?;
 	Ok(Props {
 		model_layout_info,
 		id: id.to_string(),
 		title,
 		columns,
+		prediction,
 	})
 }
 
-#[derive(serde::Deserialize, Debug)]
-#[serde(tag = "action")]
-pub enum Action {
-	#[serde(rename = "predict")]
-	Predict(PredictAction),
-}
-
-#[derive(serde::Deserialize, Debug)]
-pub struct PredictAction {
-	pub examples: tangram_core::predict::PredictInput,
-	pub options: Option<tangram_core::predict::PredictOptions>,
-}
-
-#[derive(serde::Serialize, Debug)]
-pub struct PredictResponse {
-	pub output: PredictOutput,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase", tag = "type", content = "value")]
-pub enum PredictOutput {
-	Regression(Vec<RegressionPredictOutput>),
-	Classification(Vec<ClassificationPredictOutput>),
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct RegressionPredictOutput {
-	pub value: f32,
-	pub shap_values: Option<RegressionShapValuesOutput>,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ClassificationPredictOutput {
-	pub class_name: String,
-	pub probabilities: BTreeMap<String, f32>,
-	pub shap_values: Option<BTreeMap<String, ClassificationShapValuesOutput>>,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ClassificationShapValuesOutput {
-	pub baseline: f32,
-	pub baseline_probability: f32,
-	pub output: f32,
-	pub values: Vec<(String, f32)>,
-}
-
-#[derive(serde::Serialize, Debug)]
-pub struct RegressionShapValuesOutput {
-	pub baseline: f32,
-	pub values: Vec<(String, f32)>,
-}
-
-pub async fn post(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-) -> Result<Response<Body>> {
-	predict(request, context, model_id).await
-}
-
-async fn predict(
-	mut request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-) -> Result<Response<Body>> {
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_model(&mut db, &user, model_id).await? {
-		return Err(Error::NotFound.into());
+fn predict(
+	model: tangram_core::types::Model,
+	columns: &[Column],
+	search_params: BTreeMap<String, String>,
+) -> Prediction {
+	let mut column_lookup = BTreeMap::new();
+	for column in columns.iter() {
+		match column {
+			Column::Number(number_column) => {
+				column_lookup.insert(number_column.name.to_owned(), column);
+			}
+			Column::Enum(enum_column) => {
+				column_lookup.insert(enum_column.name.to_owned(), column);
+			}
+			Column::Text(text_column) => {
+				column_lookup.insert(text_column.name.to_owned(), column);
+			}
+			_ => unreachable!(),
+		}
 	}
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let request: PredictAction =
-		serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-
-	let Model { data, .. } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(data.as_slice()).unwrap();
-
 	let predict_model: predict::PredictModel = model.try_into().unwrap();
-	let output = tangram_core::predict::predict(&predict_model, request.examples, request.options);
-	let output: PredictOutput = match output {
-		tangram_core::predict::PredictOutput::Classification(output) => {
+	let mut example: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+	for (key, value) in search_params.into_iter() {
+		match column_lookup.get(&key) {
+			Some(column) => match column {
+				Column::Text(_) => {
+					example.insert(key, serde_json::Value::String(value));
+				}
+				Column::Enum(_) => {
+					example.insert(key, serde_json::Value::String(value));
+				}
+				Column::Number(_) => {
+					if value == "" {
+						continue;
+					}
+					let value = match lexical::parse::<f64, _>(value) {
+						Ok(n) => n,
+						Err(_) => {
+							panic!();
+						}
+					};
+					example.insert(
+						key,
+						serde_json::Value::Number(
+							serde_json::Number::from_f64(value.into()).unwrap(),
+						),
+					);
+				}
+				_ => unreachable!(),
+			},
+			None => panic!(),
+		}
+	}
+	let examples: tangram_core::predict::PredictInput = vec![example];
+	let options = tangram_core::predict::PredictOptions { threshold: 0.5 };
+	let output = tangram_core::predict::predict(&predict_model, examples, Some(options));
+	let predict_output: Prediction = match output {
+		tangram_core::predict::PredictOutput::Classification(mut output) => {
 			// get baseline probabliities
 			let softmax = |logits: &[f32]| {
 				let mut probabilities = logits.to_owned();
@@ -248,70 +285,66 @@ async fn predict(
 				predict::PredictModel::GbtMulticlassClassifier(_) => Box::new(softmax),
 				_ => unreachable!(),
 			};
-			PredictOutput::Classification(
-				output
+			let output = output.remove(0);
+			let shap_values = output.shap_values.unwrap();
+			let baselines = shap_values
+				.iter()
+				.map(|(_, shap_values)| shap_values.baseline)
+				.collect::<Vec<f32>>();
+			let baseline_probabilities = get_baseline_probabilities(baselines.as_slice());
+			let class_name = output.class_name.clone();
+			let probability = output.probabilities.get(&class_name).unwrap().to_owned();
+			let prediction = ClassificationPrediction {
+				class_name,
+				probability,
+				probabilities: output.probabilities.into_iter().collect(),
+				shap_chart_data: shap_values
 					.into_iter()
-					.map(|output| {
-						let shap_values = output.shap_values.unwrap();
-						let baselines = shap_values
-							.iter()
-							.map(|(_, shap_values)| shap_values.baseline)
-							.collect::<Vec<f32>>();
-						let baseline_probabilities =
-							get_baseline_probabilities(baselines.as_slice());
-						ClassificationPredictOutput {
-							class_name: output.class_name,
-							probabilities: output.probabilities,
-							shap_values: Some(
-								shap_values
-									.into_iter()
-									.zip(baseline_probabilities)
-									.map(|((class, shap_values), baseline_probability)| {
-										let output = shap_values.baseline
-											+ shap_values.values.iter().fold(
-												0.0,
-												|mut sum, shap_value| {
-													sum += shap_value.1;
-													sum
-												},
-											);
-										(
-											class,
-											ClassificationShapValuesOutput {
-												baseline: shap_values.baseline,
-												baseline_probability,
-												output,
-												values: shap_values.values,
-											},
-										)
-									})
-									.collect::<BTreeMap<String, ClassificationShapValuesOutput>>(),
-							),
+					.zip(baseline_probabilities)
+					.map(|((class, shap_values), baseline_probability)| {
+						let output = shap_values.baseline
+							+ shap_values.values.iter().fold(0.0, |mut sum, shap_value| {
+								sum += shap_value.1;
+								sum
+							});
+						ClassificationShapValuesOutput {
+							baseline: shap_values.baseline,
+							baseline_probability,
+							baseline_label: shap_values.baseline.to_string(),
+							output,
+							label: class.to_string(),
+							output_label: output.to_string(),
+							values: shap_values
+								.values
+								.into_iter()
+								.map(|(feature, value)| ShapValue { feature, value })
+								.collect(),
 						}
 					})
-					.collect(),
-			)
+					.collect::<Vec<_>>(),
+			};
+			Prediction::Classification(prediction)
 		}
-		tangram_core::predict::PredictOutput::Regression(output) => PredictOutput::Regression(
-			output
-				.into_iter()
-				.map(|output| {
-					let shap_values = output.shap_values.unwrap();
-					RegressionPredictOutput {
-						shap_values: Some(RegressionShapValuesOutput {
-							baseline: shap_values.baseline,
-							values: shap_values.values,
-						}),
-						value: output.value,
-					}
-				})
-				.collect(),
-		),
+		tangram_core::predict::PredictOutput::Regression(mut output) => {
+			let output = output.remove(0);
+			let shap_values = output.shap_values.unwrap();
+			let prediction = RegressionPredictOutput {
+				shap_chart_data: vec![RegressionShapValuesOutput {
+					baseline: shap_values.baseline,
+					baseline_label: shap_values.baseline.to_string(),
+					label: "output".to_string(),
+					output: output.value,
+					output_label: output.value.to_string(),
+					values: shap_values
+						.values
+						.into_iter()
+						.map(|(feature, value)| ShapValue { feature, value })
+						.collect(),
+				}],
+				value: output.value,
+			};
+			Prediction::Regression(prediction)
+		}
 	};
-	let response = PredictResponse { output };
-	let response = serde_json::to_vec(&response)?;
-	Ok(Response::builder()
-		.status(StatusCode::OK)
-		.header(header::CONTENT_TYPE, "application/json")
-		.body(Body::from(response))?)
+	predict_output
 }
