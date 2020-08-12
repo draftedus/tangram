@@ -1,7 +1,7 @@
 import { Logo, LogoScheme } from '../components/logo'
 import backgroundImage from './background.svg'
 import { Footer } from './footer'
-import { Body, Children, Fragment, Head, PinwheelInfo, h, ui } from 'deps'
+import { Body, Children, Head, PinwheelInfo, h, ui } from 'deps'
 
 export type DocumentProps = {
 	children: Children
@@ -10,26 +10,24 @@ export type DocumentProps = {
 
 export function Document(props: DocumentProps) {
 	return (
-		<Fragment>
-			<html lang="en">
-				<head>
-					<Head pinwheelInfo={props.pinwheelInfo} />
-					<link
-						as="font"
-						crossOrigin="true"
-						href="/jetbrainsmono.woff2"
-						rel="preload"
-						type="font/woff2"
-					/>
-					<link href="/tangram.css" rel="stylesheet" />
-					<title>{'Tangram'}</title>
-					<meta content="Machine Learning for Developers" name="description" />
-				</head>
-				<body>
-					<Body pinwheelInfo={props.pinwheelInfo}>{props.children}</Body>
-				</body>
-			</html>
-		</Fragment>
+		<html lang="en">
+			<head>
+				<Head pinwheelInfo={props.pinwheelInfo} />
+				<link
+					as="font"
+					crossOrigin="true"
+					href="/jetbrainsmono.woff2"
+					rel="preload"
+					type="font/woff2"
+				/>
+				<link href="/tangram.css" rel="stylesheet" />
+				<title>{'Tangram'}</title>
+				<meta content="Machine Learning for Developers" name="description" />
+			</head>
+			<body>
+				<Body pinwheelInfo={props.pinwheelInfo}>{props.children}</Body>
+			</body>
+		</html>
 	)
 }
 

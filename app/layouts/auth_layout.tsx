@@ -1,4 +1,5 @@
 import { Logo, LogoScheme } from '../../www/components/logo'
+import { Document } from '../../www/layouts/layout'
 import { Children, PinwheelInfo, h, ui } from 'deps'
 
 type AuthLayoutProps = {
@@ -15,13 +16,15 @@ export function AuthLayout(props: AuthLayoutProps) {
 		width: '300px',
 	}
 	return (
-		<div class="auth-layout">
-			<div style={logoStyle}>
-				<Logo color="var(--text-color)" colorScheme={LogoScheme.Multi} />
+		<Document pinwheelInfo={props.pinwheelInfo}>
+			<div class="auth-layout">
+				<div style={logoStyle}>
+					<Logo color="var(--text-color)" colorScheme={LogoScheme.Multi} />
+				</div>
+				<div style={cardStyle}>
+					<ui.Card>{props.children}</ui.Card>
+				</div>
 			</div>
-			<div style={cardStyle}>
-				<ui.Card>{props.children}</ui.Card>
-			</div>
-		</div>
+		</Document>
 	)
 }
