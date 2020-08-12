@@ -180,7 +180,7 @@ async fn props(
 					.as_ref()
 					.and_then(|s| s.get(&name))
 					.map(|s| s.to_owned())
-					.unwrap_or("".to_string());
+					.unwrap_or_else(|| "".to_string());
 				Column::Unknown(Unknown { name, value })
 			}
 			tangram_core::types::ColumnStats::Number(column_stats) => {
@@ -190,7 +190,7 @@ async fn props(
 					.as_ref()
 					.and_then(|s| s.get(&name))
 					.map(|s| s.to_owned())
-					.unwrap_or(mean.to_string());
+					.unwrap_or_else(|| mean.to_string());
 				Column::Number(Number {
 					name,
 					max: *column_stats.max.as_option().unwrap(),
@@ -233,7 +233,7 @@ async fn props(
 					.as_ref()
 					.and_then(|s| s.get(&name))
 					.map(|s| s.to_owned())
-					.unwrap_or("".to_string());
+					.unwrap_or_else(|| "".to_string());
 				Column::Text(Text { name, value })
 			}
 			tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
