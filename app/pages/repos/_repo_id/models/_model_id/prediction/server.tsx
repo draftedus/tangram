@@ -121,7 +121,7 @@ export default function PredictPage(props: Props) {
 												name={name}
 												value={column.value}
 											/>
-											<div></div>
+											<div class="predict-column-chart-wrapper" />
 										</Fragment>
 									)
 								case ColumnType.Number:
@@ -133,29 +133,31 @@ export default function PredictPage(props: Props) {
 												name={name}
 												value={column.value}
 											/>
-											<ui.BoxChart
-												class="column-chart"
-												data={[
-													{
-														color: ui.colors.blue,
-														data: [
-															{
-																x: 0,
-																y: {
-																	max: column.max,
-																	min: column.min,
-																	p25: column.p25,
-																	p50: column.p50,
-																	p75: column.p75,
+											<div class="predict-column-chart-wrapper">
+												<ui.BoxChart
+													class="column-chart"
+													data={[
+														{
+															color: ui.colors.blue,
+															data: [
+																{
+																	x: 0,
+																	y: {
+																		max: column.max,
+																		min: column.min,
+																		p25: column.p25,
+																		p50: column.p50,
+																		p75: column.p75,
+																	},
 																},
-															},
-														],
-														title: 'quartiles',
-													},
-												]}
-												hideLegend={true}
-												id={column.name}
-											/>
+															],
+															title: 'quartiles',
+														},
+													]}
+													hideLegend={true}
+													id={column.name}
+												/>
+											</div>
 										</Fragment>
 									)
 								case ColumnType.Enum:
@@ -168,21 +170,23 @@ export default function PredictPage(props: Props) {
 												options={column.options}
 												value={column.value ?? undefined}
 											/>
-											<ui.BarChart
-												class="column-chart"
-												data={[
-													{
-														color: ui.colors.blue,
-														data: column.histogram.map(([_, value], i) => ({
-															x: i,
-															y: value,
-														})),
-														title: 'histogram',
-													},
-												]}
-												hideLegend={true}
-												id={column.name}
-											/>
+											<div class="predict-column-chart-wrapper">
+												<ui.BarChart
+													class="column-chart"
+													data={[
+														{
+															color: ui.colors.blue,
+															data: column.histogram.map(([_, value], i) => ({
+																x: i,
+																y: value,
+															})),
+															title: 'histogram',
+														},
+													]}
+													hideLegend={true}
+													id={column.name}
+												/>
+											</div>
 										</Fragment>
 									)
 								case ColumnType.Text:
@@ -194,7 +198,7 @@ export default function PredictPage(props: Props) {
 												name={name}
 												value={column.value ?? undefined}
 											/>
-											<div></div>
+											<div class="predict-column-chart-wrapper" />
 										</Fragment>
 									)
 							}
@@ -203,7 +207,7 @@ export default function PredictPage(props: Props) {
 					<div class="predict-form-buttons-wrapper">
 						<ui.Button type="submit">{'Predict'}</ui.Button>
 						<ui.Button color={ui.colors.yellow} type="reset">
-							{'Reset'}
+							{'Reset Defaults'}
 						</ui.Button>
 					</div>
 				</ui.Form>

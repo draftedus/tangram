@@ -17,8 +17,18 @@
 	align-items: center;
 	grid-gap: 1rem;
 }
+
 .predict-form-buttons-wrapper {
 	display: grid;
 	grid-gap: 1rem;
 	grid: auto / 1fr auto;
+}
+
+@media (max-width: 1199px) {
+	.predict-column-chart-wrapper {
+		display: none;
+	}
+	.predict-form-items-wrapper {
+		grid: auto / minmax(0, 1fr);
+	}
 }
