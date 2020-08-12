@@ -10,55 +10,39 @@ import {
 export type Props = {
 	class: string
 	classes: string[]
-	modelId: string
-	modelLayoutInfo: ModelLayoutInfo
-	nonParametricPrecisionRecallCurveData: Array<{
+	data: Array<{
 		precision: number
 		recall: number
 		threshold: number
 	}>
-	parametricPrecisionRecallCurveData: Array<{
-		precision: number
-		recall: number
-	}>
+	modelId: string
+	modelLayoutInfo: ModelLayoutInfo
 	pinwheelInfo: PinwheelInfo
 }
 
 export default function TrainingMetricsIndexPage(props: Props) {
 	let prData = ui
 		.zip(
-			props.parametricPrecisionRecallCurveData.map(
-				threshold => threshold.recall,
-			),
-			props.parametricPrecisionRecallCurveData.map(
-				threshold => threshold.precision,
-			),
+			props.data.map(threshold => threshold.recall),
+			props.data.map(threshold => threshold.precision),
 		)
 		.map(([recall, precision]) => ({ x: recall, y: precision }))
 		.filter(v => v.x !== null && v.y !== null)
-	let ptData = ui
+	let precisionData = ui
 		.zip(
-			props.nonParametricPrecisionRecallCurveData.map(
-				threshold => threshold.threshold,
-			),
-			props.nonParametricPrecisionRecallCurveData.map(
-				threshold => threshold.precision,
-			),
+			props.data.map(threshold => threshold.threshold),
+			props.data.map(threshold => threshold.precision),
 		)
-		.map(([recall, precision]) => ({ x: recall, y: precision }))
+		.map(([threshold, precision]) => ({ x: threshold, y: precision }))
 		.filter(v => v.x !== null && v.y !== null)
-	let rtData = ui
+	let recallData = ui
 		.zip(
-			props.nonParametricPrecisionRecallCurveData.map(
-				threshold => threshold.threshold,
-			),
-			props.nonParametricPrecisionRecallCurveData.map(
-				threshold => threshold.recall,
-			),
+			props.data.map(threshold => threshold.threshold),
+			props.data.map(threshold => threshold.recall),
 		)
-		.map(([recall, precision]) => ({ x: recall, y: precision }))
+		.map(([threshold, recall]) => ({ x: threshold, y: recall }))
 		.filter(v => v.x !== null && v.y !== null)
-	let data = [
+	let parametricData = [
 		{
 			color: ui.colors.blue,
 			data: prData,
@@ -68,12 +52,12 @@ export default function TrainingMetricsIndexPage(props: Props) {
 	let nonParametricData = [
 		{
 			color: ui.colors.blue,
-			data: ptData,
+			data: precisionData,
 			title: 'Precision',
 		},
 		{
 			color: ui.colors.green,
-			data: rtData,
+			data: recallData,
 			title: 'Recall',
 		},
 	]
@@ -95,14 +79,14 @@ export default function TrainingMetricsIndexPage(props: Props) {
 				</ui.TabBar>
 				<ClassSelect class={props.class} classes={props.classes} />
 				<ui.S2>
-					<ui.H2>{'Precision Recall Curve'}</ui.H2>
+					<ui.H2>{'Parametric Precision Recall Curve'}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Card>
 						<ui.LineChart
-							data={data}
+							data={parametricData}
 							id="parametric_pr"
 							showLegend={false}
-							title="Precision Recall Curve"
+							title="Parametric Precision Recall Curve"
 							xAxisTitle="Recall"
 							xMax={1}
 							xMin={0}
@@ -120,7 +104,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 							data={nonParametricData}
 							id="non_parametric_pr"
 							showLegend={true}
-							title="Precision Recall Curve"
+							title="None-Parametric Precision Recall Curve"
 							xAxisTitle="Threshold"
 							xMax={1}
 							xMin={0}

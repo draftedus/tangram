@@ -35,25 +35,17 @@ pub async fn get(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
-	id: String,
-	title: String,
-	classes: Vec<String>,
-	non_parametric_precision_recall_curve_data: Vec<Vec<NonParametricPrecisionRecallCurveData>>,
-	parametric_precision_recall_curve_data: Vec<Vec<ParametricPrecisionRecallCurveData>>,
-	model_layout_info: types::ModelLayoutInfo,
 	class: String,
+	classes: Vec<String>,
+	data: Vec<DataPoint>,
+	id: String,
+	model_layout_info: types::ModelLayoutInfo,
+	title: String,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ParametricPrecisionRecallCurveData {
-	precision: f32,
-	recall: f32,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct NonParametricPrecisionRecallCurveData {
+struct DataPoint {
 	precision: f32,
 	recall: f32,
 	threshold: f32,
@@ -79,74 +71,47 @@ async fn props(
 	}
 	let Model { title, data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
-	// assemble the response
-	match model {
-		tangram_core::types::Model::Classifier(model) => {
-			let class_metrics = match model.model.as_option().unwrap() {
-				tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
-					inner_model.class_metrics.as_option().unwrap()
-				}
-				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
-					inner_model.class_metrics.as_option().unwrap()
-				}
-				_ => return Err(Error::BadRequest.into()),
-			};
-			let parametric_precision_recall_curve_data = class_metrics
-				.iter()
-				.map(|class_metrics| {
-					class_metrics
-						.thresholds
-						.as_option()
-						.unwrap()
-						.iter()
-						.map(|class_metrics| ParametricPrecisionRecallCurveData {
-							precision: *class_metrics.precision.as_option().unwrap(),
-							recall: *class_metrics.recall.as_option().unwrap(),
-						})
-						.collect()
-				})
-				.collect();
-			let non_parametric_precision_recall_curve_data = class_metrics
-				.iter()
-				.map(|class_metrics| {
-					class_metrics
-						.thresholds
-						.as_option()
-						.unwrap()
-						.iter()
-						.map(|class_metrics| NonParametricPrecisionRecallCurveData {
-							precision: *class_metrics.precision.as_option().unwrap(),
-							recall: *class_metrics.recall.as_option().unwrap(),
-							threshold: *class_metrics.threshold.as_option().unwrap(),
-						})
-						.collect()
-				})
-				.collect();
-
-			let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-
-			let classes = model.classes().to_owned();
-			let class_index = if let Some(class) = &class {
-				classes.iter().position(|c| c == class).unwrap()
-			} else {
-				1
-			};
-			let class = class.unwrap_or_else(|| classes[class_index].to_owned());
-
-			db.commit().await?;
-			Ok(Props {
-				id: id.to_string(),
-				title,
-				classes: model.classes().to_owned(),
-				non_parametric_precision_recall_curve_data,
-				parametric_precision_recall_curve_data,
-				model_layout_info,
-				class,
-			})
+	let model = match model {
+		tangram_core::types::Model::Classifier(model) => model,
+		_ => return Err(Error::BadRequest.into()),
+	};
+	let classes = model.classes().to_owned();
+	let class_index = if let Some(class) = &class {
+		classes.iter().position(|c| c == class).unwrap()
+	} else {
+		1
+	};
+	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
+	let class_metrics = match model.model.as_option().unwrap() {
+		tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
+			inner_model.class_metrics.as_option().unwrap()
 		}
-		_ => {
-			db.commit().await?;
-			Err(Error::BadRequest.into())
+		tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
+			inner_model.class_metrics.as_option().unwrap()
 		}
-	}
+		_ => return Err(Error::BadRequest.into()),
+	};
+	let data = class_metrics
+		.get(class_index)
+		.unwrap()
+		.thresholds
+		.as_option()
+		.unwrap()
+		.iter()
+		.map(|class_metrics| DataPoint {
+			precision: *class_metrics.precision.as_option().unwrap(),
+			recall: *class_metrics.recall.as_option().unwrap(),
+			threshold: *class_metrics.threshold.as_option().unwrap(),
+		})
+		.collect();
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	db.commit().await?;
+	Ok(Props {
+		class,
+		classes: model.classes().to_owned(),
+		data,
+		id: id.to_string(),
+		model_layout_info,
+		title,
+	})
 }
