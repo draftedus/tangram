@@ -23,6 +23,7 @@ export function TextColumnDetail(props: Props) {
 				<ui.Card>
 					<ui.BarChart
 						data={data}
+						id="text_histogram"
 						title="Most Frequent Tokens"
 						xAxisLabelFormatter={i => props.tokens[i][0]}
 						xAxisTitle="Token"

@@ -106,6 +106,7 @@ export function NumberColumnDetail(props: Props) {
 					<ui.Card>
 						<ui.BarChart
 							data={histogramData}
+							id="number_histogram"
 							shouldDrawXAxisLabels={true}
 							title={`Histogram of Unique Values for ${props.name}`}
 							xAxisLabelFormatter={i =>

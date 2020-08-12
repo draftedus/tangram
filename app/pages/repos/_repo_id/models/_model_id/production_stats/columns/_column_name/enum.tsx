@@ -94,6 +94,7 @@ export function Enum(props: Props) {
 			<ui.Card>
 				<ui.BarChart
 					data={overallChartData}
+					id="enum_overall"
 					title={overallDistributionChartTitle}
 					xAxisLabelFormatter={x => props.overall.histogram[x][0]}
 					xAxisTitle={props.name}
@@ -105,6 +106,7 @@ export function Enum(props: Props) {
 			<ui.Card>
 				<ui.BarChart
 					data={intervalChartData}
+					id="enum_intervals"
 					title={intervalDistributionChartTitle}
 					xAxisLabelFormatter={i => props.intervals[i].label}
 					yAxisTitle="Count"

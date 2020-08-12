@@ -141,6 +141,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 				<ui.Card>
 					<ui.BarChart
 						data={predictionCountData}
+						id="prediction_count"
 						title={predictionCountTitle}
 						xAxisLabelFormatter={i => props.predictionCountChart[i].label}
 					/>
@@ -258,6 +259,7 @@ function RegressionProductionStatsChart(props: {
 	return (
 		<ui.BoxChart
 			data={data}
+			id="quantiles_overall"
 			title={title}
 			xAxisLabelFormatter={_ => props.chartData.label}
 		/>
@@ -295,6 +297,7 @@ function RegressionProductionStatsIntervalChart(props: {
 	return (
 		<ui.BoxChart
 			data={data}
+			id="quantiles_intervals"
 			title={title}
 			xAxisLabelFormatter={i => props.chartData[i].label}
 		/>
@@ -334,6 +337,7 @@ function ClassificationProductionStatsChart(props: {
 	return (
 		<ui.BarChart
 			data={data}
+			id="histogram_overall"
 			title={title}
 			xAxisLabelFormatter={_ => props.chartData.label}
 		/>
@@ -368,6 +372,7 @@ function ClassificationProductionStatsIntervalChart(props: {
 	return (
 		<ui.BarChart
 			data={data}
+			id="histogram_intervals"
 			title={title}
 			xAxisLabelFormatter={i => props.chartData[i].label}
 		/>

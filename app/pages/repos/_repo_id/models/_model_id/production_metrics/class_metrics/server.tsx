@@ -240,6 +240,7 @@ export default function ProductionMetricsPage(props: Props) {
 							<ui.Card>
 								<ui.LineChart
 									data={precisionChartData}
+									id="precision_intervals"
 									title={precisionIntervalChartTitle}
 									xAxisLabelFormatter={i =>
 										selectedIntervalClassMetrics.intervals[i].label
@@ -251,6 +252,7 @@ export default function ProductionMetricsPage(props: Props) {
 							<ui.Card>
 								<ui.LineChart
 									data={recallChartData}
+									id="recall_intervals"
 									title={recallIntervalChartTitle}
 									xAxisLabelFormatter={i =>
 										selectedIntervalClassMetrics.intervals[i].label
@@ -276,6 +278,7 @@ export default function ProductionMetricsPage(props: Props) {
 							<ui.Card>
 								<ui.LineChart
 									data={f1ScoreChartData}
+									id="f1_intervals"
 									title={f1ScoreIntervalChartTitle}
 									xAxisLabelFormatter={i =>
 										selectedIntervalClassMetrics.intervals[i].label

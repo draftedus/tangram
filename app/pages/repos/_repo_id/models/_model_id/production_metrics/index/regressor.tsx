@@ -74,6 +74,7 @@ export function RegressorProductionMetricsPage(props: Props) {
 					<ui.Card>
 						<ui.LineChart
 							data={mseData}
+							id="mse"
 							title={mseChartTitle}
 							xAxisLabelFormatter={i => props.mseChart.data[i].label}
 							yAxisTitle="Root Mean Squared Error"

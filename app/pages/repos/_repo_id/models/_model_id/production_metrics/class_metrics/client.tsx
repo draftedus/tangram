@@ -1,4 +1,4 @@
-export {}
+import { ui } from 'deps'
 
 let classSelectElements = document.querySelectorAll('#class-select')
 classSelectElements.forEach(selectElement => {
@@ -21,3 +21,7 @@ dateWindowSlectElements.forEach(selectElement => {
 		form.submit()
 	})
 })
+
+ui.hydrateLineChart('precision_intervals')
+ui.hydrateLineChart('recall_intervals')
+ui.hydrateLineChart('f1_intervals')

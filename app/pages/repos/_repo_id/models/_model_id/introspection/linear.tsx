@@ -22,6 +22,7 @@ export function LinearFeatureWeights(props: Props) {
 			<ui.Card>
 				<ui.BarChart
 					data={data}
+					id="feature_weights"
 					shouldDrawXAxisLabels={false}
 					title="Feature Weights"
 					xAxisLabelFormatter={i => props.values[i][0]}

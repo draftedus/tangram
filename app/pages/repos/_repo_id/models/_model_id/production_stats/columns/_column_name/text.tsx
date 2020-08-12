@@ -45,6 +45,7 @@ export function Text(props: Props) {
 			<ui.Card>
 				<ui.BarChart
 					data={overallChartData}
+					id="text_overall"
 					title={overallDistributionChartTitle}
 					xAxisLabelFormatter={x => props.overall.tokenHistogram[x][0]}
 					xAxisTitle={props.name}

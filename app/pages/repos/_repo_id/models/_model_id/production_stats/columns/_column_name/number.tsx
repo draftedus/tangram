@@ -126,6 +126,7 @@ export function Number(props: Props) {
 			<ui.Card>
 				<ui.BoxChart
 					data={overallChartData}
+					id="overall"
 					title={statsOverallChartTitle}
 					xAxisLabelFormatter={_ => props.overall.label}
 				/>
@@ -133,6 +134,7 @@ export function Number(props: Props) {
 			<ui.Card>
 				<ui.BoxChart
 					data={intervalChartData}
+					id="number_intervals"
 					title={statsIntervalChartTitle}
 					xAxisLabelFormatter={i => props.intervals[i].label}
 				/>

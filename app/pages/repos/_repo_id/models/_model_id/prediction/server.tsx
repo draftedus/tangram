@@ -147,6 +147,7 @@ export default function PredictPage(props: Props) {
 										title: 'probabilities',
 									},
 								]}
+								id="probabilities"
 								title="Predicted Probabilities"
 								xAxisLabelFormatter={props.prediction.value.xAxisLabelFormatter}
 							/>
@@ -160,6 +161,7 @@ export default function PredictPage(props: Props) {
 						<ui.Card>
 							<ui.ShapChart
 								data={props.prediction.value.shapChartData}
+								id="classification_shap"
 								includeXAxisTitle={true}
 								includeYAxisLabels={true}
 								includeYAxisTitle={true}
@@ -187,6 +189,7 @@ export default function PredictPage(props: Props) {
 						<ui.Card>
 							<ui.ShapChart
 								data={props.prediction.value.shapChartData}
+								id="regression_shap"
 								includeXAxisTitle={true}
 								includeYAxisLabels={false}
 								includeYAxisTitle={false}

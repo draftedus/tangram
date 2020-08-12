@@ -1,4 +1,4 @@
-export {}
+import { ui } from 'deps'
 
 let selectElements = document.querySelectorAll('select')
 selectElements.forEach(selectElement => {
@@ -9,3 +9,11 @@ selectElements.forEach(selectElement => {
 		form.submit()
 	})
 })
+
+ui.hydrateBoxChart('number_intervals')
+ui.hydrateBoxChart('number_overall')
+
+ui.hydrateBarChart('enum_intervals')
+ui.hydrateBarChart('enum_overall')
+
+ui.hydrateBarChart('text_overall')

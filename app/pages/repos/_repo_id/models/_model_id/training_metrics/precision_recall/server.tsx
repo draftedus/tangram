@@ -100,6 +100,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					<ui.Card>
 						<ui.LineChart
 							data={data}
+							id="parametric_pr"
 							showLegend={false}
 							title="Precision Recall Curve"
 							xAxisTitle="Recall"
@@ -117,6 +118,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					<ui.Card>
 						<ui.LineChart
 							data={nonParametricData}
+							id="non_parametric_pr"
 							showLegend={true}
 							title="Precision Recall Curve"
 							xAxisTitle="Threshold"

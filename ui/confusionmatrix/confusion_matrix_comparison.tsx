@@ -127,18 +127,16 @@ function ConfusionMatrixComparisonItem(props: ConfusionMatrixItemProps) {
 	let wrapperStyle = {
 		gridArea: props.area,
 	}
+	let className = cx(
+		'confusion-matrix-comparison-item-wrapper',
+		props.true
+			? 'confusion-matrix-comparison-item-positive-wrapper'
+			: 'confusion-matrix-comparison-item-negative-wrapper',
+	)
 	return (
-		<div
-			class={cx(
-				'confusion-matrix-comparison-item-wrapper',
-				props.true
-					? 'confusion-matrix-comparison-item-positive-wrapper'
-					: 'confusion-matrix-comparison-item-negative-wrapper',
-			)}
-			style={wrapperStyle}
-		>
+		<div class={className} style={wrapperStyle}>
 			<div class="confusion-matrix-comparison-item-title">{props.label}</div>
-			<div class=".confusion-matrix-comparison-number-comparison-wrapper">
+			<div class="confusion-matrix-comparison-number-comparison-wrapper">
 				<div class="confusion-matrix-comparison-item-value">
 					{props.valueA === null ? 'N/A' : valueFormatter(props.valueA)}
 				</div>

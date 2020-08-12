@@ -40,7 +40,7 @@ export function EnumColumnDetail(props: Props) {
 				<ui.Card>
 					<ui.BarChart
 						data={histogramData}
-						id="histogram"
+						id="enum_histogram"
 						title={`Histogram of Unique Values for ${props.name}`}
 						xAxisLabelFormatter={x => props.histogram[x][0]}
 						xAxisTitle={props.name}
