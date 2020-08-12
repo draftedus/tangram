@@ -386,10 +386,10 @@ fn predict(
 			let prediction = RegressionPredictOutput {
 				shap_chart_data: vec![RegressionShapValuesOutput {
 					baseline: shap_values.baseline,
-					baseline_label: dbg!(shap_values.baseline.to_string()),
+					baseline_label: shap_values.baseline.to_string(),
 					label: "output".to_string(),
 					output: output.value,
-					output_label: dbg!(output.value.to_string()),
+					output_label: output.value.to_string(),
 					values: shap_values
 						.values
 						.into_iter()

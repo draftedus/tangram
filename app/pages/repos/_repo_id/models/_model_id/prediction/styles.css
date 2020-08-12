@@ -18,6 +18,14 @@
 	grid-gap: 1rem;
 }
 
+.predict-output-items-wrapper {
+	display: grid;
+	grid: auto / minmax(0, 1fr);
+	align-content: center;
+	align-items: center;
+	grid-gap: 1rem;
+}
+
 .predict-form-buttons-wrapper {
 	display: grid;
 	grid-gap: 1rem;

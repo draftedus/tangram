@@ -105,123 +105,147 @@ export default function PredictPage(props: Props) {
 			pinwheelInfo={props.pinwheelInfo}
 			selectedItem={ModelSideNavItem.Prediction}
 		>
-			<ui.S1>
-				<ui.H1>{'Predict'}</ui.H1>
-				<ui.Form autoComplete="off" id="predict_form">
-					<div class="predict-form-items-wrapper">
-						{props.columns.map(column => {
-							let name = column.name
-							switch (column.type) {
-								case ColumnType.Unknown:
-									return (
-										<Fragment>
-											<ui.TextField
-												key={name}
-												label={column.name}
-												name={name}
-												value={column.value}
-											/>
-											<div class="predict-column-chart-wrapper" />
-										</Fragment>
-									)
-								case ColumnType.Number:
-									return (
-										<Fragment>
-											<ui.TextField
-												key={name}
-												label={column.name}
-												name={name}
-												value={column.value}
-											/>
-											<div class="predict-column-chart-wrapper">
-												<ui.BoxChart
-													class="column-chart"
-													data={[
-														{
-															color: ui.colors.blue,
-															data: [
-																{
-																	x: 0,
-																	y: {
-																		max: column.max,
-																		min: column.min,
-																		p25: column.p25,
-																		p50: column.p50,
-																		p75: column.p75,
-																	},
-																},
-															],
-															title: 'quartiles',
-														},
-													]}
-													hideLegend={true}
-													id={column.name}
-												/>
-											</div>
-										</Fragment>
-									)
-								case ColumnType.Enum:
-									return (
-										<Fragment>
-											<ui.SelectField
-												key={name}
-												label={column.name}
-												name={name}
-												options={column.options}
-												value={column.value ?? undefined}
-											/>
-											<div class="predict-column-chart-wrapper">
-												<ui.BarChart
-													class="column-chart"
-													data={[
-														{
-															color: ui.colors.blue,
-															data: column.histogram.map(([_, value], i) => ({
-																x: i,
-																y: value,
-															})),
-															title: 'histogram',
-														},
-													]}
-													hideLegend={true}
-													id={column.name}
-												/>
-											</div>
-										</Fragment>
-									)
-								case ColumnType.Text:
-									return (
-										<Fragment>
-											<ui.TextField
-												key={name}
-												label={column.name}
-												name={name}
-												value={column.value ?? undefined}
-											/>
-											<div class="predict-column-chart-wrapper" />
-										</Fragment>
-									)
-							}
-						})}
-					</div>
-					<div class="predict-form-buttons-wrapper">
-						<ui.Button type="submit">{'Predict'}</ui.Button>
-						<ui.Button color={ui.colors.yellow} type="reset">
-							{'Reset Defaults'}
-						</ui.Button>
-					</div>
-				</ui.Form>
-				<div id="predict_output">
-					{props.prediction &&
-					props.prediction.type === PredictionType.Classification ? (
-						<ClassificationPrediction {...props.prediction.value} />
-					) : props.prediction &&
-					  props.prediction.type === PredictionType.Regression ? (
-						<RegressionPrediction {...props.prediction.value} />
-					) : null}
-				</div>
-			</ui.S1>
+			{props.prediction ? (
+				<PredictionOutputInner {...props} />
+			) : (
+				<PredictionInputInner {...props} />
+			)}
 		</ModelLayout>,
+	)
+}
+
+function PredictionOutputInner(props: Props) {
+	return (
+		<ui.S1>
+			<ui.H1>{'Predict'}</ui.H1>
+			<div class="predict-output-items-wrapper">
+				{props.columns.map(column => (
+					<div key={column.name}>
+						<span style="color: var(--muted-text-color)">{column.name}</span>
+						{': '}
+						<span style="color: var(--text-color)">{column.value}</span>
+					</div>
+				))}
+			</div>
+			{props.prediction &&
+				(props.prediction.type === PredictionType.Classification ? (
+					<ClassificationPrediction {...props.prediction.value} />
+				) : props.prediction.type === PredictionType.Regression ? (
+					<RegressionPrediction {...props.prediction.value} />
+				) : null)}
+		</ui.S1>
+	)
+}
+
+function PredictionInputInner(props: Props) {
+	return (
+		<ui.S1>
+			<ui.H1>{'Predict'}</ui.H1>
+			<ui.Form autoComplete="off">
+				<div class="predict-form-items-wrapper">
+					{props.columns.map(column => {
+						let name = column.name
+						switch (column.type) {
+							case ColumnType.Unknown:
+								return (
+									<Fragment>
+										<ui.TextField
+											key={name}
+											label={column.name}
+											name={name}
+											value={column.value}
+										/>
+										<div />
+									</Fragment>
+								)
+							case ColumnType.Number:
+								return (
+									<Fragment>
+										<ui.TextField
+											key={name}
+											label={column.name}
+											name={name}
+											value={column.value}
+										/>
+										<div>
+											<ui.BoxChart
+												class="column-chart"
+												data={[
+													{
+														color: ui.colors.blue,
+														data: [
+															{
+																x: 0,
+																y: {
+																	max: column.max,
+																	min: column.min,
+																	p25: column.p25,
+																	p50: column.p50,
+																	p75: column.p75,
+																},
+															},
+														],
+														title: 'quartiles',
+													},
+												]}
+												hideLegend={true}
+												id={column.name}
+											/>
+										</div>
+									</Fragment>
+								)
+							case ColumnType.Enum:
+								return (
+									<Fragment>
+										<ui.SelectField
+											key={name}
+											label={column.name}
+											name={name}
+											options={column.options}
+											value={column.value ?? undefined}
+										/>
+										<div>
+											<ui.BarChart
+												class="column-chart"
+												data={[
+													{
+														color: ui.colors.blue,
+														data: column.histogram.map(([_, value], i) => ({
+															x: i,
+															y: value,
+														})),
+														title: 'histogram',
+													},
+												]}
+												hideLegend={true}
+												id={column.name}
+											/>
+										</div>
+									</Fragment>
+								)
+							case ColumnType.Text:
+								return (
+									<Fragment>
+										<ui.TextField
+											key={name}
+											label={column.name}
+											name={name}
+											value={column.value ?? undefined}
+										/>
+										<div />
+									</Fragment>
+								)
+						}
+					})}
+				</div>
+				<div class="predict-form-buttons-wrapper">
+					<ui.Button type="submit">{'Predict'}</ui.Button>
+					<ui.Button color={ui.colors.yellow} type="reset">
+						{'Reset Defaults'}
+					</ui.Button>
+				</div>
+			</ui.Form>
+		</ui.S1>
 	)
 }
 

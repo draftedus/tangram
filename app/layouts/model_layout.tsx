@@ -44,41 +44,45 @@ export function ModelLayout(props: ModelLayoutProps) {
 					class="model-layout-model-group-topbar"
 					style={{ gridArea: 'model-group-topbar' }}
 				>
-					<div class="model-layout-owner-slash-repo-wrapper">
-						<a
-							class="model-layout-owner-slash-repo-link"
-							href={props.info.ownerUrl}
-							title="owner"
-						>
-							{props.info.ownerName}
-						</a>
-						<span class="model-layout-owner-slash-repo-link">{'/'}</span>
-						<a
-							class="model-layout-owner-slash-repo-link"
-							href={`/repos/${props.info.id}/models/${props.info.modelId}/`}
-							title="repo"
-						>
-							{props.info.title}
-						</a>
+					<div class="model-layout-owner-slash-repor-slash-model-wrapper">
+						<div class="model-layout-owner-slash-repo-wrapper">
+							<a
+								class="model-layout-owner-slash-repo-link"
+								href={props.info.ownerUrl}
+								title="owner"
+							>
+								{props.info.ownerName}
+							</a>
+							<span class="model-layout-owner-slash-repo-link">{'/'}</span>
+							<a
+								class="model-layout-owner-slash-repo-link"
+								href={`/repos/${props.info.id}/models/${props.info.modelId}/`}
+								title="repo"
+							>
+								{props.info.title}
+							</a>
+						</div>
+						<ui.Details
+							options={
+								props.info.models.map(model => ({
+									href: `/repos/${props.info.id}/models/${model.id}/`,
+									name: model.title,
+								})) ?? []
+							}
+							summary={selectedModel?.title ?? null}
+						/>
 					</div>
-					<ui.Details
-						options={
-							props.info.models.map(model => ({
-								href: `/repos/${props.info.id}/models/${model.id}/`,
-								name: model.title,
-							})) ?? []
-						}
-						summary={selectedModel?.title ?? null}
-					/>
-					<ui.Button
-						download={`${props.info.modelTitle}.tangram`}
-						href={`/repos/${props.info.id}/models/${props.info.modelId}/download`}
-					>
-						{'Download Model'}
-					</ui.Button>
-					<ui.Button href={`/repos/${props.info.id}/models/new`}>
-						{'Upload New Model Version'}
-					</ui.Button>
+					<div class="model-layout-model-group-topbar-actions-wrapper">
+						<ui.Button
+							download={`${props.info.modelTitle}.tangram`}
+							href={`/repos/${props.info.id}/models/${props.info.modelId}/download`}
+						>
+							{'Download Model'}
+						</ui.Button>
+						<ui.Button href={`/repos/${props.info.id}/models/new`}>
+							{'Upload New Model Version'}
+						</ui.Button>
+					</div>
 				</div>
 				<div class="model-layout-grid" style={{ gridArea: 'model' }}>
 					<div
