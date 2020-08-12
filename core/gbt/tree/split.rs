@@ -241,7 +241,7 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 
 		let split = TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
 			feature_index,
-			bin_index: bin_index as u8,
+			bin_index: bin_index.to_u8().unwrap(),
 			split_value: match bin_info {
 				BinInfo::Number { thresholds } => {
 					match bin_index.checked_sub(1) {
@@ -325,7 +325,7 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 	let mut directions = types::BinDirections::new(bin_info.n_valid_bins() + 1, true);
 
 	for (bin_index, bin_stats_entry) in sorted_bin_stats.iter() {
-		directions.set(*bin_index as u8, false);
+		directions.set(bin_index.to_u8().unwrap(), false);
 		left_n_examples += bin_stats_entry.count;
 		left_sum_hessians += bin_stats_entry.sum_hessians;
 		left_sum_gradients += bin_stats_entry.sum_gradients;

@@ -1,6 +1,7 @@
 use super::{super::types, bin_stats::BinStats};
 use crate::dataframe::*;
 use ndarray::prelude::*;
+use num_traits::ToPrimitive;
 use std::cmp::Ordering;
 
 /// Contains data structures used during training of trees.
@@ -181,7 +182,7 @@ impl types::Tree {
 					..
 				}) => {
 					let feature_value = match row[*feature_index] {
-						Value::Enum(value) => value as u8,
+						Value::Enum(value) => value.to_u8().unwrap(),
 						_ => unreachable!(),
 					};
 					node_index = if !directions.get(feature_value).unwrap() {

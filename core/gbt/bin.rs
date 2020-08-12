@@ -41,7 +41,7 @@ pub fn compute_bin_info_for_column(
 	match column {
 		ColumnView::Number(column) => compute_bin_info_for_number_column(column, options),
 		ColumnView::Enum(column) => BinInfo::Enum {
-			n_options: column.options.len() as u8,
+			n_options: column.options.len().to_u8().unwrap(),
 		},
 		_ => unreachable!(),
 	}
@@ -173,8 +173,8 @@ pub fn compute_binned_features(
 						for (binned_feature_value, feature_value) in
 							binned_features_column.iter_mut().zip(column.data)
 						{
-							*binned_feature_value = *feature_value as u8;
-							binned_feature_stats[*binned_feature_value as usize] += 1;
+							*binned_feature_value = feature_value.to_u8().unwrap();
+							binned_feature_stats[binned_feature_value.to_usize().unwrap()] += 1;
 						}
 					}
 					_ => unreachable!(),

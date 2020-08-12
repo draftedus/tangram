@@ -490,7 +490,7 @@ mod brute {
 				..
 			}) => {
 				let feature_value = match example[*feature_index] {
-					dataframe::Value::Enum(value) => value as u8,
+					dataframe::Value::Enum(value) => value.to_u8().unwrap(),
 					_ => unreachable!(),
 				};
 
