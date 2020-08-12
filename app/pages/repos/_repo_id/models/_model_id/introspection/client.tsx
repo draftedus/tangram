@@ -1,4 +1,8 @@
 import { ui } from 'deps'
 
-ui.hydrateBarChart('feature_importances')
-ui.hydrateBarChart('feature_weights')
+if (document.getElementById('feature_importances')) {
+	ui.hydrateBarChart('feature_importances')
+}
+if (document.getElementById('feature_weights')) {
+	ui.hydrateBarChart('feature_weights')
+}
