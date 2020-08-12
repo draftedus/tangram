@@ -19,6 +19,7 @@ import { drawTooltip } from './tooltip'
 
 export type DrawBarChartOptions = {
 	data: BarChartData
+	hideLegend?: boolean
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
 	xAxisLabelFormatter?: AxisLabelFormatter

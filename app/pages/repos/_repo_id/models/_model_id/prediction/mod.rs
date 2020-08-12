@@ -55,6 +55,7 @@ enum Column {
 #[serde(rename_all = "camelCase")]
 struct Unknown {
 	name: String,
+	value: String,
 }
 
 #[derive(Serialize)]
@@ -63,18 +64,25 @@ struct Number {
 	name: String,
 	max: f32,
 	min: f32,
+	p25: f32,
+	p50: f32,
+	p75: f32,
+	value: String,
 }
 
 #[derive(Serialize)]
 struct Enum {
 	name: String,
 	options: Vec<String>,
+	value: String,
+	histogram: Vec<(String, u64)>,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Text {
 	name: String,
+	value: String,
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -118,6 +126,7 @@ pub struct ClassificationShapValuesOutput {
 }
 
 #[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct RegressionShapValuesOutput {
 	pub baseline: f32,
 	pub baseline_label: String,
@@ -165,25 +174,68 @@ async fn props(
 	let columns: Vec<Column> = column_stats
 		.iter()
 		.map(|column_stats| match column_stats {
-			tangram_core::types::ColumnStats::Unknown(column_stats) => Column::Unknown(Unknown {
-				name: column_stats.column_name.as_option().unwrap().to_owned(),
-			}),
-			tangram_core::types::ColumnStats::Number(column_stats) => Column::Number(Number {
-				name: column_stats.column_name.as_option().unwrap().to_owned(),
-				max: *column_stats.max.as_option().unwrap(),
-				min: *column_stats.min.as_option().unwrap(),
-			}),
+			tangram_core::types::ColumnStats::Unknown(column_stats) => {
+				let name = column_stats.column_name.as_option().unwrap().to_owned();
+				let value = search_params
+					.as_ref()
+					.and_then(|s| s.get(&name))
+					.map(|s| s.to_owned())
+					.unwrap_or("".to_string());
+				Column::Unknown(Unknown { name, value })
+			}
+			tangram_core::types::ColumnStats::Number(column_stats) => {
+				let name = column_stats.column_name.as_option().unwrap().to_owned();
+				let mean = column_stats.mean.as_option().unwrap();
+				let value = search_params
+					.as_ref()
+					.and_then(|s| s.get(&name))
+					.map(|s| s.to_owned())
+					.unwrap_or(mean.to_string());
+				Column::Number(Number {
+					name,
+					max: *column_stats.max.as_option().unwrap(),
+					min: *column_stats.min.as_option().unwrap(),
+					p25: *column_stats.p25.as_option().unwrap(),
+					p50: *column_stats.p50.as_option().unwrap(),
+					p75: *column_stats.p75.as_option().unwrap(),
+					value,
+				})
+			}
 			tangram_core::types::ColumnStats::Enum(column_stats) => {
 				let histogram = column_stats.histogram.as_option().unwrap();
 				let options = histogram.iter().map(|(key, _)| key.to_owned()).collect();
+				let name = column_stats.column_name.as_option().unwrap().to_owned();
+				let mode: String = column_stats
+					.histogram
+					.as_option()
+					.unwrap()
+					.iter()
+					.max_by(|a, b| a.1.cmp(&b.1))
+					.unwrap()
+					.0
+					.to_owned();
+				let value = search_params
+					.as_ref()
+					.and_then(|s| s.get(&name))
+					.map(|s| s.to_owned())
+					.unwrap_or(mode);
+				let histogram = column_stats.histogram.as_option().unwrap().to_owned();
 				Column::Enum(Enum {
-					name: column_stats.column_name.as_option().unwrap().to_owned(),
+					name,
 					options,
+					value,
+					histogram,
 				})
 			}
-			tangram_core::types::ColumnStats::Text(column_stats) => Column::Text(Text {
-				name: column_stats.column_name.as_option().unwrap().to_owned(),
-			}),
+			tangram_core::types::ColumnStats::Text(column_stats) => {
+				let name = column_stats.column_name.as_option().unwrap().to_owned();
+				let value = search_params
+					.as_ref()
+					.and_then(|s| s.get(&name))
+					.map(|s| s.to_owned())
+					.unwrap_or("".to_string());
+				Column::Text(Text { name, value })
+			}
 			tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
 		})
 		.collect();
@@ -334,10 +386,10 @@ fn predict(
 			let prediction = RegressionPredictOutput {
 				shap_chart_data: vec![RegressionShapValuesOutput {
 					baseline: shap_values.baseline,
-					baseline_label: shap_values.baseline.to_string(),
+					baseline_label: dbg!(shap_values.baseline.to_string()),
 					label: "output".to_string(),
 					output: output.value,
-					output_label: output.value.to_string(),
+					output_label: dbg!(output.value.to_string()),
 					values: shap_values
 						.values
 						.into_iter()

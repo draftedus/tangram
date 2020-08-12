@@ -9,3 +9,16 @@
 	grid: auto / 1fr 1fr;
 	grid-gap: 1rem;
 }
+
+.predict-form-items-wrapper {
+	display: grid;
+	grid: auto / 1fr 20%;
+	align-content: center;
+	align-items: center;
+	grid-gap: 1rem;
+}
+.predict-form-buttons-wrapper {
+	display: grid;
+	grid-gap: 1rem;
+	grid: auto / 1fr auto;
+}

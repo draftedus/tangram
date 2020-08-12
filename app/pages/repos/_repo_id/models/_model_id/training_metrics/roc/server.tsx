@@ -82,8 +82,8 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					<ui.Card>
 						<ui.LineChart
 							data={data}
+							hideLegend={false}
 							id="roc"
-							showLegend={false}
 							title="Receiver Operating Characteristic Curve"
 							xAxisTitle="False Positive Rate"
 							xMax={1}

@@ -4,6 +4,7 @@ import {
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { Fragment } from 'preact'
 
 export type Props = {
 	columns: Column[]
@@ -16,21 +17,29 @@ export type Column =
 	| {
 			name: string
 			type: ColumnType.Unknown
+			value: string | null
 	  }
 	| {
 			max: number
 			min: number
 			name: string
+			p25: number
+			p50: number
+			p75: number
 			type: ColumnType.Number
+			value: string | null
 	  }
 	| {
+			histogram: Array<[string, number]>
 			name: string
 			options: string[]
 			type: ColumnType.Enum
+			value: string | null
 	  }
 	| {
 			name: string
 			type: ColumnType.Text
+			value: string | null
 	  }
 
 export enum ColumnType {
@@ -98,42 +107,113 @@ export default function PredictPage(props: Props) {
 		>
 			<ui.S1>
 				<ui.H1>{'Predict'}</ui.H1>
-				<ui.Form>
-					{props.columns.map(column => {
-						let name = column.name
-						switch (column.type) {
-							case ColumnType.Unknown:
-								return (
-									<ui.TextField key={name} label={column.name} name={name} />
-								)
-							case ColumnType.Number:
-								return (
-									<ui.TextField key={name} label={column.name} name={name} />
-								)
-							case ColumnType.Enum:
-								return (
-									<ui.SelectField
-										key={name}
-										label={column.name}
-										name={name}
-										options={column.options}
-									/>
-								)
-							case ColumnType.Text:
-								return (
-									<ui.TextField key={name} label={column.name} name={name} />
-								)
-						}
-					})}
-					<ui.Button type="submit">{'Predict'}</ui.Button>
+				<ui.Form autoComplete="off" id="predict_form">
+					<div class="predict-form-items-wrapper">
+						{props.columns.map(column => {
+							let name = column.name
+							switch (column.type) {
+								case ColumnType.Unknown:
+									return (
+										<Fragment>
+											<ui.TextField
+												key={name}
+												label={column.name}
+												name={name}
+												value={column.value}
+											/>
+											<div></div>
+										</Fragment>
+									)
+								case ColumnType.Number:
+									return (
+										<Fragment>
+											<ui.TextField
+												key={name}
+												label={column.name}
+												name={name}
+												value={column.value}
+											/>
+											<ui.BoxChart
+												data={[
+													{
+														color: ui.colors.blue,
+														data: [
+															{
+																x: 0,
+																y: {
+																	max: column.max,
+																	min: column.min,
+																	p25: column.p25,
+																	p50: column.p50,
+																	p75: column.p75,
+																},
+															},
+														],
+														title: 'quartiles',
+													},
+												]}
+												hideLegend={true}
+												id={column.name}
+											/>
+										</Fragment>
+									)
+								case ColumnType.Enum:
+									return (
+										<Fragment>
+											<ui.SelectField
+												key={name}
+												label={column.name}
+												name={name}
+												options={column.options}
+												value={column.value ?? undefined}
+											/>
+											<ui.BarChart
+												data={[
+													{
+														color: ui.colors.blue,
+														data: column.histogram.map(([_, value], i) => ({
+															x: i,
+															y: value,
+														})),
+														title: 'histogram',
+													},
+												]}
+												hideLegend={true}
+												id={column.name}
+											/>
+										</Fragment>
+									)
+								case ColumnType.Text:
+									return (
+										<Fragment>
+											<ui.TextField
+												key={name}
+												label={column.name}
+												name={name}
+												value={column.value ?? undefined}
+											/>
+											<div></div>
+										</Fragment>
+									)
+							}
+						})}
+					</div>
+					<div class="predict-form-buttons-wrapper">
+						<ui.Button type="submit">{'Predict'}</ui.Button>
+						<ui.Button color={ui.colors.yellow} type="reset">
+							{'Reset'}
+						</ui.Button>
+					</div>
 				</ui.Form>
-				{props.prediction &&
-				props.prediction.type === PredictionType.Classification ? (
-					<ClassificationPrediction {...props.prediction.value} />
-				) : props.prediction &&
-				  props.prediction.type === PredictionType.Regression ? (
-					<RegressionPrediction {...props.prediction.value} />
-				) : null}
+				<div id="predict_output">
+					{props.prediction &&
+					props.prediction.type === PredictionType.Classification ? (
+						<ClassificationPrediction {...props.prediction.value} />
+					) : props.prediction &&
+					  props.prediction.type === PredictionType.Regression ? (
+						<RegressionPrediction {...props.prediction.value} />
+					) : null}
+				</div>
 			</ui.S1>
 		</ModelLayout>,
 	)

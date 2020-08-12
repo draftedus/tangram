@@ -21,9 +21,9 @@ import { TooltipData, drawTooltip } from './tooltip'
 
 export type DrawLineChartOptions = {
 	data: LineChartData
+	hideLegend?: boolean
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
-	showLegend?: boolean
 	title?: string
 	xAxisGridLineInterval?: GridLineInterval
 	xAxisLabelFormatter?: AxisLabelFormatter

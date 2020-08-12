@@ -8,7 +8,7 @@ export type ButtonProps = {
 	download?: string
 	href?: string
 	onClick?: () => void
-	type?: 'submit' | 'button'
+	type?: 'submit' | 'button' | 'reset'
 }
 
 export function Button(props: ButtonProps) {

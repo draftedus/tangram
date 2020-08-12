@@ -8,8 +8,10 @@ export function FormTitle(props: FormTitleProps) {
 
 type FormProps = {
 	action?: string
+	autoComplete?: string
 	children?: Children
 	encType?: string
+	id?: string
 	onSubmit?: (event: Event) => void
 	post?: boolean
 }
@@ -18,8 +20,10 @@ export function Form(props: FormProps) {
 	return (
 		<form
 			action={props.action}
+			autoComplete={props.autoComplete}
 			class="form"
 			encType={props.encType}
+			id={props.id}
 			method={props.post ? 'post' : undefined}
 			onSubmit={props.onSubmit}
 		>

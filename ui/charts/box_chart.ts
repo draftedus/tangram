@@ -19,6 +19,7 @@ import { TooltipData, drawTooltip } from './tooltip'
 
 export type DrawBoxChartOptions = {
 	data: BoxChartData
+	hideLegend?: boolean
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
 	title?: string

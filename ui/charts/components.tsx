@@ -30,8 +30,9 @@ export function BarChart(props: BarChartProps) {
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			<ChartLegend items={props.data} />
+			{!props.hideLegend && <ChartLegend items={props.data} />}
 			<div
+				data-chart-type="bar"
 				data-options={props.id && JSON.stringify(props)}
 				id={props.id}
 				ref={containerRef}
@@ -72,8 +73,9 @@ export function BoxChart(props: BoxChartProps) {
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			<ChartLegend items={props.data} />
+			{!props.hideLegend && <ChartLegend items={props.data} />}
 			<div
+				data-chart-type="box"
 				data-options={props.id && JSON.stringify(props)}
 				id={props.id}
 				ref={containerRef}
@@ -114,8 +116,9 @@ export function LineChart(props: LineChartProps) {
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			<ChartLegend items={props.data} />
+			{!props.hideLegend && <ChartLegend items={props.data} />}
 			<div
+				data-chart-type="line"
 				data-options={props.id && JSON.stringify(props)}
 				id={props.id}
 				ref={containerRef}
@@ -171,6 +174,7 @@ export function ShapChart(props: ShapChartProps) {
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
 			<div
+				data-chart-type="shap"
 				data-options={props.id && JSON.stringify(props)}
 				id={props.id}
 				ref={containerRef}
@@ -227,7 +231,7 @@ function ChartLegendItemCell(props: LegendItemCellProps) {
 	return (
 		<div class="chart-legend-item">
 			<div class="chart-legend-indicator" style={style} />
-			<div class="chart-legend-titel">{props.title}</div>
+			<div class="chart-legend-title">{props.title}</div>
 		</div>
 	)
 }
