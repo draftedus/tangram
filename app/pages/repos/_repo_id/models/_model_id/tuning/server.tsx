@@ -7,15 +7,15 @@ import {
 } from 'layouts/model_layout'
 
 export type Props = {
-	inner: TuningProps | null
 	modelLayoutInfo: ModelLayoutInfo
 	pinwheelInfo: PinwheelInfo
+	tuning: TuningProps | null
 }
 
 export default function TuningPage(props: Props) {
 	let inner
-	if (props.inner) {
-		inner = <Client component={Tuning} id="tuning" props={props.inner} />
+	if (props.tuning) {
+		inner = <Client component={Tuning} id="tuning" props={props.tuning} />
 	} else {
 		inner = (
 			<ui.S1>

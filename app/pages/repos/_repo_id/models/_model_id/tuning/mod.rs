@@ -31,9 +31,7 @@ pub async fn get(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
-	id: String,
-	inner: Option<Inner>,
-	title: String,
+	tuning: Option<Inner>,
 	model_layout_info: types::ModelLayoutInfo,
 }
 
@@ -72,9 +70,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let Model { title, data, id } = get_model(&mut db, model_id).await?;
+	let Model { data, .. } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
-	let inner = match model {
+	let tuning = match model {
 		tangram_core::types::Model::Classifier(model) => {
 			let classes = model.classes().to_owned();
 			match model.model.into_option().unwrap() {
@@ -109,9 +107,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
-		inner,
-		id: id.to_string(),
-		title,
+		tuning,
 		model_layout_info,
 	})
 }

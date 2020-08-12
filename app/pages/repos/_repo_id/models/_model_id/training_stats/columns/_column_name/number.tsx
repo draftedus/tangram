@@ -1,5 +1,5 @@
 import { MetricsRow } from 'common/metrics_row'
-import { h, r, ui } from 'deps'
+import { h, ui } from 'deps'
 
 export type Props = {
 	histogram: Array<[number, number]> | null
@@ -109,9 +109,10 @@ export function NumberColumnDetail(props: Props) {
 							id="number_histogram"
 							shouldDrawXAxisLabels={true}
 							title={`Histogram of Unique Values for ${props.name}`}
-							xAxisLabelFormatter={i =>
-								ui.formatNumber(r(props.histogram)[i][0])
-							}
+							xAxisLabelFormatter={i => {
+								if (!props.histogram) throw Error()
+								return ui.formatNumber(props.histogram[i][0])
+							}}
 							xAxisTitle={props.name}
 							yAxisTitle="Count"
 						/>

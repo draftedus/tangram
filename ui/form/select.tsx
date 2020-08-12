@@ -7,11 +7,11 @@ export type SelectProps = {
 	id?: string
 	label?: string
 	name?: string
-	onChange?: (newValue: string | null) => void
+	onChange?: (newValue: string) => void
 	options?: string[]
 	placeholder?: string
 	required?: boolean
-	value?: string | null
+	value?: string
 }
 
 export function SelectField(props: SelectProps) {
@@ -28,7 +28,7 @@ export function SelectField(props: SelectProps) {
 				}}
 				placeholder={props.placeholder}
 				required={props.required}
-				value={props.value ?? undefined}
+				value={props.value}
 			>
 				{props.options
 					? props.options.map(option => (

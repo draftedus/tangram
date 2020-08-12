@@ -20,7 +20,8 @@ export function Slider(props: SliderProps) {
 	let tooltipStyle = { marginLeft: `${percent}%` }
 	let onInput = (event: Event) => {
 		if (!(event.currentTarget instanceof HTMLInputElement)) throw Error()
-		props.onChange?.(parseFloat(event.currentTarget.value))
+		let value = parseFloat(event.currentTarget.value)
+		props.onChange?.(value)
 	}
 	return (
 		<div class="slider-wrapper">

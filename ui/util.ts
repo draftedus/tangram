@@ -20,7 +20,7 @@ export function formatNumber(
 	if (value === undefined || value === null) {
 		return ''
 	}
-	let result = value.toPrecision(maxDigits || 6)
+	let result = value.toPrecision(maxDigits ?? 6)
 	// remove trailing zeros including decimal point, for example 12345.000
 	result = result.replace(/\.(0*)$/, '')
 	// remove trailing zeros excluding decimal point, for example .01234500

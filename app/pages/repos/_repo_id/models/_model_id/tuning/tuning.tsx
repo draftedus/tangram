@@ -1,9 +1,9 @@
 import { MetricsRow } from 'common/metrics_row'
 import { baselineColor, selectedThresholdColor } from 'common/tokens'
-import { h, r, ui, useState } from 'deps'
+import { h, ui, useState } from 'deps'
 
 export type TuningProps = {
-	baselineThreshold: string
+	baselineThreshold: number
 	classes: string[]
 	metrics: Array<
 		Array<{
@@ -13,7 +13,7 @@ export type TuningProps = {
 			falsePositives: number
 			precision: number
 			recall: number
-			threshold: string
+			threshold: number
 			trueNegatives: number
 			truePositives: number
 		}>
@@ -41,8 +41,8 @@ export function Tuning(props: TuningProps) {
 	let selectedThresholdMetrics =
 		selectedClassThresholdMetrics[selectedThresholdIndex]
 
-	let onChange = (value: string | null) => {
-		setSelectedClass(r(value))
+	let onChange = (value: string) => {
+		setSelectedClass(value)
 	}
 
 	return (
@@ -61,7 +61,7 @@ export function Tuning(props: TuningProps) {
 					onChange={setSelectedThresholdIndex}
 					step={1}
 					value={selectedThresholdIndex}
-					valueFormatter={index => thresholds[index]}
+					valueFormatter={index => ui.formatNumber(thresholds[index], 2)}
 				/>
 			</ui.S2>
 			<ui.S2>
@@ -72,13 +72,13 @@ export function Tuning(props: TuningProps) {
 					value={selectedClass}
 				/>
 			</ui.S2>
-			{selectedThreshold == '0.0' ? (
+			{selectedThreshold == 0.0 ? (
 				<ui.Alert level={ui.Level.Info}>
 					{
-						'A selected threshold of 0 makes your model predict the same class for every input.'
+						'A threshold of 0 makes your model predict the same class for every input.'
 					}
 				</ui.Alert>
-			) : selectedThreshold == '1.0' ? (
+			) : selectedThreshold == 1.0 ? (
 				<ui.Alert level={ui.Level.Info}>
 					{
 						'A threshold of 1 makes your model predict the same class for every input.'

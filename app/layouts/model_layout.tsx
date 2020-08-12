@@ -1,5 +1,5 @@
 import { TopbarLayout } from './topbar_layout'
-import { Children, PinwheelInfo, h, r, ui } from 'deps'
+import { Children, PinwheelInfo, h, ui } from 'deps'
 
 type ModelLayoutProps = {
 	children?: Children
@@ -34,9 +34,9 @@ export enum ModelSideNavItem {
 }
 
 export function ModelLayout(props: ModelLayoutProps) {
-	let selectedModel = r(
-		props.info.models.find(model => model.id == props.info.modelId),
-	)?.title
+	let selectedModel = props.info.models.find(
+		model => model.id == props.info.modelId,
+	)
 	return (
 		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
 			<div class="model-layout">
@@ -68,7 +68,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 								name: model.title,
 							})) ?? []
 						}
-						summary={selectedModel}
+						summary={selectedModel?.title ?? null}
 					/>
 					<ui.Button
 						download={`${props.info.modelTitle}.tangram`}

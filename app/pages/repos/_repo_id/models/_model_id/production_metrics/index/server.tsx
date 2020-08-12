@@ -6,7 +6,7 @@ import {
 	RegressorProductionMetricsPage,
 	Props as RegresssorProps,
 } from './regressor'
-import { PinwheelInfo, assert, h, renderPage } from 'deps'
+import { PinwheelInfo, h, renderPage } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
@@ -40,7 +40,6 @@ export default function ProductionMetricsPage(props: Props) {
 	let inner
 	switch (props.inner.type) {
 		case Type.Regressor: {
-			assert(props.inner.value)
 			inner = <RegressorProductionMetricsPage {...props.inner.value} />
 			break
 		}
