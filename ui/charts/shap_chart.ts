@@ -12,7 +12,7 @@ import {
 import { chartColors, chartConfig } from './config'
 import { drawTooltip } from './tooltip'
 
-export type DrawShapChartOptions = {
+export type ShapChartOptions = {
 	data: ShapChartData
 	includeXAxisTitle?: boolean
 	includeYAxisLabels?: boolean
@@ -67,7 +67,7 @@ export function createShapChart(container: HTMLElement) {
 
 export function drawShapChart(
 	ctx: CanvasRenderingContext2D,
-	options: DrawShapChartOptions,
+	options: ShapChartOptions,
 ): DrawMultiShapChartOutput {
 	let {
 		data,

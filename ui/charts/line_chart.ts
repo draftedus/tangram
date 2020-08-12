@@ -19,7 +19,7 @@ import {
 import { chartColors, chartConfig } from './config'
 import { TooltipData, drawTooltip } from './tooltip'
 
-export type DrawLineChartOptions = {
+export type LineChartOptions = {
 	data: LineChartData
 	hideLegend?: boolean
 	shouldDrawXAxisLabels?: boolean
@@ -98,7 +98,7 @@ export function createLineChart(container: HTMLElement) {
 
 export function drawLineChart(
 	ctx: CanvasRenderingContext2D,
-	options: DrawLineChartOptions,
+	options: LineChartOptions,
 ): DrawLineChartOutput {
 	let {
 		data,

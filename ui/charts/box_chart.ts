@@ -17,7 +17,7 @@ import {
 import { chartColors, chartConfig } from './config'
 import { TooltipData, drawTooltip } from './tooltip'
 
-export type DrawBoxChartOptions = {
+export type BoxChartOptions = {
 	data: BoxChartData
 	hideLegend?: boolean
 	shouldDrawXAxisLabels?: boolean
@@ -74,7 +74,7 @@ export function createBoxChart(container: HTMLElement) {
 
 export function drawBoxChart(
 	ctx: CanvasRenderingContext2D,
-	options: DrawBoxChartOptions,
+	options: BoxChartOptions,
 ): DrawBoxChartOutput {
 	let { data, xAxisTitle, yAxisTitle } = options
 	let width = ctx.canvas.clientWidth

@@ -1,22 +1,22 @@
 export type {
 	BarChartData,
 	BarChartSeries,
-	DrawBarChartOptions,
+	BarChartOptions as DrawBarChartOptions,
 } from './bar_chart'
 export type {
 	BoxChartData,
 	BoxChartPoint,
 	BoxChartSeries,
-	DrawBoxChartOptions,
+	BoxChartOptions as DrawBoxChartOptions,
 } from './box_chart'
 export type {
-	DrawShapChartOptions,
+	ShapChartOptions as DrawShapChartOptions,
 	ShapChartData,
 	ShapChartSeries,
 	ShapValue,
 } from './shap_chart'
 export type {
-	DrawLineChartOptions,
+	LineChartOptions as DrawLineChartOptions,
 	LineChartData,
 	LineChartSeries,
 } from './line_chart'
@@ -33,9 +33,9 @@ import { Chart } from './chart'
 import { createLineChart } from './line_chart'
 import { createShapChart } from './shap_chart'
 
-export function hydrateChart<T>(
+export function hydrateChart<Options>(
 	id: string,
-	create: (element: HTMLElement) => Chart<T>,
+	create: (element: HTMLElement, options?: Options) => Chart<Options>,
 ) {
 	let container = document.getElementById(id)
 	if (!container) throw Error()

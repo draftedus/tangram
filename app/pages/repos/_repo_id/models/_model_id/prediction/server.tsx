@@ -134,6 +134,7 @@ export default function PredictPage(props: Props) {
 												value={column.value}
 											/>
 											<ui.BoxChart
+												class="column-chart"
 												data={[
 													{
 														color: ui.colors.blue,
@@ -168,6 +169,7 @@ export default function PredictPage(props: Props) {
 												value={column.value ?? undefined}
 											/>
 											<ui.BarChart
+												class="column-chart"
 												data={[
 													{
 														color: ui.colors.blue,

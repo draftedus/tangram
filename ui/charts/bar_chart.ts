@@ -17,7 +17,7 @@ import {
 import { chartColors, chartConfig } from './config'
 import { drawTooltip } from './tooltip'
 
-export type DrawBarChartOptions = {
+export type BarChartOptions = {
 	data: BarChartData
 	hideLegend?: boolean
 	shouldDrawXAxisLabels?: boolean
@@ -68,7 +68,7 @@ export function createBarChart(container: HTMLElement) {
 
 export function drawBarChart(
 	ctx: CanvasRenderingContext2D,
-	options: DrawBarChartOptions,
+	options: BarChartOptions,
 ): DrawBarChartOutput {
 	let {
 		data,

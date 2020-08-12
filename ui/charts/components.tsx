@@ -1,11 +1,12 @@
 import { Children, h, useEffect, useRef } from '../deps'
-import { DrawBarChartOptions, createBarChart } from './bar_chart'
-import { DrawBoxChartOptions, createBoxChart } from './box_chart'
+import { BarChartOptions, createBarChart } from './bar_chart'
+import { BoxChartOptions, createBoxChart } from './box_chart'
 import { chartConfig } from './config'
-import { DrawLineChartOptions, createLineChart } from './line_chart'
-import { DrawShapChartOptions, createShapChart } from './shap_chart'
+import { LineChartOptions, createLineChart } from './line_chart'
+import { ShapChartOptions, createShapChart } from './shap_chart'
 
-export type BarChartProps = DrawBarChartOptions & {
+export type BarChartProps = BarChartOptions & {
+	class?: string
 	id?: string
 	title?: string
 }
@@ -32,6 +33,7 @@ export function BarChart(props: BarChartProps) {
 			<ChartTitle>{props.title}</ChartTitle>
 			{!props.hideLegend && <ChartLegend items={props.data} />}
 			<div
+				class={props.class}
 				data-chart-type="bar"
 				data-options={props.id && JSON.stringify(props)}
 				id={props.id}
@@ -48,7 +50,8 @@ export function BarChart(props: BarChartProps) {
 	)
 }
 
-export type BoxChartProps = DrawBoxChartOptions & {
+export type BoxChartProps = BoxChartOptions & {
+	class?: string
 	id?: string
 	title?: string
 }
@@ -75,6 +78,7 @@ export function BoxChart(props: BoxChartProps) {
 			<ChartTitle>{props.title}</ChartTitle>
 			{!props.hideLegend && <ChartLegend items={props.data} />}
 			<div
+				class={props.class}
 				data-chart-type="box"
 				data-options={props.id && JSON.stringify(props)}
 				id={props.id}
@@ -91,7 +95,7 @@ export function BoxChart(props: BoxChartProps) {
 	)
 }
 
-export type LineChartProps = DrawLineChartOptions & {
+export type LineChartProps = LineChartOptions & {
 	id?: string
 	title?: string
 }
@@ -134,7 +138,7 @@ export function LineChart(props: LineChartProps) {
 	)
 }
 
-export type ShapChartProps = DrawShapChartOptions & {
+export type ShapChartProps = ShapChartOptions & {
 	id?: string
 	title?: string
 }
