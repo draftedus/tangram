@@ -32,7 +32,7 @@ export function SelectField(props: SelectProps) {
 			>
 				{props.options
 					? props.options.map(option => (
-							<option key={option} selected={props.value == option}>
+							<option key={option} value={option}>
 								{option}
 							</option>
 					  ))

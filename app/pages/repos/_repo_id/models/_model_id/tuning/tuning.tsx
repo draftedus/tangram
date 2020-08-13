@@ -42,6 +42,7 @@ export function Tuning(props: TuningProps) {
 		selectedClassThresholdMetrics[selectedThresholdIndex]
 
 	let onChange = (value: string) => {
+		console.log(value)
 		setSelectedClass(value)
 	}
 
