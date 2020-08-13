@@ -50,7 +50,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 							>
 								{props.info.ownerName}
 							</a>
-							<span class="model-layout-owner-slash-repo-link">{'/'}</span>
+							<span class="model-layout-owner-slash-repo-slash">{'/'}</span>
 							<a
 								class="model-layout-owner-slash-repo-link"
 								href={`/repos/${props.info.id}/models/${props.info.modelId}/`}
@@ -59,6 +59,9 @@ export function ModelLayout(props: ModelLayoutProps) {
 								{props.info.title}
 							</a>
 						</div>
+					</div>
+					<div class="model-layout-topbar-actions-wrapper">
+						{'Version:'}
 						<ui.Details
 							options={
 								props.info.models.map(model => ({
@@ -68,16 +71,14 @@ export function ModelLayout(props: ModelLayoutProps) {
 							}
 							summary={selectedModel?.id ?? null}
 						/>
-					</div>
-					<div class="model-layout-topbar-actions-wrapper">
 						<ui.Button
 							download={`${props.info.modelTitle}.tangram`}
 							href={`/repos/${props.info.id}/models/${props.info.modelId}/download`}
 						>
-							{'Download Model'}
+							{'Download'}
 						</ui.Button>
 						<ui.Button href={`/repos/${props.info.id}/models/new`}>
-							{'Upload New Model Version'}
+							{'Upload New Version'}
 						</ui.Button>
 					</div>
 				</div>
