@@ -33,7 +33,7 @@ export default function UserPage(props: Props) {
 				</ui.S2>
 				<ui.S2>
 					<ui.SpaceBetween>
-						<ui.H2>{'Repos'}</ui.H2>
+						<ui.H2>{'User Repos'}</ui.H2>
 						<ui.Button href="/repos/new">{'Create New Repo'}</ui.Button>
 					</ui.SpaceBetween>
 					{props.repos.length > 0 ? (

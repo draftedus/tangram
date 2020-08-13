@@ -33,14 +33,14 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
-	organizations: Vec<Organization>,
+	owners: Vec<Owner>,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Organization {
+struct Owner {
 	id: String,
-	name: String,
+	title: String,
 }
 
 async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<Props> {
@@ -58,17 +58,19 @@ async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<
 	.bind(&user.id.to_string())
 	.fetch_all(&mut *db)
 	.await?;
-	let items: Vec<_> = rows
-		.iter()
-		.map(|row| {
-			let id: String = row.get(0);
-			let name: String = row.get(1);
-			Organization { id, name }
+	let mut items = vec![Owner {
+		id: format!("user:{}", user.id),
+		title: user.email,
+	}];
+	rows.iter().for_each(|row| {
+		let id: String = row.get(0);
+		let title: String = row.get(1);
+		items.push(Owner {
+			id: format!("organization:{}", id),
+			title,
 		})
-		.collect();
-	Ok(Props {
-		organizations: items,
-	})
+	});
+	Ok(Props { owners: items })
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
@@ -95,7 +97,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		.and_then(|ct| multer::parse_boundary(ct).ok())
 		.ok_or_else(|| Error::BadRequest)?;
 	let mut title: Option<String> = None;
-	let mut organization_id: Option<String> = None;
+	let mut owner_id: Option<String> = None;
 	let mut file: Option<Vec<u8>> = None;
 	let mut multipart = Multipart::new(request.into_body(), boundary);
 	while let Some(mut field) = multipart.next_field().await? {
@@ -106,41 +108,71 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		}
 		match name.as_str() {
 			"title" => title = Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?),
-			"organization_id" => {
-				organization_id =
-					Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?)
+			"owner_id" => {
+				owner_id = Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?)
 			}
 			"file" => file = Some(field_data),
 			_ => return Err(Error::BadRequest.into()),
 		};
 	}
 	let title = title.ok_or_else(|| Error::BadRequest)?;
-	let organization_id: Id = organization_id
-		.ok_or(Error::BadRequest)?
-		.parse()
-		.map_err(|_| Error::BadRequest)?;
+	let owner_id = owner_id.ok_or(Error::BadRequest)?;
 	let file = file.ok_or_else(|| Error::BadRequest)?;
-	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
-		return Err(Error::Unauthorized.into());
-	}
+
+	// parse owner_id as user: id, or organization: id,
+
 	let model = tangram_core::types::Model::from_slice(&file).map_err(|_| Error::BadRequest)?;
 	let now = Utc::now().timestamp();
 	let repo_id = Id::new();
-	sqlx::query(
-		"
+
+	let id_parts: Vec<&str> = dbg!(owner_id.split(':').collect());
+
+	match id_parts[0] {
+		"user" => {
+			let user_id: Id = id_parts[1].parse().map_err(|_| Error::BadRequest)?;
+			if user_id != user.id {
+				return Err(Error::Unauthorized.into());
+			}
+			sqlx::query(
+				"
+			insert into repos (
+				id, created_at, title, user_id
+			) values (
+				?1, ?2, ?3, ?4
+			)
+		",
+			)
+			.bind(&repo_id.to_string())
+			.bind(&now)
+			.bind(&title)
+			.bind(&user_id.to_string())
+			.execute(&mut *db)
+			.await?;
+		}
+		"organization" => {
+			let organization_id: Id = id_parts[1].parse().map_err(|_| Error::BadRequest)?;
+			if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
+				return Err(Error::Unauthorized.into());
+			}
+			sqlx::query(
+				"
 			insert into repos (
 				id, created_at, title, organization_id
 			) values (
 				?1, ?2, ?3, ?4
 			)
 		",
-	)
-	.bind(&repo_id.to_string())
-	.bind(&now)
-	.bind(&title)
-	.bind(&organization_id.to_string())
-	.execute(&mut *db)
-	.await?;
+			)
+			.bind(&repo_id.to_string())
+			.bind(&now)
+			.bind(&title)
+			.bind(&organization_id.to_string())
+			.execute(&mut *db)
+			.await?;
+		}
+		&_ => return Err(Error::BadRequest.into()),
+	};
+
 	sqlx::query(
 		"
 			insert into models
