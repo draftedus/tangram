@@ -12,7 +12,8 @@ export function EnumColumnDetail(props: Props) {
 	let histogramData = [
 		{
 			color: ui.colors.blue,
-			data: props.histogram.map(([_value, count], i) => ({
+			data: props.histogram.map(([label, count], i) => ({
+				label,
 				x: i,
 				y: count,
 			})),
@@ -42,7 +43,6 @@ export function EnumColumnDetail(props: Props) {
 						data={histogramData}
 						id="enum_histogram"
 						title={`Histogram of Unique Values for ${props.name}`}
-						xAxisLabelFormatter={x => props.histogram[x][0]}
 						xAxisTitle={props.name}
 						yAxisTitle="Count"
 					/>

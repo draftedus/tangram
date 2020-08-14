@@ -25,7 +25,8 @@ export function Text(props: Props) {
 	let overallChartData = [
 		{
 			color: productionColor,
-			data: props.overall.tokenHistogram.map(([_value, count], i) => ({
+			data: props.overall.tokenHistogram.map(([label, count], i) => ({
+				label,
 				x: i,
 				y: count,
 			})),
@@ -47,7 +48,6 @@ export function Text(props: Props) {
 					data={overallChartData}
 					id="text_overall"
 					title={overallDistributionChartTitle}
-					xAxisLabelFormatter={x => props.overall.tokenHistogram[x][0]}
 					xAxisTitle={props.name}
 					yAxisTitle="Count"
 				/>

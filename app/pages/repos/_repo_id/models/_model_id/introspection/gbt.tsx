@@ -11,7 +11,8 @@ export function GBTFeatureImportances(props: Props) {
 			color: ui.colors.blue,
 			data: props.values
 				.filter(([_, value]) => value > 0)
-				.map(([_, value], i) => ({
+				.map(([label, value], i) => ({
+					label,
 					x: i,
 					y: value,
 				})),
@@ -26,7 +27,6 @@ export function GBTFeatureImportances(props: Props) {
 					data={data}
 					id="feature_importances"
 					title="Feature Importances"
-					xAxisLabelFormatter={i => props.values[i][0]}
 					xAxisTitle="Feature Name"
 					yAxisTitle="Importance Score"
 				/>

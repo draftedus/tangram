@@ -1,12 +1,11 @@
+import { formatNumber } from '../util'
 import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
 import {
-	AxisLabelFormatter,
 	Box,
 	GridLineInterval,
 	Point,
 	RectCorner,
 	computeBoxes,
-	defaultAxisLabelFormatter,
 	drawRoundedRect,
 	drawXAxis,
 	drawXAxisTitle,
@@ -22,10 +21,8 @@ export type BarChartOptions = {
 	hideLegend?: boolean
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
-	xAxisLabelFormatter?: AxisLabelFormatter
 	xAxisTitle?: string
 	yAxisGridLineInterval?: GridLineInterval
-	yAxisLabelFormatter?: AxisLabelFormatter
 	yAxisTitle?: string
 	yMax?: number
 	yMin?: number
@@ -40,20 +37,19 @@ export type BarChartSeries = {
 }
 
 export type BarChartPoint = {
+	label: string
 	x: number
 	y: number | null
 }
 
 export type BarChartOverlayInfo = {
 	chartBox: Box
-	xAxisLabelFormatter: AxisLabelFormatter
-	yAxisLabelFormatter: AxisLabelFormatter
 }
 
 export type BarChartHoverRegionInfo = {
 	box: Box
 	color: string
-	point: Point
+	point: BarChartPoint
 	tooltipOriginPixels: Point
 }
 
@@ -78,10 +74,6 @@ export function drawBarChart(
 	} = options
 	let width = ctx.canvas.clientWidth
 	let height = ctx.canvas.clientHeight
-	let xAxisLabelFormatter =
-		options.xAxisLabelFormatter ?? defaultAxisLabelFormatter
-	let yAxisLabelFormatter =
-		options.yAxisLabelFormatter ?? defaultAxisLabelFormatter
 	let hoverRegions: Array<HoverRegion<BarChartHoverRegionInfo>> = []
 
 	// compute bounds
@@ -123,12 +115,11 @@ export function drawBarChart(
 		includeYAxisTitle: yAxisTitle !== undefined,
 		width,
 		yAxisGridLineInterval: yAxisLineInterval,
-		yAxisLabelFormatter,
 		yMax,
 		yMin,
 	})
 
-	let categories = data[0].data.map(({ x }) => xAxisLabelFormatter(x))
+	let categories = data[0].data.map(({ label }) => label)
 
 	let barGroupWidth =
 		(chartBox.w - chartConfig.barGroupGap * (categories.length + 1)) /
@@ -168,7 +159,6 @@ export function drawBarChart(
 			fontSize: chartConfig.fontSize,
 			gridLineInfo: yAxisGridLineInfo,
 			height,
-			yAxisLabelFormatter,
 		})
 	}
 
@@ -224,7 +214,7 @@ export function drawBarChart(
 				info: {
 					box,
 					color: series.color,
-					point: { x: point.x, y: point.y },
+					point,
 					tooltipOriginPixels: { x: box.x + box.w / 2, y: box.y },
 				},
 			}
@@ -235,8 +225,6 @@ export function drawBarChart(
 
 	let info: BarChartOverlayInfo = {
 		chartBox,
-		xAxisLabelFormatter,
-		yAxisLabelFormatter,
 	}
 
 	return { hoverRegions, overlayInfo: info }
@@ -344,12 +332,12 @@ export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
 	let {
 		activeHoverRegions,
 		ctx,
-		info: { chartBox, xAxisLabelFormatter, yAxisLabelFormatter },
+		info: { chartBox },
 	} = options
 	let activeHoverRegion = activeHoverRegions[0]
 	if (activeHoverRegion) {
-		let x = xAxisLabelFormatter(activeHoverRegion.info.point.x)
-		let y = yAxisLabelFormatter(activeHoverRegion.info.point.y)
+		let x = activeHoverRegion.info.point.label
+		let y = formatNumber(activeHoverRegion.info.point.y)
 		let text = `(${x}, ${y})`
 		let tooltip = {
 			color: activeHoverRegion.info.color,

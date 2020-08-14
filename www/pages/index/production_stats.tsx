@@ -1,33 +1,30 @@
 import { h, ui } from 'deps'
 
 export function ProductionStats() {
-	let xAxisLabelFormatter = (index: number): string => {
-		let categories: string[] = [
-			'asymptomatic',
-			'atypical angina',
-			'non-angina pain',
-			'typical angina',
-		]
-		return categories[index]
-	}
+	let categories: string[] = [
+		'asymptomatic',
+		'atypical angina',
+		'non-angina pain',
+		'typical angina',
+	]
 	let series = [
 		{
 			color: ui.colors.blue,
 			data: [
-				{ x: 0, y: 0.4752 },
-				{ x: 1, y: 0.165 },
-				{ x: 2, y: 0.2838 },
-				{ x: 3, y: 0.07591 },
+				{ label: categories[0], x: 0, y: 0.4752 },
+				{ label: categories[1], x: 1, y: 0.165 },
+				{ label: categories[2], x: 2, y: 0.2838 },
+				{ label: categories[3], x: 3, y: 0.07591 },
 			],
 			title: 'Training',
 		},
 		{
 			color: ui.colors.green,
 			data: [
-				{ x: 0, y: 0 },
-				{ x: 1, y: 0.1622 },
-				{ x: 2, y: 0.2903 },
-				{ x: 3, y: 0.07508 },
+				{ label: categories[0], x: 0, y: 0 },
+				{ label: categories[1], x: 1, y: 0.1622 },
+				{ label: categories[2], x: 2, y: 0.2903 },
+				{ label: categories[3], x: 3, y: 0.07508 },
 			],
 			title: 'Production',
 		},
@@ -43,7 +40,6 @@ export function ProductionStats() {
 						<ui.BarChart
 							data={series}
 							title="Chest Pain"
-							xAxisLabelFormatter={xAxisLabelFormatter}
 							xAxisTitle="Chest Pain"
 							yAxisLabelFormatter={value => ui.formatPercent(value, 2)}
 							yAxisTitle="Percent"

@@ -1,12 +1,10 @@
 import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
 import {
-	AxisLabelFormatter,
 	Box,
 	GridLineInterval,
 	Point,
 	computeBoxes,
 	computeXAxisGridLineInfo,
-	defaultAxisLabelFormatter,
 	drawXAxis,
 	drawXAxisGridLines,
 	drawXAxisLabels,
@@ -15,6 +13,7 @@ import {
 	drawYAxisGridLines,
 	drawYAxisLabels,
 	drawYAxisTitle,
+	formatNumber,
 } from './common'
 import { chartColors, chartConfig } from './config'
 import { TooltipData, drawTooltip } from './tooltip'
@@ -26,12 +25,10 @@ export type LineChartOptions = {
 	shouldDrawYAxisLabels?: boolean
 	title?: string
 	xAxisGridLineInterval?: GridLineInterval
-	xAxisLabelFormatter?: AxisLabelFormatter
 	xAxisTitle?: string
 	xMax?: number
 	xMin?: number
 	yAxisGridLineInterval?: GridLineInterval
-	yAxisLabelFormatter?: AxisLabelFormatter
 	yAxisTitle?: string
 	yMax?: number
 	yMin?: number
@@ -65,10 +62,8 @@ export enum PointStyle {
 
 export type LineChartOverlayInfo = {
 	chartBox: Box
-	xAxisLabelFormatter: AxisLabelFormatter
 	xMax: number
 	xMin: number
-	yAxisLabelFormatter: AxisLabelFormatter
 	yMax: number
 	yMin: number
 }
@@ -79,10 +74,8 @@ export type LineChartHoverRegionInfo = {
 	point: Point
 	seriesIndex: number
 	tooltipOriginPixels: Point
-	xAxisLabelFormatter: AxisLabelFormatter
 	xMax: number
 	xMin: number
-	yAxisLabelFormatter: AxisLabelFormatter
 	yMax: number
 	yMin: number
 }
@@ -109,10 +102,6 @@ export function drawLineChart(
 	} = options
 	let width = ctx.canvas.clientWidth
 	let height = ctx.canvas.clientHeight
-	let xAxisLabelFormatter =
-		options.xAxisLabelFormatter ?? defaultAxisLabelFormatter
-	let yAxisLabelFormatter =
-		options.yAxisLabelFormatter ?? defaultAxisLabelFormatter
 	let hoverRegions: Array<HoverRegion<LineChartHoverRegionInfo>> = []
 
 	// compute bounds
@@ -167,7 +156,6 @@ export function drawLineChart(
 		width,
 		xAxisGridLineInterval,
 		yAxisGridLineInterval,
-		yAxisLabelFormatter,
 		yMax,
 		yMin,
 	})
@@ -176,7 +164,6 @@ export function drawLineChart(
 	let xAxisGridLineInfo = computeXAxisGridLineInfo({
 		chartWidth: chartBox.w,
 		ctx,
-		xAxisLabelFormatter,
 		xMax,
 		xMin,
 	})
@@ -212,7 +199,6 @@ export function drawLineChart(
 			ctx,
 			gridLineInfo: xAxisGridLineInfo,
 			width,
-			xAxisLabelFormatter,
 		})
 	}
 
@@ -224,7 +210,6 @@ export function drawLineChart(
 			fontSize: chartConfig.fontSize,
 			gridLineInfo: yAxisGridLineInfo,
 			height,
-			yAxisLabelFormatter,
 		})
 	}
 
@@ -312,10 +297,8 @@ export function drawLineChart(
 					point: { x: point.x, y: point.y },
 					seriesIndex,
 					tooltipOriginPixels: { x: pointPixels.x, y: pointPixels.y },
-					xAxisLabelFormatter,
 					xMax,
 					xMin,
-					yAxisLabelFormatter,
 					yMax,
 					yMin,
 				},
@@ -326,10 +309,8 @@ export function drawLineChart(
 
 	let overlayInfo: LineChartOverlayInfo = {
 		chartBox,
-		xAxisLabelFormatter,
 		xMax,
 		xMin,
-		yAxisLabelFormatter,
 		yMax,
 		yMin,
 	}
@@ -522,15 +503,7 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 	let {
 		activeHoverRegions,
 		ctx,
-		info: {
-			chartBox,
-			xAxisLabelFormatter,
-			xMax,
-			xMin,
-			yAxisLabelFormatter,
-			yMax,
-			yMin,
-		},
+		info: { chartBox, xMax, xMin, yMax, yMin },
 	} = options
 	let closestActiveHoverRegionForSeries = new Map<
 		number,
@@ -555,8 +528,8 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 	)
 	let tooltips: TooltipData[] = closestActiveHoverRegions.map(
 		activeHoverRegion => {
-			let x = xAxisLabelFormatter(activeHoverRegion.info.point.x)
-			let y = yAxisLabelFormatter(activeHoverRegion.info.point.y)
+			let x = formatNumber(activeHoverRegion.info.point.x)
+			let y = formatNumber(activeHoverRegion.info.point.y)
 			return {
 				color: activeHoverRegion.info.color,
 				text: `(${x}, ${y})`,

@@ -41,7 +41,8 @@ export function Enum(props: Props) {
 	let overallChartData = [
 		{
 			color: trainingColor,
-			data: props.overall.histogram.map(([_value, entry], i) => ({
+			data: props.overall.histogram.map(([label, entry], i) => ({
+				label,
 				x: i,
 				y: entry.trainingFraction,
 			})),
@@ -49,7 +50,8 @@ export function Enum(props: Props) {
 		},
 		{
 			color: productionColor,
-			data: props.overall.histogram.map(([_value, entry], i) => ({
+			data: props.overall.histogram.map(([label, entry], i) => ({
+				label,
 				x: i,
 				y: entry.productionFraction,
 			})),
@@ -75,6 +77,7 @@ export function Enum(props: Props) {
 	let intervalChartData = ui.times(props.intervals[0].histogram.length, i => ({
 		color: colorOptions[i % colorOptions.length],
 		data: props.intervals.map((entry, j) => ({
+			label: entry.label,
 			x: j,
 			y: entry.histogram !== null ? entry.histogram[i][1] : null,
 		})),
@@ -96,9 +99,7 @@ export function Enum(props: Props) {
 					data={overallChartData}
 					id="enum_overall"
 					title={overallDistributionChartTitle}
-					xAxisLabelFormatter={x => props.overall.histogram[x][0]}
 					xAxisTitle={props.name}
-					yAxisLabelFormatter={value => ui.formatPercent(value, 2)}
 					yAxisTitle="Percent"
 					yMax={1}
 				/>
@@ -108,7 +109,6 @@ export function Enum(props: Props) {
 					data={intervalChartData}
 					id="enum_intervals"
 					title={intervalDistributionChartTitle}
-					xAxisLabelFormatter={i => props.intervals[i].label}
 					yAxisTitle="Count"
 				/>
 			</ui.Card>

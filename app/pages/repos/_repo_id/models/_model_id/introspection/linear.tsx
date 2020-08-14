@@ -9,7 +9,8 @@ export function LinearFeatureWeights(props: Props) {
 	let data = [
 		{
 			color: ui.colors.blue,
-			data: props.values.map(([_, value], i) => ({
+			data: props.values.map(([label, value], i) => ({
+				label,
 				x: i,
 				y: value,
 			})),
@@ -25,7 +26,6 @@ export function LinearFeatureWeights(props: Props) {
 					id="feature_weights"
 					shouldDrawXAxisLabels={false}
 					title="Feature Weights"
-					xAxisLabelFormatter={i => props.values[i][0]}
 					xAxisTitle="Name"
 					yAxisTitle="Weight"
 				/>

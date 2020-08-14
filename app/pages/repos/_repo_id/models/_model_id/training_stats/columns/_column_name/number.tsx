@@ -21,6 +21,7 @@ export function NumberColumnDetail(props: Props) {
 			color: ui.colors.blue,
 			data: [
 				{
+					label: props.name,
 					x: 0,
 					y: {
 						max: props.max,
@@ -37,7 +38,8 @@ export function NumberColumnDetail(props: Props) {
 	let histogramData = props.histogram && [
 		{
 			color: ui.colors.blue,
-			data: props.histogram.map(([_, count], i) => ({
+			data: props.histogram.map(([label, count], i) => ({
+				label: ui.formatNumber(label),
 				x: i,
 				y: count,
 			})),
@@ -98,7 +100,6 @@ export function NumberColumnDetail(props: Props) {
 						<ui.BoxChart
 							data={quantilesData}
 							title={`Distribution of Values for ${props.name}`}
-							xAxisLabelFormatter={_ => `${props.name}`}
 						/>
 					</ui.Card>
 				)}
@@ -109,10 +110,6 @@ export function NumberColumnDetail(props: Props) {
 							id="number_histogram"
 							shouldDrawXAxisLabels={true}
 							title={`Histogram of Unique Values for ${props.name}`}
-							xAxisLabelFormatter={i => {
-								if (!props.histogram) throw Error()
-								return ui.formatNumber(props.histogram[i][0])
-							}}
 							xAxisTitle={props.name}
 							yAxisTitle="Count"
 						/>

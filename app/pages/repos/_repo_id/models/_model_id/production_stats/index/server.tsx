@@ -102,6 +102,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 		{
 			color: ui.colors.blue,
 			data: props.predictionCountChart.map((entry, i) => ({
+				label: entry.label,
 				x: i,
 				y: entry.count,
 			})),
@@ -143,7 +144,6 @@ export default function ProductionStatsIndexPage(props: Props) {
 						data={predictionCountData}
 						id="prediction_count"
 						title={predictionCountTitle}
-						xAxisLabelFormatter={i => props.predictionCountChart[i].label}
 					/>
 				</ui.Card>
 				{props.predictionStatsChart.type === Task.Regression ? (
@@ -223,6 +223,7 @@ function RegressionProductionStatsChart(props: {
 			color: ui.colors.green,
 			data: [
 				{
+					label: props.chartData.label,
 					x: 0,
 					y: {
 						max: props.chartData.quantiles.training.max,
@@ -239,6 +240,7 @@ function RegressionProductionStatsChart(props: {
 			color: ui.colors.blue,
 			data: [
 				{
+					label: props.chartData.label,
 					x: 0,
 					y:
 						props.chartData.quantiles.production !== null
@@ -259,14 +261,7 @@ function RegressionProductionStatsChart(props: {
 		props.dateWindow,
 		'Prediction Distribution Stats',
 	)
-	return (
-		<ui.BoxChart
-			data={data}
-			id="quantiles_overall"
-			title={title}
-			xAxisLabelFormatter={_ => props.chartData.label}
-		/>
-	)
+	return <ui.BoxChart data={data} id="quantiles_overall" title={title} />
 }
 
 function RegressionProductionStatsIntervalChart(props: {
@@ -278,6 +273,7 @@ function RegressionProductionStatsIntervalChart(props: {
 		{
 			color: ui.colors.blue,
 			data: props.chartData.map((entry, i) => ({
+				label: entry.label,
 				x: i,
 				y:
 					entry.quantiles.production !== null
@@ -297,14 +293,7 @@ function RegressionProductionStatsIntervalChart(props: {
 		props.dateWindowInterval,
 		'Prediction Distribution Stats',
 	)
-	return (
-		<ui.BoxChart
-			data={data}
-			id="quantiles_intervals"
-			title={title}
-			xAxisLabelFormatter={i => props.chartData[i].label}
-		/>
-	)
+	return <ui.BoxChart data={data} id="quantiles_intervals" title={title} />
 }
 
 function ClassificationProductionStatsChart(props: {
@@ -328,6 +317,7 @@ function ClassificationProductionStatsChart(props: {
 			props.chartData.histogram !== null
 				? [
 						{
+							label: props.chartData.label,
 							x: 0,
 							y: props.chartData.histogram.production[i][1],
 						},
@@ -337,14 +327,7 @@ function ClassificationProductionStatsChart(props: {
 	}))
 
 	let title = overallChartTitle(props.dateWindow, 'Prediction Stats')
-	return (
-		<ui.BarChart
-			data={data}
-			id="histogram_overall"
-			title={title}
-			xAxisLabelFormatter={_ => props.chartData.label}
-		/>
-	)
+	return <ui.BarChart data={data} id="histogram_overall" title={title} />
 }
 
 function ClassificationProductionStatsIntervalChart(props: {
@@ -366,18 +349,12 @@ function ClassificationProductionStatsIntervalChart(props: {
 	let data = ui.times(props.chartData[0].histogram.production.length, i => ({
 		color: colorOptions[i % colorOptions.length],
 		data: props.chartData.map((entry, j) => ({
+			label: entry.label,
 			x: j,
 			y: entry?.histogram.production[i][1] ?? null,
 		})),
 		title: categories[i],
 	}))
 	let title = intervalChartTitle(props.dateWindowInterval, 'Prediction Stats')
-	return (
-		<ui.BarChart
-			data={data}
-			id="histogram_intervals"
-			title={title}
-			xAxisLabelFormatter={i => props.chartData[i].label}
-		/>
-	)
+	return <ui.BarChart data={data} id="histogram_intervals" title={title} />
 }

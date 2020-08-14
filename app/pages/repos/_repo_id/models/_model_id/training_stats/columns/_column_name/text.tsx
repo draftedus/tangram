@@ -9,7 +9,8 @@ export function TextColumnDetail(props: Props) {
 	let data = [
 		{
 			color: ui.colors.blue,
-			data: props.tokens.map(([_value, count], i) => ({
+			data: props.tokens.map(([label, count], i) => ({
+				label,
 				x: i,
 				y: count,
 			})),
@@ -25,7 +26,6 @@ export function TextColumnDetail(props: Props) {
 						data={data}
 						id="text_histogram"
 						title="Most Frequent Tokens"
-						xAxisLabelFormatter={i => props.tokens[i][0]}
 						xAxisTitle="Token"
 						yAxisTitle="Count"
 					/>

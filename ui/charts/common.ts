@@ -24,7 +24,6 @@ export type ComputeBoxesOptions = {
 	width: number
 	xAxisGridLineInterval?: GridLineInterval
 	yAxisGridLineInterval?: GridLineInterval
-	yAxisLabelFormatter: AxisLabelFormatter
 	yMax: number
 	yMin: number
 }
@@ -66,8 +65,6 @@ export type GridLineInfo = {
 	startPixels: number
 }
 
-export type AxisLabelFormatter = (value: number) => string
-
 export function computeBoxes(options: ComputeBoxesOptions): ComputeBoxesOutput {
 	let {
 		ctx,
@@ -77,7 +74,6 @@ export function computeBoxes(options: ComputeBoxesOptions): ComputeBoxesOutput {
 		includeYAxisLabels,
 		includeYAxisTitle,
 		width,
-		yAxisLabelFormatter,
 		yMax,
 		yMin,
 	} = options
@@ -104,11 +100,7 @@ export function computeBoxes(options: ComputeBoxesOptions): ComputeBoxesOutput {
 		yMax,
 		yMin,
 	})
-	let yAxisLabelsWidth = computeAxisLabelsMaxWidth(
-		ctx,
-		yAxisGridLineInfo,
-		yAxisLabelFormatter,
-	)
+	let yAxisLabelsWidth = computeAxisLabelsMaxWidth(ctx, yAxisGridLineInfo)
 
 	let chartWidth =
 		width -
@@ -231,7 +223,6 @@ export function computeGridLineInfo(
 type ComputeXAxisGridLineInfoOptions = {
 	chartWidth: number
 	ctx: CanvasRenderingContext2D
-	xAxisLabelFormatter: AxisLabelFormatter
 	xMax: number
 	xMin: number
 }
@@ -239,7 +230,7 @@ type ComputeXAxisGridLineInfoOptions = {
 export function computeXAxisGridLineInfo(
 	options: ComputeXAxisGridLineInfoOptions,
 ): GridLineInfo {
-	let { chartWidth, ctx, xAxisLabelFormatter, xMax, xMin } = options
+	let { chartWidth, ctx, xMax, xMin } = options
 	let xAxisGridLineInterval: GridLineInterval
 	let xAxisMinGridLineDistance = 1
 	let xAxisGridLineInfo: GridLineInfo | undefined
@@ -264,7 +255,8 @@ export function computeXAxisGridLineInfo(
 		) {
 			let gridLineValue =
 				xAxisGridLineInfo.start + gridLineIndex * xAxisGridLineInfo.interval
-			let label = xAxisLabelFormatter(gridLineValue)
+			// TODO
+			let label = formatNumber(gridLineValue)
 			let labelWidth = ctx.measureText(label).width
 			if (labelWidth > xAxisGridLineInfo.intervalPixels) {
 				xAxisMinGridLineDistance = labelWidth
@@ -299,14 +291,13 @@ export function computeYAxisGridLineInfo(
 function computeAxisLabelsMaxWidth(
 	ctx: CanvasRenderingContext2D,
 	gridLineInfo: GridLineInfo,
-	axisLabelFormatter: AxisLabelFormatter,
 ): number {
 	return Math.max(
 		...times(gridLineInfo.numGridLines, gridLineIndex => {
 			let gridLineValue =
 				gridLineInfo.start + gridLineIndex * gridLineInfo.interval
-			let labelText = axisLabelFormatter(gridLineValue)
-			return ctx.measureText(labelText).width
+			let label = formatNumber(gridLineValue)
+			return ctx.measureText(label).width
 		}),
 	)
 }
@@ -417,11 +408,10 @@ type DrawXAxisLabelsOptions = {
 	ctx: CanvasRenderingContext2D
 	gridLineInfo: GridLineInfo
 	width: number
-	xAxisLabelFormatter: AxisLabelFormatter
 }
 
 export function drawXAxisLabels(options: DrawXAxisLabelsOptions): void {
-	let { box, ctx, gridLineInfo, width, xAxisLabelFormatter } = options
+	let { box, ctx, gridLineInfo, width } = options
 	ctx.fillStyle = chartColors.current.labelColor
 	ctx.textBaseline = 'bottom'
 	ctx.textAlign = 'center'
@@ -430,7 +420,8 @@ export function drawXAxisLabels(options: DrawXAxisLabelsOptions): void {
 			gridLineInfo.startPixels + gridLineIndex * gridLineInfo.intervalPixels
 		let gridLineValue =
 			gridLineInfo.start + gridLineIndex * gridLineInfo.interval
-		let label = xAxisLabelFormatter(gridLineValue)
+		// TODO
+		let label = formatNumber(gridLineValue)
 		// do not draw the label if it will overflow the chart
 		if (
 			box.x + gridLineOffsetPixels - ctx.measureText(label).width / 2 < 0 ||
@@ -448,18 +439,10 @@ type DrawYAxisLabelsOptions = {
 	fontSize: number
 	gridLineInfo: GridLineInfo
 	height: number
-	yAxisLabelFormatter: AxisLabelFormatter
 }
 
 export function drawYAxisLabels(options: DrawYAxisLabelsOptions): void {
-	let {
-		box,
-		ctx,
-		fontSize,
-		gridLineInfo,
-		height,
-		yAxisLabelFormatter,
-	} = options
+	let { box, ctx, fontSize, gridLineInfo, height } = options
 	ctx.fillStyle = chartColors.current.labelColor
 	ctx.textBaseline = 'middle'
 	ctx.textAlign = 'right'
@@ -468,8 +451,7 @@ export function drawYAxisLabels(options: DrawYAxisLabelsOptions): void {
 			gridLineInfo.startPixels + gridLineIndex * gridLineInfo.intervalPixels
 		let gridLineValue =
 			gridLineInfo.start + gridLineIndex * gridLineInfo.interval
-		let label = yAxisLabelFormatter(gridLineValue)
-		// do not draw the label if it will overflow the chart
+		let label = formatNumber(gridLineValue)
 		if (
 			box.y + box.h - gridLineOffsetPixels - fontSize / 2 < 0 ||
 			box.y + box.h - gridLineOffsetPixels + fontSize / 2 > height
@@ -642,8 +624,4 @@ export function formatNumber(value: number, maxDigits?: number): string {
 	// remove trailing zeros excluding decimal point, for example .01234500
 	result = result.replace(/\.([0-9]*)([1-9])(0*)$/, '.$1$2')
 	return result
-}
-
-export function defaultAxisLabelFormatter(value: number) {
-	return formatNumber(value)
 }

@@ -1,11 +1,10 @@
+import { formatNumber } from '../util'
 import { drawBarChartXAxisLabels } from './bar_chart'
 import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
 import {
-	AxisLabelFormatter,
 	Box,
 	Point,
 	computeBoxes,
-	defaultAxisLabelFormatter,
 	drawRoundedRect,
 	drawXAxis,
 	drawXAxisTitle,
@@ -23,9 +22,7 @@ export type BoxChartOptions = {
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
 	title?: string
-	xAxisLabelFormatter?: AxisLabelFormatter
 	xAxisTitle?: string
-	yAxisLabelFormatter?: AxisLabelFormatter
 	yAxisTitle?: string
 	yMax?: number
 	yMin?: number
@@ -40,6 +37,7 @@ export type BoxChartSeries = {
 }
 
 export type BoxChartPoint = {
+	label: string
 	x: number
 	y: {
 		max: number
@@ -52,15 +50,14 @@ export type BoxChartPoint = {
 
 export type BoxChartOverlayInfo = {
 	chartBox: Box
-	xAxisLabelFormatter: AxisLabelFormatter
 }
 
 export type BoxChartHoverRegionInfo = {
 	color: string
+	label: string
 	name: string
 	tooltipOriginPixels: Point
 	value: number
-	x: number
 }
 
 export type DrawBoxChartOutput = {
@@ -79,10 +76,6 @@ export function drawBoxChart(
 	let { data, xAxisTitle, yAxisTitle } = options
 	let width = ctx.canvas.clientWidth
 	let height = ctx.canvas.clientHeight
-	let xAxisLabelFormatter =
-		options.xAxisLabelFormatter ?? defaultAxisLabelFormatter
-	let yAxisLabelFormatter =
-		options.yAxisLabelFormatter ?? defaultAxisLabelFormatter
 	let hoverRegions: Array<HoverRegion<BoxChartHoverRegionInfo>> = []
 
 	// compute bounds
@@ -126,12 +119,11 @@ export function drawBoxChart(
 		includeYAxisLabels: options.shouldDrawYAxisLabels ?? true,
 		includeYAxisTitle: yAxisTitle !== undefined,
 		width,
-		yAxisLabelFormatter,
 		yMax,
 		yMin,
 	})
 
-	let categories = data[0].data.map(({ x }) => xAxisLabelFormatter(x))
+	let categories = data[0].data.map(({ label }) => label)
 	let boxGroupWidth =
 		(chartBox.w - chartConfig.barGroupGap * (categories.length + 1)) /
 		categories.length
@@ -174,7 +166,6 @@ export function drawBoxChart(
 			fontSize: chartConfig.fontSize,
 			gridLineInfo: yAxisGridLineInfo,
 			height,
-			yAxisLabelFormatter,
 		})
 	}
 
@@ -213,7 +204,6 @@ export function drawBoxChart(
 
 	let overlayInfo: BoxChartOverlayInfo = {
 		chartBox,
-		xAxisLabelFormatter,
 	}
 
 	return { hoverRegions, overlayInfo }
@@ -229,7 +219,7 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 	let {
 		activeHoverRegions,
 		ctx,
-		info: { chartBox, xAxisLabelFormatter },
+		info: { chartBox },
 	} = options
 	let tooltips: TooltipData[] = []
 	let boxPointIndexForName: { [key: string]: number } = {
@@ -247,10 +237,10 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 	for (let i = 0; i < activeHoverRegions.length; i++) {
 		let activeHoverRegion = activeHoverRegions[i]
 		let color = activeHoverRegion.info.color
-		let x = xAxisLabelFormatter(activeHoverRegion.info.x)
-		let label = activeHoverRegion.info.name
-		let value = defaultAxisLabelFormatter(activeHoverRegion.info.value)
-		let y = `${label} = ${value}`
+		let x = activeHoverRegion.info.label
+		let name = activeHoverRegion.info.name
+		let value = formatNumber(activeHoverRegion.info.value)
+		let y = `${name} = ${value}`
 		let text = `(${x}, ${y})`
 		tooltips.push({
 			color,
@@ -375,10 +365,10 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		boxChartHoverRegion({
 			box: medianBox,
 			color: series.color,
+			label: point.label,
 			name: 'median',
 			tooltipOriginPixels: { ...medianBox, x: x + boxWidth / 2 },
 			value: point.y.p50,
-			x: point.x,
 		}),
 	)
 
@@ -417,10 +407,10 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		boxChartHoverRegion({
 			box: minWhiskerTipBox,
 			color: series.color,
+			label: point.label,
 			name: 'min',
 			tooltipOriginPixels: { ...minWhiskerTipBox, x: x + boxWidth / 2 },
 			value: point.y.min,
-			x: point.x,
 		}),
 	)
 
@@ -459,13 +449,13 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		boxChartHoverRegion({
 			box: maxWhiskerTipBox,
 			color: series.color,
+			label: point.label,
 			name: 'max',
 			tooltipOriginPixels: {
 				...maxWhiskerTipBox,
 				x: x + boxWidth / 2,
 			},
 			value: point.y.max,
-			x: point.x,
 		}),
 	)
 
@@ -480,13 +470,13 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		boxChartHoverRegion({
 			box: p25Box,
 			color: series.color,
+			label: point.label,
 			name: 'p25',
 			tooltipOriginPixels: {
 				...p25Box,
 				x: x + boxWidth / 2,
 			},
 			value: point.y.p25,
-			x: point.x,
 		}),
 	)
 
@@ -501,13 +491,13 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		boxChartHoverRegion({
 			box: p75Box,
 			color: series.color,
+			label: point.label,
 			name: 'p75',
 			tooltipOriginPixels: {
 				...p75Box,
 				x: x + boxWidth / 2,
 			},
 			value: point.y.p75,
-			x: point.x,
 		}),
 	)
 
@@ -517,16 +507,16 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 type RegisterBoxChartHoverRegionOptions = {
 	box: Box
 	color: string
+	label: string
 	name: string
 	tooltipOriginPixels: Box
 	value: number
-	x: number
 }
 
 function boxChartHoverRegion(
 	options: RegisterBoxChartHoverRegionOptions,
 ): HoverRegion<BoxChartHoverRegionInfo> {
-	let { box, color, name, tooltipOriginPixels, value, x } = options
+	let { box, color, label, name, tooltipOriginPixels, value } = options
 	return {
 		distance: (mouseX: number, mouseY: number) => {
 			return (box.x - mouseX) ** 2 + (box.y - mouseY) ** 2
@@ -541,10 +531,10 @@ function boxChartHoverRegion(
 		},
 		info: {
 			color,
+			label,
 			name,
 			tooltipOriginPixels,
 			value,
-			x,
 		},
 	}
 }

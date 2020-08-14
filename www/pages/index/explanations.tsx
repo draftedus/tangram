@@ -1,11 +1,10 @@
 import { h, ui } from 'deps'
 
 export function Explanations() {
-	let xAxisLabelFormatter = (i: number) => data.classes[i]
 	let data = {
 		chartData: [
-			{ x: 0, y: 0.02517283 },
-			{ x: 1, y: 0.9748272 },
+			{ label: 'Negative', x: 0, y: 0.02517283 },
+			{ label: 'Positive', x: 1, y: 0.9748272 },
 		],
 		className: 'Positive',
 		classes: ['Negative', 'Positive'],
@@ -67,7 +66,6 @@ export function Explanations() {
 							},
 						]}
 						title="Predicted Probabilities"
-						xAxisLabelFormatter={xAxisLabelFormatter}
 					/>
 				)}
 				<ui.Card>

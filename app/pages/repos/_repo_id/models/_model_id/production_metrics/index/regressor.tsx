@@ -50,6 +50,7 @@ export function RegressorProductionMetricsPage(props: Props) {
 		{
 			color: productionColor,
 			data: props.mseChart.data.map((entry, index) => ({
+				label: entry.label,
 				x: index,
 				y: entry.mse,
 			})),
@@ -76,7 +77,6 @@ export function RegressorProductionMetricsPage(props: Props) {
 							data={mseData}
 							id="mse"
 							title={mseChartTitle}
-							xAxisLabelFormatter={i => props.mseChart.data[i].label}
 							yAxisTitle="Root Mean Squared Error"
 						/>
 					</ui.Card>

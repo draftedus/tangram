@@ -126,6 +126,7 @@ function PredictionInputInner(props: Props) {
 							case ColumnType.Unknown:
 								return (
 									<Fragment>
+										{/* <UnknownColumnToken /> */}
 										<ui.TextField
 											key={name}
 											label={column.name}
@@ -138,6 +139,7 @@ function PredictionInputInner(props: Props) {
 							case ColumnType.Number:
 								return (
 									<Fragment>
+										{/* <NumberColumnToken /> */}
 										<ui.TextField
 											key={name}
 											label={column.name}
@@ -152,6 +154,7 @@ function PredictionInputInner(props: Props) {
 														color: ui.colors.blue,
 														data: [
 															{
+																label: column.name,
 																x: 0,
 																y: {
 																	max: column.max,
@@ -174,6 +177,7 @@ function PredictionInputInner(props: Props) {
 							case ColumnType.Enum:
 								return (
 									<Fragment>
+										{/* <EnumColumnToken /> */}
 										<ui.SelectField
 											key={name}
 											label={column.name}
@@ -187,7 +191,8 @@ function PredictionInputInner(props: Props) {
 												data={[
 													{
 														color: ui.colors.blue,
-														data: column.histogram.map(([_, value], i) => ({
+														data: column.histogram.map(([label, value], i) => ({
+															label,
 															x: i,
 															y: value,
 														})),
@@ -203,6 +208,7 @@ function PredictionInputInner(props: Props) {
 							case ColumnType.Text:
 								return (
 									<Fragment>
+										{/* <TextColumnToken /> */}
 										<ui.TextField
 											key={name}
 											label={column.name}
@@ -287,7 +293,8 @@ function ClassificationPredictionOutput(
 	let probabilityData = [
 		{
 			color: ui.colors.blue,
-			data: props.probabilities.map(([_className, probability], i) => ({
+			data: props.probabilities.map(([label, probability], i) => ({
+				label,
 				x: i,
 				y: probability,
 			})),
@@ -311,7 +318,6 @@ function ClassificationPredictionOutput(
 					data={probabilityData}
 					id="probabilities"
 					title="Predicted Probabilities"
-					xAxisLabelFormatter={i => props.probabilities[i][0]}
 				/>
 			)}
 			<ui.H2>{'Explanation'}</ui.H2>

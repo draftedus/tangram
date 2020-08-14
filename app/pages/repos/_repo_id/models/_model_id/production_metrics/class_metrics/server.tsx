@@ -112,6 +112,7 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
+				label: interval.label,
 				x: index,
 				y: interval.precision.training,
 			})),
@@ -122,6 +123,7 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: productionColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
+				label: interval.label,
 				x: index,
 				y: interval.precision.production,
 			})),
@@ -133,6 +135,7 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
+				label: interval.label,
 				x: index,
 				y: interval.recall.training,
 			})),
@@ -154,6 +157,7 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
+				label: interval.label,
 				x: index,
 				y: interval.f1Score.training,
 			})),
@@ -164,6 +168,7 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: productionColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
+				label: interval.label,
 				x: index,
 				y: interval.f1Score.production,
 			})),
@@ -242,9 +247,6 @@ export default function ProductionMetricsPage(props: Props) {
 									data={precisionChartData}
 									id="precision_intervals"
 									title={precisionIntervalChartTitle}
-									xAxisLabelFormatter={i =>
-										selectedIntervalClassMetrics.intervals[i].label
-									}
 									yMax={1}
 									yMin={0}
 								/>
@@ -254,9 +256,6 @@ export default function ProductionMetricsPage(props: Props) {
 									data={recallChartData}
 									id="recall_intervals"
 									title={recallIntervalChartTitle}
-									xAxisLabelFormatter={i =>
-										selectedIntervalClassMetrics.intervals[i].label
-									}
 									yMax={1}
 									yMin={0}
 								/>
@@ -280,9 +279,6 @@ export default function ProductionMetricsPage(props: Props) {
 									data={f1ScoreChartData}
 									id="f1_intervals"
 									title={f1ScoreIntervalChartTitle}
-									xAxisLabelFormatter={i =>
-										selectedIntervalClassMetrics.intervals[i].label
-									}
 									yMax={1}
 									yMin={0}
 								/>

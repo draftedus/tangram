@@ -57,6 +57,7 @@ export function Number(props: Props) {
 		{
 			color: productionColor,
 			data: props.intervals.map((entry, index) => ({
+				label: entry.label,
 				x: index,
 				y: entry.stats
 					? {
@@ -78,6 +79,7 @@ export function Number(props: Props) {
 			data: props.overall.stats
 				? [
 						{
+							label: props.overall.label,
 							x: 0,
 							y: {
 								max: props.overall.stats.training.max,
@@ -96,6 +98,7 @@ export function Number(props: Props) {
 			data: props.overall.stats.production
 				? [
 						{
+							label: props.overall.label,
 							x: 0,
 							y: {
 								max: props.overall.stats.production.max,
@@ -128,7 +131,6 @@ export function Number(props: Props) {
 					data={overallChartData}
 					id="overall"
 					title={statsOverallChartTitle}
-					xAxisLabelFormatter={_ => props.overall.label}
 				/>
 			</ui.Card>
 			<ui.Card>
@@ -136,7 +138,6 @@ export function Number(props: Props) {
 					data={intervalChartData}
 					id="number_intervals"
 					title={statsIntervalChartTitle}
-					xAxisLabelFormatter={i => props.intervals[i].label}
 				/>
 			</ui.Card>
 			<MetricsRow>

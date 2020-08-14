@@ -110,7 +110,6 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 						data={accuracyData}
 						id="accuracy"
 						title={accuracyChartTitle}
-						xAxisLabelFormatter={i => props.accuracyChart.data[i].label}
 						yMax={1}
 						yMin={0}
 					/>

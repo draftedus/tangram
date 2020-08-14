@@ -3,7 +3,6 @@ import {
 	Box,
 	Point,
 	computeXAxisGridLineInfo,
-	defaultAxisLabelFormatter,
 	drawXAxisGridLines,
 	drawXAxisLabels,
 	drawXAxisTitle,
@@ -215,13 +214,10 @@ export function drawShapChart(
 		drawYAxisTitle({ box: yAxisTitlesBox, ctx, title: 'Class' })
 	}
 
-	let xAxisLabelFormatter = defaultAxisLabelFormatter
-
 	// compute grid line info
 	let xAxisGridLineInfo = computeXAxisGridLineInfo({
 		chartWidth: chartBox.w,
 		ctx,
-		xAxisLabelFormatter,
 		xMax,
 		xMin,
 	})
@@ -237,7 +233,6 @@ export function drawShapChart(
 		ctx,
 		gridLineInfo: xAxisGridLineInfo,
 		width,
-		xAxisLabelFormatter,
 	})
 
 	drawXAxisLabels({
@@ -245,7 +240,6 @@ export function drawShapChart(
 		ctx,
 		gridLineInfo: xAxisGridLineInfo,
 		width,
-		xAxisLabelFormatter,
 	})
 
 	let categories = data.map(classShapValues => classShapValues.label)
