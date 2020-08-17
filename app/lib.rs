@@ -1,11 +1,9 @@
-#![allow(non_snake_case)]
-
 use self::error::Error;
 use anyhow::Result;
 use futures::FutureExt;
 use hyper::{header, service::service_fn, Body, Method, Request, Response, StatusCode};
 use pinwheel::Pinwheel;
-use std::{collections::BTreeMap, panic::AssertUnwindSafe, path::PathBuf, str::FromStr, sync::Arc};
+use std::{collections::BTreeMap, panic::AssertUnwindSafe, str::FromStr, sync::Arc};
 use url::Url;
 
 mod cookies;
@@ -22,6 +20,11 @@ mod track;
 mod types;
 
 pub use helpers::user;
+
+pub fn run() -> Result<()> {
+	let mut runtime = tokio::runtime::Runtime::new().unwrap();
+	runtime.block_on(run_async())
+}
 
 pub struct Context {
 	pinwheel: Pinwheel,
@@ -232,12 +235,17 @@ async fn handle(
 			pages::organizations::_organization_id::edit::post(request, &context, organization_id)
 				.await
 		}
-		_ => Ok(context.pinwheel.handle(request).await),
+		_ => context.pinwheel.handle(request).await,
 	};
 	let response = match result {
 		Ok(r) => r,
 		Err(error) => {
-			if let Some(error) = error.downcast_ref::<Error>() {
+			if let Some(_) = error.downcast_ref::<pinwheel::NotFoundError>() {
+				Response::builder()
+					.status(StatusCode::NOT_FOUND)
+					.body(Body::from("not found"))
+					.unwrap()
+			} else if let Some(error) = error.downcast_ref::<Error>() {
 				match error {
 					Error::BadRequest => Response::builder()
 						.status(StatusCode::BAD_REQUEST)
@@ -270,7 +278,7 @@ async fn handle(
 	Ok(response)
 }
 
-pub async fn start() -> Result<()> {
+pub async fn run_async() -> Result<()> {
 	// get host and port
 	let host = std::env::var("HOST")
 		.map(|host| host.parse().expect("HOST environment variable invalid"))
@@ -281,29 +289,28 @@ pub async fn start() -> Result<()> {
 	let addr = std::net::SocketAddr::new(host, port);
 
 	// configure the database pool
-	let database_url =
-		std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable not set");
+	let database_url = std::env::var("DATABASE_URL").ok().unwrap_or_else(|| {
+		let tangram_data_dir = dirs::data_dir()
+			.expect("failed to find user data directory")
+			.join("tangram");
+		std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
+			panic!(
+				"failed to create tangram data directory in {}",
+				tangram_data_dir.display()
+			)
+		});
+		let tangram_database_path = tangram_data_dir.join("tangram.db");
+		format!(
+			"sqlite:{}",
+			tangram_database_path.to_str().unwrap().to_owned()
+		)
+	});
 	let database_pool_max_size: u32 = std::env::var("DATABASE_POOL_MAX_SIZE")
 		.map(|s| {
 			s.parse()
 				.expect("DATABASE_POOL_MAX_SIZE environment variable invalid")
 		})
 		.unwrap_or(10);
-	// let database_cert = std::env::var("DATABASE_CERT").ok().map(|c| c.into_bytes());
-	// let database_config = database_url.parse().unwrap();
-	// let database_pool = if let Some(database_cert) = database_cert {
-	// 	let tls = MakeTlsConnector::new(
-	// 		TlsConnector::builder()
-	// 			.add_root_certificate(Certificate::from_pem(&database_cert).unwrap())
-	// 			.build()
-	// 			.unwrap(),
-	// 	);
-	// 	let database_manager = Manager::new(database_config, tls);
-	// 	Pool::new(database_manager, database_pool_max_size)
-	// } else {
-	// 	let database_manager = Manager::new(database_config, postgres::NoTls);
-	// 	Pool::new(database_manager, database_pool_max_size)
-	// };
 	let options = match database_url {
 		_ if database_url.starts_with("sqlite:") => sqlx::any::AnyConnectOptions::from(
 			sqlx::sqlite::SqliteConnectOptions::from_str(&database_url)?
@@ -327,7 +334,10 @@ pub async fn start() -> Result<()> {
 	// create the pinwheel
 	#[cfg(debug_assertions)]
 	fn pinwheel() -> Pinwheel {
-		Pinwheel::dev(PathBuf::from("app"), PathBuf::from("target/app"))
+		Pinwheel::dev(
+			std::path::PathBuf::from("app"),
+			std::path::PathBuf::from("target/app"),
+		)
 	}
 	#[cfg(not(debug_assertions))]
 	fn pinwheel() -> Pinwheel {
@@ -364,6 +374,10 @@ pub async fn start() -> Result<()> {
 	let http = hyper::server::conn::Http::new();
 	eprintln!("🚀 serving on port {}", port);
 
+	std::panic::set_hook(Box::new(|panic_info| {
+		eprintln!("{}", panic_info.to_string());
+	}));
+
 	// wait for and handle each connection
 	loop {
 		let result = listener.accept().await;
@@ -382,10 +396,13 @@ pub async fn start() -> Result<()> {
 					.catch_unwind()
 					.await;
 				match result {
-					Err(_) => Ok(Response::builder()
-						.status(StatusCode::INTERNAL_SERVER_ERROR)
-						.body(Body::from("internal server error"))
-						.unwrap()),
+					Err(_) => {
+						let response = Response::builder()
+							.status(StatusCode::INTERNAL_SERVER_ERROR)
+							.body(Body::from("internal server error"))
+							.unwrap();
+						Ok(response)
+					}
 					Ok(response) => response,
 				}
 			}

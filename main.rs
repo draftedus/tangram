@@ -68,10 +68,7 @@ fn main() {
 			cli_train(file_path, target_column_name, config_path, output_path)
 		}
 		#[cfg(feature = "app")]
-		("app", Some(_)) => {
-			let mut runtime = tokio::runtime::Runtime::new().unwrap();
-			runtime.block_on(tangram_app::start())
-		}
+		("app", Some(_)) => cli_app(),
 		_ => unreachable!(),
 	};
 	if let Err(error) = result {
@@ -135,6 +132,10 @@ fn cli_train(
 	);
 
 	Ok(())
+}
+
+fn cli_app() -> Result<()> {
+	tangram_app::run()
 }
 
 pub fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {

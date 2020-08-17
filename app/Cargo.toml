@@ -20,6 +20,7 @@ bytes = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.5", features = ["serde"] }
 derive_more = "0.99"
+dirs = "3"
 futures = { version = "0.3" }
 futures-util = { version = "0.3" }
 hyper =  { version = "0.13", features = ["stream"] }
@@ -38,5 +39,5 @@ serde_json = "1"
 serde_urlencoded = "0.6"
 sqlx = { git = "https://github.com/nitsky/sqlx", branch = "from_any_connect_options", default-features = false, features = ["any", "chrono", "postgres", "runtime-tokio", "sqlite"] }
 tangram-core = { path = "../core" }
-tokio = { version = "0.2", features = ["tcp"] }
+tokio = { version = "0.2", features = ["rt-threaded", "tcp"] }
 url = "2"

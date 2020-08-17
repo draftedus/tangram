@@ -1,7 +1,6 @@
 PORT=8080 \
 APP_URL=http://localhost:8080 \
 DATABASE_URL=sqlite:data/tangram.db \
-DATABASE_POOL_MAX_SIZE=100 \
 STRIPE_PUBLISHABLE_KEY=pk_test_IdZDlwnF8QDZoDB3dIdtIZ5K00p4enlqGE \
 STRIPE_SECRET_KEY=sk_test_8HE9tiU8FcQ3qKmo2nWADZrW00zstANVQE \
 watchexec --exts rs --restart --watch . -- cargo run --features app -- app

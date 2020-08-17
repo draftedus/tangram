@@ -4,7 +4,7 @@ import { AuthLayout } from 'layouts/auth_layout'
 export type LoginProps = {
 	code?: boolean
 	email?: string
-	error?: string
+	flash?: string
 	pinwheelInfo: PinwheelInfo
 }
 
@@ -12,8 +12,8 @@ export default function Login(props: LoginProps) {
 	return renderPage(
 		<AuthLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.Form post={true}>
-				{props.error && (
-					<ui.Alert level={ui.Level.Danger}>{props.error}</ui.Alert>
+				{props.flash && (
+					<ui.Alert level={ui.Level.Danger}>{props.flash}</ui.Alert>
 				)}
 				<ui.TextField
 					autocomplete="username"

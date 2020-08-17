@@ -1,8 +1,10 @@
 use anyhow::{format_err, Result};
+use derive_more::{Display, Error};
 use hyper::{header, Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use rusty_v8 as v8;
 use sourcemap::SourceMap;
+use std::fmt::Write;
 use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc};
 use url::Url;
 
@@ -11,6 +13,14 @@ pub struct Pinwheel {
 	dst_dir: Option<PathBuf>,
 	fs: Box<dyn VirtualFileSystem>,
 }
+
+#[derive(Debug, Display, Error)]
+pub struct NotFoundError;
+
+#[derive(Debug, Display)]
+pub struct JSError(String);
+
+impl std::error::Error for JSError {}
 
 impl Pinwheel {
 	pub fn dev(src_dir: PathBuf, dst_dir: PathBuf) -> Self {
@@ -43,16 +53,15 @@ impl Pinwheel {
 		} else {
 			pagename.to_string()
 		};
-		let page_entry = page_entry.strip_prefix('/').unwrap();
+		let page_entry = page_entry.strip_prefix('/').unwrap().to_owned();
 
 		// in dev mode compile the page
 		if self.src_dir.is_some() {
 			esbuild_single_page(
 				self.src_dir.as_ref().unwrap(),
 				self.dst_dir.as_ref().unwrap(),
-				page_entry,
-			)
-			.unwrap();
+				page_entry.clone(),
+			)?;
 		}
 
 		// determine output urls
@@ -74,8 +83,10 @@ impl Pinwheel {
 			.unwrap();
 		let page_js_url = if self.fs.exists(&static_js_url) {
 			static_js_url
-		} else {
+		} else if self.fs.exists(&server_js_url) {
 			server_js_url
+		} else {
+			return Err(NotFoundError.into());
 		};
 		let client_js_url = Url::parse("dst:/")
 			.unwrap()
@@ -87,11 +98,12 @@ impl Pinwheel {
 			.unwrap();
 		let client_js_src = if self.fs.exists(&client_js_url) {
 			Some(
-				if self.src_dir.is_some() {
-					"/".to_string()
-				} else {
-					page_entry.to_string() + "/"
-				} + "client.js",
+				"/".to_string()
+					+ &if self.src_dir.is_some() {
+						"".to_string()
+					} else {
+						page_entry.to_string() + "/"
+					} + "client.js",
 			)
 		} else {
 			None
@@ -121,7 +133,7 @@ impl Pinwheel {
 
 			// get default export from page
 			let page_module_namespace =
-				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone()).unwrap();
+				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone())?;
 			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_literal)
@@ -131,7 +143,7 @@ impl Pinwheel {
 				unsafe { v8::Local::cast(page_module_default_export) };
 
 			// send the props to v8
-			let json = serde_json::to_string(&props).unwrap();
+			let json = serde_json::to_string(&props)?;
 			let json = v8::String::new(&mut scope, &json).unwrap();
 			let props = v8::json::parse(&mut scope, json).unwrap();
 			let props = props.to_object(&mut scope).unwrap();
@@ -159,8 +171,8 @@ impl Pinwheel {
 			if try_catch_scope.has_caught() {
 				let exception = try_catch_scope.exception().unwrap();
 				let mut scope = v8::HandleScope::new(&mut try_catch_scope);
-				print_error(&mut scope, exception);
-				return Err(format_err!(""));
+				let exception_string = exception_to_string(&mut scope, exception);
+				return Err(format_err!("{}", exception_string));
 			}
 			let html = html.unwrap();
 			drop(try_catch_scope);
@@ -173,8 +185,7 @@ impl Pinwheel {
 		})
 	}
 
-	pub async fn handle(&self, request: Request<Body>) -> Response<Body> {
-		let method = request.method();
+	pub async fn handle(&self, request: Request<Body>) -> Result<Response<Body>> {
 		let uri = request.uri();
 		let path_and_query = uri.path_and_query().unwrap();
 		let path = path_and_query.path();
@@ -188,33 +199,32 @@ impl Pinwheel {
 		if let Some(src_dir) = self.src_dir.as_ref() {
 			let static_path = src_dir.join("static").join(static_path);
 			if static_path.exists() {
-				let body = std::fs::read(&static_path).unwrap();
+				let body = std::fs::read(&static_path)?;
 				let mut response = Response::builder();
 				if let Some(content_type) = content_type(static_path.to_str().unwrap()) {
 					response = response.header(header::CONTENT_TYPE, content_type);
 				}
 				let response = response.body(Body::from(body)).unwrap();
-				return response;
+				return Ok(response);
 			}
 		}
 		// serve from the dst_dir
 		let url = Url::parse(&format!("dst:/{}", static_path)).unwrap();
 		if self.fs.exists(&url) {
-			let data = self.fs.read(&url).unwrap();
+			let data = self.fs.read(&url)?;
 			let mut response = Response::builder();
 			if let Some(content_type) = content_type(static_path) {
 				response = response.header("content-type", content_type);
 			}
 			let response = response.body(Body::from(data)).unwrap();
-			return response;
+			return Ok(response);
 		}
-		let html = self.render(path).unwrap();
+		let html = self.render(path)?;
 		let response = Response::builder()
 			.status(StatusCode::OK)
 			.body(Body::from(html))
 			.unwrap();
-		eprintln!("{} {} {}", method, path, response.status().as_u16());
-		response
+		Ok(response)
 	}
 }
 
@@ -280,7 +290,7 @@ fn run_module<'s>(
 	fs: &dyn VirtualFileSystem,
 	url: Url,
 ) -> Result<v8::Local<'s, v8::Object>> {
-	let module_id = load_module(scope, fs, url).unwrap();
+	let module_id = load_module(scope, fs, url)?;
 	let state = get_state(scope);
 	let state = state.borrow();
 	let module = &get_module_handle_with_id(&state, module_id).unwrap().module;
@@ -291,13 +301,15 @@ fn run_module<'s>(
 	if try_catch_scope.has_caught() {
 		let exception = try_catch_scope.exception().unwrap();
 		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
-		print_error(&mut scope, exception);
+		let exception_string = exception_to_string(&mut scope, exception);
+		return Err(format_err!("{}", exception_string));
 	}
 	let _ = module.evaluate(&mut try_catch_scope);
 	if try_catch_scope.has_caught() {
 		let exception = try_catch_scope.exception().unwrap();
 		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
-		print_error(&mut scope, exception);
+		let exception_string = exception_to_string(&mut scope, exception);
+		return Err(format_err!("{}", exception_string));
 	}
 	drop(try_catch_scope);
 	let namespace = module.get_module_namespace();
@@ -341,8 +353,8 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	);
 
 	// read the source
-	let code = fs.read(&url).unwrap();
-	let code = std::str::from_utf8(code.as_ref()).unwrap();
+	let code = fs.read(&url)?;
+	let code = std::str::from_utf8(code.as_ref())?;
 	let source = v8::script_compiler::Source::new(v8::String::new(scope, code).unwrap(), &origin);
 
 	// read the source map
@@ -352,8 +364,8 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 		None => None,
 	};
 	let source_map = if let Some(source_map_url) = source_map_url {
-		let source_map = fs.read(&source_map_url).unwrap();
-		let source_map = sourcemap::SourceMap::from_slice(source_map.as_ref()).unwrap();
+		let source_map = fs.read(&source_map_url)?;
+		let source_map = sourcemap::SourceMap::from_slice(source_map.as_ref())?;
 		Some(source_map)
 	} else {
 		None
@@ -365,7 +377,8 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	if try_catch_scope.has_caught() {
 		let exception = try_catch_scope.exception().unwrap();
 		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
-		print_error(&mut scope, exception);
+		let exception_string = exception_to_string(&mut scope, exception);
+		return Err(format_err!("{}", exception_string));
 	}
 	let module = module.unwrap();
 	drop(try_catch_scope);
@@ -392,7 +405,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 		let referrer_url = &get_module_handle_with_id(&state, id).unwrap().url;
 		let url = referrer_url.join(&specifier).unwrap();
 		drop(state);
-		load_module(scope, fs, url).unwrap();
+		load_module(scope, fs, url)?;
 	}
 
 	Ok(id)
@@ -414,12 +427,13 @@ fn module_resolve_callback<'s>(
 	Some(v8::Local::new(&mut scope, module))
 }
 
-fn print_error(scope: &mut v8::HandleScope, exception: v8::Local<v8::Value>) {
+fn exception_to_string(scope: &mut v8::HandleScope, exception: v8::Local<v8::Value>) -> String {
+	let mut string = String::new();
 	let message = exception
 		.to_string(scope)
 		.unwrap()
 		.to_rust_string_lossy(scope);
-	eprintln!("{}", message);
+	writeln!(&mut string, "{}", message).unwrap();
 	let stack_trace = v8::Exception::get_stack_trace(scope, exception).unwrap();
 	for i in 0..stack_trace.get_frame_count() {
 		let stack_trace_frame = stack_trace.get_frame(scope, i).unwrap();
@@ -444,7 +458,8 @@ fn print_error(scope: &mut v8::HandleScope, exception: v8::Local<v8::Value>) {
 				(source_column - 1).to_u32().unwrap(),
 			)
 			.unwrap();
-		eprintln!(
+		writeln!(
+			&mut string,
 			"{}:{}:{} -> {}:{}:{}",
 			stack_trace_frame
 				.get_script_name(scope)
@@ -455,8 +470,10 @@ fn print_error(scope: &mut v8::HandleScope, exception: v8::Local<v8::Value>) {
 			token.get_source().unwrap_or("<unknown>"),
 			token.get_src_line() + 1,
 			token.get_src_col() + 1,
-		);
+		)
+		.unwrap();
 	}
+	string
 }
 
 trait VirtualFileSystem: Send + Sync {
@@ -499,14 +516,15 @@ impl VirtualFileSystem for IncludedFileSystem {
 
 pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 	// collect all pages in the pages directory
-	let mut page_entries = Vec::new();
+	let mut page_entries = <Vec<String>>::new();
+	let mut static_page_entries = <Vec<String>>::new();
 	let pages_dir = src_dir.join("pages");
 	for path in walkdir::WalkDir::new(&pages_dir) {
 		let path = path.unwrap();
 		let path = path.path();
 		match path.file_stem().unwrap().to_str().unwrap() {
 			"static" | "server" => {
-				let page_entry = path
+				let page_entry: String = path
 					.strip_prefix(&pages_dir)
 					.unwrap()
 					.parent()
@@ -516,7 +534,10 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 					.unwrap()
 					.to_owned()
 					.into();
-				page_entries.push(page_entry)
+				page_entries.push(page_entry.clone().into());
+				if path.file_stem().unwrap().to_str().unwrap() == "static" {
+					static_page_entries.push(page_entry.into());
+				}
 			}
 			_ => {}
 		}
@@ -542,7 +563,7 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 			dst_dir: dst_dir.to_owned(),
 		}),
 	};
-	for page_entry in page_entries {
+	for page_entry in static_page_entries {
 		let mut pagename = String::from("/") + &page_entry;
 		if pagename.ends_with("/index") {
 			pagename = pagename.strip_suffix("index").unwrap().to_string();
@@ -556,11 +577,11 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 	Ok(())
 }
 
-pub fn esbuild_single_page(src_dir: &Path, dst_dir: &Path, page_entry: &str) -> Result<()> {
-	esbuild_pages(src_dir, dst_dir, &[page_entry.into()])
+pub fn esbuild_single_page(src_dir: &Path, dst_dir: &Path, page_entry: String) -> Result<()> {
+	esbuild_pages(src_dir, dst_dir, &[page_entry])
 }
 
-pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[Cow<str>]) -> Result<()> {
+pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) -> Result<()> {
 	// remove the dst_dir if it exists and create it
 	if dst_dir.exists() {
 		std::fs::remove_dir_all(&dst_dir).unwrap();
@@ -583,23 +604,14 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[Cow<str>]) 
 		format!("--outdir={}", dst_dir.display()),
 	];
 	for page_entry in page_entries {
-		let static_source_path = src_dir
-			.join("pages")
-			.join(page_entry.as_ref())
-			.join("static.tsx");
-		let server_source_path = src_dir
-			.join("pages")
-			.join(page_entry.as_ref())
-			.join("server.tsx");
-		let client_source_path = src_dir
-			.join("pages")
-			.join(page_entry.as_ref())
-			.join("client.tsx");
+		let static_source_path = src_dir.join("pages").join(&page_entry).join("static.tsx");
+		let server_source_path = src_dir.join("pages").join(&page_entry).join("server.tsx");
+		let client_source_path = src_dir.join("pages").join(&page_entry).join("client.tsx");
 		let static_source_path_exists = static_source_path.exists();
 		let server_source_path_exists = server_source_path.exists();
 		let client_source_path_exists = client_source_path.exists();
 		if !static_source_path_exists && !server_source_path_exists {
-			return Err(format_err!("not found"));
+			return Err(NotFoundError.into());
 		}
 		if static_source_path_exists {
 			args.push(format!("{}", static_source_path.display()));
@@ -618,25 +630,12 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[Cow<str>]) 
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
 	}
-
 	// concat css
-	let current_dir = std::env::current_dir().unwrap();
-	let current_dir_name = current_dir.components().last().unwrap();
-	if current_dir_name == std::path::Component::Normal(std::ffi::OsStr::new("www")) {
-		let output = std::process::Command::new("fd")
-			.args(&["-e", "css", ".", "../ui", ".", "-x", "cat"])
-			.output()
-			.unwrap();
-		std::fs::write(dst_dir.join("tangram.css"), output.stdout).unwrap();
-	} else if current_dir_name == std::path::Component::Normal(std::ffi::OsStr::new("tangram")) {
-		let output = std::process::Command::new("fd")
-			.args(&["-e", "css", ".", "ui", "app", "-x", "cat"])
-			.output()
-			.unwrap();
-		std::fs::write(dst_dir.join("tangram.css"), output.stdout).unwrap();
-	} else {
-		panic!()
-	}
+	let output = std::process::Command::new("fd")
+		.args(&["-e", "css", ".", "../ui", ".", "-x", "cat"])
+		.output()
+		.unwrap();
+	std::fs::write(dst_dir.join("tangram.css"), output.stdout).unwrap();
 	Ok(())
 }
 

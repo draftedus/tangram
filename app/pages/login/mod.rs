@@ -1,4 +1,4 @@
-use crate::{error::Error, Context};
+use crate::{cookies, error::Error, Context};
 use anyhow::Result;
 use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
@@ -9,19 +9,25 @@ use std::{collections::BTreeMap, sync::Arc};
 use tangram_core::id::Id;
 
 pub async fn get(
-	_request: Request<Body>,
+	request: Request<Body>,
 	context: Arc<Context>,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
+	let flash = request
+		.headers()
+		.get(header::COOKIE)
+		.and_then(|cookie| cookies::parse(cookie.to_str().unwrap()).ok())
+		.and_then(|cookies| cookies.get("tangram-flash").map(|flash| flash.to_string()));
 	let email = search_params.as_ref().and_then(|s| s.get("email").cloned());
 	let props = LoginProps {
 		code: email.is_some(),
-		error: None,
+		flash,
 		email,
 	};
 	let html = context.pinwheel.render_with("/login", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
+		.header(header::SET_COOKIE, "tangram-flash=")
 		.body(Body::from(html))
 		.unwrap())
 }
@@ -30,7 +36,7 @@ pub async fn get(
 struct LoginProps {
 	code: bool,
 	email: Option<String>,
-	error: Option<String>,
+	flash: Option<String>,
 }
 
 #[derive(serde::Deserialize)]
@@ -115,6 +121,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 				let response = Response::builder()
 					.status(StatusCode::SEE_OTHER)
 					.header(header::LOCATION, format!("/login?email={}", email))
+					.header(header::SET_COOKIE, format!("tangram-flash=invalid code"))
 					.body(Body::empty())?;
 				return Ok(response);
 			};

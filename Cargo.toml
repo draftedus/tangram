@@ -38,7 +38,6 @@ serde_json = "1"
 tangram-app = { path = "app", optional = true }
 tangram-core = { path = "core", optional = true }
 term-ui = { git = "https://github.com/tangram-hq/term-ui" }
-tokio = { version = "0.2", features = ["rt-threaded"] }
 
 [patch.'https://github.com/tangram-hq/buffy']
 buffy = { path = "buffy/buffy-rs" }

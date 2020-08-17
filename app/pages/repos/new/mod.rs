@@ -173,7 +173,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		&_ => return Err(Error::BadRequest.into()),
 	};
 
-	sqlx::query(
+	let result = sqlx::query(
 		"
 			insert into models
 				(id, repo_id, title, created_at, data, is_main)
@@ -188,7 +188,14 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	.bind(&base64::encode(file))
 	.bind(&true)
 	.execute(&mut *db)
-	.await?;
+	.await;
+
+	if result.is_err() {
+		return Ok(Response::builder()
+			.status(StatusCode::SEE_OTHER)
+			.header(header::LOCATION, format!("/repos/new"))
+			.body(Body::empty())?);
+	};
 	db.commit().await?;
 	Ok(Response::builder()
 		.status(StatusCode::SEE_OTHER)

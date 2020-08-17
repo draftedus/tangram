@@ -1,13 +1,10 @@
-#![allow(non_snake_case)]
-
 use anyhow::Result;
 use futures::FutureExt;
 use hyper::{service::service_fn, Body, Response, StatusCode};
 use pinwheel::Pinwheel;
 use std::{panic::AssertUnwindSafe, path::Path, sync::Arc};
 
-#[tokio::main]
-pub async fn main() -> Result<()> {
+pub fn main() {
 	let mut app = clap::App::new("pinwheel")
 		.version(clap::crate_version!())
 		.setting(clap::AppSettings::SubcommandRequiredElseHelp);
@@ -43,20 +40,22 @@ pub async fn main() -> Result<()> {
 					.takes_value(true),
 			),
 	);
+	let mut runtime = tokio::runtime::Runtime::new().unwrap();
 	let matches = app.get_matches();
-	match matches.subcommand() {
+	let result = match matches.subcommand() {
 		("dev", Some(dev_matches)) => {
 			let src_dir = dev_matches.value_of("src-dir").map(Path::new).unwrap();
 			let dst_dir = dev_matches.value_of("dst-dir").map(Path::new).unwrap();
-			dev(src_dir, dst_dir).await
+			runtime.block_on(dev(src_dir, dst_dir))
 		}
 		("build", Some(build_matches)) => {
 			let src_dir = build_matches.value_of("src-dir").map(Path::new).unwrap();
 			let dst_dir = build_matches.value_of("dst-dir").map(Path::new).unwrap();
-			build(src_dir, dst_dir).await
+			runtime.block_on(build(src_dir, dst_dir))
 		}
 		_ => unreachable!(),
-	}
+	};
+	result.unwrap();
 }
 
 async fn dev(src_dir: &Path, dst_dir: &Path) -> Result<()> {
@@ -92,20 +91,18 @@ async fn dev(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 		let service = service_fn(move |request| {
 			let pinwheel = pinwheel.clone();
 			async move {
-				let result = AssertUnwindSafe(
-					pinwheel
-						.clone()
-						.handle(request)
-						.map(Result::<_, hyper::Error>::Ok),
-				)
-				.catch_unwind()
-				.await;
+				let result = AssertUnwindSafe(pinwheel.clone().handle(request))
+					.catch_unwind()
+					.await;
 				match result {
 					Ok(response) => response,
-					Err(_) => Ok(Response::builder()
-						.status(StatusCode::INTERNAL_SERVER_ERROR)
-						.body(Body::from("internal server error"))
-						.unwrap()),
+					Err(_) => {
+						let response = Response::builder()
+							.status(StatusCode::INTERNAL_SERVER_ERROR)
+							.body(Body::from("internal server error"))
+							.unwrap();
+						Ok(response)
+					}
 				}
 			}
 		});
