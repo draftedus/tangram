@@ -261,6 +261,7 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 	}
 	if (tooltips.length > 0) {
 		drawTooltip({
+			centerHorizontal: true,
 			chartBox,
 			ctx,
 			origin:

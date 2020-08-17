@@ -21,7 +21,7 @@ export function drawTooltip(options: DrawTooltipOptions) {
 	ctx.save()
 
 	let yOffset = 8 // the offset of the tooltip from the origin along the y axis
-	let xOffset = centerHorizontal ? 0 : 8 // the offset of the tooltop from the origin along the x axis
+	let xOffset = centerHorizontal ? 0 : 8 // the offset of the tooltip from the origin along the x axis
 
 	let maxTextWidth = Math.max(
 		...options.values.map(point => ctx.measureText(point.text).width),
