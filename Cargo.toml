@@ -1,14 +1,6 @@
 [workspace]
-members = [
-	"app",
-	"core",
-	"pinwheel",
-	"term-ui",
-]
-exclude = [
-	"buffy",
-	"languages/rust",
-]
+members = ["app", "core", "pinwheel", "term-ui"]
+exclude = ["buffy", "languages/rust"]
 
 [package]
 name = "tangram"

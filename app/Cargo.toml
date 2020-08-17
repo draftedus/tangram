@@ -23,7 +23,7 @@ derive_more = "0.99"
 dirs = "3"
 futures = { version = "0.3" }
 futures-util = { version = "0.3" }
-hyper =  { version = "0.13", features = ["stream"] }
+hyper = { version = "0.13", features = ["stream"] }
 include_dir = "0.6"
 itertools = "0.9"
 lexical = "5"
