@@ -121,7 +121,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 				let response = Response::builder()
 					.status(StatusCode::SEE_OTHER)
 					.header(header::LOCATION, format!("/login?email={}", email))
-					.header(header::SET_COOKIE, format!("tangram-flash=invalid code"))
+					.header(header::SET_COOKIE, "tangram-flash=invalid code")
 					.body(Body::empty())?;
 				return Ok(response);
 			};

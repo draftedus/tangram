@@ -240,7 +240,7 @@ async fn handle(
 	let response = match result {
 		Ok(r) => r,
 		Err(error) => {
-			if let Some(_) = error.downcast_ref::<pinwheel::NotFoundError>() {
+			if error.downcast_ref::<pinwheel::NotFoundError>().is_some() {
 				Response::builder()
 					.status(StatusCode::NOT_FOUND)
 					.body(Body::from("not found"))

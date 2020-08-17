@@ -6,6 +6,7 @@ export function TrainingStats() {
 			color: ui.colors.blue,
 			data: [
 				{
+					label: 'Age',
 					x: 0,
 					y: {
 						max: 77,

@@ -193,7 +193,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	if result.is_err() {
 		return Ok(Response::builder()
 			.status(StatusCode::SEE_OTHER)
-			.header(header::LOCATION, format!("/repos/new"))
+			.header(header::LOCATION, "/repos/new")
 			.body(Body::empty())?);
 	};
 	db.commit().await?;

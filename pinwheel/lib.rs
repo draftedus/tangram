@@ -102,7 +102,7 @@ impl Pinwheel {
 					+ &if self.src_dir.is_some() {
 						"".to_string()
 					} else {
-						page_entry.to_string() + "/"
+						page_entry + "/"
 					} + "client.js",
 			)
 		} else {
@@ -532,11 +532,10 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 					.to_owned()
 					.to_str()
 					.unwrap()
-					.to_owned()
-					.into();
-				page_entries.push(page_entry.clone().into());
+					.to_owned();
+				page_entries.push(page_entry.clone());
 				if path.file_stem().unwrap().to_str().unwrap() == "static" {
-					static_page_entries.push(page_entry.into());
+					static_page_entries.push(page_entry);
 				}
 			}
 			_ => {}

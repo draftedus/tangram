@@ -370,10 +370,10 @@ esbuild@0.6.21:
   resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.6.21.tgz#a2354fad3a53c2c0b7774f7b34b4e11ef7603b70"
   integrity sha512-2gWKUvMD9J6z0cUtVh7TAqONo9QaZwWOGnZ6FwdjZtDkRd8G+mCnFb+83IXjwspwz3bfLFWtblYkYbg7hRf2KQ==
 
-esbuild@0.6.24:
-  version "0.6.24"
-  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.6.24.tgz#aa191fc8a2100689c83afd5e52db3fddb0c522f5"
-  integrity sha512-usGuyo+DpQmrTguh/IOK8DBAvQ4CU7xdDtr7h/2iEK/BwBdrkpxut/uYzYaRh6ljMSSZWVJdaQgu2aOgz7m6ag==
+esbuild@0.6.25, esbuild@^0.6.18:
+  version "0.6.25"
+  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.6.25.tgz#060f95ed171dba4e6e86e6920f2aff328f96e99e"
+  integrity sha512-yOSDMlo0tmhF023LL37UVK/WHIM8UttxiUM0iOHb/DgB9Mk02wQAAHEso2ZkTY3ImpGDRQM0JnIif7aZAmGm2w==
 
 escape-string-regexp@^1.0.5:
   version "1.0.5"

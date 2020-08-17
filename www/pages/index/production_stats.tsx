@@ -41,7 +41,6 @@ export function ProductionStats() {
 							data={series}
 							title="Chest Pain"
 							xAxisTitle="Chest Pain"
-							yAxisLabelFormatter={value => ui.formatPercent(value, 2)}
 							yAxisTitle="Percent"
 							yMax={1}
 						/>

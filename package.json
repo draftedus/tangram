@@ -2,7 +2,7 @@
 	"devDependencies": {
 		"@tangramhq/eslint-plugin": "0.1.19",
 		"csstype": "3.0.2",
-		"esbuild": "0.6.24",
+		"esbuild": "0.6.25",
 		"eslint": "7.7.0",
 		"preact": "10.4.7",
 		"preact-render-to-string": "5.1.10",
@@ -13,6 +13,8 @@
 	"private": true,
 	"type": "module",
 	"workspaces": [
-		"app"
+		"app",
+		"ui",
+		"www"
 	]
 }

@@ -1,2 +1,0 @@
-yarn run -s tsc -p www/tsconfig.json
-yarn run -s eslint --ext ts,tsx www

@@ -48,7 +48,7 @@ export function TrainingMetrics() {
 					<ui.Card>
 						<ui.LineChart
 							data={prData}
-							showLegend={false}
+							hideLegend={true}
 							title="PR Curve"
 							xAxisTitle="Precision"
 							xMax={1}
@@ -63,7 +63,7 @@ export function TrainingMetrics() {
 					<ui.Card>
 						<ui.LineChart
 							data={rocData}
-							showLegend={false}
+							hideLegend={true}
 							title="ROC Curve"
 							xMax={1}
 							xMin={0}
