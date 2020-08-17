@@ -8,7 +8,6 @@ import {
 	drawRoundedRect,
 	drawXAxis,
 	drawXAxisTitle,
-	drawYAxis,
 	drawYAxisGridLines,
 	drawYAxisLabels,
 	drawYAxisTitle,
@@ -144,12 +143,6 @@ export function drawBoxChart(
 		box: chartBox,
 		ctx,
 		yAxisGridLineInfo,
-	})
-
-	drawYAxis({
-		box: chartBox,
-		ctx,
-		xAxisGridLineInfo: yAxisGridLineInfo,
 	})
 
 	drawXAxis({

@@ -170,6 +170,7 @@ function PredictionInputInner(props: Props) {
 												]}
 												hideLegend={true}
 												id={column.name}
+												shouldDrawXAxisLabels={false}
 											/>
 										</div>
 									</Fragment>
@@ -201,6 +202,7 @@ function PredictionInputInner(props: Props) {
 												]}
 												hideLegend={true}
 												id={column.name}
+												shouldDrawXAxisLabels={false}
 											/>
 										</div>
 									</Fragment>
