@@ -255,7 +255,6 @@ export function computeXAxisGridLineInfo(
 		) {
 			let gridLineValue =
 				xAxisGridLineInfo.start + gridLineIndex * xAxisGridLineInfo.interval
-			// TODO
 			let label = formatNumber(gridLineValue)
 			let labelWidth = ctx.measureText(label).width
 			if (labelWidth > xAxisGridLineInfo.intervalPixels) {
@@ -420,7 +419,6 @@ export function drawXAxisLabels(options: DrawXAxisLabelsOptions): void {
 			gridLineInfo.startPixels + gridLineIndex * gridLineInfo.intervalPixels
 		let gridLineValue =
 			gridLineInfo.start + gridLineIndex * gridLineInfo.interval
-		// TODO
 		let label = formatNumber(gridLineValue)
 		// do not draw the label if it will overflow the chart
 		if (

@@ -28,6 +28,7 @@ export type DrawOverlayOptions<Info, HoverRegionInfo> = {
 	activeHoverRegions: Array<ActiveHoverRegion<HoverRegionInfo>>
 	ctx: CanvasRenderingContext2D
 	info: Info
+	overlayDiv: HTMLElement
 }
 
 export type HoverRegion<HoverRegionInfo> = {
@@ -69,6 +70,14 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 	chartCanvas.style.left = '0'
 	chartCanvas.style.right = '0'
 	container.appendChild(chartCanvas)
+
+	let overlayDiv = document.createElement('div')
+	overlayDiv.style.position = 'absolute'
+	overlayDiv.style.top = '0'
+	overlayDiv.style.bottom = '0'
+	overlayDiv.style.left = '0'
+	overlayDiv.style.right = '0'
+	container.appendChild(overlayDiv)
 
 	let overlayCanvas = document.createElement('canvas')
 	overlayCanvas.style.position = 'absolute'
@@ -158,11 +167,13 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		}
 		ctx.scale(dpr, dpr)
 		ctx.clearRect(0, 0, width, height)
+		overlayDiv.innerHTML = ''
 		ctx.font = chartConfig.font
 		drawChartOverlay?.({
 			activeHoverRegions: state.activeHoverRegions ?? [],
 			ctx,
 			info: state.overlayInfo,
+			overlayDiv,
 		})
 	}
 

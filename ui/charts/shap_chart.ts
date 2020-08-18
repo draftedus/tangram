@@ -556,11 +556,17 @@ type DrawShapChartOverlayOptions = {
 	activeHoverRegions: Array<ActiveHoverRegion<ShapChartHoverRegionInfo>>
 	ctx: CanvasRenderingContext2D
 	info: ShapChartOverlayInfo
+	overlayDiv: HTMLElement
 }
 
 export function drawShapChartOverlay(options: DrawShapChartOverlayOptions) {
-	let { activeHoverRegions, ctx, info } = options
-	drawShapTooltips({ activeHoverRegions, chartBox: info.chartBox, ctx })
+	let { activeHoverRegions, ctx, info, overlayDiv } = options
+	drawShapTooltips({
+		activeHoverRegions,
+		chartBox: info.chartBox,
+		ctx,
+		overlayDiv,
+	})
 	activeHoverRegions.forEach(activeHoverRegion => {
 		drawShapBox({
 			box: activeHoverRegion.info.box,
@@ -576,15 +582,15 @@ type DrawShapTooltipOptions = {
 	activeHoverRegions: Array<ActiveHoverRegion<ShapChartHoverRegionInfo>>
 	chartBox: Box
 	ctx: CanvasRenderingContext2D
+	overlayDiv: HTMLElement
 }
 
 let drawShapTooltips = (options: DrawShapTooltipOptions) => {
-	let { activeHoverRegions, chartBox, ctx } = options
+	let { activeHoverRegions, overlayDiv } = options
 	for (let activeHoverRegion of activeHoverRegions) {
 		drawTooltip({
 			centerHorizontal: true,
-			chartBox,
-			ctx,
+			container: overlayDiv,
 			origin: activeHoverRegion.info.tooltipOriginPixels,
 			values: [
 				{

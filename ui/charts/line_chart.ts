@@ -497,6 +497,7 @@ type DrawLineChartOverlayOptions = {
 	activeHoverRegions: Array<ActiveHoverRegion<LineChartHoverRegionInfo>>
 	ctx: CanvasRenderingContext2D
 	info: LineChartOverlayInfo
+	overlayDiv: HTMLElement
 }
 
 export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
@@ -504,6 +505,7 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 		activeHoverRegions,
 		ctx,
 		info: { chartBox, xMax, xMin, yMax, yMin },
+		overlayDiv,
 	} = options
 	let closestActiveHoverRegionForSeries = new Map<
 		number,
@@ -560,8 +562,7 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 	}
 	if (tooltipOrigin) {
 		drawTooltip({
-			chartBox,
-			ctx,
+			container: overlayDiv,
 			origin: tooltipOrigin,
 			values: tooltips,
 		})

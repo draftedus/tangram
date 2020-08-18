@@ -326,6 +326,7 @@ type DrawBarChartOverlayOptions = {
 	activeHoverRegions: Array<ActiveHoverRegion<BarChartHoverRegionInfo>>
 	ctx: CanvasRenderingContext2D
 	info: BarChartOverlayInfo
+	overlayDiv: HTMLElement
 }
 
 export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
@@ -333,8 +334,10 @@ export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
 		activeHoverRegions,
 		ctx,
 		info: { chartBox },
+		overlayDiv,
 	} = options
 	let activeHoverRegion = activeHoverRegions[0]
+
 	if (activeHoverRegion) {
 		let x = activeHoverRegion.info.point.label
 		let y = formatNumber(activeHoverRegion.info.point.y)
@@ -345,8 +348,7 @@ export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
 		}
 		drawTooltip({
 			centerHorizontal: true,
-			chartBox,
-			ctx,
+			container: overlayDiv,
 			origin: activeHoverRegion.info.tooltipOriginPixels,
 			values: [tooltip],
 		})

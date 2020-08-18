@@ -206,6 +206,7 @@ type DrawBoxChartOverlayOptions = {
 	activeHoverRegions: Array<ActiveHoverRegion<BoxChartHoverRegionInfo>>
 	ctx: CanvasRenderingContext2D
 	info: BoxChartOverlayInfo
+	overlayDiv: HTMLElement
 }
 
 export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
@@ -213,6 +214,7 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 		activeHoverRegions,
 		ctx,
 		info: { chartBox },
+		overlayDiv,
 	} = options
 	let tooltips: TooltipData[] = []
 	let boxPointIndexForName: { [key: string]: number } = {
@@ -252,14 +254,14 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 			start: { x: chartBox.x, y: activeHoverRegion.info.tooltipOriginPixels.y },
 		})
 	}
+
 	if (tooltips.length > 0) {
+		let origin =
+			activeHoverRegions[activeHoverRegions.length - 1].info.tooltipOriginPixels
 		drawTooltip({
 			centerHorizontal: true,
-			chartBox,
-			ctx,
-			origin:
-				activeHoverRegions[activeHoverRegions.length - 1].info
-					.tooltipOriginPixels,
+			container: overlayDiv,
+			origin,
 			values: tooltips,
 		})
 	}
