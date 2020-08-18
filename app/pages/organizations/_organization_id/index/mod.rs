@@ -359,7 +359,6 @@ pub async fn start_stripe_checkout(
 				.await?
 				.json::<serde_json::Value>()
 				.await?;
-			println!("{:?}", response);
 			let stripe_customer_id = response.get("id").unwrap().as_str().unwrap().to_owned();
 			// save the stripe customer id with the tangram user
 			sqlx::query(
