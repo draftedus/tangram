@@ -21,10 +21,11 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	let props = props(&mut db, &user).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/", props)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -146,8 +147,10 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 
 	db.commit().await?;
 
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/")
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }

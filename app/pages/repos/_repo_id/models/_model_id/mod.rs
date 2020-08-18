@@ -62,10 +62,12 @@ async fn delete_model(
 	.bind(&model_id.to_string())
 	.execute(&mut *db)
 	.await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/")
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }
 
 pub async fn download(
@@ -100,8 +102,9 @@ pub async fn download(
 	let data: String = row.get(0);
 	let data = base64::decode(data)?;
 	db.commit().await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(data))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }

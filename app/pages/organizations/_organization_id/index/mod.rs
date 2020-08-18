@@ -21,10 +21,11 @@ pub async fn get(
 	let html = context
 		.pinwheel
 		.render_with("/organizations/_organization_id/", props)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(Serialize)]
@@ -233,10 +234,12 @@ async fn delete_organization(
 	.bind(&organization_id.to_string())
 	.execute(&mut *db)
 	.await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/user/")
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }
 
 async fn delete_member(
@@ -258,10 +261,12 @@ async fn delete_member(
 	.bind(&member_id.to_string())
 	.execute(&mut *db)
 	.await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/user/")
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }
 
 async fn change_plan(
@@ -287,13 +292,15 @@ async fn change_plan(
 	.bind(&organization_id.to_string())
 	.execute(&mut *db)
 	.await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
 			format!("/organizations/{}/", organization_id),
 		)
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(serde::Serialize)]
@@ -379,10 +386,12 @@ pub async fn start_stripe_checkout(
 		stripe_checkout_session_id: session_id,
 	};
 	let response = serde_json::to_vec(&response)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.header(header::CONTENT_TYPE, "application/json")
-		.body(Body::from(response))?)
+		.body(Body::from(response))
+		.unwrap();
+	Ok(response)
 }
 
 pub async fn finish_stripe_checkout(
@@ -428,8 +437,10 @@ pub async fn finish_stripe_checkout(
 	.bind(&organization_id.to_string())
 	.execute(&mut *db)
 	.await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.header(header::CONTENT_TYPE, "application/json")
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }

@@ -148,7 +148,7 @@ pub async fn get_organizations(
 // 	db.commit().await?;
 // 	let response = OrganizationListResponse { organizations };
 // 	let response = serde_json::to_vec(&response)?;
-// 	Ok(Response::builder()
+// 	let response = Response::builder()
 // 		.status(StatusCode::OK)
 // 		.header(header::CONTENT_TYPE, "application/json")
 // 		.body(Body::from(response))?)
@@ -183,7 +183,7 @@ pub async fn get_organizations(
 // 		None => return Err(Error::NotFound.into()),
 // 	};
 // 	let response = serde_json::to_vec(&organization)?;
-// 	Ok(Response::builder()
+// 	let response = Response::builder()
 // 		.status(StatusCode::OK)
 // 		.header(header::CONTENT_TYPE, "application/json")
 // 		.body(Body::from(response))?)

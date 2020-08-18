@@ -61,9 +61,11 @@ pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<
 		}
 	}
 	db.commit().await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::ACCEPTED)
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }
 
 async fn handle_prediction_monitor_event(

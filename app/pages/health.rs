@@ -4,9 +4,13 @@ use hyper::{Body, Request, Response, StatusCode};
 
 pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	match context.pool.acquire().await {
-		Ok(_) => Ok(Response::builder()
-			.status(StatusCode::OK)
-			.body(Body::empty())?),
+		Ok(_) => {
+			let response = Response::builder()
+				.status(StatusCode::OK)
+				.body(Body::empty())
+				.unwrap();
+			Ok(response)
+		}
 		Err(_) => Err(Error::ServiceUnavailable.into()),
 	}
 }

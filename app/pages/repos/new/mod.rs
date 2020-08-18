@@ -30,11 +30,12 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	let props = props(&mut db, user, flash).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/repos/new", props)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.header(header::SET_COOKIE, "tangram-flash=")
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(Serialize)]
@@ -206,21 +207,25 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	.await;
 
 	if result.is_err() {
-		return Ok(Response::builder()
+		let response = Response::builder()
 			.status(StatusCode::SEE_OTHER)
 			.header(header::LOCATION, "/repos/new")
 			.header(
 				header::SET_COOKIE,
 				"tangram-flash=model has already been uploaded",
 			)
-			.body(Body::empty())?);
+			.body(Body::empty())
+			.unwrap();
+		return Ok(response);
 	};
 	db.commit().await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
 			format!("/repos/{}/models/{}/", repo_id, model.id().to_string()),
 		)
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }

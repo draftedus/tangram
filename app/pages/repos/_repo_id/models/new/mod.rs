@@ -28,11 +28,12 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.pinwheel
 		.render_with("/repos/_repo_id/models/new", props)?;
 
-	Ok(Response::builder()
+	let response = Response::builder()
 		.header(header::SET_COOKIE, "tangram-flash=")
 		.status(StatusCode::OK)
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 pub async fn post(
@@ -94,17 +95,21 @@ pub async fn post(
 	.execute(&mut *db)
 	.await;
 	if result.is_err() {
-		return Ok(Response::builder()
+		let response = Response::builder()
 			.status(StatusCode::SEE_OTHER)
 			.header(header::LOCATION, format!("/repos/{}/models/new", repo_id))
-			.body(Body::empty())?);
+			.body(Body::empty())
+			.unwrap();
+		return Ok(response);
 	};
 	db.commit().await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
 			format!("/repos/{}/models/{}/", repo_id, model.id().to_string()),
 		)
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }

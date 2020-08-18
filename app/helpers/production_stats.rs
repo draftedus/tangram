@@ -343,7 +343,7 @@ pub async fn get_production_stats(
 // 	let production_stats =
 // 		get_production_stats(&db, &model, date_window, date_window_interval, timezone).await?;
 // 	let response = serde_json::to_vec(&production_stats)?;
-// 	Ok(Response::builder()
+// 	let response = Response::builder()
 // 		.status(StatusCode::OK)
 // 		.header(header::CONTENT_TYPE, "application/json")
 // 		.body(Body::from(response))?)

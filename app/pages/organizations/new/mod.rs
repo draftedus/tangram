@@ -11,10 +11,11 @@ use tangram_core::id::Id;
 pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let props = Props {};
 	let html = context.pinwheel.render_with("/organizations/new", props)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(serde::Serialize)]
@@ -78,11 +79,13 @@ async fn create_organization(
 	.bind(&user.id.to_string())
 	.execute(&mut *db)
 	.await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
 			format!("/organizations/{}/", organization_id),
 		)
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }

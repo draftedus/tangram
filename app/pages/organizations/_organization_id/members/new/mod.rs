@@ -18,10 +18,11 @@ pub async fn get(
 	let html = context
 		.pinwheel
 		.render_with("/organizations/_organization_id/members/new", props)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(serde::Serialize)]
@@ -112,13 +113,15 @@ async fn add_member(
 	.bind(&is_admin)
 	.execute(&mut *db)
 	.await?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
 			format!("/organizations/{}/", organization_id),
 		)
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }
 
 async fn send_invite_email(

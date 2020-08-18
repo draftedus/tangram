@@ -31,10 +31,11 @@ pub async fn get(
 		"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
 		props,
 	)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(Serialize)]

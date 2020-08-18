@@ -1,5 +1,5 @@
 import { h } from './react'
 
 export default function NotFoundPage() {
-	return <div>Not Found</div>
+	return <div>{'Not Found'}</div>
 }

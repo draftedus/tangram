@@ -25,11 +25,12 @@ pub async fn get(
 		email,
 	};
 	let html = context.pinwheel.render_with("/login", props)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.header(header::SET_COOKIE, "tangram-flash=")
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(serde::Serialize)]

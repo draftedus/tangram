@@ -18,10 +18,11 @@ pub async fn get(
 	let html = context
 		.pinwheel
 		.render_with("/organizations/_organization_id/edit", props)?;
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
-		.unwrap())
+		.unwrap();
+	Ok(response)
 }
 
 #[derive(Serialize)]
@@ -99,11 +100,13 @@ pub async fn post(
 	.await?;
 	db.commit().await?;
 
-	Ok(Response::builder()
+	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
 			format!("/organizations/{}/", organization_id),
 		)
-		.body(Body::empty())?)
+		.body(Body::empty())
+		.unwrap();
+	Ok(response)
 }
