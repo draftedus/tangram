@@ -99,6 +99,7 @@ export function NumberColumnDetail(props: Props) {
 					<ui.Card>
 						<ui.BoxChart
 							data={quantilesData}
+							id="number_quantiles"
 							title={`Distribution of Values for ${props.name}`}
 						/>
 					</ui.Card>

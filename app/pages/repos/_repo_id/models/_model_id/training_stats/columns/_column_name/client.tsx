@@ -3,6 +3,10 @@ import { ui } from 'deps'
 if (document.getElementById('enum_histogram')) {
 	ui.hydrateBarChart('enum_histogram')
 }
+
+if (document.getElementById('number_quantiles')) {
+	ui.hydrateBoxChart('number_quantiles')
+}
 if (document.getElementById('number_histogram')) {
 	ui.hydrateBarChart('number_histogram')
 }

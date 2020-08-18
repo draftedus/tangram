@@ -1,3 +1,8 @@
+import {
+	EnumColumnToken,
+	NumberColumnToken,
+	TextColumnToken,
+} from 'common/tokens'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import {
 	ModelLayout,
@@ -139,13 +144,17 @@ function PredictionInputInner(props: Props) {
 							case ColumnType.Number:
 								return (
 									<Fragment>
-										{/* <NumberColumnToken /> */}
-										<ui.TextField
-											key={name}
-											label={column.name}
-											name={name}
-											value={column.value}
-										/>
+										<div class="predict-field-wrapper">
+											<div>
+												<NumberColumnToken />
+											</div>
+											<ui.TextField
+												key={name}
+												label={column.name}
+												name={name}
+												value={column.value}
+											/>
+										</div>
 										<div>
 											<ui.BoxChart
 												class="column-chart"
@@ -178,14 +187,18 @@ function PredictionInputInner(props: Props) {
 							case ColumnType.Enum:
 								return (
 									<Fragment>
-										{/* <EnumColumnToken /> */}
-										<ui.SelectField
-											key={name}
-											label={column.name}
-											name={name}
-											options={column.options}
-											value={column.value ?? undefined}
-										/>
+										<div class="predict-field-wrapper">
+											<div>
+												<EnumColumnToken />
+											</div>
+											<ui.SelectField
+												key={name}
+												label={column.name}
+												name={name}
+												options={column.options}
+												value={column.value ?? undefined}
+											/>
+										</div>
 										<div>
 											<ui.BarChart
 												class="column-chart"
@@ -210,13 +223,17 @@ function PredictionInputInner(props: Props) {
 							case ColumnType.Text:
 								return (
 									<Fragment>
-										{/* <TextColumnToken /> */}
-										<ui.TextField
-											key={name}
-											label={column.name}
-											name={name}
-											value={column.value ?? undefined}
-										/>
+										<div class="predict-field-wrapper">
+											<div>
+												<TextColumnToken />
+											</div>
+											<ui.TextField
+												key={name}
+												label={column.name}
+												name={name}
+												value={column.value ?? undefined}
+											/>
+										</div>
 										<div />
 									</Fragment>
 								)

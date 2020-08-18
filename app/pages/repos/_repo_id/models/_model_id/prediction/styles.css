@@ -40,3 +40,8 @@
 		grid: auto / minmax(0, 1fr);
 	}
 }
+
+.predict-field-wrapper {
+	display: grid;
+	grid-gap: 1rem;
+}
