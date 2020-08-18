@@ -22,7 +22,10 @@ export function Document(props: DocumentProps) {
 				/>
 				<link href="/tangram.css" rel="stylesheet" />
 				<title>{'Tangram'}</title>
-				<meta content="Machine Learning for Developers" name="description" />
+				<meta
+					content="All-In-One Machine Learning Toolkit for Developers"
+					name="description"
+				/>
 			</head>
 			<body>
 				<Body pinwheelInfo={props.pinwheelInfo}>{props.children}</Body>

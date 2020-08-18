@@ -1,9 +1,15 @@
 use self::error::Error;
 use anyhow::Result;
 use futures::FutureExt;
-use hyper::{header, service::service_fn, Body, Method, Request, Response, StatusCode};
+use hyper::{
+	header,
+	service::{make_service_fn, service_fn},
+	Body, Method, Request, Response, StatusCode,
+};
 use pinwheel::Pinwheel;
-use std::{collections::BTreeMap, panic::AssertUnwindSafe, str::FromStr, sync::Arc};
+use std::{
+	collections::BTreeMap, convert::Infallible, panic::AssertUnwindSafe, str::FromStr, sync::Arc,
+};
 use url::Url;
 
 mod cookies;
@@ -45,10 +51,7 @@ pub struct Context {
 }
 
 #[allow(clippy::cognitive_complexity)]
-async fn handle(
-	request: Request<Body>,
-	context: Arc<Context>,
-) -> Result<Response<Body>, hyper::Error> {
+async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body> {
 	let method = request.method().clone();
 	let uri = request.uri().clone();
 	let path_and_query = uri.path_and_query().unwrap();
@@ -289,7 +292,7 @@ async fn handle(
 		}
 	};
 	eprintln!("{} {} {}", method, path, response.status().as_u16());
-	Ok(response)
+	response
 }
 
 pub async fn run_async(options: AppOptions) -> Result<()> {
@@ -354,56 +357,41 @@ pub async fn run_async(options: AppOptions) -> Result<()> {
 	// run any pending migrations
 	migrations::run(&pool).await?;
 
+	// set the panic hook
+	std::panic::set_hook(Box::new(|panic_info| {
+		eprintln!("{}", panic_info.to_string());
+	}));
+
+	// run the server
 	let context = Arc::new(Context {
 		options,
 		pinwheel,
 		pool,
 	});
-
-	// start the server
-	let addr = std::net::SocketAddr::new(context.options.host, context.options.port);
-	let listener = std::net::TcpListener::bind(&addr).unwrap();
-	let mut listener = tokio::net::TcpListener::from_std(listener).unwrap();
-	let http = hyper::server::conn::Http::new();
-	eprintln!("🚀 serving on port {}", context.options.port);
-
-	std::panic::set_hook(Box::new(|panic_info| {
-		eprintln!("{}", panic_info.to_string());
-	}));
-
-	// wait for and handle each connection
-	loop {
-		let result = listener.accept().await;
-		let (socket, _) = match result {
-			Ok(s) => s,
-			Err(e) => {
-				eprintln!("tcp error: {}", e);
-				continue;
-			}
-		};
+	let service = make_service_fn(|_| {
 		let context = context.clone();
-		let service = service_fn(move |request| {
-			let context = context.clone();
-			async move {
-				let result = AssertUnwindSafe(handle(request, context))
-					.catch_unwind()
-					.await;
-				match result {
-					Err(_) => {
-						let response = Response::builder()
-							.status(StatusCode::INTERNAL_SERVER_ERROR)
-							.body(Body::from("internal server error"))
-							.unwrap();
-						Ok(response)
-					}
-					Ok(response) => response,
+		async move {
+			Ok::<_, Infallible>(service_fn(move |request| {
+				let context = context.clone();
+				async move {
+					Ok::<_, Infallible>(
+						AssertUnwindSafe(handle(request, context))
+							.catch_unwind()
+							.await
+							.unwrap_or_else(|_| {
+								Response::builder()
+									.status(StatusCode::INTERNAL_SERVER_ERROR)
+									.body(Body::from("internal server error"))
+									.unwrap()
+							}),
+					)
 				}
-			}
-		});
-		tokio::spawn(http.serve_connection(socket, service).map(|r| {
-			if let Err(e) = r {
-				eprintln!("http error: {}", e);
-			}
-		}));
-	}
+			}))
+		}
+	});
+	let addr = std::net::SocketAddr::new(context.options.host, context.options.port);
+	let listener = std::net::TcpListener::bind(&addr)?;
+	eprintln!("🚀 serving on port {}", context.options.port);
+	hyper::Server::from_tcp(listener)?.serve(service).await?;
+	Ok(())
 }

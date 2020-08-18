@@ -38,7 +38,9 @@ function Hero() {
 	return (
 		<div class="index-wrapper">
 			<div class="index-inner">
-				<h1 class="index-title">{'Machine Learning for Developers'}</h1>
+				<h1 class="index-title">
+					{'All-In-One Machine Learning Toolkit for Developers'}
+				</h1>
 				<div class="index-subtitle">
 					{
 						'Train a model on the command line and make predictions in any programming language. Understand how your model works, tune it, and monitor it in production.'
