@@ -32,7 +32,7 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	let html = context.pinwheel.render_with("/repos/new", props)?;
 	let response = Response::builder()
 		.status(StatusCode::OK)
-		.header(header::SET_COOKIE, "tangram-flash=")
+		.header(header::SET_COOKIE, "tangram-flash=;path=/")
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
@@ -136,8 +136,21 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	let file = file.ok_or_else(|| Error::BadRequest)?;
 
 	// parse owner_id as user: id, or organization: id,
-
-	let model = tangram_core::types::Model::from_slice(&file).map_err(|_| Error::BadRequest)?;
+	let model = match tangram_core::types::Model::from_slice(&file) {
+		Ok(model) => model,
+		Err(_) => {
+			let response = Response::builder()
+				.status(StatusCode::SEE_OTHER)
+				.header(header::LOCATION, "/repos/new")
+				.header(
+					header::SET_COOKIE,
+					"tangram-flash=invalid tangram model;path=/",
+				)
+				.body(Body::empty())
+				.unwrap();
+			return Ok(response);
+		}
+	};
 	let now = Utc::now().timestamp();
 	let repo_id = Id::new();
 
@@ -212,7 +225,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			.header(header::LOCATION, "/repos/new")
 			.header(
 				header::SET_COOKIE,
-				"tangram-flash=model has already been uploaded",
+				"tangram-flash=model has already been uploaded;path=/",
 			)
 			.body(Body::empty())
 			.unwrap();

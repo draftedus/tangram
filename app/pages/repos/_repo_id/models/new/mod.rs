@@ -23,13 +23,11 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.and_then(|cookie| cookies::parse(cookie.to_str().unwrap()).ok())
 		.and_then(|cookies| cookies.get("tangram-flash").map(|flash| flash.to_string()));
 	let props = Props { flash };
-
 	let html = context
 		.pinwheel
 		.render_with("/repos/_repo_id/models/new", props)?;
-
 	let response = Response::builder()
-		.header(header::SET_COOKIE, "tangram-flash=")
+		.header(header::SET_COOKIE, "tangram-flash=;path=/")
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap();
@@ -76,7 +74,21 @@ pub async fn post(
 	}
 	let title = title.ok_or_else(|| Error::BadRequest)?;
 	let file = file.ok_or_else(|| Error::BadRequest)?;
-	let model = tangram_core::types::Model::from_slice(&file).map_err(|_| Error::BadRequest)?;
+	let model = match tangram_core::types::Model::from_slice(&file) {
+		Ok(model) => model,
+		Err(_) => {
+			let response = Response::builder()
+				.status(StatusCode::SEE_OTHER)
+				.header(header::LOCATION, format!("/repos/{}/models/new", repo_id))
+				.header(
+					header::SET_COOKIE,
+					"tangram-flash=invalid tangram model;path=/",
+				)
+				.body(Body::empty())
+				.unwrap();
+			return Ok(response);
+		}
+	};
 	let now = Utc::now().timestamp();
 	let result = sqlx::query(
 		"
@@ -98,6 +110,10 @@ pub async fn post(
 		let response = Response::builder()
 			.status(StatusCode::SEE_OTHER)
 			.header(header::LOCATION, format!("/repos/{}/models/new", repo_id))
+			.header(
+				header::SET_COOKIE,
+				"tangram-flash=model has already been uploaded;path=/",
+			)
 			.body(Body::empty())
 			.unwrap();
 		return Ok(response);

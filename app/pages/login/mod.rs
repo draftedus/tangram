@@ -27,7 +27,7 @@ pub async fn get(
 	let html = context.pinwheel.render_with("/login", props)?;
 	let response = Response::builder()
 		.status(StatusCode::OK)
-		.header(header::SET_COOKIE, "tangram-flash=")
+		.header(header::SET_COOKIE, "tangram-flash=;path=/")
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
@@ -122,7 +122,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 				let response = Response::builder()
 					.status(StatusCode::SEE_OTHER)
 					.header(header::LOCATION, format!("/login?email={}", email))
-					.header(header::SET_COOKIE, "tangram-flash=invalid code")
+					.header(header::SET_COOKIE, "tangram-flash=invalid code;path=/")
 					.body(Body::empty())?;
 				return Ok(response);
 			};
