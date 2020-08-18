@@ -25,7 +25,6 @@ export type Props = {
 		mainModelId: string
 		title: string
 	}>
-	stripeCheckoutSessionId: string | null
 	stripePublishableKey: string
 	userId: string
 }

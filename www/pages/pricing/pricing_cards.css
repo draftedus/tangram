@@ -25,9 +25,10 @@
 	padding: 2rem;
 }
 
-pricing-card-grid-selected {
+.pricing-card-grid-selected {
 	border: var(--border);
-	border-color: var(--accent-color);
+	/* border-color: var(--accent-color); */
+	background-color: var(--header-color);
 }
 
 .pricing-card-content-grid {
