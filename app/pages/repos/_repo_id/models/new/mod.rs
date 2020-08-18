@@ -1,3 +1,4 @@
+use crate::cookies;
 use crate::{
 	error::Error,
 	user::{authorize_user, authorize_user_for_repo},
@@ -11,14 +12,24 @@ use multer::Multipart;
 use tangram_core::id::Id;
 
 #[derive(serde::Serialize)]
-struct Props {}
+struct Props {
+	flash: Option<String>,
+}
 
-pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
-	let props = Props {};
+pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	let flash = request
+		.headers()
+		.get(header::COOKIE)
+		.and_then(|cookie| cookies::parse(cookie.to_str().unwrap()).ok())
+		.and_then(|cookies| cookies.get("tangram-flash").map(|flash| flash.to_string()));
+	let props = Props { flash };
+
 	let html = context
 		.pinwheel
 		.render_with("/repos/_repo_id/models/new", props)?;
+
 	Ok(Response::builder()
+		.header(header::SET_COOKIE, "tangram-flash=")
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap())

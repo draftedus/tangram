@@ -1,3 +1,4 @@
+use crate::cookies;
 use crate::{
 	error::Error,
 	user::{authorize_user, authorize_user_for_organization, User},
@@ -21,11 +22,17 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let props = props(&mut db, user).await?;
+	let flash = request
+		.headers()
+		.get(header::COOKIE)
+		.and_then(|cookie| cookies::parse(cookie.to_str().unwrap()).ok())
+		.and_then(|cookies| cookies.get("tangram-flash").map(|flash| flash.to_string()));
+	let props = props(&mut db, user, flash).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/repos/new", props)?;
 	Ok(Response::builder()
 		.status(StatusCode::OK)
+		.header(header::SET_COOKIE, "tangram-flash=")
 		.body(Body::from(html))
 		.unwrap())
 }
@@ -34,6 +41,7 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 #[serde(rename_all = "camelCase")]
 struct Props {
 	owners: Vec<Owner>,
+	flash: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -43,7 +51,11 @@ struct Owner {
 	title: String,
 }
 
-async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<Props> {
+async fn props(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user: User,
+	flash: Option<String>,
+) -> Result<Props> {
 	let rows = sqlx::query(
 		"
 		select
@@ -70,7 +82,10 @@ async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<
 			title,
 		})
 	});
-	Ok(Props { owners: items })
+	Ok(Props {
+		owners: items,
+		flash,
+	})
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
@@ -194,6 +209,10 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		return Ok(Response::builder()
 			.status(StatusCode::SEE_OTHER)
 			.header(header::LOCATION, "/repos/new")
+			.header(
+				header::SET_COOKIE,
+				"tangram-flash=model has already been uploaded",
+			)
 			.body(Body::empty())?);
 	};
 	db.commit().await?;
