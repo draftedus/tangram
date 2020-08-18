@@ -1,4 +1,3 @@
-use crate::cookies;
 use crate::{
 	error::Error,
 	user::{authorize_user, authorize_user_for_repo},
@@ -13,21 +12,15 @@ use tangram_core::id::Id;
 
 #[derive(serde::Serialize)]
 struct Props {
-	flash: Option<String>,
+	error: Option<String>,
 }
 
-pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
-	let flash = request
-		.headers()
-		.get(header::COOKIE)
-		.and_then(|cookie| cookies::parse(cookie.to_str().unwrap()).ok())
-		.and_then(|cookies| cookies.get("tangram-flash").map(|flash| flash.to_string()));
-	let props = Props { flash };
+pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	let props = Props { error: None };
 	let html = context
 		.pinwheel
 		.render_with("/repos/_repo_id/models/new", props)?;
 	let response = Response::builder()
-		.header(header::SET_COOKIE, "tangram-flash=;path=/")
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap();
@@ -57,7 +50,6 @@ pub async fn post(
 		.and_then(|ct| ct.to_str().ok())
 		.and_then(|ct| multer::parse_boundary(ct).ok());
 	let boundary = boundary.ok_or_else(|| Error::BadRequest)?;
-	let mut title: Option<String> = None;
 	let mut file: Option<Vec<u8>> = None;
 	let mut multipart = Multipart::new(request.into_body(), boundary);
 	while let Some(mut field) = multipart.next_field().await? {
@@ -67,24 +59,23 @@ pub async fn post(
 			field_data.extend(chunk.bytes());
 		}
 		match name.as_str() {
-			"title" => title = Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?),
 			"file" => file = Some(field_data),
 			_ => return Err(Error::BadRequest.into()),
 		};
 	}
-	let title = title.ok_or_else(|| Error::BadRequest)?;
 	let file = file.ok_or_else(|| Error::BadRequest)?;
 	let model = match tangram_core::types::Model::from_slice(&file) {
 		Ok(model) => model,
 		Err(_) => {
+			let props = Props {
+				error: Some("invalid tangram model".into()),
+			};
+			let html = context
+				.pinwheel
+				.render_with("/repos/_repo_id/models/new", props)?;
 			let response = Response::builder()
-				.status(StatusCode::SEE_OTHER)
-				.header(header::LOCATION, format!("/repos/{}/models/new", repo_id))
-				.header(
-					header::SET_COOKIE,
-					"tangram-flash=invalid tangram model;path=/",
-				)
-				.body(Body::empty())
+				.status(StatusCode::BAD_REQUEST)
+				.body(Body::from(html))
 				.unwrap();
 			return Ok(response);
 		}
@@ -93,28 +84,28 @@ pub async fn post(
 	let result = sqlx::query(
 		"
 		insert into models
-			(id, repo_id, title, created_at, data, is_main)
+			(id, repo_id, created_at, data)
 		values
-			(?1, ?2, ?3, ?4, ?5, ?6)
+			(?1, ?2, ?3, ?4)
 		",
 	)
 	.bind(&model.id().to_string())
 	.bind(&repo_id.to_string())
-	.bind(&title)
 	.bind(&now)
 	.bind(&base64::encode(file))
-	.bind(&false)
 	.execute(&mut *db)
 	.await;
+
 	if result.is_err() {
+		let props = Props {
+			error: Some("model has already been uploaded".into()),
+		};
+		let html = context
+			.pinwheel
+			.render_with("/repos/_repo_id/models/new", props)?;
 		let response = Response::builder()
-			.status(StatusCode::SEE_OTHER)
-			.header(header::LOCATION, format!("/repos/{}/models/new", repo_id))
-			.header(
-				header::SET_COOKIE,
-				"tangram-flash=model has already been uploaded;path=/",
-			)
-			.body(Body::empty())
+			.status(StatusCode::BAD_REQUEST)
+			.body(Body::from(html))
 			.unwrap();
 		return Ok(response);
 	};

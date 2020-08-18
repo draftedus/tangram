@@ -37,7 +37,6 @@ pub async fn get(
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
-	title: String,
 	auc_roc: f32,
 	roc_curve_data: Vec<Vec<ROCCurveData>>,
 	classes: Vec<String>,
@@ -71,7 +70,7 @@ async fn props(
 		return Err(Error::NotFound.into());
 	}
 
-	let Model { title, data, id } = get_model(&mut db, model_id).await?;
+	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	match model {
@@ -123,7 +122,6 @@ async fn props(
 
 			Ok(Props {
 				id: id.to_string(),
-				title,
 				classes,
 				class,
 				auc_roc: *auc_roc,

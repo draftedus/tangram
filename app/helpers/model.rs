@@ -4,7 +4,6 @@ use tangram_core::id::Id;
 
 pub struct Model {
 	pub id: Id,
-	pub title: String,
 	pub data: Vec<u8>,
 }
 
@@ -13,7 +12,6 @@ pub async fn get_model(db: &mut sqlx::Transaction<'_, sqlx::Any>, model_id: Id) 
 		"
 			select
 				id,
-				title,
 				created_at,
 				data
 			from models
@@ -26,8 +24,7 @@ pub async fn get_model(db: &mut sqlx::Transaction<'_, sqlx::Any>, model_id: Id) 
 	.await?;
 	let id: String = row.get(0);
 	let id: Id = id.parse()?;
-	let title: String = row.get(1);
-	let data: String = row.get(3);
+	let data: String = row.get(2);
 	let data: Vec<u8> = base64::decode(data)?;
-	Ok(Model { id, title, data })
+	Ok(Model { id, data })
 }

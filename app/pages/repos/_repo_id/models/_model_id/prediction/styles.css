@@ -43,5 +43,5 @@
 
 .predict-field-wrapper {
 	display: grid;
-	grid-gap: 1rem;
+	grid-gap: 0.5rem;
 }

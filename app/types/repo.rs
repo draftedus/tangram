@@ -14,7 +14,6 @@ pub struct ModelLayoutInfo {
 	pub owner_name: String,
 	pub owner_url: String,
 	pub model_id: String,
-	pub model_title: String,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]
@@ -42,6 +41,4 @@ pub struct OrganizationOwner {
 #[serde(rename_all = "camelCase")]
 pub struct RepoModel {
 	pub id: String,
-	pub title: String,
-	pub is_main: bool,
 }

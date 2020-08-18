@@ -22,7 +22,6 @@ export type Props = {
 	plan: Plan
 	repos: Array<{
 		id: string
-		mainModelId: string
 		title: string
 	}>
 	stripePublishableKey: string
@@ -80,9 +79,7 @@ export default function OrganizationIndexPage(props: Props) {
 								{props.repos.map(repo => (
 									<ui.TableRow key={repo.id}>
 										<ui.TableCell>
-											<ui.Link
-												href={`/repos/${repo.id}/models/${repo.mainModelId}/`}
-											>
+											<ui.Link href={`/repos/${repo.id}/`}>
 												{repo.title}
 											</ui.Link>
 										</ui.TableCell>

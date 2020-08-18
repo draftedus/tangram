@@ -38,16 +38,16 @@ create table repos (
 		organization_id is null and user_id is not null
 		or
 		user_id is null and organization_id is not null
-	)
+	),
+	unique(title, user_id),
+	unique(title, organization_id)
 );
 
 create table models (
 	id char(32) primary key,
 	repo_id char(32) references repos (id) on delete cascade not null,
 	created_at bigint not null,
-	title varchar(64) not null,
-	data text not null,
-	is_main bool not null
+	data text not null
 );
 
 create index code_index on codes (code);

@@ -22,7 +22,6 @@ struct Props {
 	id: String,
 	row_count: usize,
 	target_column_stats: ColumnStats,
-	title: String,
 	model_layout_info: types::ModelLayoutInfo,
 }
 
@@ -79,7 +78,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		return Err(Error::NotFound.into());
 	}
 
-	let Model { title, data, .. } = get_model(&mut db, model_id).await?;
+	let Model { data, .. } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let props = match model {
@@ -91,7 +90,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				target_column_stats: build_column_stats(
 					model.overall_target_column_stats.as_option().unwrap(),
 				),
-				title,
 				column_count: column_stats.len(),
 				column_stats: column_stats
 					.iter()
@@ -108,7 +106,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				target_column_stats: build_column_stats(
 					model.overall_target_column_stats.as_option().unwrap(),
 				),
-				title,
 				column_count: column_stats.len(),
 				column_stats: column_stats
 					.iter()

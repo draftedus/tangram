@@ -35,7 +35,6 @@ pub async fn get(
 struct Props {
 	id: String,
 	inner: Inner,
-	title: String,
 	model_layout_info: types::ModelLayoutInfo,
 }
 
@@ -53,7 +52,6 @@ struct Regressor {
 	id: String,
 	metrics: RegressorMetrics,
 	training_summary: TrainingSummary,
-	title: String,
 }
 
 #[derive(Serialize)]
@@ -71,7 +69,6 @@ struct Classifier {
 	id: String,
 	metrics: ClassifierMetrics,
 	training_summary: TrainingSummary,
-	title: String,
 }
 
 #[derive(Serialize)]
@@ -114,7 +111,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let Model { title, data, id } = get_model(&mut db, model_id).await?;
+	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	let training_summary = training_summary(&model);
@@ -137,7 +134,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					class_metrics,
 					classes: model.classes().to_owned(),
 				},
-				title: title.to_owned(),
 				training_summary,
 			})
 		}
@@ -152,7 +148,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					baseline_mse: *test_metrics.baseline_mse.as_option().unwrap(),
 				},
 				training_summary,
-				title: title.to_owned(),
 			})
 		}
 		_ => return Err(Error::BadRequest.into()),
@@ -163,7 +158,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 
 	Ok(Props {
 		id: id.to_string(),
-		title,
 		inner,
 		model_layout_info,
 	})

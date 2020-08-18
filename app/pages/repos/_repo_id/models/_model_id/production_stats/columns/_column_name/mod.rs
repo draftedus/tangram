@@ -45,7 +45,6 @@ struct Props {
 	column_name: String,
 	id: String,
 	inner: Inner,
-	title: String,
 	model_layout_info: types::ModelLayoutInfo,
 }
 
@@ -209,7 +208,7 @@ async fn props(
 		return Err(Error::NotFound.into());
 	}
 
-	let Model { title, data, id } = get_model(&mut db, model_id).await?;
+	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let production_stats = production_stats::get_production_column_stats(
@@ -287,7 +286,6 @@ async fn props(
 		column_name: column_name.to_owned(),
 		id: id.to_string(),
 		inner,
-		title,
 		model_layout_info,
 	})
 }

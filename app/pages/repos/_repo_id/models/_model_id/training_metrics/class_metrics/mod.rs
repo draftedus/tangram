@@ -37,7 +37,6 @@ pub async fn get(
 struct Props {
 	id: String,
 	inner: Inner,
-	title: String,
 	model_layout_info: types::ModelLayoutInfo,
 }
 
@@ -98,7 +97,7 @@ async fn props(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let Model { title, data, id } = get_model(&mut db, model_id).await?;
+	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
@@ -124,7 +123,6 @@ async fn props(
 	db.commit().await?;
 	Ok(Props {
 		id: id.to_string(),
-		title,
 		inner,
 		model_layout_info,
 	})

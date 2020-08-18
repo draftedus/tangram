@@ -41,7 +41,6 @@ struct Props {
 	data: Vec<DataPoint>,
 	id: String,
 	model_layout_info: types::ModelLayoutInfo,
-	title: String,
 }
 
 #[derive(Serialize)]
@@ -70,7 +69,7 @@ async fn props(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let Model { title, data, id } = get_model(&mut db, model_id).await?;
+	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let model = match model {
 		tangram_core::types::Model::Classifier(model) => model,
@@ -113,6 +112,5 @@ async fn props(
 		data,
 		id: id.to_string(),
 		model_layout_info,
-		title,
 	})
 }

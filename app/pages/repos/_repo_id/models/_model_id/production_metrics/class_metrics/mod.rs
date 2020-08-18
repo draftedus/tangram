@@ -41,7 +41,6 @@ pub async fn get(
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
-	title: String,
 	class_metrics: Vec<ClassMetricsEntry>,
 	date_window: types::DateWindow,
 	date_window_interval: types::DateWindowInterval,
@@ -156,7 +155,7 @@ async fn props(
 		return Err(Error::NotFound.into());
 	}
 
-	let Model { title, data, id } = get_model(&mut db, model_id).await?;
+	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let production_metrics = production_metrics::get_production_metrics(
@@ -358,7 +357,6 @@ async fn props(
 
 	Ok(Props {
 		id: id.to_string(),
-		title: title.to_string(),
 		class_metrics,
 		date_window,
 		date_window_interval,

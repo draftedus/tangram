@@ -1,4 +1,3 @@
-use crate::cookies;
 use crate::{
 	error::Error,
 	user::{authorize_user, authorize_user_for_organization, User},
@@ -22,17 +21,11 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let flash = request
-		.headers()
-		.get(header::COOKIE)
-		.and_then(|cookie| cookies::parse(cookie.to_str().unwrap()).ok())
-		.and_then(|cookies| cookies.get("tangram-flash").map(|flash| flash.to_string()));
-	let props = props(&mut db, user, flash).await?;
+	let props = props(&mut db, user, None, None).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/repos/new", props)?;
 	let response = Response::builder()
 		.status(StatusCode::OK)
-		.header(header::SET_COOKIE, "tangram-flash=;path=/")
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
@@ -42,7 +35,8 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 #[serde(rename_all = "camelCase")]
 struct Props {
 	owners: Vec<Owner>,
-	flash: Option<String>,
+	error: Option<String>,
+	title: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -55,7 +49,8 @@ struct Owner {
 async fn props(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user: User,
-	flash: Option<String>,
+	title: Option<String>,
+	error: Option<String>,
 ) -> Result<Props> {
 	let rows = sqlx::query(
 		"
@@ -85,7 +80,8 @@ async fn props(
 	});
 	Ok(Props {
 		owners: items,
-		flash,
+		error,
+		title,
 	})
 }
 
@@ -131,6 +127,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			_ => return Err(Error::BadRequest.into()),
 		};
 	}
+
 	let title = title.ok_or_else(|| Error::BadRequest)?;
 	let owner_id = owner_id.ok_or(Error::BadRequest)?;
 	let file = file.ok_or_else(|| Error::BadRequest)?;
@@ -139,14 +136,17 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	let model = match tangram_core::types::Model::from_slice(&file) {
 		Ok(model) => model,
 		Err(_) => {
+			let props = props(
+				&mut db,
+				user,
+				Some(title),
+				Some("invalid tangram model".into()),
+			)
+			.await?;
+			let html = context.pinwheel.render_with("/repos/new", props)?;
 			let response = Response::builder()
-				.status(StatusCode::SEE_OTHER)
-				.header(header::LOCATION, "/repos/new")
-				.header(
-					header::SET_COOKIE,
-					"tangram-flash=invalid tangram model;path=/",
-				)
-				.body(Body::empty())
+				.status(StatusCode::BAD_REQUEST)
+				.body(Body::from(html))
 				.unwrap();
 			return Ok(response);
 		}
@@ -162,7 +162,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			if user_id != user.id {
 				return Err(Error::Unauthorized.into());
 			}
-			sqlx::query(
+			let result = sqlx::query(
 				"
 			insert into repos (
 				id, created_at, title, user_id
@@ -176,14 +176,29 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			.bind(&title)
 			.bind(&user_id.to_string())
 			.execute(&mut *db)
-			.await?;
+			.await;
+			if result.is_err() {
+				let props = props(
+					&mut db,
+					user,
+					None,
+					Some("A repo with this name already exists.".into()),
+				)
+				.await?;
+				let html = context.pinwheel.render_with("/repos/new", props)?;
+				let response = Response::builder()
+					.status(StatusCode::BAD_REQUEST)
+					.body(Body::from(html))
+					.unwrap();
+				return Ok(response);
+			}
 		}
 		"organization" => {
 			let organization_id: Id = id_parts[1].parse().map_err(|_| Error::BadRequest)?;
 			if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
 				return Err(Error::Unauthorized.into());
 			}
-			sqlx::query(
+			let result = sqlx::query(
 				"
 			insert into repos (
 				id, created_at, title, organization_id
@@ -197,7 +212,22 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			.bind(&title)
 			.bind(&organization_id.to_string())
 			.execute(&mut *db)
-			.await?;
+			.await;
+			if result.is_err() {
+				let props = props(
+					&mut db,
+					user,
+					None,
+					Some("A repo in this organization with this name already exists.".into()),
+				)
+				.await?;
+				let html = context.pinwheel.render_with("/repos/new", props)?;
+				let response = Response::builder()
+					.status(StatusCode::BAD_REQUEST)
+					.body(Body::from(html))
+					.unwrap();
+				return Ok(response);
+			};
 		}
 		&_ => return Err(Error::BadRequest.into()),
 	};
@@ -205,29 +235,30 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	let result = sqlx::query(
 		"
 			insert into models
-				(id, repo_id, title, created_at, data, is_main)
+				(id, repo_id, created_at, data)
 			values
-				(?1, ?2, ?3, ?4, ?5, ?6)
+				(?1, ?2, ?3, ?4)
 		",
 	)
 	.bind(&model.id().to_string())
 	.bind(&repo_id.to_string())
-	.bind(&title)
 	.bind(&now)
 	.bind(&base64::encode(file))
-	.bind(&true)
 	.execute(&mut *db)
 	.await;
 
 	if result.is_err() {
+		let props = props(
+			&mut db,
+			user,
+			Some(title),
+			Some("model has already been uploaded".into()),
+		)
+		.await?;
+		let html = context.pinwheel.render_with("/repos/new", props)?;
 		let response = Response::builder()
-			.status(StatusCode::SEE_OTHER)
-			.header(header::LOCATION, "/repos/new")
-			.header(
-				header::SET_COOKIE,
-				"tangram-flash=model has already been uploaded;path=/",
-			)
-			.body(Body::empty())
+			.status(StatusCode::BAD_REQUEST)
+			.body(Body::from(html))
 			.unwrap();
 		return Ok(response);
 	};

@@ -37,7 +37,6 @@ pub async fn get(
 #[serde(rename_all = "camelCase")]
 struct Props {
 	columns: Vec<Column>,
-	title: String,
 	id: String,
 	model_layout_info: types::ModelLayoutInfo,
 	prediction: Option<Prediction>,
@@ -161,7 +160,7 @@ async fn props(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let Model { id, title, data } = get_model(&mut db, model_id).await?;
+	let Model { id, data } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let column_stats = match &model {
 		tangram_core::types::Model::Classifier(model) => {
@@ -253,7 +252,6 @@ async fn props(
 	Ok(Props {
 		model_layout_info,
 		id: id.to_string(),
-		title,
 		columns,
 		prediction,
 	})

@@ -53,7 +53,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 							<span class="model-layout-owner-slash-repo-slash">{'/'}</span>
 							<a
 								class="model-layout-owner-slash-repo-link"
-								href={`/repos/${props.info.id}/models/${props.info.modelId}/`}
+								href={`/repos/${props.info.id}/`}
 								title="repo"
 							>
 								{props.info.title}

@@ -36,7 +36,6 @@ pub async fn get(
 struct Props {
 	id: String,
 	inner: Inner,
-	title: String,
 	model_layout_info: types::ModelLayoutInfo,
 }
 
@@ -109,7 +108,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let Model { id, title, data } = get_model(&mut db, model_id).await?;
+	let Model { id, data } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let inner = match model {
 		tangram_core::types::Model::Classifier(model) => {
@@ -262,7 +261,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 
 	Ok(Props {
 		id: id.to_string(),
-		title,
 		inner,
 		model_layout_info,
 	})

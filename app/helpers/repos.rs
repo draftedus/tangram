@@ -60,17 +60,12 @@ pub async fn get_model_layout_info(
 		}
 	};
 
-	let types::RepoModel {
-		id: model_id,
-		title: model_title,
-		..
-	} = models
+	let types::RepoModel { id: model_id, .. } = models
 		.iter()
 		.find(|model| model.id == model_id.to_string())
 		.unwrap();
 
 	let model_id = model_id.clone();
-	let model_title = model_title.clone();
 
 	Ok(types::ModelLayoutInfo {
 		id: id.to_string(),
@@ -79,7 +74,6 @@ pub async fn get_model_layout_info(
 		owner_name,
 		owner_url,
 		model_id,
-		model_title,
 	})
 }
 
@@ -90,9 +84,7 @@ async fn get_models_for_repo(
 	Ok(sqlx::query(
 		"
 			select
-				models.id,
-				models.title,
-				models.is_main
+				models.id
 			from models
 			join repos
 				on models.repo_id = repos.id
@@ -106,9 +98,7 @@ async fn get_models_for_repo(
 	.iter()
 	.map(|row| {
 		let id: String = row.get(0);
-		let title: String = row.get(1);
-		let is_main: bool = row.get(2);
-		types::RepoModel { id, title, is_main }
+		types::RepoModel { id }
 	})
 	.collect())
 }
@@ -118,7 +108,6 @@ async fn get_models_for_repo(
 pub struct Repo {
 	pub id: String,
 	pub title: String,
-	pub main_model_id: String,
 }
 
 pub async fn get_organization_repositories(
@@ -129,12 +118,10 @@ pub async fn get_organization_repositories(
 		"
 				select
 					repos.id,
-					repos.title,
-					models.id
+					repos.title
 				from repos
 				join models
 					on models.repo_id = repos.id
-					and models.is_main = 1
 				where repos.organization_id = ?1
       ",
 	)
@@ -146,12 +133,7 @@ pub async fn get_organization_repositories(
 		.map(|row| {
 			let id: String = row.get(0);
 			let title: String = row.get(1);
-			let main_model_id: String = row.get(2);
-			Repo {
-				id,
-				title,
-				main_model_id,
-			}
+			Repo { id, title }
 		})
 		.collect())
 }

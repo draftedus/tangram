@@ -43,7 +43,6 @@ pub struct Props {
 pub struct Repo {
 	id: String,
 	title: String,
-	main_model_id: String,
 }
 
 pub async fn props(mut db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<Props> {
@@ -118,12 +117,10 @@ pub async fn get_user_repositories(
 		"
 			select
 				repos.id,
-				repos.title,
-				models.id
+				repos.title
 			from repos
 			join models
 				on models.repo_id = repos.id
-				and models.is_main = 1
 			where repos.user_id = ?1
 		",
 	)
@@ -135,12 +132,7 @@ pub async fn get_user_repositories(
 		.map(|row| {
 			let id: String = row.get(0);
 			let title: String = row.get(1);
-			let main_model_id: String = row.get(2);
-			Repo {
-				id,
-				title,
-				main_model_id,
-			}
+			Repo { id, title }
 		})
 		.collect())
 }

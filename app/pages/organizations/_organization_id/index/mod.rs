@@ -11,7 +11,6 @@ use serde::Serialize;
 use serde_json::json;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
-use url::Url;
 
 pub async fn get(
 	request: Request<Body>,
@@ -376,20 +375,8 @@ pub async fn start_stripe_checkout(
 			stripe_customer_id
 		}
 	};
-	let base_url = context.options.url.as_ref().map_or_else(
-		|| {
-			std::borrow::Cow::Owned(
-				Url::parse(&format!(
-					"http://{}:{}",
-					context.options.host.to_string(),
-					context.options.port.to_string()
-				))
-				.unwrap(),
-			)
-		},
-		|url| std::borrow::Cow::Borrowed(url),
-	);
 	// create the checkout session
+	let base_url = context.options.url.as_ref().unwrap();
 	let json = json!({
 		"payment_method_types[]": "card",
 		"mode": "setup",

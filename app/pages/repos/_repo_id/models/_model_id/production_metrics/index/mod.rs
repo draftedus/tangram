@@ -41,7 +41,6 @@ pub async fn get(
 struct Props {
 	id: String,
 	inner: Inner,
-	title: String,
 	model_layout_info: types::ModelLayoutInfo,
 }
 
@@ -187,7 +186,7 @@ async fn props(
 		return Err(Error::NotFound.into());
 	}
 
-	let Model { id, title, data } = get_model(&mut db, model_id).await?;
+	let Model { id, data } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 
 	let production_metrics = production_metrics::get_production_metrics(
@@ -397,7 +396,6 @@ async fn props(
 	Ok(Props {
 		id: id.to_string(),
 		inner,
-		title,
 		model_layout_info,
 	})
 }
