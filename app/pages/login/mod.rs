@@ -90,7 +90,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 	.await?
 	.get(0);
 	let user_id: Id = user_id.parse()?;
-	if context.auth_enabled {
+	if context.options.auth_enabled {
 		if let Some(code) = code {
 			// verify the code
 			let ten_minutes_in_seconds: i32 = 10 * 60;
@@ -163,7 +163,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 			.bind(&code)
 			.execute(&mut *db)
 			.await?;
-			if let Some(sendgrid_api_token) = context.sendgrid_api_token.clone() {
+			if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
 				tokio::spawn(send_code_email(email.to_owned(), code, sendgrid_api_token));
 			}
 			let response = Response::builder()
@@ -178,7 +178,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 
 	db.commit().await?;
 
-	let set_cookie = set_cookie_header_value(token, context.cookie_domain.as_deref());
+	let set_cookie = set_cookie_header_value(token, context.options.cookie_domain.as_deref());
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/")

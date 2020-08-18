@@ -21,18 +21,26 @@ mod types;
 
 pub use helpers::user;
 
-pub fn run() -> Result<()> {
+pub struct AppOptions {
+	pub auth_enabled: bool,
+	pub cookie_domain: Option<String>,
+	pub database_url: Option<Url>,
+	pub host: std::net::IpAddr,
+	pub port: u16,
+	pub sendgrid_api_token: Option<String>,
+	pub stripe_publishable_key: Option<String>,
+	pub stripe_secret_key: Option<String>,
+	pub url: Option<Url>,
+}
+
+pub fn run(options: AppOptions) -> Result<()> {
 	let mut runtime = tokio::runtime::Runtime::new().unwrap();
-	runtime.block_on(run_async())
+	runtime.block_on(run_async(options))
 }
 
 pub struct Context {
+	options: AppOptions,
 	pinwheel: Pinwheel,
-	auth_enabled: bool,
-	cookie_domain: Option<String>,
-	sendgrid_api_token: Option<String>,
-	stripe_secret_key: Option<String>,
-	url: Option<Url>,
 	pool: sqlx::AnyPool,
 }
 
@@ -278,59 +286,7 @@ async fn handle(
 	Ok(response)
 }
 
-pub async fn run_async() -> Result<()> {
-	// get host and port
-	let host = std::env::var("HOST")
-		.map(|host| host.parse().expect("HOST environment variable invalid"))
-		.unwrap_or_else(|_| "0.0.0.0".parse().unwrap());
-	let port = std::env::var("PORT")
-		.map(|port| port.parse().expect("PORT environment variable invalid"))
-		.unwrap_or_else(|_| 80);
-	let addr = std::net::SocketAddr::new(host, port);
-
-	// configure the database pool
-	let database_url = std::env::var("DATABASE_URL").ok().unwrap_or_else(|| {
-		let tangram_data_dir = dirs::data_dir()
-			.expect("failed to find user data directory")
-			.join("tangram");
-		std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
-			panic!(
-				"failed to create tangram data directory in {}",
-				tangram_data_dir.display()
-			)
-		});
-		let tangram_database_path = tangram_data_dir.join("tangram.db");
-		format!(
-			"sqlite:{}",
-			tangram_database_path.to_str().unwrap().to_owned()
-		)
-	});
-	let database_pool_max_size: u32 = std::env::var("DATABASE_POOL_MAX_SIZE")
-		.map(|s| {
-			s.parse()
-				.expect("DATABASE_POOL_MAX_SIZE environment variable invalid")
-		})
-		.unwrap_or(10);
-	let options = match database_url {
-		_ if database_url.starts_with("sqlite:") => sqlx::any::AnyConnectOptions::from(
-			sqlx::sqlite::SqliteConnectOptions::from_str(&database_url)?
-				.create_if_missing(true)
-				.foreign_keys(true)
-				.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),
-		),
-		_ if database_url.starts_with("postgres:") => sqlx::any::AnyConnectOptions::from(
-			sqlx::postgres::PgConnectOptions::from_str(&database_url)?,
-		),
-		_ => panic!("DATABASE_URL must be a sqlite or postgres database url"),
-	};
-	let pool = sqlx::any::AnyPoolOptions::new()
-		.max_connections(database_pool_max_size)
-		.connect_with(options)
-		.await?;
-
-	// run any pending migrations
-	migrations::run(&pool).await?;
-
+pub async fn run_async(options: AppOptions) -> Result<()> {
 	// create the pinwheel
 	#[cfg(debug_assertions)]
 	fn pinwheel() -> Pinwheel {
@@ -345,34 +301,65 @@ pub async fn run_async() -> Result<()> {
 	}
 	let pinwheel = pinwheel();
 
-	// create the context
-	let cookie_domain = std::env::var("COOKIE_DOMAIN").ok();
-	let auth_enabled = std::env::var("AUTH_ENABLED")
-		.map(|v| v == "1")
-		.unwrap_or(false);
-	let sendgrid_api_token = std::env::var("SENDGRID_API_TOKEN").ok();
-	if auth_enabled && sendgrid_api_token.is_none() {
-		panic!("SENDGRID_API_TOKEN environment variable must be set when AUTH_ENABLED = 1");
-	}
-	let stripe_secret_key = std::env::var("STRIPE_SECRET_KEY").ok();
-	let url = std::env::var("URL")
-		.ok()
-		.map(|url| url.parse().expect("URL environment variable invalid"));
+	// configure the database pool
+	let database_url = options
+		.database_url
+		.as_ref()
+		.map(|url| url.to_string())
+		.unwrap_or_else(|| {
+			let tangram_data_dir = dirs::data_dir()
+				.expect("failed to find user data directory")
+				.join("tangram");
+			std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
+				panic!(
+					"failed to create tangram data directory in {}",
+					tangram_data_dir.display()
+				)
+			});
+			let tangram_database_path = tangram_data_dir.join("tangram.db");
+			format!(
+				"sqlite:{}",
+				tangram_database_path.to_str().unwrap().to_owned()
+			)
+		});
+	let database_pool_max_size: u32 = std::env::var("DATABASE_POOL_MAX_SIZE")
+		.map(|s| {
+			s.parse()
+				.expect("DATABASE_POOL_MAX_SIZE environment variable invalid")
+		})
+		.unwrap_or(10);
+	let pool_options = match database_url {
+		_ if database_url.starts_with("sqlite:") => sqlx::any::AnyConnectOptions::from(
+			sqlx::sqlite::SqliteConnectOptions::from_str(&database_url)?
+				.create_if_missing(true)
+				.foreign_keys(true)
+				.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),
+		),
+		_ if database_url.starts_with("postgres:") => sqlx::any::AnyConnectOptions::from(
+			sqlx::postgres::PgConnectOptions::from_str(&database_url)?,
+		),
+		_ => panic!("DATABASE_URL must be a sqlite or postgres database url"),
+	};
+	let pool = sqlx::any::AnyPoolOptions::new()
+		.max_connections(database_pool_max_size)
+		.connect_with(pool_options)
+		.await?;
+
+	// run any pending migrations
+	migrations::run(&pool).await?;
+
 	let context = Arc::new(Context {
+		options,
 		pinwheel,
-		auth_enabled,
-		cookie_domain,
-		sendgrid_api_token,
-		stripe_secret_key,
-		url,
 		pool,
 	});
 
 	// start the server
+	let addr = std::net::SocketAddr::new(context.options.host, context.options.port);
 	let listener = std::net::TcpListener::bind(&addr).unwrap();
 	let mut listener = tokio::net::TcpListener::from_std(listener).unwrap();
 	let http = hyper::server::conn::Http::new();
-	eprintln!("🚀 serving on port {}", port);
+	eprintln!("🚀 serving on port {}", context.options.port);
 
 	std::panic::set_hook(Box::new(|panic_info| {
 		eprintln!("{}", panic_info.to_string());

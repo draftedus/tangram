@@ -23,13 +23,14 @@ app = ["tangram-app"]
 
 [dependencies]
 anyhow = "1"
-clap = { version = "2.33", features = ["color"] }
+clap = { version = "3.0.0-beta.1", features = ["color"] }
 colored = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tangram-app = { path = "app", optional = true }
 tangram-core = { path = "core", optional = true }
 term-ui = { git = "https://github.com/tangram-hq/term-ui" }
+url = "2"
 
 [patch.'https://github.com/tangram-hq/buffy']
 buffy = { path = "buffy/buffy-rs" }

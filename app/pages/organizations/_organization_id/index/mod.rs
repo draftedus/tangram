@@ -69,7 +69,7 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 	let card = get_card(
 		&mut db,
 		organization_id,
-		context.stripe_secret_key.as_ref().unwrap(),
+		context.options.stripe_secret_key.as_ref().unwrap(),
 	)
 	.await?;
 	let repos = repos::get_organization_repositories(&mut db, organization_id).await?;
@@ -334,7 +334,7 @@ pub async fn start_stripe_checkout(
 			});
 			let response = client
 				.post("https://api.stripe.com/v1/customers")
-				.basic_auth::<&str, &str>(context.stripe_secret_key.as_ref().unwrap(), None)
+				.basic_auth::<&str, &str>(context.options.stripe_secret_key.as_ref().unwrap(), None)
 				.form(&json)
 				.send()
 				.await?
@@ -362,13 +362,13 @@ pub async fn start_stripe_checkout(
 		"payment_method_types[]": "card",
 		"mode": "setup",
 		"customer": stripe_customer_id,
-		"success_url": format!("{}/organizations/{}/?session_id={{CHECKOUT_SESSION_ID}}", context.url.as_ref().unwrap(), organization_id),
-		"cancel_url": format!("{}/organizations/{}/", context.url.as_ref().unwrap(), organization_id)
+		"success_url": format!("{}/organizations/{}/?session_id={{CHECKOUT_SESSION_ID}}", context.options.url.as_ref().unwrap(), organization_id),
+		"cancel_url": format!("{}/organizations/{}/", context.options.url.as_ref().unwrap(), organization_id)
 	});
 	let client = reqwest::Client::new();
 	let response = client
 		.post("https://api.stripe.com/v1/checkout/sessions")
-		.basic_auth::<&str, &str>(context.stripe_secret_key.as_ref().unwrap(), None)
+		.basic_auth::<&str, &str>(context.options.stripe_secret_key.as_ref().unwrap(), None)
 		.form(&json)
 		.send()
 		.await?
@@ -409,7 +409,7 @@ pub async fn finish_stripe_checkout(
 	let client = reqwest::Client::new();
 	let response = client
 		.get(&url)
-		.basic_auth::<&str, &str>(context.stripe_secret_key.as_ref().unwrap(), None)
+		.basic_auth::<&str, &str>(context.options.stripe_secret_key.as_ref().unwrap(), None)
 		.form(&json)
 		.send()
 		.await?

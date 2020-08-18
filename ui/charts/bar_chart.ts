@@ -66,12 +66,7 @@ export function drawBarChart(
 	ctx: CanvasRenderingContext2D,
 	options: BarChartOptions,
 ): DrawBarChartOutput {
-	let {
-		data,
-		xAxisTitle,
-		yAxisGridLineInterval: yAxisLineInterval,
-		yAxisTitle,
-	} = options
+	let { data, xAxisTitle, yAxisGridLineInterval, yAxisTitle } = options
 	let width = ctx.canvas.clientWidth
 	let height = ctx.canvas.clientHeight
 	let hoverRegions: Array<HoverRegion<BarChartHoverRegionInfo>> = []
@@ -114,7 +109,7 @@ export function drawBarChart(
 		includeYAxisLabels: options.shouldDrawYAxisLabels ?? true,
 		includeYAxisTitle: yAxisTitle !== undefined,
 		width,
-		yAxisGridLineInterval: yAxisLineInterval,
+		yAxisGridLineInterval,
 		yMax,
 		yMin,
 	})

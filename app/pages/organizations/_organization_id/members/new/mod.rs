@@ -69,7 +69,7 @@ async fn add_member(
 ) -> Result<Response<Body>> {
 	let Action { email, .. } = action;
 	let inviter_email = user.email;
-	if let Some(sendgrid_api_token) = context.sendgrid_api_token.clone() {
+	if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
 		tokio::spawn(send_invite_email(
 			email.clone(),
 			inviter_email.clone(),

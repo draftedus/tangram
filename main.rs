@@ -1,75 +1,71 @@
 use anyhow::{Context, Result};
+use clap::Clap;
 use colored::*;
 use std::{
 	borrow::Cow,
 	path::{Path, PathBuf},
 };
+use url::Url;
 
 #[cfg(feature = "train")]
 mod progress;
 
+#[derive(Clap)]
+#[clap(about = "Train and deploy a machine learning model in minutes.")]
+enum Options {
+	#[cfg(feature = "train")]
+	#[clap(name = "train")]
+	Train(TrainOptions),
+	#[cfg(feature = "app")]
+	#[clap(name = "app")]
+	App(AppOptions),
+}
+
+#[cfg(feature = "train")]
+#[derive(Clap)]
+#[clap(about = "train a model")]
+#[clap(long_about = "train a model from a csv file with a specified target column")]
+struct TrainOptions {
+	#[clap(short, long, about = "the path to your .csv file")]
+	file: PathBuf,
+	#[clap(short, long, about = "the name of the column to predict")]
+	target: String,
+	#[clap(short, long, about = "the path to a config file")]
+	config: Option<PathBuf>,
+	#[clap(short, long, about = "the path to write the output to")]
+	output: Option<PathBuf>,
+}
+
+#[cfg(feature = "app")]
+#[derive(Clap)]
+struct AppOptions {
+	#[clap(long)]
+	auth_enabled: bool,
+	#[clap(long)]
+	cookie_domain: Option<String>,
+	#[clap(long)]
+	database_url: Option<Url>,
+	#[clap(long, default_value = "0.0.0.0")]
+	host: std::net::IpAddr,
+	#[clap(long, default_value = "8080")]
+	port: u16,
+	#[clap(long)]
+	sendgrid_api_token: Option<String>,
+	#[clap(long)]
+	stripe_publishable_key: Option<String>,
+	#[clap(long)]
+	stripe_secret_key: Option<String>,
+	#[clap(long)]
+	url: Option<Url>,
+}
+
 fn main() {
-	let mut app = clap::App::new("tangram")
-		.version(clap::crate_version!())
-		.about("Train and deploy a machine learning model in minutes.")
-		.setting(clap::AppSettings::SubcommandRequiredElseHelp);
-	if cfg!(feature = "train") {
-		app = app.subcommand(
-			clap::SubCommand::with_name("train")
-				.about("train a model")
-				.long_about("train a model from a csv file with a specified target column")
-				.arg(
-					clap::Arg::with_name("file")
-						.help("the path to your .csv file")
-						.long("file")
-						.short("f")
-						.takes_value(true)
-						.required(true),
-				)
-				.arg(
-					clap::Arg::with_name("target")
-						.help("the name of the column to predict")
-						.long("target")
-						.short("t")
-						.takes_value(true)
-						.required(true),
-				)
-				.arg(
-					clap::Arg::with_name("config")
-						.help("the path to a config file")
-						.long("config")
-						.short("c")
-						.takes_value(true),
-				)
-				.arg(
-					clap::Arg::with_name("output")
-						.help("the path to write the output to")
-						.long("output")
-						.short("o")
-						.takes_value(true),
-				),
-		);
-	}
-	if cfg!(feature = "app") {
-		app = app.subcommand(
-			clap::SubCommand::with_name("app")
-				.about("run the reporting and monitoring app")
-				.long_about("run the reporting and monitoring app"),
-		);
-	}
-	let matches = app.get_matches();
-	let result = match matches.subcommand() {
+	let options = Options::parse();
+	let result = match options {
 		#[cfg(feature = "train")]
-		("train", Some(train_matches)) => {
-			let file_path = Path::new(train_matches.value_of("file").unwrap());
-			let target_column_name = train_matches.value_of("target").unwrap();
-			let config_path = train_matches.value_of("config").map(|s| Path::new(s));
-			let output_path = train_matches.value_of("output").map(|s| Path::new(s));
-			cli_train(file_path, target_column_name, config_path, output_path)
-		}
+		Options::Train(options) => cli_train(options),
 		#[cfg(feature = "app")]
-		("app", Some(_)) => cli_app(),
-		_ => unreachable!(),
+		Options::App(options) => cli_app(options),
 	};
 	if let Err(error) = result {
 		eprintln!("{}: {}", "error".red().bold(), error);
@@ -82,12 +78,7 @@ fn main() {
 }
 
 #[cfg(feature = "train")]
-fn cli_train(
-	file_path: &Path,
-	target_column_name: &str,
-	config_path: Option<&Path>,
-	output_path: Option<&Path>,
-) -> Result<()> {
+fn cli_train(options: TrainOptions) -> Result<()> {
 	let progress = false;
 	let mut progress_view = if progress {
 		progress::ProgressView::new().ok()
@@ -102,18 +93,18 @@ fn cli_train(
 
 	let model = tangram::train(
 		tangram::id::Id::new(),
-		file_path,
-		target_column_name,
-		config_path,
+		&options.file,
+		&options.target,
+		options.config.as_deref(),
 		&mut update_progress,
 	)?;
 
 	drop(progress_view);
 
-	let output_path = match output_path {
+	let output_path = match options.output.as_deref() {
 		None => {
 			let dir = std::env::current_dir()?;
-			let csv_file_name = file_path.file_stem().unwrap().to_str().unwrap();
+			let csv_file_name = options.file.file_stem().unwrap().to_str().unwrap();
 			Cow::Owned(available_path(&dir, csv_file_name, "tangram"))
 		}
 		Some(path) => Cow::Borrowed(path),
@@ -134,11 +125,22 @@ fn cli_train(
 	Ok(())
 }
 
-fn cli_app() -> Result<()> {
-	tangram_app::run()
+#[cfg(feature = "app")]
+fn cli_app(options: AppOptions) -> Result<()> {
+	tangram_app::run(tangram_app::AppOptions {
+		auth_enabled: options.auth_enabled,
+		cookie_domain: options.cookie_domain,
+		database_url: options.database_url,
+		host: options.host,
+		port: options.port,
+		sendgrid_api_token: options.sendgrid_api_token,
+		stripe_publishable_key: options.stripe_publishable_key,
+		stripe_secret_key: options.stripe_secret_key,
+		url: options.url,
+	})
 }
 
-pub fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
+fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
 	let mut i = 0;
 	loop {
 		let mut path = PathBuf::from(base);
@@ -155,12 +157,5 @@ pub fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
 			return path;
 		}
 		i += 1;
-	}
-}
-
-pub fn env_var_enabled(var: &str) -> bool {
-	match std::env::var(var) {
-		Err(_) => false,
-		Ok(v) => v == "1" || v == "true",
 	}
 }
