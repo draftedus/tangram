@@ -7,6 +7,7 @@ export type ButtonProps = {
 	disabled?: boolean
 	download?: string
 	href?: string
+	id?: string
 	onClick?: () => void
 	type?: 'submit' | 'button' | 'reset'
 }
@@ -29,7 +30,13 @@ export function Button(props: ButtonProps) {
 		)
 	} else {
 		return (
-			<button class="button" onClick={onClick} style={style} type={props.type}>
+			<button
+				class="button"
+				id={props.id}
+				onClick={onClick}
+				style={style}
+				type={props.type}
+			>
 				{props.children}
 			</button>
 		)

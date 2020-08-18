@@ -11,6 +11,7 @@ use serde::Serialize;
 use serde_json::json;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
+use url::Url;
 
 pub async fn get(
 	request: Request<Body>,
@@ -38,6 +39,7 @@ struct Props {
 	plan: organizations::Plan,
 	user_id: String,
 	repos: Vec<repos::Repo>,
+	stripe_publishable_key: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
@@ -74,12 +76,19 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 	)
 	.await?;
 	let repos = repos::get_organization_repositories(&mut db, organization_id).await?;
+	let stripe_publishable_key = context
+		.options
+		.stripe_publishable_key
+		.as_ref()
+		.unwrap()
+		.to_owned();
 	Ok(Props {
 		id: organization_id.to_string(),
 		name: organization.name,
 		plan: organization.plan,
 		members: organization.members,
 		user_id: user.id.to_string(),
+		stripe_publishable_key,
 		card,
 		repos,
 	})
@@ -163,7 +172,9 @@ enum Action {
 	ChangePlan(ChangePlanAction),
 	#[serde(rename = "delete_member")]
 	DeleteMember(DeleteMemberAction),
+	#[serde(rename = "start_stripe_checkout")]
 	StartStripeCheckout,
+	#[serde(rename = "finish_stripe_checkout")]
 	FinishStripeCheckout(FinishStripeCheckoutAction),
 }
 
@@ -322,14 +333,15 @@ pub async fn start_stripe_checkout(
           organizations.stripe_customer_id
         from organizations
         where
-          id = ?1
+					id = ?1
+				and organizations.stripe_customer_id is not null
 			",
 	)
 	.bind(&organization_id.to_string())
-	.fetch_one(&mut *db)
+	.fetch_optional(&mut *db)
 	.await?
-	.try_get(0)
-	.ok();
+	.and_then(|r| r.get(0));
+
 	// retrieve or create the stripe customer
 	let stripe_customer_id = match existing_stripe_customer_id {
 		Some(s) => s,
@@ -347,6 +359,7 @@ pub async fn start_stripe_checkout(
 				.await?
 				.json::<serde_json::Value>()
 				.await?;
+			println!("{:?}", response);
 			let stripe_customer_id = response.get("id").unwrap().as_str().unwrap().to_owned();
 			// save the stripe customer id with the tangram user
 			sqlx::query(
@@ -364,13 +377,26 @@ pub async fn start_stripe_checkout(
 			stripe_customer_id
 		}
 	};
+	let base_url = context.options.url.as_ref().map_or_else(
+		|| {
+			std::borrow::Cow::Owned(
+				Url::parse(&format!(
+					"http://{}:{}",
+					context.options.host.to_string(),
+					context.options.port.to_string()
+				))
+				.unwrap(),
+			)
+		},
+		|url| std::borrow::Cow::Borrowed(url),
+	);
 	// create the checkout session
 	let json = json!({
 		"payment_method_types[]": "card",
 		"mode": "setup",
 		"customer": stripe_customer_id,
-		"success_url": format!("{}/organizations/{}/?session_id={{CHECKOUT_SESSION_ID}}", context.options.url.as_ref().unwrap(), organization_id),
-		"cancel_url": format!("{}/organizations/{}/", context.options.url.as_ref().unwrap(), organization_id)
+		"success_url": base_url.join(&format!("organizations/{}/?session_id={{CHECKOUT_SESSION_ID}}", organization_id)).ok().unwrap().to_string(),
+		"cancel_url": base_url.join(&format!("organizations/{}/", organization_id)).ok().unwrap().to_string(),
 	});
 	let client = reqwest::Client::new();
 	let response = client

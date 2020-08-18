@@ -41,6 +41,10 @@ export enum Plan {
 export default function OrganizationIndexPage(props: Props) {
 	return renderPage(
 		<AppLayout pinwheelInfo={props.pinwheelInfo}>
+			<script
+				data-publishable-key={props.stripePublishableKey}
+				src="https://js.stripe.com/v3/"
+			></script>
 			<ui.S1>
 				<ui.H1>{props.name}</ui.H1>
 				<ui.S2>
@@ -208,7 +212,9 @@ export default function OrganizationIndexPage(props: Props) {
 				<ui.S2>
 					<ui.SpaceBetween>
 						<ui.H2>{'Billing'}</ui.H2>
-						<ui.Button color="var(--blue)">{'Set Payment Method'}</ui.Button>
+						<ui.Button color="var(--blue)" id="set-payment-method-button">
+							{'Set Payment Method'}
+						</ui.Button>
 					</ui.SpaceBetween>
 					{props.card ? (
 						<ui.Table width="100%">
