@@ -155,7 +155,7 @@ function PredictionInputInner(props: Props) {
 												value={column.value}
 											/>
 										</div>
-										<div>
+										<div class="predict-column-chart-wrapper">
 											<ui.BoxChart
 												class="column-chart"
 												data={[
@@ -199,7 +199,7 @@ function PredictionInputInner(props: Props) {
 												value={column.value ?? undefined}
 											/>
 										</div>
-										<div>
+										<div class="predict-column-chart-wrapper">
 											<ui.BarChart
 												class="column-chart"
 												data={[
