@@ -167,7 +167,7 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		}
 		ctx.scale(dpr, dpr)
 		ctx.clearRect(0, 0, width, height)
-		overlayDiv.innerHTML = ''
+		overlayDiv.childNodes.forEach(child => overlayDiv.removeChild(child))
 		ctx.font = chartConfig.font
 		drawChartOverlay?.({
 			activeHoverRegions: state.activeHoverRegions ?? [],
