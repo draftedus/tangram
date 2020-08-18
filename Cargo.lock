@@ -98,9 +98,10 @@ dependencies = [
 [[package]]
 name = "buffy"
 version = "0.0.0"
+source = "git+https://github.com/tangram-hq/buffy#c10b46c5299194999e5407902e6967d881b53597"
 dependencies = [
  "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
- "buffy-derive 0.0.0",
+ "buffy-derive 0.0.0 (git+https://github.com/tangram-hq/buffy)",
  "derive_more 0.99.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -109,6 +110,7 @@ dependencies = [
 [[package]]
 name = "buffy-derive"
 version = "0.0.0"
+source = "git+https://github.com/tangram-hq/buffy#c10b46c5299194999e5407902e6967d881b53597"
 dependencies = [
  "proc-macro2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1738,7 +1740,7 @@ dependencies = [
  "serde_json 1.0.57 (registry+https://github.com/rust-lang/crates.io-index)",
  "tangram-app 0.0.0",
  "tangram-core 0.2.0-dev",
- "term-ui 0.0.1",
+ "term-ui 0.0.1 (git+https://github.com/tangram-hq/term-ui)",
  "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1748,7 +1750,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "buffy 0.0.0",
+ "buffy 0.0.0 (git+https://github.com/tangram-hq/buffy)",
  "bytes 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono-tz 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1782,7 +1784,7 @@ name = "tangram-core"
 version = "0.2.0-dev"
 dependencies = [
  "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
- "buffy 0.0.0",
+ "buffy 0.0.0 (git+https://github.com/tangram-hq/buffy)",
  "bytes 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "csv 1.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "derive_more 0.99.9 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1819,6 +1821,7 @@ dependencies = [
 [[package]]
 name = "term-ui"
 version = "0.0.1"
+source = "git+https://github.com/tangram-hq/term-ui#ba438253d5a008afe26988a41b7e757714519bc5"
 dependencies = [
  "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2272,6 +2275,8 @@ dependencies = [
 "checksum blake2b_simd 0.5.10 (registry+https://github.com/rust-lang/crates.io-index)" = "d8fb2d74254a3a0b5cac33ac9f8ed0e44aa50378d9dbb2e5d83bd21ed1dc2c8a"
 "checksum block-buffer 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4"
 "checksum bstr 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)" = "31accafdb70df7871592c058eca3985b71104e15ac32f64706022c58867da931"
+"checksum buffy 0.0.0 (git+https://github.com/tangram-hq/buffy)" = "<none>"
+"checksum buffy-derive 0.0.0 (git+https://github.com/tangram-hq/buffy)" = "<none>"
 "checksum bumpalo 3.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2e8c087f005730276d1096a652e92a8bacee2e2472bcc9715a74d2bec38b5820"
 "checksum byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 "checksum bytes 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0e4cec68f03f32e44924783795810fa50a7035d8c8ebe78580ad7e6c703fba38"
@@ -2450,6 +2455,7 @@ dependencies = [
 "checksum syn 1.0.38 (registry+https://github.com/rust-lang/crates.io-index)" = "e69abc24912995b3038597a7a593be5053eb0fb44f3cc5beec0deb421790c1f4"
 "checksum syn-mid 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7be3539f6c128a931cf19dcee741c1af532c7fd387baa739c03dd2e96479338a"
 "checksum tempfile 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7a6e24d9338a0a5be79593e2fa15a648add6138caa803e2d5bc782c371732ca9"
+"checksum term-ui 0.0.1 (git+https://github.com/tangram-hq/term-ui)" = "<none>"
 "checksum termcolor 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bb6bfa289a4d7c5766392812c0a1f4c1ba45afa1ad47803c11e1f407d846d75f"
 "checksum terminal_size 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "9a14cd9f8c72704232f0bfc8455c0e861f0ad4eb60cc9ec8a170e231414c1e13"
 "checksum termios 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6f0fcee7b24a25675de40d5bb4de6e41b0df07bc9856295e7e2b3a3600c400c2"

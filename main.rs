@@ -39,23 +39,23 @@ struct TrainOptions {
 #[cfg(feature = "app")]
 #[derive(Clap)]
 struct AppOptions {
-	#[clap(long)]
+	#[clap(long, env = "AUTH_ENABLED")]
 	auth_enabled: bool,
-	#[clap(long)]
+	#[clap(long, env = "COOKIE_DOMAIN")]
 	cookie_domain: Option<String>,
-	#[clap(long)]
+	#[clap(long, env = "DATABASE_URL")]
 	database_url: Option<Url>,
 	#[clap(long, default_value = "0.0.0.0")]
 	host: std::net::IpAddr,
-	#[clap(long, default_value = "8080")]
+	#[clap(long, env = "PORT", default_value = "8080")]
 	port: u16,
-	#[clap(long)]
+	#[clap(long, env = "SENDGRID_API_TOKEN")]
 	sendgrid_api_token: Option<String>,
-	#[clap(long)]
+	#[clap(hidden = true, long, env = "STRIPE_PUBLISHABLE_KEY")]
 	stripe_publishable_key: Option<String>,
-	#[clap(long)]
+	#[clap(hidden = true, long, env = "STRIPE_SECRET_KEY")]
 	stripe_secret_key: Option<String>,
-	#[clap(long)]
+	#[clap(hidden = true, long, env = "URL")]
 	url: Option<Url>,
 }
 

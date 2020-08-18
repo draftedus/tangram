@@ -1,6 +1,6 @@
 [workspace]
-members = ["app", "core", "pinwheel", "term-ui"]
-exclude = ["buffy", "languages/rust"]
+members = ["app", "core", "pinwheel"]
+exclude = ["languages/rust"]
 
 [package]
 name = "tangram"
@@ -32,8 +32,8 @@ tangram-core = { path = "core", optional = true }
 term-ui = { git = "https://github.com/tangram-hq/term-ui" }
 url = "2"
 
-[patch.'https://github.com/tangram-hq/buffy']
-buffy = { path = "buffy/buffy-rs" }
+# [patch.'https://github.com/tangram-hq/buffy']
+# buffy = { path = "buffy/buffy-rs" }
 
-[patch.'https://github.com/tangram-hq/term-ui']
-term-ui = { path = "term-ui" }
+# [patch.'https://github.com/tangram-hq/term-ui']
+# term-ui = { path = "term-ui" }
