@@ -112,10 +112,7 @@ impl Pinwheel {
 		THREAD_LOCAL_ISOLATE.with(|isolate| {
 			let mut isolate = isolate.borrow_mut();
 			if self.src_dir.is_some() {
-				let state = State {
-					module_handles: Vec::new(),
-				};
-				isolate.set_slot(Rc::new(RefCell::new(state)));
+				isolate.set_slot(Rc::new(RefCell::new(State::default())));
 			}
 			let mut scope = v8::HandleScope::new(&mut *isolate);
 			let context = v8::Context::new(&mut scope);
@@ -249,13 +246,11 @@ thread_local!(static THREAD_LOCAL_ISOLATE: RefCell<v8::OwnedIsolate> = {
 	});
 	let mut isolate = v8::Isolate::new(Default::default());
 	isolate.set_capture_stack_trace_for_uncaught_exceptions(true, 10);
-	let state = State {
-		module_handles: Vec::new(),
-	};
-	isolate.set_slot(Rc::new(RefCell::new(state)));
+	isolate.set_slot(Rc::new(RefCell::new(State::default())));
 	RefCell::new(isolate)
 });
 
+#[derive(Default)]
 struct State {
 	module_handles: Vec<ModuleHandle>,
 }
