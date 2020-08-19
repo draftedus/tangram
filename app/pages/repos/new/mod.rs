@@ -21,14 +21,24 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let props = props(&mut db, user, None, None).await?;
+	let response = render(&mut db, context, user, None).await;
 	db.commit().await?;
+	return response;
+}
+
+async fn render(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	context: &Context,
+	user: User,
+	options: Option<Options>,
+) -> Result<Response<Body>> {
+	let props = props(db, user, options).await?;
 	let html = context.pinwheel.render_with("/repos/new", props)?;
 	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap();
-	Ok(response)
+	return Ok(response);
 }
 
 #[derive(Serialize)]
@@ -46,11 +56,15 @@ struct Owner {
 	title: String,
 }
 
+struct Options {
+	title: Option<String>,
+	error: String,
+}
+
 async fn props(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user: User,
-	title: Option<String>,
-	error: Option<String>,
+	options: Option<Options>,
 ) -> Result<Props> {
 	let rows = sqlx::query(
 		"
@@ -80,8 +94,8 @@ async fn props(
 	});
 	Ok(Props {
 		owners: items,
-		error,
-		title,
+		error: options.as_ref().map(|s| s.error.to_owned()),
+		title: options.as_ref().and_then(|s| s.title.to_owned()),
 	})
 }
 
@@ -102,53 +116,161 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	let user = authorize_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let boundary = request
+	let boundary = match request
 		.headers()
 		.get(header::CONTENT_TYPE)
 		.and_then(|ct| ct.to_str().ok())
 		.and_then(|ct| multer::parse_boundary(ct).ok())
-		.ok_or_else(|| Error::BadRequest)?;
+	{
+		Some(boundary) => boundary,
+		None => {
+			return render(
+				&mut db,
+				context,
+				user,
+				Some(Options {
+					title: None,
+					error: "Failed to parse request body.".into(),
+				}),
+			)
+			.await
+		}
+	};
 	let mut title: Option<String> = None;
 	let mut owner_id: Option<String> = None;
 	let mut file: Option<Vec<u8>> = None;
 	let mut multipart = Multipart::new(request.into_body(), boundary);
 	while let Some(mut field) = multipart.next_field().await? {
-		let name = field.name().ok_or_else(|| Error::BadRequest)?.to_owned();
+		let name = match field.name() {
+			Some(name) => name.to_owned(),
+			None => {
+				return render(
+					&mut db,
+					context,
+					user,
+					Some(Options {
+						title: None,
+						error: "Failed to parse request body.".into(),
+					}),
+				)
+				.await
+			}
+		};
 		let mut field_data = Vec::new();
 		while let Some(chunk) = field.chunk().await? {
 			field_data.extend(chunk.bytes());
 		}
 		match name.as_str() {
-			"title" => title = Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?),
+			"title" => {
+				title = match String::from_utf8(field_data) {
+					Ok(title) => Some(title),
+					Err(_) => {
+						return render(
+							&mut db,
+							context,
+							user,
+							Some(Options {
+								title: None,
+								error: "Failed to parse request body.".into(),
+							}),
+						)
+						.await
+					}
+				}
+			}
 			"owner_id" => {
-				owner_id = Some(String::from_utf8(field_data).map_err(|_| Error::BadRequest)?)
+				owner_id = match String::from_utf8(field_data) {
+					Ok(owner_id) => Some(owner_id),
+					Err(_) => {
+						return render(
+							&mut db,
+							context,
+							user,
+							Some(Options {
+								title: None,
+								error: "Failed to parse request body.".into(),
+							}),
+						)
+						.await
+					}
+				}
 			}
 			"file" => file = Some(field_data),
-			_ => return Err(Error::BadRequest.into()),
-		};
+			_ => {
+				return render(
+					&mut db,
+					context,
+					user,
+					Some(Options {
+						title: None,
+						error: "Failed to parse request body.".into(),
+					}),
+				)
+				.await
+			}
+		}
 	}
 
-	let title = title.ok_or_else(|| Error::BadRequest)?;
-	let owner_id = owner_id.ok_or(Error::BadRequest)?;
-	let file = file.ok_or_else(|| Error::BadRequest)?;
+	let title = match title {
+		Some(title) => title,
+		None => {
+			return render(
+				&mut db,
+				context,
+				user,
+				Some(Options {
+					title: None,
+					error: "A title is required.".into(),
+				}),
+			)
+			.await
+		}
+	};
+	let owner_id = match owner_id {
+		Some(owner_id) => owner_id,
+		None => {
+			return render(
+				&mut db,
+				context,
+				user,
+				Some(Options {
+					title: None,
+					error: "An owner is required.".into(),
+				}),
+			)
+			.await
+		}
+	};
+	let file = match file {
+		Some(file) => file,
+		None => {
+			return render(
+				&mut db,
+				context,
+				user,
+				Some(Options {
+					title: None,
+					error: "A file is required.".into(),
+				}),
+			)
+			.await
+		}
+	};
 
 	// parse owner_id as user: id, or organization: id,
 	let model = match tangram_core::types::Model::from_slice(&file) {
 		Ok(model) => model,
 		Err(_) => {
-			let props = props(
+			return render(
 				&mut db,
+				context,
 				user,
-				Some(title),
-				Some("invalid tangram model".into()),
+				Some(Options {
+					title: Some(title),
+					error: "Invalid Tangram model file.".into(),
+				}),
 			)
-			.await?;
-			let html = context.pinwheel.render_with("/repos/new", props)?;
-			let response = Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(Body::from(html))
-				.unwrap();
-			return Ok(response);
+			.await;
 		}
 	};
 	let now = Utc::now().timestamp();
@@ -178,19 +300,16 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			.execute(&mut *db)
 			.await;
 			if result.is_err() {
-				let props = props(
+				return render(
 					&mut db,
+					context,
 					user,
-					None,
-					Some("A repo with this name already exists.".into()),
+					Some(Options {
+						title: Some(title),
+						error: "A repo with this title already exists.".into(),
+					}),
 				)
-				.await?;
-				let html = context.pinwheel.render_with("/repos/new", props)?;
-				let response = Response::builder()
-					.status(StatusCode::BAD_REQUEST)
-					.body(Body::from(html))
-					.unwrap();
-				return Ok(response);
+				.await;
 			}
 		}
 		"organization" => {
@@ -214,19 +333,16 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			.execute(&mut *db)
 			.await;
 			if result.is_err() {
-				let props = props(
+				return render(
 					&mut db,
+					context,
 					user,
-					None,
-					Some("A repo in this organization with this name already exists.".into()),
+					Some(Options {
+						title: Some(title),
+						error: "A repo in this organization with this title already exists.".into(),
+					}),
 				)
-				.await?;
-				let html = context.pinwheel.render_with("/repos/new", props)?;
-				let response = Response::builder()
-					.status(StatusCode::BAD_REQUEST)
-					.body(Body::from(html))
-					.unwrap();
-				return Ok(response);
+				.await;
 			};
 		}
 		&_ => return Err(Error::BadRequest.into()),
@@ -248,20 +364,15 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	.await;
 
 	if result.is_err() {
-		let props = props(
-			&mut db,
+		return render(&mut db, context,
 			user,
-			Some(title),
-			Some("model has already been uploaded".into()),
-		)
-		.await?;
-		let html = context.pinwheel.render_with("/repos/new", props)?;
-		let response = Response::builder()
-			.status(StatusCode::BAD_REQUEST)
-			.body(Body::from(html))
-			.unwrap();
-		return Ok(response);
+			Some(Options {
+				title: Some(title),
+				error: "This model has already been uploaded. Tangram models have unique identifiers and can only belong to one account.".into(),
+			}),
+		).await;
 	};
+
 	db.commit().await?;
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)

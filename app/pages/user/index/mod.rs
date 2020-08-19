@@ -119,8 +119,6 @@ pub async fn get_user_repositories(
 				repos.id,
 				repos.title
 			from repos
-			join models
-				on models.repo_id = repos.id
 			where repos.user_id = ?1
 		",
 	)

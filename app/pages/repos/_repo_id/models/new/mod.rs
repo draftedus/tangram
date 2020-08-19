@@ -15,8 +15,38 @@ struct Props {
 	error: Option<String>,
 }
 
-pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<Body>> {
-	let props = Props { error: None };
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	repo_id: &str,
+) -> Result<Response<Body>> {
+	let mut db = context
+		.pool
+		.begin()
+		.await
+		.map_err(|_| Error::ServiceUnavailable)?;
+
+	let user = authorize_user(&request, &mut db)
+		.await?
+		.map_err(|_| Error::Unauthorized)?;
+
+	let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
+	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
+		return Err(Error::NotFound.into());
+	}
+	let response = render(context, None).await;
+	db.commit().await?;
+	return response;
+}
+
+struct Options {
+	error: String,
+}
+
+async fn render(context: &Context, options: Option<Options>) -> Result<Response<Body>> {
+	let props = Props {
+		error: options.as_ref().map(|o| o.error.to_owned()),
+	};
 	let html = context
 		.pinwheel
 		.render_with("/repos/_repo_id/models/new", props)?;
@@ -24,7 +54,7 @@ pub async fn get(_request: Request<Body>, context: &Context) -> Result<Response<
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap();
-	Ok(response)
+	return Ok(response);
 }
 
 pub async fn post(
@@ -44,40 +74,77 @@ pub async fn post(
 	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
 		return Err(Error::Unauthorized.into());
 	}
-	let boundary = request
+	let boundary = match request
 		.headers()
 		.get(header::CONTENT_TYPE)
 		.and_then(|ct| ct.to_str().ok())
-		.and_then(|ct| multer::parse_boundary(ct).ok());
-	let boundary = boundary.ok_or_else(|| Error::BadRequest)?;
+		.and_then(|ct| multer::parse_boundary(ct).ok())
+	{
+		Some(boundary) => boundary,
+		None => {
+			return render(
+				context,
+				Some(Options {
+					error: "Failed to parse request body.".into(),
+				}),
+			)
+			.await
+		}
+	};
 	let mut file: Option<Vec<u8>> = None;
 	let mut multipart = Multipart::new(request.into_body(), boundary);
 	while let Some(mut field) = multipart.next_field().await? {
-		let name = field.name().ok_or_else(|| Error::BadRequest)?.to_owned();
+		let name = match field.name() {
+			Some(name) => name.to_owned(),
+			None => {
+				return render(
+					context,
+					Some(Options {
+						error: "Failed to parse request body.".into(),
+					}),
+				)
+				.await
+			}
+		};
 		let mut field_data = Vec::new();
 		while let Some(chunk) = field.chunk().await? {
 			field_data.extend(chunk.bytes());
 		}
 		match name.as_str() {
 			"file" => file = Some(field_data),
-			_ => return Err(Error::BadRequest.into()),
-		};
+			_ => {
+				return render(
+					context,
+					Some(Options {
+						error: "Failed to parse request body.".into(),
+					}),
+				)
+				.await
+			}
+		}
 	}
-	let file = file.ok_or_else(|| Error::BadRequest)?;
+	let file = match file {
+		Some(file) => file,
+		None => {
+			return render(
+				context,
+				Some(Options {
+					error: "A file is required.".into(),
+				}),
+			)
+			.await
+		}
+	};
 	let model = match tangram_core::types::Model::from_slice(&file) {
 		Ok(model) => model,
 		Err(_) => {
-			let props = Props {
-				error: Some("invalid tangram model".into()),
-			};
-			let html = context
-				.pinwheel
-				.render_with("/repos/_repo_id/models/new", props)?;
-			let response = Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(Body::from(html))
-				.unwrap();
-			return Ok(response);
+			return render(
+				context,
+				Some(Options {
+					error: "Invalid tangram model file.".into(),
+				}),
+			)
+			.await
 		}
 	};
 	let now = Utc::now().timestamp();
@@ -97,17 +164,13 @@ pub async fn post(
 	.await;
 
 	if result.is_err() {
-		let props = Props {
-			error: Some("model has already been uploaded".into()),
-		};
-		let html = context
-			.pinwheel
-			.render_with("/repos/_repo_id/models/new", props)?;
-		let response = Response::builder()
-			.status(StatusCode::BAD_REQUEST)
-			.body(Body::from(html))
-			.unwrap();
-		return Ok(response);
+		return render(
+			context,
+			Some(Options {
+				error: "This model has already been uploaded. Tangram models have unique identifiers and can only belong to one account.".into(),
+			}),
+		)
+		.await;
 	};
 	db.commit().await?;
 	let response = Response::builder()

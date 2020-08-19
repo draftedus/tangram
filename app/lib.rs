@@ -75,8 +75,8 @@ async fn handle(
 		(&Method::POST, &["repos", repo_id, ""]) => {
 			pages::repos::_repo_id::index::post(request, &context, repo_id).await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", "new"]) => {
-			pages::repos::_repo_id::models::new::get(request, &context).await
+		(&Method::GET, &["repos", repo_id, "models", "new"]) => {
+			pages::repos::_repo_id::models::new::get(request, &context, repo_id).await
 		}
 		(&Method::POST, &["repos", repo_id, "models", "new"]) => {
 			pages::repos::_repo_id::models::new::post(request, &context, repo_id).await
