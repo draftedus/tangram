@@ -35,6 +35,7 @@ export function drawTooltip(options: DrawTooltipOptions) {
 	tooltipWrapper.style.backgroundColor =
 		chartColors.current.tooltipBackgroundColor
 	tooltipWrapper.style.padding = `${chartConfig.tooltipPadding}px`
+	tooltipWrapper.style.zIndex = '2'
 	if (centerHorizontal) {
 		tooltipWrapper.style.left = `${x}px`
 		tooltipWrapper.style.transform = 'translateX(-50%) translateY(-100%)'
