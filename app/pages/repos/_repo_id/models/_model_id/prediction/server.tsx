@@ -286,7 +286,7 @@ function RegressionPredictionOutput(props: RegressionPredictionOutputProps) {
 			<ui.H2>{'Explanation'}</ui.H2>
 			<ui.P>
 				{
-					"Each class has a baseline likelihood of being predicted equal to that class's proportion in the training dataset. The learned model adjust its output based on what features it sees in the example. The chart below shows which features were most influential in making the model's decision."
+					"Each prediction starts out at a baseline equal to the mean prediction in the training dataset. The learned model adjust its output based on what features it sees in the example. The chart below shows which features were most influential in making the model's decision."
 				}
 			</ui.P>
 			<ui.Card>
