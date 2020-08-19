@@ -39,10 +39,11 @@ export enum Plan {
 export default function OrganizationIndexPage(props: Props) {
 	return renderPage(
 		<AppLayout pinwheelInfo={props.pinwheelInfo}>
-			<script
-				data-publishable-key={props.stripePublishableKey}
-				src="https://js.stripe.com/v3/"
-			></script>
+			<div
+				data-stripe-publishable-key={props.stripePublishableKey}
+				id="stripe-publishable-key"
+				style="display: none"
+			></div>
 			<ui.S1>
 				<ui.H1>{props.name}</ui.H1>
 				<ui.S2>

@@ -6,12 +6,7 @@ import { ui } from 'deps'
 
 let onAddPaymentMethod = async () => {
 	// get the stripe publishable key
-	let stripeUrl = 'https://js.stripe.com/v3/'
-	let stripeScript: HTMLElement | null = document.querySelector(
-		`script[src="${stripeUrl}"]`,
-	)
-	let stripePublishableKey = stripeScript?.dataset.publishableKey
-	var stripe = Stripe(stripePublishableKey)
+	let stripe = await loadStripe()
 	let response = await fetch('', {
 		body: 'action=start_stripe_checkout',
 		method: 'POST',
@@ -31,6 +26,32 @@ let params = new URLSearchParams(window.location.search)
 let stripeCheckoutSessionId = params.get('session_id')
 if (stripeCheckoutSessionId) {
 	finishStripeCheckout(stripeCheckoutSessionId)
+}
+
+async function loadStripe(): Promise<any> {
+	let stripeUrl = 'https://js.stripe.com/v3/'
+	let existingTag = document.querySelector(`script[src="${stripeUrl}"]`)
+	if (!existingTag) {
+		let scriptTag = document.createElement('script')
+		scriptTag.src = stripeUrl
+		document.head.appendChild(scriptTag)
+		await new Promise((resolve, reject) => {
+			scriptTag.addEventListener('load', () => {
+				if (Stripe) {
+					resolve(Stripe)
+				} else {
+					reject(new Error('stripe.js not available'))
+				}
+			})
+			scriptTag.addEventListener('error', () => {
+				reject(new Error('stripe.js failed to load '))
+			})
+		})
+	}
+	let stripePublishableKey = document.getElementById('stripe-publishable-key')
+		?.dataset.stripePublishableKey
+	console.log({ stripePublishableKey })
+	return Stripe(stripePublishableKey)
 }
 
 async function finishStripeCheckout(stripeCheckoutSessionId: string) {
