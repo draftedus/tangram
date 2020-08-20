@@ -14,7 +14,6 @@ type Owner = {
 }
 
 type Form = {
-	file: string
 	owner: string
 	title: string
 }
@@ -46,12 +45,7 @@ export default function RepoCreatePage(props: Props) {
 							</option>
 						))}
 					</ui.SelectField>
-					<ui.FileField
-						label="File"
-						name="file"
-						required={true}
-						value={props.form?.file}
-					/>
+					<ui.FileField label="File" name="file" required={true} />
 					<ui.Button type="submit">{'Upload'}</ui.Button>
 				</ui.Form>
 			</ui.S1>

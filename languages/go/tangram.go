@@ -180,7 +180,11 @@ func (m Model) logEvents(events []event) error {
 	if err != nil {
 		return err
 	}
-	request, err := http.NewRequest("POST", m.options.BaseURL+"/track", bytes.NewReader(body))
+	request, err := http.NewRequest(
+		"POST",
+		m.options.TangramURL+"/track",
+		bytes.NewReader(body),
+	)
 	if err != nil {
 		return err
 	}
