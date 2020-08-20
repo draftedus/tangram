@@ -1,4 +1,4 @@
-import { Children, Link, h } from './deps'
+import { Children, h } from './deps'
 
 export type ButtonProps = {
 	block?: boolean
@@ -19,14 +19,14 @@ export function Button(props: ButtonProps) {
 	let onClick = !props.disabled && props.onClick ? props.onClick : undefined
 	if (props.href) {
 		return (
-			<Link
+			<a
 				class="button"
 				download={props.download}
 				href={props.href}
 				style={style}
 			>
 				{props.children}
-			</Link>
+			</a>
 		)
 	} else {
 		return (

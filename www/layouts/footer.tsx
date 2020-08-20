@@ -1,5 +1,5 @@
-import { Logo, LogoScheme } from '../components/logo'
 import { h, ui } from '../deps'
+import { Logo, LogoScheme } from './layout'
 
 export function Footer() {
 	return (

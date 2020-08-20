@@ -1,4 +1,4 @@
-import { TopbarLayout } from './topbar_layout'
+import { Layout } from './topbar_layout'
 import { Children, PinwheelInfo, h } from 'deps'
 
 type AppLayoutProps = {
@@ -8,8 +8,8 @@ type AppLayoutProps = {
 
 export function AppLayout(props: AppLayoutProps) {
 	return (
-		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
+		<Layout pinwheelInfo={props.pinwheelInfo}>
 			<div class="app-layout">{props.children}</div>
-		</TopbarLayout>
+		</Layout>
 	)
 }

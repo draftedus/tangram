@@ -2,10 +2,21 @@ import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
-	error: string | null
-	owners: Array<{ id: string; title: string }>
+	error?: string
+	form?: Form
+	owners: Owner[]
 	pinwheelInfo: PinwheelInfo
-	title: string | null
+}
+
+type Owner = {
+	title: string
+	value: string
+}
+
+type Form = {
+	file: string
+	owner: string
+	title: string
 }
 
 export default function RepoCreatePage(props: Props) {
@@ -21,16 +32,26 @@ export default function RepoCreatePage(props: Props) {
 						label="Title"
 						name="title"
 						required={true}
-						value={props.title}
+						value={props.form?.title}
 					/>
-					<ui.SelectField label="Owner" name="owner_id" required={true}>
-						{props.owners.map(({ id, title }) => (
-							<option key={id} value={id}>
+					<ui.SelectField
+						label="Owner"
+						name="owner"
+						required={true}
+						value={props.form?.owner}
+					>
+						{props.owners.map(({ title, value }) => (
+							<option key={value} value={value}>
 								{title}
 							</option>
 						))}
 					</ui.SelectField>
-					<ui.FileField label="File" name="file" required={true} />
+					<ui.FileField
+						label="File"
+						name="file"
+						required={true}
+						value={props.form?.file}
+					/>
 					<ui.Button type="submit">{'Upload'}</ui.Button>
 				</ui.Form>
 			</ui.S1>

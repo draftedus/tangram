@@ -299,6 +299,8 @@ fn run_module<'s>(
 		let exception_string = exception_to_string(&mut scope, exception);
 		return Err(format_err!("{}", exception_string));
 	}
+	drop(try_catch_scope);
+	let mut try_catch_scope = v8::TryCatch::new(scope);
 	let _ = module.evaluate(&mut try_catch_scope);
 	if try_catch_scope.has_caught() {
 		let exception = try_catch_scope.exception().unwrap();
@@ -422,6 +424,7 @@ fn module_resolve_callback<'s>(
 	Some(v8::Local::new(&mut scope, module))
 }
 
+/// Render an exception to a string. The string will include the exception's message and a stack trace with source maps applied.
 fn exception_to_string(scope: &mut v8::HandleScope, exception: v8::Local<v8::Value>) -> String {
 	let mut string = String::new();
 	let message = exception
@@ -624,12 +627,22 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
 	}
-	// concat css
+	// HACK concat css
 	let output = std::process::Command::new("fd")
-		.args(&["-e", "css", ".", "../ui", ".", "-x", "cat"])
+		.args(&["-e", "css", ".", "ui", "-x", "cat"])
 		.output()
 		.unwrap();
-	std::fs::write(dst_dir.join("tangram.css"), output.stdout).unwrap();
+	std::fs::write(dst_dir.join("ui.css"), output.stdout).unwrap();
+	let output = std::process::Command::new("fd")
+		.args(&["-e", "css", ".", "www", "-x", "cat"])
+		.output()
+		.unwrap();
+	std::fs::write(dst_dir.join("www.css"), output.stdout).unwrap();
+	let output = std::process::Command::new("fd")
+		.args(&["-e", "css", ".", "app", "-x", "cat"])
+		.output()
+		.unwrap();
+	std::fs::write(dst_dir.join("app.css"), output.stdout).unwrap();
 	Ok(())
 }
 

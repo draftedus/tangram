@@ -1,1 +1,1 @@
-/// <reference types="../pinwheel/lib/types" />
+/// <reference types="@tangramhq/pinwheel/types" />

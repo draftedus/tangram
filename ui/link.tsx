@@ -1,4 +1,4 @@
-import { Children, Link as PinwheelLink, cx, h } from './deps'
+import { Children, cx, h } from './deps'
 
 export type LinkProps = {
 	children?: Children
@@ -10,8 +10,8 @@ export type LinkProps = {
 export function Link(props: LinkProps) {
 	let className = cx('link', props.className)
 	return (
-		<PinwheelLink class={className} href={props.href} title={props.title}>
+		<a class={className} href={props.href} title={props.title}>
 			{props.children}
-		</PinwheelLink>
+		</a>
 	)
 }

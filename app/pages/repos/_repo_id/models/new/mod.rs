@@ -36,7 +36,7 @@ pub async fn get(
 	}
 	let response = render(context, None).await;
 	db.commit().await?;
-	return response;
+	response
 }
 
 struct Options {
@@ -54,7 +54,7 @@ async fn render(context: &Context, options: Option<Options>) -> Result<Response<
 		.status(StatusCode::OK)
 		.body(Body::from(html))
 		.unwrap();
-	return Ok(response);
+	Ok(response)
 }
 
 pub async fn post(

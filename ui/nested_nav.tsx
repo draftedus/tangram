@@ -1,4 +1,4 @@
-import { Children, Link, cx, h } from './deps'
+import { Children, cx, h } from './deps'
 
 type NestedNavProps = {
 	children?: Children
@@ -33,7 +33,7 @@ type NestedNavItemProps = {
 export function NestedNavItem(props: NestedNavItemProps) {
 	return (
 		<div class={cx('nested-nav-item', props.selected && 'nested-nav-selected')}>
-			<Link href={props.href}>{props.children}</Link>
+			<a href={props.href}>{props.children}</a>
 		</div>
 	)
 }

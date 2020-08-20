@@ -1,4 +1,4 @@
-import { ComponentType, createElement, hydrate } from './react'
+import { ComponentType, createElement, hydrate } from 'preact'
 
 export type ClientProps<T> = {
 	component: ComponentType<T>

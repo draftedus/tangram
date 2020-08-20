@@ -1,7 +1,7 @@
 import { Children, h } from 'deps'
 
 type MetricsRowProps = {
-	children: Children
+	children?: Children
 }
 
 export function MetricsRow(props: MetricsRowProps) {

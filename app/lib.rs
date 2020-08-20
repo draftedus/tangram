@@ -391,7 +391,6 @@ pub async fn run_async(options: AppOptions) -> Result<()> {
 	});
 	let addr = std::net::SocketAddr::new(context.options.host, context.options.port);
 	let listener = std::net::TcpListener::bind(&addr)?;
-	eprintln!("🚀 serving on port {}", context.options.port);
 	hyper::Server::from_tcp(listener)?.serve(service).await?;
 	Ok(())
 }

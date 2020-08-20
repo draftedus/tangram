@@ -1,4 +1,7 @@
 {
+	"dependencies": {
+		"preact": "10.4.7"
+	},
 	"name": "@tangramhq/ui",
 	"main": "mod.ts",
 	"version": "0.0.0"

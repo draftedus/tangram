@@ -1,5 +1,4 @@
-import { Logo, LogoScheme } from '../../www/components/logo'
-import { Document } from '../../www/layouts/layout'
+import { Document, Logo, LogoScheme } from '../../www/layouts/layout'
 import { Children, PinwheelInfo, h, ui } from 'deps'
 
 type AuthLayoutProps = {

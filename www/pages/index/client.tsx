@@ -1,4 +1,3 @@
-import { hydrateComponent } from '../../../ui/deps'
 import { Explanations } from './explanations'
 import { Introspection } from './introspection'
 import { ProductionMetrics } from './production_metrics'
@@ -7,6 +6,7 @@ import { Training } from './training'
 import { TrainingMetrics } from './training_metrics'
 import { TrainingStats } from './training_stats'
 import { Tuning } from './tuning'
+import { hydrateComponent } from 'deps'
 
 hydrateComponent('training', Training)
 hydrateComponent('training-stats', TrainingStats)

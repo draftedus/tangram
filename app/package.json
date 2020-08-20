@@ -1,6 +1,8 @@
 {
-	"devDependencies": {
-		"esbuild": "0.6.21"
+	"dependencies": {
+		"esbuild": "0.6.26",
+		"preact": "10.4.7",
+		"preact-render-to-string": "5.1.10"
 	},
 	"license": "UNLICENSED",
 	"name": "@tangramhq/app",

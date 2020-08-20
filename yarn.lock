@@ -365,15 +365,10 @@ es-to-primitive@^1.2.1:
     is-date-object "^1.0.1"
     is-symbol "^1.0.2"
 
-esbuild@0.6.21:
-  version "0.6.21"
-  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.6.21.tgz#a2354fad3a53c2c0b7774f7b34b4e11ef7603b70"
-  integrity sha512-2gWKUvMD9J6z0cUtVh7TAqONo9QaZwWOGnZ6FwdjZtDkRd8G+mCnFb+83IXjwspwz3bfLFWtblYkYbg7hRf2KQ==
-
-esbuild@0.6.25, esbuild@^0.6.18:
-  version "0.6.25"
-  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.6.25.tgz#060f95ed171dba4e6e86e6920f2aff328f96e99e"
-  integrity sha512-yOSDMlo0tmhF023LL37UVK/WHIM8UttxiUM0iOHb/DgB9Mk02wQAAHEso2ZkTY3ImpGDRQM0JnIif7aZAmGm2w==
+esbuild@0.6.26:
+  version "0.6.26"
+  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.6.26.tgz#f0ac2abe476b77c2ec7f6ee270467659314c43d5"
+  integrity sha512-4NB2I2g6m/ggI7e3Bqv9862i+CgkizS6ehTsrgrkmXlQAI7rGsWIRteYMpmc2wCavCpAHIP5ae3z5DlCG/p11A==
 
 escape-string-regexp@^1.0.5:
   version "1.0.5"

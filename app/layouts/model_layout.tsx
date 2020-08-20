@@ -1,4 +1,4 @@
-import { TopbarLayout } from './topbar_layout'
+import { Layout } from './topbar_layout'
 import { Children, PinwheelInfo, h, ui } from 'deps'
 
 type ModelLayoutProps = {
@@ -38,7 +38,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 		model => model.id == props.info.modelId,
 	)
 	return (
-		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
+		<Layout pinwheelInfo={props.pinwheelInfo}>
 			<div class="model-layout">
 				<div class="model-layout-topbar" style={{ gridArea: 'topbar' }}>
 					<div class="model-layout-owner-slash-repo-slash-model-wrapper">
@@ -98,7 +98,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 					</div>
 				</div>
 			</div>
-		</TopbarLayout>
+		</Layout>
 	)
 }
 

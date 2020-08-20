@@ -1,5 +1,5 @@
-import { Children, Fragment, h } from './react'
 import { PinwheelInfo } from './types'
+import { ComponentChildren, Fragment, h } from 'preact'
 
 export type HeadProps = {
 	pinwheelInfo: PinwheelInfo
@@ -18,7 +18,7 @@ export function Head(props: HeadProps) {
 }
 
 export type BodyProps = {
-	children: Children
+	children: ComponentChildren
 	pinwheelInfo: PinwheelInfo
 }
 
@@ -34,7 +34,7 @@ export function Body(props: BodyProps) {
 }
 
 export type DocumentProps = {
-	children: Children
+	children: ComponentChildren
 	pinwheelInfo: PinwheelInfo
 }
 

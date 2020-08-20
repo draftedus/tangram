@@ -6,6 +6,7 @@ type FileFieldProps = {
 	label?: string
 	name?: string
 	required?: boolean
+	value?: string
 }
 
 export function FileField(props: FileFieldProps) {
@@ -19,12 +20,18 @@ export function FileField(props: FileFieldProps) {
 					name={props.name}
 					required={props.required}
 					type="file"
+					value={props.value}
 				/>
 			</div>
 		</Label>
 	)
 }
 
+/**
+ * When using a custom 'Choose File' prompt,
+ * it is necessary to use JS to update it to
+ * show the selected file name.
+ */
 export function bootFileFields() {
 	let fileInputElements = document.querySelectorAll('input[type=file]')
 	fileInputElements.forEach(fileInputElement => {

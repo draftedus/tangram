@@ -1,4 +1,4 @@
-import { Children, Link, cx, h } from './deps'
+import { Children, cx, h } from './deps'
 
 type TabBarProps = { children?: Children }
 
@@ -39,9 +39,9 @@ type TabLinkProps = {
 export function TabLink(props: TabLinkProps) {
 	return (
 		<Tab selected={props.selected}>
-			<Link class="tab-bar-tab-link" href={props.href}>
+			<a class="tab-bar-tab-link" href={props.href}>
 				{props.children}
-			</Link>
+			</a>
 		</Tab>
 	)
 }

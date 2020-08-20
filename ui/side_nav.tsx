@@ -1,4 +1,4 @@
-import { Children, Link, cx, h } from './deps'
+import { Children, cx, h } from './deps'
 
 type SideNavProps = { children?: Children }
 
@@ -30,8 +30,8 @@ export function SideNavItem(props: SideNavItemProps) {
 		props.selected && 'side-nav-item-selected',
 	)
 	return (
-		<Link class={className} href={props.href}>
+		<a class={className} href={props.href}>
 			{props.children}
-		</Link>
+		</a>
 	)
 }
