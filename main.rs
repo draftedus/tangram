@@ -87,9 +87,9 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 	} else {
 		None
 	};
-	let mut update_progress = |p| match progress_view.as_mut() {
-		Some(progress_manager) => progress_manager.update(p),
-		None => match p {
+	let mut update_progress = |progress| match progress_view.as_mut() {
+		Some(progress_manager) => progress_manager.update(progress),
+		None => match progress {
 			tangram::progress::Progress::Loading(_) => println!("Loading Data"),
 			tangram::progress::Progress::Shuffling => {
 				print!("\x1b[1A\x1b[0K");
