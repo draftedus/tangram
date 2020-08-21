@@ -10,11 +10,18 @@ impl types::MulticlassClassifier {
 		features: DataFrameView,
 		labels: EnumColumnView,
 		options: types::TrainOptions,
+		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
 		let task = types::Task::MulticlassClassification {
 			n_trees_per_round: labels.options.len(),
 		};
-		let model = super::train::train(&task, features, ColumnView::Enum(labels), options);
+		let model = super::train::train(
+			&task,
+			features,
+			ColumnView::Enum(labels),
+			options,
+			update_progress,
+		);
 		match model {
 			types::Model::MulticlassClassifier(model) => model,
 			_ => unreachable!(),
@@ -26,6 +33,7 @@ impl types::MulticlassClassifier {
 		features: ArrayView2<Value>,
 		probabilities: ArrayViewMut2<f32>,
 		mut shap_values: Option<ArrayViewMut3<f32>>,
+		// progress: &dyn Fn(),
 	) {
 		let n_rounds = self.n_rounds;
 		let n_classes = self.n_classes;

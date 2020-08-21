@@ -15,9 +15,11 @@ use super::{
 	tree::bin_stats::BinStatsPool,
 	types,
 };
+use crate::util::progress_counter::ProgressCounter;
 use crate::{dataframe::*, util::super_unsafe::SuperUnsafe};
 use ndarray::prelude::*;
 use ndarray::Zip;
+use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::ops::Range;
 use std::time::Instant;
@@ -28,6 +30,7 @@ pub fn train(
 	features: DataFrameView,
 	labels: ColumnView,
 	options: types::TrainOptions,
+	update_progress: &mut dyn FnMut(super::Progress),
 ) -> types::Model {
 	let timing = timing::Timing::new();
 
@@ -44,7 +47,12 @@ pub fn train(
 	// compute the binned features
 	let start = std::time::Instant::now();
 	let n_bins = options.max_non_missing_bins as usize + 1;
-	let (features, features_stats) = compute_binned_features(&features, &bin_info, n_bins as usize);
+	let progress_counter = ProgressCounter::new(features.nrows().to_u64().unwrap());
+	update_progress(super::Progress::Initializing(progress_counter.clone()));
+	let (features, features_stats) =
+		compute_binned_features(&features, &bin_info, n_bins as usize, &|| {
+			progress_counter.inc(1)
+		});
 	timing.binning.compute_binned_features.inc(start.elapsed());
 
 	let filter_options = FilterBinnedFeaturesOptions {
@@ -160,8 +168,11 @@ pub fn train(
 		None
 	};
 
+	let progress_counter = ProgressCounter::new(options.max_rounds.to_u64().unwrap());
+	update_progress(super::Progress::Training(progress_counter.clone()));
 	// this is the primary training loop
 	for round_index in 0..options.max_rounds {
+		progress_counter.inc(1);
 		// Update the gradients and hessians before each iteration.
 		// In the first iteration we update the gradients and hessians
 		// using the loss computed between the baseline prediction and the labels.

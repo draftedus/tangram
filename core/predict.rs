@@ -225,6 +225,7 @@ pub fn predict(
 				&dataframe.view(),
 				feature_groups,
 				features.view_mut(),
+				&|| todo!(),
 			);
 			model.predict(
 				features.view(),
@@ -258,6 +259,7 @@ pub fn predict(
 				&dataframe.view(),
 				feature_groups,
 				features.view_mut(),
+				&|| todo!(),
 			);
 			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
 			model.predict(
@@ -293,6 +295,7 @@ pub fn predict(
 				&dataframe.view(),
 				feature_groups,
 				features.view_mut(),
+				&|| todo!(),
 			);
 			model.predict(
 				features.view(),
@@ -344,6 +347,7 @@ pub fn predict(
 				&dataframe.view(),
 				feature_groups,
 				features.view_mut(),
+				&|| todo!(),
 			);
 			let mut probabilities = unsafe { Array2::uninitialized((n_examples, 2)) };
 			let mut shap_values = Array3::zeros((features.nrows(), 1, features.ncols() + 1));
@@ -401,6 +405,7 @@ pub fn predict(
 				&dataframe.view(),
 				feature_groups,
 				features.view_mut(),
+				&|| todo!(),
 			);
 			model.predict(
 				features.view(),
@@ -451,6 +456,7 @@ pub fn predict(
 				&dataframe.view(),
 				feature_groups,
 				features.view_mut(),
+				&|| todo!(),
 			);
 			let mut probabilities = unsafe { Array2::uninitialized((n_examples, n_classes)) };
 			let mut shap_values =

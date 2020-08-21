@@ -132,6 +132,7 @@ pub fn compute_binned_features(
 	features: &DataFrameView,
 	bin_info: &[BinInfo],
 	max_n_bins: usize,
+	progress: &(dyn Fn() + Sync),
 ) -> (Array2<u8>, Array2<usize>) {
 	let n_examples = features.nrows();
 	let n_features = features.ncols();
@@ -167,6 +168,7 @@ pub fn compute_binned_features(
 									.unwrap() + 1
 							};
 							binned_feature_stats[*binned_feature_value as usize] += 1;
+							progress();
 						}
 					}
 					(ColumnView::Enum(column), BinInfo::Enum { .. }) => {
@@ -175,6 +177,7 @@ pub fn compute_binned_features(
 						{
 							*binned_feature_value = feature_value.to_u8().unwrap();
 							binned_feature_stats[binned_feature_value.to_usize().unwrap()] += 1;
+							progress();
 						}
 					}
 					_ => unreachable!(),

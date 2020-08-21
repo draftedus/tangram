@@ -2,9 +2,13 @@ use super::{
 	early_stopping::{train_early_stopping_split, EarlyStoppingMonitor},
 	shap, types,
 };
-use crate::{dataframe::*, metrics::*, util::super_unsafe::SuperUnsafe};
+use crate::{
+	dataframe::*, metrics::*, util::progress_counter::ProgressCounter,
+	util::super_unsafe::SuperUnsafe,
+};
 use ndarray::prelude::*;
 use ndarray::Zip;
+use num_traits::ToPrimitive;
 use rayon::prelude::*;
 
 impl types::MulticlassClassifier {
@@ -12,6 +16,7 @@ impl types::MulticlassClassifier {
 		features: ArrayView2<f32>,
 		labels: &EnumColumnView,
 		options: &types::TrainOptions,
+		update_progress: &mut dyn FnMut(super::Progress),
 	) -> types::MulticlassClassifier {
 		let n_classes = labels.options.len();
 		let n_features = features.ncols();
@@ -40,7 +45,11 @@ impl types::MulticlassClassifier {
 		} else {
 			None
 		};
+
+		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
+		update_progress(super::Progress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {
+			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
 			(
 				features_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),

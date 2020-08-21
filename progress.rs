@@ -49,7 +49,6 @@ fn thread_main(mut screen: Screen, receiver: Receiver<Option<Progress>>) {
 			screen.clear().unwrap();
 			screen.put_str(0, 0, Style::default(), &format!("{:?}", progress));
 			screen.flush().unwrap();
-			panic!("epic sadness");
 		}
 		sleep(Duration::from_millis(15));
 	}

@@ -4,7 +4,7 @@ use crate::{
 	features, gbt, grid,
 	id::Id,
 	linear, metrics,
-	progress::{Progress, TrainProgress},
+	progress::{GridTrainProgress, ModelTestProgress, ModelTrainProgress, Progress, TrainProgress},
 	stats, test, types,
 	util::progress_counter::ProgressCounter,
 };
@@ -115,24 +115,31 @@ pub fn train(
 		compute_hyperparameter_grid(&config, &task, target_column_index, &overall_column_stats);
 
 	// train each model in the grid and compute model comparison metrics
+	let num_models = grid.len();
 	let outputs: Vec<(TrainModelOutput, TestMetrics)> = grid
 		.into_iter()
 		.enumerate()
 		.map(|(model_index, grid_item)| {
-			update_progress(Progress::Training(model_index, None));
-			let train_model_output = train_model(grid_item, &dataframe_train);
-			let comparison_progress_counter =
-				ProgressCounter::new(dataframe_comparison.nrows().to_u64().unwrap());
-			update_progress(Progress::Training(
-				model_index,
-				Some(TrainProgress::ComputingModelComparisonMetrics(
-					comparison_progress_counter,
-				)),
-			));
+			let train_model_output = train_model(grid_item, &dataframe_train, &mut |progress| {
+				update_progress(Progress::Training(GridTrainProgress {
+					current: model_index.to_u64().unwrap() + 1,
+					total: num_models.to_u64().unwrap(),
+					grid_item_progress: progress,
+				}))
+			});
+
 			let model_comparison_metrics = compute_model_comparison_metrics(
 				&train_model_output,
 				&dataframe_comparison,
-				// &comparison_progress_counter,
+				&mut |progress| {
+					update_progress(Progress::Training(GridTrainProgress {
+						current: model_index.to_u64().unwrap() + 1,
+						total: num_models.to_u64().unwrap(),
+						grid_item_progress: TrainProgress::ComputingModelComparisonMetrics(
+							progress,
+						),
+					}))
+				},
 			);
 			(train_model_output, model_comparison_metrics)
 		})
@@ -142,9 +149,8 @@ pub fn train(
 	let train_model_output = choose_best_model(outputs, &comparison_metric);
 
 	// test the best model
-	let progress = ProgressCounter::new(dataframe_test.nrows().to_u64().unwrap());
-	update_progress(Progress::Testing(progress));
-	let test_metrics = test_model(&train_model_output, &dataframe_test);
+	update_progress(Progress::Testing);
+	let test_metrics = test_model(&train_model_output, &dataframe_test, &mut |_| {});
 
 	// assemble the model
 	let model = match task {
@@ -579,7 +585,11 @@ struct GBTMulticlassClassifierTrainModelOutput {
 	options: grid::GBTModelTrainOptions,
 }
 
-fn train_model(grid_item: grid::GridItem, dataframe_train: &DataFrameView) -> TrainModelOutput {
+fn train_model(
+	grid_item: grid::GridItem,
+	dataframe_train: &DataFrameView,
+	update_progress: &mut dyn FnMut(TrainProgress),
+) -> TrainModelOutput {
 	match grid_item {
 		grid::GridItem::LinearRegressor {
 			target_column_index,
@@ -590,6 +600,7 @@ fn train_model(grid_item: grid::GridItem, dataframe_train: &DataFrameView) -> Tr
 			target_column_index,
 			feature_groups,
 			options,
+			update_progress,
 		),
 		grid::GridItem::GBTRegressor {
 			target_column_index,
@@ -600,6 +611,7 @@ fn train_model(grid_item: grid::GridItem, dataframe_train: &DataFrameView) -> Tr
 			target_column_index,
 			feature_groups,
 			options,
+			update_progress,
 		),
 		grid::GridItem::LinearBinaryClassifier {
 			target_column_index,
@@ -610,6 +622,7 @@ fn train_model(grid_item: grid::GridItem, dataframe_train: &DataFrameView) -> Tr
 			target_column_index,
 			feature_groups,
 			options,
+			update_progress,
 		),
 		grid::GridItem::GBTBinaryClassifier {
 			target_column_index,
@@ -620,6 +633,7 @@ fn train_model(grid_item: grid::GridItem, dataframe_train: &DataFrameView) -> Tr
 			target_column_index,
 			feature_groups,
 			options,
+			update_progress,
 		),
 		grid::GridItem::LinearMulticlassClassifier {
 			target_column_index,
@@ -630,6 +644,7 @@ fn train_model(grid_item: grid::GridItem, dataframe_train: &DataFrameView) -> Tr
 			target_column_index,
 			feature_groups,
 			options,
+			update_progress,
 		),
 		grid::GridItem::GBTMulticlassClassifier {
 			target_column_index,
@@ -640,6 +655,7 @@ fn train_model(grid_item: grid::GridItem, dataframe_train: &DataFrameView) -> Tr
 			target_column_index,
 			feature_groups,
 			options,
+			update_progress,
 		),
 	}
 }
@@ -649,10 +665,18 @@ fn train_linear_regressor(
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
 	options: grid::LinearModelTrainOptions,
+	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
+	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
 	let mut features = unsafe { Array2::uninitialized((dataframe_train.nrows(), n_features)) };
-	features::compute_features_ndarray(dataframe_train, &feature_groups, features.view_mut());
+	features::compute_features_ndarray(
+		dataframe_train,
+		&feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
 	let labels = dataframe_train
 		.columns
 		.get(target_column_index)
@@ -666,7 +690,12 @@ fn train_linear_regressor(
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
 	};
-	let model = linear::Regressor::train(features.view(), &labels, &linear_options);
+	let model =
+		linear::Regressor::train(features.view(), &labels, &linear_options, &mut |progress| {
+			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
+				progress,
+			)))
+		});
 	TrainModelOutput::LinearRegressor(LinearRegressorTrainModelOutput {
 		model,
 		feature_groups,
@@ -680,8 +709,13 @@ fn train_gbt_regressor(
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
 	options: grid::GBTModelTrainOptions,
+	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups);
+	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
+	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|| {
+		progress_counter.inc(1)
+	});
 	let labels = dataframe_train
 		.columns
 		.get(target_column_index)
@@ -707,7 +741,11 @@ fn train_gbt_regressor(
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
 	};
-	let model = gbt::Regressor::train(features.view(), labels, gbt_options);
+	let model = gbt::Regressor::train(features.view(), labels, gbt_options, &mut |progress| {
+		update_progress(TrainProgress::TrainingModel(ModelTrainProgress::GBT(
+			progress,
+		)))
+	});
 	TrainModelOutput::GBTRegressor(GBTRegressorTrainModelOutput {
 		model,
 		feature_groups,
@@ -721,10 +759,18 @@ fn train_linear_binary_classifier(
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
 	options: grid::LinearModelTrainOptions,
+	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
+	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
 	let mut features = unsafe { Array2::uninitialized((dataframe_train.nrows(), n_features)) };
-	features::compute_features_ndarray(dataframe_train, &feature_groups, features.view_mut());
+	features::compute_features_ndarray(
+		dataframe_train,
+		&feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
 	let labels = dataframe_train
 		.columns
 		.get(target_column_index)
@@ -738,7 +784,16 @@ fn train_linear_binary_classifier(
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
 	};
-	let model = linear::BinaryClassifier::train(features.view(), &labels, &linear_options);
+	let model = linear::BinaryClassifier::train(
+		features.view(),
+		&labels,
+		&linear_options,
+		&mut |progress| {
+			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
+				progress,
+			)))
+		},
+	);
 	TrainModelOutput::LinearBinaryClassifier(LinearBinaryClassifierTrainModelOutput {
 		model,
 		feature_groups,
@@ -752,8 +807,13 @@ fn train_gbt_binary_classifier(
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
 	options: grid::GBTModelTrainOptions,
+	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups);
+	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
+	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|| {
+		progress_counter.inc(1)
+	});
 	let labels = dataframe_train
 		.columns
 		.get(target_column_index)
@@ -779,7 +839,12 @@ fn train_gbt_binary_classifier(
 		min_sum_hessians_in_leaf: 1e-3,
 		subsample_for_binning: 200_000,
 	};
-	let model = gbt::BinaryClassifier::train(features.view(), labels, gbt_options);
+	let model =
+		gbt::BinaryClassifier::train(features.view(), labels, gbt_options, &mut |progress| {
+			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::GBT(
+				progress,
+			)))
+		});
 	TrainModelOutput::GBTBinaryClassifier(GBTBinaryClassifierTrainModelOutput {
 		model,
 		feature_groups,
@@ -793,10 +858,18 @@ fn train_linear_multiclass_classifier(
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
 	options: grid::LinearModelTrainOptions,
+	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
+	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
 	let mut features = unsafe { Array2::uninitialized((dataframe_train.nrows(), n_features)) };
-	features::compute_features_ndarray(dataframe_train, &feature_groups, features.view_mut());
+	features::compute_features_ndarray(
+		dataframe_train,
+		&feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
 	let labels = dataframe_train
 		.columns
 		.get(target_column_index)
@@ -810,7 +883,16 @@ fn train_linear_multiclass_classifier(
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
 	};
-	let model = linear::MulticlassClassifier::train(features.view(), &labels, &linear_options);
+	let model = linear::MulticlassClassifier::train(
+		features.view(),
+		&labels,
+		&linear_options,
+		&mut |progress| {
+			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
+				progress,
+			)))
+		},
+	);
 	TrainModelOutput::LinearMulticlassClassifier(LinearMulticlassClassifierTrainModelOutput {
 		model,
 		feature_groups,
@@ -824,8 +906,13 @@ fn train_gbt_multiclass_classifier(
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
 	options: grid::GBTModelTrainOptions,
+	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups);
+	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
+	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|| {
+		progress_counter.inc(1)
+	});
 	let labels = dataframe_train
 		.columns
 		.get(target_column_index)
@@ -851,7 +938,12 @@ fn train_gbt_multiclass_classifier(
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
 	};
-	let model = gbt::MulticlassClassifier::train(features.view(), labels, gbt_options);
+	let model =
+		gbt::MulticlassClassifier::train(features.view(), labels, gbt_options, &mut |progress| {
+			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::GBT(
+				progress,
+			)))
+		});
 	TrainModelOutput::GBTMulticlassClassifier(GBTMulticlassClassifierTrainModelOutput {
 		model,
 		feature_groups,
@@ -927,7 +1019,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 fn compute_model_comparison_metrics(
 	train_model_output: &TrainModelOutput,
 	dataframe_comparison: &DataFrameView,
-	// progress: &ProgressCounter,
+	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> TestMetrics {
 	match train_model_output {
 		TrainModelOutput::LinearRegressor(train_model_output) => {
@@ -942,7 +1034,7 @@ fn compute_model_comparison_metrics(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			))
 		}
 		TrainModelOutput::GBTRegressor(train_model_output) => {
@@ -957,7 +1049,7 @@ fn compute_model_comparison_metrics(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			))
 		}
 		TrainModelOutput::LinearBinaryClassifier(train_model_output) => {
@@ -972,7 +1064,7 @@ fn compute_model_comparison_metrics(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			);
 			TestMetrics::Classification((metrics, Some(model_metrics)))
 		}
@@ -988,7 +1080,7 @@ fn compute_model_comparison_metrics(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			);
 			TestMetrics::Classification((metrics, Some(model_metrics)))
 		}
@@ -1005,7 +1097,7 @@ fn compute_model_comparison_metrics(
 					*target_column_index,
 					feature_groups,
 					model,
-					// progress,
+					update_progress,
 				),
 				None,
 			))
@@ -1023,7 +1115,7 @@ fn compute_model_comparison_metrics(
 					*target_column_index,
 					feature_groups,
 					model,
-					// progress,
+					update_progress,
 				),
 				None,
 			))
@@ -1113,7 +1205,7 @@ fn choose_best_model_classification(
 fn test_model(
 	train_model_output: &TrainModelOutput,
 	dataframe_test: &DataFrameView,
-	// progress: &ProgressCounter,
+	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> TestMetrics {
 	match train_model_output {
 		TrainModelOutput::LinearRegressor(train_model_output) => {
@@ -1128,7 +1220,7 @@ fn test_model(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			))
 		}
 		TrainModelOutput::GBTRegressor(train_model_output) => {
@@ -1143,7 +1235,7 @@ fn test_model(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			))
 		}
 		TrainModelOutput::LinearBinaryClassifier(train_model_output) => {
@@ -1158,7 +1250,7 @@ fn test_model(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			);
 			TestMetrics::Classification((metrics, Some(model_metrics)))
 		}
@@ -1174,7 +1266,7 @@ fn test_model(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			);
 			TestMetrics::Classification((metrics, Some(model_metrics)))
 		}
@@ -1190,7 +1282,7 @@ fn test_model(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			);
 			TestMetrics::Classification((metrics, None))
 		}
@@ -1206,7 +1298,7 @@ fn test_model(
 				*target_column_index,
 				feature_groups,
 				model,
-				// progress,
+				update_progress,
 			);
 			TestMetrics::Classification((metrics, None))
 		}

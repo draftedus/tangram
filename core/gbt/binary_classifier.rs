@@ -9,6 +9,26 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::ops::Neg;
 
 impl types::BinaryClassifier {
+	pub fn train(
+		features: DataFrameView,
+		labels: EnumColumnView,
+		options: types::TrainOptions,
+		update_progress: &mut dyn FnMut(super::Progress),
+	) -> Self {
+		let task = types::Task::BinaryClassification;
+		let model = super::train::train(
+			&task,
+			features,
+			ColumnView::Enum(labels.clone()),
+			options,
+			update_progress,
+		);
+		match model {
+			types::Model::BinaryClassifier(model) => model,
+			_ => unreachable!(),
+		}
+	}
+
 	pub fn predict_logit(&self, features: &DataFrameView, mut probabilities: ArrayViewMut2<f32>) {
 		let mut logits = probabilities.column_mut(1);
 		logits.fill(self.bias);
@@ -29,8 +49,8 @@ impl types::BinaryClassifier {
 	) {
 		let mut logits = probabilities.column_mut(1);
 		logits.fill(self.bias);
-		for tree in &self.trees {
-			for (example_index, logit) in logits.iter_mut().enumerate() {
+		for (example_index, logit) in logits.iter_mut().enumerate() {
+			for tree in &self.trees {
 				let mut row = vec![Value::Number(0.0); features.ncols()];
 				row.iter_mut()
 					.zip(features.row(example_index))
@@ -63,19 +83,6 @@ impl types::BinaryClassifier {
 					let x = shap::compute_shap(row.as_slice(), trees, self.bias);
 					shap_values.row_mut(0).assign(&x);
 				});
-		}
-	}
-
-	pub fn train(
-		features: DataFrameView,
-		labels: EnumColumnView,
-		options: types::TrainOptions,
-	) -> Self {
-		let task = types::Task::BinaryClassification;
-		let model = super::train::train(&task, features, ColumnView::Enum(labels.clone()), options);
-		match model {
-			types::Model::BinaryClassifier(model) => model,
-			_ => unreachable!(),
 		}
 	}
 }

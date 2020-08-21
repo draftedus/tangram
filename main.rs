@@ -87,10 +87,55 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 	} else {
 		None
 	};
-	let mut update_progress = |p| {
-		if let Some(progress_manager) = progress_view.as_mut() {
-			progress_manager.update(p)
-		}
+	let mut update_progress = |p| match progress_view.as_mut() {
+		Some(progress_manager) => progress_manager.update(p),
+		None => match p {
+			tangram::progress::Progress::Loading(_) => println!("Loading Data"),
+			tangram::progress::Progress::Shuffling => {
+				print!("\x1b[1A\x1b[0K");
+				println!("Loading Data \x1b[1;92m✓\x1b[0m");
+				println!("Shuffling Data");
+			}
+			tangram::progress::Progress::Stats(p) => match p {
+				tangram::progress::StatsProgress::DatasetStats(_) => {
+					print!("\x1b[1A\x1b[0K");
+					println!("Shuffling Data \x1b[1;92m✓\x1b[0m");
+					println!("Computing Stats step 1 of 2");
+				}
+				tangram::progress::StatsProgress::HistogramStats(_) => {
+					print!("\x1b[1A\x1b[0K");
+					println!("Computing Stats step 2 of 2")
+				}
+			},
+			tangram::progress::Progress::Training(p) => match p {
+				tangram::progress::GridTrainProgress {
+					current,
+					total,
+					grid_item_progress,
+				} => match grid_item_progress {
+					tangram::progress::TrainProgress::ComputingFeatures(p) => {
+						print!("\x1b[1A\x1b[0K");
+						if current == 1 {
+							println!("Computing Stats \x1b[1;92m✓\x1b[0m");
+						}
+						println!("Training model {} of {} {:?}", current, total, p);
+					}
+					tangram::progress::TrainProgress::TrainingModel(p) => {
+						print!("\x1b[1A\x1b[0K");
+						println!("Training model {} of {} {:?}", current, total, p);
+					}
+					tangram::progress::TrainProgress::ComputingModelComparisonMetrics(p) => {
+						print!("\x1b[1A\x1b[0K");
+						println!("Training model {} of {} {:?}", current, total, p);
+					}
+				},
+			},
+			tangram::progress::Progress::Testing => {
+				print!("\x1b[1A\x1b[0K");
+				println!("Training \x1b[1;92m✓\x1b[0m",);
+				println!("Testing best model");
+			}
+		},
 	};
 
 	let model = tangram::train(
@@ -100,6 +145,8 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 		options.config.as_deref(),
 		&mut update_progress,
 	)?;
+
+	println!("\x1b[1A\x1b[0KTesting best model \x1b[1;92m✓\x1b[0m",);
 
 	drop(progress_view);
 

@@ -10,10 +10,16 @@ impl types::Regressor {
 		features: DataFrameView,
 		labels: NumberColumnView,
 		options: types::TrainOptions,
+		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
 		let task = types::Task::Regression;
-		let model =
-			super::train::train(&task, features, ColumnView::Number(labels.clone()), options);
+		let model = super::train::train(
+			&task,
+			features,
+			ColumnView::Number(labels.clone()),
+			options,
+			update_progress,
+		);
 		match model {
 			types::Model::Regressor(model) => model,
 			_ => unreachable!(),
@@ -28,8 +34,8 @@ impl types::Regressor {
 	) {
 		predictions.fill(self.bias);
 		let mut row = vec![Value::Number(0.0); features.ncols()];
-		for tree in &self.trees {
-			for (i, prediction) in predictions.iter_mut().enumerate() {
+		for (i, prediction) in predictions.iter_mut().enumerate() {
+			for tree in &self.trees {
 				row.iter_mut()
 					.zip(features.row(i))
 					.for_each(|(v, feature)| {
@@ -47,6 +53,7 @@ impl types::Regressor {
 			)
 				.into_par_iter()
 				.for_each(|(features, mut shap_values)| {
+					// n_examples times
 					let mut row = vec![Value::Number(0.0); features.len()];
 					row.iter_mut().zip(features).for_each(|(v, feature)| {
 						*v = *feature;

@@ -1,13 +1,9 @@
 use crate::{
-	dataframe::*,
-	features,
-	gbt,
-	linear,
-	metrics,
-	metrics::RunningMetric,
-	// util::progress_counter::ProgressCounter,
+	dataframe::*, features, gbt, linear, metrics, metrics::RunningMetric,
+	progress::ModelTestProgress, util::progress_counter::ProgressCounter,
 };
 use ndarray::prelude::*;
+use num_traits::ToPrimitive;
 use rayon::prelude::*;
 
 pub fn test_linear_regressor(
@@ -15,11 +11,21 @@ pub fn test_linear_regressor(
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
 	model: &linear::Regressor,
-	// progress: &ProgressCounter,
+	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::RegressionMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
+	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	update_progress(ModelTestProgress::ComputingFeatures(
+		progress_counter.clone(),
+	));
 	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	features::compute_features_ndarray(dataframe_test, &feature_groups, features.view_mut());
+	features::compute_features_ndarray(
+		dataframe_test,
+		&feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
+	update_progress(ModelTestProgress::Testing);
 	let labels: ArrayView1<f32> = dataframe_test
 		.columns
 		.get(target_column_index)
@@ -70,11 +76,20 @@ pub fn test_gbt_regressor(
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
 	model: &gbt::Regressor,
-	// progress: &ProgressCounter,
+	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::RegressionMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	features::compute_features_ndarray_value(dataframe_test, feature_groups, features.view_mut());
+	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	update_progress(ModelTestProgress::ComputingFeatures(
+		progress_counter.clone(),
+	));
+	features::compute_features_ndarray_value(
+		dataframe_test,
+		feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
 	let labels: ArrayView1<f32> = dataframe_test
 		.columns
 		.get(target_column_index)
@@ -85,6 +100,7 @@ pub fn test_gbt_regressor(
 		.into();
 	let mut metrics = metrics::RegressionMetrics::default();
 	let mut predictions = unsafe { Array1::uninitialized(features.nrows()) };
+	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut(), None);
 	metrics.update(metrics::RegressionMetricsInput {
 		predictions: predictions.view(),
@@ -98,14 +114,23 @@ pub fn test_linear_binary_classifier(
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
 	model: &linear::BinaryClassifier,
-	// progress: &ProgressCounter,
+	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> (
 	metrics::ClassificationMetricsOutput,
 	metrics::BinaryClassificationMetricsOutput,
 ) {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	features::compute_features_ndarray(dataframe_test, &feature_groups, features.view_mut());
+	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	update_progress(ModelTestProgress::ComputingFeatures(
+		progress_counter.clone(),
+	));
+	features::compute_features_ndarray(
+		dataframe_test,
+		&feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
 	let labels = dataframe_test
 		.columns
 		.get(target_column_index)
@@ -119,6 +144,7 @@ pub fn test_linear_binary_classifier(
 		classification_metrics: metrics::ClassificationMetrics,
 		binary_classifier_metrics: metrics::BinaryClassifierMetrics,
 	}
+	update_progress(ModelTestProgress::Testing);
 	let metrics = (
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		ArrayView1::from(labels.data).axis_chunks_iter(Axis(0), n_examples_per_batch),
@@ -181,14 +207,23 @@ pub fn test_gbt_binary_classifier(
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
 	model: &gbt::BinaryClassifier,
-	// progress: &ProgressCounter,
+	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> (
 	metrics::ClassificationMetricsOutput,
 	metrics::BinaryClassificationMetricsOutput,
 ) {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
+	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	update_progress(ModelTestProgress::ComputingFeatures(
+		progress_counter.clone(),
+	));
 	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	features::compute_features_ndarray_value(dataframe_test, feature_groups, features.view_mut());
+	features::compute_features_ndarray_value(
+		dataframe_test,
+		feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
 	let labels = dataframe_test
 		.columns
 		.get(target_column_index)
@@ -201,6 +236,7 @@ pub fn test_gbt_binary_classifier(
 		metrics::BinaryClassifierMetrics::new(100),
 	);
 	let mut predictions = unsafe { Array2::uninitialized((features.nrows(), n_classes)) };
+	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut(), None);
 	metrics.0.update(metrics::ClassificationMetricsInput {
 		probabilities: predictions.view(),
@@ -218,11 +254,20 @@ pub fn test_linear_multiclass_classifier(
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
 	model: &linear::MulticlassClassifier,
-	// progress: &ProgressCounter,
+	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::ClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	features::compute_features_ndarray(dataframe_test, &feature_groups, features.view_mut());
+	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	update_progress(ModelTestProgress::ComputingFeatures(
+		progress_counter.clone(),
+	));
+	features::compute_features_ndarray(
+		dataframe_test,
+		&feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
 	let labels = dataframe_test
 		.columns
 		.get(target_column_index)
@@ -235,6 +280,7 @@ pub fn test_linear_multiclass_classifier(
 		predictions: Array2<f32>,
 		metrics: metrics::ClassificationMetrics,
 	}
+	update_progress(ModelTestProgress::Testing);
 	let metrics = (
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		ArrayView1::from(labels.data).axis_chunks_iter(Axis(0), n_examples_per_batch),
@@ -278,11 +324,20 @@ pub fn test_gbt_multiclass_classifier(
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
 	model: &gbt::MulticlassClassifier,
-	// progress: &ProgressCounter,
+	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::ClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	features::compute_features_ndarray_value(dataframe_test, feature_groups, features.view_mut());
+	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	update_progress(ModelTestProgress::ComputingFeatures(
+		progress_counter.clone(),
+	));
+	features::compute_features_ndarray_value(
+		dataframe_test,
+		feature_groups,
+		features.view_mut(),
+		&|| progress_counter.inc(1),
+	);
 	let labels = dataframe_test
 		.columns
 		.get(target_column_index)
@@ -292,6 +347,7 @@ pub fn test_gbt_multiclass_classifier(
 	let n_classes = labels.options.len();
 	let mut metrics = metrics::ClassificationMetrics::new(n_classes);
 	let mut predictions = unsafe { Array2::uninitialized((features.nrows(), n_classes)) };
+	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut(), None);
 	metrics.update(metrics::ClassificationMetricsInput {
 		probabilities: predictions.view(),

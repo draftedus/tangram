@@ -137,22 +137,27 @@ pub fn compute_features_ndarray(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
 	mut features: ArrayViewMut2<f32>,
+	progress: &dyn Fn(),
 ) {
 	let mut feature_index = 0;
 	for feature_group in feature_groups.iter() {
+		// update for each feature group
 		let n_features_in_group = feature_group.n_features();
 		let slice = s![.., feature_index..feature_index + n_features_in_group];
 		let features = features.slice_mut(slice);
 		match &feature_group {
 			FeatureGroup::Identity(_) => unimplemented!(),
 			FeatureGroup::Normalized(feature_group) => {
-				compute_features_normalized_ndarray(dataframe, feature_group, features)
+				compute_features_normalized_ndarray(dataframe, feature_group, features, progress)
 			}
-			FeatureGroup::OneHotEncoded(feature_group) => {
-				compute_features_one_hot_encoded_ndarray(dataframe, feature_group, features)
-			}
+			FeatureGroup::OneHotEncoded(feature_group) => compute_features_one_hot_encoded_ndarray(
+				dataframe,
+				feature_group,
+				features,
+				progress,
+			),
 			FeatureGroup::BagOfWords(feature_group) => {
-				compute_features_bag_of_words_ndarray(dataframe, feature_group, features)
+				compute_features_bag_of_words_ndarray(dataframe, feature_group, features, progress)
 			}
 		};
 		feature_index += n_features_in_group;
@@ -163,6 +168,7 @@ fn compute_features_normalized_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &NormalizedFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
+	progress: &dyn Fn(),
 ) {
 	let data = dataframe
 		.columns
@@ -178,6 +184,7 @@ fn compute_features_normalized_ndarray(
 		} else {
 			(value - feature_group.mean) / f32::sqrt(feature_group.variance)
 		};
+		progress()
 	}
 }
 
@@ -185,6 +192,7 @@ fn compute_features_one_hot_encoded_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &OneHotEncodedFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
+	progress: &dyn Fn(),
 ) {
 	let data = dataframe
 		.columns
@@ -197,6 +205,7 @@ fn compute_features_one_hot_encoded_ndarray(
 	features.fill(0.0);
 	for (mut features, value) in features.genrows_mut().into_iter().zip(data.iter()) {
 		features[*value] = 1.0;
+		progress();
 	}
 }
 
@@ -204,6 +213,7 @@ fn compute_features_bag_of_words_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
+	progress: &dyn Fn(),
 ) {
 	features.fill(0.0);
 	let data = dataframe
@@ -237,12 +247,15 @@ fn compute_features_bag_of_words_ndarray(
 				}
 			}
 		}
+		progress();
 	}
 }
 
+/// progress gets ticked for each
 pub fn compute_features_dataframe<'a>(
 	dataframe: &DataFrameView<'a>,
 	feature_groups: &[FeatureGroup],
+	progress: &dyn Fn(),
 ) -> DataFrame {
 	let mut result = DataFrame { columns: vec![] };
 	for feature_group in feature_groups.iter() {
@@ -276,7 +289,8 @@ pub fn compute_features_dataframe<'a>(
 			FeatureGroup::Normalized(_) => unimplemented!(),
 			FeatureGroup::OneHotEncoded(_) => unimplemented!(),
 			FeatureGroup::BagOfWords(feature_group) => {
-				let columns = compute_features_bag_of_words_dataframe(dataframe, feature_group);
+				let columns =
+					compute_features_bag_of_words_dataframe(dataframe, feature_group, progress);
 				for column in columns {
 					result.columns.push(column);
 				}
@@ -289,6 +303,7 @@ pub fn compute_features_dataframe<'a>(
 fn compute_features_bag_of_words_dataframe(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
+	progress: impl Fn(),
 ) -> Vec<Column> {
 	let data = dataframe
 		.columns
@@ -332,6 +347,7 @@ fn compute_features_bag_of_words_dataframe(
 				}
 			}
 		}
+		progress();
 	}
 	columns.into_iter().map(Column::Number).collect()
 }
@@ -340,6 +356,7 @@ pub fn compute_features_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
 	mut features: ArrayViewMut2<Value>,
+	progress: &dyn Fn(),
 ) {
 	let mut feature_index = 0;
 	for feature_group in feature_groups.iter() {
@@ -347,14 +364,20 @@ pub fn compute_features_ndarray_value(
 		let slice = s![.., feature_index..feature_index + n_features_in_group];
 		let features = features.slice_mut(slice);
 		match &feature_group {
-			FeatureGroup::Identity(feature_group) => {
-				compute_features_identity_ndarray_value(dataframe, feature_group, features)
-			}
+			FeatureGroup::Identity(feature_group) => compute_features_identity_ndarray_value(
+				dataframe,
+				feature_group,
+				features,
+				progress,
+			),
 			FeatureGroup::Normalized(_) => unimplemented!(),
 			FeatureGroup::OneHotEncoded(_) => unimplemented!(),
-			FeatureGroup::BagOfWords(feature_group) => {
-				compute_features_bag_of_words_ndarray_value(dataframe, feature_group, features)
-			}
+			FeatureGroup::BagOfWords(feature_group) => compute_features_bag_of_words_ndarray_value(
+				dataframe,
+				feature_group,
+				features,
+				progress,
+			),
 		};
 		feature_index += n_features_in_group;
 	}
@@ -364,6 +387,7 @@ fn compute_features_identity_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
 	mut features: ArrayViewMut2<Value>,
+	progress: &dyn Fn(),
 ) {
 	let column = dataframe
 		.columns
@@ -377,12 +401,16 @@ fn compute_features_identity_ndarray_value(
 				.and(c.data)
 				.apply(|feature_column, column_value| {
 					*feature_column = Value::Number(*column_value);
+					progress()
 				});
 		}
 		ColumnView::Enum(c) => {
 			Zip::from(features.column_mut(0))
 				.and(c.data)
-				.apply(|feature_column, column_value| *feature_column = Value::Enum(*column_value));
+				.apply(|feature_column, column_value| {
+					*feature_column = Value::Enum(*column_value);
+					progress()
+				});
 		}
 		ColumnView::Text(_) => unimplemented!(),
 	}
@@ -392,6 +420,7 @@ fn compute_features_bag_of_words_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
 	mut features: ArrayViewMut2<Value>,
+	progress: &dyn Fn(),
 ) {
 	let data = dataframe
 		.columns
@@ -440,5 +469,6 @@ fn compute_features_bag_of_words_ndarray_value(
 				}
 			}
 		}
+		progress()
 	}
 }
