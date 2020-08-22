@@ -176,17 +176,18 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 
 #[cfg(feature = "app")]
 fn cli_app(options: AppOptions) -> Result<()> {
-	tangram_app::run(tangram_app::AppOptions {
-		auth_enabled: options.auth_enabled,
-		cookie_domain: options.cookie_domain,
-		database_url: options.database_url,
-		host: options.host,
-		port: options.port,
-		sendgrid_api_token: options.sendgrid_api_token,
-		stripe_publishable_key: options.stripe_publishable_key,
-		stripe_secret_key: options.stripe_secret_key,
-		url: options.url,
-	})
+	// tangram_app::run(tangram_app::AppOptions {
+	// 	auth_enabled: options.auth_enabled,
+	// 	cookie_domain: options.cookie_domain,
+	// 	database_url: options.database_url,
+	// 	host: options.host,
+	// 	port: options.port,
+	// 	sendgrid_api_token: options.sendgrid_api_token,
+	// 	stripe_publishable_key: options.stripe_publishable_key,
+	// 	stripe_secret_key: options.stripe_secret_key,
+	// 	url: options.url,
+	// })
+	Ok(())
 }
 
 fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {

@@ -40,7 +40,11 @@ pub struct AppOptions {
 }
 
 pub fn run(options: AppOptions) -> Result<()> {
-	let mut runtime = tokio::runtime::Runtime::new().unwrap();
+	let mut runtime = tokio::runtime::Builder::new()
+		.threaded_scheduler()
+		.enable_all()
+		.build()
+		.unwrap();
 	runtime.block_on(run_async(options))
 }
 
