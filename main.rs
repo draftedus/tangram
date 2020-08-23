@@ -34,6 +34,8 @@ struct TrainOptions {
 	config: Option<PathBuf>,
 	#[clap(short, long, about = "the path to write the output to")]
 	output: Option<PathBuf>,
+	#[clap(long = "no-progress", parse(from_flag = std::ops::Not::not))]
+	progress: bool,
 }
 
 #[cfg(feature = "app")]
@@ -81,63 +83,15 @@ fn main() {
 
 #[cfg(feature = "train")]
 fn cli_train(options: TrainOptions) -> Result<()> {
-	let progress = false;
-	let mut progress_view = if progress {
+	let mut progress_view = if options.progress {
 		progress::ProgressView::new().ok()
 	} else {
 		None
 	};
 	let mut update_progress = |progress| match progress_view.as_mut() {
 		Some(progress_manager) => progress_manager.update(progress),
-		None => match progress {
-			tangram::progress::Progress::Loading(_) => println!("Loading Data"),
-			tangram::progress::Progress::Shuffling => {
-				print!("\x1b[1A\x1b[0K");
-				println!("Loading Data \x1b[1;92m✓\x1b[0m");
-				println!("Shuffling Data");
-			}
-			tangram::progress::Progress::Stats(p) => match p {
-				tangram::progress::StatsProgress::DatasetStats(_) => {
-					print!("\x1b[1A\x1b[0K");
-					println!("Shuffling Data \x1b[1;92m✓\x1b[0m");
-					println!("Computing Stats step 1 of 2");
-				}
-				tangram::progress::StatsProgress::HistogramStats(_) => {
-					print!("\x1b[1A\x1b[0K");
-					println!("Computing Stats step 2 of 2")
-				}
-			},
-			tangram::progress::Progress::Training(p) => match p {
-				tangram::progress::GridTrainProgress {
-					current,
-					total,
-					grid_item_progress,
-				} => match grid_item_progress {
-					tangram::progress::TrainProgress::ComputingFeatures(p) => {
-						print!("\x1b[1A\x1b[0K");
-						if current == 1 {
-							println!("Computing Stats \x1b[1;92m✓\x1b[0m");
-						}
-						println!("Training model {} of {} {:?}", current, total, p);
-					}
-					tangram::progress::TrainProgress::TrainingModel(p) => {
-						print!("\x1b[1A\x1b[0K");
-						println!("Training model {} of {} {:?}", current, total, p);
-					}
-					tangram::progress::TrainProgress::ComputingModelComparisonMetrics(p) => {
-						print!("\x1b[1A\x1b[0K");
-						println!("Training model {} of {} {:?}", current, total, p);
-					}
-				},
-			},
-			tangram::progress::Progress::Testing => {
-				print!("\x1b[1A\x1b[0K");
-				println!("Training \x1b[1;92m✓\x1b[0m",);
-				println!("Testing best model");
-			}
-		},
+		None => {}
 	};
-
 	let model = tangram::train(
 		tangram::id::Id::new(),
 		&options.file,
@@ -145,9 +99,6 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 		options.config.as_deref(),
 		&mut update_progress,
 	)?;
-
-	println!("\x1b[1A\x1b[0KTesting best model \x1b[1;92m✓\x1b[0m",);
-
 	drop(progress_view);
 
 	let output_path = match options.output.as_deref() {
