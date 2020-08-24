@@ -71,11 +71,7 @@ async fn add_member(
 	let Action { email, .. } = action;
 	let inviter_email = user.email;
 	if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
-		tokio::spawn(send_invite_email(
-			email.clone(),
-			inviter_email.clone(),
-			sendgrid_api_token,
-		));
+		send_invite_email(email.clone(), inviter_email.clone(), sendgrid_api_token).await?;
 	}
 	let user_id = Id::new();
 	let now = Utc::now().timestamp();

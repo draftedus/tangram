@@ -161,10 +161,10 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	let mut organization_id = None;
 	let owner_parts: Vec<&str> = form.owner.split(':').collect();
 	let owner_type = owner_parts.get(0).ok_or(Error::BadRequest)?;
-	let owner_type = match owner_type {
-		&"user" => OwnerType::User,
-		&"organization" => OwnerType::Organization,
-		_ => return Err(Error::BadRequest)?,
+	let owner_type = match *owner_type {
+		"user" => OwnerType::User,
+		"organization" => OwnerType::Organization,
+		_ => return Err(Error::BadRequest.into()),
 	};
 	let owner_id: Id = owner_parts
 		.get(1)

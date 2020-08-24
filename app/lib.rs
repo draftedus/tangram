@@ -39,15 +39,6 @@ pub struct AppOptions {
 	pub url: Option<Url>,
 }
 
-pub fn run(options: AppOptions) -> Result<()> {
-	let mut runtime = tokio::runtime::Builder::new()
-		.threaded_scheduler()
-		.enable_all()
-		.build()
-		.unwrap();
-	runtime.block_on(run_async(options))
-}
-
 pub struct Context {
 	options: AppOptions,
 	pinwheel: Pinwheel,
@@ -299,7 +290,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 	response
 }
 
-pub async fn run_async(options: AppOptions) -> Result<()> {
+pub async fn run(options: AppOptions) -> Result<()> {
 	// create the pinwheel
 	#[cfg(debug_assertions)]
 	fn pinwheel() -> Pinwheel {
@@ -360,11 +351,6 @@ pub async fn run_async(options: AppOptions) -> Result<()> {
 
 	// run any pending migrations
 	migrations::run(&pool).await?;
-
-	// set the panic hook
-	std::panic::set_hook(Box::new(|panic_info| {
-		eprintln!("{}", panic_info.to_string());
-	}));
 
 	// run the server
 	let context = Arc::new(Context {

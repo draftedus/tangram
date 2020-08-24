@@ -1,9 +1,11 @@
-use anyhow::{Context, Result};
+use anyhow::{format_err, Context, Result};
 use clap::Clap;
 use colored::*;
+use once_cell::sync::Lazy;
 use std::{
 	borrow::Cow,
 	path::{Path, PathBuf},
+	sync::Mutex,
 };
 use url::Url;
 
@@ -83,23 +85,37 @@ fn main() {
 
 #[cfg(feature = "train")]
 fn cli_train(options: TrainOptions) -> Result<()> {
-	let mut progress_view = if options.progress {
-		progress::ProgressView::new().ok()
-	} else {
-		None
-	};
-	let mut update_progress = |progress| match progress_view.as_mut() {
-		Some(progress_manager) => progress_manager.update(progress),
-		None => {}
-	};
-	let model = tangram::train(
-		tangram::id::Id::new(),
-		&options.file,
-		&options.target,
-		options.config.as_deref(),
-		&mut update_progress,
-	)?;
-	drop(progress_view);
+	pub static PANIC_INFO: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
+	let hook = std::panic::take_hook();
+	std::panic::set_hook(Box::new(|panic_info| {
+		PANIC_INFO.lock().unwrap().replace(panic_info.to_string());
+	}));
+	let result = std::panic::catch_unwind(|| {
+		let mut progress_view = if options.progress {
+			progress::ProgressView::new().ok()
+		} else {
+			None
+		};
+		tangram::train(
+			tangram::id::Id::new(),
+			&options.file,
+			&options.target,
+			options.config.as_deref(),
+			&mut |progress| {
+				if let Some(progress_manager) = progress_view.as_mut() {
+					progress_manager.update(progress)
+				}
+			},
+		)
+	});
+	std::panic::set_hook(hook);
+	let model = match result {
+		Ok(result) => result,
+		Err(_) => Err(format_err!(
+			"{}",
+			PANIC_INFO.lock().unwrap().as_ref().unwrap()
+		)),
+	}?;
 
 	let output_path = match options.output.as_deref() {
 		None => {
@@ -114,11 +130,11 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 		.to_file(&output_path)
 		.context("failed to write model to file")?;
 
-	eprintln!("Your model was written to {}.", output_path.display());
-	eprintln!(
+	println!("Your model was written to {}.", output_path.display());
+	println!(
 		"For help making predictions in your code, read the docs at https://www.tangramhq.com/docs."
 	);
-	eprintln!(
+	println!(
 		"To learn more about how your model works and set up production monitoring, upload your .tangram file at https://app.tangramhq.com/ or your on-prem Tangram deployment."
 	);
 
@@ -127,7 +143,16 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 
 #[cfg(feature = "app")]
 fn cli_app(options: AppOptions) -> Result<()> {
-	tangram_app::run(tangram_app::AppOptions {
+	let hook = std::panic::take_hook();
+	std::panic::set_hook(Box::new(|panic_info| {
+		eprintln!("{}", panic_info.to_string());
+	}));
+	let mut runtime = tokio::runtime::Builder::new()
+		.threaded_scheduler()
+		.enable_all()
+		.build()
+		.unwrap();
+	runtime.block_on(tangram_app::run(tangram_app::AppOptions {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
 		database_url: options.database_url,
@@ -137,7 +162,9 @@ fn cli_app(options: AppOptions) -> Result<()> {
 		stripe_publishable_key: options.stripe_publishable_key,
 		stripe_secret_key: options.stripe_secret_key,
 		url: options.url,
-	})
+	}))?;
+	std::panic::set_hook(hook);
+	Ok(())
 }
 
 fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {

@@ -39,5 +39,4 @@ serde_json = "1"
 serde_urlencoded = "0.6"
 sqlx = { git = "https://github.com/nitsky/sqlx", branch = "from_any_connect_options", default-features = false, features = ["any", "chrono", "postgres", "runtime-tokio", "sqlite"] }
 tangram-core = { path = "../core" }
-tokio = { version = "0.2", features = ["rt-threaded", "tcp"] }
 url = "2"

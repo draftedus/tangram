@@ -163,8 +163,9 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 			.execute(&mut *db)
 			.await?;
 			if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
-				tokio::spawn(send_code_email(email.to_owned(), code, sendgrid_api_token));
+				send_code_email(email.to_owned(), code, sendgrid_api_token).await?;
 			}
+			db.commit().await?;
 			let response = Response::builder()
 				.status(StatusCode::SEE_OTHER)
 				.header(header::LOCATION, format!("/login?email={}", email))
