@@ -629,17 +629,20 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	}
 	// HACK concat css
 	let output = std::process::Command::new("fd")
-		.args(&["-e", "css", ".", "ui", "-x", "cat"])
+		.args(&["-e", "css", ".", "../ui", "-x", "cat"])
+		.current_dir(src_dir)
 		.output()
 		.unwrap();
 	std::fs::write(dst_dir.join("ui.css"), output.stdout).unwrap();
 	let output = std::process::Command::new("fd")
-		.args(&["-e", "css", ".", "www", "-x", "cat"])
+		.args(&["-e", "css", ".", "../www", "-x", "cat"])
+		.current_dir(src_dir)
 		.output()
 		.unwrap();
 	std::fs::write(dst_dir.join("www.css"), output.stdout).unwrap();
 	let output = std::process::Command::new("fd")
-		.args(&["-e", "css", ".", "app", "-x", "cat"])
+		.args(&["-e", "css", ".", "../app", "-x", "cat"])
+		.current_dir(src_dir)
 		.output()
 		.unwrap();
 	std::fs::write(dst_dir.join("app.css"), output.stdout).unwrap();

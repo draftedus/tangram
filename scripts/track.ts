@@ -1,5 +1,8 @@
+import * as csv from 'https://deno.land/std@0.61.0/encoding/csv.ts'
 import * as utf8 from 'https://deno.land/std@0.61.0/encoding/utf8.ts'
-import * as csv from 'https://deno.land/std@v0.61.0/encoding/csv.ts'
+
+let modelName = Deno.args[0]
+let modelId = Deno.args[1]
 
 type TrueValue = {
 	date: string
@@ -20,7 +23,6 @@ type Prediction = {
 
 type Config = {
 	csvPath: string
-	modelId: string
 	name: string
 	target: string
 	targetValues?: string[]
@@ -31,33 +33,43 @@ type NetworkConfig = {
 }
 
 let heartDisease: Config = {
-	csvPath: './data/heart-disease.csv',
-	modelId: '72a0da7a03930c16547e4397d039b354',
+	csvPath: 'data/heart-disease.csv',
 	name: 'heart-disease',
 	target: 'diagnosis',
 	targetValues: ['Positive', 'Negative'],
 }
 
 let boston: Config = {
-	csvPath: './data/boston.csv',
-	modelId: '1b1ea6e7-70db-4ce0-a816-557242fe35f9',
+	csvPath: 'data/boston.csv',
 	name: 'boston',
 	target: 'medv',
 }
 
 let iris: Config = {
-	csvPath: './data/iris.csv',
-	modelId: 'b5d3e68b2116d84ef4620b36087aaa74',
+	csvPath: 'data/iris.csv',
 	name: 'iris',
 	target: 'species',
 	targetValues: ['Iris Setosa', 'Iris Virginica', 'Iris Versicolor'],
 }
 
+let config
+switch (modelName) {
+	case 'heart-disease':
+		config = heartDisease
+		break
+	case 'boston':
+		config = boston
+		break
+	case 'iris':
+		config = iris
+		break
+	default:
+		throw Error()
+}
+
 let networkConfig: NetworkConfig = {
 	url: 'http://localhost:8080/track',
 }
-
-let config = heartDisease
 
 let csvData = await Deno.readFile(config.csvPath)
 let rows = (await csv.parse(utf8.decode(csvData), {
@@ -131,7 +143,7 @@ for (let i = 0; i < 100; i++) {
 		date: date.toISOString(),
 		identifier: i.toString(),
 		input,
-		modelId: config.modelId,
+		modelId,
 		output,
 		type: 'prediction',
 	}
@@ -141,7 +153,7 @@ for (let i = 0; i < 100; i++) {
 		let trueValue: TrueValue = {
 			date: date.toISOString(),
 			identifier: i,
-			modelId: config.modelId,
+			modelId,
 			trueValue: input[config.target],
 			type: 'true_value',
 		}

@@ -13,7 +13,10 @@ use url::Url;
 mod progress;
 
 #[derive(Clap)]
-#[clap(about = "Train and deploy a machine learning model in minutes.")]
+#[clap(
+	about = "Train and deploy a machine learning model in minutes.",
+	setting = clap::AppSettings::DisableHelpSubcommand,
+)]
 enum Options {
 	#[cfg(feature = "train")]
 	#[clap(name = "train")]

@@ -176,7 +176,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 							<ui.TableRow key={column.name}>
 								<ui.TableCell>
 									{column.alert ? (
-										<ui.AlertIcon alert={column.alert} level={ui.Level.Warning}>
+										<ui.AlertIcon alert={column.alert} level={ui.Level.Danger}>
 											{'!'}
 										</ui.AlertIcon>
 									) : (
