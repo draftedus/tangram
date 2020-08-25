@@ -157,8 +157,6 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	let now = Utc::now().timestamp();
 	let repo_id = Id::new();
 
-	let mut user_id = None;
-	let mut organization_id = None;
 	let owner_parts: Vec<&str> = form.owner.split(':').collect();
 	let owner_type = owner_parts.get(0).ok_or(Error::BadRequest)?;
 	let owner_type = match *owner_type {
@@ -171,36 +169,51 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		.ok_or(Error::BadRequest)?
 		.parse()
 		.map_err(|_| Error::BadRequest)?;
-	match owner_type {
+	let result = match owner_type {
 		OwnerType::User => {
 			if owner_id != user.id {
 				return Err(Error::Unauthorized.into());
 			}
-			user_id = Some(owner_id);
+			let user_id = Some(owner_id);
+			sqlx::query(
+				"
+			insert into repos (
+				id, created_at, title, user_id
+			) values (
+				?, ?, ?, ?
+			)
+		",
+			)
+			.bind(&repo_id.to_string())
+			.bind(&now)
+			.bind(&form.title)
+			.bind(&user_id.map(|id| id.to_string()))
+			.execute(&mut *db)
+			.await
 		}
 		OwnerType::Organization => {
 			if !authorize_user_for_organization(&mut db, &user, owner_id).await? {
 				return Err(Error::Unauthorized.into());
 			}
-			organization_id = Some(owner_id);
-		}
-	};
-	let result = sqlx::query(
-		"
+			let organization_id = Some(owner_id);
+			sqlx::query(
+				"
 			insert into repos (
-				id, created_at, title, user_id, organization_id
+				id, created_at, title, organization_id
 			) values (
-				?, ?, ?, ?, ?
+				?, ?, ?, ?
 			)
 		",
-	)
-	.bind(&repo_id.to_string())
-	.bind(&now)
-	.bind(&form.title)
-	.bind(&user_id.map(|id| id.to_string()))
-	.bind(&organization_id.map(|id| id.to_string()))
-	.execute(&mut *db)
-	.await;
+			)
+			.bind(&repo_id.to_string())
+			.bind(&now)
+			.bind(&form.title)
+			.bind(&organization_id.map(|id| id.to_string()))
+			.execute(&mut *db)
+			.await
+		}
+	};
+
 	if result.is_err() {
 		let error = "A repo with this title already exists.";
 		let props = props(&mut db, user, Some(form), Some(String::from(error))).await?;

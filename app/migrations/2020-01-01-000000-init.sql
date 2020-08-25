@@ -35,9 +35,9 @@ create table repos (
 	organization_id char(32) references organizations (id) on delete cascade,
 	user_id char(32) references users (id) on delete cascade,
 	constraint single_owner check (
-		organization_id is null and user_id is not null
+		(organization_id is null and user_id is not null)
 		or
-		user_id is null and organization_id is not null
+		(user_id is null and organization_id is not null)
 	),
 	unique(title, user_id),
 	unique(title, organization_id)
