@@ -1,7 +1,9 @@
 import { bootClassSelectField } from 'common/class_select'
+import { bootDateWindowSelectField } from 'common/time_charts'
 import { ui } from 'deps'
 
 bootClassSelectField()
+bootDateWindowSelectField()
 if (
 	document.getElementById('number_intervals') &&
 	document.getElementById('number_overall')
