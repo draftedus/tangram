@@ -47,7 +47,7 @@ export let lightChartColors: ChartColors = {
 	textColor: '#222222',
 	titleColor: '#222222',
 	tooltipBackgroundColor: '#FFFFFF',
-	tooltipShadowColor: 'rgba(0,0,0,.1)',
+	tooltipShadowColor: 'rgba(0, 0, 0, .1)',
 }
 
 export let darkChartColors: ChartColors = {
@@ -59,7 +59,7 @@ export let darkChartColors: ChartColors = {
 	textColor: '#EEEEEE',
 	titleColor: '#EEEEEE',
 	tooltipBackgroundColor: '#333333',
-	tooltipShadowColor: 'rgba(0,0,0,.1)',
+	tooltipShadowColor: 'rgba(0, 0, 0, .1)',
 }
 
 export let chartColors: { current: ChartColors } = { current: lightChartColors }

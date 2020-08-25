@@ -1,9 +1,9 @@
 import { h, ui } from 'deps'
 
-export let trainingColor = 'var(--blue)'
-export let productionColor = 'var(--green)'
-export let baselineColor = 'var(--gray)'
-export let selectedThresholdColor = 'var(--blue)'
+export let trainingColor = ui.colors.blue
+export let productionColor = ui.colors.green
+export let baselineColor = ui.colors.gray
+export let selectedThresholdColor = ui.colors.blue
 
 export function UnknownColumnToken() {
 	return <ui.Token color="var(--gray)">{'Unknown'}</ui.Token>

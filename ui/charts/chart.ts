@@ -121,9 +121,9 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 
 	window.addEventListener('resize', render)
 	let colorSchemeMediaQuery = matchMedia(`(prefers-color-scheme: dark)`)
-	colorSchemeMediaQuery.addListener(render)
+	colorSchemeMediaQuery.addEventListener('change', render)
 	let dprMediaQuery = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
-	dprMediaQuery.addListener(render)
+	dprMediaQuery.addEventListener('change', render)
 
 	function renderChart() {
 		if (!state.options) throw Error()
@@ -184,8 +184,8 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 
 	function destroy() {
 		window.removeEventListener('resize', render)
-		colorSchemeMediaQuery.removeListener(render)
-		dprMediaQuery.removeListener(render)
+		colorSchemeMediaQuery.removeEventListener('change', render)
+		dprMediaQuery.removeEventListener('change', render)
 		container.removeChild(chartCanvas)
 		container.removeChild(overlayCanvas)
 	}
