@@ -2,7 +2,7 @@ import { Fragment, h, ui } from 'deps'
 
 export function Install() {
 	return (
-		<Fragment>
+		<>
 			<ui.H2>{'Brew'}</ui.H2>
 			<Brew />
 			<ui.H2>{'Scoop'}</ui.H2>
@@ -15,7 +15,7 @@ export function Install() {
 			<Windows />
 			<ui.H2>{'Docker'}</ui.H2>
 			<Docker />
-		</Fragment>
+		</>
 	)
 }
 

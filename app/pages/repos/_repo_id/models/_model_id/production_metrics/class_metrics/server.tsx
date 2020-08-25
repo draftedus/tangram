@@ -212,7 +212,7 @@ export default function ProductionMetricsPage(props: Props) {
 					</ui.Form>
 				</div>
 				{selectedOverallClassMetrics !== null && (
-					<Fragment>
+					<>
 						<ui.S2>
 							<ui.H2>{'Precision and Recall'}</ui.H2>
 							<ui.P>{definitions.precisionRecall}</ui.P>
@@ -347,7 +347,7 @@ export default function ProductionMetricsPage(props: Props) {
 								/>
 							)}
 						</ui.S2>
-					</Fragment>
+					</>
 				)}
 			</ui.S1>
 		</ModelLayout>,

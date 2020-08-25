@@ -61,7 +61,7 @@ export function CodeSelect(props: CodeSelectProps) {
 	return (
 		<div class="code code-grid">
 			{props.languages && (
-				<Fragment>
+				<>
 					<CodeOption
 						checked={true}
 						code={props.languages[Language.Go]}
@@ -83,7 +83,7 @@ export function CodeSelect(props: CodeSelectProps) {
 						language={Language.Ruby}
 						name={name}
 					/>
-				</Fragment>
+				</>
 			)}
 		</div>
 	)
@@ -117,7 +117,7 @@ type CodeOptionProps = {
 function CodeOption(props: CodeOptionProps) {
 	let optionId = Math.random().toString()
 	return (
-		<Fragment>
+		<>
 			<input
 				checked={props.checked ?? undefined}
 				class="code-radio-input"
@@ -150,7 +150,7 @@ function CodeOption(props: CodeOptionProps) {
 					}}
 				/>
 			</div>
-		</Fragment>
+		</>
 	)
 }
 

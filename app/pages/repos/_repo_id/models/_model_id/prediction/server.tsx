@@ -130,7 +130,7 @@ function PredictionInputInner(props: Props) {
 						switch (column.type) {
 							case ColumnType.Unknown:
 								return (
-									<Fragment>
+									<>
 										{/* <UnknownColumnToken /> */}
 										<ui.TextField
 											key={name}
@@ -139,11 +139,11 @@ function PredictionInputInner(props: Props) {
 											value={column.value}
 										/>
 										<div />
-									</Fragment>
+									</>
 								)
 							case ColumnType.Number:
 								return (
-									<Fragment>
+									<>
 										<div class="predict-field-wrapper">
 											<div>
 												<NumberColumnToken />
@@ -182,11 +182,11 @@ function PredictionInputInner(props: Props) {
 												shouldDrawXAxisLabels={false}
 											/>
 										</div>
-									</Fragment>
+									</>
 								)
 							case ColumnType.Enum:
 								return (
-									<Fragment>
+									<>
 										<div class="predict-field-wrapper">
 											<div>
 												<EnumColumnToken />
@@ -218,11 +218,11 @@ function PredictionInputInner(props: Props) {
 												shouldDrawXAxisLabels={false}
 											/>
 										</div>
-									</Fragment>
+									</>
 								)
 							case ColumnType.Text:
 								return (
-									<Fragment>
+									<>
 										<div class="predict-field-wrapper">
 											<div>
 												<TextColumnToken />
@@ -235,7 +235,7 @@ function PredictionInputInner(props: Props) {
 											/>
 										</div>
 										<div />
-									</Fragment>
+									</>
 								)
 						}
 					})}

@@ -7,7 +7,7 @@ type ImageProps = {
 
 export function Img(props: ImageProps) {
 	return (
-		<Fragment>
+		<>
 			<details class="image-details">
 				<summary class="image-details-summary">
 					<img alt={props.alt} class="image-img" src={'/' + props.src} />
@@ -16,6 +16,6 @@ export function Img(props: ImageProps) {
 					<img alt={props.alt} class="image-viewer-img" src={'/' + props.src} />
 				</div>
 			</details>
-		</Fragment>
+		</>
 	)
 }

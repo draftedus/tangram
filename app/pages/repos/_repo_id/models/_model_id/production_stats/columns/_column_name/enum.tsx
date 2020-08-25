@@ -164,7 +164,7 @@ export function Enum(props: Props) {
 				</ui.TableBody>
 			</ui.Table>
 			{props.overall.invalidHistogram && (
-				<Fragment>
+				<>
 					<ui.H2>{'Invalid Values'}</ui.H2>
 					<ui.Table width="100%">
 						<ui.TableHeader>
@@ -182,7 +182,7 @@ export function Enum(props: Props) {
 							))}
 						</ui.TableBody>
 					</ui.Table>
-				</Fragment>
+				</>
 			)}
 		</ui.S2>
 	)

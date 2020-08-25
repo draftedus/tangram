@@ -69,12 +69,12 @@ export default function TrainingStatsIndexPage(props: Props) {
 								<ui.TableHeaderCell>{'Type'}</ui.TableHeaderCell>
 								<ui.TableHeaderCell>{'Unique Count'}</ui.TableHeaderCell>
 								{props.targetColumnStats.columnType == ColumnType.Number && (
-									<Fragment>
+									<>
 										<ui.TableHeaderCell>{'Min'}</ui.TableHeaderCell>
 										<ui.TableHeaderCell>{'Max'}</ui.TableHeaderCell>
 										<ui.TableHeaderCell>{'Mean'}</ui.TableHeaderCell>
 										<ui.TableHeaderCell>{'Std'}</ui.TableHeaderCell>
-									</Fragment>
+									</>
 								)}
 							</ui.TableRow>
 						</ui.TableHeader>
@@ -98,12 +98,12 @@ export default function TrainingStatsIndexPage(props: Props) {
 									{props.targetColumnStats.uniqueCount}
 								</ui.TableCell>
 								{props.targetColumnStats.columnType == ColumnType.Number && (
-									<Fragment>
+									<>
 										<ui.TableCell>{props.targetColumnStats.min}</ui.TableCell>
 										<ui.TableCell>{props.targetColumnStats.max}</ui.TableCell>
 										<ui.TableCell>{props.targetColumnStats.mean}</ui.TableCell>
 										<ui.TableCell>{props.targetColumnStats.std}</ui.TableCell>
-									</Fragment>
+									</>
 								)}
 							</ui.TableRow>
 						</ui.TableBody>
