@@ -92,7 +92,7 @@ export function Enum(props: Props) {
 	return (
 		<ui.S2>
 			{props.alert && (
-				<ui.Alert level={ui.Level.Warning}>{props.alert}</ui.Alert>
+				<ui.Alert level={ui.Level.Danger}>{props.alert}</ui.Alert>
 			)}
 			<ui.Card>
 				<ui.BarChart
