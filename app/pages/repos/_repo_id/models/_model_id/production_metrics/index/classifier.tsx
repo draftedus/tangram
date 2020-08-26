@@ -41,6 +41,7 @@ export type Props = {
 }
 
 export function ClassifierProductionMetricsIndexPage(props: Props) {
+	let chartLabels = props.accuracyChart.data.map(entry => entry.label)
 	let accuracyData = [
 		{
 			color: trainingColor,
@@ -109,7 +110,9 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 					<ui.LineChart
 						data={accuracyData}
 						id="accuracy"
+						labels={chartLabels}
 						title={accuracyChartTitle}
+						xAxisGridLineInterval={{ k: 1, p: 0 }}
 						yMax={1}
 						yMin={0}
 					/>

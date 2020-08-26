@@ -108,11 +108,13 @@ export default function ProductionMetricsPage(props: Props) {
 		'F1 Score',
 	)
 
+	let chartLabels = selectedIntervalClassMetrics.intervals.map(
+		interval => interval.label,
+	)
 	let precisionChartData = [
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
-				label: interval.label,
 				x: index,
 				y: interval.precision.training,
 			})),
@@ -123,7 +125,6 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: productionColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
-				label: interval.label,
 				x: index,
 				y: interval.precision.production,
 			})),
@@ -135,7 +136,6 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
-				label: interval.label,
 				x: index,
 				y: interval.recall.training,
 			})),
@@ -157,7 +157,6 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
-				label: interval.label,
 				x: index,
 				y: interval.f1Score.training,
 			})),
@@ -168,7 +167,6 @@ export default function ProductionMetricsPage(props: Props) {
 		{
 			color: productionColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
-				label: interval.label,
 				x: index,
 				y: interval.f1Score.production,
 			})),
@@ -246,7 +244,9 @@ export default function ProductionMetricsPage(props: Props) {
 								<ui.LineChart
 									data={precisionChartData}
 									id="precision_intervals"
+									labels={chartLabels}
 									title={precisionIntervalChartTitle}
+									xAxisGridLineInterval={{ k: 1, p: 0 }}
 									yMax={1}
 									yMin={0}
 								/>
@@ -255,7 +255,9 @@ export default function ProductionMetricsPage(props: Props) {
 								<ui.LineChart
 									data={recallChartData}
 									id="recall_intervals"
+									labels={chartLabels}
 									title={recallIntervalChartTitle}
+									xAxisGridLineInterval={{ k: 1, p: 0 }}
 									yMax={1}
 									yMin={0}
 								/>
@@ -278,7 +280,9 @@ export default function ProductionMetricsPage(props: Props) {
 								<ui.LineChart
 									data={f1ScoreChartData}
 									id="f1_intervals"
+									labels={chartLabels}
 									title={f1ScoreIntervalChartTitle}
+									xAxisGridLineInterval={{ k: 1, p: 0 }}
 									yMax={1}
 									yMin={0}
 								/>

@@ -21,6 +21,7 @@ import { TooltipData, drawTooltip } from './tooltip'
 export type LineChartOptions = {
 	data: LineChartData
 	hideLegend?: boolean
+	labels?: string[]
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
 	title?: string
@@ -71,6 +72,7 @@ export type LineChartOverlayInfo = {
 export type LineChartHoverRegionInfo = {
 	chartBox: Box
 	color: string
+	label?: string
 	point: Point
 	seriesIndex: number
 	tooltipOriginPixels: Point
@@ -95,6 +97,7 @@ export function drawLineChart(
 ): DrawLineChartOutput {
 	let {
 		data,
+		labels,
 		xAxisGridLineInterval,
 		xAxisTitle,
 		yAxisGridLineInterval,
@@ -164,6 +167,7 @@ export function drawLineChart(
 	let xAxisGridLineInfo = computeXAxisGridLineInfo({
 		chartWidth: chartBox.w,
 		ctx,
+		xAxisGridLineInterval,
 		xMax,
 		xMin,
 	})
@@ -198,6 +202,7 @@ export function drawLineChart(
 			box: xAxisLabelsBox,
 			ctx,
 			gridLineInfo: xAxisGridLineInfo,
+			labels,
 			width,
 		})
 	}
@@ -267,7 +272,7 @@ export function drawLineChart(
 
 	// hover regions
 	data.forEach((series, seriesIndex) => {
-		series.data.forEach(point => {
+		series.data.forEach((point, pointIndex) => {
 			if (point.y === null) {
 				return
 			}
@@ -294,6 +299,7 @@ export function drawLineChart(
 				info: {
 					chartBox,
 					color: series.color,
+					label: labels?.[pointIndex],
 					point: { x: point.x, y: point.y },
 					seriesIndex,
 					tooltipOriginPixels: { x: pointPixels.x, y: pointPixels.y },
@@ -530,7 +536,13 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 	)
 	let tooltips: TooltipData[] = closestActiveHoverRegions.map(
 		activeHoverRegion => {
-			let x = formatNumber(activeHoverRegion.info.point.x)
+			let x
+			let label = activeHoverRegion.info.label
+			if (label) {
+				x = label
+			} else {
+				x = formatNumber(activeHoverRegion.info.point.x)
+			}
 			let y = formatNumber(activeHoverRegion.info.point.y)
 			return {
 				color: activeHoverRegion.info.color,

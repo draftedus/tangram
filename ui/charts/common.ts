@@ -223,6 +223,7 @@ export function computeGridLineInfo(
 type ComputeXAxisGridLineInfoOptions = {
 	chartWidth: number
 	ctx: CanvasRenderingContext2D
+	xAxisGridLineInterval?: GridLineInterval
 	xMax: number
 	xMin: number
 }
@@ -230,10 +231,12 @@ type ComputeXAxisGridLineInfoOptions = {
 export function computeXAxisGridLineInfo(
 	options: ComputeXAxisGridLineInfoOptions,
 ): GridLineInfo {
-	let { chartWidth, ctx, xMax, xMin } = options
-	let xAxisGridLineInterval: GridLineInterval
+	let { chartWidth, ctx, xAxisGridLineInterval, xMax, xMin } = options
 	let xAxisMinGridLineDistance = 1
 	let xAxisGridLineInfo: GridLineInfo | undefined
+	if (xAxisGridLineInterval) {
+		return computeGridLineInfo(xMin, xMax, chartWidth, xAxisGridLineInterval)
+	}
 	while (true) {
 		xAxisGridLineInterval = computeGridLineInterval(
 			xMin,
@@ -406,29 +409,57 @@ type DrawXAxisLabelsOptions = {
 	box: Box
 	ctx: CanvasRenderingContext2D
 	gridLineInfo: GridLineInfo
+	labels?: string[]
 	width: number
 }
 
 export function drawXAxisLabels(options: DrawXAxisLabelsOptions): void {
-	let { box, ctx, gridLineInfo, width } = options
+	let { box, ctx, gridLineInfo, labels, width } = options
 	ctx.fillStyle = chartColors.current.labelColor
 	ctx.textBaseline = 'bottom'
 	ctx.textAlign = 'center'
-	times(gridLineInfo.numGridLines, gridLineIndex => {
+
+	let previousLabelEndpoint: number | undefined
+	for (let i = 0; i < gridLineInfo.numGridLines; i++) {
+		let gridLineIndex = i
+
 		let gridLineOffsetPixels =
 			gridLineInfo.startPixels + gridLineIndex * gridLineInfo.intervalPixels
 		let gridLineValue =
 			gridLineInfo.start + gridLineIndex * gridLineInfo.interval
-		let label = formatNumber(gridLineValue)
+		let label: string
+		if (labels) {
+			label = labels[gridLineIndex]
+		} else {
+			label = formatNumber(gridLineValue)
+		}
+
+		// do not draw the label if it will overlap the previous label
+		if (previousLabelEndpoint) {
+			if (
+				gridLineOffsetPixels - ctx.measureText(label).width / 2 <
+				previousLabelEndpoint
+			) {
+				// overlap
+				continue
+			}
+		}
+
 		// do not draw the label if it will overflow the chart
 		if (
 			box.x + gridLineOffsetPixels - ctx.measureText(label).width / 2 < 0 ||
 			box.x + gridLineOffsetPixels + ctx.measureText(label).width / 2 > width
 		) {
-			return
+			break
 		}
+
 		ctx.fillText(label, box.x + gridLineOffsetPixels, box.y + box.h)
-	})
+
+		// set the endpoint value of the previous label
+		// used to determine if the next label overlaps
+		previousLabelEndpoint =
+			gridLineOffsetPixels + ctx.measureText(label).width / 2
+	}
 }
 
 type DrawYAxisLabelsOptions = {
