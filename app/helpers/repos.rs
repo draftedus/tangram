@@ -1,13 +1,44 @@
-use crate::types;
 use anyhow::Result;
 use serde::Serialize;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
+#[derive(serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelLayoutInfo {
+	pub id: String,
+	pub title: String,
+	pub models: Vec<RepoModel>,
+	pub owner_name: String,
+	pub owner_url: String,
+	pub model_id: String,
+}
+
+#[derive(serde::Serialize, Clone, Debug)]
+#[serde(tag = "type", content = "value", rename_all = "camelCase")]
+pub enum RepoOwner {
+	User(UserOwner),
+	Organization(OrganizationOwner),
+}
+
+#[derive(serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UserOwner {
+	pub email: String,
+	pub id: String,
+}
+
+#[derive(serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OrganizationOwner {
+	pub id: String,
+	pub name: String,
+}
+
 pub async fn get_model_layout_info(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
-) -> Result<types::ModelLayoutInfo> {
+) -> Result<ModelLayoutInfo> {
 	let row = sqlx::query(
 		"
 			select
@@ -39,35 +70,31 @@ pub async fn get_model_layout_info(
 	let user_id: Option<String> = row.get(4);
 	let user_email: Option<String> = row.get(5);
 	let owner = match organization_id {
-		Some(organization_id) => types::RepoOwner::Organization(types::OrganizationOwner {
-			id: organization_id,
-			name: organization_name.unwrap(),
-		}),
-		None => types::RepoOwner::User(types::UserOwner {
+		None => RepoOwner::User(UserOwner {
 			email: user_email.unwrap(),
 			id: user_id.unwrap(),
 		}),
+		Some(organization_id) => RepoOwner::Organization(OrganizationOwner {
+			id: organization_id,
+			name: organization_name.unwrap(),
+		}),
 	};
-
 	let (owner_name, owner_url) = match owner {
-		types::RepoOwner::Organization(organization) => {
+		RepoOwner::User(user) => {
+			let owner_url = "/user".to_string();
+			(user.email, owner_url)
+		}
+		RepoOwner::Organization(organization) => {
 			let owner_url = format!("/organizations/{}/", organization.id);
 			(organization.name, owner_url)
 		}
-		types::RepoOwner::User(user) => {
-			let owner_url = "/user/".to_string();
-			(user.email, owner_url)
-		}
 	};
-
-	let types::RepoModel { id: model_id, .. } = models
+	let RepoModel { id: model_id, .. } = models
 		.iter()
 		.find(|model| model.id == model_id.to_string())
 		.unwrap();
-
 	let model_id = model_id.clone();
-
-	Ok(types::ModelLayoutInfo {
+	Ok(ModelLayoutInfo {
 		id: id.to_string(),
 		title,
 		models,
@@ -77,10 +104,16 @@ pub async fn get_model_layout_info(
 	})
 }
 
+#[derive(serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RepoModel {
+	pub id: String,
+}
+
 async fn get_models_for_repo(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	repo_id: Id,
-) -> Result<Vec<types::RepoModel>> {
+) -> Result<Vec<RepoModel>> {
 	Ok(sqlx::query(
 		"
 			select
@@ -98,7 +131,7 @@ async fn get_models_for_repo(
 	.iter()
 	.map(|row| {
 		let id: String = row.get(0);
-		types::RepoModel { id }
+		RepoModel { id }
 	})
 	.collect())
 }
@@ -110,20 +143,47 @@ pub struct Repo {
 	pub title: String,
 }
 
-pub async fn get_organization_repositories(
+pub async fn get_user_repos(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user_id: Id,
+) -> Result<Vec<Repo>> {
+	let rows = sqlx::query(
+		"
+			select
+				repos.id,
+				repos.title
+			from repos
+			where repos.user_id = ?1
+		",
+	)
+	.bind(&user_id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
+	let rows = rows
+		.into_iter()
+		.map(|row| {
+			let id: String = row.get(0);
+			let title: String = row.get(1);
+			Repo { id, title }
+		})
+		.collect();
+	Ok(rows)
+}
+
+pub async fn get_organization_repos(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 ) -> Result<Vec<Repo>> {
 	let rows = sqlx::query(
 		"
-				select
-					repos.id,
-					repos.title
-				from repos
-				join models
-					on models.repo_id = repos.id
-				where repos.organization_id = ?1
-      ",
+			select
+				repos.id,
+				repos.title
+			from repos
+			join models
+				on models.repo_id = repos.id
+			where repos.organization_id = ?1
+		",
 	)
 	.bind(&organization_id.to_string())
 	.fetch_all(&mut *db)
