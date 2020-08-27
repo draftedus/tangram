@@ -2,6 +2,7 @@ import {
 	EnumColumnToken,
 	NumberColumnToken,
 	TextColumnToken,
+	UnknownColumnToken,
 } from 'common/tokens'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import {
@@ -18,40 +19,44 @@ export type Props = {
 	prediction: Prediction | null
 }
 
-export type Column =
-	| {
-			name: string
-			type: ColumnType.Unknown
-			value: string | null
-	  }
-	| {
-			max: number
-			min: number
-			name: string
-			p25: number
-			p50: number
-			p75: number
-			type: ColumnType.Number
-			value: string | null
-	  }
-	| {
-			histogram: Array<[string, number]>
-			name: string
-			options: string[]
-			type: ColumnType.Enum
-			value: string | null
-	  }
-	| {
-			name: string
-			type: ColumnType.Text
-			value: string | null
-	  }
+export type Column = UnknownColumn | NumberColumn | EnumColumn | TextColumn
 
 export enum ColumnType {
 	Unknown = 'unknown',
 	Number = 'number',
 	Enum = 'enum',
 	Text = 'text',
+}
+
+type UnknownColumn = {
+	name: string
+	type: ColumnType.Unknown
+	value: string | null
+}
+
+type NumberColumn = {
+	max: number
+	min: number
+	name: string
+	p25: number
+	p50: number
+	p75: number
+	type: ColumnType.Number
+	value: string | null
+}
+
+type EnumColumn = {
+	histogram: Array<[string, number]>
+	name: string
+	options: string[]
+	type: ColumnType.Enum
+	value: string | null
+}
+
+type TextColumn = {
+	name: string
+	type: ColumnType.Text
+	value: string | null
 }
 
 enum PredictionType {
@@ -123,120 +128,18 @@ function PredictionInputInner(props: Props) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Prediction'}</ui.H1>
-			<ui.Form autoComplete="off">
+			<ui.Form>
 				<div class="predict-form-items-wrapper">
 					{props.columns.map(column => {
-						let name = column.name
 						switch (column.type) {
 							case ColumnType.Unknown:
-								return (
-									<>
-										{/* <UnknownColumnToken /> */}
-										<ui.TextField
-											key={name}
-											label={column.name}
-											name={name}
-											value={column.value}
-										/>
-										<div />
-									</>
-								)
+								return <UnknownField column={column} />
 							case ColumnType.Number:
-								return (
-									<>
-										<div class="predict-field-wrapper">
-											<div>
-												<NumberColumnToken />
-											</div>
-											<ui.TextField
-												key={name}
-												label={column.name}
-												name={name}
-												value={column.value}
-											/>
-										</div>
-										<div class="predict-column-chart-wrapper">
-											<ui.BoxChart
-												class="column-chart"
-												data={[
-													{
-														color: ui.colors.blue,
-														data: [
-															{
-																label: column.name,
-																x: 0,
-																y: {
-																	max: column.max,
-																	min: column.min,
-																	p25: column.p25,
-																	p50: column.p50,
-																	p75: column.p75,
-																},
-															},
-														],
-														title: 'quartiles',
-													},
-												]}
-												hideLegend={true}
-												id={column.name}
-												shouldDrawXAxisLabels={false}
-											/>
-										</div>
-									</>
-								)
+								return <NumberField column={column} />
 							case ColumnType.Enum:
-								return (
-									<>
-										<div class="predict-field-wrapper">
-											<div>
-												<EnumColumnToken />
-											</div>
-											<ui.SelectField
-												key={name}
-												label={column.name}
-												name={name}
-												options={column.options}
-												value={column.value ?? undefined}
-											/>
-										</div>
-										<div class="predict-column-chart-wrapper">
-											<ui.BarChart
-												class="column-chart"
-												data={[
-													{
-														color: ui.colors.blue,
-														data: column.histogram.map(([label, value], i) => ({
-															label,
-															x: i,
-															y: value,
-														})),
-														title: 'histogram',
-													},
-												]}
-												hideLegend={true}
-												id={column.name}
-												shouldDrawXAxisLabels={false}
-											/>
-										</div>
-									</>
-								)
+								return <EnumField column={column} />
 							case ColumnType.Text:
-								return (
-									<>
-										<div class="predict-field-wrapper">
-											<div>
-												<TextColumnToken />
-											</div>
-											<ui.TextField
-												key={name}
-												label={column.name}
-												name={name}
-												value={column.value ?? undefined}
-											/>
-										</div>
-										<div />
-									</>
-								)
+								return <TextField column={column} />
 						}
 					})}
 				</div>
@@ -248,6 +151,143 @@ function PredictionInputInner(props: Props) {
 				</div>
 			</ui.Form>
 		</ui.S1>
+	)
+}
+
+type UnknownFieldProps = {
+	column: Column
+}
+
+function UnknownField(props: UnknownFieldProps) {
+	return (
+		<>
+			<div class="predict-field-wrapper">
+				<div>
+					<UnknownColumnToken />
+				</div>
+				<ui.TextField
+					key={props.column.name}
+					label={props.column.name}
+					name={props.column.name}
+					value={props.column.value}
+				/>
+			</div>
+			<div></div>
+		</>
+	)
+}
+
+type NumberFieldProps = {
+	column: NumberColumn
+}
+
+function NumberField(props: NumberFieldProps) {
+	return (
+		<>
+			<div class="predict-field-wrapper">
+				<div>
+					<NumberColumnToken />
+				</div>
+				<ui.TextField
+					key={props.column.name}
+					label={props.column.name}
+					name={props.column.name}
+					value={props.column.value}
+				/>
+			</div>
+			<div class="predict-column-chart-wrapper">
+				<ui.BoxChart
+					class="column-chart"
+					data={[
+						{
+							color: ui.colors.blue,
+							data: [
+								{
+									label: props.column.name,
+									x: 0,
+									y: {
+										max: props.column.max,
+										min: props.column.min,
+										p25: props.column.p25,
+										p50: props.column.p50,
+										p75: props.column.p75,
+									},
+								},
+							],
+							title: 'quartiles',
+						},
+					]}
+					hideLegend={true}
+					id={props.column.name}
+					shouldDrawXAxisLabels={false}
+				/>
+			</div>
+		</>
+	)
+}
+
+type EnumFieldProps = {
+	column: EnumColumn
+}
+
+function EnumField(props: EnumFieldProps) {
+	return (
+		<>
+			<div class="predict-field-wrapper">
+				<div>
+					<EnumColumnToken />
+				</div>
+				<ui.SelectField
+					key={props.column.name}
+					label={props.column.name}
+					name={props.column.name}
+					options={props.column.options}
+					value={props.column.value ?? undefined}
+				/>
+			</div>
+			<div class="predict-column-chart-wrapper">
+				<ui.BarChart
+					class="column-chart"
+					data={[
+						{
+							color: ui.colors.blue,
+							data: props.column.histogram.map(([label, value], i) => ({
+								label,
+								x: i,
+								y: value,
+							})),
+							title: 'histogram',
+						},
+					]}
+					hideLegend={true}
+					id={props.column.name}
+					shouldDrawXAxisLabels={false}
+				/>
+			</div>
+		</>
+	)
+}
+
+type TextFieldProps = {
+	column: TextColumn
+}
+
+function TextField(props: TextFieldProps) {
+	return (
+		<>
+			<div class="predict-field-wrapper">
+				<div>
+					<TextColumnToken />
+				</div>
+				<ui.TextField
+					key={props.column.name}
+					label={props.column.name}
+					name={props.column.name}
+					value={props.column.value ?? undefined}
+				/>
+			</div>
+			<div />
+		</>
 	)
 }
 

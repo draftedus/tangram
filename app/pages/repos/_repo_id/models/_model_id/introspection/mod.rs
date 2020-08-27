@@ -2,10 +2,9 @@ use crate::{
 	error::Error,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_info,
+		repos::{get_model_layout_info, ModelLayoutInfo},
+		user::{authorize_user, authorize_user_for_model},
 	},
-	types,
-	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
 use anyhow::Result;
@@ -36,7 +35,7 @@ pub async fn get(
 struct Props {
 	id: String,
 	inner: Inner,
-	model_layout_info: types::ModelLayoutInfo,
+	model_layout_info: ModelLayoutInfo,
 }
 
 #[derive(Serialize)]

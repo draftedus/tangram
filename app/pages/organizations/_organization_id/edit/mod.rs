@@ -1,7 +1,9 @@
 use crate::{
 	error::Error,
-	helpers::organizations,
-	user::{authorize_user, authorize_user_for_organization},
+	helpers::{
+		organizations,
+		user::{authorize_user, authorize_user_for_organization},
+	},
 	Context,
 };
 use anyhow::Result;

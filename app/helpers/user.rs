@@ -1,4 +1,4 @@
-use crate::cookies;
+use crate::helpers::cookies::parse_cookies;
 use anyhow::Result;
 use hyper::{header, Body, Request};
 use sqlx::prelude::*;
@@ -40,7 +40,7 @@ pub async fn authorize_user(
 			Ok(cookies) => cookies,
 			Err(_) => return Ok(Err(AuthorizeUserError::CookieNotString)),
 		};
-		let cookies = match cookies::parse(cookies) {
+		let cookies = match parse_cookies(cookies) {
 			Ok(cookies) => cookies,
 			Err(_) => return Ok(Err(AuthorizeUserError::CookieParseFailed)),
 		};
@@ -53,15 +53,15 @@ pub async fn authorize_user(
 	};
 	let row = sqlx::query(
 		"
-				select
-					users.id, users.email
-				from tokens
-				join users
-					on users.id = tokens.user_id
-				where
-					tokens.token = ?1 and
-					tokens.deleted_at is null
-			",
+			select
+				users.id, users.email
+			from tokens
+			join users
+				on users.id = tokens.user_id
+			where
+				tokens.token = ?1 and
+				tokens.deleted_at is null
+		",
 	)
 	.bind(&token)
 	.fetch_optional(db)

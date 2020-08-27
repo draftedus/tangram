@@ -1,19 +1,18 @@
 use crate::{
-	cookies,
 	error::Error,
-	helpers::production_metrics,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_info,
+		production_metrics,
+		repos::{get_model_layout_info, ModelLayoutInfo},
+		time::format_date_window_interval,
+		timezone::get_timezone,
+		user::{authorize_user, authorize_user_for_model},
 	},
-	time::format_date_window_interval,
-	types,
-	user::{authorize_user, authorize_user_for_model},
+	types::{DateWindow, DateWindowInterval},
 	Context,
 };
 use anyhow::Result;
-use chrono_tz::UTC;
-use hyper::{header, Body, Request, Response, StatusCode};
+use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
@@ -24,7 +23,18 @@ pub async fn get(
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(request, context, model_id, search_params).await?;
+	// parse the date window search param
+	let date_window = search_params
+		.as_ref()
+		.and_then(|query| query.get("date_window"));
+	let date_window = date_window.map_or("this_month", |dw| dw.as_str());
+	let date_window = match date_window {
+		"today" => DateWindow::Today,
+		"this_month" => DateWindow::ThisMonth,
+		"this_year" => DateWindow::ThisYear,
+		_ => return Err(Error::BadRequest.into()),
+	};
+	let props = props(request, context, model_id, date_window).await?;
 	let html = context.pinwheel.render_with(
 		"/repos/_repo_id/models/_model_id/production_metrics/",
 		props,
@@ -41,7 +51,7 @@ pub async fn get(
 struct Props {
 	id: String,
 	inner: Inner,
-	model_layout_info: types::ModelLayoutInfo,
+	model_layout_info: ModelLayoutInfo,
 }
 
 #[derive(Serialize)]
@@ -54,8 +64,8 @@ enum Inner {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct RegressorProductionMetricsOverviewViewModel {
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	mse_chart: MSEChart,
 	overall: RegressionProductionMetrics,
 	true_values_count_chart: Vec<TrueValuesCountChartEntry>,
@@ -100,8 +110,8 @@ struct TrainingProductionMetrics {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassifierProductionMetricsOverviewViewModel {
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	true_values_count_chart: Vec<TrueValuesCountChartEntry>,
 	overall: ClassificationOverallProductionMetrics,
 	id: String,
@@ -142,37 +152,16 @@ async fn props(
 	request: Request<Body>,
 	context: &Context,
 	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
+	date_window: DateWindow,
 ) -> Result<Props> {
-	// parse the date window search param
-	let date_window = search_params
-		.as_ref()
-		.and_then(|query| query.get("date_window"));
-	let date_window = date_window.map_or("this_month", |dw| dw.as_str());
-	let date_window = match date_window {
-		"today" => types::DateWindow::Today,
-		"this_month" => types::DateWindow::ThisMonth,
-		"this_year" => types::DateWindow::ThisYear,
-		_ => return Err(Error::BadRequest.into()),
-	};
-
 	// choose the interval to use for the date window
 	let date_window_interval = match date_window {
-		types::DateWindow::Today => types::DateWindowInterval::Hourly,
-		types::DateWindow::ThisMonth => types::DateWindowInterval::Daily,
-		types::DateWindow::ThisYear => types::DateWindowInterval::Monthly,
+		DateWindow::Today => DateWindowInterval::Hourly,
+		DateWindow::ThisMonth => DateWindowInterval::Daily,
+		DateWindow::ThisYear => DateWindowInterval::Monthly,
 	};
-
 	// get the timezone
-	let timezone = request
-		.headers()
-		.get(header::COOKIE)
-		.and_then(|cookie_header_value| cookie_header_value.to_str().ok())
-		.and_then(|cookie_header_value| cookies::parse(cookie_header_value).ok())
-		.and_then(|cookies| cookies.get("tangram-timezone").cloned())
-		.and_then(|timezone_str| timezone_str.parse().ok())
-		.unwrap_or(UTC);
-
+	let timezone = get_timezone(&request);
 	let mut db = context
 		.pool
 		.begin()
@@ -185,10 +174,8 @@ async fn props(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-
 	let Model { id, data } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
-
 	let production_metrics = production_metrics::get_production_metrics(
 		&mut db,
 		&model,
@@ -197,7 +184,6 @@ async fn props(
 		timezone,
 	)
 	.await?;
-
 	let inner = match &model {
 		tangram_core::types::Model::Regressor(model) => {
 			let training_metrics = model.test_metrics.as_option().unwrap();
@@ -207,10 +193,9 @@ async fn props(
 					.overall
 					.prediction_metrics
 					.map(|metrics| match metrics {
-						types::PredictionMetrics::Regression(metrics) => metrics,
+						PredictionMetrics::Regression(metrics) => metrics,
 						_ => unreachable!(),
 					});
-
 			let overall = RegressionProductionMetrics {
 				mse: TrainingProductionMetrics {
 					production: overall_production_metrics.as_ref().map(|m| m.mse),
@@ -222,7 +207,6 @@ async fn props(
 				},
 				true_values_count,
 			};
-
 			let mse_chart = {
 				let data = production_metrics
 					.intervals
@@ -237,7 +221,7 @@ async fn props(
 							.prediction_metrics
 							.as_ref()
 							.map(|prediction_metrics| {
-								if let types::PredictionMetrics::Regression(predicion_metrics) =
+								if let PredictionMetrics::Regression(predicion_metrics) =
 									prediction_metrics
 								{
 									predicion_metrics.mse
@@ -248,13 +232,11 @@ async fn props(
 						MSEChartEntry { label, mse }
 					})
 					.collect();
-
 				MSEChart {
 					data,
 					training_mse: *training_metrics.mse.as_option().unwrap(),
 				}
 			};
-
 			let true_values_count_chart = production_metrics
 				.intervals
 				.iter()
@@ -267,7 +249,6 @@ async fn props(
 					),
 				})
 				.collect();
-
 			Inner::Regressor(RegressorProductionMetricsOverviewViewModel {
 				date_window,
 				date_window_interval,
@@ -286,7 +267,6 @@ async fn props(
 						types::PredictionMetrics::Classification(metrics) => metrics,
 						_ => unreachable!(),
 					});
-
 			let true_values_count_chart = production_metrics
 				.intervals
 				.iter()
@@ -299,7 +279,6 @@ async fn props(
 					),
 				})
 				.collect();
-
 			let accuracy_chart = {
 				let data = production_metrics
 					.intervals
@@ -332,17 +311,13 @@ async fn props(
 					training_accuracy: *training_metrics.accuracy.as_option().unwrap(),
 				}
 			};
-
 			let true_values_count = production_metrics.overall.true_values_count;
 			let training_class_metrics = training_metrics.class_metrics.as_option().unwrap();
-
 			let production_accuracy = overall_production_metrics
 				.as_ref()
 				.map(|metrics| metrics.accuracy);
-
 			let production_class_metrics = overall_production_metrics
 				.map(|production_metrics| production_metrics.class_metrics);
-
 			let classes = model.classes();
 			let class_metrics_table = training_class_metrics
 				.iter()
@@ -368,7 +343,6 @@ async fn props(
 					}
 				})
 				.collect();
-
 			let overall = ClassificationOverallProductionMetrics {
 				accuracy: TrainingProductionMetrics {
 					production: production_accuracy,
@@ -377,7 +351,6 @@ async fn props(
 				class_metrics_table,
 				true_values_count,
 			};
-
 			Inner::Classifier(ClassifierProductionMetricsOverviewViewModel {
 				date_window,
 				date_window_interval,
@@ -389,10 +362,8 @@ async fn props(
 		}
 		_ => unimplemented!(),
 	};
-
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
-
 	Ok(Props {
 		id: id.to_string(),
 		inner,

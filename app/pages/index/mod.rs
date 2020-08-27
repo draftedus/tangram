@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	user::{authorize_user, authorize_user_for_repo, User},
+	helpers::user::{authorize_user, authorize_user_for_repo, User},
 	Context,
 };
 use anyhow::Result;
@@ -48,47 +48,67 @@ pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> Re
 		"
 			select
 				repos.id,
-				repos.created_at,
 				repos.title,
-				case
-					when repos.organization_id is null
-						then users.email
-					when repos.user_id is null
-						then organizations.name
-				end as owner_name
+				repos.created_at
+			from repos
+			where repos.user_id = ?1
+		",
+	)
+	.bind(&user.id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
+	let user_repos: Vec<Repo> = rows
+		.into_iter()
+		.map(|row| {
+			let id = row.get(0);
+			let title = row.get(1);
+			let created_at = row.get::<i64, _>(2);
+			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+			let owner_name = user.email.clone();
+			Repo {
+				id,
+				title,
+				created_at: created_at.to_rfc3339(),
+				owner_name,
+			}
+		})
+		.collect();
+	let rows = sqlx::query(
+		"
+			select
+				repos.id,
+				repos.title,
+				repos.created_at,
+				organizations.title
 			from repos
 			left join organizations
 				on organizations.id = repos.organization_id
 			left join organizations_users
 				on organizations_users.organization_id = repos.organization_id
 				and organizations_users.user_id = ?1
-			left join users
-				on users.id = repos.user_id
-				and users.id = ?1
-			where organizations_users.user_id = ?1 or users.id = ?1
-			order by repos.created_at
 		",
 	)
 	.bind(&user.id.to_string())
-	.fetch_all(db)
+	.fetch_all(&mut *db)
 	.await?;
-	let repos = rows
-		.iter()
-		.map(|row| {
-			let id: String = row.get(0);
-			let id: Id = id.parse().unwrap();
-			let created_at: i64 = row.get(1);
+	let org_repos: Vec<Repo> = rows
+		.into_iter()
+		.map(|row: sqlx::any::AnyRow| {
+			let id = row.get(0);
+			let title = row.get(1);
+			let created_at = row.get::<i64, _>(2);
 			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
-			let title = row.get(2);
-			let owner_name = row.get(3);
+			let org_title = row.get(3);
 			Repo {
-				created_at: created_at.to_rfc3339(),
-				id: id.to_string(),
-				owner_name,
+				id,
 				title,
+				created_at: created_at.to_rfc3339(),
+				owner_name: org_title,
 			}
 		})
 		.collect();
+	let mut repos = user_repos;
+	repos.extend(org_repos);
 	Ok(Props { repos })
 }
 

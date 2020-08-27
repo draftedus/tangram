@@ -1,19 +1,18 @@
 use crate::{
-	cookies,
 	error::Error,
-	helpers::production_metrics,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_info,
+		production_metrics,
+		repos::{get_model_layout_info, ModelLayoutInfo},
+		time::format_date_window_interval,
+		timezone::get_timezone,
+		user::{authorize_user, authorize_user_for_model},
 	},
-	time::format_date_window_interval,
-	types,
-	user::{authorize_user, authorize_user_for_model},
+	types::{DateWindow, DateWindowInterval},
 	Context,
 };
 use anyhow::Result;
-use chrono_tz::UTC;
-use hyper::{header, Body, Request, Response, StatusCode};
+use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -42,11 +41,11 @@ pub async fn get(
 struct Props {
 	id: String,
 	class_metrics: Vec<ClassMetricsEntry>,
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	classes: Vec<String>,
 	overall: OverallClassMetrics,
-	model_layout_info: types::ModelLayoutInfo,
+	model_layout_info: ModelLayoutInfo,
 	class: String,
 }
 
@@ -121,26 +120,19 @@ async fn props(
 		.and_then(|query| query.get("date_window"));
 	let date_window = date_window.map_or("this_month", |dw| dw.as_str());
 	let date_window = match date_window {
-		"today" => types::DateWindow::Today,
-		"this_month" => types::DateWindow::ThisMonth,
-		"this_year" => types::DateWindow::ThisYear,
+		"today" => DateWindow::Today,
+		"this_month" => DateWindow::ThisMonth,
+		"this_year" => DateWindow::ThisYear,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	// choose the interval to use for the date window
 	let date_window_interval = match date_window {
-		types::DateWindow::Today => types::DateWindowInterval::Hourly,
-		types::DateWindow::ThisMonth => types::DateWindowInterval::Daily,
-		types::DateWindow::ThisYear => types::DateWindowInterval::Monthly,
+		DateWindow::Today => DateWindowInterval::Hourly,
+		DateWindow::ThisMonth => DateWindowInterval::Daily,
+		DateWindow::ThisYear => DateWindowInterval::Monthly,
 	};
 	// get the timezone
-	let timezone = request
-		.headers()
-		.get(header::COOKIE)
-		.and_then(|cookie_header_value| cookie_header_value.to_str().ok())
-		.and_then(|cookie_header_value| cookies::parse(cookie_header_value).ok())
-		.and_then(|cookies| cookies.get("tangram-timezone").cloned())
-		.and_then(|timezone_str| timezone_str.parse().ok())
-		.unwrap_or(UTC);
+	let timezone = get_timezone(&request);
 
 	let mut db = context
 		.pool
@@ -173,15 +165,15 @@ async fn props(
 	};
 	let classes = model.classes();
 
-	let types::ProductionMetricsResponse {
+	let ProductionMetrics {
 		overall, intervals, ..
 	} = production_metrics;
 	let overall_prediction_metrics =
 		overall
 			.prediction_metrics
 			.map(|prediction_metrics| match prediction_metrics {
-				types::PredictionMetrics::Regression(_) => unreachable!(),
-				types::PredictionMetrics::Classification(prediction_metrics) => prediction_metrics,
+				PredictionMetricsOutput::Regression(_) => unreachable!(),
+				PredictionMetricsOutput::Classification(prediction_metrics) => prediction_metrics,
 			});
 
 	let training_class_metrics = model
@@ -294,8 +286,8 @@ async fn props(
 							.prediction_metrics
 							.as_ref()
 							.map(|metrics| match metrics {
-								types::PredictionMetrics::Regression(_) => unreachable!(),
-								types::PredictionMetrics::Classification(prediction_metrics) => {
+								PredictionMetricsOutput::Regression(_) => unreachable!(),
+								PredictionMetricsOutput::Classification(prediction_metrics) => {
 									prediction_metrics
 								}
 							});
@@ -353,7 +345,7 @@ async fn props(
 	} else {
 		1
 	};
-	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
+	let class = class.unwrap_or_else(|| classes.get(class_index).unwrap().to_owned());
 
 	Ok(Props {
 		id: id.to_string(),

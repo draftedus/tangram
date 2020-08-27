@@ -35,7 +35,7 @@ impl ProductionMetrics {
 
 impl RunningMetric<'_, '_> for ProductionMetrics {
 	type Input = (NumberOrString, NumberOrString);
-	type Output = types::ProductionMetrics;
+	type Output = ProductionMetricsOutput;
 
 	fn update(&mut self, value: (NumberOrString, NumberOrString)) {
 		self.true_values_count += 1;

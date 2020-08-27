@@ -22,7 +22,8 @@ impl RegressionPredictionMetrics {
 
 impl RunningMetric<'_, '_> for RegressionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
-	type Output = Option<types::RegressionPredictionMetrics>;
+	type Output = Option<RegressionPredictionMetricsOutput>;
+
 	fn update(&mut self, value: Self::Input) {
 		let prediction = match value.0.as_number() {
 			Ok(value) => value,

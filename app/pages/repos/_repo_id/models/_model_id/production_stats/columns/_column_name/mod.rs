@@ -1,19 +1,19 @@
 use crate::Context;
 use crate::{
-	cookies,
 	error::Error,
-	helpers::production_stats,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_info,
+		production_stats,
+		repos::{get_model_layout_info, ModelLayoutInfo},
+		time::{format_date_window, format_date_window_interval},
+		timezone::get_timezone,
+		user::{authorize_user, authorize_user_for_model},
 	},
-	time::{format_date_window, format_date_window_interval},
-	types,
-	user::{authorize_user, authorize_user_for_model},
+	types::{DateWindow, DateWindowInterval},
 };
 use anyhow::Result;
-use chrono_tz::{Tz, UTC};
-use hyper::{header, Body, Request, Response, StatusCode};
+use chrono_tz::Tz;
+use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -41,11 +41,11 @@ pub async fn get(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
-	date_window: types::DateWindow,
+	date_window: DateWindow,
 	column_name: String,
 	id: String,
 	inner: Inner,
-	model_layout_info: types::ModelLayoutInfo,
+	model_layout_info: ModelLayoutInfo,
 }
 
 #[derive(Serialize)]
@@ -61,8 +61,8 @@ enum Inner {
 struct EnumColumnStatsViewModel {
 	alert: Option<String>,
 	name: String,
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	intervals: Vec<EnumColumnStatsInterval>,
 	overall: EnumColumnStatsOverall,
 }
@@ -99,8 +99,8 @@ struct OverallEnumColumnStatsEntry {
 struct NumberColumnStatsViewModel {
 	alert: Option<String>,
 	name: String,
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	intervals: Vec<NumberColumnStatsInterval>,
 	overall: NumberColumnStatsOverall,
 }
@@ -146,8 +146,8 @@ struct NumberColumnStats {
 struct TextColumnStatsViewModel {
 	alert: Option<String>,
 	name: String,
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	overall: TextColumnStatsOverall,
 }
 
@@ -174,27 +174,19 @@ async fn props(
 		.and_then(|query| query.get("date_window"));
 	let date_window = date_window.map_or("this_month", |dw| dw.as_str());
 	let date_window = match date_window {
-		"today" => types::DateWindow::Today,
-		"this_month" => types::DateWindow::ThisMonth,
-		"this_year" => types::DateWindow::ThisYear,
+		"today" => DateWindow::Today,
+		"this_month" => DateWindow::ThisMonth,
+		"this_year" => DateWindow::ThisYear,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	// choose the interval to use for the date window
 	let date_window_interval = match date_window {
-		types::DateWindow::Today => types::DateWindowInterval::Hourly,
-		types::DateWindow::ThisMonth => types::DateWindowInterval::Daily,
-		types::DateWindow::ThisYear => types::DateWindowInterval::Monthly,
+		DateWindow::Today => DateWindowInterval::Hourly,
+		DateWindow::ThisMonth => DateWindowInterval::Daily,
+		DateWindow::ThisYear => DateWindowInterval::Monthly,
 	};
 	// get the timezone
-	let timezone = request
-		.headers()
-		.get(header::COOKIE)
-		.and_then(|cookie_header_value| cookie_header_value.to_str().ok())
-		.and_then(|cookie_header_value| cookies::parse(cookie_header_value).ok())
-		.and_then(|cookies| cookies.get("tangram-timezone").cloned())
-		.and_then(|timezone_str| timezone_str.parse().ok())
-		.unwrap_or(UTC);
-
+	let timezone = get_timezone(&request);
 	let mut db = context
 		.pool
 		.begin()
@@ -207,10 +199,8 @@ async fn props(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-
 	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
-
 	let production_stats = production_stats::get_production_column_stats(
 		&mut db,
 		&model,
@@ -220,7 +210,6 @@ async fn props(
 		timezone,
 	)
 	.await?;
-
 	let (train_column_stats, train_row_count) = match model {
 		tangram_core::types::Model::Classifier(model) => {
 			let overall_column_stats = model.overall_column_stats.into_option().unwrap();
@@ -242,11 +231,10 @@ async fn props(
 		}
 		tangram_core::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
 	};
-
 	let inner = match (train_column_stats.unwrap(), production_stats) {
 		(
 			tangram_core::types::ColumnStats::Number(train_column_stats),
-			types::ProductionStatsSingleColumnResponse::Number(production_stats),
+			ProductionStatsSingleColumnResponse::Number(production_stats),
 		) => Inner::Number(build_production_column_number_stats(
 			production_stats,
 			train_column_stats,
@@ -256,7 +244,7 @@ async fn props(
 		)),
 		(
 			tangram_core::types::ColumnStats::Enum(train_column_stats),
-			types::ProductionStatsSingleColumnResponse::Enum(production_stats),
+			ProductionStatsSingleColumnResponse::Enum(production_stats),
 		) => Inner::Enum(build_production_column_enum_stats(
 			production_stats,
 			train_column_stats,
@@ -267,7 +255,7 @@ async fn props(
 		)),
 		(
 			tangram_core::types::ColumnStats::Text(train_column_stats),
-			types::ProductionStatsSingleColumnResponse::Text(production_stats),
+			ProductionStatsSingleColumnResponse::Text(production_stats),
 		) => Inner::Text(build_production_column_text_stats(
 			production_stats,
 			train_column_stats,
@@ -277,10 +265,8 @@ async fn props(
 		)),
 		(_, _) => return Err(Error::BadRequest.into()),
 	};
-
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
-
 	Ok(Props {
 		date_window,
 		column_name: column_name.to_owned(),
@@ -291,10 +277,10 @@ async fn props(
 }
 
 fn build_production_column_number_stats(
-	production_stats: types::NumberProductionStatsSingleColumnResponse,
+	production_stats: NumberProductionStatsSingleColumnResponse,
 	train_column_stats: tangram_core::types::NumberColumnStats,
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> NumberColumnStatsViewModel {
 	let overall =
@@ -355,11 +341,11 @@ fn build_production_column_number_stats(
 }
 
 fn build_production_column_enum_stats(
-	production_stats: types::EnumProductionStatsSingleColumnResponse,
+	production_stats: EnumProductionStatsSingleColumnResponse,
 	train_column_stats: tangram_core::types::EnumColumnStats,
 	train_row_count: u64,
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> EnumColumnStatsViewModel {
 	let production_row_count = production_stats.overall.predictions_count;
@@ -423,10 +409,10 @@ fn build_production_column_enum_stats(
 }
 
 fn build_production_column_text_stats(
-	production_stats: types::TextProductionStatsSingleColumnResponse,
+	production_stats: TextProductionStatsSingleColumnResponse,
 	_train_column_stats: tangram_core::types::TextColumnStats,
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> TextColumnStatsViewModel {
 	let overall = TextColumnStatsOverall {

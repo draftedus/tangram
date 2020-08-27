@@ -1,5 +1,5 @@
 use super::NumberStats;
-use crate::{monitor_event::Output, types};
+use crate::monitor_event::Output;
 use std::collections::BTreeMap;
 use tangram_core::metrics::RunningMetric;
 
@@ -39,7 +39,7 @@ impl PredictionStats {
 
 impl RunningMetric<'_, '_> for PredictionStats {
 	type Input = Output;
-	type Output = types::ProductionPredictionStats;
+	type Output = ProductionPredictionStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		match self {
@@ -66,10 +66,10 @@ impl RunningMetric<'_, '_> for PredictionStats {
 	fn finalize(self) -> Self::Output {
 		match self {
 			PredictionStats::Regression(stats) => {
-				types::ProductionPredictionStats::Regression(stats.finalize())
+				ProductionPredictionStatsOutput::Regression(stats.finalize())
 			}
 			PredictionStats::Classification(stats) => {
-				types::ProductionPredictionStats::Classification(stats.finalize())
+				ProductionPredictionStatsOutput::Classification(stats.finalize())
 			}
 		}
 	}
@@ -83,7 +83,7 @@ impl RegressionPredictionStats {
 
 impl RunningMetric<'_, '_> for RegressionPredictionStats {
 	type Input = Output;
-	type Output = types::RegressionProductionPredictionStats;
+	type Output = RegressionProductionPredictionStatsOutput;
 
 	fn update(&mut self, value: Output) {
 		let value = match value {
@@ -124,7 +124,7 @@ impl ClassificationPredictionStats {
 
 impl RunningMetric<'_, '_> for ClassificationPredictionStats {
 	type Input = Output;
-	type Output = types::ClassificationProductionPredictionStats;
+	type Output = ClassificationProductionPredictionStatsOutput;
 
 	fn update(&mut self, value: Output) {
 		let value = match value {

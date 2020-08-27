@@ -89,7 +89,7 @@ async function track(data: Prediction | TrueValue) {
 	await response.blob()
 }
 
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 1000; i++) {
 	let input = rows[i % nRows]
 	let startTime = 1577836800000 // Jan 1 2020 00:00:00
 	let endTime = Date.now()

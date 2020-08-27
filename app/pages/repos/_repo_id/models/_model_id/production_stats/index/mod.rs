@@ -1,18 +1,19 @@
 use crate::{
-	cookies,
 	error::Error,
-	helpers::model::{get_model, Model},
-	helpers::production_stats,
-	helpers::repos::get_model_layout_info,
-	time::{format_date_window, format_date_window_interval},
-	types,
-	user::{authorize_user, authorize_user_for_model},
+	helpers::{
+		model::{get_model, Model},
+		production_stats,
+		repos::{get_model_layout_info, ModelLayoutInfo},
+		time::{format_date_window, format_date_window_interval},
+		timezone::get_timezone,
+		user::{authorize_user, authorize_user_for_model},
+	},
+	types::{DateWindow, DateWindowInterval},
 	Context,
 };
 
 use anyhow::Result;
-use chrono_tz::UTC;
-use hyper::{header, Body, Request, Response, StatusCode};
+use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
@@ -37,14 +38,14 @@ pub async fn get(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
-	date_window: types::DateWindow,
-	date_window_interval: types::DateWindowInterval,
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
 	model_id: String,
 	overall_column_stats_table: Vec<OverallColumnStats>,
 	prediction_count_chart: Vec<PredictionCountChartEntry>,
 	prediction_stats_chart: PredictionStatsChart,
 	prediction_stats_interval_chart: PredictionStatsIntervalChart,
-	model_layout_info: types::ModelLayoutInfo,
+	model_layout_info: ModelLayoutInfo,
 }
 
 #[derive(Serialize)]
@@ -137,26 +138,19 @@ async fn props(
 		.and_then(|query| query.get("date_window"));
 	let date_window = date_window.map_or("this_month", |dw| dw.as_str());
 	let date_window = match date_window {
-		"today" => types::DateWindow::Today,
-		"this_month" => types::DateWindow::ThisMonth,
-		"this_year" => types::DateWindow::ThisYear,
+		"today" => DateWindow::Today,
+		"this_month" => DateWindow::ThisMonth,
+		"this_year" => DateWindow::ThisYear,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	// choose the interval to use for the date window
 	let date_window_interval = match date_window {
-		types::DateWindow::Today => types::DateWindowInterval::Hourly,
-		types::DateWindow::ThisMonth => types::DateWindowInterval::Daily,
-		types::DateWindow::ThisYear => types::DateWindowInterval::Monthly,
+		DateWindow::Today => DateWindowInterval::Hourly,
+		DateWindow::ThisMonth => DateWindowInterval::Daily,
+		DateWindow::ThisYear => DateWindowInterval::Monthly,
 	};
 	// get the timezone
-	let timezone = request
-		.headers()
-		.get(header::COOKIE)
-		.and_then(|cookie_header_value| cookie_header_value.to_str().ok())
-		.and_then(|cookie_header_value| cookies::parse(cookie_header_value).ok())
-		.and_then(|cookies| cookies.get("tangram-timezone").cloned())
-		.and_then(|timezone_str| timezone_str.parse().ok())
-		.unwrap_or(UTC);
+	let timezone = get_timezone(&request);
 
 	let mut db = context
 		.pool
@@ -198,28 +192,28 @@ async fn props(
 		.column_stats
 		.iter()
 		.map(|column_stats| match column_stats {
-			types::ProductionColumnStats::Unknown(column_stats) => OverallColumnStats {
+			ProductionColumnStatsOutput::Unknown(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
 				alert: column_stats.alert.to_owned(),
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Unknown,
 			},
-			types::ProductionColumnStats::Text(column_stats) => OverallColumnStats {
+			ProductionColumnStatsOutput::Text(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
 				alert: column_stats.alert.to_owned(),
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Text,
 			},
-			types::ProductionColumnStats::Number(column_stats) => OverallColumnStats {
+			ProductionColumnStatsOutput::Number(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
 				alert: column_stats.alert.to_owned(),
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Number,
 			},
-			types::ProductionColumnStats::Enum(column_stats) => OverallColumnStats {
+			ProductionColumnStatsOutput::Enum(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
 				alert: column_stats.alert.to_owned(),
@@ -240,7 +234,7 @@ async fn props(
 
 	let overall_production_stats = production_stats.overall;
 	let prediction_stats_chart = match overall_production_stats.prediction_stats {
-		types::ProductionPredictionStats::Regression(prediction_stats) => {
+		ProductionPredictionStatsOutput::Regression(prediction_stats) => {
 			let target_column_stats = target_column_stats.as_number().unwrap();
 			PredictionStatsChart::Regression(RegressionChartEntry {
 				label: format_date_window(
@@ -254,7 +248,7 @@ async fn props(
 				),
 			})
 		}
-		types::ProductionPredictionStats::Classification(prediction_stats) => {
+		ProductionPredictionStatsOutput::Classification(prediction_stats) => {
 			let target_column_stats = target_column_stats.as_enum().unwrap();
 			PredictionStatsChart::Classification(ClassificationChartEntry {
 				label: format_date_window(
@@ -271,41 +265,37 @@ async fn props(
 	};
 	let interval_production_stats = production_stats.intervals;
 	let prediction_stats_interval_chart = match &interval_production_stats[0].prediction_stats {
-		types::ProductionPredictionStats::Regression(_) => {
-			PredictionStatsIntervalChart::Regression(
-				interval_production_stats
-					.iter()
-					.map(|interval_production_stats| {
-						match &interval_production_stats.prediction_stats {
-							types::ProductionPredictionStats::Regression(
-								interval_prediction_stats,
-							) => {
-								let target_column_stats = target_column_stats.as_number().unwrap();
-								RegressionChartEntry {
-									label: format_date_window_interval(
-										interval_production_stats.start_date,
-										date_window_interval,
-										timezone,
-									),
-									quantiles: compute_production_training_quantiles(
-										target_column_stats,
-										interval_prediction_stats,
-									),
-								}
+		ProductionPredictionStatsOutput::Regression(_) => PredictionStatsIntervalChart::Regression(
+			interval_production_stats
+				.iter()
+				.map(|interval_production_stats| {
+					match &interval_production_stats.prediction_stats {
+						ProductionPredictionStatsOutput::Regression(interval_prediction_stats) => {
+							let target_column_stats = target_column_stats.as_number().unwrap();
+							RegressionChartEntry {
+								label: format_date_window_interval(
+									interval_production_stats.start_date,
+									date_window_interval,
+									timezone,
+								),
+								quantiles: compute_production_training_quantiles(
+									target_column_stats,
+									interval_prediction_stats,
+								),
 							}
-							_ => unreachable!(),
 						}
-					})
-					.collect(),
-			)
-		}
-		types::ProductionPredictionStats::Classification(_) => {
+						_ => unreachable!(),
+					}
+				})
+				.collect(),
+		),
+		ProductionPredictionStatsOutput::Classification(_) => {
 			PredictionStatsIntervalChart::Classification(
 				interval_production_stats
 					.into_iter()
 					.map(|interval_production_stats| {
 						match interval_production_stats.prediction_stats {
-							types::ProductionPredictionStats::Classification(prediction_stats) => {
+							ProductionPredictionStatsOutput::Classification(prediction_stats) => {
 								let target_column_stats = target_column_stats.as_enum().unwrap();
 								ClassificationChartEntry {
 									label: format_date_window_interval(
@@ -348,7 +338,7 @@ async fn props(
 
 fn compute_production_training_quantiles(
 	target_column_stats: &tangram_core::types::NumberColumnStats,
-	prediction_stats: &types::RegressionProductionPredictionStats,
+	prediction_stats: &RegressionProductionPredictionStats,
 ) -> ProductionTrainingQuantiles {
 	ProductionTrainingQuantiles {
 		production: if let Some(prediction_stats) = &prediction_stats.stats {

@@ -16,15 +16,13 @@ impl Default for Id {
 }
 
 #[derive(Debug, Error)]
-#[error("parse uid error")]
-pub struct ParseUidError;
+#[error("parse id error")]
+pub struct ParseIdError;
 
 impl std::str::FromStr for Id {
-	type Err = ParseUidError;
+	type Err = ParseIdError;
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(Self(
-			u128::from_str_radix(s, 16).map_err(|_| ParseUidError)?,
-		))
+		Ok(Self(u128::from_str_radix(s, 16).map_err(|_| ParseIdError)?))
 	}
 }
 

@@ -1,5 +1,4 @@
 use super::NumberStats;
-use crate::types;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use tangram_core::metrics::RunningMetric;
@@ -99,7 +98,7 @@ impl ProductionColumnStats {
 
 impl<'a> RunningMetric<'a, '_> for ProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
-	type Output = types::ProductionColumnStats;
+	type Output = ProductionColumnStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		match self {
@@ -138,16 +137,16 @@ impl<'a> RunningMetric<'a, '_> for ProductionColumnStats {
 	fn finalize(self) -> Self::Output {
 		match self {
 			ProductionColumnStats::Unknown(stats) => {
-				types::ProductionColumnStats::Unknown(stats.finalize())
+				ProductionColumnStatsOuptut::Unknown(stats.finalize())
 			}
 			ProductionColumnStats::Text(stats) => {
-				types::ProductionColumnStats::Text(stats.finalize())
+				ProductionColumnStatsOuptut::Text(stats.finalize())
 			}
 			ProductionColumnStats::Number(stats) => {
-				types::ProductionColumnStats::Number(stats.finalize())
+				ProductionColumnStatsOuptut::Number(stats.finalize())
 			}
 			ProductionColumnStats::Enum(stats) => {
-				types::ProductionColumnStats::Enum(stats.finalize())
+				ProductionColumnStatsOuptut::Enum(stats.finalize())
 			}
 		}
 	}
@@ -166,7 +165,7 @@ impl UnknownProductionColumnStats {
 
 impl<'a> RunningMetric<'a, '_> for UnknownProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
-	type Output = types::UnknownProductionColumnStats;
+	type Output = UnknownProductionColumnStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		self.count += 1;
@@ -217,7 +216,7 @@ impl NumberProductionColumnStats {
 
 impl<'a, 'b> RunningMetric<'a, 'b> for NumberProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
-	type Output = types::NumberProductionColumnStats;
+	type Output = NumberProductionColumnStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		self.count += 1;
@@ -313,7 +312,7 @@ impl EnumProductionColumnStats {
 
 impl<'a> RunningMetric<'a, '_> for EnumProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
-	type Output = types::EnumProductionColumnStats;
+	type Output = EnumProductionColumnStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		self.count += 1;
@@ -427,7 +426,7 @@ impl TextProductionColumnStats {
 
 impl<'a> RunningMetric<'a, '_> for TextProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
-	type Output = types::TextProductionColumnStats;
+	type Output = TextProductionColumnStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		self.count += 1;

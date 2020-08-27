@@ -12,20 +12,15 @@ use std::{
 };
 use url::Url;
 
-mod cookies;
 mod error;
 mod helpers;
 mod migrations;
-mod model;
 mod monitor_event;
 mod pages;
 mod production_metrics;
 mod production_stats;
-mod time;
 mod track;
 mod types;
-
-pub use helpers::user;
 
 pub struct AppOptions {
 	pub auth_enabled: bool,
@@ -207,8 +202,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["user", ""]) => pages::user::index::get(request, &context).await,
-		(&Method::POST, &["user", ""]) => pages::user::index::post(request, &context).await,
+		(&Method::GET, &["user", ""]) => pages::user::get(request, &context).await,
+		(&Method::POST, &["user", ""]) => pages::user::post(request, &context).await,
 		(&Method::GET, &["organizations", "new"]) => {
 			pages::organizations::new::get(request, &context).await
 		}
@@ -381,6 +376,7 @@ pub async fn run(options: AppOptions) -> Result<()> {
 	});
 	let addr = std::net::SocketAddr::new(context.options.host, context.options.port);
 	let listener = std::net::TcpListener::bind(&addr)?;
+	eprintln!("🚀 serving on port {}", context.options.port);
 	hyper::Server::from_tcp(listener)?.serve(service).await?;
 	Ok(())
 }

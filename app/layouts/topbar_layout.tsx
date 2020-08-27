@@ -27,11 +27,11 @@ function Topbar() {
 			items={[
 				{
 					element: (
-						<ui.Link href="/user/">
+						<ui.Link href="/user">
 							<ui.Avatar />
 						</ui.Link>
 					),
-					href: '/user/',
+					href: '/user',
 					title: 'Settings',
 				},
 			]}

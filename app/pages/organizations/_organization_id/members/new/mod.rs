@@ -1,6 +1,6 @@
 use crate::{
 	error::Error,
-	user::{authorize_user, authorize_user_for_organization, User},
+	helpers::user::{authorize_user, authorize_user_for_organization, User},
 	Context,
 };
 use anyhow::{format_err, Result};

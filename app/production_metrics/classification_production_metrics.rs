@@ -1,4 +1,4 @@
-use crate::{monitor_event::NumberOrString, types};
+use crate::monitor_event::NumberOrString;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_core::metrics::RunningMetric;
@@ -23,7 +23,8 @@ impl ClassificationPredictionMetrics {
 
 impl RunningMetric<'_, '_> for ClassificationPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
-	type Output = Option<types::ClassificationPredictionMetrics>;
+	type Output = Option<ClassificationPredictionMetricsOutput>;
+
 	fn update(&mut self, value: Self::Input) {
 		let label = match value.1 {
 			NumberOrString::Number(_) => return,
@@ -68,7 +69,7 @@ impl RunningMetric<'_, '_> for ClassificationPredictionMetrics {
 				let recall = true_positives.to_f32().unwrap()
 					/ (true_positives + false_negatives).to_f32().unwrap();
 				let f1_score = 2.0 * (precision * recall) / (precision + recall);
-				types::ClassificationPredictionClassMetrics {
+				ClassificationPredictionMetricsOutput {
 					class_name,
 					true_positives,
 					false_positives,
@@ -123,7 +124,7 @@ impl RunningMetric<'_, '_> for ClassificationPredictionMetrics {
 		if n_examples == 0 {
 			None
 		} else {
-			Some(types::ClassificationPredictionMetrics {
+			Some(ClassificationPredictionMetricsOutput {
 				accuracy,
 				baseline_accuracy,
 				class_metrics,

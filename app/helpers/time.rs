@@ -1,30 +1,26 @@
-use crate::types;
+use crate::types::{DateWindow, DateWindowInterval};
 use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
 
-pub fn format_date_window(
-	date: DateTime<Utc>,
-	date_window: types::DateWindow,
-	timezone: Tz,
-) -> String {
+pub fn format_date_window(date: DateTime<Utc>, date_window: DateWindow, timezone: Tz) -> String {
 	let date = date.with_timezone(&timezone);
 	match date_window {
-		types::DateWindow::Today => format_day(date),
-		types::DateWindow::ThisMonth => format_month(date),
-		types::DateWindow::ThisYear => format_year(date),
+		DateWindow::Today => format_day(date),
+		DateWindow::ThisMonth => format_month(date),
+		DateWindow::ThisYear => format_year(date),
 	}
 }
 
 pub fn format_date_window_interval(
 	date: DateTime<Utc>,
-	date_window_interval: types::DateWindowInterval,
+	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> String {
 	let date = date.with_timezone(&timezone);
 	match date_window_interval {
-		types::DateWindowInterval::Hourly => format_hour(date),
-		types::DateWindowInterval::Daily => format_day_of_month(date),
-		types::DateWindowInterval::Monthly => format_month(date),
+		DateWindowInterval::Hourly => format_hour(date),
+		DateWindowInterval::Daily => format_day_of_month(date),
+		DateWindowInterval::Monthly => format_month(date),
 	}
 }
 

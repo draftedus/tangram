@@ -2,10 +2,9 @@ use crate::{
 	error::Error,
 	helpers::{
 		model::{get_model, Model},
-		repos::get_model_layout_info,
+		repos::{get_model_layout_info, ModelLayoutInfo},
+		user::{authorize_user, authorize_user_for_model},
 	},
-	types,
-	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
 use anyhow::Result;
@@ -22,7 +21,7 @@ struct Props {
 	id: String,
 	row_count: usize,
 	target_column_stats: ColumnStats,
-	model_layout_info: types::ModelLayoutInfo,
+	model_layout_info: ModelLayoutInfo,
 }
 
 #[derive(Serialize)]

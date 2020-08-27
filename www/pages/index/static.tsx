@@ -42,9 +42,9 @@ function Hero() {
 					{'All-In-One Machine Learning Toolkit for Developers'}
 				</h1>
 				<div class="index-subtitle">
-					{
-						'Train a model on the command line and make predictions in any programming language. Understand how your model works, tune it, and monitor it in production.'
-					}
+					{'* Run `tangram train` to train a model from a CSV file on the command line.'}
+					{'* Make predictions without any network calls in Go, JS, Python, Ruby, or Rust.'}
+					{'* Run `tangram app` to run '}
 				</div>
 				<Video />
 			</div>

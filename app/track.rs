@@ -12,10 +12,8 @@ use anyhow::{format_err, Result};
 use chrono::prelude::*;
 use hyper::{body::to_bytes, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use std::collections::BTreeMap;
-use std::sync::Arc;
-use tangram_core::id::Id;
-use tangram_core::{metrics::RunningMetric, types};
+use std::{collections::BTreeMap, sync::Arc};
+use tangram_core::{id::Id, metrics::RunningMetric};
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(untagged)]
@@ -70,14 +68,14 @@ pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<
 
 async fn handle_prediction_monitor_event(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	models: &mut BTreeMap<Id, types::Model>,
+	models: &mut BTreeMap<Id, tangram_core::types::Model>,
 	monitor_event: PredictionMonitorEvent,
 ) -> Result<()> {
 	let model_id = monitor_event.model_id;
 	let model = match models.get(&model_id) {
 		Some(m) => m,
 		None => {
-			let model = crate::model::get_model(&mut db, model_id).await?;
+			let model = get_model(&mut db, model_id).await?;
 			models.insert(model_id, model);
 			models.get(&model_id).unwrap()
 		}
@@ -90,14 +88,14 @@ async fn handle_prediction_monitor_event(
 
 async fn handle_true_value_monitor_event(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	models: &mut BTreeMap<Id, types::Model>,
+	models: &mut BTreeMap<Id, tangram_core::types::Model>,
 	monitor_event: TrueValueMonitorEvent,
 ) -> Result<()> {
 	let model_id = monitor_event.model_id;
 	let model = match models.get(&model_id) {
 		Some(m) => m,
 		None => {
-			let model = crate::model::get_model(&mut db, monitor_event.model_id).await?;
+			let model = get_model(&mut db, monitor_event.model_id).await?;
 			models.insert(model_id, model);
 			models.get(&model_id).unwrap()
 		}
@@ -171,7 +169,7 @@ async fn write_true_value_monitor_event(
 async fn insert_or_update_production_stats_for_monitor_event(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
-	model: &types::Model,
+	model: &tangram_core::types::Model,
 	monitor_event: PredictionMonitorEvent,
 ) -> Result<()> {
 	let date = monitor_event.date;
@@ -242,7 +240,7 @@ async fn insert_or_update_production_stats_for_monitor_event(
 async fn insert_or_update_production_metrics_for_monitor_event(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
-	model: &types::Model,
+	model: &tangram_core::types::Model,
 	monitor_event: TrueValueMonitorEvent,
 ) -> Result<()> {
 	let identifier = monitor_event.identifier.as_string().to_string();
@@ -341,4 +339,27 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 		.await?;
 	}
 	Ok(())
+}
+
+/// Retrieves the model with the specified id. Errors if the model is not found.
+pub async fn get_model(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	model_id: Id,
+) -> Result<tangram_core::types::Model> {
+	let data: String = sqlx::query(
+		"
+			select
+				data
+			from models
+			where
+				models.id = ?1
+		",
+	)
+	.bind(&model_id.to_string())
+	.fetch_one(&mut *db)
+	.await?
+	.get(0);
+	let data: Vec<u8> = base64::decode(data)?;
+	let model = tangram_core::types::Model::from_slice(&data.as_slice())?;
+	Ok(model)
 }

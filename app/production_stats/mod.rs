@@ -1,5 +1,5 @@
 use self::{column_stats::ProductionColumnStats, prediction_stats::PredictionStats};
-use crate::{monitor_event::PredictionMonitorEvent, types};
+use crate::monitor_event::PredictionMonitorEvent;
 use chrono::prelude::*;
 use num_traits::ToPrimitive;
 use rand::random;
@@ -62,7 +62,9 @@ impl ProductionStats {
 		let column_stats = train_column_stats
 			.iter()
 			.zip(feature_groups.iter())
-			.map(|(c, f)| ProductionColumnStats::new(f, c))
+			.map(|(column_stats, feature_group)| {
+				ProductionColumnStats::new(feature_group, column_stats)
+			})
 			.collect();
 		let prediction_stats = PredictionStats::new(model);
 		ProductionStats {
@@ -77,7 +79,7 @@ impl ProductionStats {
 
 impl RunningMetric<'_, '_> for ProductionStats {
 	type Input = PredictionMonitorEvent;
-	type Output = types::ProductionStats;
+	type Output = ProductionStatsOutput;
 
 	fn update(&mut self, value: PredictionMonitorEvent) {
 		self.row_count += 1;
@@ -142,7 +144,7 @@ impl NumberStats {
 
 impl RunningMetric<'_, '_> for NumberStats {
 	type Input = f32;
-	type Output = types::NumberStats;
+	type Output = NumberStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		let (new_mean, new_m2) =

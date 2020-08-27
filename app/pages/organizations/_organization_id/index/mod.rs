@@ -1,8 +1,9 @@
 use crate::{
 	error::Error,
-	helpers::organizations,
-	helpers::repos,
-	user::{authorize_user, authorize_user_for_organization, User},
+	helpers::{
+		organizations, repos,
+		user::{authorize_user, authorize_user_for_organization, User},
+	},
 	Context,
 };
 use anyhow::Result;
@@ -74,7 +75,7 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 		context.options.stripe_secret_key.as_ref().unwrap(),
 	)
 	.await?;
-	let repos = repos::get_organization_repositories(&mut db, organization_id).await?;
+	let repos = repos::get_organization_repos(&mut db, organization_id).await?;
 	let stripe_publishable_key = context
 		.options
 		.stripe_publishable_key
@@ -246,7 +247,7 @@ async fn delete_organization(
 	.await?;
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, "/user/")
+		.header(header::LOCATION, "/user")
 		.body(Body::empty())
 		.unwrap();
 	Ok(response)
@@ -273,7 +274,7 @@ async fn delete_member(
 	.await?;
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, "/user/")
+		.header(header::LOCATION, "/user")
 		.body(Body::empty())
 		.unwrap();
 	Ok(response)
