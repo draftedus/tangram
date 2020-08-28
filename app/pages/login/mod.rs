@@ -99,7 +99,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 					on codes.user_id = users.id
 					where
 						codes.deleted_at is null and
-						?1 - codes.created_at < ?2
+						?1 - codes.created_at < ?2 and
 						users.email = ?3 and
 						codes.code = ?4
 				",
@@ -110,6 +110,8 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 			.bind(&code)
 			.fetch_optional(&mut db)
 			.await?;
+			println!("{:?}", code);
+			println!("{:?}", email);
 			let row = if let Some(row) = row {
 				row
 			} else {

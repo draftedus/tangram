@@ -51,6 +51,7 @@ labels = data[target]
 	features,
 	labels,
 	test_size=nrows_test,
+	train_size=nrows_train,
 	shuffle=False
 )
 
@@ -68,7 +69,7 @@ model = lgb.LGBMClassifier(
 start = time.time()
 model.fit(features_train, labels_train)
 end = time.time()
-print('duration: ', end - start)
+print('duration: {}ms'.format((end - start)*1000))
 
 # compute accuracy
 predictions = model.predict(features_test)

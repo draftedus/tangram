@@ -9,30 +9,15 @@ pub struct ModelLayoutInfo {
 	pub id: String,
 	pub title: String,
 	pub models: Vec<RepoModel>,
-	pub owner_name: String,
-	pub owner_url: String,
+	pub owner: Option<Owner>,
 	pub model_id: String,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]
-#[serde(tag = "type", content = "value", rename_all = "camelCase")]
-pub enum RepoOwner {
-	User(UserOwner),
-	Organization(OrganizationOwner),
-}
-
-#[derive(serde::Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct UserOwner {
-	pub email: String,
-	pub id: String,
-}
-
-#[derive(serde::Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct OrganizationOwner {
-	pub id: String,
+pub struct Owner {
 	pub name: String,
+	pub url: String,
 }
 
 pub async fn get_model_layout_info(
@@ -69,26 +54,19 @@ pub async fn get_model_layout_info(
 	let organization_name: Option<String> = row.get(3);
 	let user_id: Option<String> = row.get(4);
 	let user_email: Option<String> = row.get(5);
-	let owner = match organization_id {
-		None => RepoOwner::User(UserOwner {
-			email: user_email.unwrap(),
-			id: user_id.unwrap(),
-		}),
-		Some(organization_id) => RepoOwner::Organization(OrganizationOwner {
-			id: organization_id,
+	let owner = match (organization_id, user_id) {
+		(Some(organization_id), None) => Some(Owner {
 			name: organization_name.unwrap(),
+			url: format!("/organizations/{}/", organization_id),
 		}),
+		(None, Some(user_id)) => Some(Owner {
+			name: user_email.unwrap(),
+			url: "/user".to_string(),
+		}),
+		(None, None) => None,
+		(_, _) => unreachable!(),
 	};
-	let (owner_name, owner_url) = match owner {
-		RepoOwner::User(user) => {
-			let owner_url = "/user".to_string();
-			(user.email, owner_url)
-		}
-		RepoOwner::Organization(organization) => {
-			let owner_url = format!("/organizations/{}/", organization.id);
-			(organization.name, owner_url)
-		}
-	};
+
 	let RepoModel { id: model_id, .. } = models
 		.iter()
 		.find(|model| model.id == model_id.to_string())
@@ -98,8 +76,7 @@ pub async fn get_model_layout_info(
 		id: id.to_string(),
 		title,
 		models,
-		owner_name,
-		owner_url,
+		owner,
 		model_id,
 	})
 }

@@ -21,6 +21,7 @@ pub struct ModelLayoutInfo {
 pub enum RepoOwner {
 	Organization(OrganizationOwner),
 	User(UserOwner),
+	Root,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]

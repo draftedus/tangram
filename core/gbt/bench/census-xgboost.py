@@ -1,3 +1,4 @@
+
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -7,50 +8,21 @@ import time
 import xgboost as xgb
 
 # load the data
-path = '../data/higgs.csv'
-nrows_train = 10_500_000
-nrows_test = 500_000
-target = "signal"
+path = '../data/census.csv'
+nrows_train = 26049
+nrows_test = 6512
+target = "income"
 data = pd.read_csv(
 	path,
-	dtype={
-		'signal': np.bool,
-		'lepton_pt': np.float64,
-		'lepton_eta': np.float64,
-		'lepton_phi': np.float64,
-		'missing_energy_magnitude': np.float64,
-		'missing_energy_phi': np.float64,
-		'jet_1_pt': np.float64,
-		'jet_1_eta': np.float64,
-		'jet_1_phi': np.float64,
-		'jet_1_b_tag': np.float64,
-		'jet_2_pt': np.float64,
-		'jet_2_eta': np.float64,
-		'jet_2_phi': np.float64,
-		'jet_2_b_tag': np.float64,
-		'jet_3_pt': np.float64,
-		'jet_3_eta': np.float64,
-		'jet_3_phi': np.float64,
-		'jet_3_b_tag': np.float64,
-		'jet_4_pt': np.float64,
-		'jet_4_eta': np.float64,
-		'jet_4_phi': np.float64,
-		'jet_4_b_tag': np.float64,
-		'm_jj': np.float64,
-		'm_jjj': np.float64,
-		'm_lv': np.float64,
-		'm_jlv': np.float64,
-		'm_bb': np.float64,
-		'm_wbb': np.float64,
-		'm_wwbb': np.float64,
-	}
 )
 features = data.loc[:, data.columns != target]
 labels = data[target]
+features = pd.get_dummies(features)
 (features_train, features_test, labels_train, labels_test) = train_test_split(
 	features,
 	labels,
 	test_size=nrows_test,
+	train_size=nrows_train,
 	shuffle=False
 )
 

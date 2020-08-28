@@ -1,7 +1,7 @@
 mod config;
-mod features;
+pub mod features;
 mod grid;
-mod stats;
+pub mod stats;
 mod test;
 mod train;
 

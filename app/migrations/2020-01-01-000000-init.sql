@@ -38,9 +38,9 @@ create table repos (
 		(organization_id is null and user_id is not null)
 		or
 		(user_id is null and organization_id is not null)
-	),
-	unique(title, user_id),
-	unique(title, organization_id)
+		or
+		(user_id is null and organization_id is null)
+	)
 );
 
 create table models (

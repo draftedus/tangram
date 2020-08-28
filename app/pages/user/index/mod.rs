@@ -17,9 +17,10 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
+
 	let props = props(&mut db, user).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/user/", props)?;
@@ -33,8 +34,29 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
+	pub inner: Inner,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type", content = "value")]
+pub enum Inner {
+	#[serde(rename = "auth")]
+	Auth(AuthProps),
+	#[serde(rename = "no_auth")]
+	NoAuth(NoAuthProps),
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthProps {
 	email: String,
 	organizations: Vec<Organization>,
+	repos: Vec<Repo>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NoAuthProps {
 	repos: Vec<Repo>,
 }
 
@@ -45,14 +67,26 @@ pub struct Repo {
 	title: String,
 }
 
-pub async fn props(mut db: &mut sqlx::Transaction<'_, sqlx::Any>, user: User) -> Result<Props> {
-	let organizations = get_organizations(&mut db, user.id).await?;
-	let repos = get_user_repositories(&mut db, user.id).await?;
-	Ok(Props {
-		email: user.email,
-		organizations,
-		repos,
-	})
+pub async fn props(
+	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user: Option<User>,
+) -> Result<Props> {
+	if let Some(user) = user {
+		let organizations = get_organizations(&mut db, user.id).await?;
+		let repos = get_user_repositories(&mut db, user.id).await?;
+		Ok(Props {
+			inner: Inner::Auth(AuthProps {
+				email: user.email,
+				organizations,
+				repos,
+			}),
+		})
+	} else {
+		let repos = get_root_user_repositories(&mut db).await?;
+		Ok(Props {
+			inner: Inner::NoAuth(NoAuthProps { repos }),
+		})
+	}
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -62,18 +96,23 @@ enum Action {
 }
 
 pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let mut db = context
 		.pool
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
+	let user = user.unwrap();
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
 	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
+
 	let response = match action {
 		Action::Logout => logout(user, &mut db).await?,
 	};
@@ -123,6 +162,30 @@ pub async fn get_user_repositories(
 		",
 	)
 	.bind(&user_id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
+	Ok(rows
+		.iter()
+		.map(|row| {
+			let id: String = row.get(0);
+			let title: String = row.get(1);
+			Repo { id, title }
+		})
+		.collect())
+}
+
+pub async fn get_root_user_repositories(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+) -> Result<Vec<Repo>> {
+	let rows = sqlx::query(
+		"
+			select
+				repos.id,
+				repos.title
+			from repos
+			where repos.user_id is null
+		",
+	)
 	.fetch_all(&mut *db)
 	.await?;
 	Ok(rows

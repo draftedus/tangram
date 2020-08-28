@@ -15,7 +15,7 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let props = props(&mut db, &user).await?;
@@ -43,7 +43,18 @@ pub struct Repo {
 	pub owner_name: String,
 }
 
-pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> Result<Props> {
+pub async fn props(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user: &Option<User>,
+) -> Result<Props> {
+	if let Some(user) = user {
+		props_user(db, user).await
+	} else {
+		props_root(db).await
+	}
+}
+
+async fn props_user(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> Result<Props> {
 	let rows = sqlx::query(
 		"
 			select
@@ -92,6 +103,41 @@ pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> Re
 	Ok(Props { repos })
 }
 
+async fn props_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Props> {
+	let rows = sqlx::query(
+		"
+			select
+				repos.id,
+				repos.created_at,
+				repos.title,
+				'root' as owner_name
+			from repos
+			where repos.user_id is null and repos.organization_id is null
+			order by repos.created_at
+		",
+	)
+	.fetch_all(db)
+	.await?;
+	let repos = rows
+		.iter()
+		.map(|row| {
+			let id: String = row.get(0);
+			let id: Id = id.parse().unwrap();
+			let created_at: i64 = row.get(1);
+			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+			let title = row.get(2);
+			let owner_name = row.get(3);
+			Repo {
+				created_at: created_at.to_rfc3339(),
+				id: id.to_string(),
+				owner_name,
+				title,
+			}
+		})
+		.collect();
+	return Ok(Props { repos });
+}
+
 #[derive(serde::Deserialize)]
 #[serde(tag = "action")]
 enum Action {
@@ -115,16 +161,17 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-
 	match action {
 		Action::DeleteRepo(DeleteRepoAction { repo_id, .. }) => {
 			let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
-			authorize_user_for_repo(&mut db, &user, repo_id)
-				.await
-				.map_err(|_| Error::NotFound)?;
+			if let Some(user) = user {
+				authorize_user_for_repo(&mut db, &user, repo_id)
+					.await
+					.map_err(|_| Error::NotFound)?;
+			}
 			sqlx::query(
 				"
 					delete from repos
@@ -136,9 +183,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 			.await?;
 		}
 	}
-
 	db.commit().await?;
-
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/")

@@ -27,6 +27,9 @@ pub struct Action {
 }
 
 pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	if !context.options.auth_enabled {
+		return Err(Error::BadRequest.into());
+	}
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
@@ -36,9 +39,10 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
+	let user = user.unwrap();
 	let response = create_organization(action, user, &mut db).await?;
 	db.commit().await?;
 	Ok(response)
