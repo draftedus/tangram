@@ -18,6 +18,13 @@ path = "gbt/bench/census.rs"
 name = "gbt-boston"
 path = "gbt/bench/boston.rs"
 
+[[bin]]
+name = "gbt-heart-disease"
+path = "gbt/bench/heart-disease.rs"
+
+[[bin]]
+name = "gbt-iris"
+path = "gbt/bench/iris.rs"
 
 [dev-dependencies]
 insta = " 0.16"
