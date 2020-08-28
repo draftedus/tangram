@@ -201,8 +201,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["user", ""]) => pages::user::get(request, &context).await,
-		(&Method::POST, &["user", ""]) => pages::user::post(request, &context).await,
+		(&Method::GET, &["user"]) => pages::user::get(request, &context).await,
+		(&Method::POST, &["user"]) => pages::user::post(request, &context).await,
 		(&Method::GET, &["organizations", "new"]) => {
 			pages::organizations::new::get(request, &context).await
 		}

@@ -22,10 +22,9 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-
 	let props = props(&mut db, user).await?;
 	db.commit().await?;
-	let html = context.pinwheel.render_with("/user/", props)?;
+	let html = context.pinwheel.render_with("/user", props)?;
 	let response = Response::builder()
 		.status(StatusCode::OK)
 		.body(Body::from(html))
@@ -185,7 +184,6 @@ pub async fn get_root_user_repositories(
 				repos.id,
 				repos.title
 			from repos
-			where repos.user_id is null
 		",
 	)
 	.fetch_all(&mut *db)
