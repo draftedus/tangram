@@ -1,17 +1,20 @@
 use crate::{
-	error::Error,
-	helpers::{
+	common::{
+		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
 		model::{get_model, Model},
-		production_stats,
+		production_stats::get_production_stats,
 		repos::{get_model_layout_info, ModelLayoutInfo},
 		time::{format_date_window, format_date_window_interval},
 		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_model},
 	},
-	types::{DateWindow, DateWindowInterval},
+	error::Error,
+	production_stats::{
+		ProductionColumnStatsOutput, ProductionPredictionStatsOutput,
+		RegressionProductionPredictionStatsOutput,
+	},
 	Context,
 };
-
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
@@ -132,26 +135,8 @@ async fn props(
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Props> {
-	// parse the date window search param
-	let date_window = search_params
-		.as_ref()
-		.and_then(|query| query.get("date_window"));
-	let date_window = date_window.map_or("this_month", |dw| dw.as_str());
-	let date_window = match date_window {
-		"today" => DateWindow::Today,
-		"this_month" => DateWindow::ThisMonth,
-		"this_year" => DateWindow::ThisYear,
-		_ => return Err(Error::BadRequest.into()),
-	};
-	// choose the interval to use for the date window
-	let date_window_interval = match date_window {
-		DateWindow::Today => DateWindowInterval::Hourly,
-		DateWindow::ThisMonth => DateWindowInterval::Daily,
-		DateWindow::ThisYear => DateWindowInterval::Monthly,
-	};
-	// get the timezone
+	let (date_window, date_window_interval) = get_date_window_and_interval(&search_params)?;
 	let timezone = get_timezone(&request);
-
 	let mut db = context
 		.pool
 		.begin()
@@ -164,19 +149,10 @@ async fn props(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Err(Error::NotFound.into());
 	}
-
 	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
-
-	let production_stats = production_stats::get_production_stats(
-		&mut db,
-		&model,
-		date_window,
-		date_window_interval,
-		timezone,
-	)
-	.await?;
-
+	let production_stats =
+		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let target_column_stats = match model {
 		tangram_core::types::Model::Classifier(model) => {
 			model.overall_target_column_stats.into_option().unwrap()
@@ -186,7 +162,6 @@ async fn props(
 		}
 		tangram_core::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
 	};
-
 	let overall_column_stats_table = production_stats
 		.overall
 		.column_stats
@@ -222,7 +197,6 @@ async fn props(
 			},
 		})
 		.collect();
-
 	let prediction_count_chart = production_stats
 		.intervals
 		.iter()
@@ -231,7 +205,6 @@ async fn props(
 			label: format_date_window_interval(interval.start_date, date_window_interval, timezone),
 		})
 		.collect();
-
 	let overall_production_stats = production_stats.overall;
 	let prediction_stats_chart = match overall_production_stats.prediction_stats {
 		ProductionPredictionStatsOutput::Regression(prediction_stats) => {
@@ -320,10 +293,8 @@ async fn props(
 			)
 		}
 	};
-
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
-
 	Ok(Props {
 		overall_column_stats_table,
 		model_id: id.to_string(),
@@ -338,7 +309,7 @@ async fn props(
 
 fn compute_production_training_quantiles(
 	target_column_stats: &tangram_core::types::NumberColumnStats,
-	prediction_stats: &RegressionProductionPredictionStats,
+	prediction_stats: &RegressionProductionPredictionStatsOutput,
 ) -> ProductionTrainingQuantiles {
 	ProductionTrainingQuantiles {
 		production: if let Some(prediction_stats) = &prediction_stats.stats {

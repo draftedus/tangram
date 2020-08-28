@@ -1,50 +1,69 @@
-use super::NumberStats;
+use super::number_stats::{NumberStats, NumberStatsOutput};
 use crate::monitor_event::Output;
 use std::collections::BTreeMap;
 use tangram_core::metrics::RunningMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", tag = "id", content = "value")]
-pub enum PredictionStats {
-	Regression(RegressionPredictionStats),
-	Classification(ClassificationPredictionStats),
+pub enum ProductionPredictionStats {
+	Regression(RegressionProductionPredictionStats),
+	Classification(ClassificationProductionPredictionStats),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct RegressionPredictionStats {
+pub struct RegressionProductionPredictionStats {
 	stats: Option<NumberStats>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ClassificationPredictionStats {
+pub struct ClassificationProductionPredictionStats {
 	pub histogram: BTreeMap<String, u64>,
 }
 
-impl PredictionStats {
+#[derive(Debug)]
+pub enum ProductionPredictionStatsOutput {
+	Regression(RegressionProductionPredictionStatsOutput),
+	Classification(ClassificationProductionPredictionStatsOutput),
+}
+
+#[derive(Debug)]
+pub struct RegressionProductionPredictionStatsOutput {
+	pub stats: Option<NumberStatsOutput>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ClassificationProductionPredictionStatsOutput {
+	pub histogram: Vec<(String, u64)>,
+}
+
+impl ProductionPredictionStats {
 	pub fn new(model: &tangram_core::types::Model) -> Self {
 		match &model {
 			tangram_core::types::Model::Regressor(_) => {
-				PredictionStats::Regression(RegressionPredictionStats::new())
+				ProductionPredictionStats::Regression(RegressionProductionPredictionStats::new())
 			}
 			tangram_core::types::Model::Classifier(model) => {
 				let classes = model.classes();
-				PredictionStats::Classification(ClassificationPredictionStats::new(classes))
+				ProductionPredictionStats::Classification(
+					ClassificationProductionPredictionStats::new(classes),
+				)
 			}
 			_ => unimplemented!(),
 		}
 	}
 }
 
-impl RunningMetric<'_, '_> for PredictionStats {
+impl RunningMetric<'_, '_> for ProductionPredictionStats {
 	type Input = Output;
 	type Output = ProductionPredictionStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		match self {
-			PredictionStats::Regression(stats) => stats.update(value),
-			PredictionStats::Classification(stats) => stats.update(value),
+			ProductionPredictionStats::Regression(stats) => stats.update(value),
+			ProductionPredictionStats::Classification(stats) => stats.update(value),
 		}
 	}
 
@@ -65,23 +84,23 @@ impl RunningMetric<'_, '_> for PredictionStats {
 
 	fn finalize(self) -> Self::Output {
 		match self {
-			PredictionStats::Regression(stats) => {
+			ProductionPredictionStats::Regression(stats) => {
 				ProductionPredictionStatsOutput::Regression(stats.finalize())
 			}
-			PredictionStats::Classification(stats) => {
+			ProductionPredictionStats::Classification(stats) => {
 				ProductionPredictionStatsOutput::Classification(stats.finalize())
 			}
 		}
 	}
 }
 
-impl RegressionPredictionStats {
+impl RegressionProductionPredictionStats {
 	fn new() -> Self {
 		Self { stats: None }
 	}
 }
 
-impl RunningMetric<'_, '_> for RegressionPredictionStats {
+impl RunningMetric<'_, '_> for RegressionProductionPredictionStats {
 	type Input = Output;
 	type Output = RegressionProductionPredictionStatsOutput;
 
@@ -115,14 +134,14 @@ impl RunningMetric<'_, '_> for RegressionPredictionStats {
 	}
 }
 
-impl ClassificationPredictionStats {
-	fn new(classes: &[String]) -> ClassificationPredictionStats {
+impl ClassificationProductionPredictionStats {
+	fn new(classes: &[String]) -> ClassificationProductionPredictionStats {
 		let histogram = classes.iter().cloned().map(|class| (class, 0)).collect();
-		ClassificationPredictionStats { histogram }
+		ClassificationProductionPredictionStats { histogram }
 	}
 }
 
-impl RunningMetric<'_, '_> for ClassificationPredictionStats {
+impl RunningMetric<'_, '_> for ClassificationProductionPredictionStats {
 	type Input = Output;
 	type Output = ClassificationProductionPredictionStatsOutput;
 

@@ -12,15 +12,14 @@ use std::{
 };
 use url::Url;
 
+mod common;
 mod error;
-mod helpers;
 mod migrations;
 mod monitor_event;
 mod pages;
 mod production_metrics;
 mod production_stats;
 mod track;
-mod types;
 
 pub struct AppOptions {
 	pub auth_enabled: bool,

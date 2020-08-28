@@ -1,6 +1,6 @@
 use crate::{
+	common::user::{authorize_user, authorize_user_for_model},
 	error::Error,
-	helpers::user::{authorize_user, authorize_user_for_model},
 	Context,
 };
 use anyhow::Result;

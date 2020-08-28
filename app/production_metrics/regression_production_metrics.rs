@@ -1,16 +1,27 @@
-use crate::{monitor_event::NumberOrString, production_stats::NumberStats, types};
+use crate::monitor_event::NumberOrString;
+use crate::production_stats::NumberStats;
 use num_traits::ToPrimitive;
 use tangram_core::metrics::RunningMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct RegressionPredictionMetrics {
+pub struct RegressionProductionPredictionMetrics {
 	stats: Option<NumberStats>,
 	absolute_error: f64,
 	squared_error: f64,
 }
 
-impl RegressionPredictionMetrics {
+#[derive(Debug)]
+pub struct RegressionProductionPredictionMetricsOutput {
+	pub mse: f32,
+	pub rmse: f32,
+	pub mae: f32,
+	pub r2: f32,
+	pub baseline_mse: f32,
+	pub baseline_rmse: f32,
+}
+
+impl RegressionProductionPredictionMetrics {
 	pub fn new() -> Self {
 		Self {
 			stats: None,
@@ -20,9 +31,9 @@ impl RegressionPredictionMetrics {
 	}
 }
 
-impl RunningMetric<'_, '_> for RegressionPredictionMetrics {
+impl RunningMetric<'_, '_> for RegressionProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
-	type Output = Option<RegressionPredictionMetricsOutput>;
+	type Output = Option<RegressionProductionPredictionMetricsOutput>;
 
 	fn update(&mut self, value: Self::Input) {
 		let prediction = match value.0.as_number() {
@@ -70,7 +81,7 @@ impl RunningMetric<'_, '_> for RegressionPredictionMetrics {
 					- self.squared_error.to_f32().unwrap() / (variance * stats.n.to_f32().unwrap()); // Sum of Squared Error = variance * n
 				let baseline_mse = variance;
 				let baseline_rmse = baseline_mse.sqrt();
-				Some(types::RegressionPredictionMetrics {
+				Some(RegressionProductionPredictionMetricsOutput {
 					mae,
 					mse,
 					r2,

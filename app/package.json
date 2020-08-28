@@ -1,7 +1,7 @@
 {
 	"dependencies": {
-		"esbuild": "0.6.27",
-		"preact": "10.4.7",
+		"esbuild": "0.6.28",
+		"preact": "10.4.8",
 		"preact-render-to-string": "5.1.10"
 	},
 	"license": "UNLICENSED",

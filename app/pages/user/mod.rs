@@ -1,10 +1,10 @@
 use crate::{
-	error::Error,
-	helpers::{
+	common::{
 		organizations::{get_organizations, Organization},
 		repos::get_user_repos,
 		user::{authorize_user, User},
 	},
+	error::Error,
 	Context,
 };
 use anyhow::Result;

@@ -5,12 +5,36 @@ use tangram_core::metrics::RunningMetric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct ClassificationPredictionMetrics {
+pub struct ClassificationProductionPredictionMetrics {
 	classes: Vec<String>,
 	confusion_matrix: Array2<u64>,
 }
 
-impl ClassificationPredictionMetrics {
+#[derive(Debug)]
+pub struct ClassificationProductionPredictionMetricsOutput {
+	pub class_metrics: Vec<ClassificationProductionPredictionClassMetricsOutput>,
+	pub accuracy: f32,
+	pub baseline_accuracy: f32,
+	pub precision_unweighted: f32,
+	pub precision_weighted: f32,
+	pub recall_unweighted: f32,
+	pub recall_weighted: f32,
+}
+
+#[derive(Debug)]
+pub struct ClassificationProductionPredictionClassMetricsOutput {
+	pub class_name: String,
+	pub true_positives: u64,
+	pub false_positives: u64,
+	pub true_negatives: u64,
+	pub false_negatives: u64,
+	pub accuracy: f32,
+	pub precision: f32,
+	pub recall: f32,
+	pub f1_score: f32,
+}
+
+impl ClassificationProductionPredictionMetrics {
 	pub fn new(classes: Vec<String>) -> Self {
 		let n_classes = classes.len();
 		let confusion_matrix = Array2::<u64>::zeros((n_classes, n_classes));
@@ -21,9 +45,9 @@ impl ClassificationPredictionMetrics {
 	}
 }
 
-impl RunningMetric<'_, '_> for ClassificationPredictionMetrics {
+impl RunningMetric<'_, '_> for ClassificationProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
-	type Output = Option<ClassificationPredictionMetricsOutput>;
+	type Output = Option<ClassificationProductionPredictionMetricsOutput>;
 
 	fn update(&mut self, value: Self::Input) {
 		let label = match value.1 {
@@ -69,7 +93,7 @@ impl RunningMetric<'_, '_> for ClassificationPredictionMetrics {
 				let recall = true_positives.to_f32().unwrap()
 					/ (true_positives + false_negatives).to_f32().unwrap();
 				let f1_score = 2.0 * (precision * recall) / (precision + recall);
-				ClassificationPredictionMetricsOutput {
+				ClassificationProductionPredictionClassMetricsOutput {
 					class_name,
 					true_positives,
 					false_positives,
@@ -124,7 +148,7 @@ impl RunningMetric<'_, '_> for ClassificationPredictionMetrics {
 		if n_examples == 0 {
 			None
 		} else {
-			Some(ClassificationPredictionMetricsOutput {
+			Some(ClassificationProductionPredictionMetricsOutput {
 				accuracy,
 				baseline_accuracy,
 				class_metrics,
@@ -140,7 +164,7 @@ impl RunningMetric<'_, '_> for ClassificationPredictionMetrics {
 #[test]
 fn test_binary() {
 	let classes = vec!["Cat".into(), "Dog".into()];
-	let mut metrics = ClassificationPredictionMetrics::new(classes);
+	let mut metrics = ClassificationProductionPredictionMetrics::new(classes);
 	metrics.update((
 		NumberOrString::String("Cat".into()),
 		NumberOrString::String("Cat".into()),
@@ -205,7 +229,7 @@ fn test_multiclass() {
 	// example taken from https://en.wikipedia.org/wiki/Confusion_matrix
 
 	let classes = vec!["Cat".into(), "Dog".into(), "Rabbit".into()];
-	let mut metrics = ClassificationPredictionMetrics::new(classes);
+	let mut metrics = ClassificationProductionPredictionMetrics::new(classes);
 	metrics.update((
 		NumberOrString::String("Cat".into()),
 		NumberOrString::String("Cat".into()),

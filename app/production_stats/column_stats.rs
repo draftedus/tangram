@@ -1,4 +1,4 @@
-use super::NumberStats;
+use super::number_stats::{NumberStats, NumberStatsOutput};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use tangram_core::metrics::RunningMetric;
@@ -13,17 +13,6 @@ pub enum ProductionColumnStats {
 	Number(NumberProductionColumnStats),
 	Enum(EnumProductionColumnStats),
 	Text(TextProductionColumnStats),
-}
-
-impl ProductionColumnStats {
-	pub fn column_name(&self) -> &str {
-		match self {
-			Self::Unknown(s) => s.column_name.as_str(),
-			Self::Text(s) => s.column_name.as_str(),
-			Self::Number(s) => s.column_name.as_str(),
-			Self::Enum(s) => s.column_name.as_str(),
-		}
-	}
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -47,12 +36,6 @@ pub struct NumberProductionColumnStats {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub enum Tokenizer {
-	Alphanumeric,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct EnumProductionColumnStats {
 	pub absent_count: u64,
 	pub column_name: String,
@@ -70,20 +53,67 @@ pub struct TextProductionColumnStats {
 	pub invalid_count: u64,
 	pub count: u64,
 	pub token_histogram: BTreeMap<String, u64>,
-	pub tokenizer: Tokenizer,
+	// pub tokenizer: Tokenizer,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum Tokenizer {
+	Alphanumeric,
+}
+
+#[derive(Debug)]
+pub enum ProductionColumnStatsOutput {
+	Unknown(UnknownProductionColumnStatsOutput),
+	Number(NumberProductionColumnStatsOutput),
+	Enum(EnumProductionColumnStatsOutput),
+	Text(TextProductionColumnStatsOutput),
+}
+
+#[derive(Debug)]
+pub struct UnknownProductionColumnStatsOutput {
+	pub column_name: String,
+	pub absent_count: u64,
+	pub invalid_count: u64,
+	pub alert: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct NumberProductionColumnStatsOutput {
+	pub column_name: String,
+	pub absent_count: u64,
+	pub invalid_count: u64,
+	pub stats: Option<NumberStatsOutput>,
+	pub alert: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct EnumProductionColumnStatsOutput {
+	pub column_name: String,
+	pub absent_count: u64,
+	pub invalid_count: u64,
+	pub histogram: Vec<(String, u64)>,
+	pub invalid_histogram: Option<Vec<(String, u64)>>,
+	pub alert: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct TextProductionColumnStatsOutput {
+	pub column_name: String,
+	pub absent_count: u64,
+	pub invalid_count: u64,
+	pub alert: Option<String>,
+	pub token_histogram: Vec<(String, u64)>,
 }
 
 impl ProductionColumnStats {
-	pub fn new(
-		feature_group: &tangram_core::types::FeatureGroup,
-		column_stats: &tangram_core::types::ColumnStats,
-	) -> Self {
+	pub fn new(column_stats: &tangram_core::types::ColumnStats) -> Self {
 		match column_stats {
 			tangram_core::types::ColumnStats::Unknown(stats) => {
 				ProductionColumnStats::Unknown(UnknownProductionColumnStats::new(stats))
 			}
 			tangram_core::types::ColumnStats::Text(stats) => {
-				ProductionColumnStats::Text(TextProductionColumnStats::new(feature_group, stats))
+				ProductionColumnStats::Text(TextProductionColumnStats::new(stats))
 			}
 			tangram_core::types::ColumnStats::Number(stats) => {
 				ProductionColumnStats::Number(NumberProductionColumnStats::new(stats))
@@ -92,6 +122,15 @@ impl ProductionColumnStats {
 				ProductionColumnStats::Enum(EnumProductionColumnStats::new(stats))
 			}
 			_ => unimplemented!(),
+		}
+	}
+
+	pub fn column_name(&self) -> &str {
+		match self {
+			Self::Unknown(s) => s.column_name.as_str(),
+			Self::Text(s) => s.column_name.as_str(),
+			Self::Number(s) => s.column_name.as_str(),
+			Self::Enum(s) => s.column_name.as_str(),
 		}
 	}
 }
@@ -137,16 +176,16 @@ impl<'a> RunningMetric<'a, '_> for ProductionColumnStats {
 	fn finalize(self) -> Self::Output {
 		match self {
 			ProductionColumnStats::Unknown(stats) => {
-				ProductionColumnStatsOuptut::Unknown(stats.finalize())
+				ProductionColumnStatsOutput::Unknown(stats.finalize())
 			}
 			ProductionColumnStats::Text(stats) => {
-				ProductionColumnStatsOuptut::Text(stats.finalize())
+				ProductionColumnStatsOutput::Text(stats.finalize())
 			}
 			ProductionColumnStats::Number(stats) => {
-				ProductionColumnStatsOuptut::Number(stats.finalize())
+				ProductionColumnStatsOutput::Number(stats.finalize())
 			}
 			ProductionColumnStats::Enum(stats) => {
-				ProductionColumnStatsOuptut::Enum(stats.finalize())
+				ProductionColumnStatsOutput::Enum(stats.finalize())
 			}
 		}
 	}
@@ -397,29 +436,26 @@ impl<'a> RunningMetric<'a, '_> for EnumProductionColumnStats {
 }
 
 impl TextProductionColumnStats {
-	fn new(
-		feature_group: &tangram_core::types::FeatureGroup,
-		column_stats: &tangram_core::types::TextColumnStats,
-	) -> Self {
-		let tokenizer = match feature_group {
-			tangram_core::types::FeatureGroup::BagOfWords(feature_group) => {
-				match feature_group.tokenizer.as_option().unwrap() {
-					tangram_core::types::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
-					tangram_core::types::Tokenizer::UnknownVariant(_, _, _) => unimplemented!(),
-				}
-			}
-			tangram_core::types::FeatureGroup::Identity(_) => unreachable!(),
-			tangram_core::types::FeatureGroup::Normalized(_) => unreachable!(),
-			tangram_core::types::FeatureGroup::OneHotEncoded(_) => unreachable!(),
-			_ => unimplemented!(),
-		};
+	fn new(column_stats: &tangram_core::types::TextColumnStats) -> Self {
+		// let tokenizer = match feature_group {
+		// 	tangram_core::types::FeatureGroup::BagOfWords(feature_group) => {
+		// 		match feature_group.tokenizer.as_option().unwrap() {
+		// 			tangram_core::types::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
+		// 			tangram_core::types::Tokenizer::UnknownVariant(_, _, _) => unimplemented!(),
+		// 		}
+		// 	}
+		// 	tangram_core::types::FeatureGroup::Identity(_) => unreachable!(),
+		// 	tangram_core::types::FeatureGroup::Normalized(_) => unreachable!(),
+		// 	tangram_core::types::FeatureGroup::OneHotEncoded(_) => unreachable!(),
+		// 	_ => unimplemented!(),
+		// };
 		Self {
 			column_name: column_stats.column_name.as_option().unwrap().clone(),
 			absent_count: 0,
 			invalid_count: 0,
 			count: 0,
 			token_histogram: BTreeMap::new(),
-			tokenizer,
+			// tokenizer,
 		}
 	}
 }
@@ -453,22 +489,22 @@ impl<'a> RunningMetric<'a, '_> for TextProductionColumnStats {
 				return;
 			}
 		};
-		match self.tokenizer {
-			Tokenizer::Alphanumeric => {
-				let tokenizer = tangram_core::util::text::AlphanumericTokenizer;
-				let tokens = tokenizer.tokenize(value);
-				let bigrams = tangram_core::util::text::bigrams(&tokens);
-				for token in tokens.iter().chain(bigrams.iter()) {
-					// insert the token into the histogram
-					match self.token_histogram.get_mut(token) {
-						Some(count) => *count += 1,
-						None => {
-							self.token_histogram.insert(value.into(), 1);
-						}
-					}
-				}
-			}
-		}
+		// match self.tokenizer {
+		// 	Tokenizer::Alphanumeric => {
+		// 		let tokenizer = tangram_core::util::text::AlphanumericTokenizer;
+		// 		let tokens = tokenizer.tokenize(value);
+		// 		let bigrams = tangram_core::util::text::bigrams(&tokens);
+		// 		for token in tokens.iter().chain(bigrams.iter()) {
+		// 			// insert the token into the histogram
+		// 			match self.token_histogram.get_mut(token) {
+		// 				Some(count) => *count += 1,
+		// 				None => {
+		// 					self.token_histogram.insert(value.into(), 1);
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 
 	fn merge(&mut self, other: Self) {

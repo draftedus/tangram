@@ -1,12 +1,17 @@
-use crate::{monitor_event::NumberOrString, types};
+use self::{
+	classification_production_metrics::{
+		ClassificationProductionPredictionMetrics, ClassificationProductionPredictionMetricsOutput,
+	},
+	regression_production_metrics::{
+		RegressionProductionPredictionMetrics, RegressionProductionPredictionMetricsOutput,
+	},
+};
+use crate::monitor_event::NumberOrString;
 use chrono::prelude::*;
 use tangram_core::metrics::RunningMetric;
 
 mod classification_production_metrics;
 mod regression_production_metrics;
-
-pub use self::classification_production_metrics::*;
-pub use self::regression_production_metrics::*;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -14,7 +19,28 @@ pub struct ProductionMetrics {
 	pub start_date: DateTime<Utc>,
 	pub end_date: DateTime<Utc>,
 	pub true_values_count: u64,
-	pub prediction_metrics: PredictionMetrics,
+	pub prediction_metrics: ProductionPredictionMetrics,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase", tag = "type", content = "value")]
+pub enum ProductionPredictionMetrics {
+	Classification(ClassificationProductionPredictionMetrics),
+	Regression(RegressionProductionPredictionMetrics),
+}
+
+#[derive(Debug)]
+pub struct ProductionMetricsOutput {
+	pub start_date: DateTime<Utc>,
+	pub end_date: DateTime<Utc>,
+	pub true_values_count: u64,
+	pub prediction_metrics: Option<ProductionPredictionMetricsOutput>,
+}
+
+#[derive(Debug)]
+pub enum ProductionPredictionMetricsOutput {
+	Regression(RegressionProductionPredictionMetricsOutput),
+	Classification(ClassificationProductionPredictionMetricsOutput),
 }
 
 impl ProductionMetrics {
@@ -23,7 +49,7 @@ impl ProductionMetrics {
 		start_date: DateTime<Utc>,
 		end_date: DateTime<Utc>,
 	) -> Self {
-		let prediction_metrics = PredictionMetrics::new(model);
+		let prediction_metrics = ProductionPredictionMetrics::new(model);
 		Self {
 			start_date,
 			end_date,
@@ -59,47 +85,42 @@ impl RunningMetric<'_, '_> for ProductionMetrics {
 	}
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase", tag = "type", content = "value")]
-pub enum PredictionMetrics {
-	Classification(ClassificationPredictionMetrics),
-	Regression(RegressionPredictionMetrics),
-}
-
-impl PredictionMetrics {
+impl ProductionPredictionMetrics {
 	pub fn new(model: &tangram_core::types::Model) -> Self {
 		match model {
 			tangram_core::types::Model::Regressor(_) => {
-				PredictionMetrics::Regression(RegressionPredictionMetrics::new())
+				ProductionPredictionMetrics::Regression(RegressionProductionPredictionMetrics::new())
 			}
-			tangram_core::types::Model::Classifier(model) => PredictionMetrics::Classification(
-				ClassificationPredictionMetrics::new(model.classes().to_owned()),
-			),
+			tangram_core::types::Model::Classifier(model) => {
+				ProductionPredictionMetrics::Classification(
+					ClassificationProductionPredictionMetrics::new(model.classes().to_owned()),
+				)
+			}
 			_ => unimplemented!(),
 		}
 	}
 }
 
-impl RunningMetric<'_, '_> for PredictionMetrics {
+impl RunningMetric<'_, '_> for ProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
-	type Output = Option<types::PredictionMetrics>;
+	type Output = Option<ProductionPredictionMetricsOutput>;
 
 	fn update(&mut self, value: (NumberOrString, NumberOrString)) {
 		match self {
-			PredictionMetrics::Classification(s) => s.update(value),
-			PredictionMetrics::Regression(s) => s.update(value),
+			ProductionPredictionMetrics::Classification(s) => s.update(value),
+			ProductionPredictionMetrics::Regression(s) => s.update(value),
 		}
 	}
 
 	fn merge(&mut self, other: Self) {
 		match self {
-			PredictionMetrics::Regression(s) => {
-				if let PredictionMetrics::Regression(other) = other {
+			ProductionPredictionMetrics::Regression(s) => {
+				if let ProductionPredictionMetrics::Regression(other) = other {
 					s.merge(other)
 				}
 			}
-			PredictionMetrics::Classification(s) => {
-				if let PredictionMetrics::Classification(other) = other {
+			ProductionPredictionMetrics::Classification(s) => {
+				if let ProductionPredictionMetrics::Classification(other) = other {
 					s.merge(other)
 				}
 			}
@@ -108,12 +129,12 @@ impl RunningMetric<'_, '_> for PredictionMetrics {
 
 	fn finalize(self) -> Self::Output {
 		match self {
-			PredictionMetrics::Classification(s) => match s.finalize() {
-				Some(s) => Some(types::PredictionMetrics::Classification(s)),
+			ProductionPredictionMetrics::Classification(s) => match s.finalize() {
+				Some(s) => Some(ProductionPredictionMetricsOutput::Classification(s)),
 				None => None,
 			},
-			PredictionMetrics::Regression(s) => match s.finalize() {
-				Some(s) => Some(types::PredictionMetrics::Regression(s)),
+			ProductionPredictionMetrics::Regression(s) => match s.finalize() {
+				Some(s) => Some(ProductionPredictionMetricsOutput::Regression(s)),
 				None => None,
 			},
 		}
