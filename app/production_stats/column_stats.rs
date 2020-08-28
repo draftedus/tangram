@@ -466,29 +466,16 @@ impl<'a> RunningMetric<'a, '_> for TextProductionColumnStats {
 
 	fn update(&mut self, value: Self::Input) {
 		self.count += 1;
-		let value = match value {
+		match value {
 			None => {
 				self.absent_count += 1;
-				return;
 			}
-			Some(serde_json::Value::Number(_)) => {
-				self.invalid_count += 1;
-				return;
-			}
-			Some(serde_json::Value::Bool(_)) => {
-				self.invalid_count += 1;
-				return;
-			}
-			Some(serde_json::Value::String(value)) => value,
-			Some(serde_json::Value::Null) => {
-				self.invalid_count += 1;
-				return;
-			}
+			Some(serde_json::Value::String(_)) => {}
 			_ => {
 				self.invalid_count += 1;
-				return;
 			}
 		};
+		// if let Some(serde_json::Value::String(value)) = value {
 		// match self.tokenizer {
 		// 	Tokenizer::Alphanumeric => {
 		// 		let tokenizer = tangram_core::util::text::AlphanumericTokenizer;
@@ -504,6 +491,7 @@ impl<'a> RunningMetric<'a, '_> for TextProductionColumnStats {
 		// 			}
 		// 		}
 		// 	}
+		// }
 		// }
 	}
 

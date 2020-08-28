@@ -155,7 +155,7 @@ async fn props_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Props> 
 			}
 		})
 		.collect();
-	return Ok(Props { repos });
+	Ok(Props { repos })
 }
 
 #[derive(serde::Deserialize)]

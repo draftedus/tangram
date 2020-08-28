@@ -85,12 +85,12 @@ async fn props(
 			title,
 		})
 	} else {
-		return Ok(Props {
+		Ok(Props {
 			owners: None,
 			error,
 			owner,
 			title,
-		});
+		})
 	}
 }
 

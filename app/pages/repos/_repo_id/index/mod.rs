@@ -1,5 +1,5 @@
 use crate::{
-	common::user::{authorize_user, authorize_user_for_model, authorize_user_for_repo, User},
+	common::user::{authorize_user, authorize_user_for_model, authorize_user_for_repo},
 	error::Error,
 	Context,
 };
