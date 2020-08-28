@@ -34,11 +34,14 @@ create table repos (
 	title varchar(64) not null,
 	organization_id char(32) references organizations (id) on delete cascade,
 	user_id char(32) references users (id) on delete cascade,
+	/* ensure that organization_id and user_id are not both set */
 	constraint single_owner check (
+		(organization_id is null and user_id is null)
+		or
 		(organization_id is null and user_id is not null)
 		or
-		(user_id is null and organization_id is not null)
-	),
+		(organization_id is not null and user_id is null)
+	)
 );
 
 create table models (

@@ -6,6 +6,14 @@ edition = "2018"
 [lib]
 path = "lib.rs"
 
+[[bin]]
+name = "gbt-higgs"
+path = "gbt/bench/higgs.rs"
+
+[[bin]]
+name = "gbt-census"
+path = "gbt/bench/census.rs"
+
 [dev-dependencies]
 insta = " 0.16"
 

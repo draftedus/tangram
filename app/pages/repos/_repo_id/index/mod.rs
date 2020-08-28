@@ -19,14 +19,16 @@ pub async fn get(
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
-	authorize_user_for_repo(&mut db, &user, repo_id)
-		.await
-		.map_err(|_| Error::NotFound)?;
-	let props = props(&mut db, &user, repo_id).await?;
+	if let Some(user) = user {
+		authorize_user_for_repo(&mut db, &user, repo_id)
+			.await
+			.map_err(|_| Error::NotFound)?;
+	}
+	let props = props(&mut db, repo_id).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/repos/_repo_id/", props)?;
 	let response = Response::builder()
@@ -49,11 +51,7 @@ pub struct Model {
 	pub created_at: String,
 }
 
-pub async fn props(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	_user: &User,
-	repo_id: Id,
-) -> Result<Props> {
+pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, repo_id: Id) -> Result<Props> {
 	let rows = sqlx::query(
 		"
 			select
@@ -110,16 +108,18 @@ pub async fn post(
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 
 	match action {
 		Action::DeleteModel(DeleteModelAction { model_id, .. }) => {
 			let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-			authorize_user_for_model(&mut db, &user, model_id)
-				.await
-				.map_err(|_| Error::NotFound)?;
+			if let Some(user) = user {
+				authorize_user_for_model(&mut db, &user, model_id)
+					.await
+					.map_err(|_| Error::NotFound)?;
+			}
 			sqlx::query(
 				"
 					delete from models

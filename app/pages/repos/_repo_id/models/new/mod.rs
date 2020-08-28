@@ -26,13 +26,15 @@ pub async fn get(
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
 
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 
 	let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
-		return Err(Error::NotFound.into());
+	if let Some(user) = user {
+		if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
+			return Err(Error::NotFound.into());
+		}
 	}
 	let response = render(context, None).await;
 	db.commit().await?;
@@ -67,12 +69,14 @@ pub async fn post(
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
-		return Err(Error::Unauthorized.into());
+	if let Some(user) = user {
+		if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
+			return Err(Error::Unauthorized.into());
+		}
 	}
 	let boundary = match request
 		.headers()

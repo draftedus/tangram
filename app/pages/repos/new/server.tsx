@@ -3,19 +3,15 @@ import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
 	error?: string
-	form?: Form
-	owners: Owner[]
+	owner?: string
+	owners?: Owner[]
 	pinwheelInfo: PinwheelInfo
+	title?: string
 }
 
 type Owner = {
 	title: string
 	value: string
-}
-
-type Form = {
-	owner: string
-	title: string
 }
 
 export default function RepoCreatePage(props: Props) {
@@ -31,20 +27,22 @@ export default function RepoCreatePage(props: Props) {
 						label="Title"
 						name="title"
 						required={true}
-						value={props.form?.title}
+						value={props.title}
 					/>
-					<ui.SelectField
-						label="Owner"
-						name="owner"
-						required={true}
-						value={props.form?.owner}
-					>
-						{props.owners.map(({ title, value }) => (
-							<option key={value} value={value}>
-								{title}
-							</option>
-						))}
-					</ui.SelectField>
+					{props.owners && (
+						<ui.SelectField
+							label="Owner"
+							name="owner"
+							required={true}
+							value={props.owner}
+						>
+							{props.owners.map(({ title, value }) => (
+								<option key={value} value={value}>
+									{title}
+								</option>
+							))}
+						</ui.SelectField>
+					)}
 					<ui.FileField label="File" name="file" required={true} />
 					<ui.Button type="submit">{'Upload'}</ui.Button>
 				</ui.Form>

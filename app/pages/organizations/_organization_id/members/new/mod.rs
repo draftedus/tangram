@@ -14,6 +14,9 @@ pub async fn get(
 	context: &Context,
 	_organization_id: &str,
 ) -> Result<Response<Body>> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let props = Props {};
 	let html = context
 		.pinwheel
@@ -40,6 +43,9 @@ pub async fn post(
 	context: &Context,
 	organization_id: &str,
 ) -> Result<Response<Body>> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
@@ -50,9 +56,10 @@ pub async fn post(
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
+	let user = user.unwrap();
 	authorize_user_for_organization(&mut db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;

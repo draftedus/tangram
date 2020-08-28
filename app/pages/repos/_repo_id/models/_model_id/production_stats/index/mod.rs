@@ -142,12 +142,14 @@ async fn props(
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_model(&mut db, &user, model_id).await? {
-		return Err(Error::NotFound.into());
+	if let Some(user) = user {
+		if !authorize_user_for_model(&mut db, &user, model_id).await? {
+			return Err(Error::NotFound.into());
+		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;

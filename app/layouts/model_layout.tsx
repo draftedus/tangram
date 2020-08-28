@@ -17,9 +17,13 @@ export type ModelLayoutInfo = {
 		isMain: boolean
 		title: string
 	}>
-	ownerName: string
-	ownerUrl: string
+	owner?: Owner
 	title: string
+}
+
+type Owner = {
+	name: string
+	url: string
 }
 
 export enum ModelSideNavItem {
@@ -43,13 +47,15 @@ export function ModelLayout(props: ModelLayoutProps) {
 				<div class="model-layout-topbar" style={{ gridArea: 'topbar' }}>
 					<div class="model-layout-owner-slash-repo-slash-model-wrapper">
 						<div class="model-layout-owner-slash-repo-wrapper">
-							<a
-								class="model-layout-owner-slash-repo-link"
-								href={props.info.ownerUrl}
-								title="owner"
-							>
-								{props.info.ownerName}
-							</a>
+							{props.info.owner && (
+								<a
+									class="model-layout-owner-slash-repo-link"
+									href={props.info.owner.url}
+									title="owner"
+								>
+									{props.info.owner.name}
+								</a>
+							)}
 							<span class="model-layout-owner-slash-repo-slash">{'/'}</span>
 							<a
 								class="model-layout-owner-slash-repo-link"
@@ -61,16 +67,18 @@ export function ModelLayout(props: ModelLayoutProps) {
 						</div>
 					</div>
 					<div class="model-layout-topbar-actions-wrapper">
-						{'Version:'}
-						<ui.Details
-							options={
-								props.info.models.map(model => ({
-									href: `/repos/${props.info.id}/models/${model.id}/`,
-									name: model.id,
-								})) ?? []
-							}
-							summary={selectedModel?.id ?? null}
-						/>
+						<div class="model-layout-topbar-version-select-wrapper">
+							{'Version:'}
+							<ui.Details
+								options={
+									props.info.models.map(model => ({
+										href: `/repos/${props.info.id}/models/${model.id}/`,
+										name: model.id,
+									})) ?? []
+								}
+								summary={selectedModel?.id ?? null}
+							/>
+						</div>
 						<ui.Button
 							download={`${props.info.modelTitle}.tangram`}
 							href={`/repos/${props.info.id}/models/${props.info.modelId}/download`}

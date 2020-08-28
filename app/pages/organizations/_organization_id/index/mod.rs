@@ -18,6 +18,9 @@ pub async fn get(
 	context: &Context,
 	organization_id: &str,
 ) -> Result<Response<Body>> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let props = props(request, context, organization_id).await?;
 	let html = context
 		.pinwheel
@@ -59,9 +62,10 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
+	let user = user.unwrap();
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
 	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
 		return Err(Error::NotFound.into());
@@ -200,6 +204,9 @@ pub async fn post(
 	context: &Context,
 	organization_id: &str,
 ) -> Result<Response<Body>> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
@@ -209,9 +216,10 @@ pub async fn post(
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db)
+	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
+	let user = user.unwrap();
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
 	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
 		return Err(Error::NotFound.into());

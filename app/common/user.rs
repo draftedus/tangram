@@ -24,7 +24,12 @@ pub enum AuthorizeUserError {
 pub async fn authorize_user(
 	request: &Request<Body>,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-) -> Result<Result<User, AuthorizeUserError>> {
+	auth_enabled: bool,
+) -> Result<Result<Option<User>, AuthorizeUserError>> {
+	// when auth is disabled, everyone is authorized as the root user
+	if !auth_enabled {
+		return Ok(Ok(None));
+	}
 	let token = if let Some(authorization) = request.headers().get(header::AUTHORIZATION) {
 		let authorization = match authorization.to_str() {
 			Ok(authorization) => authorization,
@@ -75,7 +80,7 @@ pub async fn authorize_user(
 	let id: Id = id.parse().unwrap();
 	let email = row.get(1);
 	let user = User { id, email, token };
-	Ok(Ok(user))
+	Ok(Ok(Some(user)))
 }
 
 pub async fn authorize_user_for_organization(
