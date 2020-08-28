@@ -60,77 +60,82 @@ enum Inner {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct NumberProps {
+	absent_count: u64,
 	alert: Option<String>,
-	name: String,
-	date_window: DateWindow,
+	column_name: String,
 	date_window_interval: DateWindowInterval,
-	intervals: Vec<NumberInterval>,
-	overall: NumberOverall,
+	date_window: DateWindow,
+	interval_box_chart_data: Vec<IntervalBoxChartDataPoint>,
+	invalid_count: u64,
+	max_comparison: NumberTrainingProductionComparison,
+	mean_comparison: NumberTrainingProductionComparison,
+	min_comparison: NumberTrainingProductionComparison,
+	overall_box_chart_data: OverallBoxChartData,
+	row_count: u64,
+	std_comparison: NumberTrainingProductionComparison,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct NumberInterval {
+struct IntervalBoxChartDataPoint {
 	label: String,
-	stats: Option<NumberStats>,
+	stats: Option<IntervalBoxChartDataPointStats>,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct NumberStats {
+struct IntervalBoxChartDataPointStats {
 	max: f32,
 	min: f32,
-	mean: f32,
 	p25: f32,
 	p50: f32,
 	p75: f32,
-	std: f32,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct NumberOverall {
-	absent_count: u64,
-	invalid_count: u64,
-	label: String,
-	row_count: u64,
-	stats: NumberOverallStats,
+struct OverallBoxChartData {
+	production: Option<OverallBoxChartDataStats>,
+	training: OverallBoxChartDataStats,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct NumberOverallStats {
-	production: Option<NumberStats>,
-	training: NumberStats,
+struct OverallBoxChartDataStats {
+	max: f32,
+	min: f32,
+	p25: f32,
+	p50: f32,
+	p75: f32,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NumberTrainingProductionComparison {
+	production: Option<f32>,
+	training: f32,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct EnumProps {
 	alert: Option<String>,
-	name: String,
+	absent_count: u64,
+	column_name: String,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
-	intervals: Vec<EnumInterval>,
-	overall: EnumOverall,
+	interval_chart_data: Vec<EnumIntervalChartDataPoint>,
+	invalid_count: u64,
+	overall_chart_data: Vec<(String, EnumOverallHistogramEntry)>,
+	overall_invalid_chart_data: Option<Vec<(String, u64)>>,
+	row_count: u64,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct EnumInterval {
+struct EnumIntervalChartDataPoint {
 	label: String,
 	histogram: Vec<(String, u64)>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct EnumOverall {
-	label: String,
-	histogram: Vec<(String, EnumOverallHistogramEntry)>,
-	row_count: u64,
-	invalid_histogram: Option<Vec<(String, u64)>>,
-	invalid_count: u64,
-	absent_count: u64,
 }
 
 #[derive(Serialize)]
@@ -145,21 +150,14 @@ struct EnumOverallHistogramEntry {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TextProps {
-	alert: Option<String>,
-	name: String,
-	date_window: DateWindow,
-	date_window_interval: DateWindowInterval,
-	overall: TextOverall,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct TextOverall {
-	label: String,
-	token_histogram: Vec<(String, u64)>,
-	row_count: u64,
-	invalid_count: u64,
 	absent_count: u64,
+	alert: Option<String>,
+	column_name: String,
+	date_window_interval: DateWindowInterval,
+	date_window: DateWindow,
+	invalid_count: u64,
+	overall_token_histogram: Vec<(String, u64)>,
+	row_count: u64,
 }
 
 async fn props(
@@ -195,9 +193,9 @@ async fn props(
 		timezone,
 	)
 	.await?;
-	let train_row_count = match model {
-		tangram_core::types::Model::Regressor(model) => model.row_count.into_option().unwrap(),
-		tangram_core::types::Model::Classifier(model) => model.row_count.into_option().unwrap(),
+	let train_row_count = match &model {
+		tangram_core::types::Model::Regressor(model) => *model.row_count.as_option().unwrap(),
+		tangram_core::types::Model::Classifier(model) => *model.row_count.as_option().unwrap(),
 		_ => unreachable!(),
 	};
 	let train_column_stats = match &model {
@@ -261,155 +259,155 @@ fn number_props(
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> NumberProps {
-	let overall = match get_production_stats_output.overall {
-		ProductionColumnStatsOutput::Number(overall) => overall,
-		_ => unreachable!(),
-	};
-	let overall = NumberOverall {
-		absent_count: get_production_stats_output.overall.absent_count,
-		invalid_count: get_production_stats_output.overall.invalid_count,
-		label: format_date_window(
-			get_production_stats_output.overall.start_date,
-			date_window,
-			timezone,
-		),
-		row_count: get_production_stats_output.overall.predictions_count,
-		stats: NumberOverallStats {
-			production: get_production_stats_output
-				.overall
-				.stats
-				.as_ref()
-				.map(|stats| NumberStats {
-					max: stats.max,
-					min: stats.min,
-					mean: stats.mean,
-					p25: stats.p25,
-					p50: stats.p50,
-					p75: stats.p75,
-					std: stats.std,
-				}),
-			training: NumberStats {
-				max: *train_column_stats.max.as_option().unwrap(),
-				min: *train_column_stats.min.as_option().unwrap(),
-				mean: *train_column_stats.mean.as_option().unwrap(),
-				p25: *train_column_stats.p25.as_option().unwrap(),
-				p50: *train_column_stats.p50.as_option().unwrap(),
-				p75: *train_column_stats.p75.as_option().unwrap(),
-				std: *train_column_stats.std.as_option().unwrap(),
-			},
-		},
-	};
-	let intervals = get_production_column_stats_output
-		.intervals
-		.into_iter()
-		.map(|interval| NumberInterval {
-			label: format_date_window_interval(interval.start_date, date_window_interval, timezone),
-			stats: interval.stats.map(|c| NumberStats {
-				max: c.max,
-				min: c.min,
-				mean: c.mean,
-				p25: c.p25,
-				p50: c.p50,
-				p75: c.p75,
-				std: c.std,
-			}),
-		})
-		.collect();
-	NumberProps {
-		// TODO
-		alert: None,
-		name: train_column_stats.column_name,
-		date_window,
-		date_window_interval,
-		intervals,
-		overall,
-	}
+	// let overall = match get_production_stats_output.overall {
+	// 	ProductionColumnStatsOutput::Number(overall) => overall,
+	// 	_ => unreachable!(),
+	// };
+	// let overall = NumberOverall {
+	// 	label: format_date_window(
+	// 		get_production_stats_output.overall.start_date,
+	// 		date_window,
+	// 		timezone,
+	// 	),
+	// 	stats: NumberOverallStats {
+	// 		production: get_production_stats_output
+	// 			.overall
+	// 			.stats
+	// 			.as_ref()
+	// 			.map(|stats| NumberStats {
+	// 				max: stats.max,
+	// 				min: stats.min,
+	// 				mean: stats.mean,
+	// 				p25: stats.p25,
+	// 				p50: stats.p50,
+	// 				p75: stats.p75,
+	// 				std: stats.std,
+	// 			}),
+	// 		training: NumberStats {
+	// 			max: *train_column_stats.max.as_option().unwrap(),
+	// 			min: *train_column_stats.min.as_option().unwrap(),
+	// 			mean: *train_column_stats.mean.as_option().unwrap(),
+	// 			p25: *train_column_stats.p25.as_option().unwrap(),
+	// 			p50: *train_column_stats.p50.as_option().unwrap(),
+	// 			p75: *train_column_stats.p75.as_option().unwrap(),
+	// 			std: *train_column_stats.std.as_option().unwrap(),
+	// 		},
+	// 	},
+	// };
+	// let intervals = get_production_column_stats_output
+	// 	.intervals
+	// 	.into_iter()
+	// 	.map(|interval| NumberInterval {
+	// 		label: format_date_window_interval(interval.start_date, date_window_interval, timezone),
+	// 		stats: interval.stats.map(|c| NumberStats {
+	// 			max: c.max,
+	// 			min: c.min,
+	// 			mean: c.mean,
+	// 			p25: c.p25,
+	// 			p50: c.p50,
+	// 			p75: c.p75,
+	// 			std: c.std,
+	// 		}),
+	// 	})
+	// 	.collect();
+	// NumberProps {
+	// 	// TODO
+	// 	alert: None,
+	// 	column_name: train_column_stats.column_name,
+	// 	date_window,
+	// 	date_window_interval,
+	// 	intervals,
+	// 	overall,
+	// }
+	todo!()
 }
 
 fn enum_props(
 	get_production_stats_output: GetProductionColumnStatsOutput,
-	train_column_stats: tangram_core::types::EnumColumnStats,
+	train_column_stats: &tangram_core::types::EnumColumnStats,
 	train_row_count: u64,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> EnumProps {
-	let production_row_count = production_stats.overall.predictions_count;
-	let histogram = production_stats
-		.overall
-		.histogram
-		.into_iter()
-		.zip(
-			train_column_stats
-				.histogram
-				.into_option()
-				.unwrap()
-				.into_iter(),
-		)
-		.map(
-			|((production_key, production_count), (train_key, training_count))| {
-				if production_key != train_key {
-					panic!();
-				}
-				(
-					production_key,
-					EnumOverallHistogramEntry {
-						production_count,
-						training_count,
-						production_fraction: production_count.to_f32().unwrap()
-							/ production_row_count.to_f32().unwrap(),
-						training_fraction: training_count.to_f32().unwrap()
-							/ train_row_count.to_f32().unwrap(),
-					},
-				)
-			},
-		)
-		.collect();
-	let overall = EnumOverall {
-		absent_count: production_stats.overall.absent_count,
-		invalid_count: production_stats.overall.invalid_count,
-		label: format_date_window(production_stats.overall.start_date, date_window, timezone),
-		row_count: production_stats.overall.predictions_count,
-		histogram,
-		invalid_histogram: production_stats.overall.invalid_histogram,
-	};
-	let intervals = production_stats
-		.intervals
-		.into_iter()
-		.map(|interval| EnumInterval {
-			label: format_date_window_interval(interval.start_date, date_window_interval, timezone),
-			histogram: interval.histogram,
-		})
-		.collect();
-	EnumProps {
-		alert: production_stats.overall.alert,
-		name: production_stats.overall.column_name,
-		date_window,
-		date_window_interval,
-		intervals,
-		overall,
-	}
+	// let production_row_count = production_stats.overall.predictions_count;
+	// let histogram = production_stats
+	// 	.overall
+	// 	.histogram
+	// 	.into_iter()
+	// 	.zip(
+	// 		train_column_stats
+	// 			.histogram
+	// 			.into_option()
+	// 			.unwrap()
+	// 			.into_iter(),
+	// 	)
+	// 	.map(
+	// 		|((production_key, production_count), (train_key, training_count))| {
+	// 			if production_key != train_key {
+	// 				panic!();
+	// 			}
+	// 			(
+	// 				production_key,
+	// 				EnumOverallHistogramEntry {
+	// 					production_count,
+	// 					training_count,
+	// 					production_fraction: production_count.to_f32().unwrap()
+	// 						/ production_row_count.to_f32().unwrap(),
+	// 					training_fraction: training_count.to_f32().unwrap()
+	// 						/ train_row_count.to_f32().unwrap(),
+	// 				},
+	// 			)
+	// 		},
+	// 	)
+	// 	.collect();
+	// let overall = EnumOverallChartData {
+	// 	// label: format_date_window(production_stats.overall.start_date, date_window, timezone),
+	// 	histogram,
+	// };
+	// let intervals = production_stats
+	// 	.intervals
+	// 	.into_iter()
+	// 	.map(|interval| EnumIntervalChartDataPoint {
+	// 		label: format_date_window_interval(interval.start_date, date_window_interval, timezone),
+	// 		histogram: interval.histogram,
+	// 	})
+	// 	.collect();
+	// EnumProps {
+	// 	invalid_histogram: production_stats.overall.invalid_histogram,
+	// 	row_count: production_stats.overall.predictions_count,
+	// 	absent_count: production_stats.overall.absent_count,
+	// 	invalid_count: production_stats.overall.invalid_count,
+	// 	alert: production_stats.overall.alert,
+	// 	column_name: production_stats.overall.column_name,
+	// 	date_window,
+	// 	date_window_interval,
+	// 	interval_chart_data: intervals,
+	// 	overall,
+	// }
+	todo!()
 }
 
 fn text_props(
 	get_production_stats_output: GetProductionColumnStatsOutput,
-	_train_column_stats: tangram_core::types::TextColumnStats,
+	_train_column_stats: &tangram_core::types::TextColumnStats,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> TextProps {
-	let overall = TextOverall {
-		absent_count: production_stats.overall.absent_count,
-		invalid_count: production_stats.overall.invalid_count,
-		label: format_date_window(production_stats.overall.start_date, date_window, timezone),
-		row_count: production_stats.overall.predictions_count,
-		token_histogram: production_stats.overall.token_histogram,
-	};
-	TextProps {
-		alert: production_stats.overall.alert,
-		name: production_stats.overall.column_name,
-		date_window,
-		date_window_interval,
-		overall,
-	}
+	// let overall = TextOverall {
+	// 	absent_count: production_stats.overall.absent_count,
+	// 	invalid_count: production_stats.overall.invalid_count,
+	// 	label: format_date_window(production_stats.overall.start_date, date_window, timezone),
+	// 	row_count: production_stats.overall.predictions_count,
+	// 	token_histogram: production_stats.overall.token_histogram,
+	// };
+	// TextProps {
+	// 	alert: production_stats.overall.alert,
+	// 	column_name: production_stats.overall.column_name,
+	// 	date_window,
+	// 	date_window_interval,
+	// 	overall,
+	// }
+	todo!()
 }

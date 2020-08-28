@@ -23,10 +23,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@tangramhq/eslint-plugin@0.1.22":
-  version "0.1.22"
-  resolved "https://registry.yarnpkg.com/@tangramhq/eslint-plugin/-/eslint-plugin-0.1.22.tgz#e5649883f43d9b7932fc6145b28a3dd53a8ed345"
-  integrity sha512-Zp0k69+NXqqbaqOxpBFOVNR12a9Xg37q400JeKFGDtOYJPfAxwVX1uYT42hhVcmZFvxdfq/hy6khINnMpQAtBA==
+"@tangramhq/eslint-plugin@0.1.23":
+  version "0.1.23"
+  resolved "https://registry.yarnpkg.com/@tangramhq/eslint-plugin/-/eslint-plugin-0.1.23.tgz#a07390362c4db814110299b4d1e80e1e40734cd3"
+  integrity sha512-lW5ceBRUtNwX6qIOL4SdwWubs3A8fZumjvBVtvU1muF0nI3xtkpIyTaOX2krWB3QmGYyVD2weUdOMoO0bWpacw==
   dependencies:
     "@typescript-eslint/eslint-plugin" "3.10.1"
     "@typescript-eslint/parser" "3.10.1"
@@ -36,7 +36,7 @@
     eslint-plugin-prettier "3.1.4"
     eslint-plugin-react "7.20.6"
     eslint-plugin-react-hooks "4.1.0"
-    prettier "2.1.0"
+    prettier "2.1.1"
     typescript "4.0.2"
 
 "@types/color-name@^1.1.1":
@@ -1107,11 +1107,6 @@ prettier-linter-helpers@^1.0.0:
   integrity sha512-GbK2cP9nraSSUF9N2XwUwqfzlAFlMNYYl+ShE/V+H8a9uNl/oUqB1w2EL54Jh0OlyRSd8RfWYJ3coVS4TROP2w==
   dependencies:
     fast-diff "^1.1.2"
-
-prettier@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.1.0.tgz#5a9789f767a243118c60f3e56d95cb6544914fbb"
-  integrity sha512-lz28cCbA1cDFHVuY8vvj6QuqOwIpyIfPUYkSl8AZ/vxH8qBXMMjE2knfLHCrZCmUsK/H1bg1P0tOo0dJkTJHvw==
 
 prettier@2.1.1:
   version "2.1.1"

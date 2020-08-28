@@ -9,39 +9,36 @@ import { productionColor, trainingColor } from 'common/tokens'
 import { Fragment, h, ui } from 'deps'
 
 export type Props = {
+	absentCount: number
 	alert: string | null
+	columnName: string
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
-	intervals: Array<{
+	intervalChartData: Array<{
 		histogram: Array<[string, number]>
 		label: string
 	}>
-	name: string
-	overall: {
-		absentCount: number
-		histogram: Array<
-			[
-				string,
-				{
-					productionCount: number
-					productionFraction: number
-					trainingCount: number
-					trainingFraction: number
-				},
-			]
-		>
-		invalidCount: number
-		invalidHistogram: Array<[string, number]> | null
-		label: string
-		rowCount: number
-	}
+	invalidCount: number
+	overallChartData: Array<
+		[
+			string,
+			{
+				productionCount: number
+				productionFraction: number
+				trainingCount: number
+				trainingFraction: number
+			},
+		]
+	>
+	overallInvalidChartData: Array<[string, number]> | null
+	rowCount: number
 }
 
 export function Enum(props: Props) {
 	let overallChartData = [
 		{
 			color: trainingColor,
-			data: props.overall.histogram.map(([label, entry], i) => ({
+			data: props.overallChartData.map(([label, entry], i) => ({
 				label,
 				x: i,
 				y: entry.trainingFraction,
@@ -50,7 +47,7 @@ export function Enum(props: Props) {
 		},
 		{
 			color: productionColor,
-			data: props.overall.histogram.map(([label, entry], i) => ({
+			data: props.overallChartData.map(([label, entry], i) => ({
 				label,
 				x: i,
 				y: entry.productionFraction,
@@ -60,10 +57,10 @@ export function Enum(props: Props) {
 	]
 	let overallDistributionChartTitle = overallChartTitle(
 		props.dateWindow,
-		`Distribution of Unique Values for ${props.name}`,
+		`Distribution of Unique Values for ${props.columnName}`,
 	)
 
-	let categories = props.intervals[0].histogram.map(x => x[0])
+	let categories = props.intervalChartData[0].histogram.map(x => x[0])
 	let colorOptions = [
 		ui.colors.green,
 		ui.colors.blue,
@@ -74,19 +71,22 @@ export function Enum(props: Props) {
 		ui.colors.orange,
 		ui.colors.yellow,
 	]
-	let intervalChartData = ui.times(props.intervals[0].histogram.length, i => ({
-		color: colorOptions[i % colorOptions.length],
-		data: props.intervals.map((entry, j) => ({
-			label: entry.label,
-			x: j,
-			y: entry.histogram !== null ? entry.histogram[i][1] : null,
-		})),
-		title: categories[i],
-	}))
+	let intervalChartData = ui.times(
+		props.intervalChartData[0].histogram.length,
+		i => ({
+			color: colorOptions[i % colorOptions.length],
+			data: props.intervalChartData.map((entry, j) => ({
+				label: entry.label,
+				x: j,
+				y: entry.histogram !== null ? entry.histogram[i][1] : null,
+			})),
+			title: categories[i],
+		}),
+	)
 
 	let intervalDistributionChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		`Distribution of Unique Values for ${props.name}`,
+		`Distribution of Unique Values for ${props.columnName}`,
 	)
 
 	return (
@@ -99,7 +99,7 @@ export function Enum(props: Props) {
 					data={overallChartData}
 					id="enum_overall"
 					title={overallDistributionChartTitle}
-					xAxisTitle={props.name}
+					xAxisTitle={props.columnName}
 					yAxisTitle="Percent"
 					yMax={1}
 				/>
@@ -114,21 +114,18 @@ export function Enum(props: Props) {
 			</ui.Card>
 			<MetricsRow>
 				<ui.Card>
-					<ui.NumberChart
-						title="Row Count"
-						value={props.overall.rowCount.toString()}
-					/>
+					<ui.NumberChart title="Row Count" value={props.rowCount.toString()} />
 				</ui.Card>
 				<ui.Card>
 					<ui.NumberChart
 						title="Absent Count"
-						value={props.overall.absentCount.toString()}
+						value={props.absentCount.toString()}
 					/>
 				</ui.Card>
 				<ui.Card>
 					<ui.NumberChart
 						title="Invalid Count"
-						value={props.overall.invalidCount.toString()}
+						value={props.invalidCount.toString()}
 					/>
 				</ui.Card>
 			</MetricsRow>
@@ -144,7 +141,7 @@ export function Enum(props: Props) {
 					</ui.TableRow>
 				</ui.TableHeader>
 				<ui.TableBody>
-					{props.overall.histogram.map(([value, entry]) => (
+					{props.overallChartData.map(([value, entry]) => (
 						<ui.TableRow key={value}>
 							<ui.TableCell>{value}</ui.TableCell>
 							<ui.TableCell>
@@ -163,7 +160,7 @@ export function Enum(props: Props) {
 					))}
 				</ui.TableBody>
 			</ui.Table>
-			{props.overall.invalidHistogram && (
+			{props.overallInvalidChartData && (
 				<>
 					<ui.H2>{'Invalid Values'}</ui.H2>
 					<ui.Table width="100%">
@@ -174,7 +171,7 @@ export function Enum(props: Props) {
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>
-							{props.overall.invalidHistogram.map(([value, count], i) => (
+							{props.overallInvalidChartData.map(([value, count], i) => (
 								<ui.TableRow key={i}>
 									<ui.TableCell>{value}</ui.TableCell>
 									<ui.TableCell>{ui.formatNumber(count)}</ui.TableCell>

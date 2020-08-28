@@ -1,6 +1,6 @@
 {
 	"devDependencies": {
-		"@tangramhq/eslint-plugin": "0.1.22",
+		"@tangramhq/eslint-plugin": "0.1.23",
 		"csstype": "3.0.3",
 		"esbuild": "0.6.28",
 		"eslint": "7.7.0",

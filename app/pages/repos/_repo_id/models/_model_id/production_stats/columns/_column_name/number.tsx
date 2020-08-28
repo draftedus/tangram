@@ -9,54 +9,62 @@ import { productionColor, trainingColor } from 'common/tokens'
 import { h, ui } from 'deps'
 
 export type Props = {
+	absentCount: number
 	alert: string | null
+	columnName: string
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
-	intervals: Array<{
+	intervalBoxChartData: Array<{
 		label: string
 		stats: {
 			max: number
-			mean: number
 			min: number
 			p25: number
 			p50: number
 			p75: number
 		} | null
 	}>
-	name: string
-	overall: {
-		absentCount: number
-		invalidCount: number
-		label: string
-		rowCount: number
-		stats: {
-			production: {
-				max: number
-				mean: number
-				min: number
-				p25: number
-				p50: number
-				p75: number
-				std: number
-			} | null
-			training: {
-				max: number
-				mean: number
-				min: number
-				p25: number
-				p50: number
-				p75: number
-				std: number
-			}
+	invalidCount: number
+	maxComparison: {
+		production: number | null
+		training: number
+	}
+	meanComparison: {
+		production: number | null
+		training: number
+	}
+	minComparison: {
+		production: number | null
+		training: number
+	}
+	overallBoxChartData: {
+		production: {
+			max: number
+			min: number
+			p25: number
+			p50: number
+			p75: number
+		} | null
+		training: {
+			max: number
+			min: number
+			p25: number
+			p50: number
+			p75: number
 		}
+	}
+	rowCount: number
+	stdComparison: {
+		production: number | null
+		training: number
 	}
 }
 
 export function Number(props: Props) {
-	let intervalChartData = [
+	let intervalBoxChartData = [
 		{
 			color: productionColor,
-			data: props.intervals.map((entry, index) => ({
+			data: props.intervalBoxChartData.map((entry, index) => ({
 				label: entry.label,
 				x: index,
 				y: entry.stats
@@ -69,58 +77,52 @@ export function Number(props: Props) {
 					  }
 					: null,
 			})),
-			title: `Production Stats for "${props.name}"`,
+			title: `Production Stats for "${props.columnName}"`,
 		},
 	]
-
-	let overallChartData: ui.BoxChartSeries[] = [
+	let overallBoxChartData = [
 		{
 			color: trainingColor,
-			data: props.overall.stats
-				? [
-						{
-							label: props.overall.label,
-							x: 0,
-							y: {
-								max: props.overall.stats.training.max,
-								min: props.overall.stats.training.min,
-								p25: props.overall.stats.training.p25,
-								p50: props.overall.stats.training.p50,
-								p75: props.overall.stats.training.p75,
-							},
-						},
-				  ]
-				: [],
-			title: `Training Stats for "${props.name}"`,
+			data: [
+				{
+					label: 'Training',
+					x: 0,
+					y: {
+						max: props.overallBoxChartData.training.max,
+						min: props.overallBoxChartData.training.min,
+						p25: props.overallBoxChartData.training.p25,
+						p50: props.overallBoxChartData.training.p50,
+						p75: props.overallBoxChartData.training.p75,
+					},
+				},
+			],
+			title: `Training Stats for "${props.columnName}"`,
 		},
 		{
 			color: productionColor,
-			data: props.overall.stats.production
+			data: props.overallBoxChartData.production
 				? [
 						{
-							label: props.overall.label,
+							label: 'Production',
 							x: 0,
 							y: {
-								max: props.overall.stats.production.max,
-								min: props.overall.stats.production.min,
-								p25: props.overall.stats.production.p25,
-								p50: props.overall.stats.production.p50,
-								p75: props.overall.stats.production.p75,
+								max: props.overallBoxChartData.production.max,
+								min: props.overallBoxChartData.production.min,
+								p25: props.overallBoxChartData.production.p25,
+								p50: props.overallBoxChartData.production.p50,
+								p75: props.overallBoxChartData.production.p75,
 							},
 						},
 				  ]
 				: [],
-			title: `Production Stats for "${props.name}"`,
+			title: `Production Stats for "${props.columnName}"`,
 		},
 	]
-
 	let statsOverallChartTitle = overallChartTitle(props.dateWindow, 'Stats')
-
 	let statsIntervalChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
 		'Stats',
 	)
-
 	return (
 		<ui.S2>
 			{props.alert && (
@@ -128,35 +130,32 @@ export function Number(props: Props) {
 			)}
 			<ui.Card>
 				<ui.BoxChart
-					data={overallChartData}
+					data={overallBoxChartData}
 					id="overall"
 					title={statsOverallChartTitle}
 				/>
 			</ui.Card>
 			<ui.Card>
 				<ui.BoxChart
-					data={intervalChartData}
+					data={intervalBoxChartData}
 					id="number_intervals"
 					title={statsIntervalChartTitle}
 				/>
 			</ui.Card>
 			<MetricsRow>
 				<ui.Card>
-					<ui.NumberChart
-						title="Row Count"
-						value={props.overall.rowCount.toString()}
-					/>
+					<ui.NumberChart title="Row Count" value={props.rowCount.toString()} />
 				</ui.Card>
 				<ui.Card>
 					<ui.NumberChart
 						title="Absent Count"
-						value={props.overall.absentCount.toString()}
+						value={props.absentCount.toString()}
 					/>
 				</ui.Card>
 				<ui.Card>
 					<ui.NumberChart
 						title="Invalid Count"
-						value={props.overall.invalidCount.toString()}
+						value={props.invalidCount.toString()}
 					/>
 				</ui.Card>
 			</MetricsRow>
@@ -166,9 +165,9 @@ export function Number(props: Props) {
 						colorA={trainingColor}
 						colorB={productionColor}
 						title="Min"
-						valueA={props.overall.stats.training.min}
+						valueA={props.minComparison.training}
 						valueATitle="Training"
-						valueB={props.overall.stats.production?.min ?? null}
+						valueB={props.minComparison.production ?? null}
 						valueBTitle="Production"
 						valueFormatter={value => ui.formatNumber(value)}
 					/>
@@ -178,9 +177,9 @@ export function Number(props: Props) {
 						colorA={trainingColor}
 						colorB={productionColor}
 						title="Max"
-						valueA={props.overall.stats.training.max}
+						valueA={props.maxComparison.training}
 						valueATitle="Training"
-						valueB={props.overall.stats.production?.max ?? null}
+						valueB={props.maxComparison.production ?? null}
 						valueBTitle="Production"
 						valueFormatter={value => ui.formatNumber(value)}
 					/>
@@ -192,9 +191,9 @@ export function Number(props: Props) {
 						colorA={trainingColor}
 						colorB={productionColor}
 						title="Mean"
-						valueA={props.overall.stats.training.mean}
+						valueA={props.meanComparison.training}
 						valueATitle="Training"
-						valueB={props.overall.stats.production?.mean ?? null}
+						valueB={props.meanComparison.production ?? null}
 						valueBTitle="Production"
 						valueFormatter={value => ui.formatNumber(value)}
 					/>
@@ -204,9 +203,9 @@ export function Number(props: Props) {
 						colorA={trainingColor}
 						colorB={productionColor}
 						title="Standard Deviation"
-						valueA={props.overall.stats.training.std}
+						valueA={props.stdComparison.training}
 						valueATitle="Training"
-						valueB={props.overall.stats.production?.std ?? null}
+						valueB={props.stdComparison.production ?? null}
 						valueBTitle="Production"
 						valueFormatter={value => ui.formatNumber(value)}
 					/>

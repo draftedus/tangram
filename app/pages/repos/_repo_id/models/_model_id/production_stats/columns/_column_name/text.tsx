@@ -8,24 +8,21 @@ import { productionColor } from 'common/tokens'
 import { h, ui } from 'deps'
 
 export type Props = {
+	absentCount: number
 	alert: string | null
+	columnName: string
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
-	name: string
-	overall: {
-		absentCount: number
-		invalidCount: number
-		label: string
-		rowCount: number
-		tokenHistogram: Array<[string, number]>
-	}
+	invalidCount: number
+	overallTokenHistogram: Array<[string, number]>
+	rowCount: number
 }
 
 export function Text(props: Props) {
 	let overallChartData = [
 		{
 			color: productionColor,
-			data: props.overall.tokenHistogram.map(([label, count], i) => ({
+			data: props.overallTokenHistogram.map(([label, count], i) => ({
 				label,
 				x: i,
 				y: count,
@@ -35,7 +32,7 @@ export function Text(props: Props) {
 	]
 	let overallDistributionChartTitle = overallChartTitle(
 		props.dateWindow,
-		`Distribution of Unique Values for ${props.name}`,
+		`Distribution of Unique Values for ${props.columnName}`,
 	)
 
 	return (
@@ -48,27 +45,24 @@ export function Text(props: Props) {
 					data={overallChartData}
 					id="text_overall"
 					title={overallDistributionChartTitle}
-					xAxisTitle={props.name}
+					xAxisTitle={props.columnName}
 					yAxisTitle="Count"
 				/>
 			</ui.Card>
 			<MetricsRow>
 				<ui.Card>
-					<ui.NumberChart
-						title="Row Count"
-						value={props.overall.rowCount.toString()}
-					/>
+					<ui.NumberChart title="Row Count" value={props.rowCount.toString()} />
 				</ui.Card>
 				<ui.Card>
 					<ui.NumberChart
 						title="Absent Count"
-						value={props.overall.absentCount.toString()}
+						value={props.absentCount.toString()}
 					/>
 				</ui.Card>
 				<ui.Card>
 					<ui.NumberChart
 						title="Invalid Count"
-						value={props.overall.invalidCount.toString()}
+						value={props.invalidCount.toString()}
 					/>
 				</ui.Card>
 			</MetricsRow>
@@ -81,7 +75,7 @@ export function Text(props: Props) {
 					</ui.TableRow>
 				</ui.TableHeader>
 				<ui.TableBody>
-					{props.overall.tokenHistogram.map(([value, count]) => (
+					{props.overallTokenHistogram.map(([value, count]) => (
 						<ui.TableRow key={value}>
 							<ui.TableCell>{value}</ui.TableCell>
 							<ui.TableCell>{ui.formatNumber(count)}</ui.TableCell>
