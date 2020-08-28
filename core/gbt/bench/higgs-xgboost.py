@@ -86,6 +86,7 @@ model = xgb.XGBClassifier(
   min_child_weight = 100,
   nthread = 24,
   num_round = 100,
+  tree_method = 'approx'
 )
 start = time.time()
 model.fit(features_train, labels_train)

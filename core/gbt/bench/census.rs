@@ -8,7 +8,7 @@ use tangram_core::metrics;
 fn main() -> Result<()> {
 	// load the data
 	let csv_file_path = Path::new("../data/census.csv");
-	let nrows_train = 26050;
+	let nrows_train = 26049;
 	let _nrows_test = 6512;
 	let target_column_index = 14;
 	let mut csv_reader = csv::Reader::from_path(csv_file_path)?;
@@ -48,7 +48,7 @@ fn main() -> Result<()> {
 	let features_train = tangram_core::features::compute_features_dataframe(
 		&dataframe_train,
 		&feature_groups,
-		&|| {},
+		&mut || {},
 	);
 
 	// train the model

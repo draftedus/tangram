@@ -13,10 +13,26 @@ nrows_test = 6512
 target = "income"
 data = pd.read_csv(
 	path,
+	dtype={
+		'age': np.float64,
+		'workclass': 'category',
+		'fnlwgt': np.float64,
+		'education': 'category',
+		'education_num': np.float64,
+		'marital_status': 'category',
+		'occupation': 'category',
+		'relationship': 'category',
+		'race': 'category',
+		'sex': 'category',
+		'captial_gain': np.float64,
+		'captial_loss': np.float64,
+		'hours_per_week': np.float64,
+		'native_country': 'category',
+		'income': 'category',
+	}
 )
 features = data.loc[:, data.columns != target]
 labels = data[target]
-features = pd.get_dummies(features)
 (features_train, features_test, labels_train, labels_test) = train_test_split(
 	features,
 	labels,
@@ -37,7 +53,9 @@ model = lgb.LGBMClassifier(
 	enable_sparse=False,
 )
 start = time.time()
-model.fit(features_train, labels_train)
+categorical_feature = ['workclass', 'education', 'marital_status', 'occupation', 'relationship', 'sex', 'native_country']
+categorical_feature=categorical_feature
+model.fit(features_train, labels_train, categorical_feature=categorical_feature)
 end = time.time()
 print('duration: {}ms'.format((end-start) * 1000))
 

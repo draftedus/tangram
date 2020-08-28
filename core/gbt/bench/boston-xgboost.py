@@ -1,4 +1,5 @@
-from sklearn.metrics import accuracy_score
+
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
@@ -7,16 +8,15 @@ import time
 import xgboost as xgb
 
 # load the data
-path = '../data/census.csv'
-nrows_train = 26049
-nrows_test = 6512
-target = "income"
+path = '../data/boston.csv'
+nrows_train = 405
+nrows_test = 101
+target = "medv"
 data = pd.read_csv(
 	path,
 )
 features = data.loc[:, data.columns != target]
 labels = data[target]
-features = pd.get_dummies(features)
 (features_train, features_test, labels_train, labels_test) = train_test_split(
 	features,
 	labels,
@@ -26,7 +26,7 @@ features = pd.get_dummies(features)
 )
 
 # train the model
-model = xgb.XGBClassifier(
+model = xgb.XGBRegressor(
   eta = 0.1,
   grow_policy = 'lossguide',
   max_depth = 8,
@@ -39,17 +39,16 @@ model = xgb.XGBClassifier(
 start = time.time()
 model.fit(features_train, labels_train)
 end = time.time()
-print('xgboost hist')
-print('duration: {}ms'.format((end - start)*1000))
+print('duration: {}ms'.format((end-start) * 1000))
 
-# compute accuracy
+# compute mse
 predictions = model.predict(features_test)
-accuracy = accuracy_score(predictions, labels_test)
-print('accuracy: ', accuracy)
+mse = mean_squared_error(predictions, labels_test)
+print('mse: ', mse)
 
 
 # train the model
-model = xgb.XGBClassifier(
+model = xgb.XGBRegressor(
   eta = 0.1,
   grow_policy = 'lossguide',
   max_depth = 8,
@@ -62,10 +61,9 @@ model = xgb.XGBClassifier(
 start = time.time()
 model.fit(features_train, labels_train)
 end = time.time()
-print('xgboost non-hist')
-print('duration: {}ms'.format((end - start)*1000))
+print('duration: {}ms'.format((end-start) * 1000))
 
-# compute accuracy
+# compute mse
 predictions = model.predict(features_test)
-accuracy = accuracy_score(predictions, labels_test)
-print('accuracy: ', accuracy)
+mse = mean_squared_error(predictions, labels_test)
+print('mse: ', mse)

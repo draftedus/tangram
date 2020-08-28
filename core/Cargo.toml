@@ -14,6 +14,11 @@ path = "gbt/bench/higgs.rs"
 name = "gbt-census"
 path = "gbt/bench/census.rs"
 
+[[bin]]
+name = "gbt-boston"
+path = "gbt/bench/boston.rs"
+
+
 [dev-dependencies]
 insta = " 0.16"
 
