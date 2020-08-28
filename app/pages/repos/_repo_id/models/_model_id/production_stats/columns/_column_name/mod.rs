@@ -184,7 +184,7 @@ async fn props(
 	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-	let production_column_stats = get_production_column_stats(
+	let get_production_column_stats_output = get_production_column_stats(
 		&mut db,
 		&model,
 		column_name,
@@ -203,14 +203,14 @@ async fn props(
 			.overall_column_stats
 			.as_option()
 			.unwrap()
-			.into_iter()
+			.iter()
 			.find(|column| column.column_name() == column_name)
 			.unwrap(),
 		tangram_core::types::Model::Regressor(model) => model
 			.overall_column_stats
 			.as_option()
 			.unwrap()
-			.into_iter()
+			.iter()
 			.find(|column| column.column_name() == column_name)
 			.unwrap(),
 		tangram_core::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
@@ -218,7 +218,7 @@ async fn props(
 	let inner = match train_column_stats {
 		tangram_core::types::ColumnStats::Number(train_column_stats) => {
 			Inner::Number(number_props(
-				production_column_stats,
+				get_production_column_stats_output,
 				train_column_stats,
 				date_window,
 				date_window_interval,
@@ -226,7 +226,7 @@ async fn props(
 			))
 		}
 		tangram_core::types::ColumnStats::Enum(train_column_stats) => Inner::Enum(enum_props(
-			production_column_stats,
+			get_production_column_stats_output,
 			train_column_stats,
 			train_row_count,
 			date_window,
@@ -234,11 +234,10 @@ async fn props(
 			timezone,
 		)),
 		tangram_core::types::ColumnStats::Text(train_column_stats) => Inner::Text(text_props(
-			production_column_stats,
+			get_production_column_stats_output,
 			train_column_stats,
 			date_window,
 			date_window_interval,
-			timezone,
 		)),
 		_ => return Err(Error::BadRequest.into()),
 	};
@@ -389,25 +388,23 @@ fn enum_props(
 }
 
 fn text_props(
-	get_production_stats_output: GetProductionColumnStatsOutput,
+	get_production_column_stats_output: GetProductionColumnStatsOutput,
 	_train_column_stats: &tangram_core::types::TextColumnStats,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
-	timezone: Tz,
 ) -> TextProps {
-	// let overall = TextOverall {
-	// 	absent_count: production_stats.overall.absent_count,
-	// 	invalid_count: production_stats.overall.invalid_count,
-	// 	label: format_date_window(production_stats.overall.start_date, date_window, timezone),
-	// 	row_count: production_stats.overall.predictions_count,
-	// 	token_histogram: production_stats.overall.token_histogram,
-	// };
-	// TextProps {
-	// 	alert: production_stats.overall.alert,
-	// 	column_name: production_stats.overall.column_name,
-	// 	date_window,
-	// 	date_window_interval,
-	// 	overall,
-	// }
-	todo!()
+	let overall_production_column_stats_output = match get_production_column_stats_output.overall {
+		ProductionColumnStatsOutput::Text(p) => p,
+		_ => unreachable!(),
+	};
+	TextProps {
+		alert: None,
+		row_count: 0,
+		absent_count: overall_production_column_stats_output.absent_count,
+		invalid_count: overall_production_column_stats_output.invalid_count,
+		column_name: overall_production_column_stats_output.column_name,
+		date_window,
+		date_window_interval,
+		overall_token_histogram: overall_production_column_stats_output.token_histogram,
+	}
 }

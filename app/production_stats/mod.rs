@@ -35,45 +35,18 @@ impl ProductionStats {
 		start_date: DateTime<Utc>,
 		end_date: DateTime<Utc>,
 	) -> Self {
-		let (train_column_stats, feature_groups) = match &model {
+		let train_column_stats = match &model {
 			tangram_core::types::Model::Regressor(model) => {
-				let feature_groups = match model.model.as_option().unwrap() {
-					tangram_core::types::RegressionModel::Linear(model) => {
-						model.feature_groups.as_option().unwrap()
-					}
-					tangram_core::types::RegressionModel::Gbt(model) => {
-						model.feature_groups.as_option().unwrap()
-					}
-					_ => unimplemented!(),
-				};
-				let train_column_stats = model.train_column_stats.as_option().unwrap().as_slice();
-				(train_column_stats, feature_groups)
+				model.train_column_stats.as_option().unwrap().as_slice()
 			}
 			tangram_core::types::Model::Classifier(model) => {
-				let feature_groups = match model.model.as_option().unwrap() {
-					tangram_core::types::ClassificationModel::LinearBinary(model) => {
-						model.feature_groups.as_option().unwrap()
-					}
-					tangram_core::types::ClassificationModel::GbtBinary(model) => {
-						model.feature_groups.as_option().unwrap()
-					}
-					tangram_core::types::ClassificationModel::LinearMulticlass(model) => {
-						model.feature_groups.as_option().unwrap()
-					}
-					tangram_core::types::ClassificationModel::GbtMulticlass(model) => {
-						model.feature_groups.as_option().unwrap()
-					}
-					_ => unimplemented!(),
-				};
-				let train_column_stats = model.train_column_stats.as_option().unwrap().as_slice();
-				(train_column_stats, feature_groups)
+				model.train_column_stats.as_option().unwrap().as_slice()
 			}
 			_ => unimplemented!(),
 		};
 		let column_stats = train_column_stats
 			.iter()
-			.zip(feature_groups.iter())
-			.map(|(column_stats, feature_group)| ProductionColumnStats::new(column_stats))
+			.map(|column_stats| ProductionColumnStats::new(column_stats))
 			.collect();
 		let prediction_stats = ProductionPredictionStats::new(model);
 		ProductionStats {
