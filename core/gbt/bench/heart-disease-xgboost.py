@@ -7,7 +7,7 @@ import time
 import xgboost as xgb
 
 # load the data
-path = '../data/heart-disease.csv'
+path = 'data/heart-disease.csv'
 nrows_train = 242
 nrows_test = 61
 target = "diagnosis"

@@ -7,7 +7,7 @@ import time
 import lightgbm as lgb
 
 # load the data
-path = '../data/higgs.csv'
+path = 'data/higgs.csv'
 nrows_train = 10_500_000
 nrows_test = 500_000
 target = "signal"

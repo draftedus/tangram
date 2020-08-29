@@ -7,7 +7,7 @@ import time
 import xgboost as xgb
 
 # load the data
-path = '../data/iris.csv'
+path = 'data/iris.csv'
 nrows_train = 120
 nrows_test = 30
 target = "species"

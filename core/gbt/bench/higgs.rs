@@ -10,7 +10,7 @@ use tangram_core::metrics;
 
 fn main() -> Result<()> {
 	// load the data
-	let csv_file_path = Path::new("../data/higgs.csv");
+	let csv_file_path = Path::new("data/higgs.csv");
 	let nrows_train = 10_500_000;
 	let nrows_test = 500_000;
 	let target_column_index = 0;

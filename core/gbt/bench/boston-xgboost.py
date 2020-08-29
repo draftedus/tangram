@@ -8,7 +8,7 @@ import time
 import xgboost as xgb
 
 # load the data
-path = '../data/boston.csv'
+path = 'data/boston.csv'
 nrows_train = 405
 nrows_test = 101
 target = "medv"

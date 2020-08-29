@@ -7,7 +7,7 @@ import time
 import xgboost as xgb
 
 # load the data
-path = '../data/census.csv'
+path = 'data/census.csv'
 nrows_train = 26049
 nrows_test = 6512
 target = "income"

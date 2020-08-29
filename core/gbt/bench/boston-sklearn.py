@@ -9,7 +9,7 @@ from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # load the data
-path = '../data/boston.csv'
+path = 'data/boston.csv'
 nrows_train = 405
 nrows_test = 101
 target = "medv"

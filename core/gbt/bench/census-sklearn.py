@@ -8,7 +8,7 @@ from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 # load the data
-path = '../data/census.csv'
+path = 'data/census.csv'
 nrows_train = 26049
 nrows_test = 6512
 target = "income"

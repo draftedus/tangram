@@ -8,7 +8,7 @@ from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 # load the data
-path = '../data/iris.csv'
+path = 'data/iris.csv'
 nrows_train = 120
 nrows_test = 30
 target = "species"
