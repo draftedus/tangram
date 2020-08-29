@@ -131,7 +131,7 @@ export function Number(props: Props) {
 			<ui.Card>
 				<ui.BoxChart
 					data={overallBoxChartData}
-					id="overall"
+					id="number_overall"
 					title={statsOverallChartTitle}
 				/>
 			</ui.Card>
