@@ -58,7 +58,7 @@ fn main() -> Result<()> {
 		max_depth: 8,
 		max_leaf_nodes: 255,
 		max_rounds: 100,
-		min_examples_leaf: 100,
+		min_examples_leaf: 10,
 		min_sum_hessians_in_leaf: 0.0,
 		..Default::default()
 	};
