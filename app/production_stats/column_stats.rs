@@ -121,7 +121,6 @@ impl ProductionColumnStats {
 			tangram_core::types::ColumnStats::Enum(stats) => {
 				ProductionColumnStats::Enum(EnumProductionColumnStats::new(stats))
 			}
-			_ => unimplemented!(),
 		}
 	}
 
@@ -194,7 +193,7 @@ impl<'a> RunningMetric<'a, '_> for ProductionColumnStats {
 impl UnknownProductionColumnStats {
 	fn new(column_stats: &tangram_core::types::UnknownColumnStats) -> Self {
 		Self {
-			column_name: column_stats.column_name.as_option().unwrap().clone(),
+			column_name: column_stats.column_name.clone(),
 			invalid_count: 0,
 			absent_count: 0,
 			count: 0,
@@ -244,7 +243,7 @@ impl<'a> RunningMetric<'a, '_> for UnknownProductionColumnStats {
 impl NumberProductionColumnStats {
 	fn new(column_stats: &tangram_core::types::NumberColumnStats) -> Self {
 		Self {
-			column_name: column_stats.column_name.as_option().unwrap().clone(),
+			column_name: column_stats.column_name.clone(),
 			absent_count: 0,
 			invalid_count: 0,
 			stats: None,
@@ -330,11 +329,9 @@ impl<'a, 'b> RunningMetric<'a, 'b> for NumberProductionColumnStats {
 
 impl EnumProductionColumnStats {
 	fn new(column_stats: &tangram_core::types::EnumColumnStats) -> Self {
-		let column_name = column_stats.column_name.as_option().unwrap();
+		let column_name = &column_stats.column_name;
 		let histogram = column_stats
 			.histogram
-			.as_option()
-			.unwrap()
 			.iter()
 			.map(|(value, _)| (value.clone(), 0))
 			.collect();
@@ -439,9 +436,8 @@ impl TextProductionColumnStats {
 	fn new(column_stats: &tangram_core::types::TextColumnStats) -> Self {
 		// let tokenizer = match feature_group {
 		// 	tangram_core::types::FeatureGroup::BagOfWords(feature_group) => {
-		// 		match feature_group.tokenizer.as_option().unwrap() {
+		// 		match feature_group.tokenizer {
 		// 			tangram_core::types::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
-		// 			tangram_core::types::Tokenizer::UnknownVariant(_, _, _) => unimplemented!(),
 		// 		}
 		// 	}
 		// 	tangram_core::types::FeatureGroup::Identity(_) => unreachable!(),
@@ -450,7 +446,7 @@ impl TextProductionColumnStats {
 		// 	_ => unimplemented!(),
 		// };
 		Self {
-			column_name: column_stats.column_name.as_option().unwrap().clone(),
+			column_name: column_stats.column_name.clone(),
 			absent_count: 0,
 			invalid_count: 0,
 			count: 0,

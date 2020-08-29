@@ -165,11 +165,8 @@ pub async fn get_production_column_stats(
 	let overall_column_stats = match model {
 		tangram_core::types::Model::Regressor(model) => &model.overall_column_stats,
 		tangram_core::types::Model::Classifier(model) => &model.overall_column_stats,
-		_ => unreachable!(),
 	};
 	let column_stats = overall_column_stats
-		.as_option()
-		.unwrap()
 		.iter()
 		.find(|column_stats| column_stats.column_name() == column_name)
 		.unwrap();

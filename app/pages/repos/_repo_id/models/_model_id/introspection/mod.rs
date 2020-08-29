@@ -113,49 +113,34 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let inner = match model {
 		tangram_core::types::Model::Classifier(model) => {
-			let target_column_name = model.target_column_name.as_option().unwrap().to_owned();
+			let target_column_name = model.target_column_name.to_owned();
 			let classes = model.classes().to_owned();
-			match model.model.into_option().unwrap() {
-				tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => {
-					unimplemented!()
-				}
+			match model.model {
 				tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
-					let feature_groups = inner_model.feature_groups.as_option().unwrap();
-					let feature_names = compute_feature_names(feature_groups);
-					let weights = inner_model.weights.as_option().unwrap();
+					let feature_groups = inner_model.feature_groups;
+					let feature_names = compute_feature_names(&feature_groups);
+					let weights = inner_model.weights;
 					let mut weights = feature_names
 						.into_iter()
 						.zip(weights)
-						.map(|(f, w)| (f, *w))
+						.map(|(f, w)| (f, w))
 						.collect::<Vec<(String, f32)>>();
 					weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
 					Inner::LinearBinaryClassifier(LinearBinaryClassifier {
-						bias: *inner_model.bias.as_option().unwrap(),
+						bias: inner_model.bias,
 						target_column_name,
 						positive_class_name: classes[1].clone(),
 						weights,
 					})
 				}
 				tangram_core::types::ClassificationModel::LinearMulticlass(inner_model) => {
-					let feature_groups = inner_model.feature_groups.as_option().unwrap();
-					let n_classes = inner_model
-						.n_classes
-						.as_option()
-						.unwrap()
-						.to_usize()
-						.unwrap();
-					let n_features = inner_model
-						.n_features
-						.as_option()
-						.unwrap()
-						.to_usize()
-						.unwrap();
-					let weights = Array2::from_shape_vec(
-						(n_classes, n_features),
-						inner_model.weights.into_option().unwrap(),
-					)
-					.unwrap();
-					let feature_names = compute_feature_names(feature_groups);
+					let feature_groups = inner_model.feature_groups;
+					let n_classes = inner_model.n_classes.to_usize().unwrap();
+					let n_features = inner_model.n_features.to_usize().unwrap();
+					let weights =
+						Array2::from_shape_vec((n_classes, n_features), inner_model.weights)
+							.unwrap();
+					let feature_names = compute_feature_names(&feature_groups);
 					let weights: Vec<Vec<(String, f32)>> = weights
 						.axis_iter(Axis(0))
 						.map(|weights| {
@@ -169,20 +154,16 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						})
 						.collect();
 					Inner::LinearMulticlassClassifier(LinearMulticlassClassifier {
-						biases: inner_model.biases.into_option().unwrap(),
+						biases: inner_model.biases,
 						target_column_name,
 						classes,
 						weights,
 					})
 				}
 				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
-					let feature_groups = inner_model.feature_groups.as_option().unwrap();
-					let feature_importances = inner_model
-						.feature_importances
-						.as_option()
-						.unwrap()
-						.as_slice();
-					let feature_names = compute_feature_names(feature_groups);
+					let feature_groups = inner_model.feature_groups;
+					let feature_importances = inner_model.feature_importances.as_slice();
+					let feature_names = compute_feature_names(&feature_groups);
 					let mut feature_importances: Vec<(String, f32)> = feature_names
 						.into_iter()
 						.zip(feature_importances)
@@ -195,13 +176,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					})
 				}
 				tangram_core::types::ClassificationModel::GbtMulticlass(inner_model) => {
-					let feature_groups = inner_model.feature_groups.as_option().unwrap();
-					let feature_importances = inner_model
-						.feature_importances
-						.as_option()
-						.unwrap()
-						.as_slice();
-					let feature_names = compute_feature_names(feature_groups);
+					let feature_groups = inner_model.feature_groups;
+					let feature_importances = inner_model.feature_importances.as_slice();
+					let feature_names = compute_feature_names(&feature_groups);
 					let mut feature_importances: Vec<(String, f32)> = feature_names
 						.into_iter()
 						.zip(feature_importances)
@@ -215,32 +192,28 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				}
 			}
 		}
-		tangram_core::types::Model::Regressor(model) => match model.model.as_option().unwrap() {
+		tangram_core::types::Model::Regressor(model) => match model.model {
 			tangram_core::types::RegressionModel::Linear(inner_model) => {
-				let target_column_name = model.target_column_name.as_option().unwrap().to_owned();
-				let feature_groups = inner_model.feature_groups.as_option().unwrap();
-				let weights = inner_model.weights.as_option().unwrap();
-				let feature_names = compute_feature_names(feature_groups);
-				let mut weights = feature_names
+				let target_column_name = model.target_column_name.to_owned();
+				let feature_groups = inner_model.feature_groups;
+				let weights = inner_model.weights;
+				let feature_names = compute_feature_names(&feature_groups);
+				let mut weights: Vec<(String, f32)> = feature_names
 					.into_iter()
 					.zip(weights)
-					.map(|(f, w)| (f, *w))
-					.collect::<Vec<(String, f32)>>();
+					.map(|(f, w)| (f, w))
+					.collect();
 				weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
 				Inner::LinearRegressor(LinearRegressor {
-					bias: *inner_model.bias.as_option().unwrap(),
+					bias: inner_model.bias,
 					target_column_name,
 					weights,
 				})
 			}
 			tangram_core::types::RegressionModel::Gbt(inner_model) => {
-				let feature_groups = inner_model.feature_groups.as_option().unwrap();
-				let feature_importances = inner_model
-					.feature_importances
-					.as_option()
-					.unwrap()
-					.as_slice();
-				let feature_names = compute_feature_names(feature_groups);
+				let feature_groups = inner_model.feature_groups;
+				let feature_importances = inner_model.feature_importances.as_slice();
+				let feature_names = compute_feature_names(&feature_groups);
 				let mut feature_importances: Vec<(String, f32)> = feature_names
 					.into_iter()
 					.zip(feature_importances)
@@ -251,9 +224,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					feature_importances,
 				})
 			}
-			tangram_core::types::RegressionModel::UnknownVariant(_, _, _) => unimplemented!(),
 		},
-		_ => return Err(Error::BadRequest.into()),
 	};
 
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
@@ -271,28 +242,20 @@ fn compute_feature_names(feature_groups: &[tangram_core::types::FeatureGroup]) -
 	feature_groups
 		.iter()
 		.flat_map(|feature_group| match feature_group {
-			tangram_core::types::FeatureGroup::Identity(feature_group) => vec![feature_group
-				.source_column_name
-				.as_option()
-				.unwrap()
-				.to_owned()],
-			tangram_core::types::FeatureGroup::Normalized(feature_group) => vec![feature_group
-				.source_column_name
-				.as_option()
-				.unwrap()
-				.to_owned()],
+			tangram_core::types::FeatureGroup::Identity(feature_group) => {
+				vec![feature_group.source_column_name.to_owned()]
+			}
+			tangram_core::types::FeatureGroup::Normalized(feature_group) => {
+				vec![feature_group.source_column_name.to_owned()]
+			}
 			tangram_core::types::FeatureGroup::OneHotEncoded(feature_group) => {
 				vec!["OOV".to_string()]
 					.iter()
-					.chain(feature_group.categories.as_option().unwrap().iter())
+					.chain(feature_group.categories.iter())
 					.map(|category| {
 						format!(
 							"{} = {}",
-							feature_group
-								.source_column_name
-								.as_option()
-								.unwrap()
-								.to_owned(),
+							feature_group.source_column_name.to_owned(),
 							category.to_owned()
 						)
 					})
@@ -300,22 +263,15 @@ fn compute_feature_names(feature_groups: &[tangram_core::types::FeatureGroup]) -
 			}
 			tangram_core::types::FeatureGroup::BagOfWords(feature_group) => feature_group
 				.tokens
-				.as_option()
-				.unwrap()
 				.iter()
 				.map(|(token, _)| {
 					format!(
 						"{} contains {}",
-						feature_group
-							.source_column_name
-							.as_option()
-							.unwrap()
-							.to_owned(),
+						feature_group.source_column_name.to_owned(),
 						token
 					)
 				})
 				.collect(),
-			tangram_core::types::FeatureGroup::UnknownVariant(_, _, _) => unimplemented!(),
 		})
 		.collect()
 }

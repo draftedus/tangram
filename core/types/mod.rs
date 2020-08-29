@@ -5,9 +5,21 @@ use std::{
 	path::Path,
 };
 
-mod generated;
+mod classifier;
+mod features;
+mod model;
+mod regressor;
+mod stats;
+mod train_options;
+mod tree;
 
-pub use self::generated::*;
+pub use classifier::*;
+pub use features::*;
+pub use model::*;
+pub use regressor::*;
+pub use stats::*;
+pub use train_options::*;
+pub use tree::*;
 
 impl Model {
 	pub fn from_slice(slice: &[u8]) -> Result<Self> {
@@ -16,7 +28,7 @@ impl Model {
 			return Err(format_err!("unknown major version {}", major_version));
 		}
 		let slice = &slice[1..];
-		let model: Self = buffy::from_slice(slice)?;
+		let model: Self = rmp_serde::from_slice(slice)?;
 		Ok(model)
 	}
 
@@ -29,7 +41,7 @@ impl Model {
 		if major_version != 0 {
 			return Err(format_err!("unknown major version {}", major_version));
 		}
-		let model: Model = buffy::from_reader(&mut reader)?;
+		let model: Model = rmp_serde::from_read(&mut reader)?;
 		Ok(model)
 	}
 
@@ -37,33 +49,25 @@ impl Model {
 		let file = std::fs::File::create(path)?;
 		let mut writer = std::io::BufWriter::new(file);
 		writer.write_all(&[0])?;
-		buffy::to_writer(&mut writer, self)?;
+		rmp_serde::encode::write_named(&mut writer, self)?;
 		Ok(())
 	}
 
 	pub fn id(&self) -> Id {
 		match self {
-			Self::Regressor(s) => s.id.as_option().unwrap().parse().unwrap(),
-			Self::Classifier(s) => s.id.as_option().unwrap().parse().unwrap(),
-			_ => unreachable!(),
+			Self::Regressor(s) => s.id.parse().unwrap(),
+			Self::Classifier(s) => s.id.parse().unwrap(),
 		}
 	}
 }
 
 impl Classifier {
 	pub fn classes(&self) -> &[String] {
-		match self.model.as_option().unwrap() {
-			ClassificationModel::LinearBinary(model) => {
-				model.classes.as_option().unwrap().as_slice()
-			}
-			ClassificationModel::GbtBinary(model) => model.classes.as_option().unwrap().as_slice(),
-			ClassificationModel::LinearMulticlass(model) => {
-				model.classes.as_option().unwrap().as_slice()
-			}
-			ClassificationModel::GbtMulticlass(model) => {
-				model.classes.as_option().unwrap().as_slice()
-			}
-			_ => unreachable!(),
+		match &self.model {
+			ClassificationModel::LinearBinary(model) => model.classes.as_slice(),
+			ClassificationModel::GbtBinary(model) => model.classes.as_slice(),
+			ClassificationModel::LinearMulticlass(model) => model.classes.as_slice(),
+			ClassificationModel::GbtMulticlass(model) => model.classes.as_slice(),
 		}
 	}
 }
@@ -71,11 +75,10 @@ impl Classifier {
 impl ColumnStats {
 	pub fn column_name(&self) -> String {
 		match &self {
-			Self::Unknown(c) => c.column_name.as_option().unwrap().to_owned(),
-			Self::Number(c) => c.column_name.as_option().unwrap().to_owned(),
-			Self::Enum(c) => c.column_name.as_option().unwrap().to_owned(),
-			Self::Text(c) => c.column_name.as_option().unwrap().to_owned(),
-			Self::UnknownVariant(_, _, _) => unimplemented!(),
+			Self::Unknown(c) => c.column_name.to_owned(),
+			Self::Number(c) => c.column_name.to_owned(),
+			Self::Enum(c) => c.column_name.to_owned(),
+			Self::Text(c) => c.column_name.to_owned(),
 		}
 	}
 

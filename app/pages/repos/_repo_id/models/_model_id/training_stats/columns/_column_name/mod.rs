@@ -105,14 +105,13 @@ async fn props(
 
 	let (mut column_stats, target_column_stats) = match model {
 		tangram_core::types::Model::Classifier(model) => (
-			model.overall_column_stats.into_option().unwrap(),
-			model.overall_target_column_stats.into_option().unwrap(),
+			model.overall_column_stats,
+			model.overall_target_column_stats,
 		),
 		tangram_core::types::Model::Regressor(model) => (
-			model.overall_column_stats.into_option().unwrap(),
-			model.overall_target_column_stats.into_option().unwrap(),
+			model.overall_column_stats,
+			model.overall_target_column_stats,
 		),
-		_ => unimplemented!(),
 	};
 
 	let column_index = column_stats
@@ -131,30 +130,29 @@ async fn props(
 	};
 
 	let inner = match column {
-		tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
 		tangram_core::types::ColumnStats::Unknown(_) => unimplemented!(),
 		tangram_core::types::ColumnStats::Number(column) => Inner::Number(Number {
-			histogram: column.histogram.into_option().unwrap(),
-			invalid_count: column.invalid_count.as_option().unwrap().to_owned(),
-			min: *column.min.as_option().unwrap(),
-			max: *column.max.as_option().unwrap(),
-			mean: *column.mean.as_option().unwrap(),
-			name: column.column_name.as_option().unwrap().to_owned(),
-			p25: *column.p25.as_option().unwrap(),
-			p50: *column.p50.as_option().unwrap(),
-			p75: *column.p75.as_option().unwrap(),
-			std: *column.std.as_option().unwrap(),
-			unique_count: *column.unique_count.as_option().unwrap(),
+			histogram: column.histogram,
+			invalid_count: column.invalid_count.to_owned(),
+			min: column.min,
+			max: column.max,
+			mean: column.mean,
+			name: column.column_name.to_owned(),
+			p25: column.p25,
+			p50: column.p50,
+			p75: column.p75,
+			std: column.std,
+			unique_count: column.unique_count,
 		}),
 		tangram_core::types::ColumnStats::Enum(column) => Inner::Enum(Enum {
-			histogram: column.histogram.into_option(),
-			invalid_count: column.invalid_count.as_option().unwrap().to_owned(),
-			name: column.column_name.as_option().unwrap().to_owned(),
-			unique_count: *column.unique_count.as_option().unwrap(),
+			histogram: Some(column.histogram),
+			invalid_count: column.invalid_count.to_owned(),
+			name: column.column_name.to_owned(),
+			unique_count: column.unique_count,
 		}),
 		tangram_core::types::ColumnStats::Text(column) => Inner::Text(Text {
-			name: column.column_name.as_option().unwrap().to_owned(),
-			tokens: column.top_tokens.into_option().unwrap(),
+			name: column.column_name.to_owned(),
+			tokens: column.top_tokens,
 		}),
 	};
 

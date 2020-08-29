@@ -1,5 +1,5 @@
 use crate::{dataframe, features, gbt, linear, types};
-use anyhow::{format_err, Result};
+use anyhow::Result;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
@@ -788,20 +788,17 @@ impl TryFrom<types::Model> for PredictModel {
 	type Error = anyhow::Error;
 	fn try_from(value: types::Model) -> Result<Self> {
 		match value {
-			types::Model::UnknownVariant(_, _, _) => Err(format_err!("unknown variant")),
 			types::Model::Regressor(model) => {
-				let id = model.id.required()?;
+				let id = model.id;
 				let columns = model
 					.overall_column_stats
-					.required()?
 					.into_iter()
 					.map(column_from_column_stats)
 					.collect::<Result<Vec<_>>>()?;
-				match model.model.required()? {
+				match model.model {
 					types::RegressionModel::Linear(model) => {
 						let feature_groups = model
 							.feature_groups
-							.required()?
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
@@ -810,17 +807,16 @@ impl TryFrom<types::Model> for PredictModel {
 							columns,
 							feature_groups,
 							model: linear::Regressor {
-								bias: model.bias.required()?,
-								weights: model.weights.required()?.into(),
-								means: model.means.required()?.into(),
-								losses: model.losses.required()?.into(),
+								bias: model.bias,
+								weights: model.weights.into(),
+								means: model.means.into(),
+								losses: model.losses.into(),
 							},
 						}))
 					}
 					types::RegressionModel::Gbt(model) => {
 						let feature_groups = model
 							.feature_groups
-							.required()?
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
@@ -829,39 +825,30 @@ impl TryFrom<types::Model> for PredictModel {
 							columns,
 							feature_groups,
 							model: gbt::Regressor {
-								bias: model.bias.required()?,
+								bias: model.bias,
 								trees: model
 									.trees
-									.required()?
 									.into_iter()
 									.map(TryInto::try_into)
 									.collect::<Result<Vec<_>>>()?,
-								feature_importances: Some(
-									model.feature_importances.required()?.into(),
-								),
-								losses: Some(model.losses.required()?.into()),
+								feature_importances: Some(model.feature_importances.into()),
+								losses: Some(model.losses.into()),
 							},
 						}))
 					}
-					_ => unimplemented!(),
 				}
 			}
 			types::Model::Classifier(model) => {
-				let id = model.id.required()?;
+				let id = model.id;
 				let columns = model
 					.overall_column_stats
-					.required()?
 					.into_iter()
 					.map(column_from_column_stats)
 					.collect::<Result<Vec<_>>>()?;
-				match model.model.required()? {
-					types::ClassificationModel::UnknownVariant(_, _, _) => {
-						Err(format_err!("unknown variant"))
-					}
+				match model.model {
 					types::ClassificationModel::LinearBinary(model) => {
 						let feature_groups = model
 							.feature_groups
-							.required()?
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
@@ -871,11 +858,11 @@ impl TryFrom<types::Model> for PredictModel {
 								columns,
 								feature_groups,
 								model: linear::BinaryClassifier {
-									weights: model.weights.required()?.into(),
-									bias: model.bias.required()?,
-									means: model.means.required()?.into(),
-									losses: model.losses.required()?.into(),
-									classes: model.classes.required()?.into(),
+									weights: model.weights.into(),
+									bias: model.bias,
+									means: model.means.into(),
+									losses: model.losses.into(),
+									classes: model.classes.into(),
 								},
 							},
 						))
@@ -883,7 +870,6 @@ impl TryFrom<types::Model> for PredictModel {
 					types::ClassificationModel::GbtBinary(model) => {
 						let feature_groups = model
 							.feature_groups
-							.required()?
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
@@ -892,32 +878,25 @@ impl TryFrom<types::Model> for PredictModel {
 							columns,
 							feature_groups,
 							model: gbt::BinaryClassifier {
-								bias: model.bias.required()?,
+								bias: model.bias,
 								trees: model
 									.trees
-									.required()?
 									.into_iter()
 									.map(TryInto::try_into)
 									.collect::<Result<Vec<_>>>()?,
-								feature_importances: Some(
-									model.feature_importances.required()?.into(),
-								),
-								losses: Some(model.losses.required()?.into()),
-								classes: model.classes.required()?,
+								feature_importances: Some(model.feature_importances.into()),
+								losses: Some(model.losses.into()),
+								classes: model.classes,
 							},
 						}))
 					}
 					types::ClassificationModel::LinearMulticlass(model) => {
-						let n_classes = model.n_classes.required()?.to_usize().unwrap();
-						let n_features = model.n_features.required()?.to_usize().unwrap();
-						let weights = Array2::from_shape_vec(
-							(n_features, n_classes),
-							model.weights.required()?,
-						)
-						.unwrap();
+						let n_classes = model.n_classes.to_usize().unwrap();
+						let n_features = model.n_features.to_usize().unwrap();
+						let weights =
+							Array2::from_shape_vec((n_features, n_classes), model.weights).unwrap();
 						let feature_groups = model
 							.feature_groups
-							.required()?
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
@@ -928,10 +907,10 @@ impl TryFrom<types::Model> for PredictModel {
 								feature_groups,
 								model: linear::MulticlassClassifier {
 									weights,
-									biases: model.biases.required()?.into(),
-									means: model.means.required()?.into(),
-									losses: model.losses.required()?.into(),
-									classes: model.classes.required()?.into(),
+									biases: model.biases.into(),
+									means: model.means.into(),
+									losses: model.losses.into(),
+									classes: model.classes.into(),
 								},
 							},
 						))
@@ -939,7 +918,6 @@ impl TryFrom<types::Model> for PredictModel {
 					types::ClassificationModel::GbtMulticlass(model) => {
 						let feature_groups = model
 							.feature_groups
-							.required()?
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
@@ -949,20 +927,17 @@ impl TryFrom<types::Model> for PredictModel {
 								columns,
 								feature_groups,
 								model: gbt::MulticlassClassifier {
-									biases: model.biases.required()?,
+									biases: model.biases,
 									trees: model
 										.trees
-										.required()?
 										.into_iter()
 										.map(TryInto::try_into)
 										.collect::<Result<Vec<_>>>()?,
-									feature_importances: Some(
-										model.feature_importances.required()?.into(),
-									),
-									losses: Some(model.losses.required()?.into()),
-									classes: model.classes.required()?,
-									n_classes: model.n_classes.required()?.to_usize().unwrap(),
-									n_rounds: model.n_rounds.required()?.to_usize().unwrap(),
+									feature_importances: Some(model.feature_importances.into()),
+									losses: Some(model.losses.into()),
+									classes: model.classes,
+									n_classes: model.n_classes.to_usize().unwrap(),
+									n_rounds: model.n_rounds.to_usize().unwrap(),
 								},
 							},
 						))
@@ -979,7 +954,6 @@ impl TryInto<gbt::Tree> for types::Tree {
 		Ok(gbt::Tree {
 			nodes: self
 				.nodes
-				.required()?
 				.into_iter()
 				.map(TryInto::try_into)
 				.collect::<Result<Vec<_>>>()?,
@@ -991,16 +965,15 @@ impl TryInto<gbt::Node> for types::Node {
 	type Error = anyhow::Error;
 	fn try_into(self) -> Result<gbt::Node> {
 		match self {
-			Self::UnknownVariant(_, _, _) => Err(format_err!("unknown variant")),
 			Self::Branch(n) => Ok(gbt::Node::Branch(gbt::BranchNode {
-				left_child_index: n.left_child_index.required()?.to_usize().unwrap(),
-				right_child_index: n.right_child_index.required()?.to_usize().unwrap(),
-				split: n.split.required()?.try_into()?,
-				examples_fraction: n.examples_fraction.required()?,
+				left_child_index: n.left_child_index.to_usize().unwrap(),
+				right_child_index: n.right_child_index.to_usize().unwrap(),
+				split: n.split.try_into()?,
+				examples_fraction: n.examples_fraction,
 			})),
 			Self::Leaf(n) => Ok(gbt::Node::Leaf(gbt::LeafNode {
-				value: n.value.required()?,
-				examples_fraction: n.examples_fraction.required()?,
+				value: n.value,
+				examples_fraction: n.examples_fraction,
 			})),
 		}
 	}
@@ -1010,18 +983,17 @@ impl TryInto<gbt::BranchSplit> for types::BranchSplit {
 	type Error = anyhow::Error;
 	fn try_into(self) -> Result<gbt::BranchSplit> {
 		match self {
-			Self::UnknownVariant(_, _, _) => Err(format_err!("unknown variant")),
 			Self::Continuous(s) => Ok(gbt::BranchSplit::Continuous(gbt::BranchSplitContinuous {
-				feature_index: s.feature_index.required()?.to_usize().unwrap(),
-				split_value: s.split_value.required()?,
-				invalid_values_direction: if s.invalid_values_direction.required()? {
+				feature_index: s.feature_index.to_usize().unwrap(),
+				split_value: s.split_value,
+				invalid_values_direction: if s.invalid_values_direction {
 					gbt::SplitDirection::Right
 				} else {
 					gbt::SplitDirection::Left
 				},
 			})),
 			Self::Discrete(s) => {
-				let value_directions = s.directions.required()?;
+				let value_directions = s.directions;
 				let mut directions =
 					crate::gbt::BinDirections::new(value_directions.len().to_u8().unwrap(), false);
 				value_directions
@@ -1029,7 +1001,7 @@ impl TryInto<gbt::BranchSplit> for types::BranchSplit {
 					.enumerate()
 					.for_each(|(i, value)| directions.set(i.to_u8().unwrap(), *value));
 				Ok(gbt::BranchSplit::Discrete(gbt::BranchSplitDiscrete {
-					feature_index: s.feature_index.required()?.to_usize().unwrap(),
+					feature_index: s.feature_index.to_usize().unwrap(),
 					directions,
 				}))
 			}
@@ -1039,24 +1011,18 @@ impl TryInto<gbt::BranchSplit> for types::BranchSplit {
 
 fn column_from_column_stats(value: types::ColumnStats) -> Result<Column> {
 	match value {
-		types::ColumnStats::UnknownVariant(_, _, _) => Err(format_err!("unknown variant")),
 		types::ColumnStats::Unknown(value) => Ok(Column::Unknown(UnknownColumn {
-			name: value.column_name.required()?,
+			name: value.column_name,
 		})),
 		types::ColumnStats::Number(value) => Ok(Column::Number(NumberColumn {
-			name: value.column_name.required()?,
+			name: value.column_name,
 		})),
 		types::ColumnStats::Enum(value) => Ok(Column::Enum(EnumColumn {
-			name: value.column_name.required()?,
-			options: value
-				.histogram
-				.required()?
-				.into_iter()
-				.map(|v| v.0)
-				.collect(),
+			name: value.column_name,
+			options: value.histogram.into_iter().map(|v| v.0).collect(),
 		})),
 		types::ColumnStats::Text(value) => Ok(Column::Text(TextColumn {
-			name: value.column_name.required()?,
+			name: value.column_name,
 		})),
 	}
 }
@@ -1065,30 +1031,29 @@ impl TryFrom<types::FeatureGroup> for features::FeatureGroup {
 	type Error = anyhow::Error;
 	fn try_from(value: types::FeatureGroup) -> Result<Self> {
 		match value {
-			types::FeatureGroup::UnknownVariant(_, _, _) => Err(format_err!("unknown variant")),
 			types::FeatureGroup::Identity(f) => Ok(features::FeatureGroup::Identity(
 				features::IdentityFeatureGroup {
-					source_column_name: f.source_column_name.required()?,
+					source_column_name: f.source_column_name,
 				},
 			)),
 			types::FeatureGroup::Normalized(f) => Ok(features::FeatureGroup::Normalized(
 				features::NormalizedFeatureGroup {
-					source_column_name: f.source_column_name.required()?,
-					mean: f.mean.required()?,
-					variance: f.variance.required()?,
+					source_column_name: f.source_column_name,
+					mean: f.mean,
+					variance: f.variance,
 				},
 			)),
 			types::FeatureGroup::OneHotEncoded(f) => Ok(features::FeatureGroup::OneHotEncoded(
 				features::OneHotEncodedFeatureGroup {
-					source_column_name: f.source_column_name.required()?,
-					categories: f.categories.required()?,
+					source_column_name: f.source_column_name,
+					categories: f.categories,
 				},
 			)),
 			types::FeatureGroup::BagOfWords(f) => Ok(features::FeatureGroup::BagOfWords(
 				features::BagOfWordsFeatureGroup {
-					source_column_name: f.source_column_name.required()?,
-					tokenizer: f.tokenizer.required()?.try_into()?,
-					tokens: f.tokens.required()?,
+					source_column_name: f.source_column_name,
+					tokenizer: f.tokenizer.try_into()?,
+					tokens: f.tokens,
 				},
 			)),
 		}
@@ -1099,7 +1064,6 @@ impl TryFrom<types::Tokenizer> for features::Tokenizer {
 	type Error = anyhow::Error;
 	fn try_from(value: types::Tokenizer) -> Result<features::Tokenizer> {
 		match value {
-			types::Tokenizer::UnknownVariant(_, _, _) => Err(format_err!("unknown variant")),
 			types::Tokenizer::Alphanumeric => Ok(features::Tokenizer::Alphanumeric),
 		}
 	}

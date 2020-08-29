@@ -164,19 +164,14 @@ async fn props(
 	let Model { id, data } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let column_stats = match &model {
-		tangram_core::types::Model::Classifier(model) => {
-			model.overall_column_stats.as_option().unwrap()
-		}
-		tangram_core::types::Model::Regressor(model) => {
-			model.overall_column_stats.as_option().unwrap()
-		}
-		_ => return Err(Error::BadRequest.into()),
+		tangram_core::types::Model::Classifier(model) => &model.overall_column_stats,
+		tangram_core::types::Model::Regressor(model) => &model.overall_column_stats,
 	};
 	let columns: Vec<Column> = column_stats
 		.iter()
 		.map(|column_stats| match column_stats {
 			tangram_core::types::ColumnStats::Unknown(column_stats) => {
-				let name = column_stats.column_name.as_option().unwrap().to_owned();
+				let name = column_stats.column_name.to_owned();
 				let value = search_params
 					.as_ref()
 					.and_then(|s| s.get(&name))
@@ -185,8 +180,8 @@ async fn props(
 				Column::Unknown(Unknown { name, value })
 			}
 			tangram_core::types::ColumnStats::Number(column_stats) => {
-				let name = column_stats.column_name.as_option().unwrap().to_owned();
-				let mean = column_stats.mean.as_option().unwrap();
+				let name = column_stats.column_name.to_owned();
+				let mean = column_stats.mean;
 				let value = search_params
 					.as_ref()
 					.and_then(|s| s.get(&name))
@@ -194,22 +189,20 @@ async fn props(
 					.unwrap_or_else(|| mean.to_string());
 				Column::Number(Number {
 					name,
-					max: *column_stats.max.as_option().unwrap(),
-					min: *column_stats.min.as_option().unwrap(),
-					p25: *column_stats.p25.as_option().unwrap(),
-					p50: *column_stats.p50.as_option().unwrap(),
-					p75: *column_stats.p75.as_option().unwrap(),
+					max: column_stats.max,
+					min: column_stats.min,
+					p25: column_stats.p25,
+					p50: column_stats.p50,
+					p75: column_stats.p75,
 					value,
 				})
 			}
 			tangram_core::types::ColumnStats::Enum(column_stats) => {
-				let histogram = column_stats.histogram.as_option().unwrap();
+				let histogram = &column_stats.histogram;
 				let options = histogram.iter().map(|(key, _)| key.to_owned()).collect();
-				let name = column_stats.column_name.as_option().unwrap().to_owned();
+				let name = column_stats.column_name.to_owned();
 				let mode: String = column_stats
 					.histogram
-					.as_option()
-					.unwrap()
 					.iter()
 					.max_by(|a, b| a.1.cmp(&b.1))
 					.unwrap()
@@ -220,7 +213,7 @@ async fn props(
 					.and_then(|s| s.get(&name))
 					.map(|s| s.to_owned())
 					.unwrap_or(mode);
-				let histogram = column_stats.histogram.as_option().unwrap().to_owned();
+				let histogram = column_stats.histogram.to_owned();
 				Column::Enum(Enum {
 					name,
 					options,
@@ -229,7 +222,7 @@ async fn props(
 				})
 			}
 			tangram_core::types::ColumnStats::Text(column_stats) => {
-				let name = column_stats.column_name.as_option().unwrap().to_owned();
+				let name = column_stats.column_name.to_owned();
 				let value = search_params
 					.as_ref()
 					.and_then(|s| s.get(&name))
@@ -237,7 +230,6 @@ async fn props(
 					.unwrap_or_else(|| "".to_string());
 				Column::Text(Text { name, value })
 			}
-			tangram_core::types::ColumnStats::UnknownVariant(_, _, _) => unimplemented!(),
 		})
 		.collect();
 	let model_layout_info = get_model_layout_info(&mut db, id).await?;

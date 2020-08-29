@@ -1,6 +1,0 @@
-[package]
-name = "model-types"
-
-[[outputs]]
-language = "rust"
-path = "../generated"

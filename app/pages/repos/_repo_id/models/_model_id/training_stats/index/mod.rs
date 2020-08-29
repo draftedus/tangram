@@ -84,13 +84,11 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 
 	let props = match model {
 		tangram_core::types::Model::Classifier(model) => {
-			let column_stats = model.overall_column_stats.as_option().unwrap();
+			let column_stats = model.overall_column_stats;
 			Props {
-				id: model.id.as_option().unwrap().to_owned(),
-				row_count: model.row_count.as_option().unwrap().to_usize().unwrap(),
-				target_column_stats: build_column_stats(
-					model.overall_target_column_stats.as_option().unwrap(),
-				),
+				id: model.id.to_owned(),
+				row_count: model.row_count.to_usize().unwrap(),
+				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				column_count: column_stats.len(),
 				column_stats: column_stats
 					.iter()
@@ -100,13 +98,11 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			}
 		}
 		tangram_core::types::Model::Regressor(model) => {
-			let column_stats = model.overall_column_stats.as_option().unwrap();
+			let column_stats = model.overall_column_stats;
 			Props {
-				id: model.id.as_option().unwrap().to_owned(),
-				row_count: model.row_count.as_option().unwrap().to_usize().unwrap(),
-				target_column_stats: build_column_stats(
-					model.overall_target_column_stats.as_option().unwrap(),
-				),
+				id: model.id.to_owned(),
+				row_count: model.row_count.to_usize().unwrap(),
+				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				column_count: column_stats.len(),
 				column_stats: column_stats
 					.iter()
@@ -115,7 +111,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
 			}
 		}
-		_ => unimplemented!(),
 	};
 	db.commit().await?;
 	Ok(props)
@@ -127,7 +122,7 @@ fn build_column_stats(column_stats: &tangram_core::types::ColumnStats) -> Column
 			column_type: ColumnType::Unknown,
 			unique_count: None,
 			invalid_count: None,
-			name: column_stats.column_name.as_option().unwrap().to_owned(),
+			name: column_stats.column_name.to_owned(),
 			max: None,
 			min: None,
 			std: None,
@@ -136,34 +131,20 @@ fn build_column_stats(column_stats: &tangram_core::types::ColumnStats) -> Column
 		},
 		tangram_core::types::ColumnStats::Number(column_stats) => ColumnStats {
 			column_type: ColumnType::Number,
-			unique_count: Some(
-				column_stats
-					.unique_count
-					.as_option()
-					.unwrap()
-					.to_usize()
-					.unwrap(),
-			),
-			invalid_count: Some(
-				column_stats
-					.invalid_count
-					.as_option()
-					.unwrap()
-					.to_usize()
-					.unwrap(),
-			),
-			name: column_stats.column_name.as_option().unwrap().to_owned(),
-			max: Some(*column_stats.max.as_option().unwrap()),
-			min: Some(*column_stats.min.as_option().unwrap()),
-			std: Some(*column_stats.std.as_option().unwrap()),
-			mean: Some(*column_stats.mean.as_option().unwrap()),
-			variance: Some(*column_stats.variance.as_option().unwrap()),
+			unique_count: Some(column_stats.unique_count.to_usize().unwrap()),
+			invalid_count: Some(column_stats.invalid_count.to_usize().unwrap()),
+			name: column_stats.column_name.to_owned(),
+			max: Some(column_stats.max),
+			min: Some(column_stats.min),
+			std: Some(column_stats.std),
+			mean: Some(column_stats.mean),
+			variance: Some(column_stats.variance),
 		},
 		tangram_core::types::ColumnStats::Enum(column_stats) => ColumnStats {
 			column_type: ColumnType::Enum,
-			unique_count: column_stats.unique_count.as_option().unwrap().to_usize(),
-			invalid_count: column_stats.invalid_count.as_option().unwrap().to_usize(),
-			name: column_stats.column_name.as_option().unwrap().to_owned(),
+			unique_count: column_stats.unique_count.to_usize(),
+			invalid_count: column_stats.invalid_count.to_usize(),
+			name: column_stats.column_name.to_owned(),
 			max: None,
 			min: None,
 			std: None,
@@ -174,13 +155,12 @@ fn build_column_stats(column_stats: &tangram_core::types::ColumnStats) -> Column
 			column_type: ColumnType::Text,
 			unique_count: None,
 			invalid_count: None,
-			name: column_stats.column_name.as_option().unwrap().to_owned(),
+			name: column_stats.column_name.to_owned(),
 			max: None,
 			min: None,
 			std: None,
 			mean: None,
 			variance: None,
 		},
-		_ => unimplemented!(),
 	}
 }

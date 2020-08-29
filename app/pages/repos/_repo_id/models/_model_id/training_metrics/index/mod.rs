@@ -102,8 +102,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let Model { data, id } = get_model(&mut db, model_id).await?;
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	let inner = match model {
-		tangram_core::types::Model::Classifier(model) => match model.model.as_option().unwrap() {
-			tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
+		tangram_core::types::Model::Classifier(model) => match model.model {
 			tangram_core::types::ClassificationModel::LinearBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id))
 			}
@@ -118,16 +117,15 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			}
 		},
 		tangram_core::types::Model::Regressor(model) => {
-			let test_metrics = model.test_metrics.as_option().unwrap();
+			let test_metrics = model.test_metrics;
 			Inner::Regressor(Regressor {
 				id: id.to_string(),
-				rmse: *test_metrics.rmse.as_option().unwrap(),
-				baseline_rmse: *test_metrics.baseline_rmse.as_option().unwrap(),
-				mse: *test_metrics.mse.as_option().unwrap(),
-				baseline_mse: *test_metrics.baseline_mse.as_option().unwrap(),
+				rmse: test_metrics.rmse,
+				baseline_rmse: test_metrics.baseline_rmse,
+				mse: test_metrics.mse,
+				baseline_mse: test_metrics.baseline_mse,
 			})
 		}
-		_ => return Err(Error::NotFound.into()),
 	};
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
@@ -139,29 +137,25 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 }
 
 fn build_inner_binary(model: tangram_core::types::Classifier, id: Id) -> BinaryClassifier {
-	let test_metrics = model.test_metrics.as_option().unwrap();
-	let class_metrics = test_metrics.class_metrics.as_option().unwrap();
+	let test_metrics = &model.test_metrics;
+	let class_metrics = &test_metrics.class_metrics;
 	let classes = model.classes().to_owned();
 	let class_metrics = class_metrics
 		.iter()
 		.map(|class_metrics| ClassMetrics {
-			precision: *class_metrics.precision.as_option().unwrap(),
-			recall: *class_metrics.recall.as_option().unwrap(),
+			precision: class_metrics.precision,
+			recall: class_metrics.recall,
 		})
 		.collect::<Vec<ClassMetrics>>();
-	let losses = match model.model.into_option().unwrap() {
-		tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
-			inner_model.losses.into_option().unwrap()
-		}
-		tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
-			inner_model.losses.into_option().unwrap()
-		}
+	let losses = match model.model {
+		tangram_core::types::ClassificationModel::LinearBinary(inner_model) => inner_model.losses,
+		tangram_core::types::ClassificationModel::GbtBinary(inner_model) => inner_model.losses,
 		_ => unreachable!(),
 	};
 	BinaryClassifier {
 		id: id.to_string(),
-		accuracy: *test_metrics.accuracy.as_option().unwrap(),
-		baseline_accuracy: *test_metrics.baseline_accuracy.as_option().unwrap(),
+		accuracy: test_metrics.accuracy,
+		baseline_accuracy: test_metrics.baseline_accuracy,
 		class_metrics,
 		classes,
 		losses,
@@ -169,29 +163,27 @@ fn build_inner_binary(model: tangram_core::types::Classifier, id: Id) -> BinaryC
 }
 
 fn build_inner_multiclass(model: tangram_core::types::Classifier, id: Id) -> MulticlassClassifier {
-	let test_metrics = model.test_metrics.as_option().unwrap();
+	let test_metrics = &model.test_metrics;
 	let classes = model.classes().to_owned();
-	let class_metrics = test_metrics.class_metrics.as_option().unwrap();
+	let class_metrics = &test_metrics.class_metrics;
 	let class_metrics = class_metrics
 		.iter()
 		.map(|class_metrics| ClassMetrics {
-			precision: *class_metrics.precision.as_option().unwrap(),
-			recall: *class_metrics.recall.as_option().unwrap(),
+			precision: class_metrics.precision,
+			recall: class_metrics.recall,
 		})
 		.collect::<Vec<ClassMetrics>>();
-	let losses = match model.model.into_option().unwrap() {
+	let losses = match model.model {
 		tangram_core::types::ClassificationModel::LinearMulticlass(inner_model) => {
-			inner_model.losses.into_option().unwrap()
+			inner_model.losses
 		}
-		tangram_core::types::ClassificationModel::GbtMulticlass(inner_model) => {
-			inner_model.losses.into_option().unwrap()
-		}
+		tangram_core::types::ClassificationModel::GbtMulticlass(inner_model) => inner_model.losses,
 		_ => unreachable!(),
 	};
 	MulticlassClassifier {
 		id: id.to_string(),
-		accuracy: *test_metrics.accuracy.as_option().unwrap(),
-		baseline_accuracy: *test_metrics.baseline_accuracy.as_option().unwrap(),
+		accuracy: test_metrics.accuracy,
+		baseline_accuracy: test_metrics.baseline_accuracy,
 		class_metrics,
 		classes,
 		losses,

@@ -156,13 +156,8 @@ async fn props(
 	let production_stats =
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let target_column_stats = match model {
-		tangram_core::types::Model::Classifier(model) => {
-			model.overall_target_column_stats.into_option().unwrap()
-		}
-		tangram_core::types::Model::Regressor(model) => {
-			model.overall_target_column_stats.into_option().unwrap()
-		}
-		tangram_core::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
+		tangram_core::types::Model::Classifier(model) => model.overall_target_column_stats,
+		tangram_core::types::Model::Regressor(model) => model.overall_target_column_stats,
 	};
 	let overall_column_stats_table = production_stats
 		.overall
@@ -233,7 +228,7 @@ async fn props(
 				),
 				histogram: ProductionTrainingHistogram {
 					production: prediction_stats.histogram,
-					training: target_column_stats.histogram.as_option().unwrap().clone(),
+					training: target_column_stats.histogram.clone(),
 				},
 			})
 		}
@@ -280,11 +275,7 @@ async fn props(
 									),
 									histogram: ProductionTrainingHistogram {
 										production: prediction_stats.histogram,
-										training: target_column_stats
-											.histogram
-											.as_option()
-											.unwrap()
-											.clone(),
+										training: target_column_stats.histogram.clone(),
 									},
 								}
 							}
@@ -326,11 +317,11 @@ fn compute_production_training_quantiles(
 			None
 		},
 		training: Quantiles {
-			max: *target_column_stats.max.as_option().unwrap(),
-			min: *target_column_stats.min.as_option().unwrap(),
-			p25: *target_column_stats.p25.as_option().unwrap(),
-			p50: *target_column_stats.p50.as_option().unwrap(),
-			p75: *target_column_stats.p75.as_option().unwrap(),
+			max: target_column_stats.max,
+			min: target_column_stats.min,
+			p25: target_column_stats.p25,
+			p50: target_column_stats.p50,
+			p75: target_column_stats.p75,
 		},
 	}
 }

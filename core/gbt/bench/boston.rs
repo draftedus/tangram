@@ -49,7 +49,7 @@ fn main() -> Result<()> {
 	let features_train = tangram_core::features::compute_features_dataframe(
 		&dataframe_train,
 		&feature_groups,
-		&mut || {},
+		&|| {},
 	);
 
 	// train the model

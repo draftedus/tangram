@@ -115,22 +115,22 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let model = tangram_core::types::Model::from_slice(&data)?;
 	// assemble the response
 	let training_summary = training_summary(&model);
-	let inner = match model {
+	let inner = match &model {
 		tangram_core::types::Model::Classifier(model) => {
-			let test_metrics = model.test_metrics.as_option().unwrap();
-			let class_metrics = test_metrics.class_metrics.as_option().unwrap();
+			let test_metrics = &model.test_metrics;
+			let class_metrics = &test_metrics.class_metrics;
 			let class_metrics = class_metrics
 				.iter()
 				.map(|class_metrics| ClassMetrics {
-					precision: *class_metrics.precision.as_option().unwrap(),
-					recall: *class_metrics.recall.as_option().unwrap(),
+					precision: class_metrics.precision,
+					recall: class_metrics.recall,
 				})
 				.collect::<Vec<ClassMetrics>>();
 			Inner::Classifier(Classifier {
 				id: id.to_string(),
 				metrics: ClassifierMetrics {
-					accuracy: *test_metrics.accuracy.as_option().unwrap(),
-					baseline_accuracy: *test_metrics.baseline_accuracy.as_option().unwrap(),
+					accuracy: test_metrics.accuracy,
+					baseline_accuracy: test_metrics.baseline_accuracy,
 					class_metrics,
 					classes: model.classes().to_owned(),
 				},
@@ -138,19 +138,18 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			})
 		}
 		tangram_core::types::Model::Regressor(model) => {
-			let test_metrics = model.test_metrics.as_option().unwrap();
+			let test_metrics = &model.test_metrics;
 			Inner::Regressor(Regressor {
 				id: id.to_string(),
 				metrics: RegressorMetrics {
-					rmse: *test_metrics.rmse.as_option().unwrap(),
-					baseline_rmse: *test_metrics.baseline_rmse.as_option().unwrap(),
-					mse: *test_metrics.mse.as_option().unwrap(),
-					baseline_mse: *test_metrics.baseline_mse.as_option().unwrap(),
+					rmse: test_metrics.rmse,
+					baseline_rmse: test_metrics.baseline_rmse,
+					mse: test_metrics.mse,
+					baseline_mse: test_metrics.baseline_mse,
 				},
 				training_summary,
 			})
 		}
-		_ => return Err(Error::BadRequest.into()),
 	};
 
 	let model_layout_info = get_model_layout_info(&mut db, id).await?;
@@ -168,23 +167,22 @@ fn training_summary(model: &tangram_core::types::Model) -> TrainingSummary {
 	match model {
 		tangram_core::types::Model::Regressor(model) => TrainingSummary {
 			chosen_model_type_name,
-			column_count: model.overall_column_stats.as_option().unwrap().len() + 1,
+			column_count: model.overall_column_stats.len() + 1,
 			model_comparison_metric_type_name: regression_model_comparison_type_name(
-				model.comparison_metric.as_option().unwrap(),
+				&model.comparison_metric,
 			),
-			row_count: model.row_count.as_option().unwrap().to_usize().unwrap(),
-			test_fraction: *model.test_fraction.as_option().unwrap(),
+			row_count: model.row_count.to_usize().unwrap(),
+			test_fraction: model.test_fraction,
 		},
 		tangram_core::types::Model::Classifier(model) => TrainingSummary {
 			chosen_model_type_name,
-			column_count: model.overall_column_stats.as_option().unwrap().len() + 1,
+			column_count: model.overall_column_stats.len() + 1,
 			model_comparison_metric_type_name: classification_model_comparison_type_name(
-				model.comparison_metric.as_option().unwrap(),
+				&model.comparison_metric,
 			),
-			row_count: model.row_count.as_option().unwrap().to_usize().unwrap(),
-			test_fraction: *model.test_fraction.as_option().unwrap(),
+			row_count: model.row_count.to_usize().unwrap(),
+			test_fraction: model.test_fraction,
 		},
-		_ => unimplemented!(),
 	}
 }
 
@@ -202,7 +200,6 @@ fn regression_model_comparison_type_name(
 			"Root Mean Squared Error".into()
 		}
 		tangram_core::types::RegressionComparisonMetric::R2 => "R2".into(),
-		_ => unimplemented!(),
 	}
 }
 
@@ -215,20 +212,18 @@ fn classification_model_comparison_type_name(
 			"Area Under the Receiver Operating Characteristic".into()
 		}
 		tangram_core::types::ClassificationComparisonMetric::F1 => "F1 Score".into(),
-		_ => unimplemented!(),
 	}
 }
 
 fn model_type_name(model: &tangram_core::types::Model) -> String {
 	match model {
-		tangram_core::types::Model::Regressor(model) => match &model.model.as_option().unwrap() {
+		tangram_core::types::Model::Regressor(model) => match &model.model {
 			tangram_core::types::RegressionModel::Linear(_) => "Linear Regressor".into(),
 			tangram_core::types::RegressionModel::Gbt(_) => {
 				"Gradient Boosted Tree Regressor".into()
 			}
-			_ => unimplemented!(),
 		},
-		tangram_core::types::Model::Classifier(model) => match &model.model.as_option().unwrap() {
+		tangram_core::types::Model::Classifier(model) => match &model.model {
 			tangram_core::types::ClassificationModel::LinearBinary(_) => {
 				"Linear Binary Classifier".into()
 			}
@@ -241,8 +236,6 @@ fn model_type_name(model: &tangram_core::types::Model) -> String {
 			tangram_core::types::ClassificationModel::GbtMulticlass(_) => {
 				"Gradient Boosted Tree Multiclass Classifier".into()
 			}
-			_ => unimplemented!(),
 		},
-		_ => unimplemented!(),
 	}
 }

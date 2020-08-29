@@ -196,26 +196,21 @@ async fn props(
 	)
 	.await?;
 	let train_row_count = match &model {
-		tangram_core::types::Model::Regressor(model) => *model.row_count.as_option().unwrap(),
-		tangram_core::types::Model::Classifier(model) => *model.row_count.as_option().unwrap(),
+		tangram_core::types::Model::Regressor(model) => model.row_count,
+		tangram_core::types::Model::Classifier(model) => model.row_count,
 		_ => unreachable!(),
 	};
 	let train_column_stats = match &model {
 		tangram_core::types::Model::Classifier(model) => model
 			.overall_column_stats
-			.as_option()
-			.unwrap()
 			.iter()
 			.find(|column| column.column_name() == column_name)
 			.unwrap(),
 		tangram_core::types::Model::Regressor(model) => model
 			.overall_column_stats
-			.as_option()
-			.unwrap()
 			.iter()
 			.find(|column| column.column_name() == column_name)
 			.unwrap(),
-		tangram_core::types::Model::UnknownVariant(_, _, _) => unimplemented!(),
 	};
 	let inner = match train_column_stats {
 		tangram_core::types::ColumnStats::Number(train_column_stats) => {
@@ -285,13 +280,13 @@ fn number_props(
 	// 				std: stats.std,
 	// 			}),
 	// 		training: NumberStats {
-	// 			max: *train_column_stats.max.as_option().unwrap(),
-	// 			min: *train_column_stats.min.as_option().unwrap(),
-	// 			mean: *train_column_stats.mean.as_option().unwrap(),
-	// 			p25: *train_column_stats.p25.as_option().unwrap(),
-	// 			p50: *train_column_stats.p50.as_option().unwrap(),
-	// 			p75: *train_column_stats.p75.as_option().unwrap(),
-	// 			std: *train_column_stats.std.as_option().unwrap(),
+	// 			max: *train_column_stats.max,
+	// 			min: *train_column_stats.min,
+	// 			mean: *train_column_stats.mean,
+	// 			p25: *train_column_stats.p25,
+	// 			p50: *train_column_stats.p50,
+	// 			p75: *train_column_stats.p75,
+	// 			std: *train_column_stats.std,
 	// 		},
 	// 	},
 	// };
@@ -339,8 +334,6 @@ fn enum_props(
 	// 	.zip(
 	// 		train_column_stats
 	// 			.histogram
-	// 			.into_option()
-	// 			.unwrap()
 	// 			.into_iter(),
 	// 	)
 	// 	.map(

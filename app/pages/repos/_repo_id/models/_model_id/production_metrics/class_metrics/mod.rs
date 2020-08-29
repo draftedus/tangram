@@ -154,13 +154,7 @@ async fn props(
 					prediction_metrics
 				}
 			});
-	let training_class_metrics = model
-		.test_metrics
-		.as_option()
-		.unwrap()
-		.class_metrics
-		.as_option()
-		.unwrap();
+	let training_class_metrics = &model.test_metrics.class_metrics;
 	let overall_class_metrics: Vec<OverallClassMetricsEntry> = training_class_metrics
 		.iter()
 		.zip(classes.iter())
@@ -169,10 +163,10 @@ async fn props(
 			let production_class_metrics = overall_prediction_metrics
 				.as_ref()
 				.map(|prediction_metrics| &prediction_metrics.class_metrics[class_index]);
-			let training_tn = training_class_metrics.true_negatives.as_option().unwrap();
-			let training_fp = training_class_metrics.false_positives.as_option().unwrap();
-			let training_tp = training_class_metrics.true_positives.as_option().unwrap();
-			let training_fn = training_class_metrics.false_negatives.as_option().unwrap();
+			let training_tn = training_class_metrics.true_negatives;
+			let training_fp = training_class_metrics.false_positives;
+			let training_tp = training_class_metrics.true_positives;
+			let training_fn = training_class_metrics.false_negatives;
 			let training_total = training_tn + training_fp + training_tp + training_fn;
 			let training_tn_fraction =
 				training_tn.to_f32().unwrap() / training_total.to_f32().unwrap();
@@ -226,15 +220,15 @@ async fn props(
 				comparison,
 				confusion_matrix,
 				f1_score: TrainingProductionMetrics {
-					training: *training_class_metrics.f1_score.as_option().unwrap(),
+					training: training_class_metrics.f1_score,
 					production: production_class_metrics.map(|m| m.f1_score),
 				},
 				precision: TrainingProductionMetrics {
 					production: production_class_metrics.map(|m| m.precision),
-					training: *training_class_metrics.f1_score.as_option().unwrap(),
+					training: training_class_metrics.f1_score,
 				},
 				recall: TrainingProductionMetrics {
-					training: *training_class_metrics.recall.as_option().unwrap(),
+					training: training_class_metrics.recall,
 					production: production_class_metrics.map(|m| m.recall),
 				},
 			}
@@ -274,24 +268,15 @@ async fn props(
 						),
 						f1_score: TrainingProductionMetrics {
 							production: production_f1_score,
-							training: *training_class_metrics[class_index]
-								.f1_score
-								.as_option()
-								.unwrap(),
+							training: training_class_metrics[class_index].f1_score,
 						},
 						precision: TrainingProductionMetrics {
 							production: production_precision,
-							training: *training_class_metrics[class_index]
-								.precision
-								.as_option()
-								.unwrap(),
+							training: training_class_metrics[class_index].precision,
 						},
 						recall: TrainingProductionMetrics {
 							production: production_recall,
-							training: *training_class_metrics[class_index]
-								.precision
-								.as_option()
-								.unwrap(),
+							training: training_class_metrics[class_index].precision,
 						},
 					}
 				})

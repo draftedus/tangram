@@ -1,7 +1,0 @@
-[workspace]
-members = [
-	"tangram/types/buffy",
-	"telemetry/app/buffy",
-	"telemetry/cli/buffy",
-	"telemetry/www/buffy",
-]

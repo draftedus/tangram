@@ -108,7 +108,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		.get(header::CONTENT_TYPE)
 		.and_then(|ct| ct.to_str().ok())
 		.and_then(|ct| multer::parse_boundary(ct).ok())
-		.ok_or(Error::BadRequest)?;
+		.ok_or_else(|| Error::BadRequest)?;
 	let mut title: Option<String> = None;
 	let mut owner: Option<String> = None;
 	let mut file_data: Option<Vec<u8>> = None;
@@ -145,7 +145,8 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 
 	let model = match tangram_core::types::Model::from_slice(&file_data) {
 		Ok(model) => model,
-		Err(_) => {
+		Err(e) => {
+			dbg!(e);
 			let error =
 				"The model you uploaded failed to deserialize. Are you sure it is a .tangram file?";
 			let props = props(&mut db, user, Some(String::from(error)), Some(title), owner).await?;
@@ -162,26 +163,20 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	let result = if let Some(owner) = &owner {
 		let owner_parts: Vec<&str> = owner.split(':').collect();
 		let owner_type = owner_parts.get(0).ok_or(Error::BadRequest)?;
+		let owner_id: Id = owner_parts
+			.get(1)
+			.ok_or(Error::BadRequest)?
+			.parse()
+			.map_err(|_| Error::BadRequest)?;
 		match *owner_type {
-			"user" => {
-				let user_id: Id = owner_parts
-					.get(1)
-					.ok_or(Error::BadRequest)?
-					.parse()
-					.map_err(|_| Error::BadRequest)?;
-				create_user_repo(&mut db, user_id, repo_id, now, &title).await
-			}
+			"user" => create_user_repo(&mut db, owner_id, repo_id, now, &title).await,
 			"organization" => {
-				let org_id: Id = owner_parts
-					.get(1)
-					.ok_or(Error::BadRequest)?
-					.parse()
-					.map_err(|_| Error::BadRequest)?;
-				if !authorize_user_for_organization(&mut db, user.as_ref().unwrap(), org_id).await?
+				if !authorize_user_for_organization(&mut db, user.as_ref().unwrap(), owner_id)
+					.await?
 				{
 					return Err(Error::Unauthorized.into());
 				}
-				create_org_repo(&mut db, org_id, repo_id, now, title.as_str()).await
+				create_org_repo(&mut db, owner_id, repo_id, now, title.as_str()).await
 			}
 			_ => return Err(Error::BadRequest.into()),
 		}

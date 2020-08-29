@@ -1,4 +1,4 @@
-import { PinwheelInfo, h, renderPage, ui } from 'deps'
+import { Fragment, PinwheelInfo, h, renderPage, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {
@@ -6,7 +6,7 @@ export type Props = {
 	repos: Array<{
 		createdAt: string
 		id: string
-		ownerName: string
+		ownerName: string | null
 		title: string
 	}>
 }
@@ -34,8 +34,12 @@ export default function HomePage(props: Props) {
 								<ui.TableRow key={repo.id}>
 									<ui.TableCell>
 										<ui.Link href={`/repos/${repo.id}/`}>
-											{repo.ownerName}
-											{'/'}
+											{repo.ownerName && (
+												<>
+													{repo.ownerName}
+													{'/'}
+												</>
+											)}
 											{repo.title}
 										</ui.Link>
 									</ui.TableCell>

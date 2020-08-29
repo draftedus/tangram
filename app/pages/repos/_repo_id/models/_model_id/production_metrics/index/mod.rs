@@ -175,7 +175,7 @@ async fn props(
 			.await?;
 	let inner = match &model {
 		tangram_core::types::Model::Regressor(model) => {
-			let training_metrics = model.test_metrics.as_option().unwrap();
+			let training_metrics = &model.test_metrics;
 			let true_values_count = production_metrics.overall.true_values_count;
 			let overall_production_metrics =
 				production_metrics
@@ -188,11 +188,11 @@ async fn props(
 			let overall = RegressionProductionMetrics {
 				mse: TrainingProductionMetrics {
 					production: overall_production_metrics.as_ref().map(|m| m.mse),
-					training: *training_metrics.mse.as_option().unwrap(),
+					training: training_metrics.mse,
 				},
 				rmse: TrainingProductionMetrics {
 					production: overall_production_metrics.as_ref().map(|m| m.rmse),
-					training: *training_metrics.rmse.as_option().unwrap(),
+					training: training_metrics.rmse,
 				},
 				true_values_count,
 			};
@@ -224,7 +224,7 @@ async fn props(
 					.collect();
 				MSEChart {
 					data,
-					training_mse: *training_metrics.mse.as_option().unwrap(),
+					training_mse: training_metrics.mse,
 				}
 			};
 			let true_values_count_chart = production_metrics
@@ -248,7 +248,7 @@ async fn props(
 			})
 		}
 		tangram_core::types::Model::Classifier(model) => {
-			let training_metrics = model.test_metrics.as_option().unwrap();
+			let training_metrics = &model.test_metrics;
 			let overall_production_metrics =
 				production_metrics
 					.overall
@@ -298,11 +298,11 @@ async fn props(
 					.collect();
 				AccuracyChart {
 					data,
-					training_accuracy: *training_metrics.accuracy.as_option().unwrap(),
+					training_accuracy: training_metrics.accuracy,
 				}
 			};
 			let true_values_count = production_metrics.overall.true_values_count;
-			let training_class_metrics = training_metrics.class_metrics.as_option().unwrap();
+			let training_class_metrics = &training_metrics.class_metrics;
 			let production_accuracy = overall_production_metrics
 				.as_ref()
 				.map(|metrics| metrics.accuracy);
@@ -322,11 +322,11 @@ async fn props(
 						.map(|p| p[class_index].recall);
 					ClassMetricsTableEntry {
 						precision: TrainingProductionMetrics {
-							training: *training_class_metrics.precision.as_option().unwrap(),
+							training: training_class_metrics.precision,
 							production: precision,
 						},
 						recall: TrainingProductionMetrics {
-							training: *training_class_metrics.recall.as_option().unwrap(),
+							training: training_class_metrics.recall,
 							production: recall,
 						},
 						class_name: class_name.to_owned(),
@@ -336,7 +336,7 @@ async fn props(
 			let overall = ClassificationOverallProductionMetrics {
 				accuracy: TrainingProductionMetrics {
 					production: production_accuracy,
-					training: *training_metrics.accuracy.as_option().unwrap(),
+					training: training_metrics.accuracy,
 				},
 				class_metrics_table,
 				true_values_count,
@@ -350,7 +350,6 @@ async fn props(
 				overall,
 			})
 		}
-		_ => unimplemented!(),
 	};
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;

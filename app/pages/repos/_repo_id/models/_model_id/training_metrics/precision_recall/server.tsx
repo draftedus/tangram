@@ -104,7 +104,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 							data={nonParametricData}
 							hideLegend={false}
 							id="non_parametric_pr"
-							title="None-Parametric Precision Recall Curve"
+							title="Non-Parametric Precision Recall Curve"
 							xAxisTitle="Threshold"
 							xMax={1}
 							xMin={0}

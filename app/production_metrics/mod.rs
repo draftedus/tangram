@@ -96,7 +96,6 @@ impl ProductionPredictionMetrics {
 					ClassificationProductionPredictionMetrics::new(model.classes().to_owned()),
 				)
 			}
-			_ => unimplemented!(),
 		}
 	}
 }

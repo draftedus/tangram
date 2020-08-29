@@ -83,12 +83,12 @@ async fn props(
 		1
 	};
 	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
-	let class_metrics = match model.model.as_option().unwrap() {
+	let class_metrics = match &model.model {
 		tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
-			inner_model.class_metrics.as_option().unwrap()
+			&inner_model.class_metrics
 		}
 		tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
-			inner_model.class_metrics.as_option().unwrap()
+			&inner_model.class_metrics
 		}
 		_ => return Err(Error::BadRequest.into()),
 	};
@@ -96,13 +96,11 @@ async fn props(
 		.get(class_index)
 		.unwrap()
 		.thresholds
-		.as_option()
-		.unwrap()
 		.iter()
 		.map(|class_metrics| DataPoint {
-			precision: *class_metrics.precision.as_option().unwrap(),
-			recall: *class_metrics.recall.as_option().unwrap(),
-			threshold: *class_metrics.threshold.as_option().unwrap(),
+			precision: class_metrics.precision,
+			recall: class_metrics.recall,
+			threshold: class_metrics.threshold,
 		})
 		.collect();
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;

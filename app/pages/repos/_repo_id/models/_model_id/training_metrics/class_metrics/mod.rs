@@ -103,8 +103,7 @@ async fn props(
 	// assemble the response
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let inner = match model {
-		tangram_core::types::Model::Classifier(model) => match model.model.as_option().unwrap() {
-			tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => unimplemented!(),
+		tangram_core::types::Model::Classifier(model) => match model.model {
 			tangram_core::types::ClassificationModel::LinearBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
@@ -134,8 +133,8 @@ fn build_inner_binary(
 	id: Id,
 	class: Option<String>,
 ) -> BinaryClassifier {
-	let test_metrics = model.test_metrics.as_option().unwrap();
-	let class_metrics = test_metrics.class_metrics.as_option().unwrap();
+	let test_metrics = &model.test_metrics;
+	let class_metrics = &test_metrics.class_metrics;
 	let classes = model.classes().to_owned();
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
@@ -145,13 +144,13 @@ fn build_inner_binary(
 	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
 	let class_metrics = &class_metrics[class_index];
 	let class_metrics = ClassMetrics {
-		precision: *class_metrics.precision.as_option().unwrap(),
-		recall: *class_metrics.recall.as_option().unwrap(),
-		f1_score: *class_metrics.f1_score.as_option().unwrap(),
-		true_negatives: *class_metrics.true_negatives.as_option().unwrap(),
-		true_positives: *class_metrics.true_positives.as_option().unwrap(),
-		false_negatives: *class_metrics.false_negatives.as_option().unwrap(),
-		false_positives: *class_metrics.false_positives.as_option().unwrap(),
+		precision: class_metrics.precision,
+		recall: class_metrics.recall,
+		f1_score: class_metrics.f1_score,
+		true_negatives: class_metrics.true_negatives,
+		true_positives: class_metrics.true_positives,
+		false_negatives: class_metrics.false_negatives,
+		false_positives: class_metrics.false_positives,
 	};
 	BinaryClassifier {
 		id: id.to_string(),
@@ -166,9 +165,9 @@ fn build_inner_multiclass(
 	id: Id,
 	class: Option<String>,
 ) -> MulticlassClassifier {
-	let test_metrics = model.test_metrics.as_option().unwrap();
+	let test_metrics = &model.test_metrics;
 	let classes = model.classes().to_owned();
-	let class_metrics = test_metrics.class_metrics.as_option().unwrap();
+	let class_metrics = &test_metrics.class_metrics;
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {
@@ -178,13 +177,13 @@ fn build_inner_multiclass(
 
 	let class_metrics = &class_metrics[class_index];
 	let class_metrics = ClassMetrics {
-		precision: *class_metrics.precision.as_option().unwrap(),
-		recall: *class_metrics.recall.as_option().unwrap(),
-		f1_score: *class_metrics.f1_score.as_option().unwrap(),
-		true_negatives: *class_metrics.true_negatives.as_option().unwrap(),
-		true_positives: *class_metrics.true_positives.as_option().unwrap(),
-		false_negatives: *class_metrics.false_negatives.as_option().unwrap(),
-		false_positives: *class_metrics.false_positives.as_option().unwrap(),
+		precision: class_metrics.precision,
+		recall: class_metrics.recall,
+		f1_score: class_metrics.f1_score,
+		true_negatives: class_metrics.true_negatives,
+		true_positives: class_metrics.true_positives,
+		false_negatives: class_metrics.false_negatives,
+		false_positives: class_metrics.false_positives,
 	};
 	MulticlassClassifier {
 		id: id.to_string(),

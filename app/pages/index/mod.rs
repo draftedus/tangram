@@ -40,7 +40,7 @@ pub struct Repo {
 	pub id: String,
 	pub title: String,
 	pub created_at: String,
-	pub owner_name: String,
+	pub owner_name: Option<String>,
 }
 
 pub async fn props(
@@ -80,7 +80,7 @@ async fn props_user(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> R
 				id,
 				title,
 				created_at: created_at.to_rfc3339(),
-				owner_name,
+				owner_name: Some(owner_name),
 			}
 		})
 		.collect();
@@ -129,8 +129,7 @@ async fn props_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Props> 
 			select
 				repos.id,
 				repos.created_at,
-				repos.title,
-				'root' as owner_name
+				repos.title
 			from repos
 			where repos.user_id is null and repos.organization_id is null
 			order by repos.created_at
@@ -146,11 +145,10 @@ async fn props_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Props> 
 			let created_at: i64 = row.get(1);
 			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
 			let title = row.get(2);
-			let owner_name = row.get(3);
 			Repo {
 				created_at: created_at.to_rfc3339(),
 				id: id.to_string(),
-				owner_name,
+				owner_name: None,
 				title,
 			}
 		})

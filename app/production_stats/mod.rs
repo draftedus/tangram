@@ -36,13 +36,8 @@ impl ProductionStats {
 		end_date: DateTime<Utc>,
 	) -> Self {
 		let train_column_stats = match &model {
-			tangram_core::types::Model::Regressor(model) => {
-				model.train_column_stats.as_option().unwrap().as_slice()
-			}
-			tangram_core::types::Model::Classifier(model) => {
-				model.train_column_stats.as_option().unwrap().as_slice()
-			}
-			_ => unimplemented!(),
+			tangram_core::types::Model::Regressor(model) => model.train_column_stats.as_slice(),
+			tangram_core::types::Model::Classifier(model) => model.train_column_stats.as_slice(),
 		};
 		let column_stats = train_column_stats
 			.iter()

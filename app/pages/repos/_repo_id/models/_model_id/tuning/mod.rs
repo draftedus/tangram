@@ -77,12 +77,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let tuning = match model {
 		tangram_core::types::Model::Classifier(model) => {
 			let classes = model.classes().to_owned();
-			match model.model.into_option().unwrap() {
-				tangram_core::types::ClassificationModel::UnknownVariant(_, _, _) => {
-					unimplemented!()
-				}
+			match model.model {
 				tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
-					let class_metrics = inner_model.class_metrics.into_option().unwrap();
+					let class_metrics = inner_model.class_metrics;
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
 						baseline_threshold: 0.5,
@@ -92,7 +89,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				}
 				tangram_core::types::ClassificationModel::LinearMulticlass(_) => None,
 				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
-					let class_metrics = inner_model.class_metrics.into_option().unwrap();
+					let class_metrics = inner_model.class_metrics;
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
 						baseline_threshold: 0.5,
@@ -104,7 +101,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			}
 		}
 		tangram_core::types::Model::Regressor(_) => None,
-		_ => return Err(Error::BadRequest.into()),
 	};
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
@@ -122,19 +118,17 @@ fn build_threshold_class_metrics(
 		.map(|class_metrics| {
 			class_metrics
 				.thresholds
-				.as_option()
-				.unwrap()
 				.iter()
 				.map(|class_metrics| Metrics {
-					threshold: *class_metrics.threshold.as_option().unwrap(),
-					precision: *class_metrics.precision.as_option().unwrap(),
-					recall: *class_metrics.recall.as_option().unwrap(),
-					accuracy: *class_metrics.accuracy.as_option().unwrap(),
-					f1_score: *class_metrics.f1_score.as_option().unwrap(),
-					false_negatives: *class_metrics.false_negatives.as_option().unwrap(),
-					false_positives: *class_metrics.false_positives.as_option().unwrap(),
-					true_negatives: *class_metrics.true_negatives.as_option().unwrap(),
-					true_positives: *class_metrics.true_positives.as_option().unwrap(),
+					threshold: class_metrics.threshold,
+					precision: class_metrics.precision,
+					recall: class_metrics.recall,
+					accuracy: class_metrics.accuracy,
+					f1_score: class_metrics.f1_score,
+					false_negatives: class_metrics.false_negatives,
+					false_positives: class_metrics.false_positives,
+					true_negatives: class_metrics.true_negatives,
+					true_positives: class_metrics.true_positives,
 				})
 				.collect::<Vec<Metrics>>()
 		})

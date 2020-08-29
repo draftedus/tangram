@@ -51,7 +51,6 @@ impl ProductionPredictionStats {
 					ClassificationProductionPredictionStats::new(classes),
 				)
 			}
-			_ => unimplemented!(),
 		}
 	}
 }

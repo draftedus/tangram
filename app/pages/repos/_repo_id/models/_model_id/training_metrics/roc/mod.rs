@@ -76,15 +76,13 @@ async fn props(
 	// assemble the response
 	match model {
 		tangram_core::types::Model::Classifier(model) => {
-			let (class_metrics, auc_roc) = match model.model.as_option().unwrap() {
-				tangram_core::types::ClassificationModel::LinearBinary(inner_model) => (
-					inner_model.class_metrics.as_option().unwrap(),
-					inner_model.auc_roc.as_option().unwrap(),
-				),
-				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => (
-					inner_model.class_metrics.as_option().unwrap(),
-					inner_model.auc_roc.as_option().unwrap(),
-				),
+			let (class_metrics, auc_roc) = match &model.model {
+				tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
+					(&inner_model.class_metrics, inner_model.auc_roc)
+				}
+				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
+					(&inner_model.class_metrics, inner_model.auc_roc)
+				}
 				_ => return Err(Error::BadRequest.into()),
 			};
 			let roc_curve_data = class_metrics
@@ -92,18 +90,10 @@ async fn props(
 				.map(|class_metrics| {
 					class_metrics
 						.thresholds
-						.as_option()
-						.unwrap()
 						.iter()
 						.map(|class_metrics| ROCCurveData {
-							false_positive_rate: *class_metrics
-								.false_positive_rate
-								.as_option()
-								.unwrap(),
-							true_positive_rate: *class_metrics
-								.true_positive_rate
-								.as_option()
-								.unwrap(),
+							false_positive_rate: class_metrics.false_positive_rate,
+							true_positive_rate: class_metrics.true_positive_rate,
 						})
 						.collect()
 				})
@@ -125,7 +115,7 @@ async fn props(
 				id: id.to_string(),
 				classes,
 				class,
-				auc_roc: *auc_roc,
+				auc_roc,
 				roc_curve_data,
 				model_layout_info,
 			})

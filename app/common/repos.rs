@@ -59,7 +59,7 @@ pub async fn get_model_layout_info(
 			name: organization_name.unwrap(),
 			url: format!("/organizations/{}/", organization_id),
 		}),
-		(None, Some(user_id)) => Some(Owner {
+		(None, Some(_)) => Some(Owner {
 			name: user_email.unwrap(),
 			url: "/user".to_string(),
 		}),

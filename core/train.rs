@@ -9,7 +9,6 @@ use crate::{
 	util::progress_counter::ProgressCounter,
 };
 use anyhow::{format_err, Context, Result};
-use buffy::prelude::*;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rand::seq::SliceRandom;
@@ -187,29 +186,21 @@ pub fn train(
 				_ => unreachable!(),
 			};
 			types::Model::Regressor(types::Regressor {
-				cached_size: Default::default(),
-				unknown_fields: Default::default(),
-				id: Field::Present(model_id.to_string()),
-				target_column_name: Field::Present(target_column_name.to_string()),
-				row_count: Field::Present(row_count.to_u64().unwrap()),
-				stats_settings: Field::Present(stats_settings.into()),
-				overall_column_stats: Field::Present(
-					overall_column_stats.into_iter().map(Into::into).collect(),
-				),
-				overall_target_column_stats: Field::Present(overall_target_column_stats.into()),
-				train_column_stats: Field::Present(
-					train_column_stats.into_iter().map(Into::into).collect(),
-				),
-				train_target_column_stats: Field::Present(train_target_column_stats.into()),
-				test_column_stats: Field::Present(
-					test_column_stats.into_iter().map(Into::into).collect(),
-				),
-				test_target_column_stats: Field::Present(test_target_column_stats.into()),
-				test_fraction: Field::Present(test_fraction),
-				test_metrics: Field::Present(test_metrics.into()),
-				model: Field::Present(model.into()),
-				comparison_fraction: Field::Present(comparison_fraction),
-				comparison_metric: Field::Present(comparison_metric.into()),
+				id: model_id.to_string(),
+				target_column_name: target_column_name.to_string(),
+				row_count: row_count.to_u64().unwrap(),
+				stats_settings: stats_settings.into(),
+				overall_column_stats: overall_column_stats.into_iter().map(Into::into).collect(),
+				overall_target_column_stats: overall_target_column_stats.into(),
+				train_column_stats: train_column_stats.into_iter().map(Into::into).collect(),
+				train_target_column_stats: train_target_column_stats.into(),
+				test_column_stats: test_column_stats.into_iter().map(Into::into).collect(),
+				test_target_column_stats: test_target_column_stats.into(),
+				test_fraction,
+				test_metrics: test_metrics.into(),
+				model: model.into(),
+				comparison_fraction,
+				comparison_metric: comparison_metric.into(),
 			})
 		}
 		Task::Classification { .. } => {
@@ -281,29 +272,21 @@ pub fn train(
 				_ => unreachable!(),
 			};
 			types::Model::Classifier(types::Classifier {
-				cached_size: Default::default(),
-				unknown_fields: Default::default(),
-				id: Field::Present(model_id.to_string()),
-				target_column_name: Field::Present(target_column_name.to_string()),
-				row_count: Field::Present(row_count.to_u64().unwrap()),
-				stats_settings: Field::Present(stats_settings.into()),
-				overall_column_stats: Field::Present(
-					overall_column_stats.into_iter().map(Into::into).collect(),
-				),
-				overall_target_column_stats: Field::Present(overall_target_column_stats.into()),
-				train_column_stats: Field::Present(
-					train_column_stats.into_iter().map(Into::into).collect(),
-				),
-				train_target_column_stats: Field::Present(train_target_column_stats.into()),
-				test_column_stats: Field::Present(
-					test_column_stats.into_iter().map(Into::into).collect(),
-				),
-				test_target_column_stats: Field::Present(test_target_column_stats.into()),
-				test_fraction: Field::Present(test_fraction),
-				test_metrics: Field::Present(test_metrics.into()),
-				model: Field::Present(model.into()),
-				comparison_fraction: Field::Present(comparison_fraction),
-				comparison_metric: Field::Present(comparison_metric.into()),
+				id: model_id.to_string(),
+				target_column_name: target_column_name.to_string(),
+				row_count: row_count.to_u64().unwrap(),
+				stats_settings: stats_settings.into(),
+				overall_column_stats: overall_column_stats.into_iter().map(Into::into).collect(),
+				overall_target_column_stats: overall_target_column_stats.into(),
+				train_column_stats: train_column_stats.into_iter().map(Into::into).collect(),
+				train_target_column_stats: train_target_column_stats.into(),
+				test_column_stats: test_column_stats.into_iter().map(Into::into).collect(),
+				test_target_column_stats: test_target_column_stats.into(),
+				test_fraction,
+				test_metrics: test_metrics.into(),
+				model: model.into(),
+				comparison_fraction,
+				comparison_metric: comparison_metric.into(),
 			})
 		}
 	};
@@ -1308,12 +1291,8 @@ fn test_model(
 impl Into<types::StatsSettings> for stats::StatsSettings {
 	fn into(self) -> types::StatsSettings {
 		types::StatsSettings {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			text_histogram_max_size: Field::Present(self.text_histogram_max_size.to_u64().unwrap()),
-			number_histogram_max_size: Field::Present(
-				self.number_histogram_max_size.to_u64().unwrap(),
-			),
+			text_histogram_max_size: self.text_histogram_max_size.to_u64().unwrap(),
+			number_histogram_max_size: self.number_histogram_max_size.to_u64().unwrap(),
 		}
 	}
 }
@@ -1332,9 +1311,7 @@ impl Into<types::FeatureGroup> for features::FeatureGroup {
 impl Into<types::IdentityFeatureGroup> for features::IdentityFeatureGroup {
 	fn into(self) -> types::IdentityFeatureGroup {
 		types::IdentityFeatureGroup {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			source_column_name: Present(self.source_column_name),
+			source_column_name: self.source_column_name,
 		}
 	}
 }
@@ -1342,11 +1319,9 @@ impl Into<types::IdentityFeatureGroup> for features::IdentityFeatureGroup {
 impl Into<types::NormalizedFeatureGroup> for features::NormalizedFeatureGroup {
 	fn into(self) -> types::NormalizedFeatureGroup {
 		types::NormalizedFeatureGroup {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			source_column_name: Present(self.source_column_name),
-			mean: Present(self.mean),
-			variance: Present(self.variance),
+			source_column_name: self.source_column_name,
+			mean: self.mean,
+			variance: self.variance,
 		}
 	}
 }
@@ -1354,10 +1329,8 @@ impl Into<types::NormalizedFeatureGroup> for features::NormalizedFeatureGroup {
 impl Into<types::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatureGroup {
 	fn into(self) -> types::OneHotEncodedFeatureGroup {
 		types::OneHotEncodedFeatureGroup {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			source_column_name: Present(self.source_column_name),
-			categories: Present(self.categories),
+			source_column_name: self.source_column_name,
+			categories: self.categories,
 		}
 	}
 }
@@ -1365,11 +1338,9 @@ impl Into<types::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatureGr
 impl Into<types::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
 	fn into(self) -> types::BagOfWordsFeatureGroup {
 		types::BagOfWordsFeatureGroup {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			source_column_name: Present(self.source_column_name),
-			tokenizer: Present(self.tokenizer.into()),
-			tokens: Present(self.tokens),
+			source_column_name: self.source_column_name,
+			tokenizer: self.tokenizer.into(),
+			tokens: self.tokens,
 		}
 	}
 }
@@ -1396,9 +1367,7 @@ impl Into<types::ColumnStats> for stats::ColumnStats {
 impl Into<types::UnknownColumnStats> for stats::UnknownColumnStats {
 	fn into(self) -> types::UnknownColumnStats {
 		types::UnknownColumnStats {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			column_name: Present(self.column_name),
+			column_name: self.column_name,
 		}
 	}
 }
@@ -1406,20 +1375,18 @@ impl Into<types::UnknownColumnStats> for stats::UnknownColumnStats {
 impl Into<types::NumberColumnStats> for stats::NumberColumnStats {
 	fn into(self) -> types::NumberColumnStats {
 		types::NumberColumnStats {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			column_name: Present(self.column_name),
-			histogram: Present(self.histogram),
-			invalid_count: Present(self.invalid_count),
-			unique_count: Present(self.unique_count),
-			min: Present(self.min),
-			max: Present(self.max),
-			mean: Present(self.mean),
-			variance: Present(self.variance),
-			std: Present(self.std),
-			p25: Present(self.p25),
-			p50: Present(self.p50),
-			p75: Present(self.p75),
+			column_name: self.column_name,
+			histogram: self.histogram,
+			invalid_count: self.invalid_count,
+			unique_count: self.unique_count,
+			min: self.min,
+			max: self.max,
+			mean: self.mean,
+			variance: self.variance,
+			std: self.std,
+			p25: self.p25,
+			p50: self.p50,
+			p75: self.p75,
 		}
 	}
 }
@@ -1427,17 +1394,14 @@ impl Into<types::NumberColumnStats> for stats::NumberColumnStats {
 impl Into<types::EnumColumnStats> for stats::EnumColumnStats {
 	fn into(self) -> types::EnumColumnStats {
 		types::EnumColumnStats {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			column_name: Field::Present(self.column_name),
-			histogram: Field::Present(
-				self.histogram
-					.into_iter()
-					.map(|(s, v)| (s, v.to_u64().unwrap()))
-					.collect(),
-			),
-			invalid_count: Field::Present(self.invalid_count.to_u64().unwrap()),
-			unique_count: Field::Present(self.unique_count.to_u64().unwrap()),
+			column_name: self.column_name,
+			histogram: self
+				.histogram
+				.into_iter()
+				.map(|(s, v)| (s, v.to_u64().unwrap()))
+				.collect(),
+			invalid_count: self.invalid_count.to_u64().unwrap(),
+			unique_count: self.unique_count.to_u64().unwrap(),
 		}
 	}
 }
@@ -1445,15 +1409,12 @@ impl Into<types::EnumColumnStats> for stats::EnumColumnStats {
 impl Into<types::TextColumnStats> for stats::TextColumnStats {
 	fn into(self) -> types::TextColumnStats {
 		types::TextColumnStats {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			column_name: Present(self.column_name),
-			top_tokens: Present(
-				self.top_tokens
-					.into_iter()
-					.map(|(token, count, _)| (token, count))
-					.collect(),
-			),
+			column_name: self.column_name,
+			top_tokens: self
+				.top_tokens
+				.into_iter()
+				.map(|(token, count, _)| (token, count))
+				.collect(),
 		}
 	}
 }
@@ -1461,14 +1422,12 @@ impl Into<types::TextColumnStats> for stats::TextColumnStats {
 impl Into<types::RegressionMetrics> for metrics::RegressionMetricsOutput {
 	fn into(self) -> types::RegressionMetrics {
 		types::RegressionMetrics {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			mse: Present(self.mse),
-			rmse: Present(self.rmse),
-			mae: Present(self.mae),
-			r2: Present(self.r2),
-			baseline_mse: Present(self.baseline_mse),
-			baseline_rmse: Present(self.baseline_rmse),
+			mse: self.mse,
+			rmse: self.rmse,
+			mae: self.mae,
+			r2: self.r2,
+			baseline_mse: self.baseline_mse,
+			baseline_rmse: self.baseline_rmse,
 		}
 	}
 }
@@ -1476,15 +1435,13 @@ impl Into<types::RegressionMetrics> for metrics::RegressionMetricsOutput {
 impl Into<types::ClassificationMetrics> for metrics::ClassificationMetricsOutput {
 	fn into(self) -> types::ClassificationMetrics {
 		types::ClassificationMetrics {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			class_metrics: Present(self.class_metrics.into_iter().map(Into::into).collect()),
-			accuracy: Present(self.accuracy),
-			precision_unweighted: Present(self.precision_unweighted),
-			precision_weighted: Present(self.precision_weighted),
-			recall_unweighted: Present(self.recall_unweighted),
-			recall_weighted: Present(self.recall_weighted),
-			baseline_accuracy: Present(self.baseline_accuracy),
+			class_metrics: self.class_metrics.into_iter().map(Into::into).collect(),
+			accuracy: self.accuracy,
+			precision_unweighted: self.precision_unweighted,
+			precision_weighted: self.precision_weighted,
+			recall_unweighted: self.recall_unweighted,
+			recall_weighted: self.recall_weighted,
+			baseline_accuracy: self.baseline_accuracy,
 		}
 	}
 }
@@ -1492,16 +1449,14 @@ impl Into<types::ClassificationMetrics> for metrics::ClassificationMetricsOutput
 impl Into<types::ClassMetrics> for metrics::ClassMetrics {
 	fn into(self) -> types::ClassMetrics {
 		types::ClassMetrics {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			true_positives: Present(self.true_positives),
-			false_positives: Present(self.false_positives),
-			true_negatives: Present(self.true_negatives),
-			false_negatives: Present(self.false_negatives),
-			accuracy: Present(self.accuracy),
-			precision: Present(self.precision),
-			recall: Present(self.recall),
-			f1_score: Present(self.f1_score),
+			true_positives: self.true_positives,
+			false_positives: self.false_positives,
+			true_negatives: self.true_negatives,
+			false_negatives: self.false_negatives,
+			accuracy: self.accuracy,
+			precision: self.precision,
+			recall: self.recall,
+			f1_score: self.f1_score,
 		}
 	}
 }
@@ -1509,9 +1464,7 @@ impl Into<types::ClassMetrics> for metrics::ClassMetrics {
 impl Into<types::Tree> for crate::gbt::Tree {
 	fn into(self) -> types::Tree {
 		types::Tree {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			nodes: Present(self.nodes.into_iter().map(Into::into).collect()),
+			nodes: self.nodes.into_iter().map(Into::into).collect(),
 		}
 	}
 }
@@ -1528,12 +1481,10 @@ impl Into<types::Node> for crate::gbt::Node {
 impl Into<types::BranchNode> for crate::gbt::BranchNode {
 	fn into(self) -> types::BranchNode {
 		types::BranchNode {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			left_child_index: Present(self.left_child_index.to_u64().unwrap()),
-			right_child_index: Present(self.right_child_index.to_u64().unwrap()),
-			split: Present(self.split.into()),
-			examples_fraction: Present(self.examples_fraction),
+			left_child_index: self.left_child_index.to_u64().unwrap(),
+			right_child_index: self.right_child_index.to_u64().unwrap(),
+			split: self.split.into(),
+			examples_fraction: self.examples_fraction,
 		}
 	}
 }
@@ -1554,11 +1505,9 @@ impl Into<types::BranchSplitContinuous> for crate::gbt::BranchSplitContinuous {
 			crate::gbt::SplitDirection::Right => true,
 		};
 		types::BranchSplitContinuous {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			feature_index: Present(self.feature_index.to_u64().unwrap()),
-			split_value: Present(self.split_value),
-			invalid_values_direction: Present(invalid_values_direction),
+			feature_index: self.feature_index.to_u64().unwrap(),
+			split_value: self.split_value,
+			invalid_values_direction,
 		}
 	}
 }
@@ -1569,10 +1518,8 @@ impl Into<types::BranchSplitDiscrete> for crate::gbt::BranchSplitDiscrete {
 			.map(|i| self.directions.get(i).unwrap())
 			.collect();
 		types::BranchSplitDiscrete {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			feature_index: Present(self.feature_index.to_u64().unwrap()),
-			directions: Present(directions),
+			feature_index: self.feature_index.to_u64().unwrap(),
+			directions,
 		}
 	}
 }
@@ -1580,10 +1527,8 @@ impl Into<types::BranchSplitDiscrete> for crate::gbt::BranchSplitDiscrete {
 impl Into<types::LeafNode> for crate::gbt::LeafNode {
 	fn into(self) -> types::LeafNode {
 		types::LeafNode {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			value: Present(self.value),
-			examples_fraction: Present(self.examples_fraction),
+			value: self.value,
+			examples_fraction: self.examples_fraction,
 		}
 	}
 }
@@ -1602,19 +1547,15 @@ impl Into<types::ClassificationModel> for ClassificationModel {
 impl Into<types::LinearBinaryClassifier> for LinearBinaryClassifier {
 	fn into(self) -> types::LinearBinaryClassifier {
 		types::LinearBinaryClassifier {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			feature_groups: Field::Present(
-				self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			),
-			options: Field::Present(self.options.into()),
-			class_metrics: Field::Present(self.class_metrics.into_iter().map(Into::into).collect()),
-			auc_roc: Field::Present(self.auc_roc),
-			means: Field::Present(self.model.means.into_raw_vec()),
-			weights: Field::Present(self.model.weights.into_raw_vec()),
-			bias: Field::Present(self.model.bias),
-			losses: Field::Present(self.model.losses.into_raw_vec()),
-			classes: Field::Present(self.model.classes.into_raw_vec()),
+			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
+			options: self.options.into(),
+			class_metrics: self.class_metrics.into_iter().map(Into::into).collect(),
+			auc_roc: self.auc_roc,
+			means: self.model.means.into_raw_vec(),
+			weights: self.model.weights.into_raw_vec(),
+			bias: self.model.bias,
+			losses: self.model.losses.into_raw_vec(),
+			classes: self.model.classes.into_raw_vec(),
 		}
 	}
 }
@@ -1622,13 +1563,11 @@ impl Into<types::LinearBinaryClassifier> for LinearBinaryClassifier {
 impl Into<types::LinearModelTrainOptions> for grid::LinearModelTrainOptions {
 	fn into(self) -> types::LinearModelTrainOptions {
 		types::LinearModelTrainOptions {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			early_stopping_fraction: Present(self.early_stopping_fraction),
-			l2_regularization: Present(self.l2_regularization),
-			learning_rate: Present(self.learning_rate),
-			max_epochs: Present(self.max_epochs),
-			n_examples_per_batch: Present(self.n_examples_per_batch),
+			early_stopping_fraction: self.early_stopping_fraction,
+			l2_regularization: self.l2_regularization,
+			learning_rate: self.learning_rate,
+			max_epochs: self.max_epochs,
+			n_examples_per_batch: self.n_examples_per_batch,
 		}
 	}
 }
@@ -1636,13 +1575,11 @@ impl Into<types::LinearModelTrainOptions> for grid::LinearModelTrainOptions {
 impl Into<types::GbtModelTrainOptions> for grid::GBTModelTrainOptions {
 	fn into(self) -> types::GbtModelTrainOptions {
 		types::GbtModelTrainOptions {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			depth: Present(self.max_depth),
-			learning_rate: Present(self.learning_rate),
-			min_examples_per_leaf: Present(self.min_examples_per_leaf),
-			max_rounds: Present(self.max_rounds),
-			early_stopping_fraction: Present(self.early_stopping_fraction),
+			depth: self.max_depth,
+			learning_rate: self.learning_rate,
+			min_examples_per_leaf: self.min_examples_per_leaf,
+			max_rounds: self.max_rounds,
+			early_stopping_fraction: self.early_stopping_fraction,
 		}
 	}
 }
@@ -1650,19 +1587,15 @@ impl Into<types::GbtModelTrainOptions> for grid::GBTModelTrainOptions {
 impl Into<types::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 	fn into(self) -> types::LinearMulticlassClassifier {
 		types::LinearMulticlassClassifier {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			feature_groups: Field::Present(
-				self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			),
-			n_features: Field::Present(self.model.weights.nrows().to_u64().unwrap()),
-			n_classes: Field::Present(self.model.weights.ncols().to_u64().unwrap()),
-			weights: Field::Present(self.model.weights.into_raw_vec()),
-			biases: Field::Present(self.model.biases.into_raw_vec()),
-			losses: Field::Present(self.model.losses.into_raw_vec()),
-			options: Field::Present(self.options.into()),
-			classes: Field::Present(self.model.classes.into_raw_vec()),
-			means: Field::Present(self.model.means.into_raw_vec()),
+			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
+			n_features: self.model.weights.nrows().to_u64().unwrap(),
+			n_classes: self.model.weights.ncols().to_u64().unwrap(),
+			weights: self.model.weights.into_raw_vec(),
+			biases: self.model.biases.into_raw_vec(),
+			losses: self.model.losses.into_raw_vec(),
+			options: self.options.into(),
+			classes: self.model.classes.into_raw_vec(),
+			means: self.model.means.into_raw_vec(),
 		}
 	}
 }
@@ -1675,19 +1608,15 @@ impl Into<types::GbtBinaryClassifier> for GbtBinaryClassifier {
 		let feature_importances = self.model.feature_importances.unwrap().into_raw_vec();
 		let options = self.options.into();
 		types::GbtBinaryClassifier {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			feature_groups: Field::Present(
-				self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			),
-			trees: Field::Present(trees),
-			class_metrics: Field::Present(class_metrics),
-			bias: Field::Present(self.model.bias),
-			losses: Field::Present(losses),
-			auc_roc: Field::Present(self.auc_roc),
-			classes: Field::Present(self.model.classes),
-			feature_importances: Field::Present(feature_importances),
-			options: Field::Present(options),
+			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
+			trees,
+			class_metrics,
+			bias: self.model.bias,
+			losses,
+			auc_roc: self.auc_roc,
+			classes: self.model.classes,
+			feature_importances,
+			options,
 		}
 	}
 }
@@ -1695,21 +1624,15 @@ impl Into<types::GbtBinaryClassifier> for GbtBinaryClassifier {
 impl Into<types::GbtMulticlassClassifier> for GbtMulticlassClassifier {
 	fn into(self) -> types::GbtMulticlassClassifier {
 		types::GbtMulticlassClassifier {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			n_rounds: Field::Present(self.model.n_rounds.to_u64().unwrap()),
-			n_classes: Field::Present(self.model.n_classes.to_u64().unwrap()),
-			biases: Field::Present(self.model.biases),
-			options: Field::Present(self.options.into()),
-			trees: Field::Present(self.model.trees.into_iter().map(|t| t.into()).collect()),
-			feature_groups: Field::Present(
-				self.feature_groups.into_iter().map(|t| t.into()).collect(),
-			),
-			losses: Field::Present(self.model.losses.unwrap().into_raw_vec()),
-			classes: Field::Present(self.model.classes),
-			feature_importances: Field::Present(
-				self.model.feature_importances.unwrap().into_raw_vec(),
-			),
+			n_rounds: self.model.n_rounds.to_u64().unwrap(),
+			n_classes: self.model.n_classes.to_u64().unwrap(),
+			biases: self.model.biases,
+			options: self.options.into(),
+			trees: self.model.trees.into_iter().map(|t| t.into()).collect(),
+			feature_groups: self.feature_groups.into_iter().map(|t| t.into()).collect(),
+			losses: self.model.losses.unwrap().into_raw_vec(),
+			classes: self.model.classes,
+			feature_importances: self.model.feature_importances.unwrap().into_raw_vec(),
 		}
 	}
 }
@@ -1717,9 +1640,7 @@ impl Into<types::GbtMulticlassClassifier> for GbtMulticlassClassifier {
 impl Into<types::BinaryClassifierClassMetrics> for metrics::BinaryClassificationClassMetricsOutput {
 	fn into(self) -> types::BinaryClassifierClassMetrics {
 		types::BinaryClassifierClassMetrics {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			thresholds: Present(self.thresholds.into_iter().map(Into::into).collect()),
+			thresholds: self.thresholds.into_iter().map(Into::into).collect(),
 		}
 	}
 }
@@ -1727,19 +1648,17 @@ impl Into<types::BinaryClassifierClassMetrics> for metrics::BinaryClassification
 impl Into<types::ThresholdMetrics> for metrics::BinaryClassificationThresholdMetricsOutput {
 	fn into(self) -> types::ThresholdMetrics {
 		types::ThresholdMetrics {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			threshold: Present(self.threshold),
-			true_positives: Present(self.true_positives),
-			false_positives: Present(self.false_positives),
-			true_negatives: Present(self.true_negatives),
-			false_negatives: Present(self.false_negatives),
-			accuracy: Present(self.accuracy),
-			precision: Present(self.precision),
-			recall: Present(self.recall),
-			f1_score: Present(self.f1_score),
-			true_positive_rate: Present(self.true_positive_rate),
-			false_positive_rate: Present(self.false_positive_rate),
+			threshold: self.threshold,
+			true_positives: self.true_positives,
+			false_positives: self.false_positives,
+			true_negatives: self.true_negatives,
+			false_negatives: self.false_negatives,
+			accuracy: self.accuracy,
+			precision: self.precision,
+			recall: self.recall,
+			f1_score: self.f1_score,
+			true_positive_rate: self.true_positive_rate,
+			false_positive_rate: self.false_positive_rate,
 		}
 	}
 }
@@ -1766,16 +1685,12 @@ impl Into<types::RegressionModel> for RegressionModel {
 impl Into<types::LinearRegressor> for LinearRegressor {
 	fn into(self) -> types::LinearRegressor {
 		types::LinearRegressor {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			feature_groups: Field::Present(
-				self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			),
-			weights: Field::Present(self.model.weights.into_raw_vec()),
-			bias: Field::Present(self.model.bias),
-			losses: Field::Present(self.model.losses.into_raw_vec()),
-			means: Field::Present(self.model.means.into_raw_vec()),
-			options: Field::Present(self.options.into()),
+			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
+			weights: self.model.weights.into_raw_vec(),
+			bias: self.model.bias,
+			losses: self.model.losses.into_raw_vec(),
+			means: self.model.means.into_raw_vec(),
+			options: self.options.into(),
 		}
 	}
 }
@@ -1785,18 +1700,12 @@ impl Into<types::GbtRegressor> for GBTRegressor {
 		let losses = self.model.losses.map(|l| l.into_raw_vec()).unwrap();
 		let trees = self.model.trees.into_iter().map(Into::into).collect();
 		types::GbtRegressor {
-			cached_size: Default::default(),
-			unknown_fields: Default::default(),
-			feature_groups: Field::Present(
-				self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			),
-			trees: Field::Present(trees),
-			bias: Field::Present(self.model.bias),
-			losses: Field::Present(losses),
-			options: Field::Present(self.options.into()),
-			feature_importances: Field::Present(
-				self.model.feature_importances.unwrap().into_raw_vec(),
-			),
+			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
+			trees,
+			bias: self.model.bias,
+			losses,
+			options: self.options.into(),
+			feature_importances: self.model.feature_importances.unwrap().into_raw_vec(),
 		}
 	}
 }

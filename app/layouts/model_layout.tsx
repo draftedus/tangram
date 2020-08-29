@@ -1,5 +1,5 @@
 import { Layout } from './topbar_layout'
-import { Children, PinwheelInfo, h, ui } from 'deps'
+import { Children, Fragment, PinwheelInfo, h, ui } from 'deps'
 
 type ModelLayoutProps = {
 	children?: Children
@@ -48,15 +48,17 @@ export function ModelLayout(props: ModelLayoutProps) {
 					<div class="model-layout-owner-slash-repo-slash-model-wrapper">
 						<div class="model-layout-owner-slash-repo-wrapper">
 							{props.info.owner && (
-								<a
-									class="model-layout-owner-slash-repo-link"
-									href={props.info.owner.url}
-									title="owner"
-								>
-									{props.info.owner.name}
-								</a>
+								<>
+									<a
+										class="model-layout-owner-slash-repo-link"
+										href={props.info.owner.url}
+										title="owner"
+									>
+										{props.info.owner.name}
+									</a>
+									<span class="model-layout-owner-slash-repo-slash">{'/'}</span>
+								</>
 							)}
-							<span class="model-layout-owner-slash-repo-slash">{'/'}</span>
 							<a
 								class="model-layout-owner-slash-repo-link"
 								href={`/repos/${props.info.id}/`}
