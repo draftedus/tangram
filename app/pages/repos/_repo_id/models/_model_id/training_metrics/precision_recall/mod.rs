@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
@@ -32,7 +31,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	class: String,
@@ -42,7 +41,7 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DataPoint {
 	precision: f32,

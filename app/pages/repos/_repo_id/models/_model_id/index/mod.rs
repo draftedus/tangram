@@ -10,7 +10,6 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::cast::ToPrimitive;
-use serde::Serialize;
 use tangram_core::id::Id;
 
 pub async fn get(
@@ -29,7 +28,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
@@ -37,7 +36,7 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 enum Inner {
@@ -45,7 +44,7 @@ enum Inner {
 	Classifier(Classifier),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Regressor {
 	id: String,
@@ -53,7 +52,7 @@ struct Regressor {
 	training_summary: TrainingSummary,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct RegressorMetrics {
 	baseline_mse: f32,
@@ -62,7 +61,7 @@ struct RegressorMetrics {
 	rmse: f32,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Classifier {
 	id: String,
@@ -70,7 +69,7 @@ struct Classifier {
 	training_summary: TrainingSummary,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TrainingSummary {
 	chosen_model_type_name: String,
@@ -80,7 +79,7 @@ struct TrainingSummary {
 	test_fraction: f32,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassifierMetrics {
 	accuracy: f32,
@@ -89,7 +88,7 @@ struct ClassifierMetrics {
 	classes: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassMetrics {
 	precision: f32,

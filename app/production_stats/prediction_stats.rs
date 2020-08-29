@@ -4,20 +4,17 @@ use std::collections::BTreeMap;
 use tangram_core::metrics::RunningMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase", tag = "id", content = "value")]
 pub enum ProductionPredictionStats {
 	Regression(RegressionProductionPredictionStats),
 	Classification(ClassificationProductionPredictionStats),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct RegressionProductionPredictionStats {
 	stats: Option<NumberStats>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct ClassificationProductionPredictionStats {
 	pub histogram: BTreeMap<String, u64>,
 }
@@ -34,7 +31,6 @@ pub struct RegressionProductionPredictionStatsOutput {
 }
 
 #[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct ClassificationProductionPredictionStatsOutput {
 	pub histogram: Vec<(String, u64)>,
 }

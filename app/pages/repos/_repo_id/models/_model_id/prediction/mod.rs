@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use serde::Serialize;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::ops::Neg;
@@ -32,7 +31,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	columns: Vec<Column>,
@@ -41,7 +40,7 @@ struct Props {
 	prediction: Option<Prediction>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 enum Column {
 	Unknown(Unknown),
@@ -50,14 +49,14 @@ enum Column {
 	Text(Text),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Unknown {
 	name: String,
 	value: String,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Number {
 	name: String,
@@ -69,7 +68,7 @@ struct Number {
 	value: String,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 struct Enum {
 	name: String,
 	options: Vec<String>,
@@ -77,7 +76,7 @@ struct Enum {
 	histogram: Vec<(String, u64)>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Text {
 	name: String,

@@ -17,7 +17,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
@@ -38,7 +37,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	date_window: DateWindow,
@@ -51,7 +50,7 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct OverallColumnStats {
 	absent_count: u64,
@@ -61,21 +60,21 @@ struct OverallColumnStats {
 	column_type: ColumnType,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(tag = "type", content = "data", rename_all = "camelCase")]
 enum PredictionStatsChart {
 	Regression(RegressionChartEntry),
 	Classification(ClassificationChartEntry),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(tag = "type", content = "data", rename_all = "camelCase")]
 enum PredictionStatsIntervalChart {
 	Regression(Vec<RegressionChartEntry>),
 	Classification(Vec<ClassificationChartEntry>),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 enum ColumnType {
 	Unknown,
@@ -84,42 +83,42 @@ enum ColumnType {
 	Text,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PredictionCountChartEntry {
 	count: u64,
 	label: String,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct RegressionChartEntry {
 	label: String,
 	quantiles: ProductionTrainingQuantiles,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassificationChartEntry {
 	label: String,
 	histogram: ProductionTrainingHistogram,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ProductionTrainingHistogram {
 	production: Vec<(String, u64)>,
 	training: Vec<(String, u64)>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ProductionTrainingQuantiles {
 	production: Option<Quantiles>,
 	training: Quantiles,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Quantiles {
 	max: f32,
@@ -167,28 +166,28 @@ async fn props(
 			ProductionColumnStatsOutput::Unknown(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
-				alert: column_stats.alert.to_owned(),
+				alert: None,
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Unknown,
 			},
 			ProductionColumnStatsOutput::Text(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
-				alert: column_stats.alert.to_owned(),
+				alert: None,
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Text,
 			},
 			ProductionColumnStatsOutput::Number(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
-				alert: column_stats.alert.to_owned(),
+				alert: None,
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Number,
 			},
 			ProductionColumnStatsOutput::Enum(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
-				alert: column_stats.alert.to_owned(),
+				alert: None,
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Enum,
 			},
@@ -198,7 +197,7 @@ async fn props(
 		.intervals
 		.iter()
 		.map(|interval| PredictionCountChartEntry {
-			count: interval.predictions_count,
+			count: interval.row_count,
 			label: format_date_window_interval(interval.start_date, date_window_interval, timezone),
 		})
 		.collect();
@@ -325,3 +324,23 @@ fn compute_production_training_quantiles(
 		},
 	}
 }
+
+// const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
+// const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
+// let invalid_ratio = self.invalid_count.to_f32().unwrap() / self.count.to_f32().unwrap();
+// let absent_ratio = self.absent_count.to_f32().unwrap() / self.count.to_f32().unwrap();
+// let alert = alert_message(invalid_ratio, absent_ratio);
+
+// fn alert_message(invalid_ratio: f32, absent_ratio: f32) -> Option<String> {
+// 	if invalid_ratio > LARGE_INVALID_RATIO_THRESHOLD {
+// 		if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
+// 			Some("High Invalid and Absent Count".into())
+// 		} else {
+// 			Some("High Invalid Count".into())
+// 		}
+// 	} else if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
+// 		Some("High Absent Count".into())
+// 	} else {
+// 		None
+// 	}
+// }

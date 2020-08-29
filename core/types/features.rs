@@ -1,5 +1,4 @@
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum FeatureGroup {
 	Identity(IdentityFeatureGroup),
 	Normalized(NormalizedFeatureGroup),
@@ -33,7 +32,6 @@ pub struct BagOfWordsFeatureGroup {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum Tokenizer {
 	Alphanumeric,
 }

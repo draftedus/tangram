@@ -5,7 +5,6 @@ pub struct StatsSettings {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum ColumnStats {
 	Unknown(UnknownColumnStats),
 	Number(NumberColumnStats),

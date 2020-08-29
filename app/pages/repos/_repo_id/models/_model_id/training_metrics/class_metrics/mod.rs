@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
@@ -31,7 +30,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
@@ -39,7 +38,7 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(tag = "type", content = "value")]
 enum Inner {
 	#[serde(rename = "BinaryClassifier")]
@@ -48,7 +47,7 @@ enum Inner {
 	MulticlassClassifier(MulticlassClassifier),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 struct BinaryClassifier {
 	#[serde(rename = "classMetrics")]
 	class_metrics: ClassMetrics,
@@ -57,7 +56,7 @@ struct BinaryClassifier {
 	id: String,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassMetrics {
 	precision: f32,
@@ -69,7 +68,7 @@ struct ClassMetrics {
 	true_negatives: u64,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 struct MulticlassClassifier {
 	#[serde(rename = "classMetrics")]
 	class_metrics: ClassMetrics,

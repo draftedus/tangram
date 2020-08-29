@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use serde::Serialize;
 use tangram_core::id::Id;
 
 pub async fn get(
@@ -28,14 +27,14 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	tuning: Option<Inner>,
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Inner {
 	baseline_threshold: f32,
@@ -43,7 +42,7 @@ struct Inner {
 	classes: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Metrics {
 	accuracy: f32,

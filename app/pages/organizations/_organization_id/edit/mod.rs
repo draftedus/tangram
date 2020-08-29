@@ -8,7 +8,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use serde::Serialize;
 use tangram_core::id::Id;
 
 pub async fn get(
@@ -30,7 +29,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,

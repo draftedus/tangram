@@ -11,7 +11,6 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use serde::{Deserialize, Serialize};
 use tangram_core::id::Id;
 
 pub async fn get(
@@ -30,7 +29,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
@@ -38,7 +37,7 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 enum Inner {
@@ -50,7 +49,7 @@ enum Inner {
 	GbtRegressor(GbtRegressor),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct LinearRegressor {
 	bias: f32,
@@ -58,7 +57,7 @@ struct LinearRegressor {
 	weights: Vec<(String, f32)>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct LinearBinaryClassifier {
 	bias: f32,
@@ -67,7 +66,7 @@ struct LinearBinaryClassifier {
 	weights: Vec<(String, f32)>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct LinearMulticlassClassifier {
 	biases: Vec<f32>,
@@ -76,19 +75,19 @@ struct LinearMulticlassClassifier {
 	weights: Vec<Vec<(String, f32)>>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct GbtBinaryClassifier {
 	feature_importances: Vec<(String, f32)>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct GbtMulticlassClassifier {
 	feature_importances: Vec<(String, f32)>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct GbtRegressor {
 	feature_importances: Vec<(String, f32)>,

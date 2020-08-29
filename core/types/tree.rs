@@ -4,7 +4,6 @@ pub struct Tree {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum Node {
 	Branch(BranchNode),
 	Leaf(LeafNode),
@@ -21,7 +20,6 @@ pub struct BranchNode {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum BranchSplit {
 	Continuous(BranchSplitContinuous),
 	Discrete(BranchSplitDiscrete),

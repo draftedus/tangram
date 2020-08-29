@@ -46,7 +46,6 @@ pub struct ClassMetrics {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum ClassificationModel {
 	LinearBinary(LinearBinaryClassifier),
 	LinearMulticlass(LinearMulticlassClassifier),
@@ -127,7 +126,6 @@ pub struct ThresholdMetrics {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum ClassificationComparisonMetric {
 	Accuracy,
 	Aucroc,

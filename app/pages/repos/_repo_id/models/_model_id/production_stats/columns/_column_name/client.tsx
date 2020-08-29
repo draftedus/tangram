@@ -4,18 +4,13 @@ import { ui } from 'deps'
 
 bootClassSelectField()
 bootDateWindowSelectField()
-if (
-	document.getElementById('number_intervals') &&
-	document.getElementById('number_overall')
-) {
+if (document.getElementById('number_intervals')) {
 	ui.hydrateBoxChart('number_intervals')
+}
+if (document.getElementById('number_overall')) {
 	ui.hydrateBoxChart('number_overall')
 }
-if (
-	document.getElementById('enum_intervals') &&
-	document.getElementById('enum_overall')
-) {
-	ui.hydrateBarChart('enum_intervals')
+if (document.getElementById('enum_overall')) {
 	ui.hydrateBarChart('enum_overall')
 }
 if (document.getElementById('text_overall')) {

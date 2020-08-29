@@ -11,7 +11,6 @@ pub use number_stats::*;
 pub use prediction_stats::*;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct ProductionStats {
 	pub start_date: DateTime<Utc>,
 	pub end_date: DateTime<Utc>,
@@ -24,7 +23,7 @@ pub struct ProductionStats {
 pub struct ProductionStatsOutput {
 	pub start_date: DateTime<Utc>,
 	pub end_date: DateTime<Utc>,
-	pub predictions_count: u64,
+	pub row_count: u64,
 	pub column_stats: Vec<ProductionColumnStatsOutput>,
 	pub prediction_stats: ProductionPredictionStatsOutput,
 }
@@ -82,7 +81,7 @@ impl RunningMetric<'_, '_> for ProductionStats {
 		Self::Output {
 			start_date: self.start_date,
 			end_date: self.end_date,
-			predictions_count: self.row_count,
+			row_count: self.row_count,
 			column_stats: self
 				.column_stats
 				.into_iter()

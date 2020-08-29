@@ -1,5 +1,4 @@
 use anyhow::Result;
-use serde::Serialize;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
@@ -113,64 +112,9 @@ async fn get_models_for_repo(
 	.collect())
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Repo {
 	pub id: String,
 	pub title: String,
-}
-
-pub async fn get_user_repos(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	user_id: Id,
-) -> Result<Vec<Repo>> {
-	let rows = sqlx::query(
-		"
-			select
-				repos.id,
-				repos.title
-			from repos
-			where repos.user_id = ?1
-		",
-	)
-	.bind(&user_id.to_string())
-	.fetch_all(&mut *db)
-	.await?;
-	let rows = rows
-		.into_iter()
-		.map(|row| {
-			let id: String = row.get(0);
-			let title: String = row.get(1);
-			Repo { id, title }
-		})
-		.collect();
-	Ok(rows)
-}
-
-pub async fn get_organization_repos(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	organization_id: Id,
-) -> Result<Vec<Repo>> {
-	let rows = sqlx::query(
-		"
-			select
-				repos.id,
-				repos.title
-			from repos
-			join models
-				on models.repo_id = repos.id
-			where repos.organization_id = ?1
-		",
-	)
-	.bind(&organization_id.to_string())
-	.fetch_all(&mut *db)
-	.await?;
-	Ok(rows
-		.iter()
-		.map(|row| {
-			let id: String = row.get(0);
-			let title: String = row.get(1);
-			Repo { id, title }
-		})
-		.collect())
 }

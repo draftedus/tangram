@@ -33,7 +33,6 @@ pub struct RegressionMetrics {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum RegressionModel {
 	Linear(LinearRegressor),
 	Gbt(GbtRegressor),
@@ -60,7 +59,6 @@ pub struct GbtRegressor {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type", content = "value")]
 pub enum RegressionComparisonMetric {
 	MeanAbsoluteError,
 	MeanSquaredError,

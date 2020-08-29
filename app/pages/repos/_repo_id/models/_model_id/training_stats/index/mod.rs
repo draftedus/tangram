@@ -10,10 +10,9 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
-use serde::Serialize;
 use tangram_core::id::Id;
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	column_count: usize,
@@ -24,7 +23,7 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ColumnStats {
 	invalid_count: Option<usize>,
@@ -38,7 +37,7 @@ struct ColumnStats {
 	variance: Option<f32>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 enum ColumnType {
 	Unknown,

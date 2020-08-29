@@ -14,7 +14,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
@@ -44,7 +43,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
@@ -52,14 +51,14 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(tag = "type", content = "value", rename_all = "camelCase")]
 enum Inner {
 	Regressor(RegressorProductionMetricsOverview),
 	Classifier(ClassifierProductionMetricsOverview),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct RegressorProductionMetricsOverview {
 	date_window: DateWindow,
@@ -69,28 +68,28 @@ struct RegressorProductionMetricsOverview {
 	true_values_count_chart: Vec<TrueValuesCountChartEntry>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TrueValuesCountChartEntry {
 	label: String,
 	count: u64,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MSEChart {
 	data: Vec<MSEChartEntry>,
 	training_mse: f32,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MSEChartEntry {
 	label: String,
 	mse: Option<f32>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct RegressionProductionMetrics {
 	mse: TrainingProductionMetrics,
@@ -98,14 +97,14 @@ struct RegressionProductionMetrics {
 	true_values_count: u64,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TrainingProductionMetrics {
 	production: Option<f32>,
 	training: f32,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassifierProductionMetricsOverview {
 	date_window: DateWindow,
@@ -116,21 +115,21 @@ struct ClassifierProductionMetricsOverview {
 	accuracy_chart: AccuracyChart,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AccuracyChart {
 	data: Vec<AccuracyChartEntry>,
 	training_accuracy: f32,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AccuracyChartEntry {
 	accuracy: Option<f32>,
 	label: String,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassificationOverallProductionMetrics {
 	accuracy: TrainingProductionMetrics,
@@ -138,7 +137,7 @@ struct ClassificationOverallProductionMetrics {
 	true_values_count: u64,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassMetricsTableEntry {
 	class_name: String,

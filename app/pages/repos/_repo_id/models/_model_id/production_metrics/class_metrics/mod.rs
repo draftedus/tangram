@@ -15,7 +15,6 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
-use serde::Serialize;
 use std::collections::BTreeMap;
 use tangram_core::id::Id;
 
@@ -37,7 +36,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
@@ -50,14 +49,14 @@ struct Props {
 	class: String,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct ClassMetricsEntry {
 	class_name: String,
 	intervals: Vec<IntervalEntry>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct IntervalEntry {
 	label: String,
@@ -66,14 +65,14 @@ struct IntervalEntry {
 	recall: TrainingProductionMetrics,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct OverallClassMetrics {
 	class_metrics: Vec<OverallClassMetricsEntry>,
 	label: String,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct OverallClassMetricsEntry {
 	class_name: String,
@@ -84,7 +83,7 @@ struct OverallClassMetricsEntry {
 	recall: TrainingProductionMetrics,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Comparison {
 	false_negative_fraction: TrainingProductionMetrics,
@@ -93,7 +92,7 @@ struct Comparison {
 	true_negative_fraction: TrainingProductionMetrics,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct ConfusionMatrix {
 	false_negatives: Option<u64>,
@@ -102,7 +101,7 @@ struct ConfusionMatrix {
 	false_positives: Option<u64>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct TrainingProductionMetrics {
 	production: Option<f32>,

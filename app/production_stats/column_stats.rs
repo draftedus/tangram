@@ -3,11 +3,7 @@ use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use tangram_core::metrics::RunningMetric;
 
-const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
-const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
-
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase", tag = "id", content = "value")]
 pub enum ProductionColumnStats {
 	Unknown(UnknownProductionColumnStats),
 	Number(NumberProductionColumnStats),
@@ -16,7 +12,6 @@ pub enum ProductionColumnStats {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct UnknownProductionColumnStats {
 	pub absent_count: u64,
 	pub column_name: String,
@@ -25,7 +20,6 @@ pub struct UnknownProductionColumnStats {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct NumberProductionColumnStats {
 	pub absent_count: u64,
 	pub column_name: String,
@@ -35,7 +29,6 @@ pub struct NumberProductionColumnStats {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct EnumProductionColumnStats {
 	pub absent_count: u64,
 	pub column_name: String,
@@ -46,7 +39,6 @@ pub struct EnumProductionColumnStats {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct TextProductionColumnStats {
 	pub absent_count: u64,
 	pub column_name: String,
@@ -57,7 +49,6 @@ pub struct TextProductionColumnStats {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub enum Tokenizer {
 	Alphanumeric,
 }
@@ -75,7 +66,6 @@ pub struct UnknownProductionColumnStatsOutput {
 	pub column_name: String,
 	pub absent_count: u64,
 	pub invalid_count: u64,
-	pub alert: Option<String>,
 }
 
 #[derive(Debug)]
@@ -84,7 +74,6 @@ pub struct NumberProductionColumnStatsOutput {
 	pub absent_count: u64,
 	pub invalid_count: u64,
 	pub stats: Option<NumberStatsOutput>,
-	pub alert: Option<String>,
 }
 
 #[derive(Debug)]
@@ -94,7 +83,6 @@ pub struct EnumProductionColumnStatsOutput {
 	pub invalid_count: u64,
 	pub histogram: Vec<(String, u64)>,
 	pub invalid_histogram: Option<Vec<(String, u64)>>,
-	pub alert: Option<String>,
 }
 
 #[derive(Debug)]
@@ -102,7 +90,6 @@ pub struct TextProductionColumnStatsOutput {
 	pub column_name: String,
 	pub absent_count: u64,
 	pub invalid_count: u64,
-	pub alert: Option<String>,
 	pub token_histogram: Vec<(String, u64)>,
 }
 
@@ -228,14 +215,10 @@ impl<'a> RunningMetric<'a, '_> for UnknownProductionColumnStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		let invalid_ratio = self.invalid_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-		let absent_ratio = self.absent_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-		let alert = alert_message(invalid_ratio, absent_ratio);
 		Self::Output {
 			column_name: self.column_name,
 			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
-			alert,
 		}
 	}
 }
@@ -313,16 +296,11 @@ impl<'a, 'b> RunningMetric<'a, 'b> for NumberProductionColumnStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		let invalid_ratio = self.invalid_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-		let absent_ratio = self.absent_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-		let alert = alert_message(invalid_ratio, absent_ratio);
-		let stats = self.stats.map(|s| s.finalize());
 		Self::Output {
 			column_name: self.column_name,
 			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
-			stats,
-			alert,
+			stats: self.stats.map(|s| s.finalize()),
 		}
 	}
 }
@@ -418,16 +396,12 @@ impl<'a> RunningMetric<'a, '_> for EnumProductionColumnStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		let invalid_ratio = self.invalid_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-		let absent_ratio = self.absent_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-		let alert = alert_message(invalid_ratio, absent_ratio);
 		Self::Output {
 			column_name: self.column_name,
 			histogram: self.histogram.into_iter().collect(),
 			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
 			invalid_histogram: self.invalid_histogram.map(|h| h.into_iter().collect()),
-			alert,
 		}
 	}
 }
@@ -501,29 +475,22 @@ impl<'a> RunningMetric<'a, '_> for TextProductionColumnStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		let invalid_ratio = self.invalid_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-		let absent_ratio = self.absent_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-		let alert = alert_message(invalid_ratio, absent_ratio);
 		Self::Output {
 			column_name: self.column_name,
 			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
-			alert,
 			token_histogram: self.token_histogram.into_iter().collect(),
 		}
 	}
 }
 
-fn alert_message(invalid_ratio: f32, absent_ratio: f32) -> Option<String> {
-	if invalid_ratio > LARGE_INVALID_RATIO_THRESHOLD {
-		if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
-			Some("High Invalid and Absent Count".into())
-		} else {
-			Some("High Invalid Count".into())
+impl ProductionColumnStatsOutput {
+	pub fn column_name(&self) -> &str {
+		match self {
+			Self::Unknown(s) => s.column_name.as_str(),
+			Self::Text(s) => s.column_name.as_str(),
+			Self::Number(s) => s.column_name.as_str(),
+			Self::Enum(s) => s.column_name.as_str(),
 		}
-	} else if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
-		Some("High Absent Count".into())
-	} else {
-		None
 	}
 }

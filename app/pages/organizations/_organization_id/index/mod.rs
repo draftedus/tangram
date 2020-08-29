@@ -1,6 +1,7 @@
 use crate::{
 	common::{
 		organizations, repos,
+		repos::Repo,
 		user::{authorize_user, authorize_user_for_organization, User},
 	},
 	error::Error,
@@ -8,7 +9,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use serde::Serialize;
 use serde_json::json;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
@@ -32,7 +32,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	card: Option<Card>,
@@ -79,7 +79,28 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 		context.options.stripe_secret_key.as_ref().unwrap(),
 	)
 	.await?;
-	let repos = repos::get_organization_repos(&mut db, organization_id).await?;
+	let rows = sqlx::query(
+		"
+			select
+				repos.id,
+				repos.title
+			from repos
+			join models
+				on models.repo_id = repos.id
+			where repos.organization_id = ?1
+		",
+	)
+	.bind(&organization_id.to_string())
+	.fetch_all(&mut *db)
+	.await?;
+	let repos = rows
+		.iter()
+		.map(|row| {
+			let id: String = row.get(0);
+			let title: String = row.get(1);
+			Repo { id, title }
+		})
+		.collect();
 	let stripe_publishable_key = context
 		.options
 		.stripe_publishable_key

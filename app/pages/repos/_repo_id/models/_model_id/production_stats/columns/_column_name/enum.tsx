@@ -2,7 +2,6 @@ import { MetricsRow } from 'common/metrics_row'
 import {
 	DateWindow,
 	DateWindowInterval,
-	intervalChartTitle,
 	overallChartTitle,
 } from 'common/time_charts'
 import { productionColor, trainingColor } from 'common/tokens'
@@ -14,10 +13,6 @@ export type Props = {
 	columnName: string
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
-	intervalChartData: Array<{
-		histogram: Array<[string, number]>
-		label: string
-	}>
 	invalidCount: number
 	overallChartData: Array<
 		[
@@ -60,35 +55,6 @@ export function Enum(props: Props) {
 		`Distribution of Unique Values for ${props.columnName}`,
 	)
 
-	let categories = props.intervalChartData[0].histogram.map(x => x[0])
-	let colorOptions = [
-		ui.colors.green,
-		ui.colors.blue,
-		ui.colors.indigo,
-		ui.colors.purple,
-		ui.colors.pink,
-		ui.colors.red,
-		ui.colors.orange,
-		ui.colors.yellow,
-	]
-	let intervalChartData = ui.times(
-		props.intervalChartData[0].histogram.length,
-		i => ({
-			color: colorOptions[i % colorOptions.length],
-			data: props.intervalChartData.map((entry, j) => ({
-				label: entry.label,
-				x: j,
-				y: entry.histogram !== null ? entry.histogram[i][1] : null,
-			})),
-			title: categories[i],
-		}),
-	)
-
-	let intervalDistributionChartTitle = intervalChartTitle(
-		props.dateWindowInterval,
-		`Distribution of Unique Values for ${props.columnName}`,
-	)
-
 	return (
 		<ui.S2>
 			{props.alert && (
@@ -102,14 +68,6 @@ export function Enum(props: Props) {
 					xAxisTitle={props.columnName}
 					yAxisTitle="Percent"
 					yMax={1}
-				/>
-			</ui.Card>
-			<ui.Card>
-				<ui.BarChart
-					data={intervalChartData}
-					id="enum_intervals"
-					title={intervalDistributionChartTitle}
-					yAxisTitle="Count"
 				/>
 			</ui.Card>
 			<MetricsRow>

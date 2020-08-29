@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use serde::Serialize;
 use tangram_core::id::Id;
 
 pub async fn get(
@@ -28,7 +27,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
@@ -36,7 +35,7 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 enum Inner {
@@ -45,7 +44,7 @@ enum Inner {
 	MulticlassClassifier(MulticlassClassifier),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Regressor {
 	baseline_mse: f32,
@@ -55,7 +54,7 @@ struct Regressor {
 	id: String,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BinaryClassifier {
 	accuracy: f32,
@@ -66,14 +65,14 @@ struct BinaryClassifier {
 	id: String,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ClassMetrics {
 	precision: f32,
 	recall: f32,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MulticlassClassifier {
 	accuracy: f32,

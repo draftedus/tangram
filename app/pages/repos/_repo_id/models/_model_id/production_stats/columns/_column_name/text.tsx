@@ -34,7 +34,6 @@ export function Text(props: Props) {
 		props.dateWindow,
 		`Distribution of Unique Values for ${props.columnName}`,
 	)
-
 	return (
 		<ui.S2>
 			{props.alert && (

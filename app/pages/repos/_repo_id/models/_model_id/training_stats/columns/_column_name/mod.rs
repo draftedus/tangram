@@ -9,10 +9,9 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use serde::Serialize;
 use tangram_core::id::Id;
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
@@ -20,7 +19,7 @@ struct Props {
 	model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 enum Inner {
@@ -29,7 +28,7 @@ enum Inner {
 	Text(Text),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Number {
 	histogram: Option<Vec<(f32, u64)>>,
@@ -45,7 +44,7 @@ struct Number {
 	unique_count: u64,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Enum {
 	histogram: Option<Vec<(String, u64)>>,
@@ -54,7 +53,7 @@ struct Enum {
 	unique_count: u64,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Text {
 	name: String,

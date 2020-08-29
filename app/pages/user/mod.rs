@@ -9,7 +9,6 @@ use crate::{
 use anyhow::Result;
 use chrono::Utc;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use serde::Serialize;
 use sqlx::prelude::*;
 use tangram_core::id::Id;
 
@@ -32,13 +31,13 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	Ok(response)
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
 	pub inner: Inner,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(tag = "type", content = "value")]
 pub enum Inner {
 	#[serde(rename = "auth")]
@@ -47,7 +46,7 @@ pub enum Inner {
 	NoAuth(NoAuthProps),
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthProps {
 	email: String,
@@ -55,13 +54,13 @@ pub struct AuthProps {
 	repos: Vec<Repo>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoAuthProps {
 	repos: Vec<Repo>,
 }
 
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Repo {
 	id: String,

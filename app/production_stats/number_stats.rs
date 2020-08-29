@@ -3,7 +3,6 @@ use rand::random;
 use tangram_core::metrics::RunningMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct NumberStats {
 	pub n: u64,
 	pub min: f32,
