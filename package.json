@@ -1,9 +1,14 @@
 {
 	"devDependencies": {
-		"@tangramhq/eslint-plugin": "0.1.23",
+		"@tangramhq/eslint-plugin": "0.1.26",
+		"@typescript-eslint/eslint-plugin": "4.0.1",
+		"@typescript-eslint/parser": "4.0.1",
 		"csstype": "3.0.3",
 		"esbuild": "0.6.28",
 		"eslint": "7.8.0",
+		"eslint-plugin-import": "2.22.0",
+		"eslint-plugin-react": "7.20.6",
+		"eslint-plugin-react-hooks": "4.1.0",
 		"preact": "10.4.8",
 		"preact-render-to-string": "5.1.10",
 		"prettier": "2.1.1",
