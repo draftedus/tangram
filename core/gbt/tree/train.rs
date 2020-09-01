@@ -18,13 +18,13 @@ use std::{collections::BinaryHeap, ops::Range, time::Instant};
 pub fn train(
 	binned_features: ArrayView2<u8>,
 	include_features: &[bool],
-	gradients: ArrayView1<f32>,
-	hessians: ArrayView1<f32>,
-	mut ordered_gradients: ArrayViewMut1<f32>,
-	mut ordered_hessians: ArrayViewMut1<f32>,
-	mut examples_index: ArrayViewMut1<usize>,
-	mut examples_index_left: ArrayViewMut1<usize>,
-	mut examples_index_right: ArrayViewMut1<usize>,
+	gradients: &[f32],
+	hessians: &[f32],
+	ordered_gradients: &mut [f32],
+	ordered_hessians: &mut [f32],
+	examples_index: &mut [usize],
+	examples_index_left: &mut [usize],
+	examples_index_right: &mut [usize],
 	bin_stats_pool: &mut BinStatsPool,
 	hessians_are_constant: bool,
 	options: &types::TrainOptions,
@@ -184,13 +184,18 @@ pub fn train(
 
 		// rearrange the examples index
 		let start_time = Instant::now();
-		let slice = s![queue_item.examples_index_range.clone()];
 		let (left, right) = rearrange_examples_index(
 			binned_features,
 			&queue_item.split,
-			examples_index.slice_mut(slice),
-			examples_index_left.slice_mut(slice),
-			examples_index_right.slice_mut(slice),
+			examples_index
+				.get_mut(queue_item.examples_index_range.clone())
+				.unwrap(),
+			examples_index_left
+				.get_mut(queue_item.examples_index_range.clone())
+				.unwrap(),
+			examples_index_right
+				.get_mut(queue_item.examples_index_range.clone())
+				.unwrap(),
 		);
 		// The left and right ranges are local to the node,
 		// so add the node's start to make them global.
@@ -276,14 +281,8 @@ pub fn train(
 				types::SplitDirection::Right
 			};
 		let smaller_child_examples_index = match smaller_direction {
-			types::SplitDirection::Left => {
-				let slice = s![left_examples_index_range.clone()];
-				examples_index.slice(slice)
-			}
-			types::SplitDirection::Right => {
-				let slice = s![right_examples_index_range.clone()];
-				examples_index.slice(slice)
-			}
+			types::SplitDirection::Left => &examples_index[left_examples_index_range.clone()],
+			types::SplitDirection::Right => &examples_index[right_examples_index_range.clone()],
 		};
 		let mut smaller_child_bin_stats = bin_stats_pool.get();
 
@@ -292,13 +291,13 @@ pub fn train(
 		compute_bin_stats_for_non_root_node(
 			&mut smaller_child_bin_stats,
 			include_features,
-			ordered_gradients.view_mut(),
-			ordered_hessians.view_mut(),
+			ordered_gradients,
+			ordered_hessians,
 			binned_features,
 			gradients,
 			hessians,
 			hessians_are_constant,
-			smaller_child_examples_index.view(),
+			smaller_child_examples_index,
 		);
 		timing.bin_stats.compute_bin_stats.inc(start.elapsed());
 

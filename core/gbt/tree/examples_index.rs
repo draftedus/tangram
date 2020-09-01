@@ -11,9 +11,9 @@ use rayon::prelude::*;
 pub fn rearrange_examples_index(
 	binned_features: ArrayView2<u8>,
 	split: &TrainBranchSplit,
-	examples_index: ArrayViewMut1<usize>,
-	examples_index_left: ArrayViewMut1<usize>,
-	examples_index_right: ArrayViewMut1<usize>,
+	examples_index: &mut [usize],
+	examples_index_left: &mut [usize],
+	examples_index_right: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	if examples_index.len() <= 1024 {
 		rearrange_examples_index_serial(binned_features, split, examples_index)
@@ -31,7 +31,7 @@ pub fn rearrange_examples_index(
 fn rearrange_examples_index_serial(
 	binned_features: ArrayView2<u8>,
 	split: &TrainBranchSplit,
-	mut examples_index: ArrayViewMut1<usize>,
+	examples_index: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let start = 0;
 	let end = examples_index.len();
@@ -84,15 +84,16 @@ fn rearrange_examples_index_serial(
 fn rearrange_examples_index_parallel(
 	binned_features: ArrayView2<u8>,
 	split: &TrainBranchSplit,
-	examples_index: ArrayViewMut1<usize>,
-	mut examples_index_left: ArrayViewMut1<usize>,
-	mut examples_index_right: ArrayViewMut1<usize>,
+	examples_index: &mut [usize],
+	examples_index_left: &mut [usize],
+	examples_index_right: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let chunk_size = usize::max(examples_index.len() / rayon::current_num_threads(), 1024);
 	let counts: Vec<(usize, usize)> = (
-		examples_index.axis_chunks_iter(Axis(0), chunk_size),
-		examples_index_left.axis_chunks_iter_mut(Axis(0), chunk_size),
-		examples_index_right.axis_chunks_iter_mut(Axis(0), chunk_size),
+		ArrayViewMut1::from(&mut examples_index[..]).axis_chunks_iter(Axis(0), chunk_size),
+		ArrayViewMut1::from(&mut examples_index_left[..]).axis_chunks_iter_mut(Axis(0), chunk_size),
+		ArrayViewMut1::from(&mut examples_index_right[..])
+			.axis_chunks_iter_mut(Axis(0), chunk_size),
 	)
 		.into_par_iter()
 		.map(
@@ -108,7 +109,9 @@ fn rearrange_examples_index_parallel(
 								bin_index,
 								..
 							}) => {
-								let feature_bin = binned_features[(*example_index, *feature_index)];
+								let feature_bin = unsafe {
+									*binned_features.uget((*example_index, *feature_index))
+								};
 								if feature_bin <= *bin_index {
 									types::SplitDirection::Left
 								} else {
@@ -120,7 +123,9 @@ fn rearrange_examples_index_parallel(
 								directions,
 								..
 							}) => {
-								let feature_bin = binned_features[(*example_index, *feature_index)];
+								let feature_bin = unsafe {
+									*binned_features.uget((*example_index, *feature_index))
+								};
 								if !directions.get(feature_bin).unwrap() {
 									types::SplitDirection::Left
 								} else {
@@ -159,8 +164,8 @@ fn rearrange_examples_index_parallel(
 	(
 		left_starting_indexes,
 		right_starting_indexes,
-		examples_index_left.axis_chunks_iter(Axis(0), chunk_size),
-		examples_index_right.axis_chunks_iter(Axis(0), chunk_size),
+		ArrayViewMut1::from(&mut examples_index_left[..]).axis_chunks_iter(Axis(0), chunk_size),
+		ArrayViewMut1::from(&mut examples_index_right[..]).axis_chunks_iter(Axis(0), chunk_size),
 	)
 		.into_par_iter()
 		.for_each(
@@ -170,10 +175,8 @@ fn rearrange_examples_index_parallel(
 				examples_index_left,
 				examples_index_right,
 			)| {
-				let examples_index_slice = examples_index
-					.slice(s![left_starting_index..left_starting_index + n_left])
-					.to_slice()
-					.unwrap();
+				let examples_index_slice =
+					&examples_index[left_starting_index..left_starting_index + n_left];
 				let examples_index_slice = unsafe {
 					std::slice::from_raw_parts_mut(
 						examples_index_slice.as_ptr() as *mut usize,
@@ -182,10 +185,8 @@ fn rearrange_examples_index_parallel(
 				};
 				examples_index_slice
 					.copy_from_slice(examples_index_left.slice(s![0..n_left]).to_slice().unwrap());
-				let examples_index_slice = examples_index
-					.slice(s![right_starting_index..right_starting_index + n_right])
-					.to_slice()
-					.unwrap();
+				let examples_index_slice =
+					&examples_index[right_starting_index..right_starting_index + n_right];
 				let examples_index_slice = unsafe {
 					std::slice::from_raw_parts_mut(
 						examples_index_slice.as_ptr() as *mut usize,

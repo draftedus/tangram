@@ -191,7 +191,10 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
 
-	for (bin_index, bin_stats_entry) in bin_stats_for_feature.iter().enumerate() {
+	for (bin_index, bin_stats_entry) in bin_stats_for_feature[0..bin_info.n_valid_bins() as usize]
+		.iter()
+		.enumerate()
+	{
 		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
 			.round()
 			.to_usize()
@@ -325,8 +328,10 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 	let categorical_bin_score = |bin: &BinStatsEntry| {
 		bin.sum_gradients / (bin.sum_hessians + options.discrete_smoothing_factor.to_f64().unwrap())
 	};
-	let mut sorted_bin_stats: Vec<(usize, &BinStatsEntry)> = (0..bin_stats_for_feature.len())
-		.zip(bin_stats_for_feature.iter())
+	let mut sorted_bin_stats: Vec<(usize, &BinStatsEntry)> = bin_stats_for_feature
+		[0..bin_info.n_valid_bins() as usize]
+		.iter()
+		.enumerate()
 		.collect();
 	sorted_bin_stats.sort_by(|(_, a), (_, b)| {
 		categorical_bin_score(a)
