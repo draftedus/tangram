@@ -15,7 +15,6 @@ pinwheel = { path = "../pinwheel" }
 [dependencies]
 anyhow = "1"
 base64 = "0.12"
-buffy = { git = "https://github.com/tangram-hq/buffy" }
 bytes = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.5", features = ["serde"] }

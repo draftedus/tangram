@@ -7,6 +7,9 @@ name = "tangram"
 version = "0.2.0-dev"
 edition = "2018"
 
+[profile.release]
+debug = true
+
 [lib]
 name = "tangram"
 path = "lib.rs"

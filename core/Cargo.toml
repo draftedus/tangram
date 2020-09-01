@@ -7,23 +7,23 @@ edition = "2018"
 path = "lib.rs"
 
 [[bin]]
-name = "gbt-higgs"
+name = "higgs-gbt"
 path = "gbt/bench/higgs.rs"
 
 [[bin]]
-name = "gbt-census"
+name = "census-gbt"
 path = "gbt/bench/census.rs"
 
 [[bin]]
-name = "gbt-boston"
+name = "boston-gbt"
 path = "gbt/bench/boston.rs"
 
 [[bin]]
-name = "gbt-heart-disease"
+name = "heart-disease-gbt"
 path = "gbt/bench/heart-disease.rs"
 
 [[bin]]
-name = "gbt-iris"
+name = "iris-gbt"
 path = "gbt/bench/iris.rs"
 
 [dev-dependencies]
@@ -31,7 +31,6 @@ insta = " 0.16"
 
 [dependencies]
 anyhow = "1"
-buffy = { git = "https://github.com/tangram-hq/buffy" }
 bytes = "0.5"
 csv = "1"
 derive_more = "0.99"

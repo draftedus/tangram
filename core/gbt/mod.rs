@@ -1,6 +1,5 @@
 mod bin;
 mod binary_classifier;
-mod bundling;
 mod early_stopping;
 mod multiclass_classifier;
 mod progress;
