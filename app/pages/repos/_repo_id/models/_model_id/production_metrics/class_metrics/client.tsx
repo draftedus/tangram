@@ -1,5 +1,5 @@
 import { bootClassSelectField } from 'common/class_select'
-import { bootDateWindowSelectField } from 'common/time_charts'
+import { bootDateWindowSelectField } from 'common/time'
 import { ui } from 'deps'
 
 bootClassSelectField()

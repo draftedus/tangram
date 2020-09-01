@@ -4,7 +4,7 @@ import {
 	DateWindowInterval,
 	intervalChartTitle,
 	overallChartTitle,
-} from 'common/time_charts'
+} from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
 import { h, ui } from 'deps'
 

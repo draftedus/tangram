@@ -7,7 +7,7 @@ edition = "2018"
 path = "lib.rs"
 
 [dev-dependencies]
-insta = " 0.16"
+insta = "0.16"
 
 [build-dependencies]
 pinwheel = { path = "../pinwheel" }

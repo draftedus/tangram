@@ -1,9 +1,5 @@
 import { MetricsRow } from 'common/metrics_row'
-import {
-	DateWindow,
-	DateWindowInterval,
-	overallChartTitle,
-} from 'common/time_charts'
+import { DateWindow, DateWindowInterval, overallChartTitle } from 'common/time'
 import { productionColor } from 'common/tokens'
 import { h, ui } from 'deps'
 

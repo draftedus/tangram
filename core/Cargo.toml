@@ -27,7 +27,7 @@ name = "iris-gbt"
 path = "gbt/bench/iris.rs"
 
 [dev-dependencies]
-insta = " 0.16"
+insta = "0.16"
 
 [dependencies]
 anyhow = "1"

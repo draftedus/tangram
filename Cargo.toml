@@ -37,8 +37,5 @@ term-ui = { git = "https://github.com/tangram-hq/term-ui" }
 tokio = { version = "0.2", features = ["rt-threaded"] }
 url = "2"
 
-# [patch.'https://github.com/tangram-hq/buffy']
-# buffy = { path = "buffy/buffy-rs" }
-
 # [patch.'https://github.com/tangram-hq/term-ui']
 # term-ui = { path = "term-ui" }

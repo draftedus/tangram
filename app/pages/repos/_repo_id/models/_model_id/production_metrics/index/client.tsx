@@ -1,4 +1,4 @@
-import { bootDateWindowSelectField } from 'common/time_charts'
+import { bootDateWindowSelectField } from 'common/time'
 import { ui } from 'deps'
 
 bootDateWindowSelectField()

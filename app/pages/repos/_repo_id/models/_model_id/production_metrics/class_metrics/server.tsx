@@ -1,10 +1,6 @@
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
-import {
-	DateWindow,
-	DateWindowInterval,
-	intervalChartTitle,
-} from 'common/time_charts'
+import { DateWindow, DateWindowInterval, intervalChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
 import { Fragment, PinwheelInfo, h, renderPage, ui } from 'deps'
 import {

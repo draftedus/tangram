@@ -5,7 +5,7 @@ import {
 	DateWindowInterval,
 	DateWindowSelectField,
 	intervalChartTitle,
-} from 'common/time_charts'
+} from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
 import { h, ui } from 'deps'
 
@@ -73,7 +73,9 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 				<ui.TabLink href="" selected={true}>
 					{'Overview'}
 				</ui.TabLink>
-				<ui.TabLink href={`class_metrics?date_window=${props.dateWindow}`}>{'Class Metrics'}</ui.TabLink>
+				<ui.TabLink href={`class_metrics?date_window=${props.dateWindow}`}>
+					{'Class Metrics'}
+				</ui.TabLink>
 			</ui.TabBar>
 			<ui.S2>
 				<DateWindowSelectField dateWindow={props.dateWindow} />

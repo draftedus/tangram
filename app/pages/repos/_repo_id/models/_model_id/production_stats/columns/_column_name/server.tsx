@@ -1,7 +1,7 @@
 import { Enum, Props as EnumProps } from './enum'
 import { Number, Props as NumberProps } from './number'
 import { Text, Props as TextProps } from './text'
-import { DateWindow, DateWindowSelectField } from 'common/time_charts'
+import { DateWindow, DateWindowSelectField } from 'common/time'
 import { PinwheelInfo, h, renderPage, ui } from 'deps'
 import {
 	ModelLayout,

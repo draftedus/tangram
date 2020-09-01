@@ -3,7 +3,7 @@
 		"@tangramhq/eslint-plugin": "0.1.23",
 		"csstype": "3.0.3",
 		"esbuild": "0.6.28",
-		"eslint": "7.7.0",
+		"eslint": "7.8.0",
 		"preact": "10.4.8",
 		"preact-render-to-string": "5.1.10",
 		"prettier": "2.1.1",

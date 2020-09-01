@@ -4,7 +4,7 @@ import {
 	DateWindowSelectField,
 	intervalChartTitle,
 	overallChartTitle,
-} from 'common/time_charts'
+} from 'common/time'
 import {
 	EnumColumnToken,
 	NumberColumnToken,
