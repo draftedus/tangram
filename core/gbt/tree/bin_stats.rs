@@ -19,7 +19,7 @@ pub struct BinStats {
 
 #[derive(Clone, Copy, Debug)]
 pub struct BinStatsEntry {
-	pub count: usize,
+	// pub count: usize,
 	pub sum_gradients: f64,
 	pub sum_hessians: f64,
 }
@@ -58,7 +58,7 @@ impl BinStatsEntry {
 		Self {
 			sum_gradients: 0.0,
 			sum_hessians: 0.0,
-			count: 0,
+			// count: 0,
 		}
 	}
 }
@@ -194,7 +194,7 @@ fn compute_bin_stats_for_feature_root_no_hessian(
 		let bin_stats = unsafe { bin_stats_for_feature.uget_mut(bin_index) };
 		bin_stats.sum_gradients += ordered_gradient.to_f64().unwrap();
 		bin_stats.sum_hessians += 1.0;
-		bin_stats.count += 1;
+		// bin_stats.count += 1;
 	}
 }
 
@@ -211,7 +211,7 @@ fn compute_bin_stats_for_feature_root(
 		let bin_stats = unsafe { bin_stats_for_feature.uget_mut(bin_index) };
 		bin_stats.sum_gradients += ordered_gradient.to_f64().unwrap();
 		bin_stats.sum_hessians += ordered_hessian.to_f64().unwrap();
-		bin_stats.count += 1;
+		// bin_stats.count += 1;
 	}
 }
 
@@ -228,7 +228,7 @@ fn compute_bin_stats_for_feature_not_root_no_hessians(
 		let bin_stats = unsafe { bin_stats_for_feature.uget_mut(bin_index) };
 		bin_stats.sum_gradients += ordered_gradient.to_f64().unwrap();
 		bin_stats.sum_hessians += 1.0;
-		bin_stats.count += 1;
+		// bin_stats.count += 1;
 	}
 }
 
@@ -247,7 +247,7 @@ fn compute_bin_stats_for_feature_not_root(
 		let bin_stats = unsafe { bin_stats_for_feature.uget_mut(bin_index) };
 		bin_stats.sum_gradients += ordered_gradient.to_f64().unwrap();
 		bin_stats.sum_hessians += ordered_hessian.to_f64().unwrap();
-		bin_stats.count += 1;
+		// bin_stats.count += 1;
 	}
 }
 
@@ -288,6 +288,6 @@ fn compute_bin_stats_subtraction_for_feature(
 	for (parent_bin_stats, sibling_bin_stats) in iter {
 		parent_bin_stats.sum_gradients -= sibling_bin_stats.sum_gradients;
 		parent_bin_stats.sum_hessians -= sibling_bin_stats.sum_hessians;
-		parent_bin_stats.count -= sibling_bin_stats.count;
+		// parent_bin_stats.count -= sibling_bin_stats.count;
 	}
 }

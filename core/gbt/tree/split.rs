@@ -185,18 +185,26 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 	);
 	let mut best_split_so_far: Option<FindSplitOutput> = None;
 
+	let count_multiplier = examples_index_range.len() as f64 / sum_hessians_parent;
+
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
 
 	for (bin_index, bin_stats_entry) in bin_stats_for_feature.iter().enumerate() {
-		left_n_examples += bin_stats_entry.count;
+		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
+			.round()
+			.to_usize()
+			.unwrap();
 		left_sum_hessians += bin_stats_entry.sum_hessians;
 		left_sum_gradients += bin_stats_entry.sum_gradients;
 
 		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
 		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
-		let right_n_examples = examples_index_range.len() - left_n_examples;
+		let right_n_examples = match examples_index_range.len().checked_sub(left_n_examples) {
+			Some(right_n_examples) => right_n_examples,
+			None => break,
+		};
 
 		// check if we have violated the min samples leaf constraint
 		if left_n_examples < options.min_examples_leaf {
@@ -227,7 +235,8 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 			options.l2_regularization,
 		);
 
-		let invalid_values_direction = if bin_stats_for_feature.first().unwrap().count > 0 {
+		let invalid_values_direction = if bin_stats_for_feature.first().unwrap().sum_hessians > 0.0
+		{
 			// we are in the function that splits from left to right
 			types::SplitDirection::Left
 		} else {
@@ -295,8 +304,8 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 	feature_index: usize,
 	bin_info: &BinInfo,
 	bin_stats_for_feature: &[BinStatsEntry],
-	sum_gradients: f64,
-	sum_hessians: f64,
+	sum_gradients_parent: f64,
+	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
 	options: &types::TrainOptions,
 ) -> Option<FindSplitOutput> {
@@ -304,7 +313,10 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 
 	let l2_regularization = options.l2_regularization + options.discrete_l2_regularization;
 
-	let negative_loss_parent_node = negative_loss(sum_gradients, sum_hessians, l2_regularization);
+	let negative_loss_parent_node =
+		negative_loss(sum_gradients_parent, sum_hessians_parent, l2_regularization);
+
+	let count_multiplier = examples_index_range.len() as f64 / sum_hessians_parent;
 
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
@@ -326,13 +338,19 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 
 	for (bin_index, bin_stats_entry) in sorted_bin_stats.iter() {
 		directions.set(bin_index.to_u8().unwrap(), false);
-		left_n_examples += bin_stats_entry.count;
+		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
+			.round()
+			.to_usize()
+			.unwrap();
 		left_sum_hessians += bin_stats_entry.sum_hessians;
 		left_sum_gradients += bin_stats_entry.sum_gradients;
 
-		let right_sum_gradients = sum_gradients - left_sum_gradients;
-		let right_sum_hessians = sum_hessians - left_sum_hessians;
-		let right_n_examples = examples_index_range.len() - left_n_examples;
+		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
+		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
+		let right_n_examples = match examples_index_range.len().checked_sub(left_n_examples) {
+			Some(right_n_examples) => right_n_examples,
+			None => break,
+		};
 
 		// check if we have violated the min samples leaf constraint
 		if left_n_examples < options.min_examples_leaf {
@@ -372,7 +390,8 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 			l2_regularization,
 		);
 
-		let invalid_values_direction = if bin_stats_for_feature.first().unwrap().count > 0 {
+		let invalid_values_direction = if bin_stats_for_feature.first().unwrap().sum_hessians > 0.0
+		{
 			// we are in the function that splits from left to right
 			types::SplitDirection::Left
 		} else {
