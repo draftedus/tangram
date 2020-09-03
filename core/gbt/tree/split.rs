@@ -1,6 +1,6 @@
 use super::{
 	super::{bin::BinInfo, types},
-	bin_stats::{BinStats, BinStatsEntry},
+	bin_stats::BinStats,
 	types::*,
 };
 use num_traits::ToPrimitive;
@@ -172,7 +172,7 @@ pub fn find_split_both(
 pub fn find_best_continuous_split_for_feature_left_to_right(
 	feature_index: usize,
 	bin_info: &BinInfo,
-	bin_stats_for_feature: &[BinStatsEntry],
+	bin_stats_for_feature: &[f64],
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
@@ -191,16 +191,19 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
 
-	for (bin_index, bin_stats_entry) in bin_stats_for_feature[0..bin_info.n_valid_bins() as usize]
-		.iter()
+	for (bin_index, bin_stats_entry) in bin_stats_for_feature
+		[0..bin_info.n_valid_bins() as usize * 2]
+		.chunks(2)
 		.enumerate()
 	{
-		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
+		let sum_gradients = bin_stats_entry[0];
+		let sum_hessians = bin_stats_entry[1];
+		left_n_examples += (sum_hessians * count_multiplier)
 			.round()
 			.to_usize()
 			.unwrap();
-		left_sum_hessians += bin_stats_entry.sum_hessians;
-		left_sum_gradients += bin_stats_entry.sum_gradients;
+		left_sum_hessians += sum_hessians;
+		left_sum_gradients += sum_gradients;
 
 		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
 		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
@@ -238,8 +241,7 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 			options.l2_regularization,
 		);
 
-		let invalid_values_direction = if bin_stats_for_feature.first().unwrap().sum_hessians > 0.0
-		{
+		let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
 			// we are in the function that splits from left to right
 			types::SplitDirection::Left
 		} else {
@@ -306,7 +308,7 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 pub fn find_best_discrete_split_for_feature_left_to_right(
 	feature_index: usize,
 	bin_info: &BinInfo,
-	bin_stats_for_feature: &[BinStatsEntry],
+	bin_stats_for_feature: &[f64],
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
@@ -325,12 +327,11 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
 
-	let categorical_bin_score = |bin: &BinStatsEntry| {
-		bin.sum_gradients / (bin.sum_hessians + options.discrete_smoothing_factor.to_f64().unwrap())
-	};
-	let mut sorted_bin_stats: Vec<(usize, &BinStatsEntry)> = bin_stats_for_feature
-		[0..bin_info.n_valid_bins() as usize]
-		.iter()
+	let categorical_bin_score =
+		|bin: &[f64]| bin[0] / (bin[1] + options.discrete_smoothing_factor.to_f64().unwrap());
+	let mut sorted_bin_stats: Vec<(usize, &[f64])> = bin_stats_for_feature
+		[0..bin_info.n_valid_bins() as usize * 2]
+		.chunks(2)
 		.enumerate()
 		.collect();
 	sorted_bin_stats.sort_by(|(_, a), (_, b)| {
@@ -343,12 +344,14 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 
 	for (bin_index, bin_stats_entry) in sorted_bin_stats.iter() {
 		directions.set(bin_index.to_u8().unwrap(), false);
-		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
+		let sum_gradients = bin_stats_entry[0];
+		let sum_hessians = bin_stats_entry[1];
+		left_n_examples += (sum_hessians * count_multiplier)
 			.round()
 			.to_usize()
 			.unwrap();
-		left_sum_hessians += bin_stats_entry.sum_hessians;
-		left_sum_gradients += bin_stats_entry.sum_gradients;
+		left_sum_hessians += sum_hessians;
+		left_sum_gradients += sum_gradients;
 
 		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
 		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
@@ -395,8 +398,7 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 			l2_regularization,
 		);
 
-		let invalid_values_direction = if bin_stats_for_feature.first().unwrap().sum_hessians > 0.0
-		{
+		let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
 			// we are in the function that splits from left to right
 			types::SplitDirection::Left
 		} else {
