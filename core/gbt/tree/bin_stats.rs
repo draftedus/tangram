@@ -138,7 +138,7 @@ pub fn compute_bin_stats_for_non_root_node(
 			|bin_info_for_feature,
 			 bin_stats_for_feature,
 			 binned_feature_values,
-			 include_feature| unsafe {
+			 include_feature| {
 				if !include_feature {
 					return;
 				}
@@ -148,20 +148,34 @@ pub fn compute_bin_stats_for_non_root_node(
 					*entry = 0.0;
 				}
 				if hessians_are_constant {
-					compute_bin_stats_for_feature_not_root_no_hessians(
-						ordered_gradients,
-						binned_feature_values.as_slice().unwrap(),
-						bin_stats_for_feature,
-						examples_index_for_node,
-					)
+					unsafe {
+						compute_bin_stats_for_feature_not_root_no_hessians(
+							ordered_gradients,
+							binned_feature_values.as_slice().unwrap(),
+							bin_stats_for_feature,
+							examples_index_for_node,
+						)
+					}
 				} else {
-					compute_bin_stats_for_feature_not_root(
-						ordered_gradients,
-						ordered_hessians,
-						binned_feature_values.as_slice().unwrap(),
-						bin_stats_for_feature,
-						examples_index_for_node,
-					)
+					unsafe {
+						compute_bin_stats_for_feature_not_root(
+							ordered_gradients,
+							ordered_hessians,
+							binned_feature_values.as_slice().unwrap(),
+							bin_stats_for_feature,
+							examples_index_for_node,
+						)
+					}
+					// unsafe {
+					// 	compute_bin_stats_for_feature_not_root(
+					// 		examples_index_for_node.len(),
+					// 		ordered_gradients.as_ptr(),
+					// 		ordered_hessians.as_ptr(),
+					// 		binned_feature_values.as_slice().unwrap().as_ptr(),
+					// 		bin_stats_for_feature.as_mut_ptr(),
+					// 		examples_index_for_node.as_ptr(),
+					// 	)
+					// }
 				}
 			},
 		);
@@ -214,6 +228,17 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
 	}
 }
 
+// extern "C" {
+// 	fn compute_bin_stats_for_feature_not_root(
+// 		n_examples: usize,
+// 		ordered_gradients: *const f32,
+// 		ordered_hessians: *const f32,
+// 		binned_feature_values: *const u8,
+// 		bin_stats_for_feature: *mut f64,
+// 		examples_index_for_node: *const usize,
+// 	);
+// }
+
 unsafe fn compute_bin_stats_for_feature_not_root(
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
@@ -237,7 +262,6 @@ unsafe fn compute_bin_stats_for_feature_not_root(
 		*bin_stats_for_feature_ptr.add(bin_index << 1) += ordered_gradient as f64;
 		*bin_stats_for_feature_ptr.add((bin_index << 1) + 1) += ordered_hessian as f64;
 	}
-
 	for i in upper_bound..n_examples {
 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
 		let ordered_hessian = *ordered_hessians.get_unchecked(i);
