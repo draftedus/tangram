@@ -13,10 +13,10 @@ use super::{
 };
 use crate::util::progress_counter::ProgressCounter;
 use crate::{dataframe::*, util::super_unsafe::SuperUnsafe};
+use itertools::izip;
 use ndarray::prelude::*;
 use ndarray::Zip;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 use std::ops::Range;
 use std::time::Instant;
 
@@ -137,8 +137,7 @@ pub fn train(
 	// pre-allocate memory to be used in training
 	let start = std::time::Instant::now();
 	let mut predictions = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
-	Zip::from(predictions.gencolumns_mut())
-		.par_apply(|mut predictions| predictions.assign(&biases));
+	Zip::from(predictions.gencolumns_mut()).apply(|mut predictions| predictions.assign(&biases));
 	let (mut gradients, mut hessians, mut ordered_gradients, mut ordered_hessians) = (
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples)) },
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples)) },
@@ -202,7 +201,7 @@ pub fn train(
 			}
 		};
 		// train n_trees_per_round trees in parallel
-		let trees_for_round = (
+		let trees_for_round = izip!(
 			predictions.axis_iter_mut(Axis(0)),
 			examples_index.axis_iter_mut(Axis(0)),
 			examples_index_left.axis_iter_mut(Axis(0)),
@@ -213,52 +212,50 @@ pub fn train(
 			ordered_hessians.axis_iter_mut(Axis(0)),
 			bin_stats_pools.axis_iter_mut(Axis(0)),
 		)
-			.into_par_iter()
-			.map(
-				|(
-					mut predictions,
-					mut examples_index,
-					mut examples_index_left,
-					mut examples_index_right,
-					gradients,
-					hessians,
-					mut ordered_gradients,
-					mut ordered_hessians,
-					bin_stats_pool,
-				)| {
-					// reset the examples_index to sorted order
-					Zip::indexed(examples_index.view_mut())
-						.par_apply(|index, value| *value = index);
-					// train the tree
-					let (tree, leaf_values) = tree::train::train(
-						features_train.view(),
-						&include_features,
-						gradients.as_slice().unwrap(),
-						hessians.as_slice().unwrap(),
-						ordered_gradients.as_slice_mut().unwrap(),
-						ordered_hessians.as_slice_mut().unwrap(),
-						examples_index.as_slice_mut().unwrap(),
-						examples_index_left.as_slice_mut().unwrap(),
-						examples_index_right.as_slice_mut().unwrap(),
-						bin_stats_pool.into_scalar(),
-						has_constant_hessians,
-						&options,
-						&timing,
+		.map(
+			|(
+				mut predictions,
+				mut examples_index,
+				mut examples_index_left,
+				mut examples_index_right,
+				gradients,
+				hessians,
+				mut ordered_gradients,
+				mut ordered_hessians,
+				bin_stats_pool,
+			)| {
+				// reset the examples_index to sorted order
+				Zip::indexed(examples_index.view_mut()).apply(|index, value| *value = index);
+				// train the tree
+				let (tree, leaf_values) = tree::train::train(
+					features_train.view(),
+					&include_features,
+					gradients.as_slice().unwrap(),
+					hessians.as_slice().unwrap(),
+					ordered_gradients.as_slice_mut().unwrap(),
+					ordered_hessians.as_slice_mut().unwrap(),
+					examples_index.as_slice_mut().unwrap(),
+					examples_index_left.as_slice_mut().unwrap(),
+					examples_index_right.as_slice_mut().unwrap(),
+					bin_stats_pool.into_scalar(),
+					has_constant_hessians,
+					&options,
+					&timing,
+				);
+				// update the predictions with the most recently trained tree
+				if round_index < options.max_rounds - 1 {
+					let start = Instant::now();
+					update_predictions_from_leaves(
+						&leaf_values,
+						predictions.view_mut(),
+						examples_index.view(),
 					);
-					// update the predictions with the most recently trained tree
-					if round_index < options.max_rounds - 1 {
-						let start = Instant::now();
-						update_predictions_from_leaves(
-							&leaf_values,
-							predictions.view_mut(),
-							examples_index.view(),
-						);
-						timing.predict.inc(start.elapsed());
-					}
-					tree
-				},
-			)
-			.collect::<Vec<_>>();
+					timing.predict.inc(start.elapsed());
+				}
+				tree
+			},
+		)
+		.collect::<Vec<_>>();
 
 		// If loss computation was enabled, then compute the loss for this round.
 		if let Some(losses) = losses.as_mut() {
@@ -284,7 +281,7 @@ pub fn train(
 			let mut logits_early_stopping =
 				{ Array::zeros((n_trees_per_round, n_examples_early_stopping)) };
 			Zip::from(logits_early_stopping.gencolumns_mut())
-				.par_apply(|mut logits| logits.assign(&biases));
+				.apply(|mut logits| logits.assign(&biases));
 
 			// compute the early stopping metrics and update the train stop monitor
 			// to see if we should stop training at this round.
@@ -362,7 +359,7 @@ pub fn update_predictions_from_leaves(
 	examples_index: ArrayView1<usize>,
 ) {
 	let predictions_cell = SuperUnsafe::new(predictions);
-	leaf_values.par_iter().for_each(|(range, value)| {
+	leaf_values.iter().for_each(|(range, value)| {
 		examples_index
 			.slice(s![range.clone()])
 			.iter()

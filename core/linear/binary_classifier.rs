@@ -6,10 +6,10 @@ use crate::{
 	dataframe::*, metrics::*, util::progress_counter::ProgressCounter,
 	util::super_unsafe::SuperUnsafe,
 };
+use itertools::izip;
 use ndarray::prelude::*;
 use ndarray::Zip;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 use std::ops::Neg;
 
 impl types::BinaryClassifier {
@@ -27,16 +27,14 @@ impl types::BinaryClassifier {
 				labels.data.into(),
 				options.early_stopping_fraction,
 			);
-		let mut means = Vec::with_capacity(n_features);
-		features_train
+		let means = features_train
 			.axis_iter(Axis(1))
-			.into_par_iter()
 			.map(|column| column.mean().unwrap())
-			.collect_into_vec(&mut means);
+			.collect();
 		let mut model = types::BinaryClassifier {
 			bias: 0.0,
 			weights: Array1::<f32>::zeros(n_features),
-			means: means.into(),
+			means,
 			losses: vec![].into(),
 			classes: classes.into(),
 		};
@@ -51,15 +49,14 @@ impl types::BinaryClassifier {
 		for _ in 0..options.max_epochs {
 			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
-			(
+			izip!(
 				features_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			)
-				.into_par_iter()
-				.for_each(|(features, labels)| {
-					let model = unsafe { model_cell.get() };
-					Self::train_batch(model, features, labels, options);
-				});
+			.for_each(|(features, labels)| {
+				let model = unsafe { model_cell.get() };
+				Self::train_batch(model, features, labels, options);
+			});
 			model = model_cell.into_inner();
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
 				let early_stopping_metric_value = Self::compute_early_stopping_metric_value(
@@ -113,39 +110,34 @@ impl types::BinaryClassifier {
 		labels: ArrayView1<usize>,
 		options: &types::TrainOptions,
 	) -> f32 {
-		(
+		izip!(
 			features.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			labels.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 		)
-			.into_par_iter()
-			.fold(
-				|| {
-					let predictions =
-						unsafe { <Array2<f32>>::uninitialized((options.n_examples_per_batch, 2)) };
-					let metric = BinaryCrossEntropy::default();
-					(predictions, metric)
-				},
-				|mut state, (features, labels)| {
-					let (predictions, metric) = &mut state;
-					let slice = s![0..features.nrows(), ..];
-					let mut predictions = predictions.slice_mut(slice);
-					self.predict(features, predictions.view_mut(), None);
-					for (prediction, label) in predictions.column(1).iter().zip(labels.iter()) {
-						metric.update(BinaryCrossEntropyInput {
-							probability: *prediction,
-							label: *label,
-						});
-					}
-					state
-				},
-			)
-			.map(|state| state.1)
-			.reduce(BinaryCrossEntropy::default, |mut metric, next_metric| {
-				metric.merge(next_metric);
-				metric
-			})
-			.finalize()
-			.unwrap()
+		.fold(
+			{
+				let predictions =
+					unsafe { <Array2<f32>>::uninitialized((options.n_examples_per_batch, 2)) };
+				let metric = BinaryCrossEntropy::default();
+				(predictions, metric)
+			},
+			|mut state, (features, labels)| {
+				let (predictions, metric) = &mut state;
+				let slice = s![0..features.nrows(), ..];
+				let mut predictions = predictions.slice_mut(slice);
+				self.predict(features, predictions.view_mut(), None);
+				for (prediction, label) in predictions.column(1).iter().zip(labels.iter()) {
+					metric.update(BinaryCrossEntropyInput {
+						probability: *prediction,
+						label: *label,
+					});
+				}
+				state
+			},
+		)
+		.1
+		.finalize()
+		.unwrap()
 	}
 
 	pub fn predict(
@@ -171,20 +163,19 @@ impl types::BinaryClassifier {
 			.apply(|neg, pos| *neg = 1.0 - *pos);
 
 		if let Some(shap_values) = &mut shap_values {
-			(
+			izip!(
 				features.axis_iter(Axis(0)),
 				shap_values.axis_iter_mut(Axis(0)),
 			)
-				.into_par_iter()
-				.for_each(|(features, mut shap_values)| {
-					shap::compute_shap(
-						features,
-						self.bias,
-						self.weights.view(),
-						self.means.view(),
-						shap_values.row_mut(0),
-					);
-				});
+			.for_each(|(features, mut shap_values)| {
+				shap::compute_shap(
+					features,
+					self.bias,
+					self.weights.view(),
+					self.means.view(),
+					shap_values.row_mut(0),
+				);
+			});
 		}
 	}
 }

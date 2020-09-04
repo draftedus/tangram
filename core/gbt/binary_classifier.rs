@@ -3,9 +3,9 @@ use crate::{
 	dataframe::*,
 	gbt::{tree, types},
 };
+use itertools::izip;
 use ndarray::{prelude::*, Zip};
 use num_traits::{clamp, ToPrimitive};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::ops::Neg;
 
 impl types::BinaryClassifier {
@@ -70,19 +70,18 @@ impl types::BinaryClassifier {
 
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
 		if let Some(shap_values) = &mut shap_values {
-			(
+			izip!(
 				features.axis_iter(Axis(0)),
 				shap_values.axis_iter_mut(Axis(0)),
 			)
-				.into_par_iter()
-				.for_each(|(features, mut shap_values)| {
-					let mut row = vec![Value::Number(0.0); features.len()];
-					row.iter_mut().zip(features).for_each(|(v, feature)| {
-						*v = *feature;
-					});
-					let x = shap::compute_shap(row.as_slice(), trees, self.bias);
-					shap_values.row_mut(0).assign(&x);
+			.for_each(|(features, mut shap_values)| {
+				let mut row = vec![Value::Number(0.0); features.len()];
+				row.iter_mut().zip(features).for_each(|(v, feature)| {
+					*v = *feature;
 				});
+				let x = shap::compute_shap(row.as_slice(), trees, self.bias);
+				shap_values.row_mut(0).assign(&x);
+			});
 		}
 	}
 }
@@ -134,7 +133,7 @@ pub fn update_gradients_and_hessians(
 		.and(hessians.row_mut(0))
 		.and(labels)
 		.and(predictions.row(0))
-		.par_apply(|gradient, hessian, label, prediction| {
+		.apply(|gradient, hessian, label, prediction| {
 			let probability = clamp(
 				sigmoid(*prediction),
 				std::f32::EPSILON,

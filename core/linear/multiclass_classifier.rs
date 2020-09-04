@@ -6,10 +6,10 @@ use crate::{
 	dataframe::*, metrics::*, util::progress_counter::ProgressCounter,
 	util::super_unsafe::SuperUnsafe,
 };
+use itertools::izip;
 use ndarray::prelude::*;
 use ndarray::Zip;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 
 impl types::MulticlassClassifier {
 	pub fn train(
@@ -27,16 +27,14 @@ impl types::MulticlassClassifier {
 				labels.data.into(),
 				options.early_stopping_fraction,
 			);
-		let mut means = Vec::with_capacity(n_features);
-		features_train
+		let means = features_train
 			.axis_iter(Axis(1))
-			.into_par_iter()
 			.map(|column| column.mean().unwrap())
-			.collect_into_vec(&mut means);
+			.collect();
 		let mut model = types::MulticlassClassifier {
 			biases: Array1::<f32>::zeros(n_classes),
 			weights: Array2::<f32>::zeros((n_features, n_classes)),
-			means: means.into(),
+			means,
 			losses: vec![].into(),
 			classes: classes.into(),
 		};
@@ -51,15 +49,14 @@ impl types::MulticlassClassifier {
 		for _ in 0..options.max_epochs {
 			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
-			(
+			izip!(
 				features_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			)
-				.into_par_iter()
-				.for_each(|(features, labels)| {
-					let model = unsafe { model_cell.get() };
-					Self::train_batch(model, features, labels, options);
-				});
+			.for_each(|(features, labels)| {
+				let model = unsafe { model_cell.get() };
+				Self::train_batch(model, features, labels, options);
+			});
 			model = model_cell.into_inner();
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
 				let early_stopping_metric_value = Self::compute_early_stopping_metric_value(
@@ -117,40 +114,35 @@ impl types::MulticlassClassifier {
 		options: &types::TrainOptions,
 	) -> f32 {
 		let n_classes = self.biases.len();
-		(
+		izip!(
 			features.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			labels.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 		)
-			.into_par_iter()
-			.fold(
-				|| {
-					let predictions = unsafe {
-						<Array2<f32>>::uninitialized((options.n_examples_per_batch, n_classes))
-					};
-					let metric = CrossEntropy::default();
-					(predictions, metric)
-				},
-				|mut state, (features, labels)| {
-					let (predictions, metric) = &mut state;
-					let slice = s![0..features.nrows(), ..];
-					let mut predictions = predictions.slice_mut(slice);
-					self.predict(features, predictions.view_mut(), None);
-					for (prediction, label) in predictions.axis_iter(Axis(0)).zip(labels.iter()) {
-						metric.update(CrossEntropyInput {
-							probabilities: prediction,
-							label: *label,
-						});
-					}
-					state
-				},
-			)
-			.map(|state| state.1)
-			.reduce(CrossEntropy::default, |mut metric, next_metric| {
-				metric.merge(next_metric);
-				metric
-			})
-			.finalize()
-			.unwrap()
+		.fold(
+			{
+				let predictions = unsafe {
+					<Array2<f32>>::uninitialized((options.n_examples_per_batch, n_classes))
+				};
+				let metric = CrossEntropy::default();
+				(predictions, metric)
+			},
+			|mut state, (features, labels)| {
+				let (predictions, metric) = &mut state;
+				let slice = s![0..features.nrows(), ..];
+				let mut predictions = predictions.slice_mut(slice);
+				self.predict(features, predictions.view_mut(), None);
+				for (prediction, label) in predictions.axis_iter(Axis(0)).zip(labels.iter()) {
+					metric.update(CrossEntropyInput {
+						probabilities: prediction,
+						label: *label,
+					});
+				}
+				state
+			},
+		)
+		.1
+		.finalize()
+		.unwrap()
 	}
 
 	pub fn predict(
@@ -168,22 +160,21 @@ impl types::MulticlassClassifier {
 
 		// compute shap
 		if let Some(shap_values) = &mut shap_values {
-			(
+			izip!(
 				features.axis_iter(Axis(0)),
 				shap_values.axis_iter_mut(Axis(0)),
 			)
-				.into_par_iter()
-				.for_each(|(features, mut shap_values)| {
-					for class_index in 0..n_classes {
-						shap::compute_shap(
-							features,
-							self.biases[class_index],
-							self.weights.row(class_index),
-							self.means.view(),
-							shap_values.row_mut(class_index),
-						)
-					}
-				})
+			.for_each(|(features, mut shap_values)| {
+				for class_index in 0..n_classes {
+					shap::compute_shap(
+						features,
+						self.biases[class_index],
+						self.weights.row(class_index),
+						self.means.view(),
+						shap_values.row_mut(class_index),
+					)
+				}
+			})
 		}
 	}
 }

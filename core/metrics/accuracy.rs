@@ -1,7 +1,7 @@
 use super::RunningMetric;
+use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 use std::num::NonZeroU64;
 
 #[derive(Debug, Clone, Default)]
@@ -55,8 +55,7 @@ impl<'a> RunningMetric<'a, '_> for Accuracy {
 /// and labels have shape (n_examples)
 pub fn accuracy(probabilities: ArrayView2<f32>, labels: ArrayView1<usize>) -> f32 {
 	let n_examples = probabilities.nrows();
-	let n_correct: usize = (probabilities.axis_iter(Axis(0)), labels.as_slice().unwrap())
-		.into_par_iter()
+	let n_correct: usize = izip!(probabilities.axis_iter(Axis(0)), labels.as_slice().unwrap())
 		.map(|(probabilities, label)| {
 			if is_correct(probabilities, *label) {
 				1

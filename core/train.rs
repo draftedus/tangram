@@ -14,7 +14,6 @@ use num_traits::ToPrimitive;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256Plus;
-use rayon::prelude::*;
 use std::{collections::BTreeMap, path::Path};
 
 pub fn train(
@@ -459,7 +458,7 @@ fn shuffle(
 	// shuffle the dataframe
 	if let Some(seed) = shuffle_options {
 		update_progress(Progress::Shuffling);
-		dataframe.columns.par_iter_mut().for_each(|column| {
+		dataframe.columns.iter_mut().for_each(|column| {
 			let mut rng = Xoshiro256Plus::seed_from_u64(seed);
 			match column {
 				Column::Unknown(_) => {}

@@ -2,9 +2,9 @@ use crate::{
 	dataframe::*, features, gbt, linear, metrics, metrics::RunningMetric,
 	progress::ModelTestProgress, util::progress_counter::ProgressCounter,
 };
+use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 
 pub fn test_linear_regressor(
 	dataframe_test: &DataFrameView,
@@ -39,35 +39,30 @@ pub fn test_linear_regressor(
 		predictions: Array1<f32>,
 		metrics: metrics::RegressionMetrics,
 	}
-	let metrics = (
+	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		labels.axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
-		.into_par_iter()
-		.fold(
-			|| {
-				let predictions = unsafe { Array1::uninitialized(n_examples_per_batch) };
-				let metrics = metrics::RegressionMetrics::default();
-				State {
-					predictions,
-					metrics,
-				}
-			},
-			|mut state, (features, labels)| {
-				let slice = s![0..features.nrows()];
-				model.predict(features, state.predictions.slice_mut(slice), None);
-				state.metrics.update(metrics::RegressionMetricsInput {
-					predictions: state.predictions.slice(slice),
-					labels,
-				});
-				state
-			},
-		)
-		.map(|state| state.metrics)
-		.reduce(metrics::RegressionMetrics::default, |mut a, b| {
-			a.merge(b);
-			a
-		});
+	.fold(
+		{
+			let predictions = unsafe { Array1::uninitialized(n_examples_per_batch) };
+			let metrics = metrics::RegressionMetrics::default();
+			State {
+				predictions,
+				metrics,
+			}
+		},
+		|mut state, (features, labels)| {
+			let slice = s![0..features.nrows()];
+			model.predict(features, state.predictions.slice_mut(slice), None);
+			state.metrics.update(metrics::RegressionMetricsInput {
+				predictions: state.predictions.slice(slice),
+				labels,
+			});
+			state
+		},
+	)
+	.metrics;
 	metrics.finalize()
 }
 
@@ -145,61 +140,43 @@ pub fn test_linear_binary_classifier(
 		binary_classifier_metrics: metrics::BinaryClassifierMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
-	let metrics = (
+	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		ArrayView1::from(labels.data).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
-		.into_par_iter()
-		.fold(
-			|| {
-				let predictions =
-					unsafe { Array2::uninitialized((n_examples_per_batch, n_classes)) };
-				State {
-					predictions,
-					classification_metrics: metrics::ClassificationMetrics::new(n_classes),
-					binary_classifier_metrics: metrics::BinaryClassifierMetrics::new(100),
-				}
-			},
-			|mut state, (features, labels)| {
-				let slice = s![0..features.nrows(), ..];
-				let predictions = state.predictions.slice_mut(slice);
-				model.predict(features, predictions, None);
-				let predictions = state.predictions.slice(slice);
-				state
-					.classification_metrics
-					.update(metrics::ClassificationMetricsInput {
-						probabilities: predictions,
-						labels,
-					});
-				state
-					.binary_classifier_metrics
-					.update(metrics::BinaryClassifierMetricsInput {
-						probabilities: predictions,
-						labels,
-					});
-				state
-			},
-		)
-		.map(|state| {
-			(
-				state.classification_metrics,
-				state.binary_classifier_metrics,
-			)
-		})
-		.reduce(
-			|| {
-				(
-					metrics::ClassificationMetrics::new(n_classes),
-					metrics::BinaryClassifierMetrics::new(100),
-				)
-			},
-			|mut a, b| {
-				a.0.merge(b.0);
-				a.1.merge(b.1);
-				a
-			},
-		);
-	(metrics.0.finalize(), metrics.1.finalize())
+	.fold(
+		{
+			let predictions = unsafe { Array2::uninitialized((n_examples_per_batch, n_classes)) };
+			State {
+				predictions,
+				classification_metrics: metrics::ClassificationMetrics::new(n_classes),
+				binary_classifier_metrics: metrics::BinaryClassifierMetrics::new(100),
+			}
+		},
+		|mut state, (features, labels)| {
+			let slice = s![0..features.nrows(), ..];
+			let predictions = state.predictions.slice_mut(slice);
+			model.predict(features, predictions, None);
+			let predictions = state.predictions.slice(slice);
+			state
+				.classification_metrics
+				.update(metrics::ClassificationMetricsInput {
+					probabilities: predictions,
+					labels,
+				});
+			state
+				.binary_classifier_metrics
+				.update(metrics::BinaryClassifierMetricsInput {
+					probabilities: predictions,
+					labels,
+				});
+			state
+		},
+	);
+	(
+		metrics.classification_metrics.finalize(),
+		metrics.binary_classifier_metrics.finalize(),
+	)
 }
 
 pub fn test_gbt_binary_classifier(
@@ -281,41 +258,32 @@ pub fn test_linear_multiclass_classifier(
 		metrics: metrics::ClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
-	let metrics = (
+	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		ArrayView1::from(labels.data).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
-		.into_par_iter()
-		.fold(
-			|| {
-				let predictions =
-					unsafe { Array2::uninitialized((n_examples_per_batch, n_classes)) };
-				let metrics = metrics::ClassificationMetrics::new(n_classes);
-				State {
-					predictions,
-					metrics,
-				}
-			},
-			|mut state, (features, labels)| {
-				let slice = s![0..features.nrows(), ..];
-				let predictions = state.predictions.slice_mut(slice);
-				model.predict(features, predictions, None);
-				let predictions = state.predictions.slice(slice);
-				state.metrics.update(metrics::ClassificationMetricsInput {
-					probabilities: predictions,
-					labels,
-				});
-				state
-			},
-		)
-		.map(|state| state.metrics)
-		.reduce(
-			|| metrics::ClassificationMetrics::new(n_classes),
-			|mut a, b| {
-				a.merge(b);
-				a
-			},
-		);
+	.fold(
+		{
+			let predictions = unsafe { Array2::uninitialized((n_examples_per_batch, n_classes)) };
+			let metrics = metrics::ClassificationMetrics::new(n_classes);
+			State {
+				predictions,
+				metrics,
+			}
+		},
+		|mut state, (features, labels)| {
+			let slice = s![0..features.nrows(), ..];
+			let predictions = state.predictions.slice_mut(slice);
+			model.predict(features, predictions, None);
+			let predictions = state.predictions.slice(slice);
+			state.metrics.update(metrics::ClassificationMetricsInput {
+				probabilities: predictions,
+				labels,
+			});
+			state
+		},
+	)
+	.metrics;
 	metrics.finalize()
 }
 

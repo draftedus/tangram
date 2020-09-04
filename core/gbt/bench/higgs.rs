@@ -1,8 +1,6 @@
 use anyhow::Result;
 use maplit::btreemap;
 use ndarray::{prelude::*, Zip};
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
 use std::path::Path;
 use std::time::Instant;
 use tangram_core::dataframe::*;
@@ -84,8 +82,7 @@ fn main() -> Result<()> {
 	let mut features_ndarray = unsafe { Array2::uninitialized((nrows_test, n_features)) };
 	Zip::from(features_ndarray.gencolumns_mut())
 		.and(columns.as_slice())
-		.into_par_iter()
-		.for_each(|(mut feature_column, column)| {
+		.apply(|mut feature_column, column| {
 			let column = column.as_number().unwrap();
 			feature_column
 				.iter_mut()

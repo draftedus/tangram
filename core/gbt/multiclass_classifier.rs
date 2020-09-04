@@ -1,9 +1,8 @@
 use super::{shap, tree, types};
 use crate::dataframe::*;
+use itertools::izip;
 use ndarray::{prelude::*, Zip};
 use num_traits::{clamp, ToPrimitive};
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
 
 impl types::MulticlassClassifier {
 	pub fn train(
@@ -40,9 +39,8 @@ impl types::MulticlassClassifier {
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
 		let mut logits = probabilities;
 		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
-		(logits.axis_iter_mut(Axis(0)), features.axis_iter(Axis(0)))
-			.into_par_iter()
-			.for_each(|(mut logits, features)| {
+		izip!(logits.axis_iter_mut(Axis(0)), features.axis_iter(Axis(0))).for_each(
+			|(mut logits, features)| {
 				let mut row = vec![Value::Number(0.0); features.len()];
 				row.iter_mut().zip(features).for_each(|(v, feature)| {
 					*v = *feature;
@@ -54,28 +52,28 @@ impl types::MulticlassClassifier {
 					}
 				}
 				softmax_inplace(logits);
-			});
+			},
+		);
 
 		if let Some(shap_values) = &mut shap_values {
-			(
+			izip!(
 				features.axis_iter(Axis(0)),
 				shap_values.axis_iter_mut(Axis(0)),
 			)
-				.into_par_iter()
-				.for_each(|(features, mut shap_values)| {
-					let mut row = vec![Value::Number(0.0); features.len()];
-					row.iter_mut().zip(features).for_each(|(v, feature)| {
-						*v = *feature;
-					});
-					for class_index in 0..n_classes {
-						let x = shap::compute_shap(
-							row.as_slice(),
-							trees.column(class_index),
-							biases[class_index],
-						);
-						shap_values.row_mut(class_index).assign(&x);
-					}
+			.for_each(|(features, mut shap_values)| {
+				let mut row = vec![Value::Number(0.0); features.len()];
+				row.iter_mut().zip(features).for_each(|(v, feature)| {
+					*v = *feature;
 				});
+				for class_index in 0..n_classes {
+					let x = shap::compute_shap(
+						row.as_slice(),
+						trees.column(class_index),
+						biases[class_index],
+					);
+					shap_values.row_mut(class_index).assign(&x);
+				}
+			});
 		}
 	}
 }
@@ -139,7 +137,7 @@ pub fn update_gradients_and_hessians(
 		.and(hessians.gencolumns_mut())
 		.and(predictions.gencolumns_mut())
 		.and(&labels)
-		.par_apply(|gradients, hessians, mut predictions, &label| {
+		.apply(|gradients, hessians, mut predictions, &label| {
 			softmax_inplace(predictions.view_mut());
 			// predictions are now probabilities
 			Zip::indexed(predictions)

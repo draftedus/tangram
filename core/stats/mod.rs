@@ -3,7 +3,6 @@ use crate::{
 	dataframe::*, progress::StatsProgress, stats, util::progress_counter::ProgressCounter,
 };
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 
 mod dataset;
 mod histogram;
@@ -122,12 +121,12 @@ pub fn compute_stats(
 	update_progress(StatsProgress::DatasetStats(progress_counter));
 	let train_dataset_stats: Vec<DatasetStats> = dataframe_train
 		.columns
-		.par_iter()
+		.iter()
 		.map(|column| DatasetStats::compute(column, &settings))
 		.collect();
 	let test_dataset_stats: Vec<DatasetStats> = dataframe_test
 		.columns
-		.par_iter()
+		.iter()
 		.map(|column| DatasetStats::compute(column, &settings))
 		.collect();
 	let overall_dataset_stats: Vec<DatasetStats> = train_dataset_stats

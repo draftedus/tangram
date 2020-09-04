@@ -1,8 +1,7 @@
 use crate::{dataframe::*, util::finite::Finite};
-use itertools::Itertools;
+use itertools::{izip, Itertools};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
@@ -29,7 +28,7 @@ pub struct ComputeBinInfoOptions {
 pub fn compute_bin_info(features: &DataFrameView, options: &ComputeBinInfoOptions) -> Vec<BinInfo> {
 	features
 		.columns
-		.par_iter()
+		.iter()
 		.map(|column| compute_bin_info_for_column(column, &options))
 		.collect()
 }
@@ -140,50 +139,49 @@ pub fn compute_binned_features(
 	let mut binned_features: Array2<u8> =
 		unsafe { Array::uninitialized((n_examples, n_features).f()) };
 	let mut binned_features_stats: Array2<usize> = Array::zeros((max_n_bins, n_features).f());
-	(
+	izip!(
 		binned_features.axis_iter_mut(Axis(1)),
 		binned_features_stats.axis_iter_mut(Axis(1)),
 		&features.columns,
 		bin_info,
 	)
-		.into_par_iter()
-		.for_each(
-			|(mut binned_features_column, mut binned_feature_stats, column, bin_info)| {
-				match (column, bin_info) {
-					(ColumnView::Number(column), BinInfo::Number { thresholds }) => {
-						for (binned_feature_value, feature_value) in
-							binned_features_column.iter_mut().zip(column.data)
-						{
-							*binned_feature_value = if feature_value.is_nan() {
-								0
-							} else {
-								// use binary search to find the bin for the feature value
-								thresholds
-									.binary_search_by(|threshold| {
-										threshold.partial_cmp(feature_value).unwrap()
-									})
-									// reserve bin 0 for invalid
-									.unwrap_or_else(|bin| bin)
-									.to_u8()
-									.unwrap() + 1
-							};
-							binned_feature_stats[*binned_feature_value as usize] += 1;
-							progress();
-						}
+	.for_each(
+		|(mut binned_features_column, mut binned_feature_stats, column, bin_info)| {
+			match (column, bin_info) {
+				(ColumnView::Number(column), BinInfo::Number { thresholds }) => {
+					for (binned_feature_value, feature_value) in
+						binned_features_column.iter_mut().zip(column.data)
+					{
+						*binned_feature_value = if feature_value.is_nan() {
+							0
+						} else {
+							// use binary search to find the bin for the feature value
+							thresholds
+								.binary_search_by(|threshold| {
+									threshold.partial_cmp(feature_value).unwrap()
+								})
+								// reserve bin 0 for invalid
+								.unwrap_or_else(|bin| bin)
+								.to_u8()
+								.unwrap() + 1
+						};
+						binned_feature_stats[*binned_feature_value as usize] += 1;
+						progress();
 					}
-					(ColumnView::Enum(column), BinInfo::Enum { .. }) => {
-						for (binned_feature_value, feature_value) in
-							binned_features_column.iter_mut().zip(column.data)
-						{
-							*binned_feature_value = feature_value.to_u8().unwrap();
-							binned_feature_stats[binned_feature_value.to_usize().unwrap()] += 1;
-							progress();
-						}
-					}
-					_ => unreachable!(),
 				}
-			},
-		);
+				(ColumnView::Enum(column), BinInfo::Enum { .. }) => {
+					for (binned_feature_value, feature_value) in
+						binned_features_column.iter_mut().zip(column.data)
+					{
+						*binned_feature_value = feature_value.to_u8().unwrap();
+						binned_feature_stats[binned_feature_value.to_usize().unwrap()] += 1;
+						progress();
+					}
+				}
+				_ => unreachable!(),
+			}
+		},
+	);
 	(binned_features, binned_features_stats)
 }
 

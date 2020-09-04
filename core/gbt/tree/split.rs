@@ -3,8 +3,8 @@ use super::{
 	bin_stats::BinStats,
 	types::*,
 };
+use itertools::izip;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 use std::ops::Range;
 
 pub struct FindSplitOutput {
@@ -31,8 +31,7 @@ pub fn find_split(
 	examples_index_range: Range<usize>,
 	options: &types::TrainOptions,
 ) -> Option<FindSplitOutput> {
-	(&bin_stats.entries, include_features, &bin_stats.bin_info)
-		.into_par_iter()
+	izip!(&bin_stats.entries, include_features, &bin_stats.bin_info)
 		.enumerate()
 		.filter_map(|(feature_index, (bin_stats, include_feature, bin_info))| {
 			if !include_feature {
@@ -82,7 +81,6 @@ pub fn find_split_both(
 ) -> (Option<FindSplitOutput>, Option<FindSplitOutput>) {
 	let best: Vec<(Option<FindSplitOutput>, Option<FindSplitOutput>)> =
 		(0..left_bin_stats.entries.len())
-			.into_par_iter()
 			.map(|feature_index| {
 				if !include_features[feature_index] {
 					return (None, None);

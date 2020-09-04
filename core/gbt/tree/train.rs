@@ -10,7 +10,6 @@ use super::{
 };
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
 use std::{collections::BinaryHeap, ops::Range, time::Instant};
 
 /// Train a single tree.
@@ -42,11 +41,11 @@ pub fn train(
 	// Compute the sums of gradients and hessians for the root node.
 	let n_examples = gradients.len();
 	let examples_index_range = 0..n_examples;
-	let sum_gradients = gradients.into_par_iter().map(|v| v.to_f64().unwrap()).sum();
+	let sum_gradients = gradients.iter().map(|v| v.to_f64().unwrap()).sum();
 	let sum_hessians = if hessians_are_constant {
 		n_examples.to_f64().unwrap()
 	} else {
-		hessians.into_par_iter().map(|v| v.to_f64().unwrap()).sum()
+		hessians.iter().map(|v| v.to_f64().unwrap()).sum()
 	};
 
 	// If there are too few training examples or the hessians are too small,

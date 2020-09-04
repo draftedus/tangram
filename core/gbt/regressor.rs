@@ -1,9 +1,9 @@
 use super::{shap, tree, types};
 use crate::dataframe::*;
+use itertools::izip;
 use ndarray::prelude::*;
 use ndarray::Zip;
 use num_traits::ToPrimitive;
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 impl types::Regressor {
 	pub fn train(
@@ -47,20 +47,19 @@ impl types::Regressor {
 
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
 		if let Some(shap_values) = &mut shap_values {
-			(
+			izip!(
 				features.axis_iter(Axis(0)),
 				shap_values.axis_iter_mut(Axis(0)),
 			)
-				.into_par_iter()
-				.for_each(|(features, mut shap_values)| {
-					// n_examples times
-					let mut row = vec![Value::Number(0.0); features.len()];
-					row.iter_mut().zip(features).for_each(|(v, feature)| {
-						*v = *feature;
-					});
-					let x = shap::compute_shap(row.as_slice(), trees, self.bias);
-					shap_values.row_mut(0).assign(&x);
+			.for_each(|(features, mut shap_values)| {
+				// n_examples times
+				let mut row = vec![Value::Number(0.0); features.len()];
+				row.iter_mut().zip(features).for_each(|(v, feature)| {
+					*v = *feature;
 				});
+				let x = shap::compute_shap(row.as_slice(), trees, self.bias);
+				shap_values.row_mut(0).assign(&x);
+			});
 		}
 	}
 }
@@ -108,5 +107,5 @@ pub fn update_gradients_and_hessians(
 	Zip::from(gradients.row_mut(0))
 		.and(labels)
 		.and(predictions.row(0))
-		.par_apply(|gradient, label, prediction| *gradient = prediction - label)
+		.apply(|gradient, label, prediction| *gradient = prediction - label)
 }
