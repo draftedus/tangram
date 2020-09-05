@@ -1,5 +1,4 @@
 use libc::{c_char, c_int, c_void, size_t};
-use std::collections::BTreeMap;
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 use std::path::Path;
@@ -61,7 +60,7 @@ where
 	// pub probabilities: Map<C, f32>,
 }
 
-trait OutputTrait {}
+pub trait OutputTrait: serde::de::DeserializeOwned {}
 
 impl OutputTrait for Output {}
 impl OutputTrait for RegressionOutput {}

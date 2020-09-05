@@ -164,16 +164,6 @@ pub fn compute_bin_stats_for_non_root_node(
 						examples_index_for_node,
 					)
 				}
-				// unsafe {
-				// 	compute_bin_stats_for_feature_not_root(
-				// 		examples_index_for_node.len(),
-				// 		ordered_gradients.as_ptr(),
-				// 		ordered_hessians.as_ptr(),
-				// 		binned_feature_values.as_slice().unwrap().as_ptr(),
-				// 		bin_stats_for_feature.as_mut_ptr(),
-				// 		examples_index_for_node.as_ptr(),
-				// 	)
-				// }
 			}
 		},
 	);
@@ -226,17 +216,6 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
 	}
 }
 
-// extern "C" {
-// 	fn compute_bin_stats_for_feature_not_root(
-// 		n_examples: usize,
-// 		ordered_gradients: *const f32,
-// 		ordered_hessians: *const f32,
-// 		binned_feature_values: *const u8,
-// 		bin_stats_for_feature: *mut f64,
-// 		examples_index_for_node: *const usize,
-// 	);
-// }
-
 unsafe fn compute_bin_stats_for_feature_not_root(
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
@@ -246,7 +225,7 @@ unsafe fn compute_bin_stats_for_feature_not_root(
 ) {
 	let bin_stats_for_feature_ptr = bin_stats_for_feature.as_mut_ptr();
 	let n_examples = examples_index.len();
-	let upper_bound = n_examples.checked_sub(64).unwrap_or(0);
+	let upper_bound = n_examples.saturating_sub(64);
 	for i in 0..upper_bound {
 		let prefetch_index = *examples_index.get_unchecked(i + 64) as usize;
 		core::arch::x86_64::_mm_prefetch(
