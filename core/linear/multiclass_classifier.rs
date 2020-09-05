@@ -8,7 +8,6 @@ use crate::{
 };
 use itertools::izip;
 use ndarray::prelude::*;
-use ndarray::Zip;
 use num_traits::ToPrimitive;
 
 impl types::MulticlassClassifier {
@@ -43,7 +42,6 @@ impl types::MulticlassClassifier {
 		} else {
 			None
 		};
-
 		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
 		update_progress(super::Progress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {
@@ -85,11 +83,11 @@ impl types::MulticlassClassifier {
 		let mut logits = features.dot(&self.weights) + &self.biases;
 		softmax(logits.view_mut());
 		let mut predictions = logits;
-		Zip::indexed(predictions.view_mut())
-			.and_broadcast(labels.insert_axis(Axis(1)))
-			.apply(|(_, class_index), prediction, label| {
+		for (mut predictions, label) in izip!(predictions.genrows_mut(), labels) {
+			for (class_index, prediction) in predictions.iter_mut().enumerate() {
 				*prediction -= if class_index == label - 1 { 1.0 } else { 0.0 }
-			});
+			}
+		}
 		let py = predictions;
 		for class_index in 0..n_classes {
 			let weight_gradients = (&features * &py.column(class_index).insert_axis(Axis(1)))
