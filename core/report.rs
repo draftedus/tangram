@@ -1,7 +1,7 @@
 use crate::types;
 use derive_more::Constructor;
+use itertools::izip;
 use ndarray::prelude::*;
-use ndarray::Zip;
 
 #[derive(Constructor)]
 pub struct Model<'a> {
@@ -379,13 +379,11 @@ impl<'a> std::fmt::Display for Table<'a> {
 		}
 		// update column widths with values
 		if let Some(values) = self.values {
-			Zip::from(&mut column_widths)
-				.and(values.gencolumns())
-				.apply(|column_width, col| {
-					col.iter().for_each(|value| {
-						*column_width = usize::max(*column_width, value.len());
-					})
-				});
+			izip!(&mut column_widths, values.gencolumns()).for_each(|(column_width, col)| {
+				col.iter().for_each(|value| {
+					*column_width = usize::max(*column_width, value.len());
+				})
+			});
 		}
 		// write header
 		let line = Line {

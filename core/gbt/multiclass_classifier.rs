@@ -1,7 +1,7 @@
 use super::{shap, tree, types};
 use crate::dataframe::*;
 use itertools::izip;
-use ndarray::{prelude::*, Zip};
+use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 
 impl types::MulticlassClassifier {
@@ -54,7 +54,6 @@ impl types::MulticlassClassifier {
 				softmax_inplace(logits);
 			},
 		);
-
 		if let Some(shap_values) = &mut shap_values {
 			izip!(
 				features.axis_iter(Axis(0)),
@@ -133,22 +132,25 @@ pub fn update_gradients_and_hessians(
 	predictions: ArrayView2<f32>,
 ) {
 	let mut predictions = predictions.to_owned();
-	Zip::from(gradients.gencolumns_mut())
-		.and(hessians.gencolumns_mut())
-		.and(predictions.gencolumns_mut())
-		.and(&labels)
-		.apply(|gradients, hessians, mut predictions, &label| {
-			softmax_inplace(predictions.view_mut());
-			// predictions are now probabilities
-			Zip::indexed(predictions)
-				.and(gradients)
-				.and(hessians)
-				.apply(|class_index, prediction, gradient, hessian| {
-					let label = if (label - 1) == class_index { 1.0 } else { 0.0 };
-					*gradient = *prediction - label;
-					*hessian = *prediction * (1.0 - *prediction);
-				});
+	izip!(
+		gradients.gencolumns_mut(),
+		hessians.gencolumns_mut(),
+		predictions.gencolumns_mut(),
+		labels
+	)
+	.for_each(|(mut gradients, mut hessians, mut predictions, label)| {
+		softmax_inplace(predictions.view_mut());
+		izip!(
+			predictions.iter().enumerate(),
+			gradients.iter_mut(),
+			hessians.iter_mut()
+		)
+		.for_each(|((class_index, prediction), gradient, hessian)| {
+			let label = if (label - 1) == class_index { 1.0 } else { 0.0 };
+			*gradient = *prediction - label;
+			*hessian = *prediction * (1.0 - *prediction);
 		});
+	});
 }
 
 fn softmax_inplace(mut logits: ArrayViewMut1<f32>) {

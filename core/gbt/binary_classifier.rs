@@ -4,7 +4,7 @@ use crate::{
 	gbt::{tree, types},
 };
 use itertools::izip;
-use ndarray::{prelude::*, Zip};
+use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use std::ops::Neg;
 
@@ -64,9 +64,8 @@ impl types::BinaryClassifier {
 			*logit = 1.0 / (logit.neg().exp() + 1.0);
 		}
 		let (mut probabilities_neg, probabilities_pos) = probabilities.split_at(Axis(1), 1);
-		Zip::from(probabilities_neg.view_mut())
-			.and(probabilities_pos.view())
-			.apply(|neg, pos| *neg = 1.0 - *pos);
+		izip!(probabilities_neg.view_mut(), probabilities_pos.view())
+			.for_each(|(neg, pos)| *neg = 1.0 - *pos);
 
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
 		if let Some(shap_values) = &mut shap_values {
@@ -129,19 +128,21 @@ pub fn update_gradients_and_hessians(
 	// (n_trees_per_rounds, n_examples)
 	predictions: ArrayView2<f32>,
 ) {
-	Zip::from(gradients.row_mut(0))
-		.and(hessians.row_mut(0))
-		.and(labels)
-		.and(predictions.row(0))
-		.apply(|gradient, hessian, label, prediction| {
-			let probability = clamp(
-				sigmoid(*prediction),
-				std::f32::EPSILON,
-				1.0 - std::f32::EPSILON,
-			);
-			*gradient = probability - (label - 1).to_f32().unwrap();
-			*hessian = probability * (1.0 - probability);
-		});
+	izip!(
+		gradients.row_mut(0),
+		hessians.row_mut(0),
+		labels,
+		predictions.row(0)
+	)
+	.for_each(|(gradient, hessian, label, prediction)| {
+		let probability = clamp(
+			sigmoid(*prediction),
+			std::f32::EPSILON,
+			1.0 - std::f32::EPSILON,
+		);
+		*gradient = probability - (label - 1).to_f32().unwrap();
+		*hessian = probability * (1.0 - probability);
+	});
 }
 
 pub fn sigmoid(value: f32) -> f32 {

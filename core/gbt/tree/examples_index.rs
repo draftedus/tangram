@@ -12,20 +12,20 @@ pub fn rearrange_examples_index(
 	binned_features: ArrayView2<u8>,
 	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
-	_examples_index_left: &mut [usize],
-	_examples_index_right: &mut [usize],
+	examples_index_left: &mut [usize],
+	examples_index_right: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
-	// if examples_index.len() <= 1024 {
-	rearrange_examples_index_serial(binned_features, split, examples_index)
-	// } else {
-	// 	rearrange_examples_index_parallel(
-	// 		binned_features,
-	// 		split,
-	// 		examples_index,
-	// 		examples_index_left,
-	// 		examples_index_right,
-	// 	)
-	// }
+	if examples_index.len() <= 1024 {
+		rearrange_examples_index_serial(binned_features, split, examples_index)
+	} else {
+		rearrange_examples_index_parallel(
+			binned_features,
+			split,
+			examples_index,
+			examples_index_left,
+			examples_index_right,
+		)
+	}
 }
 
 fn rearrange_examples_index_serial(

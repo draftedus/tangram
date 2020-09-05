@@ -8,7 +8,6 @@ use crate::{
 };
 use itertools::izip;
 use ndarray::prelude::*;
-use ndarray::Zip;
 use num_traits::ToPrimitive;
 
 impl types::Regressor {
@@ -40,7 +39,6 @@ impl types::Regressor {
 		} else {
 			None
 		};
-
 		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
 		update_progress(super::Progress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {
@@ -82,11 +80,9 @@ impl types::Regressor {
 		let py = (predictions - labels).insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
 		let bias_gradient: f32 = py.mean_axis(Axis(0)).unwrap()[0];
-		Zip::from(self.weights.view_mut())
-			.and(weight_gradients.view())
-			.apply(|weight, weight_gradient| {
-				*weight += -learning_rate * weight_gradient;
-			});
+		for (weight, weight_gradient) in izip!(self.weights.iter_mut(), weight_gradients.iter()) {
+			*weight += -learning_rate * weight_gradient;
+		}
 		self.bias += -learning_rate * bias_gradient;
 	}
 
@@ -131,7 +127,6 @@ impl types::Regressor {
 	) {
 		predictions.fill(self.bias);
 		ndarray::linalg::general_mat_vec_mul(1.0, &features, &self.weights, 1.0, &mut predictions);
-
 		if let Some(shap_values) = &mut shap_values {
 			izip!(
 				features.axis_iter(Axis(0)),

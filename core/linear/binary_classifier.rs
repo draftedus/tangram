@@ -8,7 +8,6 @@ use crate::{
 };
 use itertools::izip;
 use ndarray::prelude::*;
-use ndarray::Zip;
 use num_traits::ToPrimitive;
 use std::ops::Neg;
 
@@ -83,24 +82,22 @@ impl types::BinaryClassifier {
 		let learning_rate = options.learning_rate;
 		let logits = features.dot(&self.weights) + self.bias;
 		let mut predictions = logits.mapv_into(|logit| 1.0 / (logit.neg().exp() + 1.0));
-		Zip::from(predictions.view_mut())
-			.and(labels)
-			.apply(|prediction, label| {
-				let label = match label {
-					1 => 0.0,
-					2 => 1.0,
-					_ => unreachable!(),
-				};
-				*prediction -= label
-			});
+		izip!(predictions.view_mut(), labels).for_each(|(prediction, label)| {
+			let label = match label {
+				1 => 0.0,
+				2 => 1.0,
+				_ => unreachable!(),
+			};
+			*prediction -= label
+		});
 		let py = predictions.insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
 		let bias_gradient = py.mean_axis(Axis(0)).unwrap()[0];
-		Zip::from(self.weights.view_mut())
-			.and(weight_gradients.view())
-			.apply(|weight, weight_gradient| {
+		izip!(self.weights.view_mut(), weight_gradients.view()).for_each(
+			|(weight, weight_gradient)| {
 				*weight += -learning_rate * weight_gradient;
-			});
+			},
+		);
 		self.bias += -learning_rate * bias_gradient;
 	}
 
@@ -156,12 +153,12 @@ impl types::BinaryClassifier {
 			&mut probabilities_pos,
 		);
 		let (mut probabilities_neg, mut probabilities_pos) = probabilities.split_at(Axis(1), 1);
-		Zip::from(probabilities_pos.view_mut())
-			.apply(|probability_pos| *probability_pos = 1.0 / (probability_pos.neg().exp() + 1.0));
-		Zip::from(probabilities_neg.view_mut())
-			.and(probabilities_pos.view())
-			.apply(|neg, pos| *neg = 1.0 - *pos);
-
+		for probability_pos in probabilities_pos.iter_mut() {
+			*probability_pos = 1.0 / (probability_pos.neg().exp() + 1.0);
+		}
+		for (neg, pos) in izip!(probabilities_neg.view_mut(), probabilities_pos.view()) {
+			*neg = 1.0 - *pos;
+		}
 		if let Some(shap_values) = &mut shap_values {
 			izip!(
 				features.axis_iter(Axis(0)),

@@ -280,8 +280,9 @@ pub fn train(
 			let n_examples_early_stopping = early_stopping.features_early_stopping.nrows();
 			let mut logits_early_stopping =
 				{ Array::zeros((n_trees_per_round, n_examples_early_stopping)) };
-			Zip::from(logits_early_stopping.gencolumns_mut())
-				.apply(|mut logits| logits.assign(&biases));
+			for mut logits in logits_early_stopping.gencolumns_mut() {
+				logits.assign(&biases);
+			}
 
 			// compute the early stopping metrics and update the train stop monitor
 			// to see if we should stop training at this round.

@@ -103,31 +103,14 @@ pub fn compute_bin_stats_for_non_root_node(
 ) {
 	let n_examples_in_node = examples_index_for_node.len();
 	if !hessians_are_constant {
-		// if n_examples_in_node <= 1024 {
 		for i in 0..n_examples_in_node {
 			ordered_gradients[i] = gradients[examples_index_for_node[i]];
 			ordered_hessians[i] = hessians[examples_index_for_node[i]]
 		}
-	// } else {
-	// 	Zip::indexed(&mut ordered_gradients[0..n_examples_in_node])
-	// 		.and(&mut ordered_hessians[0..n_examples_in_node])
-	// 		.apply(|i, ordered_gradient, ordered_hessian| {
-	// 			*ordered_gradient = gradients[examples_index_for_node[i]];
-	// 			*ordered_hessian = hessians[examples_index_for_node[i]];
-	// 		});
-	// }
 	} else {
-		// if n_examples_in_node <= 1024 {
 		for i in 0..n_examples_in_node {
 			ordered_gradients[i] = gradients[examples_index_for_node[i]];
 		}
-		// } else {
-		// Zip::indexed(&mut ordered_gradients[0..n_examples_in_node]).apply(
-		// 	|i, ordered_gradient| {
-		// 		*ordered_gradient = gradients[examples_index_for_node[i]];
-		// 	},
-		// );
-		// }
 	}
 	izip!(
 		&mut node_bin_stats.bin_info,

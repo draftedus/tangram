@@ -95,9 +95,12 @@ impl types::MulticlassClassifier {
 			let weight_gradients = (&features * &py.column(class_index).insert_axis(Axis(1)))
 				.mean_axis(Axis(0))
 				.unwrap();
-			Zip::from(self.weights.column_mut(class_index))
-				.and(weight_gradients.view())
-				.apply(|weight, weight_gradient| *weight += -learning_rate * weight_gradient);
+			for (weight, weight_gradient) in izip!(
+				self.weights.column_mut(class_index),
+				weight_gradients.iter()
+			) {
+				*weight += -learning_rate * weight_gradient
+			}
 			let bias_gradients = py
 				.column(class_index)
 				.insert_axis(Axis(1))

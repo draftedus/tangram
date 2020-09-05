@@ -69,13 +69,11 @@ pub fn update_logits(
 	features: ArrayView2<u8>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
-	Zip::from(predictions.row_mut(0))
-		.and(features.genrows())
-		.apply(|prediction, features| {
-			for tree in trees {
-				*prediction += tree.predict(features);
-			}
-		});
+	for (prediction, features) in izip!(predictions.row_mut(0), features.genrows()) {
+		for tree in trees {
+			*prediction += tree.predict(features);
+		}
+	}
 }
 
 /// squared error loss
@@ -104,8 +102,7 @@ pub fn update_gradients_and_hessians(
 ) {
 	// gradients are y_pred - y_true
 	// d / dy_pred (0.5 ( y_pred - y_true) **2 ) = 2 * (0.5) * (y_pred - y_pred) = y_pred - y_true
-	Zip::from(gradients.row_mut(0))
-		.and(labels)
-		.and(predictions.row(0))
-		.apply(|gradient, label, prediction| *gradient = prediction - label)
+	for (gradient, label, prediction) in izip!(gradients.row_mut(0), labels, predictions.row(0)) {
+		*gradient = prediction - label;
+	}
 }

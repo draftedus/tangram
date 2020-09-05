@@ -1,5 +1,6 @@
 use crate::{dataframe::*, stats, util::text};
-use ndarray::{prelude::*, s, Zip};
+use itertools::izip;
+use ndarray::{prelude::*, s};
 
 #[derive(Debug)]
 pub enum FeatureGroup {
@@ -397,20 +398,16 @@ fn compute_features_identity_ndarray_value(
 	match column {
 		ColumnView::Unknown(_) => unimplemented!(),
 		ColumnView::Number(c) => {
-			Zip::from(features.column_mut(0))
-				.and(c.data)
-				.apply(|feature_column, column_value| {
-					*feature_column = Value::Number(*column_value);
-					progress()
-				});
+			izip!(features.column_mut(0), c.data).for_each(|(feature_column, column_value)| {
+				*feature_column = Value::Number(*column_value);
+				progress()
+			});
 		}
 		ColumnView::Enum(c) => {
-			Zip::from(features.column_mut(0))
-				.and(c.data)
-				.apply(|feature_column, column_value| {
-					*feature_column = Value::Enum(*column_value);
-					progress()
-				});
+			izip!(features.column_mut(0), c.data).for_each(|(feature_column, column_value)| {
+				*feature_column = Value::Enum(*column_value);
+				progress()
+			});
 		}
 		ColumnView::Text(_) => unimplemented!(),
 	}

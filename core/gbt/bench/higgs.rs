@@ -1,6 +1,7 @@
 use anyhow::Result;
+use itertools::izip;
 use maplit::btreemap;
-use ndarray::{prelude::*, Zip};
+use ndarray::prelude::*;
 use std::path::Path;
 use std::time::Instant;
 use tangram_core::dataframe::*;
@@ -80,15 +81,15 @@ fn main() -> Result<()> {
 	let n_features = features.ncols();
 	let columns = dataframe_test.columns;
 	let mut features_ndarray = unsafe { Array2::uninitialized((nrows_test, n_features)) };
-	Zip::from(features_ndarray.gencolumns_mut())
-		.and(columns.as_slice())
-		.apply(|mut feature_column, column| {
+	izip!(features_ndarray.gencolumns_mut(), columns.as_slice()).for_each(
+		|(mut feature_column, column)| {
 			let column = column.as_number().unwrap();
 			feature_column
 				.iter_mut()
 				.zip(column.data)
 				.for_each(|(f, d)| *f = Value::Number(*d));
-		});
+		},
+	);
 
 	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((nrows_test, 2)) };
 	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
