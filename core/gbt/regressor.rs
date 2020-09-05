@@ -2,7 +2,6 @@ use super::{shap, tree, types};
 use crate::dataframe::*;
 use itertools::izip;
 use ndarray::prelude::*;
-use ndarray::Zip;
 use num_traits::ToPrimitive;
 
 impl types::Regressor {

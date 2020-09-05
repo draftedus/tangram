@@ -15,7 +15,6 @@ use crate::util::progress_counter::ProgressCounter;
 use crate::{dataframe::*, util::super_unsafe::SuperUnsafe};
 use itertools::izip;
 use ndarray::prelude::*;
-use ndarray::Zip;
 use num_traits::ToPrimitive;
 use std::ops::Range;
 use std::time::Instant;
@@ -137,7 +136,9 @@ pub fn train(
 	// pre-allocate memory to be used in training
 	let start = std::time::Instant::now();
 	let mut predictions = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
-	Zip::from(predictions.gencolumns_mut()).apply(|mut predictions| predictions.assign(&biases));
+	for mut predictions_column in predictions.gencolumns_mut() {
+		predictions_column.assign(&biases)
+	}
 	let (mut gradients, mut hessians, mut ordered_gradients, mut ordered_hessians) = (
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples)) },
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples)) },
@@ -225,7 +226,9 @@ pub fn train(
 				bin_stats_pool,
 			)| {
 				// reset the examples_index to sorted order
-				Zip::indexed(examples_index.view_mut()).apply(|index, value| *value = index);
+				for (index, value) in examples_index.iter_mut().enumerate() {
+					*value = index;
+				}
 				// train the tree
 				let (tree, leaf_values) = tree::train::train(
 					features_train.view(),
