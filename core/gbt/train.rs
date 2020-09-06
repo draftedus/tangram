@@ -7,7 +7,7 @@ use super::{
 	early_stopping::{
 		compute_early_stopping_metrics, train_early_stopping_split, TrainStopMonitor,
 	},
-	multiclass_classifier, regressor, timing, tree,
+	multiclass_classifier, regressor, tree,
 	tree::bin_stats::BinStatsPool,
 	types,
 };
@@ -26,7 +26,7 @@ pub fn train(
 	options: types::TrainOptions,
 	update_progress: &mut dyn FnMut(super::Progress),
 ) -> types::Model {
-	let timing = timing::Timing::new();
+	// let timing = timing::Timing::new();
 
 	// determine how to bin each column
 	let bin_options = ComputeBinInfoOptions {
@@ -236,7 +236,6 @@ pub fn train(
 					bin_stats_pool.into_scalar(),
 					has_constant_hessians,
 					&options,
-					&timing,
 				);
 				// update the predictions with the most recently trained tree
 				if round_index < options.max_rounds - 1 {
@@ -306,8 +305,6 @@ pub fn train(
 
 	// compute feature importances
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
-
-	println!("{:?}", timing);
 
 	// assemble the model
 	let trees: Vec<types::Tree> = trees.into_iter().map(Into::into).collect();

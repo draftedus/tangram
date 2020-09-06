@@ -8,6 +8,8 @@ use tangram_core::dataframe::*;
 use tangram_core::metrics;
 
 fn main() -> Result<()> {
+	let start = Instant::now();
+
 	// load the data
 	// let csv_file_path = Path::new("data/higgs.csv");
 	// let nrows_train = 10_500_000;
@@ -68,15 +70,12 @@ fn main() -> Result<()> {
 		min_sum_hessians_in_leaf: 0.0,
 		..Default::default()
 	};
-	let start = Instant::now();
 	let model = tangram_core::gbt::BinaryClassifier::train(
 		dataframe_train,
 		labels_train.clone(),
 		train_options,
 		&mut |_| {},
 	);
-	let end = Instant::now();
-	println!("duration: {:?}", end - start);
 
 	let n_features = features.ncols();
 	let columns = dataframe_test.columns;
@@ -94,6 +93,9 @@ fn main() -> Result<()> {
 	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((nrows_test, 2)) };
 	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
 	let accuracy = metrics::accuracy(probabilities.view(), labels_test.data.into());
+
+	let end = Instant::now();
+	println!("duration: {:?}", end - start);
 	println!("accuracy: {:?}", accuracy);
 
 	Ok(())

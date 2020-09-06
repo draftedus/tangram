@@ -5,7 +5,7 @@ mod multiclass_classifier;
 mod progress;
 mod regressor;
 mod shap;
-mod timing;
+// mod timing;
 mod train;
 mod tree;
 mod types;

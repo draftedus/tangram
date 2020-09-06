@@ -7,10 +7,9 @@ name = "tangram"
 version = "0.2.0-dev"
 edition = "2018"
 
-[profile.release]
-debug = true
-codegen-units = 1
-lto = true
+# [profile.release]
+# codegen-units = 1
+# lto = true
 
 [lib]
 name = "tangram"

@@ -1,5 +1,5 @@
 use super::{
-	super::{timing, types},
+	super::types,
 	bin_stats::{
 		compute_bin_stats_for_non_root_node, compute_bin_stats_for_root_node,
 		compute_bin_stats_subtraction, BinStatsPool,
@@ -27,7 +27,6 @@ pub fn train(
 	bin_stats_pool: &mut BinStatsPool,
 	hessians_are_constant: bool,
 	options: &types::TrainOptions,
-	timing: &timing::Timing,
 ) -> (TrainTree, Vec<(Range<usize>, f32)>) {
 	// This is the tree returned by this function
 	let mut tree = TrainTree { nodes: Vec::new() };
