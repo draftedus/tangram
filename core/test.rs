@@ -26,14 +26,13 @@ pub fn test_linear_regressor(
 		&|| progress_counter.inc(1),
 	);
 	update_progress(ModelTestProgress::Testing);
-	let labels: ArrayView1<f32> = dataframe_test
+	let labels = dataframe_test
 		.columns
 		.get(target_column_index)
 		.unwrap()
 		.as_number()
 		.unwrap()
-		.data
-		.into();
+		.data;
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array1<f32>,
@@ -41,7 +40,7 @@ pub fn test_linear_regressor(
 	}
 	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
-		labels.axis_chunks_iter(Axis(0), n_examples_per_batch),
+		labels.chunks(n_examples_per_batch),
 	)
 	.fold(
 		{
@@ -85,14 +84,13 @@ pub fn test_gbt_regressor(
 		features.view_mut(),
 		&|| progress_counter.inc(1),
 	);
-	let labels: ArrayView1<f32> = dataframe_test
+	let labels = dataframe_test
 		.columns
 		.get(target_column_index)
 		.unwrap()
 		.as_number()
 		.unwrap()
-		.data
-		.into();
+		.data;
 	let mut metrics = metrics::RegressionMetrics::default();
 	let mut predictions = unsafe { Array1::uninitialized(features.nrows()) };
 	update_progress(ModelTestProgress::Testing);

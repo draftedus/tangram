@@ -17,7 +17,7 @@ struct MeanVariance {
 
 pub struct RegressionMetricsInput<'a, 'b> {
 	pub predictions: ArrayView1<'a, f32>,
-	pub labels: ArrayView1<'b, f32>,
+	pub labels: &'b [f32],
 }
 
 #[derive(Debug)]

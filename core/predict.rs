@@ -519,8 +519,8 @@ fn compute_shap_values_regression_output_linear(
 				feature_group_map.as_slice(),
 				feature_groups,
 				feature_names.as_slice(),
-				features,
-				shap_values.row(0),
+				features.as_slice().unwrap(),
+				shap_values.row(0).as_slice().unwrap(),
 				&dataframe,
 			);
 			shap_values.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap());
@@ -585,8 +585,8 @@ fn compute_shap_values_classification_output_linear(
 						feature_group_map.as_slice(),
 						feature_groups,
 						feature_names.as_slice(),
-						features,
-						shap_values,
+						features.as_slice().unwrap(),
+						shap_values.as_slice().unwrap(),
 						&dataframe,
 					);
 					shap_values.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap());
@@ -607,8 +607,8 @@ fn compute_shap_values_linear(
 	feature_group_map: &[usize],
 	feature_groups: &[features::FeatureGroup],
 	feature_names: &[String],
-	features: ArrayView1<f32>,
-	shap_values: ArrayView1<f32>,
+	features: &[f32],
+	shap_values: &[f32],
 	_dataframe: &dataframe::DataFrameView,
 ) -> Vec<(String, f32)> {
 	feature_names

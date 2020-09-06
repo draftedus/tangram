@@ -155,17 +155,11 @@ pub fn compute_bin_stats_for_non_root_node(
 }
 
 fn compute_bin_stats_for_feature_root_no_hessian(
-	gradients: &[f32],
-	binned_feature_values: &[u8],
-	bin_stats_for_feature: &mut [f64],
+	_gradients: &[f32],
+	_binned_feature_values: &[u8],
+	_bin_stats_for_feature: &mut [f64],
 ) {
-	let bin_stats_for_feature_ptr = bin_stats_for_feature.as_mut_ptr();
-	for i in 0..gradients.len() {
-		let ordered_gradient = unsafe { *gradients.get_unchecked(i) };
-		let bin_index = unsafe { *binned_feature_values.get_unchecked(i) } as usize;
-		unsafe { *bin_stats_for_feature_ptr.add(bin_index << 1) += ordered_gradient as f64 };
-		unsafe { *bin_stats_for_feature_ptr.add((bin_index << 1) + 1) += 1.0 };
-	}
+	todo!()
 }
 
 pub unsafe fn compute_bin_stats_for_feature_root(
@@ -180,38 +174,18 @@ pub unsafe fn compute_bin_stats_for_feature_root(
 	let hessians_ptr = hessians.as_ptr();
 	let binned_feature_values_ptr = binned_feature_values.as_ptr();
 	let len = gradients.len() as isize;
-	for i in 0..len / 4 {
-		let i = i * 4;
-		// 0
-		let ordered_gradient = *gradients_ptr.offset(i);
-		let ordered_hessian = *hessians_ptr.offset(i);
-		let bin_index = *binned_feature_values_ptr.offset(i) as isize;
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
-		// 1
-		let ordered_gradient = *gradients_ptr.offset(i + 1);
-		let ordered_hessian = *hessians_ptr.offset(i + 1);
-		let bin_index = *binned_feature_values_ptr.offset(i + 1) as isize;
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
-		// 2
-		let ordered_gradient = *gradients_ptr.offset(i + 2);
-		let ordered_hessian = *hessians_ptr.offset(i + 2);
-		let bin_index = *binned_feature_values_ptr.offset(i + 2) as isize;
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
-		// 3
-		let ordered_gradient = *gradients_ptr.offset(i + 3);
-		let ordered_hessian = *hessians_ptr.offset(i + 3);
-		let bin_index = *binned_feature_values_ptr.offset(i + 3) as isize;
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
+	let unroll = 16;
+	for i in 0..len / unroll {
+		for i in i * unroll..i * unroll + unroll {
+			let ordered_gradient = *gradients_ptr.offset(i);
+			let ordered_hessian = *hessians_ptr.offset(i);
+			let bin_index = *binned_feature_values_ptr.offset(i) as isize;
+			let bin_index = bin_index << 1;
+			*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
+			*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
+		}
 	}
-	for i in (len / 4) * 4..len {
+	for i in (len / unroll) * unroll..len {
 		let ordered_gradient = *gradients_ptr.offset(i);
 		let ordered_hessian = *hessians_ptr.offset(i);
 		let bin_index = *binned_feature_values_ptr.offset(i) as isize;
@@ -222,54 +196,13 @@ pub unsafe fn compute_bin_stats_for_feature_root(
 }
 
 unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
-	ordered_gradients: &[f32],
-	binned_feature_values: &[u8],
-	bin_stats_for_feature: &mut [f64],
-	examples_index: &[usize],
+	_ordered_gradients: &[f32],
+	_binned_feature_values: &[u8],
+	_bin_stats_for_feature: &mut [f64],
+	_examples_index: &[usize],
 ) {
-	let bin_stats_for_feature_ptr = bin_stats_for_feature.as_mut_ptr();
-	let n_examples = examples_index.len();
-	for i in 0..n_examples {
-		let ordered_gradient = *ordered_gradients.get_unchecked(i);
-		let example_index = *examples_index.get_unchecked(i);
-		let bin_index = *binned_feature_values.get_unchecked(example_index) as usize;
-		*bin_stats_for_feature_ptr.add(bin_index << 1) += ordered_gradient as f64;
-		*bin_stats_for_feature_ptr.add((bin_index << 1) + 1) += 1.0;
-	}
+	todo!()
 }
-
-// unsafe fn compute_bin_stats_for_feature_not_root(
-// 	ordered_gradients: &[f32],
-// 	ordered_hessians: &[f32],
-// 	binned_feature_values: &[u8],
-// 	bin_stats_for_feature: &mut [f64],
-// 	examples_index: &[usize],
-// ) {
-// 	let bin_stats_for_feature_ptr = bin_stats_for_feature.as_mut_ptr();
-// 	let n_examples = examples_index.len();
-// 	let upper_bound = n_examples.saturating_sub(64);
-// 	for i in 0..upper_bound {
-// 		let prefetch_index = *examples_index.get_unchecked(i + 64) as usize;
-// 		core::arch::x86_64::_mm_prefetch(
-// 			binned_feature_values.as_ptr().add(prefetch_index) as *const i8,
-// 			core::arch::x86_64::_MM_HINT_T0,
-// 		);
-// 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
-// 		let ordered_hessian = *ordered_hessians.get_unchecked(i);
-// 		let example_index = *examples_index.get_unchecked(i);
-// 		let bin_index = *binned_feature_values.get_unchecked(example_index) as isize;
-// 		*bin_stats_for_feature_ptr.offset(bin_index << 1) += ordered_gradient as f64;
-// 		*bin_stats_for_feature_ptr.offset((bin_index << 1) + 1) += ordered_hessian as f64;
-// 	}
-// 	for i in upper_bound..n_examples {
-// 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
-// 		let ordered_hessian = *ordered_hessians.get_unchecked(i);
-// 		let example_index = *examples_index.get_unchecked(i);
-// 		let bin_index = *binned_feature_values.get_unchecked(example_index) as isize;
-// 		*bin_stats_for_feature_ptr.offset(bin_index << 1) += ordered_gradient as f64;
-// 		*bin_stats_for_feature_ptr.offset((bin_index << 1) + 1) += ordered_hessian as f64;
-// 	}
-// }
 
 unsafe fn compute_bin_stats_for_feature_not_root(
 	ordered_gradients: &[f32],
@@ -285,62 +218,24 @@ unsafe fn compute_bin_stats_for_feature_not_root(
 	let binned_feature_values_ptr = binned_feature_values.as_ptr();
 	let examples_index_ptr = examples_index.as_ptr();
 	let len = examples_index.len() as isize;
-	for i in 0..len / 4 {
-		let i = i * 4;
-		// 0
-		let prefetch_index = *examples_index_ptr.offset(i + 64) as isize;
-		core::arch::x86_64::_mm_prefetch(
-			binned_feature_values_ptr.offset(prefetch_index) as *const i8,
-			core::arch::x86_64::_MM_HINT_T0,
-		);
-		let ordered_gradient = *gradients_ptr.offset(i);
-		let ordered_hessian = *hessians_ptr.offset(i);
-		let example_index = *examples_index_ptr.offset(i) as isize;
-		let bin_index = *binned_feature_values_ptr.offset(example_index) as isize;
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
-		// 1
-		let prefetch_index = *examples_index_ptr.offset(i + 1 + 64) as isize;
-		core::arch::x86_64::_mm_prefetch(
-			binned_feature_values_ptr.offset(prefetch_index) as *const i8,
-			core::arch::x86_64::_MM_HINT_T0,
-		);
-		let ordered_gradient = *gradients_ptr.offset(i + 1);
-		let ordered_hessian = *hessians_ptr.offset(i + 1);
-		let example_index = *examples_index_ptr.offset(i + 1) as isize;
-		let bin_index = *binned_feature_values_ptr.offset(example_index) as isize;
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
-		// 2
-		let prefetch_index = *examples_index_ptr.offset(i + 2 + 64) as isize;
-		core::arch::x86_64::_mm_prefetch(
-			binned_feature_values_ptr.offset(prefetch_index) as *const i8,
-			core::arch::x86_64::_MM_HINT_T0,
-		);
-		let ordered_gradient = *gradients_ptr.offset(i + 2);
-		let ordered_hessian = *hessians_ptr.offset(i + 2);
-		let example_index = *examples_index_ptr.offset(i + 2) as isize;
-		let bin_index = *binned_feature_values_ptr.offset(example_index) as isize;
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
-		// 3
-		let prefetch_index = *examples_index_ptr.offset(i + 3 + 64) as isize;
-		core::arch::x86_64::_mm_prefetch(
-			binned_feature_values_ptr.offset(prefetch_index) as *const i8,
-			core::arch::x86_64::_MM_HINT_T0,
-		);
-		let ordered_gradient = *gradients_ptr.offset(i + 3);
-		let ordered_hessian = *hessians_ptr.offset(i + 3);
-		let example_index = *examples_index_ptr.offset(i + 3) as isize;
-		let bin_index = *binned_feature_values_ptr.offset(example_index) as isize;
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
+	let unroll = 4;
+	for i in 0..len / unroll {
+		for i in i * unroll..i * unroll + unroll {
+			let prefetch_index = *examples_index_ptr.offset(i + 64) as isize;
+			core::arch::x86_64::_mm_prefetch(
+				binned_feature_values_ptr.offset(prefetch_index) as *const i8,
+				core::arch::x86_64::_MM_HINT_T0,
+			);
+			let ordered_gradient = *gradients_ptr.offset(i);
+			let ordered_hessian = *hessians_ptr.offset(i);
+			let example_index = *examples_index_ptr.offset(i) as isize;
+			let bin_index = *binned_feature_values_ptr.offset(example_index) as isize;
+			let bin_index = bin_index << 1;
+			*bin_stats_for_feature_gradients_ptr.offset(bin_index) += ordered_gradient as f64;
+			*bin_stats_for_feature_hessians_ptr.offset(bin_index) += ordered_hessian as f64;
+		}
 	}
-	for i in (len / 4) * 4..len {
+	for i in (len / unroll) * unroll..len {
 		let ordered_gradient = *gradients_ptr.offset(i);
 		let ordered_hessian = *hessians_ptr.offset(i);
 		let example_index = *examples_index_ptr.offset(i) as isize;
