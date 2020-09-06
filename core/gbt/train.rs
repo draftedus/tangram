@@ -17,7 +17,6 @@ use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::ops::Range;
-use std::time::Instant;
 
 /// Train a gradient boosted decision tree model.
 pub fn train(
@@ -30,17 +29,14 @@ pub fn train(
 	let timing = timing::Timing::new();
 
 	// determine how to bin each column
-	let start = std::time::Instant::now();
 	let bin_options = ComputeBinInfoOptions {
 		max_valid_bins: options.max_non_missing_bins,
 		max_number_column_examples_for_bin_info: options.subsample_for_binning,
 	};
 
 	let bin_info = compute_bin_info(&features, &bin_options);
-	timing.binning.compute_bin_info.inc(start.elapsed());
 
 	// compute the binned features
-	let start = std::time::Instant::now();
 	let n_bins = options.max_non_missing_bins as usize + 1;
 	let progress_counter = ProgressCounter::new(features.nrows().to_u64().unwrap());
 	update_progress(super::Progress::Initializing(progress_counter.clone()));
@@ -48,7 +44,6 @@ pub fn train(
 		compute_binned_features(&features, &bin_info, n_bins as usize, &|| {
 			progress_counter.inc(1)
 		});
-	timing.binning.compute_binned_features.inc(start.elapsed());
 
 	let filter_options = FilterBinnedFeaturesOptions {
 		min_examples_split: options.min_examples_leaf,
@@ -134,7 +129,6 @@ pub fn train(
 	};
 
 	// pre-allocate memory to be used in training
-	let start = std::time::Instant::now();
 	let mut predictions = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
 	for mut predictions_column in predictions.gencolumns_mut() {
 		predictions_column.assign(&biases)
@@ -150,7 +144,6 @@ pub fn train(
 	let mut examples_index_right = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
 	let mut bin_stats_pools: Array1<BinStatsPool> =
 		vec![BinStatsPool::new(options.max_leaf_nodes, &bin_info); n_trees_per_round].into();
-	timing.allocations.inc(start.elapsed());
 
 	// this is the total number of rounds that have been trained thus far.
 	let mut n_rounds_trained = 0;
@@ -247,13 +240,11 @@ pub fn train(
 				);
 				// update the predictions with the most recently trained tree
 				if round_index < options.max_rounds - 1 {
-					let start = Instant::now();
 					update_predictions_from_leaves(
 						&leaf_values,
 						predictions.view_mut(),
 						examples_index.view(),
 					);
-					timing.predict.inc(start.elapsed());
 				}
 				tree
 			},
@@ -315,6 +306,8 @@ pub fn train(
 
 	// compute feature importances
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
+
+	println!("{:?}", timing);
 
 	// assemble the model
 	let trees: Vec<types::Tree> = trees.into_iter().map(Into::into).collect();

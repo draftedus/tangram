@@ -640,15 +640,7 @@ mod brute {
 	// 		dataframe::Value::Number(0.0),
 	// 	];
 	// 	let trees = arr1(&[tree]);
-	// 	let start = std::time::Instant::now();
 	// 	let shap_values = compute_shap(example, trees.view(), bias);
-	// 	println!("elapsed: {:?}, values: {:?}", start.elapsed(), shap_values);
-	// 	let start = std::time::Instant::now();
 	// 	let shap_values_brute = brute::compute_shap_brute(example, trees.view(), bias);
-	// 	println!(
-	// 		"elapsed: {:?}, values: {:?}",
-	// 		start.elapsed(),
-	// 		shap_values_brute
-	// 	);
 	// 	assert_eq!(shap_values, shap_values_brute);
 }

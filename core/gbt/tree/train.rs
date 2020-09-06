@@ -10,7 +10,7 @@ use super::{
 };
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use std::{collections::BinaryHeap, ops::Range, time::Instant};
+use std::{collections::BinaryHeap, ops::Range};
 
 /// Train a single tree.
 #[allow(clippy::too_many_arguments)]
@@ -64,7 +64,6 @@ pub fn train(
 	}
 
 	// compute the bin stats for the root node
-	let start = Instant::now();
 	let mut root_bin_stats = bin_stats_pool.get();
 	compute_bin_stats_for_root_node(
 		&mut root_bin_stats,
@@ -74,10 +73,8 @@ pub fn train(
 		hessians,
 		hessians_are_constant,
 	);
-	timing.bin_stats.compute_bin_stats_root.inc(start.elapsed());
 
 	// based on the node stats and bin stats, find a split, if any.
-	let start = Instant::now();
 	let find_split_output = find_split(
 		&root_bin_stats,
 		&include_features,
@@ -86,7 +83,6 @@ pub fn train(
 		examples_index_range.clone(),
 		&options,
 	);
-	timing.find_split.inc(start.elapsed());
 
 	// if we were able to find a split for the root node,
 	// add it to the queue and proceed to the loop.
@@ -182,7 +178,6 @@ pub fn train(
 		}));
 
 		// rearrange the examples index
-		let start_time = Instant::now();
 		let (left, right) = rearrange_examples_index(
 			binned_features,
 			&queue_item.split,
@@ -201,7 +196,6 @@ pub fn train(
 		let start = queue_item.examples_index_range.start;
 		let left_examples_index_range = start + left.start..start + left.end;
 		let right_examples_index_range = start + right.start..start + right.end;
-		timing.rearrange_examples_index.inc(start_time.elapsed());
 
 		// Determine if we should split left and/or right
 		// based on the number of examples in the node
@@ -286,7 +280,6 @@ pub fn train(
 		let mut smaller_child_bin_stats = bin_stats_pool.get();
 
 		// Compute the bin stats for the child with fewer examples.
-		let start = Instant::now();
 		compute_bin_stats_for_non_root_node(
 			&mut smaller_child_bin_stats,
 			include_features,
@@ -298,18 +291,12 @@ pub fn train(
 			hessians_are_constant,
 			smaller_child_examples_index,
 		);
-		timing.bin_stats.compute_bin_stats.inc(start.elapsed());
 
 		// Compute the bin stats for the child with more examples
 		// by subtracting the bin stats of the child with fewer
 		// examples from the parent's bin stats.
-		let start = Instant::now();
 		let mut larger_child_bin_stats = queue_item.bin_stats;
 		compute_bin_stats_subtraction(&mut larger_child_bin_stats, &smaller_child_bin_stats);
-		timing
-			.bin_stats
-			.compute_bin_stats_subtraction
-			.inc(start.elapsed());
 		let (left_bin_stats, right_bin_stats) = match smaller_direction {
 			types::SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
 			types::SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
@@ -320,7 +307,6 @@ pub fn train(
 		let (left_find_split_output, right_find_split_output) =
 			if should_split_left && should_split_right {
 				// based on the node stats and bin stats, find a split, if any.
-				let start = Instant::now();
 				let (left_find_split_output, right_find_split_output) = find_split_both(
 					&left_bin_stats,
 					queue_item.left_sum_gradients,
@@ -333,11 +319,9 @@ pub fn train(
 					include_features,
 					&options,
 				);
-				timing.find_split.inc(start.elapsed());
 				(left_find_split_output, right_find_split_output)
 			} else if should_split_left {
 				// based on the node stats and bin stats, find a split, if any.
-				let start = Instant::now();
 				let find_split_output = find_split(
 					&left_bin_stats,
 					&include_features,
@@ -346,11 +330,9 @@ pub fn train(
 					left_examples_index_range.clone(),
 					&options,
 				);
-				timing.find_split.inc(start.elapsed());
 				(find_split_output, None)
 			} else if should_split_right {
 				// based on the node stats and bin stats, find a split, if any.
-				let start = Instant::now();
 				let find_split_output = find_split(
 					&right_bin_stats,
 					&include_features,
@@ -359,7 +341,6 @@ pub fn train(
 					right_examples_index_range.clone(),
 					&options,
 				);
-				timing.find_split.inc(start.elapsed());
 				(None, find_split_output)
 			} else {
 				(None, None)
