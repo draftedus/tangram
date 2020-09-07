@@ -396,6 +396,10 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 			l2_regularization,
 		);
 
+		// TODO: comment this better
+		// The first bucket contains the null values, if there are null values in the training set
+		// then the invalid values direction is left, if there are none, then choose the node with more
+		// training examples
 		let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
 			// we are in the function that splits from left to right
 			types::SplitDirection::Left

@@ -7,6 +7,10 @@ edition = "2018"
 path = "lib.rs"
 
 [[bin]]
+name = "flights-gbt"
+path = "gbt/bench/flights.rs"
+
+[[bin]]
 name = "higgs-gbt"
 path = "gbt/bench/higgs.rs"
 

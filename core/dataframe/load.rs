@@ -3,12 +3,13 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 
 // TODO add option to specify invalid values.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct FromCsvOptions {
 	pub column_types: Option<BTreeMap<String, ColumnType>>,
 	pub infer_options: InferOptions,
 }
 
+#[derive(Clone)]
 pub struct InferOptions {
 	pub enum_max_unique_values: usize,
 }
