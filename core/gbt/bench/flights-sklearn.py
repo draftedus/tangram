@@ -1,10 +1,11 @@
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
 import time
 
-import lightgbm as lgb
+from sklearn.experimental import enable_hist_gradient_boosting
+from sklearn.ensemble import HistGradientBoostingClassifier
 
 # load the data
 path_train = 'data/flights-1m.csv'
@@ -66,8 +67,8 @@ labels = data[target]
 # train the model
 model = HistGradientBoostingClassifier(
 	learning_rate=0.1,
-	n_estimators=100,
-	num_leaves=512,
+  max_iter=100,
+	max_leaf_nodes=512,
 )
 
 start = time.time()
