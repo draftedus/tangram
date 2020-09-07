@@ -71,12 +71,7 @@ where
 	I: serde::Serialize,
 	O: OutputTrait,
 {
-	pub fn from_file<P: AsRef<Path>>(path: P) -> Self {
-		let bytes = std::fs::read(path).unwrap();
-		Self::from_bytes(&bytes)
-	}
-
-	pub fn from_bytes(model_data: &[u8]) -> Self {
+	pub fn from_slice(model_data: &[u8]) -> Self {
 		let mut model_ptr = std::mem::MaybeUninit::uninit();
 		let result = unsafe {
 			tangram_model_load(
@@ -92,6 +87,11 @@ where
 			input_marker: PhantomData,
 			output_marker: PhantomData,
 		}
+	}
+
+	pub fn from_file<P: AsRef<Path>>(path: P) -> Self {
+		let bytes = std::fs::read(path).unwrap();
+		Self::from_slice(&bytes)
 	}
 
 	pub fn predict(&self, input: &[&I], options: Option<&PredictOptions>) -> Vec<O> {

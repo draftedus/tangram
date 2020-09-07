@@ -1,4 +1,4 @@
-import * as cookies from 'cookies'
+import * as cookies from 'common/cookies'
 
 // set the tangram-timezone cookie
 let timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone

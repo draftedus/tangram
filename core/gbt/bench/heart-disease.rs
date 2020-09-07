@@ -7,7 +7,7 @@ use tangram_core::metrics;
 
 fn main() -> Result<()> {
 	// load the data
-	let csv_file_path = Path::new("../data/heart-disease.csv");
+	let csv_file_path = Path::new("data/heart-disease.csv");
 	let nrows_train = 242;
 	let _nrows_test = 61;
 	let target_column_index = 13;

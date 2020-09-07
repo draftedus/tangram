@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use tangram_rust as tangram;
 
 #[derive(Debug, serde::Serialize)]
@@ -105,7 +103,8 @@ enum Diagnosis {
 
 fn main() {
 	// Load the model from the file.
-	let model = tangram::Model::<Input, Output>::from_file("examples/heart-disease.tangram");
+	let model =
+		tangram::Model::<Input, Output>::from_slice(include_bytes!("./heart-disease.tangram"));
 
 	// Create an example input matching the schema of the CSV file the model was trained on. Here the data is just hard-coded, but in your application you will probably get this from a database or user input.
 	let input = Input {

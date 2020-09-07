@@ -1,12 +1,11 @@
-use serde_json::json;
 use tangram_rust as tangram;
 
 fn main() {
 	// Load the model from the file.
-	let model = tangram::Model::from_file("examples/heart-disease.tangram");
+	let model = tangram::Model::from_slice(include_bytes!("./heart-disease.tangram"));
 
 	// Create an example input matching the schema of the CSV file the model was trained on. Here the data is just hard-coded, but in your application you will probably get this from a database or user input.
-	let input = json!({
+	let input = serde_json::json!({
 		"age": 63,
 		"gender": "male",
 		"chest_pain": "typical angina",
