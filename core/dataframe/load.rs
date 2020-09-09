@@ -135,10 +135,10 @@ impl DataFrame {
 		};
 
 		// create the dataframe
-		let mut df = Self::new(column_names, column_types);
+		let mut dataframe = Self::new(column_names, column_types);
 		// If an inference pass was done, reserve storage for the values because we know how many rows are in the csv.
 		if let Some(n_rows) = n_rows {
-			for column in df.columns.iter_mut() {
+			for column in dataframe.columns.iter_mut() {
 				match column {
 					Column::Unknown(_) => {}
 					Column::Number(column) => column.data.reserve_exact(n_rows),
@@ -147,10 +147,11 @@ impl DataFrame {
 				}
 			}
 		}
+		// read each csv record and insert the values into the columns of the dataframe
 		let mut record = csv::ByteRecord::new();
 		while reader.read_byte_record(&mut record)? {
 			progress(record.position().unwrap().byte());
-			for (column, value) in df.columns.iter_mut().zip(record.iter()) {
+			for (column, value) in dataframe.columns.iter_mut().zip(record.iter()) {
 				match column {
 					Column::Unknown(column) => {
 						column.len += 1;
@@ -177,7 +178,7 @@ impl DataFrame {
 				}
 			}
 		}
-		Ok(df)
+		Ok(dataframe)
 	}
 }
 

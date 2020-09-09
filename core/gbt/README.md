@@ -1,1 +1,1 @@
-# tangram::gbt
+# Tangram GBT

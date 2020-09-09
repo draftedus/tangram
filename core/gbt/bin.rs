@@ -135,7 +135,6 @@ pub fn compute_binned_features(
 ) -> (Array2<u8>, Array2<usize>) {
 	let n_examples = features.nrows();
 	let n_features = features.ncols();
-
 	let mut binned_features: Array2<u8> =
 		unsafe { Array::uninitialized((n_examples, n_features).f()) };
 	let mut binned_features_stats: Array2<usize> = Array::zeros((max_n_bins, n_features).f());

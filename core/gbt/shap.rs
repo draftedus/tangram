@@ -320,7 +320,6 @@ mod brute {
 	// use crate::{dataframe, gbt::types};
 	// use ndarray::prelude::*;
 	// use num_traits::ToPrimitive;
-	// use rayon::prelude::*;
 
 	// fn compute_shap_brute_regressor(
 	// 	example: &[dataframe::Value],

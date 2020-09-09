@@ -2,6 +2,7 @@ use anyhow::Result;
 use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::time::Instant;
 use tangram_core::dataframe::*;

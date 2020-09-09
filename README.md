@@ -1,3 +1,3 @@
 # Tangram
 
-Tangram is an open source machine learning toolkit.
+Tangram is an all-in-one machine learning toolkit.
