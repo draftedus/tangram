@@ -93,23 +93,23 @@ fn main() -> Result<()> {
 	.iter()
 	.map(|m| m.to_string())
 	.collect();
-	let csv_file_path_train = Path::new("data/flights-100k.csv");
+	let csv_file_path_train = Path::new("data/flights-10m.csv");
 	let csv_file_path_test = Path::new("data/flights-test.csv");
-	// let nrows_train = 1_000_000;
+	let _nrows_train = 10_000_000;
 	let _nrows_test = 100_000;
 	let target_column_index = 8;
 	let options = FromCsvOptions {
 		column_types: Some(btreemap! {
-			  "Month".into() => ColumnType::Enum {options: month_options},
-			  "DayOfWeek".into() => ColumnType::Enum {options: day_of_week_options},
-		"DayOfMonth".into() => ColumnType::Enum {options: day_of_month_options},
-		"DepTime".into() => ColumnType::Number,
-		"UniqueCarrier".into() => ColumnType::Enum { options: carrier_options},
-		"Origin".into() => ColumnType::Enum { options: origin_options.clone()},
-		"Dest".into() => ColumnType::Enum { options: origin_options},
-		"Distance".into() => ColumnType::Number,
-		"dep_delayed_15min".into() => ColumnType::Enum { options: vec!["Y".into(), "N".into()]}
-		  }),
+		  "Month".into() => ColumnType::Enum {options: month_options},
+		  "DayOfWeek".into() => ColumnType::Enum {options: day_of_week_options},
+		  "DayOfMonth".into() => ColumnType::Enum {options: day_of_month_options},
+		  "DepTime".into() => ColumnType::Number,
+		  "UniqueCarrier".into() => ColumnType::Enum { options: carrier_options},
+		  "Origin".into() => ColumnType::Enum { options: origin_options.clone()},
+		  "Dest".into() => ColumnType::Enum { options: origin_options},
+		  "Distance".into() => ColumnType::Number,
+		  "dep_delayed_15min".into() => ColumnType::Enum { options: vec!["N".into(), "Y".into()]}
+		}),
 		infer_options: InferOptions {
 			enum_max_unique_values: 292,
 		},
@@ -158,6 +158,7 @@ fn main() -> Result<()> {
 		learning_rate: 0.1,
 		max_rounds: 100,
 		max_leaf_nodes: 512,
+		max_depth: 10,
 		..Default::default()
 	};
 
@@ -181,11 +182,21 @@ fn main() -> Result<()> {
 	);
 
 	let mut probabilities: Array2<f32> =
-		unsafe { Array::uninitialized((features_test.nrows(), 2)) };
+		unsafe { Array::uninitialized((features_test.nrows(), 2).f()) };
 	model.predict(features_test.view(), probabilities.view_mut(), None);
 	let accuracy = metrics::accuracy(probabilities.view(), labels_test.view().data.into());
+	let baseline_accuracy = labels_test
+		.data
+		.iter()
+		.map(|label| label.checked_sub(1).unwrap())
+		.sum::<usize>() as f32
+		/ labels_test.data.len() as f32;
+	println!("baseline accuracy: {:?}", baseline_accuracy);
 	println!("accuracy: {:?}", accuracy);
-	println!("predictions: {:?}", probabilities);
-
+	let auc = metrics::auc_roc(
+		&probabilities.column(1).as_slice().unwrap(),
+		&labels_test.view().data,
+	);
+	println!("auc: {:?}", auc);
 	Ok(())
 }

@@ -8,10 +8,10 @@ from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 # load the data
-path_train = 'data/flights-1m.csv'
+path_train = 'data/flights-10m.csv'
 path_test = 'data/flights-test.csv'
 target = "dep_delayed_15min"
-nrows_train = 1_000_000
+nrows_train = 10_000_000
 nrows_test = 100_000
 
 data_train = pd.read_csv(

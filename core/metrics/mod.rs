@@ -1,4 +1,5 @@
 mod accuracy;
+mod auc_roc;
 mod binary_classification;
 mod binary_cross_entropy;
 mod classification;
@@ -9,6 +10,7 @@ mod mean_variance;
 mod regression;
 
 pub use accuracy::*;
+pub use auc_roc::*;
 pub use binary_classification::*;
 pub use binary_cross_entropy::*;
 pub use classification::*;

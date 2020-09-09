@@ -44,13 +44,13 @@ origin_options = [
 ]
 
 # load the data
-# path_train = 'data/flights-1m.csv'
-# path_test = 'data/flights-test.csv'
-# nrows_train = 1_000_000
-
-path_train = 'data/flights-100k.csv'
+path_train = 'data/flights-1m.csv'
 path_test = 'data/flights-test.csv'
-nrows_train = 100_000
+nrows_train = 1_000_000
+
+# path_train = 'data/flights-100k.csv'
+# path_test = 'data/flights-test.csv'
+# nrows_train = 100_000
 
 nrows_test = 100_000
 
@@ -95,8 +95,8 @@ data_test = pd.read_csv(
   }
 })
 
-# data = pd.get_dummies(pd.concat([data_train, data_test]))
-data = pd.concat([data_train, data_test])
+data = pd.get_dummies(pd.concat([data_train, data_test]))
+# data = pd.concat([data_train, data_test])
 
 features = data.loc[:, data.columns != target]
 labels = data[target]
@@ -113,6 +113,9 @@ model = lgb.LGBMClassifier(
 	learning_rate=0.1,
 	n_estimators=100,
 	num_leaves=512,
+  # force_col_wise=True,
+  # enable_sparse=False,
+  # enable_bundle=False,
 )
 
 categorical_features = ["Month", "DayofMonth", "DayOfWeek", "UniqueCarrier", "Origin", "Dest"]
