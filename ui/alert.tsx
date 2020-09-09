@@ -1,4 +1,4 @@
-import { ComponentChildren, h } from './deps'
+import { ComponentChildren, h } from 'preact'
 
 export enum Level {
 	Info,

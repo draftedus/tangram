@@ -1,5 +1,6 @@
-import { cx, h } from './deps'
 import { Token } from './token'
+import { cx } from '@tangramhq/pinwheel'
+import { h } from 'preact'
 
 type NumberComparisonChartProps = {
 	colorA: string

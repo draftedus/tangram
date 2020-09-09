@@ -1,6 +1,7 @@
-import { ComponentChildren, Fragment, h, useEffect } from './deps'
 import { Language, SyntaxColors, grammars, highlight } from './syntax/mod'
 import { times } from './util'
+import { ComponentChildren, Fragment, h } from 'preact'
+import { useEffect } from 'preact/hooks'
 
 let syntaxColors: SyntaxColors = {
 	background: 'var(--header-color)',

@@ -1,4 +1,5 @@
-import { ComponentChildren, cx, h } from './deps'
+import { cx } from '@tangramhq/pinwheel'
+import { ComponentChildren, h } from 'preact'
 
 type TabBarProps = { children?: ComponentChildren }
 

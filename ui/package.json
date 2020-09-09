@@ -1,5 +1,6 @@
 {
 	"dependencies": {
+		"@tangramhq/pinwheel": "*",
 		"preact": "10.4.8"
 	},
 	"name": "@tangramhq/ui",

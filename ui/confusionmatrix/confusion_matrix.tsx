@@ -1,6 +1,7 @@
-import { ComponentChildren, cx, h } from '../deps'
 import { Token } from '../token'
 import { formatPercent } from '../util'
+import { cx } from '@tangramhq/pinwheel'
+import { ComponentChildren, h } from 'preact'
 
 // |---------------------------------------------------------|
 // |           ||     |                Actual                |

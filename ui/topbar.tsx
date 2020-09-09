@@ -1,5 +1,5 @@
 import { Button } from './button'
-import { ComponentChildren, JSX, h } from './deps'
+import { ComponentChildren, h } from 'preact'
 
 type TopbarProps = {
 	activeTextColor: string
@@ -8,7 +8,7 @@ type TopbarProps = {
 	dropdownBackgroundColor: string
 	foregroundColor: string
 	items?: TopbarItem[]
-	logo?: JSX.Element
+	logo?: ComponentChildren
 	logoHref?: string
 	logoImgUrl?: string
 	menuSeparatorColor: string
@@ -16,7 +16,7 @@ type TopbarProps = {
 }
 
 export type TopbarItem = {
-	element?: JSX.Element
+	element?: ComponentChildren
 	href: string
 	title: string
 }
@@ -66,7 +66,7 @@ export function Topbar(props: TopbarProps) {
 }
 
 type TopbarBrandProps = {
-	logoElement?: JSX.Element
+	logoElement?: ComponentChildren
 	logoHref?: string
 	logoImgUrl?: string
 	textColor: string

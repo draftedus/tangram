@@ -1,4 +1,4 @@
-import { h } from './deps'
+import { h } from 'preact'
 
 type NumberChartProps = {
 	title: string

@@ -1,4 +1,5 @@
-import { h, useEffect, useRef } from './deps'
+import { h } from 'preact'
+import { useEffect, useRef } from 'preact/hooks'
 
 type AsciicastProps = {
 	asciicast: AsciicastEvent[]

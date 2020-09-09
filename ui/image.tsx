@@ -1,4 +1,4 @@
-import { Fragment, h } from './deps'
+import { Fragment, h } from 'preact'
 
 type ImageProps = {
 	alt: string

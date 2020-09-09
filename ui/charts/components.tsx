@@ -1,9 +1,10 @@
-import { ComponentChildren, h, useEffect, useRef } from '../deps'
 import { BarChartOptions, createBarChart } from './bar_chart'
 import { BoxChartOptions, createBoxChart } from './box_chart'
 import { chartConfig } from './config'
 import { LineChartOptions, createLineChart } from './line_chart'
 import { ShapChartOptions, createShapChart } from './shap_chart'
+import { ComponentChildren, h } from 'preact'
+import { useEffect, useRef } from 'preact/hooks'
 
 export type BarChartProps = BarChartOptions & {
 	class?: string

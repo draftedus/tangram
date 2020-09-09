@@ -1,5 +1,6 @@
 import { Level } from './alert'
-import { cx, h } from './deps'
+import { cx } from '@tangramhq/pinwheel'
+import { h } from 'preact'
 
 type AlertProps = {
 	alert: string

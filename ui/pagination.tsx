@@ -1,5 +1,5 @@
 import { Button } from './button'
-import { ComponentChildren, h } from './deps'
+import { ComponentChildren, h } from 'preact'
 
 export type PaginationProps = {
 	children?: ComponentChildren

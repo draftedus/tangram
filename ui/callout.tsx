@@ -1,5 +1,5 @@
 import { Level } from './alert'
-import { ComponentChildren, h } from './deps'
+import { ComponentChildren, h } from 'preact'
 
 type CalloutProps = {
 	children?: ComponentChildren

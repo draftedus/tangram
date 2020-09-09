@@ -1,5 +1,5 @@
-import { h } from '../deps'
 import { Label } from './label'
+import { h } from 'preact'
 
 type CheckboxFieldProps = {
 	autocomplete?: string

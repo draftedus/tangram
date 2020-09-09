@@ -1,5 +1,5 @@
-import { ComponentChildren, h } from '../deps'
 import { Label } from './label'
+import { ComponentChildren, h } from 'preact'
 
 export type SelectProps = {
 	children?: ComponentChildren
