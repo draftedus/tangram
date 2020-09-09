@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"esbuild": "0.6.28",
+		"esbuild": "0.6.33",
 		"preact": "10.4.8",
 		"preact-render-to-string": "5.1.10"
 	},
