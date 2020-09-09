@@ -1,13 +1,13 @@
-import { Children, cx, h } from './deps'
+import { ComponentChildren, cx, h } from './deps'
 
-type TabBarProps = { children?: Children }
+type TabBarProps = { children?: ComponentChildren }
 
 export function TabBar(props: TabBarProps) {
 	return <div class="tab-bar">{props.children}</div>
 }
 
 type TabProps = {
-	children?: Children
+	children?: ComponentChildren
 	disabled?: boolean
 	onClick?: () => void
 	selected?: boolean
@@ -30,7 +30,7 @@ export function Tab(props: TabProps) {
 }
 
 type TabLinkProps = {
-	children?: Children
+	children?: ComponentChildren
 	disabled?: boolean
 	href: string
 	selected?: boolean

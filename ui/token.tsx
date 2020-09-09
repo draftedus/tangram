@@ -1,7 +1,7 @@
-import { Children, h } from './deps'
+import { ComponentChildren, h } from './deps'
 
 export type TokenProps = {
-	children?: Children
+	children?: ComponentChildren
 	color?: string
 	inline?: boolean
 }

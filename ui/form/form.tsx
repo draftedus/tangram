@@ -1,6 +1,6 @@
-import { Children, h } from '../deps'
+import { ComponentChildren, h } from '../deps'
 
-type FormTitleProps = { children?: Children }
+type FormTitleProps = { children?: ComponentChildren }
 
 export function FormTitle(props: FormTitleProps) {
 	return <legend class="form-title">{props.children}</legend>
@@ -9,7 +9,7 @@ export function FormTitle(props: FormTitleProps) {
 type FormProps = {
 	action?: string
 	autoComplete?: string
-	children?: Children
+	children?: ComponentChildren
 	encType?: string
 	id?: string
 	onSubmit?: (event: Event) => void

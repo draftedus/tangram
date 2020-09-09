@@ -1,4 +1,4 @@
-import { Children, h, useEffect, useRef } from '../deps'
+import { ComponentChildren, h, useEffect, useRef } from '../deps'
 import { BarChartOptions, createBarChart } from './bar_chart'
 import { BoxChartOptions, createBoxChart } from './box_chart'
 import { chartConfig } from './config'
@@ -194,7 +194,7 @@ export function ShapChart(props: ShapChartProps) {
 	)
 }
 
-type ChartTitleProps = { children?: Children }
+type ChartTitleProps = { children?: ComponentChildren }
 
 export function ChartTitle(props: ChartTitleProps) {
 	return <div class="chart-title">{props.children}</div>

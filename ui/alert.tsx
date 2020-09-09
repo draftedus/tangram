@@ -1,4 +1,4 @@
-import { Children, h } from './deps'
+import { ComponentChildren, h } from './deps'
 
 export enum Level {
 	Info,
@@ -8,7 +8,7 @@ export enum Level {
 }
 
 export type AlertProps = {
-	children?: Children
+	children?: ComponentChildren
 	level: Level
 	title?: string
 }

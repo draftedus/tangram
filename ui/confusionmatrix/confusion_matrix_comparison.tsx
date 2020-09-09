@@ -1,4 +1,4 @@
-import { Children, cx, h } from '../deps'
+import { ComponentChildren, cx, h } from '../deps'
 import { Token } from '../token'
 
 // |-----------------------------------------------------------|
@@ -156,7 +156,7 @@ function ConfusionMatrixComparisonItem(props: ConfusionMatrixItemProps) {
 
 type ConfusionMatrixLabelProps = {
 	area: string
-	children?: Children
+	children?: ComponentChildren
 	left?: boolean
 }
 

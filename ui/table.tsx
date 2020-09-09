@@ -1,7 +1,7 @@
-import { Children, cx, h } from './deps'
+import { ComponentChildren, cx, h } from './deps'
 
 export type TableProps = {
-	children?: Children
+	children?: ComponentChildren
 	width?: string
 }
 
@@ -16,7 +16,7 @@ export function Table(props: TableProps) {
 }
 
 export type TableHeaderProps = {
-	children?: Children
+	children?: ComponentChildren
 }
 
 export function TableHeader(props: TableHeaderProps) {
@@ -24,7 +24,7 @@ export function TableHeader(props: TableHeaderProps) {
 }
 
 export type TableBodyProps = {
-	children?: Children
+	children?: ComponentChildren
 }
 
 export function TableBody(props: TableBodyProps) {
@@ -32,7 +32,7 @@ export function TableBody(props: TableBodyProps) {
 }
 
 export type TableRowProps = {
-	children?: Children
+	children?: ComponentChildren
 }
 
 export function TableRow(props: TableRowProps) {
@@ -40,7 +40,7 @@ export function TableRow(props: TableRowProps) {
 }
 
 export type TableCellProps = {
-	children?: Children
+	children?: ComponentChildren
 	colSpan?: string
 	color?: string
 	expand?: boolean

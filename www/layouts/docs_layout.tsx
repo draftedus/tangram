@@ -1,8 +1,8 @@
-import { Children, PinwheelInfo, h, ui } from '../deps'
+import { ComponentChildren, PinwheelInfo, h, ui } from '../deps'
 import { Layout } from './layout'
 
 type DocsLayoutProps = {
-	children?: Children
+	children?: ComponentChildren
 	pinwheelInfo: PinwheelInfo
 	selectedPage: DocsPage
 }

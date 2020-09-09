@@ -1,25 +1,25 @@
-import { Children, cx, h } from './deps'
+import { ComponentChildren, cx, h } from './deps'
 
-type SideNavProps = { children?: Children }
+type SideNavProps = { children?: ComponentChildren }
 
 export function SideNav(props: SideNavProps) {
 	return <div class="side-nav">{props.children}</div>
 }
 
-type SideNavSectionProps = { children?: Children }
+type SideNavSectionProps = { children?: ComponentChildren }
 
 export function SideNavSection(props: SideNavSectionProps) {
 	return <div class="side-nav-section">{props.children}</div>
 }
 
-type SideNavTitleProps = { children?: Children }
+type SideNavTitleProps = { children?: ComponentChildren }
 
 export function SideNavTitle(props: SideNavTitleProps) {
 	return <div class="side-nav-title">{props.children}</div>
 }
 
 type SideNavItemProps = {
-	children?: Children
+	children?: ComponentChildren
 	href: string
 	selected?: boolean
 }

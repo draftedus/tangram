@@ -1,6 +1,6 @@
-import { Children, cx, h } from './deps'
+import { ComponentChildren, cx, h } from './deps'
 
-type Props = { children?: Children }
+type Props = { children?: ComponentChildren }
 
 export function S1(props: Props) {
 	return <div class="s1">{props.children}</div>
@@ -16,7 +16,7 @@ export function SpaceBetween(props: Props) {
 
 type HProps = {
 	center?: boolean
-	children?: Children
+	children?: ComponentChildren
 }
 
 export function H1(props: HProps) {

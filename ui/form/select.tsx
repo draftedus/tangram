@@ -1,8 +1,8 @@
-import { Children, h } from '../deps'
+import { ComponentChildren, h } from '../deps'
 import { Label } from './label'
 
 export type SelectProps = {
-	children?: Children
+	children?: ComponentChildren
 	disabled?: boolean
 	id?: string
 	label?: string

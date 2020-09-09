@@ -1,7 +1,7 @@
-import { Children, cx, h } from './deps'
+import { ComponentChildren, cx, h } from './deps'
 
 export type LinkProps = {
-	children?: Children
+	children?: ComponentChildren
 	className?: string
 	href?: string
 	title?: string

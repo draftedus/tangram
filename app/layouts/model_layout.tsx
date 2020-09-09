@@ -1,8 +1,8 @@
 import { Layout } from './topbar_layout'
-import { Children, Fragment, PinwheelInfo, h, ui } from 'deps'
+import { ComponentChildren, Fragment, PinwheelInfo, h, ui } from 'deps'
 
 type ModelLayoutProps = {
-	children?: Children
+	children?: ComponentChildren
 	info: ModelLayoutInfo
 	pinwheelInfo: PinwheelInfo
 	selectedItem: ModelSideNavItem

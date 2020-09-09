@@ -1,7 +1,7 @@
-import { Children, h } from '../deps'
+import { ComponentChildren, h } from '../deps'
 
 type Props = {
-	children?: Children
+	children?: ComponentChildren
 	for?: string
 }
 

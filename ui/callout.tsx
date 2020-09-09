@@ -1,8 +1,8 @@
 import { Level } from './alert'
-import { Children, h } from './deps'
+import { ComponentChildren, h } from './deps'
 
 type CalloutProps = {
-	children?: Children
+	children?: ComponentChildren
 	level: Level
 	title?: string
 }

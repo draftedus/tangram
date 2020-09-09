@@ -1,7 +1,7 @@
-import { Children, cx, h } from './deps'
+import { ComponentChildren, cx, h } from './deps'
 
 type NestedNavProps = {
-	children?: Children
+	children?: ComponentChildren
 }
 
 export function NestedNav(props: NestedNavProps) {
@@ -9,7 +9,7 @@ export function NestedNav(props: NestedNavProps) {
 }
 
 type NestedNavSectionProps = {
-	children?: Children
+	children?: ComponentChildren
 }
 
 export function NestedNavSection(props: NestedNavSectionProps) {
@@ -17,7 +17,7 @@ export function NestedNavSection(props: NestedNavSectionProps) {
 }
 
 type NestedNavSectionTitleProps = {
-	children?: Children
+	children?: ComponentChildren
 }
 
 export function NestedNavSectionTitle(props: NestedNavSectionTitleProps) {
@@ -25,7 +25,7 @@ export function NestedNavSectionTitle(props: NestedNavSectionTitleProps) {
 }
 
 type NestedNavItemProps = {
-	children?: Children
+	children?: ComponentChildren
 	href: string
 	selected?: boolean
 }

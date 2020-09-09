@@ -1,4 +1,4 @@
-import { Children, Fragment, h, useEffect } from './deps'
+import { ComponentChildren, Fragment, h, useEffect } from './deps'
 import { Language, SyntaxColors, grammars, highlight } from './syntax/mod'
 import { times } from './util'
 
@@ -170,7 +170,7 @@ function LineNumbers(props: LineNumbersProps) {
 	)
 }
 
-type InlineCodeProps = { children?: Children }
+type InlineCodeProps = { children?: ComponentChildren }
 
 export function InlineCode(props: InlineCodeProps) {
 	return <span class="inline-code-wrapper">{props.children}</span>

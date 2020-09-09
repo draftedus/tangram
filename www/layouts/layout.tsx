@@ -1,9 +1,9 @@
 import backgroundImage from './background.svg'
 import { Footer } from './footer'
-import { Body, Children, Head, PinwheelInfo, h, ui } from 'deps'
+import { Body, ComponentChildren, Head, PinwheelInfo, h, ui } from 'deps'
 
 export type DocumentProps = {
-	children?: Children
+	children?: ComponentChildren
 	pinwheelInfo: PinwheelInfo
 }
 
@@ -37,7 +37,7 @@ export function Document(props: DocumentProps) {
 
 type LayoutProps = {
 	background?: boolean
-	children?: Children
+	children?: ComponentChildren
 	pinwheelInfo: PinwheelInfo
 }
 

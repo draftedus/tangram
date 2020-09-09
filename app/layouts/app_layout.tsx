@@ -1,8 +1,8 @@
 import { Layout } from './topbar_layout'
-import { Children, PinwheelInfo, h } from 'deps'
+import { ComponentChildren, PinwheelInfo, h } from 'deps'
 
 type AppLayoutProps = {
-	children?: Children
+	children?: ComponentChildren
 	pinwheelInfo: PinwheelInfo
 }
 

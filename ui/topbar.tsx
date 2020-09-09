@@ -1,5 +1,5 @@
 import { Button } from './button'
-import { Children, JSX, h } from './deps'
+import { ComponentChildren, JSX, h } from './deps'
 
 type TopbarProps = {
 	activeTextColor: string
@@ -95,7 +95,7 @@ export function TopbarBrand(props: TopbarBrandProps) {
 	)
 }
 
-type TopbarItemsWrapperProps = { children?: Children }
+type TopbarItemsWrapperProps = { children?: ComponentChildren }
 
 function TopbarItemsWrapper(props: TopbarItemsWrapperProps) {
 	return <nav class="topbar-items-wrapper">{props.children}</nav>

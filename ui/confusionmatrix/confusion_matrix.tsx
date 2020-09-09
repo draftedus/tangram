@@ -1,4 +1,4 @@
-import { Children, cx, h } from '../deps'
+import { ComponentChildren, cx, h } from '../deps'
 import { Token } from '../token'
 import { formatPercent } from '../util'
 
@@ -127,7 +127,7 @@ function defaultValueFormatter(value: number | null) {
 
 type ConfusionMatrixLabelProps = {
 	area: string
-	children?: Children
+	children?: ComponentChildren
 	left?: boolean
 }
 

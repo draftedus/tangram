@@ -1,4 +1,4 @@
-import { Children, h } from './deps'
+import { ComponentChildren, h } from './deps'
 
 export enum WindowShade {
 	Code,
@@ -6,7 +6,7 @@ export enum WindowShade {
 }
 
 type WindowProps = {
-	children?: Children
+	children?: ComponentChildren
 }
 
 export function Window(props: WindowProps) {

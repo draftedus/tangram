@@ -22,7 +22,6 @@ export type {
 	ClassAttributes,
 	ComponentChild,
 	ComponentChildren,
-	ComponentChildren as Children,
 	ComponentClass,
 	ComponentConstructor,
 	ComponentFactory,

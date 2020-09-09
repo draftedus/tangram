@@ -1,8 +1,8 @@
 import { AppLayout } from './app_layout'
-import { Children, PinwheelInfo, h, ui } from 'deps'
+import { ComponentChildren, PinwheelInfo, h, ui } from 'deps'
 
 type Props = {
-	children?: Children
+	children?: ComponentChildren
 	id: string
 	name: string
 	pinwheelInfo: PinwheelInfo

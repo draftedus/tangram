@@ -1,8 +1,8 @@
 import { Button } from './button'
-import { Children, h } from './deps'
+import { ComponentChildren, h } from './deps'
 
 export type PaginationProps = {
-	children?: Children
+	children?: ComponentChildren
 	count?: number
 	limit: number
 	offset: number
@@ -46,14 +46,14 @@ export function Pagination(props: PaginationProps) {
 	)
 }
 
-type PaginationWrapperProps = { children?: Children }
+type PaginationWrapperProps = { children?: ComponentChildren }
 
 function PaginationWrapper(props: PaginationWrapperProps) {
 	return <div class="pagination">{props.children}</div>
 }
 
 type PaginationButtonProps = {
-	children?: Children
+	children?: ComponentChildren
 	disabled?: boolean
 	onClick: () => void
 }

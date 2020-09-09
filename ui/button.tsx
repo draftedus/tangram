@@ -1,8 +1,8 @@
-import { Children, h } from './deps'
+import { ComponentChildren, h } from './deps'
 
 export type ButtonProps = {
 	block?: boolean
-	children?: Children
+	children?: ComponentChildren
 	color?: string
 	disabled?: boolean
 	download?: string
