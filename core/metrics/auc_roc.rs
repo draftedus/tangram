@@ -60,8 +60,8 @@ pub struct TpsFpsPoint {
 // unlike roc curve, each point is not cumulative from the last
 fn compute_tps_fps_by_threshold(probabilities: &[f32], labels: &[usize]) -> Vec<TpsFpsPoint> {
 	let mut probabilities_labels: Vec<(f32, usize)> = probabilities
-		.into_iter()
-		.zip(labels.into_iter())
+		.iter()
+		.zip(labels.iter())
 		.map(|(a, b)| (a.to_owned(), b.to_owned()))
 		.collect();
 	probabilities_labels.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
@@ -127,5 +127,5 @@ fn test_roc_curve() {
 		.zip(right.iter())
 		.for_each(|(left, right)| assert_eq!(left, right));
 	let auc = auc_roc(probabilities.as_slice(), labels.as_slice());
-	assert_eq!(auc, 0.875)
+	assert!(f32::abs(auc - 0.875) < f32::EPSILON)
 }

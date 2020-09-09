@@ -20,7 +20,7 @@ chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.5", features = ["serde"] }
 derive_more = "0.99"
 dirs = "3"
-futures = { version = "0.3" }
+futures = "0.3"
 hyper = { version = "0.13", features = ["stream"] }
 include_dir = "0.6"
 itertools = "0.9"
