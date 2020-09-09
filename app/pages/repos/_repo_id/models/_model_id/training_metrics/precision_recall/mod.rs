@@ -86,7 +86,7 @@ async fn props(
 		tangram_core::types::ClassificationModel::LinearBinary(inner_model) => {
 			&inner_model.class_metrics
 		}
-		tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
+		tangram_core::types::ClassificationModel::GBTBinary(inner_model) => {
 			&inner_model.class_metrics
 		}
 		_ => return Err(Error::BadRequest.into()),

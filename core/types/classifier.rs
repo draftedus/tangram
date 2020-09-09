@@ -1,6 +1,6 @@
 use super::features::FeatureGroup;
 use super::stats::{ColumnStats, StatsSettings};
-use super::train_options::{GbtModelTrainOptions, LinearModelTrainOptions};
+use super::train_options::{GBTModelTrainOptions, LinearModelTrainOptions};
 use super::tree::Tree;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
@@ -49,8 +49,8 @@ pub struct ClassMetrics {
 pub enum ClassificationModel {
 	LinearBinary(LinearBinaryClassifier),
 	LinearMulticlass(LinearMulticlassClassifier),
-	GbtBinary(GbtBinaryClassifier),
-	GbtMulticlass(GbtMulticlassClassifier),
+	GBTBinary(GBTBinaryClassifier),
+	GBTMulticlass(GBTMulticlassClassifier),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
@@ -80,9 +80,9 @@ pub struct LinearMulticlassClassifier {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-pub struct GbtBinaryClassifier {
+pub struct GBTBinaryClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: GbtModelTrainOptions,
+	pub options: GBTModelTrainOptions,
 	pub bias: f32,
 	pub trees: Vec<Tree>,
 	pub classes: Vec<String>,
@@ -93,9 +93,9 @@ pub struct GbtBinaryClassifier {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-pub struct GbtMulticlassClassifier {
+pub struct GBTMulticlassClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: GbtModelTrainOptions,
+	pub options: GBTModelTrainOptions,
 	pub n_classes: u64,
 	pub n_rounds: u64,
 	pub biases: Vec<f32>,

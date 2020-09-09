@@ -1,23 +1,18 @@
 use super::{super::types, bin_stats::BinStats};
-use crate::dataframe::*;
-use ndarray::prelude::*;
-use num_traits::ToPrimitive;
 use std::cmp::Ordering;
 
-/// Contains data structures used during training of trees.
-
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct TrainTree {
 	pub nodes: Vec<TrainNode>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum TrainNode {
 	Branch(TrainBranchNode),
 	Leaf(TrainLeafNode),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct TrainBranchNode {
 	pub left_child_index: Option<usize>,
 	pub right_child_index: Option<usize>,
@@ -47,7 +42,7 @@ pub struct TrainBranchSplitDiscrete {
 	pub invalid_values_direction: types::SplitDirection,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct TrainLeafNode {
 	pub value: f32,
 	pub examples_fraction: f32,
@@ -138,65 +133,6 @@ impl From<TrainNode> for types::Node {
 	}
 }
 
-impl types::Tree {
-	pub fn predict(&self, row: &[Value]) -> f32 {
-		let mut node_index = 0;
-		loop {
-			match &self.nodes[node_index] {
-				types::Node::Branch(types::BranchNode {
-					left_child_index,
-					right_child_index,
-					split:
-						types::BranchSplit::Continuous(types::BranchSplitContinuous {
-							feature_index,
-							split_value,
-							invalid_values_direction,
-							..
-						}),
-					..
-				}) => {
-					let feature_value = match row[*feature_index] {
-						Value::Number(value) => value,
-						_ => unreachable!(),
-					};
-					node_index = if feature_value.is_nan() {
-						match invalid_values_direction {
-							types::SplitDirection::Left => *left_child_index,
-							types::SplitDirection::Right => *right_child_index,
-						}
-					} else if feature_value <= *split_value {
-						*left_child_index
-					} else {
-						*right_child_index
-					};
-				}
-				types::Node::Branch(types::BranchNode {
-					left_child_index,
-					right_child_index,
-					split:
-						types::BranchSplit::Discrete(types::BranchSplitDiscrete {
-							feature_index,
-							directions,
-							..
-						}),
-					..
-				}) => {
-					let feature_value = match row[*feature_index] {
-						Value::Enum(value) => value.to_u8().unwrap(),
-						_ => unreachable!(),
-					};
-					node_index = if !directions.get(feature_value).unwrap() {
-						*left_child_index
-					} else {
-						*right_child_index
-					};
-				}
-				types::Node::Leaf(types::LeafNode { value, .. }) => return *value,
-			}
-		}
-	}
-}
-
 impl PartialEq for QueueItem {
 	fn eq(&self, other: &Self) -> bool {
 		self.gain == other.gain
@@ -222,47 +158,6 @@ impl TrainNode {
 		match self {
 			TrainNode::Branch(s) => Some(s),
 			_ => None,
-		}
-	}
-}
-
-impl TrainTree {
-	pub fn predict(&self, features: ArrayView1<u8>) -> f32 {
-		let mut node_index = 0;
-		loop {
-			match &self.nodes[node_index] {
-				TrainNode::Branch(TrainBranchNode {
-					left_child_index,
-					right_child_index,
-					split,
-					..
-				}) => match split {
-					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-						feature_index,
-						bin_index,
-						..
-					}) => {
-						node_index = if features[*feature_index] <= *bin_index {
-							left_child_index.unwrap()
-						} else {
-							right_child_index.unwrap()
-						};
-					}
-					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-						feature_index,
-						directions,
-						..
-					}) => {
-						let bin_index = features[*feature_index];
-						node_index = if !directions.get(bin_index).unwrap() {
-							left_child_index.unwrap()
-						} else {
-							right_child_index.unwrap()
-						};
-					}
-				},
-				TrainNode::Leaf(TrainLeafNode { value, .. }) => return *value,
-			}
 		}
 	}
 }

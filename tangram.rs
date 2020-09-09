@@ -49,11 +49,11 @@ pub extern "C" fn tangram_model_id(model: *const PredictModel, id_ptr: *mut *con
 		let model = model.as_ref().unwrap();
 		let id = match model {
 			PredictModel::LinearRegressor(model) => &model.id,
-			PredictModel::GbtRegressor(model) => &model.id,
+			PredictModel::GBTRegressor(model) => &model.id,
 			PredictModel::LinearBinaryClassifier(model) => &model.id,
-			PredictModel::GbtBinaryClassifier(model) => &model.id,
+			PredictModel::GBTBinaryClassifier(model) => &model.id,
 			PredictModel::LinearMulticlassClassifier(model) => &model.id,
-			PredictModel::GbtMulticlassClassifier(model) => &model.id,
+			PredictModel::GBTMulticlassClassifier(model) => &model.id,
 		};
 		let id = CString::new(id.to_owned()).unwrap();
 		*id_ptr = CString::into_raw(id) as *const u8;
@@ -116,10 +116,10 @@ pub extern "C" fn tangram_model_free(model_ptr: *mut PredictModel) -> isize {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tangram_alloc(size: usize) -> *mut u8 {
+pub extern "C" fn tangram_alloc(size: usize) -> *mut u8 {
 	let align = std::mem::align_of::<usize>();
 	let layout = Layout::from_size_align(size, align).unwrap();
-	alloc(layout)
+	unsafe { alloc(layout) }
 }
 
 #[no_mangle]

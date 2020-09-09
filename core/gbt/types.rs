@@ -11,9 +11,9 @@ pub struct TrainOptions {
 	pub compute_loss: bool,
 	/// l2 regularization value to use for discrete splits
 	pub discrete_l2_regularization: f32,
-	///
+	/// Hello world.
 	pub discrete_min_examples_per_branch: usize,
-	///
+	/// Hello world.
 	pub discrete_smoothing_factor: f32,
 	/// Specify options for early stopping. If the value is `Some`, early stopping will be enabled. If it is `None`, early stopping will be disabled.
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
@@ -39,7 +39,7 @@ pub struct TrainOptions {
 	pub subsample_for_binning: usize,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct EarlyStoppingOptions {
 	// the fraction of the dataset that we should set aside for use in early stopping
 	pub early_stopping_fraction: f32,
@@ -71,14 +71,21 @@ impl Default for TrainOptions {
 	}
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
+pub enum Task {
+	Regression,
+	BinaryClassification,
+	MulticlassClassification { n_trees_per_round: usize },
+}
+
+#[derive(Debug)]
 pub enum Model {
 	Regressor(Regressor),
 	BinaryClassifier(BinaryClassifier),
 	MulticlassClassifier(MulticlassClassifier),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Regressor {
 	pub bias: f32,
 	pub trees: Vec<Tree>,
@@ -86,7 +93,7 @@ pub struct Regressor {
 	pub losses: Option<Array1<f32>>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BinaryClassifier {
 	pub bias: f32,
 	pub trees: Vec<Tree>,
@@ -95,7 +102,7 @@ pub struct BinaryClassifier {
 	pub classes: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct MulticlassClassifier {
 	pub biases: Vec<f32>,
 	/// (n_rounds, n_classes)
@@ -107,12 +114,12 @@ pub struct MulticlassClassifier {
 	pub classes: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Tree {
 	pub nodes: Vec<Node>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Node {
 	Branch(BranchNode),
 	Leaf(LeafNode),
@@ -131,7 +138,7 @@ impl Node {
 	}
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BranchNode {
 	pub left_child_index: usize,
 	pub right_child_index: usize,
@@ -139,7 +146,7 @@ pub struct BranchNode {
 	pub examples_fraction: f32,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub enum BranchSplit {
 	Continuous(BranchSplitContinuous),
 	Discrete(BranchSplitDiscrete),
@@ -154,39 +161,33 @@ impl BranchSplit {
 	}
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BranchSplitContinuous {
 	pub feature_index: usize,
 	pub split_value: f32,
 	pub invalid_values_direction: SplitDirection,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum SplitDirection {
 	Left,
 	Right,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct BranchSplitDiscrete {
 	pub feature_index: usize,
 	pub directions: BinDirections,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct BinDirections {
 	pub n: u8,
 	pub bytes: [u8; 32],
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct LeafNode {
 	pub value: f32,
 	pub examples_fraction: f32,
-}
-
-pub enum Task {
-	Regression,
-	BinaryClassification,
-	MulticlassClassification { n_trees_per_round: usize },
 }

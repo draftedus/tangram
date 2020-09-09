@@ -53,7 +53,7 @@ pub fn train(
 
 	let (features_train, labels_train) = (features, labels);
 
-	let early_stopping_options = options.early_stopping_options.clone();
+	let early_stopping_options = &options.early_stopping_options;
 
 	struct EarlyStopping<'features, 'labels> {
 		train_stop_monitor: TrainStopMonitor,

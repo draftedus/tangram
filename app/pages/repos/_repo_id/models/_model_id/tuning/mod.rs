@@ -87,7 +87,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					})
 				}
 				tangram_core::types::ClassificationModel::LinearMulticlass(_) => None,
-				tangram_core::types::ClassificationModel::GbtBinary(inner_model) => {
+				tangram_core::types::ClassificationModel::GBTBinary(inner_model) => {
 					let class_metrics = inner_model.class_metrics;
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
@@ -96,7 +96,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						classes,
 					})
 				}
-				tangram_core::types::ClassificationModel::GbtMulticlass(_) => None,
+				tangram_core::types::ClassificationModel::GBTMulticlass(_) => None,
 			}
 		}
 		tangram_core::types::Model::Regressor(_) => None,

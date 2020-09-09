@@ -177,7 +177,7 @@ pub fn train(
 					feature_groups,
 					options,
 					..
-				}) => RegressionModel::Gbt(GBTRegressor {
+				}) => RegressionModel::GBT(GBTRegressor {
 					model,
 					feature_groups,
 					options,
@@ -236,7 +236,7 @@ pub fn train(
 					..
 				}) => {
 					let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
-					ClassificationModel::GbtBinary(GbtBinaryClassifier {
+					ClassificationModel::GBTBinary(GBTBinaryClassifier {
 						auc_roc: binary_classifier_model_test_metrics.auc_roc,
 						class_metrics: binary_classifier_model_test_metrics.class_metrics,
 						feature_groups,
@@ -263,7 +263,7 @@ pub fn train(
 						options,
 						..
 					},
-				) => ClassificationModel::GbtMulticlass(GbtMulticlassClassifier {
+				) => ClassificationModel::GBTMulticlass(GBTMulticlassClassifier {
 					model,
 					feature_groups,
 					options,
@@ -298,7 +298,7 @@ pub enum Task {
 	Classification { classes: Vec<String> },
 }
 
-pub struct GbtBinaryClassifier {
+pub struct GBTBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: gbt::BinaryClassifier,
 	pub class_metrics: Vec<metrics::BinaryClassificationClassMetricsOutput>,
@@ -306,7 +306,7 @@ pub struct GbtBinaryClassifier {
 	pub options: grid::GBTModelTrainOptions,
 }
 
-pub struct GbtMulticlassClassifier {
+pub struct GBTMulticlassClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: gbt::MulticlassClassifier,
 	pub options: grid::GBTModelTrainOptions,
@@ -321,7 +321,7 @@ pub enum ClassificationComparisonMetric {
 
 pub enum RegressionModel {
 	Linear(LinearRegressor),
-	Gbt(GBTRegressor),
+	GBT(GBTRegressor),
 }
 
 pub struct LinearRegressor {
@@ -347,8 +347,8 @@ pub enum RegressionComparisonMetric {
 pub enum ClassificationModel {
 	LinearBinary(LinearBinaryClassifier),
 	LinearMulticlass(LinearMulticlassClassifier),
-	GbtBinary(GbtBinaryClassifier),
-	GbtMulticlass(GbtMulticlassClassifier),
+	GBTBinary(GBTBinaryClassifier),
+	GBTMulticlass(GBTMulticlassClassifier),
 }
 
 pub struct LinearBinaryClassifier {
@@ -1537,8 +1537,8 @@ impl Into<types::ClassificationModel> for ClassificationModel {
 		match self {
 			Self::LinearBinary(m) => types::ClassificationModel::LinearBinary(m.into()),
 			Self::LinearMulticlass(m) => types::ClassificationModel::LinearMulticlass(m.into()),
-			Self::GbtBinary(m) => types::ClassificationModel::GbtBinary(m.into()),
-			Self::GbtMulticlass(m) => types::ClassificationModel::GbtMulticlass(m.into()),
+			Self::GBTBinary(m) => types::ClassificationModel::GBTBinary(m.into()),
+			Self::GBTMulticlass(m) => types::ClassificationModel::GBTMulticlass(m.into()),
 		}
 	}
 }
@@ -1571,9 +1571,9 @@ impl Into<types::LinearModelTrainOptions> for grid::LinearModelTrainOptions {
 	}
 }
 
-impl Into<types::GbtModelTrainOptions> for grid::GBTModelTrainOptions {
-	fn into(self) -> types::GbtModelTrainOptions {
-		types::GbtModelTrainOptions {
+impl Into<types::GBTModelTrainOptions> for grid::GBTModelTrainOptions {
+	fn into(self) -> types::GBTModelTrainOptions {
+		types::GBTModelTrainOptions {
 			depth: self.max_depth,
 			learning_rate: self.learning_rate,
 			min_examples_per_leaf: self.min_examples_per_leaf,
@@ -1599,14 +1599,14 @@ impl Into<types::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 	}
 }
 
-impl Into<types::GbtBinaryClassifier> for GbtBinaryClassifier {
-	fn into(self) -> types::GbtBinaryClassifier {
+impl Into<types::GBTBinaryClassifier> for GBTBinaryClassifier {
+	fn into(self) -> types::GBTBinaryClassifier {
 		let losses = self.model.losses.map(|l| l.into_raw_vec()).unwrap();
 		let trees = self.model.trees.into_iter().map(Into::into).collect();
 		let class_metrics = self.class_metrics.into_iter().map(Into::into).collect();
 		let feature_importances = self.model.feature_importances.unwrap().into_raw_vec();
 		let options = self.options.into();
-		types::GbtBinaryClassifier {
+		types::GBTBinaryClassifier {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
 			trees,
 			class_metrics,
@@ -1620,9 +1620,9 @@ impl Into<types::GbtBinaryClassifier> for GbtBinaryClassifier {
 	}
 }
 
-impl Into<types::GbtMulticlassClassifier> for GbtMulticlassClassifier {
-	fn into(self) -> types::GbtMulticlassClassifier {
-		types::GbtMulticlassClassifier {
+impl Into<types::GBTMulticlassClassifier> for GBTMulticlassClassifier {
+	fn into(self) -> types::GBTMulticlassClassifier {
+		types::GBTMulticlassClassifier {
 			n_rounds: self.model.n_rounds.to_u64().unwrap(),
 			n_classes: self.model.n_classes.to_u64().unwrap(),
 			biases: self.model.biases,
@@ -1676,7 +1676,7 @@ impl Into<types::RegressionModel> for RegressionModel {
 	fn into(self) -> types::RegressionModel {
 		match self {
 			Self::Linear(m) => types::RegressionModel::Linear(m.into()),
-			Self::Gbt(m) => types::RegressionModel::Gbt(m.into()),
+			Self::GBT(m) => types::RegressionModel::GBT(m.into()),
 		}
 	}
 }
@@ -1694,11 +1694,11 @@ impl Into<types::LinearRegressor> for LinearRegressor {
 	}
 }
 
-impl Into<types::GbtRegressor> for GBTRegressor {
-	fn into(self) -> types::GbtRegressor {
+impl Into<types::GBTRegressor> for GBTRegressor {
+	fn into(self) -> types::GBTRegressor {
 		let losses = self.model.losses.map(|l| l.into_raw_vec()).unwrap();
 		let trees = self.model.trees.into_iter().map(Into::into).collect();
-		types::GbtRegressor {
+		types::GBTRegressor {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
 			trees,
 			bias: self.model.bias,

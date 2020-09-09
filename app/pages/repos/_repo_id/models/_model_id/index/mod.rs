@@ -218,7 +218,7 @@ fn model_type_name(model: &tangram_core::types::Model) -> String {
 	match model {
 		tangram_core::types::Model::Regressor(model) => match &model.model {
 			tangram_core::types::RegressionModel::Linear(_) => "Linear Regressor".into(),
-			tangram_core::types::RegressionModel::Gbt(_) => {
+			tangram_core::types::RegressionModel::GBT(_) => {
 				"Gradient Boosted Tree Regressor".into()
 			}
 		},
@@ -226,13 +226,13 @@ fn model_type_name(model: &tangram_core::types::Model) -> String {
 			tangram_core::types::ClassificationModel::LinearBinary(_) => {
 				"Linear Binary Classifier".into()
 			}
-			tangram_core::types::ClassificationModel::GbtBinary(_) => {
+			tangram_core::types::ClassificationModel::GBTBinary(_) => {
 				"Gradient Boosted Tree Binary Classifier".into()
 			}
 			tangram_core::types::ClassificationModel::LinearMulticlass(_) => {
 				"Linear Multiclass Classifier".into()
 			}
-			tangram_core::types::ClassificationModel::GbtMulticlass(_) => {
+			tangram_core::types::ClassificationModel::GBTMulticlass(_) => {
 				"Gradient Boosted Tree Multiclass Classifier".into()
 			}
 		},

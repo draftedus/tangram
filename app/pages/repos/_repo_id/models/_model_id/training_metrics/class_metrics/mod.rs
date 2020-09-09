@@ -109,10 +109,10 @@ async fn props(
 			tangram_core::types::ClassificationModel::LinearMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
-			tangram_core::types::ClassificationModel::GbtBinary(_) => {
+			tangram_core::types::ClassificationModel::GBTBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram_core::types::ClassificationModel::GbtMulticlass(_) => {
+			tangram_core::types::ClassificationModel::GBTMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
 		},

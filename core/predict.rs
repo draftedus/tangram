@@ -50,10 +50,10 @@ pub struct ShapValues {
 #[derive(Debug)]
 pub enum PredictModel {
 	LinearRegressor(LinearRegressorPredictModel),
-	GbtRegressor(GbtRegressorPredictModel),
+	GBTRegressor(GBTRegressorPredictModel),
 	LinearBinaryClassifier(LinearBinaryClassifierPredictModel),
-	GbtBinaryClassifier(GbtBinaryClassifierPredictModel),
-	GbtMulticlassClassifier(GbtMulticlassClassifierPredictModel),
+	GBTBinaryClassifier(GBTBinaryClassifierPredictModel),
+	GBTMulticlassClassifier(GBTMulticlassClassifierPredictModel),
 	LinearMulticlassClassifier(LinearMulticlassClassifierPredictModel),
 }
 
@@ -66,7 +66,7 @@ pub struct LinearRegressorPredictModel {
 }
 
 #[derive(Debug)]
-pub struct GbtRegressorPredictModel {
+pub struct GBTRegressorPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
@@ -82,7 +82,7 @@ pub struct LinearBinaryClassifierPredictModel {
 }
 
 #[derive(Debug)]
-pub struct GbtBinaryClassifierPredictModel {
+pub struct GBTBinaryClassifierPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
@@ -98,7 +98,7 @@ pub struct LinearMulticlassClassifierPredictModel {
 }
 
 #[derive(Debug)]
-pub struct GbtMulticlassClassifierPredictModel {
+pub struct GBTMulticlassClassifierPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
@@ -153,11 +153,11 @@ pub fn predict(
 	// initialize the dataframe
 	let columns = match model {
 		PredictModel::LinearRegressor(model) => model.columns.as_slice(),
-		PredictModel::GbtRegressor(model) => model.columns.as_slice(),
+		PredictModel::GBTRegressor(model) => model.columns.as_slice(),
 		PredictModel::LinearBinaryClassifier(model) => model.columns.as_slice(),
-		PredictModel::GbtBinaryClassifier(model) => model.columns.as_slice(),
+		PredictModel::GBTBinaryClassifier(model) => model.columns.as_slice(),
 		PredictModel::LinearMulticlassClassifier(model) => model.columns.as_slice(),
-		PredictModel::GbtMulticlassClassifier(model) => model.columns.as_slice(),
+		PredictModel::GBTMulticlassClassifier(model) => model.columns.as_slice(),
 	};
 	let column_names = columns.iter().map(|c| c.column_name()).collect();
 	let column_types = columns
@@ -248,7 +248,7 @@ pub fn predict(
 				.collect();
 			PredictOutput::Regression(output)
 		}
-		PredictModel::GbtRegressor(model) => {
+		PredictModel::GBTRegressor(model) => {
 			let n_examples = dataframe.nrows();
 			let feature_groups = &model.feature_groups;
 			let model = &model.model;
@@ -337,7 +337,7 @@ pub fn predict(
 				.collect();
 			PredictOutput::Classification(output)
 		}
-		PredictModel::GbtBinaryClassifier(model) => {
+		PredictModel::GBTBinaryClassifier(model) => {
 			let n_examples = dataframe.nrows();
 			let feature_groups = &model.feature_groups;
 			let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -445,7 +445,7 @@ pub fn predict(
 				.collect();
 			PredictOutput::Classification(output)
 		}
-		PredictModel::GbtMulticlassClassifier(model) => {
+		PredictModel::GBTMulticlassClassifier(model) => {
 			let n_examples = dataframe.nrows();
 			let feature_groups = &model.feature_groups;
 			let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -814,13 +814,13 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						}))
 					}
-					types::RegressionModel::Gbt(model) => {
+					types::RegressionModel::GBT(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::GbtRegressor(GbtRegressorPredictModel {
+						Ok(Self::GBTRegressor(GBTRegressorPredictModel {
 							id,
 							columns,
 							feature_groups,
@@ -867,13 +867,13 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						))
 					}
-					types::ClassificationModel::GbtBinary(model) => {
+					types::ClassificationModel::GBTBinary(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::GbtBinaryClassifier(GbtBinaryClassifierPredictModel {
+						Ok(Self::GBTBinaryClassifier(GBTBinaryClassifierPredictModel {
 							id,
 							columns,
 							feature_groups,
@@ -915,14 +915,14 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						))
 					}
-					types::ClassificationModel::GbtMulticlass(model) => {
+					types::ClassificationModel::GBTMulticlass(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::GbtMulticlassClassifier(
-							GbtMulticlassClassifierPredictModel {
+						Ok(Self::GBTMulticlassClassifier(
+							GBTMulticlassClassifierPredictModel {
 								id,
 								columns,
 								feature_groups,

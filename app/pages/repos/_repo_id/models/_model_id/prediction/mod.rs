@@ -321,9 +321,9 @@ fn predict(
 			};
 			let get_baseline_probabilities: Box<dyn Fn(&[f32]) -> Vec<f32>> = match predict_model {
 				predict::PredictModel::LinearBinaryClassifier(_) => Box::new(sigmoid),
-				predict::PredictModel::GbtBinaryClassifier(_) => Box::new(sigmoid),
+				predict::PredictModel::GBTBinaryClassifier(_) => Box::new(sigmoid),
 				predict::PredictModel::LinearMulticlassClassifier(_) => Box::new(softmax),
-				predict::PredictModel::GbtMulticlassClassifier(_) => Box::new(softmax),
+				predict::PredictModel::GBTMulticlassClassifier(_) => Box::new(softmax),
 				_ => unreachable!(),
 			};
 			let output = output.remove(0);
