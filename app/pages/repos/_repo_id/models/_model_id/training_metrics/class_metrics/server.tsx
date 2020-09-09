@@ -6,7 +6,8 @@ import {
 	MulticlassClassifierClassMetricsPage,
 	Props as MulticlassClassifierProps,
 } from './multiclass_classifier'
-import { PinwheelInfo, h, renderPage } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

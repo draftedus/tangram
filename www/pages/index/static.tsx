@@ -16,7 +16,8 @@ import { TrainingStats } from './training_stats'
 import trainingStats from './training_stats.svg'
 import { Tuning } from './tuning'
 import tuning from './tuning.svg'
-import { Client, PinwheelInfo, h, renderPage, ui } from 'deps'
+import { renderPage } from 'common/render'
+import { Client, PinwheelInfo, h, ui } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
 
 type Props = {
@@ -42,8 +43,12 @@ function Hero() {
 					{'All-In-One Machine Learning Toolkit for Developers'}
 				</h1>
 				<div class="index-subtitle">
-					{'* Run `tangram train` to train a model from a CSV file on the command line.'}
-					{'* Make predictions without any network calls in Go, JS, Python, Ruby, or Rust.'}
+					{
+						'* Run `tangram train` to train a model from a CSV file on the command line.'
+					}
+					{
+						'* Make predictions without any network calls in Go, JS, Python, Ruby, or Rust.'
+					}
 					{'* Run `tangram app` to run '}
 				</div>
 				<Video />

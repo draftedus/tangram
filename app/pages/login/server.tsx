@@ -1,4 +1,5 @@
-import { PinwheelInfo, h, renderPage, ui } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h, ui } from 'deps'
 import { AuthLayout } from 'layouts/auth_layout'
 
 export type LoginProps = {

@@ -1,7 +1,8 @@
 import { EnumColumnDetail, Props as EnumProps } from './enum'
 import { NumberColumnDetail, Props as NumberProps } from './number'
 import { TextColumnDetail, Props as TextProps } from './text'
-import { PinwheelInfo, h, renderPage } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

@@ -1,4 +1,5 @@
-import { PinwheelInfo, h, renderPage, ui } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
 
 export type Props = {

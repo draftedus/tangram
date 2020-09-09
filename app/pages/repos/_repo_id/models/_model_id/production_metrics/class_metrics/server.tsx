@@ -1,8 +1,9 @@
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
+import { renderPage } from 'common/render'
 import { DateWindow, DateWindowInterval, intervalChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
-import { Fragment, PinwheelInfo, h, renderPage, ui } from 'deps'
+import { Fragment, PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

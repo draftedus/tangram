@@ -1,11 +1,12 @@
 import { MetricsRow } from 'common/metrics_row'
+import { renderPage } from 'common/render'
 import {
 	EnumColumnToken,
 	NumberColumnToken,
 	TextColumnToken,
 	UnknownColumnToken,
 } from 'common/tokens'
-import { Fragment, PinwheelInfo, h, renderPage, ui } from 'deps'
+import { Fragment, PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

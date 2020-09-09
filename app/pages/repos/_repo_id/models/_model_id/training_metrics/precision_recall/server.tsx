@@ -1,6 +1,7 @@
 import { ClassSelect } from 'common/class_select'
 import * as definitions from 'common/definitions'
-import { PinwheelInfo, h, renderPage, ui } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

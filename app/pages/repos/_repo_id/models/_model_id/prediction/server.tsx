@@ -1,10 +1,11 @@
+import { renderPage } from 'common/render'
 import {
 	EnumColumnToken,
 	NumberColumnToken,
 	TextColumnToken,
 	UnknownColumnToken,
 } from 'common/tokens'
-import { PinwheelInfo, h, renderPage, ui } from 'deps'
+import { PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

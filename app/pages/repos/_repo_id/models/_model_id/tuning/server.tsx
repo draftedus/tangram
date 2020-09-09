@@ -1,5 +1,6 @@
 import { Tuning, TuningProps } from './tuning'
-import { Client, PinwheelInfo, h, renderPage, ui } from 'deps'
+import { renderPage } from 'common/render'
+import { Client, PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

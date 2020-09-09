@@ -1,5 +1,6 @@
 import { PricingCards } from './pricing_cards'
-import { PinwheelInfo, h, renderPage, ui } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h, ui } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
 
 type Props = {

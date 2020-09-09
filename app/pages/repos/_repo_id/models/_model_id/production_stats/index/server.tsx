@@ -1,3 +1,4 @@
+import { renderPage } from 'common/render'
 import {
 	DateWindow,
 	DateWindowInterval,
@@ -10,7 +11,7 @@ import {
 	NumberColumnToken,
 	TextColumnToken,
 } from 'common/tokens'
-import { PinwheelInfo, h, renderPage, ui } from 'deps'
+import { PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

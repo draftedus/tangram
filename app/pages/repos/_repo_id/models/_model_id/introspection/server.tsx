@@ -1,4 +1,5 @@
-import { PinwheelInfo, h, renderPage } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,

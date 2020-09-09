@@ -1,4 +1,5 @@
-import { PinwheelInfo, h, renderPage, ui } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h, ui } from 'deps'
 import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 
 import tuning from './screenshots/tuning.png'

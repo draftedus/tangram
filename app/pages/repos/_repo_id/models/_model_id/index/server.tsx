@@ -1,6 +1,7 @@
 import { ClassifierIndexPage, Props as ClassifierProps } from './classifier'
 import { RegressorIndexPage, Props as RegressorProps } from './regressor'
-import { PinwheelInfo, h, renderPage } from 'deps'
+import { renderPage } from 'common/render'
+import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
