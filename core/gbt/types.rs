@@ -89,43 +89,58 @@ pub enum Model {
 /// This struct represents a gbt regressor model. Regressor models are used to predict continuous target values, e.g. the selling price of a home.
 #[derive(Debug)]
 pub struct Regressor {
+	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
 	pub bias: f32,
 	pub trees: Vec<Tree>,
 	pub feature_importances: Option<Array1<f32>>,
 	pub losses: Option<Array1<f32>>,
 }
 
-/// This struct represents a gbt binary classifier model. Binary Classifier models are used to predict binary target values, e.g. does the patient have heart disease or not.
+/// A Binary classifier model is trained to predict binary target values, e.g. does the patient have heart disease or not.
 #[derive(Debug)]
 pub struct BinaryClassifier {
+	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
 	pub bias: f32,
+	/// The trees in this model.
 	pub trees: Vec<Tree>,
+	/// The feature importances of this model. These importances are computed using the ...TODO.
 	pub feature_importances: Option<Array1<f32>>,
+	/// The training losses in each round of training this model.
 	pub losses: Option<Array1<f32>>,
+	/// The names of the unique values in the target column.
 	pub classes: Vec<String>,
 }
 
 /// This struct represents a gbt multiclass classifier model. Multiclass classifier models are used to predict multiclass target values, e.g. species of flower is one of Iris Setosa, Iris Virginica, or Iris Versicolor.
 #[derive(Debug)]
 pub struct MulticlassClassifier {
+	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
 	pub biases: Vec<f32>,
-	/// (n_rounds, n_classes)
+	/// The trees in this model. It has shape (n_rounds, n_classes) because for each round, we train n_classes trees.
 	pub trees: Vec<Tree>,
+	// The number of classes.
 	pub n_classes: usize,
+	/// The number of boosting rounds == the number of trained trees.
 	pub n_rounds: usize,
+	/// TODO
 	pub feature_importances: Option<Array1<f32>>,
+	/// The training losses in each round of training this model.
 	pub losses: Option<Array1<f32>>,
+	/// The names of the unique values in the target column.
 	pub classes: Vec<String>,
 }
 
-/// This struct describes a trained tree. It contains a node vector, where each node is either a `BranchNode` or a `LeafNode`.
+/// A Tree is described by a single vector of nodes.
 #[derive(Debug)]
 pub struct Tree {
 	/// Nodes in the trained tree.
 	pub nodes: Vec<Node>,
 }
 
-/// This Enum represents the type of Node in the tree. A `BranchNode` represents internal tree nodes, and a `LeafNode` represents terminal nodes.
+/** A Node represents the type of Node in the trained tree. It has two types:
+1. **Branch**: A `BranchNode` represents internal tree nodes.
+2. **Leaf**:  A `LeafNode` represents terminal nodes.
+*/
 #[derive(Debug)]
 pub enum Node {
 	Branch(BranchNode),
@@ -145,7 +160,7 @@ impl Node {
 	}
 }
 
-/// This struct describes a branch node in a trained tree.
+/// A BranchNode describes an internal node in a trained tree.
 ///
 #[derive(Debug)]
 pub struct BranchNode {
@@ -159,6 +174,7 @@ pub struct BranchNode {
 	pub examples_fraction: f32,
 }
 
+/// A BranchSplit describes how examples are routed to the left or right subtrees given their feature values. A BranchSplit is `Continous` if the best split for the node is for a numeric feature and `Discrete` if the best split of the node is for an enum feature.
 #[derive(Debug)]
 pub enum BranchSplit {
 	Continuous(BranchSplitContinuous),

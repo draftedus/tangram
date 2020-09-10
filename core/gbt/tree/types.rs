@@ -1,11 +1,16 @@
 use super::{super::types, bin_stats::BinStats};
 use std::cmp::Ordering;
 
+/// A TrainTree is described by a single vector of nodes.
 #[derive(Debug)]
 pub struct TrainTree {
 	pub nodes: Vec<TrainNode>,
 }
 
+/** A TrainNode represents the type of TrainNode in the tree. It has two types:
+1. **Branch**: A `BranchNode` represents internal tree nodes.
+2. **Leaf**:  A `LeafNode` represents terminal nodes.
+*/
 #[derive(Debug)]
 pub enum TrainNode {
 	Branch(TrainBranchNode),
@@ -14,10 +19,15 @@ pub enum TrainNode {
 
 #[derive(Debug)]
 pub struct TrainBranchNode {
+	/// The index in the TrainTree's nodes of this node's left child
 	pub left_child_index: Option<usize>,
+	/// The index in the TrainTree's nodes of this node's right child
 	pub right_child_index: Option<usize>,
+	/// The best split for this node.
 	pub split: TrainBranchSplit,
+	/// Missing values direction specifies whether examples whose feature value is missing should go to the left subtree or the right.
 	pub missing_values_direction: types::SplitDirection,
+	/// The fraction of the total training examples that reach this node.
 	pub examples_fraction: f32,
 }
 
@@ -49,8 +59,9 @@ pub struct TrainLeafNode {
 }
 
 pub struct QueueItem {
-	/// Items in the priority queue will be sorted by the gain of the split
+	/// Items in the priority queue will be sorted by the gain of the split.
 	pub gain: f32,
+	/// A split describes how the node is split into left and right children.
 	pub split: TrainBranchSplit,
 
 	/// The queue item holds a reference to its parent so that
@@ -60,7 +71,9 @@ pub struct QueueItem {
 	/// Will this node be a left or right child of its parent?
 	pub split_direction: Option<types::SplitDirection>,
 
+	/// The depth of the item in the tree.
 	pub depth: usize,
+	/// The bin_stats consisting of aggregate hessian/gradient statistics of the training examples that reach this node.
 	pub bin_stats: BinStats,
 
 	/// The examples_index_range tells you what the range of
@@ -68,15 +81,23 @@ pub struct QueueItem {
 	/// the examples in this node.
 	pub examples_index_range: std::ops::Range<usize>,
 
+	/// The sum of the gradients of all of the training examples in this node.
 	pub sum_gradients: f64,
+	/// The sum of the hessians of all of the training examples in this node.
 	pub sum_hessians: f64,
 
+	/// The sum of the gradients of all of the training examples that go to the left child.
 	pub left_sum_gradients: f64,
+	/// The sum of the hessians of all of the training examples that go to the left child.
 	pub left_sum_hessians: f64,
+	/// The total number of training examples that go to the left child.
 	pub left_n_examples: usize,
 
+	/// The sum of the gradients of all of the training examples that go to the right child.
 	pub right_sum_gradients: f64,
+	/// The sum of the hessians of all of the training examples that go to the right child.
 	pub right_sum_hessians: f64,
+	/// The total number of training examples that go to the right child.
 	pub right_n_examples: usize,
 }
 

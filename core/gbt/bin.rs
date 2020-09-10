@@ -12,6 +12,20 @@ pub enum BinInfo {
 }
 
 impl BinInfo {
+	/**
+	Returns the number of valid bins. The total number of bins is the number of valid bins + 1 bin reserved for missing values.
+	## Number Bins
+	Numeric features have n valid bins equal to the number of thresholds + 1.
+	### Example
+	Given 3 thresholds: `[0.5, 1.5, 2]`
+	There are 4 valid bins:
+	* (-infinity, 0.5]
+	* (0.5, 1.5]
+	* (1.5, 2]
+	* (2, infinity)
+	### Enum Bins
+	Enum features have n valid bins equal to the number of enum variants.
+	*/
 	pub fn n_valid_bins(&self) -> u8 {
 		match self {
 			Self::Number { thresholds } => (thresholds.len() + 1).to_u8().unwrap(),
@@ -20,8 +34,11 @@ impl BinInfo {
 	}
 }
 
+/// ComputeBinInfoOptions specifies how to compute bins for a given column.
 pub struct ComputeBinInfoOptions {
+	/// The maximum number of bins to use for the column. Used to determine the number of bins for numeric columns because enum columns need n_valid_bins equal to the number of enum variants.
 	pub max_valid_bins: u8,
+	/// The maximum number of samples to use in order to estimate bin thresholds. This setting is used exclusively for numeric columns. In order to find bin thresholds, we need to sort values and find the threshold cutoffs. To speed up the computation, instead of sorting all of the values in the column, we choose to sort a smaller subset to get an estimate of the quantile threshold cutoffs.
 	pub max_number_column_examples_for_bin_info: usize,
 }
 
@@ -33,6 +50,7 @@ pub fn compute_bin_info(features: &DataFrameView, options: &ComputeBinInfoOption
 		.collect()
 }
 
+/// Computes the bin info given a column.
 pub fn compute_bin_info_for_column(
 	column: &ColumnView,
 	options: &ComputeBinInfoOptions,
@@ -46,6 +64,7 @@ pub fn compute_bin_info_for_column(
 	}
 }
 
+/// Computes the quantile thresholds for a numeric column. Returns BinInfo with the numeric thresholds used to map the column values into their respective bins.
 fn compute_bin_info_for_number_column(
 	column: &NumberColumnView,
 	options: &ComputeBinInfoOptions,
@@ -82,6 +101,8 @@ fn compute_bin_info_for_number_column(
 	BinInfo::Number { thresholds }
 }
 
+/// Computes the bin thresholds given a histogram of numeric values.
+/// Instead of storing and sorting all values as an array, we collect values into a histogram which reduces the memory needed to compute thresholds for columns with many duplicate values.
 fn compute_bin_thresholds_for_histogram(
 	histogram: BTreeMap<Finite<f32>, usize>,
 	histogram_values_count: usize,
@@ -127,6 +148,7 @@ fn compute_bin_thresholds_for_histogram(
 	quantiles.into_iter().map(|q| q.unwrap()).collect()
 }
 
+/// Computes the binned_features given raw input features and bin_info.
 pub fn compute_binned_features(
 	features: &DataFrameView,
 	bin_info: &[BinInfo],
@@ -185,13 +207,13 @@ pub fn compute_binned_features(
 }
 
 pub struct FilterBinnedFeaturesOptions {
-	// if the dataset were split according to this feature, is there a split that does not
-	// violate min_examples_per_branch?
-	// for number feature iterate through bins sequentially
-	// for categorical feature, is there a subset that meets the criteria
 	pub min_examples_split: usize,
 }
 
+/** Filters out features that would result in invalid splits because no split exists such that there are more than min_examples_split.
+For number features, iterate through bins sequentially to see if there exists a threshold such that min_examples_split is not violated.
+For categorical features, determine if there exists any partition of the feature such that min_examples_split is not violated.
+*/
 pub fn filter_binned_features(
 	binned_features: ArrayView2<u8>,
 	binned_features_stats: Array2<usize>,
