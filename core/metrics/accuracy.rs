@@ -1,4 +1,4 @@
-use super::RunningMetric;
+use super::Metric;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -12,7 +12,7 @@ pub struct AccuracyInput<'a> {
 	label: usize,
 }
 
-impl<'a> RunningMetric<'a, '_> for Accuracy {
+impl<'a> Metric<'a> for Accuracy {
 	type Input = AccuracyInput<'a>;
 	type Output = Option<f32>;
 

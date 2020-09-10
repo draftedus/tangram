@@ -13,7 +13,7 @@ use chrono::prelude::*;
 use hyper::{body::to_bytes, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use std::{collections::BTreeMap, sync::Arc};
-use tangram_core::{id::Id, metrics::RunningMetric};
+use tangram_core::{id::Id, metrics::Metric};
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(untagged)]

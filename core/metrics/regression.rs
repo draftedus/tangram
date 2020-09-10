@@ -1,4 +1,4 @@
-use super::{mean_variance::merge_mean_m2, RunningMetric};
+use super::{mean_variance::merge_mean_m2, Metric};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
@@ -15,9 +15,9 @@ struct MeanVariance {
 	pub mean: f64,
 }
 
-pub struct RegressionMetricsInput<'a, 'b> {
+pub struct RegressionMetricsInput<'a> {
 	pub predictions: ArrayView1<'a, f32>,
-	pub labels: &'b [f32],
+	pub labels: &'a [f32],
 }
 
 #[derive(Debug)]
@@ -40,8 +40,8 @@ impl Default for RegressionMetrics {
 	}
 }
 
-impl<'a, 'b> RunningMetric<'a, 'b> for RegressionMetrics {
-	type Input = RegressionMetricsInput<'a, 'b>;
+impl<'a> Metric<'a> for RegressionMetrics {
+	type Input = RegressionMetricsInput<'a>;
 	type Output = RegressionMetricsOutput;
 
 	fn update(&mut self, input: RegressionMetricsInput) {

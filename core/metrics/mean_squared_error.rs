@@ -1,11 +1,11 @@
 use super::mean::Mean;
-use super::RunningMetric;
+use super::Metric;
 use ndarray::prelude::*;
 
 #[derive(Default)]
 pub struct MeanSquaredError(Mean);
 
-impl RunningMetric<'_, '_> for MeanSquaredError {
+impl Metric<'_> for MeanSquaredError {
 	type Input = (f32, f32);
 	type Output = Option<f32>;
 

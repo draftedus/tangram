@@ -1,7 +1,7 @@
 use crate::monitor_event::NumberOrString;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram_core::metrics::RunningMetric;
+use tangram_core::metrics::Metric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -45,7 +45,7 @@ impl ClassificationProductionPredictionMetrics {
 	}
 }
 
-impl RunningMetric<'_, '_> for ClassificationProductionPredictionMetrics {
+impl Metric<'_> for ClassificationProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
 	type Output = Option<ClassificationProductionPredictionMetricsOutput>;
 

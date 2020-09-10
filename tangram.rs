@@ -1,4 +1,6 @@
-//! This module implements the C api for libtangram, the tangram C library, which is used by the libraries for each programming language to make predictions using a model trained with the the tangram cli.
+/*!
+This module implements the C api for libtangram, the tangram C library, which is used by the libraries for each programming language to make predictions using a model trained with the the tangram cli.
+*/
 
 #![allow(clippy::missing_safety_doc)]
 

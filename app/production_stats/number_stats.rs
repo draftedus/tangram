@@ -1,6 +1,6 @@
 use num_traits::ToPrimitive;
 use rand::random;
-use tangram_core::metrics::RunningMetric;
+use tangram_core::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct NumberStats {
@@ -41,7 +41,7 @@ impl NumberStats {
 	}
 }
 
-impl RunningMetric<'_, '_> for NumberStats {
+impl Metric<'_> for NumberStats {
 	type Input = f32;
 	type Output = NumberStatsOutput;
 

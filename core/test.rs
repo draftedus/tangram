@@ -1,6 +1,6 @@
 use crate::{
-	dataframe::*, features, gbt, linear, metrics, metrics::RunningMetric,
-	progress::ModelTestProgress, util::progress_counter::ProgressCounter,
+	dataframe::*, features, gbt, linear, metrics, metrics::Metric, progress::ModelTestProgress,
+	util::progress_counter::ProgressCounter,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -156,6 +156,7 @@ pub fn test_linear_binary_classifier(
 			let predictions = state.predictions.slice_mut(slice);
 			model.predict(features, predictions, None);
 			let predictions = state.predictions.slice(slice);
+			let labels = labels.view();
 			state
 				.classification_metrics
 				.update(metrics::ClassificationMetricsInput {
@@ -274,6 +275,7 @@ pub fn test_linear_multiclass_classifier(
 			let predictions = state.predictions.slice_mut(slice);
 			model.predict(features, predictions, None);
 			let predictions = state.predictions.slice(slice);
+			let labels = labels.view();
 			state.metrics.update(metrics::ClassificationMetricsInput {
 				probabilities: predictions,
 				labels,

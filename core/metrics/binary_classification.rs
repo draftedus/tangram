@@ -1,4 +1,4 @@
-use super::RunningMetric;
+use super::Metric;
 use ndarray::prelude::*;
 use ndarray::s;
 use num_traits::ToPrimitive;
@@ -11,9 +11,9 @@ pub struct BinaryClassifierMetrics {
 	pub thresholds: Vec<f32>,
 }
 
-pub struct BinaryClassifierMetricsInput<'a, 'b> {
+pub struct BinaryClassifierMetricsInput<'a> {
 	pub probabilities: ArrayView2<'a, f32>,
-	pub labels: ArrayView1<'b, usize>,
+	pub labels: ArrayView1<'a, usize>,
 }
 
 #[derive(Debug)]
@@ -59,8 +59,8 @@ impl BinaryClassifierMetrics {
 	}
 }
 
-impl<'a, 'b> RunningMetric<'a, 'b> for BinaryClassifierMetrics {
-	type Input = BinaryClassifierMetricsInput<'a, 'b>;
+impl<'a> Metric<'a> for BinaryClassifierMetrics {
+	type Input = BinaryClassifierMetricsInput<'a>;
 	type Output = BinaryClassificationMetricsOutput;
 
 	fn update(&mut self, value: BinaryClassifierMetricsInput) {

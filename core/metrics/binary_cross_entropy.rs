@@ -1,5 +1,5 @@
 use super::mean::Mean;
-use super::RunningMetric;
+use super::Metric;
 use num_traits::clamp;
 
 #[derive(Debug, Default)]
@@ -11,7 +11,7 @@ pub struct BinaryCrossEntropyInput {
 	pub label: usize,
 }
 
-impl RunningMetric<'_, '_> for BinaryCrossEntropy {
+impl Metric<'_> for BinaryCrossEntropy {
 	type Input = BinaryCrossEntropyInput;
 	type Output = Option<f32>;
 

@@ -8,7 +8,7 @@ use chrono::Duration;
 use chrono_tz::Tz;
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
-use tangram_core::metrics::RunningMetric;
+use tangram_core::metrics::Metric;
 
 #[derive(Debug)]
 pub struct GetProductionMetricsOutput {

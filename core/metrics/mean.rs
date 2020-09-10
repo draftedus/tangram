@@ -1,13 +1,13 @@
 //! https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
 
-use super::RunningMetric;
+use super::Metric;
 use num_traits::ToPrimitive;
 use std::num::NonZeroU64;
 
 #[derive(Debug, Clone, Default)]
 pub struct Mean(Option<(NonZeroU64, f64)>);
 
-impl RunningMetric<'_, '_> for Mean {
+impl Metric<'_> for Mean {
 	type Input = f32;
 	type Output = Option<f32>;
 

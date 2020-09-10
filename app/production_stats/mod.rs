@@ -1,6 +1,6 @@
 use crate::monitor_event::PredictionMonitorEvent;
 use chrono::prelude::*;
-use tangram_core::metrics::RunningMetric;
+use tangram_core::metrics::Metric;
 
 mod column_stats;
 mod number_stats;
@@ -53,7 +53,7 @@ impl ProductionStats {
 	}
 }
 
-impl RunningMetric<'_, '_> for ProductionStats {
+impl Metric<'_> for ProductionStats {
 	type Input = PredictionMonitorEvent;
 	type Output = ProductionStatsOutput;
 

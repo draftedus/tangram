@@ -1,4 +1,4 @@
-use super::RunningMetric;
+use super::Metric;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
@@ -7,11 +7,11 @@ pub struct ClassificationMetrics {
 	confusion_matrix: Array2<u64>,
 }
 
-pub struct ClassificationMetricsInput<'a, 'b> {
+pub struct ClassificationMetricsInput<'a> {
 	// (n_classes, n_examples)
 	pub probabilities: ArrayView2<'a, f32>,
 	// (n_examples), 1-indexed
-	pub labels: ArrayView1<'b, usize>,
+	pub labels: ArrayView1<'a, usize>,
 }
 
 #[derive(Debug)]
@@ -47,8 +47,8 @@ impl ClassificationMetrics {
 	}
 }
 
-impl<'a, 'b> RunningMetric<'a, 'b> for ClassificationMetrics {
-	type Input = ClassificationMetricsInput<'a, 'b>;
+impl<'a> Metric<'a> for ClassificationMetrics {
+	type Input = ClassificationMetricsInput<'a>;
 	type Output = ClassificationMetricsOutput;
 
 	fn update(&mut self, value: ClassificationMetricsInput) {

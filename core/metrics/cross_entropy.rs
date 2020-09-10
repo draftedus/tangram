@@ -1,5 +1,5 @@
 use super::mean::Mean;
-use super::RunningMetric;
+use super::Metric;
 use ndarray::prelude::*;
 use num_traits::clamp;
 
@@ -15,7 +15,7 @@ pub struct CrossEntropyInput<'a> {
 
 pub type CrossEntropyOutput = Option<f32>;
 
-impl<'a> RunningMetric<'a, '_> for CrossEntropy {
+impl<'a> Metric<'a> for CrossEntropy {
 	type Input = CrossEntropyInput<'a>;
 	type Output = CrossEntropyOutput;
 

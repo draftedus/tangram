@@ -1,7 +1,7 @@
 use crate::monitor_event::NumberOrString;
 use crate::production_stats::NumberStats;
 use num_traits::ToPrimitive;
-use tangram_core::metrics::RunningMetric;
+use tangram_core::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -31,7 +31,7 @@ impl RegressionProductionPredictionMetrics {
 	}
 }
 
-impl RunningMetric<'_, '_> for RegressionProductionPredictionMetrics {
+impl Metric<'_> for RegressionProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
 	type Output = Option<RegressionProductionPredictionMetricsOutput>;
 

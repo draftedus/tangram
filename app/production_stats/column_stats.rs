@@ -1,7 +1,7 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram_core::metrics::RunningMetric;
+use tangram_core::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum ProductionColumnStats {
@@ -121,7 +121,7 @@ impl ProductionColumnStats {
 	}
 }
 
-impl<'a> RunningMetric<'a, '_> for ProductionColumnStats {
+impl<'a> Metric<'a> for ProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
 	type Output = ProductionColumnStatsOutput;
 
@@ -188,7 +188,7 @@ impl UnknownProductionColumnStats {
 	}
 }
 
-impl<'a> RunningMetric<'a, '_> for UnknownProductionColumnStats {
+impl<'a> Metric<'a> for UnknownProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
 	type Output = UnknownProductionColumnStatsOutput;
 
@@ -235,7 +235,7 @@ impl NumberProductionColumnStats {
 	}
 }
 
-impl<'a, 'b> RunningMetric<'a, 'b> for NumberProductionColumnStats {
+impl<'a> Metric<'a> for NumberProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
 	type Output = NumberProductionColumnStatsOutput;
 
@@ -324,7 +324,7 @@ impl EnumProductionColumnStats {
 	}
 }
 
-impl<'a> RunningMetric<'a, '_> for EnumProductionColumnStats {
+impl<'a> Metric<'a> for EnumProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
 	type Output = EnumProductionColumnStatsOutput;
 
@@ -430,7 +430,7 @@ impl TextProductionColumnStats {
 	}
 }
 
-impl<'a> RunningMetric<'a, '_> for TextProductionColumnStats {
+impl<'a> Metric<'a> for TextProductionColumnStats {
 	type Input = Option<&'a serde_json::Value>;
 	type Output = TextProductionColumnStatsOutput;
 

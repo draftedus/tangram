@@ -8,7 +8,7 @@ use self::{
 };
 use crate::monitor_event::NumberOrString;
 use chrono::prelude::*;
-use tangram_core::metrics::RunningMetric;
+use tangram_core::metrics::Metric;
 
 mod classification_production_metrics;
 mod regression_production_metrics;
@@ -59,7 +59,7 @@ impl ProductionMetrics {
 	}
 }
 
-impl RunningMetric<'_, '_> for ProductionMetrics {
+impl Metric<'_> for ProductionMetrics {
 	type Input = (NumberOrString, NumberOrString);
 	type Output = ProductionMetricsOutput;
 
@@ -100,7 +100,7 @@ impl ProductionPredictionMetrics {
 	}
 }
 
-impl RunningMetric<'_, '_> for ProductionPredictionMetrics {
+impl Metric<'_> for ProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
 	type Output = Option<ProductionPredictionMetricsOutput>;
 
