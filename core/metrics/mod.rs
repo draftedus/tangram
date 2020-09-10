@@ -25,27 +25,39 @@ The `Metric` trait defines a common interface to compute metrics such as accurac
 
 After being initialized, a type `T` implementing the `Metric` trait can have `update()` called on it with values of the associated type `Input`. Multiple values of the type can be merged together by calling `merge()`. When finished aggregating, you can call `finalize()` on the metric to produce the associated type `Output`.
 
+# Examples
+
 Here is a basic example implementation of a `Min` metric, which takes `f32`s and produces an `f32` that is the minimum of all the inputs.
 
 struct Min(f32);
 
-```rust
+```
 impl Metric for Min {
-  type Input = f32;
+  type Input = f32;x
   type Output = f32;
   fn update(&mut self, input: Self::Input) { self.0 = self.0.min(input) };
   fn merge(&mut self, other: Self) { self.0 = self.0.min(other.0) }
   fn finalize(self) -> Self::Output { self.0 }
 }
 ```
+
+We can write a generic function to compute arbitrary metrics in parallel with `rayon` like so:
+
+```
+
+```
+
+The seeminly unused generic lifetime `'a` exists here to allow `Input`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
+
 */
 pub trait Metric<'a> {
-	/// T
+	/// `Input` is the type to aggregate in calls to `update()`.
 	type Input;
+	/// `Output` is the return type of `finalize()`.
 	type Output;
-	///
+	/// Update this metric with the `Input` `input`.
 	fn update(&mut self, input: Self::Input);
-	/// Merge multiple values of this type.
+	/// Merge multiple independently computed metrics.
 	fn merge(&mut self, other: Self);
 	/// When you are done aggregating `Input`s, call `finalize()` to produce an `Output`.
 	fn finalize(self) -> Self::Output;
