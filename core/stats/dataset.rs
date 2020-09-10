@@ -19,30 +19,43 @@ pub struct UnknownDatasetStats {
 
 #[derive(Clone, Debug)]
 pub struct NumberDatasetStats {
+	/// The total number of values.
 	pub count: usize,
+	/// The total number of valid values.
 	pub valid_count: usize,
+	/// The total number of invalid values.
+	/// Invalid values are values that fail to parse as finite f32.
 	pub invalid_count: usize,
+	/// Stores counts for each unique value.
 	pub histogram: BTreeMap<Finite<f32>, usize>,
 }
 
 #[derive(Clone, Debug)]
 pub struct EnumDatasetStats {
+	/// The total number of values.
 	pub count: usize,
+	/// The enum variants.
 	pub options: Vec<String>,
+	/// The total number of valid values.
 	pub valid_count: usize,
+	/// The total number of invalid values.
 	pub invalid_count: usize,
+	/// Stores counts for each enum variant.
+	/// The i-th entry in the vec corresponds to the count for the i-th enum variant in the options.
 	pub histogram: Vec<usize>,
 }
 
 #[derive(Clone, Debug)]
 pub struct TextDatasetStats {
+	/// The total number of values.
 	pub count: usize,
+	/// The tokenizer is used to split text into tokens.
 	pub tokenizer: text::AlphanumericTokenizer,
-	/// A map from unigram tokens to the total number of occurrences across all examples
+	/// A map from unigram tokens to the total number of occurrences across all examples.
 	pub unigram_histogram: BTreeMap<String, usize>,
-	/// A map from bigram tokens to the total number of occurrences across all examples
+	/// A map from bigram tokens to the total number of occurrences across all examples.
 	pub bigram_histogram: BTreeMap<String, usize>,
-	/// A map from ngrams to the number of examples with at least one occurrence
+	/// A map from ngrams to the number of examples with at least one occurrence.
 	pub per_example_histogram: BTreeMap<String, usize>,
 }
 
@@ -119,6 +132,7 @@ impl EnumDatasetStats {
 		for value in column.data {
 			stats.histogram[*value] += 1;
 		}
+		stats.invalid_count = stats.histogram[0];
 		stats
 	}
 	pub fn merge(&self, other: &Self) -> Self {
