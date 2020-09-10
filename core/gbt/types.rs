@@ -9,11 +9,11 @@ use ndarray::prelude::*;
 pub struct TrainOptions {
 	/// If true, the model will include the loss on the training data at each round.
 	pub compute_loss: bool,
-	/// l2 regularization value to use for discrete splits
+	/// l2 regularization value to use for discrete splits.
 	pub discrete_l2_regularization: f32,
-	/// Hello world.
+	/// TODO
 	pub discrete_min_examples_per_branch: usize,
-	/// Hello world.
+	/// TODO
 	pub discrete_smoothing_factor: f32,
 	/// Specify options for early stopping. If the value is `Some`, early stopping will be enabled. If it is `None`, early stopping will be disabled.
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
@@ -39,6 +39,7 @@ pub struct TrainOptions {
 	pub subsample_for_binning: usize,
 }
 
+/// This struct is used to specify the early stopping parameters that control what percentage of the dataset should be held out for early stopping, the number of early stopping rounds and the threshold to determine when to stop training.
 #[derive(Debug)]
 pub struct EarlyStoppingOptions {
 	// the fraction of the dataset that we should set aside for use in early stopping
@@ -85,6 +86,7 @@ pub enum Model {
 	MulticlassClassifier(MulticlassClassifier),
 }
 
+/// This struct represents a gbt regressor model. Regressor models are used to predict continuous target values, e.g. the selling price of a home.
 #[derive(Debug)]
 pub struct Regressor {
 	pub bias: f32,
@@ -93,6 +95,7 @@ pub struct Regressor {
 	pub losses: Option<Array1<f32>>,
 }
 
+/// This struct represents a gbt binary classifier model. Binary Classifier models are used to predict binary target values, e.g. does the patient have heart disease or not.
 #[derive(Debug)]
 pub struct BinaryClassifier {
 	pub bias: f32,
@@ -102,6 +105,7 @@ pub struct BinaryClassifier {
 	pub classes: Vec<String>,
 }
 
+/// This struct represents a gbt multiclass classifier model. Multiclass classifier models are used to predict multiclass target values, e.g. species of flower is one of Iris Setosa, Iris Virginica, or Iris Versicolor.
 #[derive(Debug)]
 pub struct MulticlassClassifier {
 	pub biases: Vec<f32>,
@@ -114,11 +118,14 @@ pub struct MulticlassClassifier {
 	pub classes: Vec<String>,
 }
 
+/// This struct describes a trained tree. It contains a node vector, where each node is either a `BranchNode` or a `LeafNode`.
 #[derive(Debug)]
 pub struct Tree {
+	/// Nodes in the trained tree.
 	pub nodes: Vec<Node>,
 }
 
+/// This Enum represents the type of Node in the tree. A `BranchNode` represents internal tree nodes, and a `LeafNode` represents terminal nodes.
 #[derive(Debug)]
 pub enum Node {
 	Branch(BranchNode),
@@ -138,11 +145,17 @@ impl Node {
 	}
 }
 
+/// This struct describes a branch node in a trained tree.
+///
 #[derive(Debug)]
 pub struct BranchNode {
+	/// The index in the tree's node vector for this node's left child.
 	pub left_child_index: usize,
+	/// The index in the tree's node vector for this node's right child.
 	pub right_child_index: usize,
+	/// Used to determine how examples reaching this node should be routed, either to the left subtree or to the right.
 	pub split: BranchSplit,
+	/// The fraction of training examples that reach this node, used to compute SHAP values.
 	pub examples_fraction: f32,
 }
 
@@ -161,10 +174,15 @@ impl BranchSplit {
 	}
 }
 
+/// This struct describes a continuous split used to determine how continuous numeric features are split into left/right subtrees.
 #[derive(Debug)]
 pub struct BranchSplitContinuous {
+	/// The index of the feature used to split the node.
 	pub feature_index: usize,
+	/// The threshold value of the split.
+	/// All features <= split_value go to the left subtree and all features  > split_value go to the right.
 	pub split_value: f32,
+	/// The subtree (left or right) that invalid values for this feature should go to.
 	pub invalid_values_direction: SplitDirection,
 }
 
@@ -174,20 +192,44 @@ pub enum SplitDirection {
 	Right,
 }
 
+/// This struct describes a discrete split used to determine how enum features are split into left/right subtrees.
 #[derive(Debug)]
 pub struct BranchSplitDiscrete {
+	/// The index of the feature used to split the node.
 	pub feature_index: usize,
+	/// The child node direction each enum variant belongs to, 0 for the left child and 1 for the right.
 	pub directions: BinDirections,
 }
 
+/// This struct describes which subtree (left or right) a binned feature value should go to. It is a bitset where the bit value at index i represent which child the i-th enum variant should go: 0 for the left child and 1 for the right.
+///
+/// A feature whose value is the i-th enum variant should go to the left subtree if the i-th bit in the bitset is 0 and to the right subtree if the i-th bit is 1.
+///
+/// # Example
+/// Consider an enum feature with three variants: `red`, `green`, and `blue`. We always reserve bin 0 for features with missing values.
+/// ```
+/// BinDirections {
+///		n: 4,
+///		bytes: [2, ..]
+/// }
+/// ```
+/// We only need one byte to represent this feature since there are only 4 bins: 3 enum variants + 1 for the missing bin.
+/// The first byte, represented as bits is `00000010`.
+/// The enum variant 1, corresponding to `red` goes to the right subtree and `missing`, `blue` and `green` go to the left.
+
 #[derive(Clone, Debug)]
 pub struct BinDirections {
+	/// The total number of bin directions in the bitset.
 	pub n: u8,
+	/// Bytes representing the direction (0=left and 1=right) for each bin.
 	pub bytes: [u8; 32],
 }
 
+/// This struct describes a leaf node in a trained tree.
 #[derive(Debug)]
 pub struct LeafNode {
+	/// The output of the leaf node... TODO
 	pub value: f32,
+	/// The fraction of the training examples that ended up in this leaf node, used to compute SHAP values.
 	pub examples_fraction: f32,
 }
