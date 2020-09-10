@@ -39,7 +39,7 @@ struct TrainOptions {
 	config: Option<PathBuf>,
 	#[clap(short, long, about = "the path to write the output to")]
 	output: Option<PathBuf>,
-	#[clap(long = "no-progress", parse(from_flag = std::ops::Not::not))]
+	#[clap(long = "no-progress", about = "disable the cli progress view", parse(from_flag = std::ops::Not::not))]
 	progress: bool,
 }
 

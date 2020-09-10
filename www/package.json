@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"esbuild": "0.6.33",
+		"@tangramhq/pinwheel": "*",
 		"preact": "10.4.8",
 		"preact-render-to-string": "5.1.10"
 	},

@@ -1,6 +1,6 @@
-let Authorization = `Basic ${btoa(
-	`${Deno.env.get('GITHUB_USERNAME')}:${Deno.env.get('GITHUB_TOKEN')}`,
-)}`
+let githubUsername = Deno.env.get('GITHUB_USERNAME')
+let githubToken = Deno.env.get('GITHUB_TOKEN')
+let Authorization = `Basic ${btoa(`${githubUsername}:${githubToken}`)}`
 
 let response = await fetch(
 	'https://api.github.com/repos/tangram-hq/tangram/dispatches',
