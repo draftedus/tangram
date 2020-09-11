@@ -8,7 +8,7 @@ use super::{
 	},
 	single,
 	single::bin_stats::BinStatsPool,
-	types,
+	*,
 };
 use crate::util::progress_counter::ProgressCounter;
 use crate::{dataframe::*, util::super_unsafe::SuperUnsafe};
@@ -19,12 +19,12 @@ use std::ops::Range;
 
 /// Train a gradient boosted decision tree model.
 pub fn train(
-	task: &types::Task,
+	task: &Task,
 	features: DataFrameView,
 	labels: ColumnView,
-	options: types::TrainOptions,
+	options: TrainOptions,
 	update_progress: &mut dyn FnMut(super::Progress),
-) -> types::Model {
+) -> Model {
 	// let timing = timing::Timing::new();
 
 	// determine how to bin each column
@@ -92,36 +92,36 @@ pub fn train(
 	// regression and binary classification have one tree for each round,
 	// multiclass classification has one tree per class for each round.
 	let n_trees_per_round = match task {
-		types::Task::Regression => 1,
-		types::Task::BinaryClassification => 1,
-		types::Task::MulticlassClassification { n_trees_per_round } => *n_trees_per_round,
+		Task::Regression => 1,
+		Task::BinaryClassification => 1,
+		Task::MulticlassClassification { n_trees_per_round } => *n_trees_per_round,
 	};
 
 	// The mean square error loss used in regression has a constant second derivative,
 	// so there is no need to update hessians for regression tasks.
 	let has_constant_hessians = match task {
-		types::Task::Regression => true,
-		types::Task::BinaryClassification => false,
-		types::Task::MulticlassClassification { .. } => false,
+		Task::Regression => true,
+		Task::BinaryClassification => false,
+		Task::MulticlassClassification { .. } => false,
 	};
 
 	// A Tree model's prediction will be a bias plus the sum of the outputs of each tree.
 	// The bias will produce the baseline prediction.
 	let biases = match task {
 		// For regression, the baseline prediction is the mean of the labels.
-		types::Task::Regression => {
+		Task::Regression => {
 			let labels_train = labels_train.as_number().unwrap().data.into();
 			super::regressor::compute_biases(labels_train)
 		}
 		// For binary classification, the bias is the log of the ratio of positive examples
 		// to negative examples in the training set, so the baseline prediction is the majority class.
-		types::Task::BinaryClassification => {
+		Task::BinaryClassification => {
 			let labels_train = labels_train.as_enum().unwrap().data.into();
 			super::binary_classifier::compute_biases(labels_train)
 		}
 		// For multiclass classification the biases are the logs of each class's
 		// proporation in the training set, so the baseline prediction is the majority class.
-		types::Task::MulticlassClassification { .. } => {
+		Task::MulticlassClassification { .. } => {
 			let labels_train = labels_train.as_enum().unwrap().data.into();
 			super::multiclass_classifier::compute_biases(labels_train, n_trees_per_round)
 		}
@@ -148,7 +148,7 @@ pub fn train(
 	let mut n_rounds_trained = 0;
 	// These are the trees in round-major order. After training this will
 	// This will have shape (n_rounds, n_trees_per_round).
-	let mut trees: Vec<single::types::TrainTree> = Vec::new();
+	let mut trees: Vec<single::TrainTree> = Vec::new();
 	// Collect the loss on the training dataset for each round if enabled.
 	let mut losses: Option<Vec<f32>> = if options.compute_loss {
 		Some(Vec::new())
@@ -163,7 +163,7 @@ pub fn train(
 		progress_counter.inc(1);
 		// Update the gradients and hessians before each iteration. In the first iteration we update the gradients and hessians using the loss computed between the baseline prediction and the labels.
 		match task {
-			types::Task::Regression => {
+			Task::Regression => {
 				let labels_train = labels_train.as_number().unwrap();
 				super::regressor::update_gradients_and_hessians(
 					gradients.view_mut(),
@@ -172,7 +172,7 @@ pub fn train(
 					predictions.view(),
 				);
 			}
-			types::Task::BinaryClassification => {
+			Task::BinaryClassification => {
 				let labels_train = labels_train.as_enum().unwrap();
 				super::binary_classifier::update_gradients_and_hessians(
 					gradients.view_mut(),
@@ -181,7 +181,7 @@ pub fn train(
 					predictions.view(),
 				);
 			}
-			types::Task::MulticlassClassification { .. } => {
+			Task::MulticlassClassification { .. } => {
 				let labels_train = labels_train.as_enum().unwrap();
 				super::multiclass_classifier::update_gradients_and_hessians(
 					gradients.view_mut(),
@@ -250,15 +250,15 @@ pub fn train(
 		// If loss computation was enabled, then compute the loss for this round.
 		if let Some(losses) = losses.as_mut() {
 			let loss = match task {
-				types::Task::Regression => {
+				Task::Regression => {
 					let labels_train = labels_train.as_number().unwrap().data.into();
 					super::regressor::compute_loss(labels_train, predictions.view())
 				}
-				types::Task::BinaryClassification => {
+				Task::BinaryClassification => {
 					let labels_train = labels_train.as_enum().unwrap().data.into();
 					super::binary_classifier::compute_loss(labels_train, predictions.view())
 				}
-				types::Task::MulticlassClassification { .. } => {
+				Task::MulticlassClassification { .. } => {
 					let labels_train = labels_train.as_enum().unwrap().data.into();
 					super::multiclass_classifier::compute_loss(labels_train, predictions.view())
 				}
@@ -304,20 +304,20 @@ pub fn train(
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
 
 	// assemble the model
-	let trees: Vec<types::Tree> = trees.into_iter().map(Into::into).collect();
+	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
 	match task {
-		types::Task::Regression => types::Model::Regressor(types::Regressor {
+		Task::Regression => Model::Regressor(Regressor {
 			bias: biases[0],
 			trees,
 			feature_importances,
 			losses,
 		}),
-		types::Task::BinaryClassification => {
+		Task::BinaryClassification => {
 			let classes = match labels_train {
 				ColumnView::Enum(c) => c.options.to_vec(),
 				_ => unreachable!(),
 			};
-			types::Model::BinaryClassifier(types::BinaryClassifier {
+			Model::BinaryClassifier(BinaryClassifier {
 				bias: biases[0],
 				trees,
 				feature_importances,
@@ -325,12 +325,12 @@ pub fn train(
 				classes,
 			})
 		}
-		types::Task::MulticlassClassification { .. } => {
+		Task::MulticlassClassification { .. } => {
 			let classes = match labels_train {
 				ColumnView::Enum(c) => c.options.to_vec(),
 				_ => unreachable!(),
 			};
-			types::Model::MulticlassClassifier(types::MulticlassClassifier {
+			Model::MulticlassClassifier(MulticlassClassifier {
 				n_rounds: n_rounds_trained,
 				n_classes: n_trees_per_round,
 				biases: biases.into_raw_vec(),
@@ -363,20 +363,21 @@ pub fn update_predictions_from_leaves(
 /**
 This function computes feature importances using the "split" method, where a feature's importance is proportional to the number of nodes that use it to split.
 */
-fn compute_feature_importances(trees: &[single::types::TrainTree], n_features: usize) -> Vec<f32> {
+fn compute_feature_importances(trees: &[single::TrainTree], n_features: usize) -> Vec<f32> {
 	let mut feature_importances = vec![0.0; n_features];
 	for tree in trees.iter() {
 		tree.nodes.iter().for_each(|node| match node {
-			single::types::TrainNode::Branch(single::types::TrainBranchNode {
+			single::TrainNode::Branch(single::TrainBranchNode {
 				split:
-					single::types::TrainBranchSplit::Continuous(
-						single::types::TrainBranchSplitContinuous { feature_index, .. },
-					),
+					single::TrainBranchSplit::Continuous(single::TrainBranchSplitContinuous {
+						feature_index,
+						..
+					}),
 				..
 			})
-			| single::types::TrainNode::Branch(single::types::TrainBranchNode {
+			| single::TrainNode::Branch(single::TrainBranchNode {
 				split:
-					single::types::TrainBranchSplit::Discrete(single::types::TrainBranchSplitDiscrete {
+					single::TrainBranchSplit::Discrete(single::TrainBranchSplitDiscrete {
 						feature_index,
 						..
 					}),
@@ -384,7 +385,7 @@ fn compute_feature_importances(trees: &[single::types::TrainTree], n_features: u
 			}) => {
 				feature_importances[*feature_index] += 1.0;
 			}
-			single::types::TrainNode::Leaf(_) => {}
+			single::TrainNode::Leaf(_) => {}
 		});
 	}
 	// Normalize the feature_importances.

@@ -1,18 +1,18 @@
-use super::{shap, single, types};
+use super::{shap, single, *};
 use crate::dataframe::*;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use std::ops::Neg;
 
-impl types::BinaryClassifier {
+impl BinaryClassifier {
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumColumnView,
-		options: types::TrainOptions,
+		options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
-		let task = types::Task::BinaryClassification;
+		let task = Task::BinaryClassification;
 		let model = super::train::train(
 			&task,
 			features,
@@ -21,7 +21,7 @@ impl types::BinaryClassifier {
 			update_progress,
 		);
 		match model {
-			types::Model::BinaryClassifier(model) => model,
+			Model::BinaryClassifier(model) => model,
 			_ => unreachable!(),
 		}
 	}
@@ -83,7 +83,7 @@ impl types::BinaryClassifier {
 }
 
 pub fn update_logits(
-	trees: &[single::types::TrainTree],
+	trees: &[single::TrainTree],
 	features: ArrayView2<u8>,
 	mut logits: ArrayViewMut2<f32>,
 ) {

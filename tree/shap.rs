@@ -1,14 +1,12 @@
-use super::types;
+use super::{
+	BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete, Node, SplitDirection, Tree,
+};
 use crate::dataframe;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
 // computes for a single output
-pub fn compute_shap(
-	example: &[dataframe::Value],
-	trees: ArrayView1<types::Tree>,
-	bias: f32,
-) -> Vec<f32> {
+pub fn compute_shap(example: &[dataframe::Value], trees: ArrayView1<Tree>, bias: f32) -> Vec<f32> {
 	let n_features = example.len();
 	let mut shap_values =
 		trees
@@ -28,7 +26,7 @@ pub fn compute_shap(
 	shap_values
 }
 
-fn tree_shap(example: &[dataframe::Value], tree: &types::Tree) -> Vec<f32> {
+fn tree_shap(example: &[dataframe::Value], tree: &Tree) -> Vec<f32> {
 	let n_features = example.len();
 	let mut phi = vec![0.0; n_features + 1];
 	let max_depth = max_depth(tree, 0, 0) + 2;
@@ -73,7 +71,7 @@ impl PathItem {
 fn tree_shap_recursive(
 	phi: &mut [f32],
 	example: &[dataframe::Value],
-	tree: &types::Tree,
+	tree: &Tree,
 	node_index: usize,
 	unique_path: &mut [PathItem],
 	unique_depth: usize,
@@ -93,13 +91,13 @@ fn tree_shap_recursive(
 	let node = &tree.nodes[node_index];
 
 	match node {
-		types::Node::Leaf(n) => (1..=unique_depth).for_each(|path_index| {
+		Node::Leaf(n) => (1..=unique_depth).for_each(|path_index| {
 			let weight = unwound_path_sum(unique_path, unique_depth, path_index);
 			let path_item = &unique_path[path_index];
 			let scale = weight * (path_item.one_fraction - path_item.zero_fraction);
 			phi[path_item.feature_index.unwrap()] += scale * n.value;
 		}),
-		types::Node::Branch(n) => {
+		Node::Branch(n) => {
 			let (hot_child_index, cold_child_index) = compute_hot_cold_child(n, example);
 			let hot_zero_fraction =
 				tree.nodes[hot_child_index].examples_fraction() / n.examples_fraction;
@@ -224,19 +222,16 @@ fn unwound_path_sum(unique_path: &[PathItem], unique_depth: usize, path_index: u
 	total * (unique_depth + 1).to_f32().unwrap()
 }
 
-fn compute_hot_cold_child(
-	node: &types::BranchNode,
-	example: &[dataframe::Value],
-) -> (usize, usize) {
+fn compute_hot_cold_child(node: &BranchNode, example: &[dataframe::Value]) -> (usize, usize) {
 	match &node.split {
-		types::BranchSplit::Continuous(types::BranchSplitContinuous {
+		BranchSplit::Continuous(BranchSplitContinuous {
 			feature_index,
 			split_value,
 			invalid_values_direction,
 		}) => match example[*feature_index] {
 			dataframe::Value::Number(v) => {
 				if v.is_nan() {
-					if let types::SplitDirection::Left = invalid_values_direction {
+					if let SplitDirection::Left = invalid_values_direction {
 						(node.left_child_index, node.right_child_index)
 					} else {
 						(node.right_child_index, node.left_child_index)
@@ -249,7 +244,7 @@ fn compute_hot_cold_child(
 			}
 			_ => unreachable!(),
 		},
-		types::BranchSplit::Discrete(types::BranchSplitDiscrete {
+		BranchSplit::Discrete(BranchSplitDiscrete {
 			feature_index,
 			directions,
 		}) => match example[*feature_index] {
@@ -265,14 +260,14 @@ fn compute_hot_cold_child(
 	}
 }
 
-fn max_depth(tree: &types::Tree, node_index: usize, depth: usize) -> usize {
+fn max_depth(tree: &Tree, node_index: usize, depth: usize) -> usize {
 	let current_node = &tree.nodes[node_index];
-	if let types::Node::Leaf(_) = current_node {
+	if let Node::Leaf(_) = current_node {
 		return depth;
 	}
 
 	let current_node = match current_node {
-		types::Node::Branch(n) => n,
+		Node::Branch(n) => n,
 		_ => unreachable!(),
 	};
 
@@ -285,14 +280,14 @@ fn max_depth(tree: &types::Tree, node_index: usize, depth: usize) -> usize {
 	left_depth.max(right_depth) + 1
 }
 
-fn compute_expectation(tree: &types::Tree, node_index: usize) -> f32 {
+fn compute_expectation(tree: &Tree, node_index: usize) -> f32 {
 	let current_node = &tree.nodes[node_index];
-	if let types::Node::Leaf(n) = current_node {
+	if let Node::Leaf(n) = current_node {
 		return n.value;
 	}
 
 	let current_node = match current_node {
-		types::Node::Branch(n) => n,
+		Node::Branch(n) => n,
 		_ => unreachable!(),
 	};
 

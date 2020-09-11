@@ -1,6 +1,6 @@
 use super::{
 	early_stopping::{train_early_stopping_split, EarlyStoppingMonitor},
-	shap, types,
+	shap, BinaryClassifier, Progress, TrainOptions,
 };
 use crate::{
 	dataframe::*,
@@ -13,13 +13,13 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::ops::Neg;
 
-impl types::BinaryClassifier {
+impl BinaryClassifier {
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: &EnumColumnView,
-		options: &types::TrainOptions,
-		update_progress: &mut dyn FnMut(super::Progress),
-	) -> types::BinaryClassifier {
+		options: &TrainOptions,
+		update_progress: &mut dyn FnMut(Progress),
+	) -> BinaryClassifier {
 		let n_features = features.ncols();
 		let classes: Vec<String> = labels.options.to_vec();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
@@ -32,7 +32,7 @@ impl types::BinaryClassifier {
 			.axis_iter(Axis(1))
 			.map(|column| column.mean().unwrap())
 			.collect();
-		let mut model = types::BinaryClassifier {
+		let mut model = BinaryClassifier {
 			bias: 0.0,
 			weights: Array1::<f32>::zeros(n_features),
 			means,
@@ -46,7 +46,7 @@ impl types::BinaryClassifier {
 		};
 
 		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
-		update_progress(super::Progress(progress_counter.clone()));
+		update_progress(Progress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {
 			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
@@ -79,7 +79,7 @@ impl types::BinaryClassifier {
 		&mut self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<usize>,
-		options: &types::TrainOptions,
+		options: &TrainOptions,
 	) {
 		let learning_rate = options.learning_rate;
 		let logits = features.dot(&self.weights) + self.bias;
@@ -107,7 +107,7 @@ impl types::BinaryClassifier {
 		&self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<usize>,
-		options: &types::TrainOptions,
+		options: &TrainOptions,
 	) -> f32 {
 		izip!(
 			features.axis_chunks_iter(Axis(0), options.n_examples_per_batch),

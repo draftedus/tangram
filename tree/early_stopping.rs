@@ -1,4 +1,4 @@
-use super::{single, types};
+use super::{single, *};
 use crate::dataframe::*;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -67,24 +67,24 @@ pub fn train_early_stopping_split<'features, 'labels>(
 }
 
 pub fn compute_early_stopping_metrics(
-	task: &types::Task,
-	trees: &[single::types::TrainTree],
+	task: &Task,
+	trees: &[single::TrainTree],
 	features: ArrayView2<u8>,
 	labels: ColumnView,
 	mut logits: ArrayViewMut2<f32>,
 ) -> f32 {
 	match task {
-		types::Task::Regression => {
+		Task::Regression => {
 			let labels = labels.as_number().unwrap().data.into();
 			super::regressor::update_logits(trees, features, logits.view_mut());
 			super::regressor::compute_loss(labels, logits.view())
 		}
-		types::Task::BinaryClassification => {
+		Task::BinaryClassification => {
 			let labels = labels.as_enum().unwrap().data.into();
 			super::binary_classifier::update_logits(trees, features, logits.view_mut());
 			super::binary_classifier::compute_loss(labels, logits.view())
 		}
-		types::Task::MulticlassClassification { .. } => {
+		Task::MulticlassClassification { .. } => {
 			let labels = labels.as_enum().unwrap().data.into();
 			super::multiclass_classifier::update_logits(trees, features, logits.view_mut());
 			super::multiclass_classifier::compute_loss(labels, logits.view())

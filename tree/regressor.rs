@@ -1,17 +1,17 @@
-use super::{shap, single, types};
+use super::{shap, single, Model, Regressor, Task, TrainOptions};
 use crate::dataframe::*;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
-impl types::Regressor {
+impl Regressor {
 	pub fn train(
 		features: DataFrameView,
 		labels: NumberColumnView,
-		options: types::TrainOptions,
+		options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
-		let task = types::Task::Regression;
+		let task = Task::Regression;
 		let model = super::train::train(
 			&task,
 			features,
@@ -20,7 +20,7 @@ impl types::Regressor {
 			update_progress,
 		);
 		match model {
-			types::Model::Regressor(model) => model,
+			Model::Regressor(model) => model,
 			_ => unreachable!(),
 		}
 	}
@@ -64,7 +64,7 @@ impl types::Regressor {
 }
 
 pub fn update_logits(
-	trees: &[single::types::TrainTree],
+	trees: &[single::TrainTree],
 	features: ArrayView2<u8>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {

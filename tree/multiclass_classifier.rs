@@ -1,17 +1,17 @@
-use super::{shap, single, types};
+use super::{shap, single, Model, MulticlassClassifier, Task, TrainOptions};
 use crate::dataframe::*;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 
-impl types::MulticlassClassifier {
+impl MulticlassClassifier {
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumColumnView,
-		options: types::TrainOptions,
+		options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
-		let task = types::Task::MulticlassClassification {
+		let task = Task::MulticlassClassification {
 			n_trees_per_round: labels.options.len(),
 		};
 		let model = super::train::train(
@@ -22,7 +22,7 @@ impl types::MulticlassClassifier {
 			update_progress,
 		);
 		match model {
-			types::Model::MulticlassClassifier(model) => model,
+			Model::MulticlassClassifier(model) => model,
 			_ => unreachable!(),
 		}
 	}
@@ -79,7 +79,7 @@ impl types::MulticlassClassifier {
 
 // updates the logits with a single round of trees
 pub fn update_logits(
-	trees: &[single::types::TrainTree],
+	trees: &[single::TrainTree],
 	features: ArrayView2<u8>,
 	mut logits: ArrayViewMut2<f32>,
 ) {

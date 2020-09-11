@@ -1,5 +1,6 @@
-use super::super::types;
-use super::types::*;
+use super::{
+	SplitDirection, TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
+};
 use itertools::izip;
 use ndarray::prelude::*;
 
@@ -49,9 +50,9 @@ fn rearrange_examples_index_serial(
 				}) => {
 					let feature_bin = binned_features[(examples_index[left], *feature_index)];
 					if feature_bin <= *bin_index {
-						types::SplitDirection::Left
+						SplitDirection::Left
 					} else {
-						types::SplitDirection::Right
+						SplitDirection::Right
 					}
 				}
 				TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
@@ -61,19 +62,19 @@ fn rearrange_examples_index_serial(
 				}) => {
 					let feature_bin = binned_features[(examples_index[left], *feature_index)];
 					if !directions.get(feature_bin).unwrap() {
-						types::SplitDirection::Left
+						SplitDirection::Left
 					} else {
-						types::SplitDirection::Right
+						SplitDirection::Right
 					}
 				}
 			}
 		};
 		match direction {
-			types::SplitDirection::Left => {
+			SplitDirection::Left => {
 				left += 1;
 				n_left += 1;
 			}
-			types::SplitDirection::Right => {
+			SplitDirection::Right => {
 				right -= 1;
 				examples_index.swap(left, right);
 			}
@@ -112,9 +113,9 @@ fn rearrange_examples_index_parallel(
 							let feature_bin =
 								unsafe { *binned_features.uget((*example_index, *feature_index)) };
 							if feature_bin <= *bin_index {
-								types::SplitDirection::Left
+								SplitDirection::Left
 							} else {
-								types::SplitDirection::Right
+								SplitDirection::Right
 							}
 						}
 						TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
@@ -125,19 +126,19 @@ fn rearrange_examples_index_parallel(
 							let feature_bin =
 								unsafe { *binned_features.uget((*example_index, *feature_index)) };
 							if !directions.get(feature_bin).unwrap() {
-								types::SplitDirection::Left
+								SplitDirection::Left
 							} else {
-								types::SplitDirection::Right
+								SplitDirection::Right
 							}
 						}
 					}
 				};
 				match direction {
-					types::SplitDirection::Left => {
+					SplitDirection::Left => {
 						examples_index_left[n_left] = *example_index;
 						n_left += 1;
 					}
-					types::SplitDirection::Right => {
+					SplitDirection::Right => {
 						examples_index_right[n_right] = *example_index;
 						n_right += 1;
 					}

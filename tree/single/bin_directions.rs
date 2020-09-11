@@ -1,9 +1,9 @@
-use super::super::types;
+use super::BinDirections;
 
 /// Categorical splits are represented as a space-efficient bit vector.
 /// If the entry at index i is 0, then the i-th enum variant goes to the left subtree
 /// and if the value is 1, the i-th enum variant goes to the right subtree.
-impl types::BinDirections {
+impl BinDirections {
 	pub fn new(n: u8, value: bool) -> Self {
 		let bytes = if !value { [0x00; 32] } else { [0xFF; 32] };
 		Self { n, bytes }

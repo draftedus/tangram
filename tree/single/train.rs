@@ -1,12 +1,12 @@
 use super::{
-	super::types,
+	super::{SplitDirection, TrainOptions},
 	bin_stats::{
 		compute_bin_stats_for_non_root_node, compute_bin_stats_for_root_node,
 		compute_bin_stats_subtraction, BinStatsPool,
 	},
 	examples_index::rearrange_examples_index,
 	split::{find_split, find_split_both},
-	types::*,
+	QueueItem, TrainBranchNode, TrainLeafNode, TrainNode, TrainTree,
 };
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -26,7 +26,7 @@ pub fn train(
 	examples_index_right: &mut [usize],
 	bin_stats_pool: &mut BinStatsPool,
 	hessians_are_constant: bool,
-	options: &types::TrainOptions,
+	options: &TrainOptions,
 ) -> (TrainTree, Vec<(Range<usize>, f32)>) {
 	// This is the tree returned by this function
 	let mut tree = TrainTree { nodes: Vec::new() };
@@ -133,8 +133,8 @@ pub fn train(
 				.unwrap();
 			let split_direction = queue_item.split_direction.unwrap();
 			match split_direction {
-				types::SplitDirection::Left => parent.left_child_index = Some(node_index),
-				types::SplitDirection::Right => parent.right_child_index = Some(node_index),
+				SplitDirection::Left => parent.left_child_index = Some(node_index),
+				SplitDirection::Right => parent.right_child_index = Some(node_index),
 			}
 		}
 
@@ -162,9 +162,9 @@ pub fn train(
 		// TODO: this is the naiive implementation that does not take into account
 		// the split with the highest gain of missing values going left/right during training
 		let missing_values_direction = if queue_item.left_n_examples > queue_item.right_n_examples {
-			types::SplitDirection::Left
+			SplitDirection::Left
 		} else {
-			types::SplitDirection::Right
+			SplitDirection::Right
 		};
 
 		tree.nodes.push(TrainNode::Branch(TrainBranchNode {
@@ -268,13 +268,13 @@ pub fn train(
 		// smaller_direction is the direction of the child with fewer examples.
 		let smaller_direction =
 			if left_examples_index_range.len() < right_examples_index_range.len() {
-				types::SplitDirection::Left
+				SplitDirection::Left
 			} else {
-				types::SplitDirection::Right
+				SplitDirection::Right
 			};
 		let smaller_child_examples_index = match smaller_direction {
-			types::SplitDirection::Left => &examples_index[left_examples_index_range.clone()],
-			types::SplitDirection::Right => &examples_index[right_examples_index_range.clone()],
+			SplitDirection::Left => &examples_index[left_examples_index_range.clone()],
+			SplitDirection::Right => &examples_index[right_examples_index_range.clone()],
 		};
 		let mut smaller_child_bin_stats = bin_stats_pool.get();
 
@@ -297,8 +297,8 @@ pub fn train(
 		let mut larger_child_bin_stats = queue_item.bin_stats;
 		compute_bin_stats_subtraction(&mut larger_child_bin_stats, &smaller_child_bin_stats);
 		let (left_bin_stats, right_bin_stats) = match smaller_direction {
-			types::SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
-			types::SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
+			SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
+			SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
 		};
 
 		// If both left and right should split, find the splits for both at the same
@@ -361,7 +361,7 @@ pub fn train(
 					right_n_examples: find_split_output.right_n_examples,
 					right_sum_gradients: find_split_output.right_sum_gradients,
 					right_sum_hessians: find_split_output.right_sum_hessians,
-					split_direction: Some(types::SplitDirection::Left),
+					split_direction: Some(SplitDirection::Left),
 					split: find_split_output.split,
 					sum_gradients: queue_item.left_sum_gradients,
 					sum_hessians: queue_item.left_sum_hessians,
@@ -407,7 +407,7 @@ pub fn train(
 					right_n_examples: find_split_output.right_n_examples,
 					right_sum_gradients: find_split_output.right_sum_gradients,
 					right_sum_hessians: find_split_output.right_sum_hessians,
-					split_direction: Some(types::SplitDirection::Right),
+					split_direction: Some(SplitDirection::Right),
 					split: find_split_output.split,
 					sum_gradients: queue_item.right_sum_gradients,
 					sum_hessians: queue_item.right_sum_hessians,
@@ -443,7 +443,7 @@ pub fn train(
 
 /// Compute the value for a leaf node.
 #[inline(always)]
-fn compute_leaf_value(sum_gradients: f64, sum_hessians: f64, options: &types::TrainOptions) -> f32 {
+fn compute_leaf_value(sum_gradients: f64, sum_hessians: f64, options: &TrainOptions) -> f32 {
 	(-options.learning_rate.to_f64().unwrap() * sum_gradients
 		/ (sum_hessians + options.l2_regularization.to_f64().unwrap() + std::f64::EPSILON))
 		.to_f32()

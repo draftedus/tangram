@@ -1,7 +1,7 @@
 use super::{
-	super::{bin::BinInfo, types},
+	super::{bin::BinInfo, TrainOptions},
 	bin_stats::BinStats,
-	types::*,
+	*,
 };
 use itertools::izip;
 use num_traits::ToPrimitive;
@@ -29,7 +29,7 @@ pub fn find_split(
 	sum_gradients: f64,
 	sum_hessians: f64,
 	examples_index_range: Range<usize>,
-	options: &types::TrainOptions,
+	options: &TrainOptions,
 ) -> Option<FindSplitOutput> {
 	izip!(&bin_stats.entries, include_features, &bin_stats.bin_info)
 		.enumerate()
@@ -77,7 +77,7 @@ pub fn find_split_both(
 	right_sum_hessians: f64,
 	right_examples_index_range: Range<usize>,
 	include_features: &[bool],
-	options: &types::TrainOptions,
+	options: &TrainOptions,
 ) -> (Option<FindSplitOutput>, Option<FindSplitOutput>) {
 	let best: Vec<(Option<FindSplitOutput>, Option<FindSplitOutput>)> =
 		(0..left_bin_stats.entries.len())
@@ -174,7 +174,7 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
-	options: &types::TrainOptions,
+	options: &TrainOptions,
 ) -> Option<FindSplitOutput> {
 	let negative_loss_parent_node = negative_loss(
 		sum_gradients_parent,
@@ -241,13 +241,13 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 
 		let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
 			// we are in the function that splits from left to right
-			types::SplitDirection::Left
+			SplitDirection::Left
 		} else {
 			// there are no missing values, we take the branch with more examples
 			if left_n_examples >= right_n_examples {
-				types::SplitDirection::Left
+				SplitDirection::Left
 			} else {
-				types::SplitDirection::Right
+				SplitDirection::Right
 			}
 		};
 
@@ -310,7 +310,7 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
-	options: &types::TrainOptions,
+	options: &TrainOptions,
 ) -> Option<FindSplitOutput> {
 	let mut best_split_so_far: Option<FindSplitOutput> = None;
 
@@ -338,7 +338,7 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 			.unwrap()
 	});
 
-	let mut directions = types::BinDirections::new(bin_info.n_valid_bins() + 1, true);
+	let mut directions = BinDirections::new(bin_info.n_valid_bins() + 1, true);
 
 	for (bin_index, bin_stats_entry) in sorted_bin_stats.iter() {
 		directions.set(bin_index.to_u8().unwrap(), false);
@@ -402,13 +402,13 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 		// training examples
 		let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
 			// we are in the function that splits from left to right
-			types::SplitDirection::Left
+			SplitDirection::Left
 		} else {
 			// there are no missing values, we take the branch with more examples
 			if left_n_examples >= right_n_examples {
-				types::SplitDirection::Left
+				SplitDirection::Left
 			} else {
-				types::SplitDirection::Right
+				SplitDirection::Right
 			}
 		};
 

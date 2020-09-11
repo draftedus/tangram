@@ -22,9 +22,7 @@ pub mod stats;
 pub mod tree;
 pub mod util;
 
-pub use self::predict::predict;
-pub use self::tangram::*;
-pub use self::train::train;
+pub use self::{predict::predict, tangram::*, train::train};
 
 #[cfg(target_arch = "wasm32")]
 #[global_allocator]

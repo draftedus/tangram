@@ -1,6 +1,6 @@
 use super::{
 	early_stopping::{train_early_stopping_split, EarlyStoppingMonitor},
-	shap, types,
+	shap, MulticlassClassifier, Progress, TrainOptions,
 };
 use crate::{
 	dataframe::*,
@@ -12,13 +12,13 @@ use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
-impl types::MulticlassClassifier {
+impl MulticlassClassifier {
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: &EnumColumnView,
-		options: &types::TrainOptions,
-		update_progress: &mut dyn FnMut(super::Progress),
-	) -> types::MulticlassClassifier {
+		options: &TrainOptions,
+		update_progress: &mut dyn FnMut(Progress),
+	) -> MulticlassClassifier {
 		let n_classes = labels.options.len();
 		let n_features = features.ncols();
 		let classes: Vec<String> = labels.options.to_vec();
@@ -32,7 +32,7 @@ impl types::MulticlassClassifier {
 			.axis_iter(Axis(1))
 			.map(|column| column.mean().unwrap())
 			.collect();
-		let mut model = types::MulticlassClassifier {
+		let mut model = MulticlassClassifier {
 			biases: Array1::<f32>::zeros(n_classes),
 			weights: Array2::<f32>::zeros((n_features, n_classes)),
 			means,
@@ -45,7 +45,7 @@ impl types::MulticlassClassifier {
 			None
 		};
 		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
-		update_progress(super::Progress(progress_counter.clone()));
+		update_progress(Progress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {
 			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
@@ -78,7 +78,7 @@ impl types::MulticlassClassifier {
 		&mut self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<usize>,
-		options: &types::TrainOptions,
+		options: &TrainOptions,
 	) {
 		let learning_rate = options.learning_rate;
 		let n_classes = self.weights.ncols();
@@ -114,7 +114,7 @@ impl types::MulticlassClassifier {
 		&self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<usize>,
-		options: &types::TrainOptions,
+		options: &TrainOptions,
 	) -> f32 {
 		let n_classes = self.biases.len();
 		izip!(

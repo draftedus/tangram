@@ -1,6 +1,6 @@
 use super::{
 	early_stopping::{train_early_stopping_split, EarlyStoppingMonitor},
-	shap, types,
+	shap, *,
 };
 use crate::{
 	dataframe::*,
@@ -12,11 +12,11 @@ use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
-impl types::Regressor {
+impl Regressor {
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: &NumberColumnView,
-		options: &types::TrainOptions,
+		options: &TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
 		let n_features = features.ncols();
@@ -75,7 +75,7 @@ impl types::Regressor {
 		&mut self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<f32>,
-		options: &types::TrainOptions,
+		options: &TrainOptions,
 	) {
 		let learning_rate = options.learning_rate;
 		let predictions = features.dot(&self.weights) + self.bias;
@@ -92,7 +92,7 @@ impl types::Regressor {
 		&self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<f32>,
-		options: &types::TrainOptions,
+		options: &TrainOptions,
 	) -> f32 {
 		izip!(
 			features.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
