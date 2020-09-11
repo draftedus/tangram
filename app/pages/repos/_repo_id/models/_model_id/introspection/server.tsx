@@ -6,12 +6,12 @@ import {
 	ModelSideNavItem,
 } from 'layouts/model_layout'
 
-import { GBTBinaryClassifierModelPage } from './gbt_binary_classifier'
-import { GBTMulticlassClassifierModelPage } from './gbt_multiclass_classifier'
-import { GBTRegressorModelPage } from './gbt_regressor'
 import { LinearBinaryClassifierModelPage } from './linear_binary_classifier'
 import { LinearMulticlassClassifierModelPage } from './linear_multiclass_classifier'
 import { LinearRegressorModelPage } from './linear_regressor'
+import { TreeBinaryClassifierModelPage } from './tree_binary_classifier'
+import { TreeMulticlassClassifierModelPage } from './tree_multiclass_classifier'
+import { TreeRegressorModelPage } from './tree_regressor'
 
 export type Props = {
 	inner: Inner
@@ -49,9 +49,9 @@ export type Inner =
 	  }
 	| {
 			type:
-				| Type.GBTRegressor
-				| Type.GBTBinaryClassifier
-				| Type.GBTMulticlassClassifier
+				| Type.TreeRegressor
+				| Type.TreeBinaryClassifier
+				| Type.TreeMulticlassClassifier
 			value: {
 				featureImportances: Array<[string, number]>
 			}
@@ -59,11 +59,11 @@ export type Inner =
 
 export enum Type {
 	LinearRegressor = 'linearRegressor',
-	GBTRegressor = 'gbtRegressor',
+	TreeRegressor = 'treeRegressor',
 	LinearBinaryClassifier = 'linearBinaryClassifier',
-	GBTBinaryClassifier = 'gbtBinaryClassifier',
+	TreeBinaryClassifier = 'treeBinaryClassifier',
 	LinearMulticlassClassifier = 'linearMulticlassClassifier',
-	GBTMulticlassClassifier = 'gbtMulticlassClassifier',
+	TreeMulticlassClassifier = 'treeMulticlassClassifier',
 }
 
 export default function IntrospectionPage(props: Props) {
@@ -73,24 +73,24 @@ export default function IntrospectionPage(props: Props) {
 			inner = <LinearRegressorModelPage {...props.inner.value} />
 			break
 		}
-		case Type.GBTRegressor: {
-			inner = <GBTRegressorModelPage {...props.inner.value} />
+		case Type.TreeRegressor: {
+			inner = <TreeRegressorModelPage {...props.inner.value} />
 			break
 		}
 		case Type.LinearBinaryClassifier: {
 			inner = <LinearBinaryClassifierModelPage {...props.inner.value} />
 			break
 		}
-		case Type.GBTBinaryClassifier: {
-			inner = <GBTBinaryClassifierModelPage {...props.inner.value} />
+		case Type.TreeBinaryClassifier: {
+			inner = <TreeBinaryClassifierModelPage {...props.inner.value} />
 			break
 		}
 		case Type.LinearMulticlassClassifier: {
 			inner = <LinearMulticlassClassifierModelPage {...props.inner.value} />
 			break
 		}
-		case Type.GBTMulticlassClassifier: {
-			inner = <GBTMulticlassClassifierModelPage {...props.inner.value} />
+		case Type.TreeMulticlassClassifier: {
+			inner = <TreeMulticlassClassifierModelPage {...props.inner.value} />
 			break
 		}
 	}

@@ -4,7 +4,7 @@ type Props = {
 	values: Array<[string, number]>
 }
 
-export function GBTFeatureImportances(props: Props) {
+export function TreeFeatureImportances(props: Props) {
 	let max = Math.max(...props.values.map(([, value]) => Math.abs(value)))
 	let data = [
 		{

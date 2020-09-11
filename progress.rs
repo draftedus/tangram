@@ -32,7 +32,7 @@ pub enum TrainProgress {
 #[derive(Clone, Debug)]
 pub enum ModelTrainProgress {
 	Linear(crate::linear::Progress),
-	GBT(crate::gbt::Progress),
+	Tree(crate::tree::Progress),
 }
 
 #[derive(Clone, Debug)]

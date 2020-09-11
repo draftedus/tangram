@@ -7,16 +7,15 @@ use tangram::metrics;
 
 fn main() -> Result<()> {
 	// load the data
-	let csv_file_path = Path::new("data/heart-disease.csv");
-	let nrows_train = 242;
-	let _nrows_test = 61;
-	let target_column_index = 13;
+	let csv_file_path = Path::new("data/census.csv");
+	let nrows_train = 26049;
+	let _nrows_test = 6512;
+	let target_column_index = 14;
 	let mut csv_reader = csv::Reader::from_path(csv_file_path)?;
 	let options = FromCsvOptions {
 		..Default::default()
 	};
 	let mut features = DataFrame::from_csv(&mut csv_reader, options, |_| {})?;
-
 	let labels = features.columns.remove(target_column_index);
 	let (dataframe_train, dataframe_test) = features.view().split_at_row(nrows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
@@ -45,22 +44,22 @@ fn main() -> Result<()> {
 		&stats_settings,
 		&mut |_| {},
 	);
-	let feature_groups = tangram::features::compute_feature_groups_gbt(&overall_column_stats);
+	let feature_groups = tangram::features::compute_feature_groups_tree(&overall_column_stats);
 	let features_train =
 		tangram::features::compute_features_dataframe(&dataframe_train, &feature_groups, &|| {});
 
 	// train the model
-	let train_options = tangram::gbt::TrainOptions {
+	let train_options = tangram::tree::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: 8,
 		max_leaf_nodes: 255,
 		max_rounds: 100,
-		min_examples_leaf: 10,
+		min_examples_leaf: 100,
 		min_sum_hessians_in_leaf: 0.0,
 		..Default::default()
 	};
 	let start = Instant::now();
-	let model = tangram::gbt::BinaryClassifier::train(
+	let model = tangram::tree::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.clone(),
 		train_options,

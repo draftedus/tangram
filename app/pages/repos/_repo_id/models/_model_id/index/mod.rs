@@ -216,19 +216,19 @@ fn model_type_name(model: &tangram::types::Model) -> String {
 	match model {
 		tangram::types::Model::Regressor(model) => match &model.model {
 			tangram::types::RegressionModel::Linear(_) => "Linear Regressor".into(),
-			tangram::types::RegressionModel::GBT(_) => "Gradient Boosted Tree Regressor".into(),
+			tangram::types::RegressionModel::Tree(_) => "Gradient Boosted Tree Regressor".into(),
 		},
 		tangram::types::Model::Classifier(model) => match &model.model {
 			tangram::types::ClassificationModel::LinearBinary(_) => {
 				"Linear Binary Classifier".into()
 			}
-			tangram::types::ClassificationModel::GBTBinary(_) => {
+			tangram::types::ClassificationModel::TreeBinary(_) => {
 				"Gradient Boosted Tree Binary Classifier".into()
 			}
 			tangram::types::ClassificationModel::LinearMulticlass(_) => {
 				"Linear Multiclass Classifier".into()
 			}
-			tangram::types::ClassificationModel::GBTMulticlass(_) => {
+			tangram::types::ClassificationModel::TreeMulticlass(_) => {
 				"Gradient Boosted Tree Multiclass Classifier".into()
 			}
 		},

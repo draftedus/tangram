@@ -12,13 +12,13 @@ mod train;
 
 pub mod dataframe;
 pub mod features;
-pub mod gbt;
 pub mod id;
 pub mod linear;
 pub mod metrics;
 pub mod predict;
 pub mod progress;
 pub mod stats;
+pub mod tree;
 pub mod types;
 pub mod util;
 

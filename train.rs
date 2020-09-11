@@ -1,11 +1,11 @@
 use crate::{
 	config::{self, Config},
 	dataframe::*,
-	features, gbt, grid,
+	features, grid,
 	id::Id,
 	linear, metrics,
 	progress::{GridTrainProgress, ModelTestProgress, ModelTrainProgress, Progress, TrainProgress},
-	stats, test, types,
+	stats, test, tree, types,
 	util::progress_counter::ProgressCounter,
 };
 use anyhow::{format_err, Context, Result};
@@ -172,12 +172,12 @@ pub fn train(
 					options,
 					model,
 				}),
-				TrainModelOutput::GBTRegressor(GBTRegressorTrainModelOutput {
+				TrainModelOutput::TreeRegressor(TreeRegressorTrainModelOutput {
 					model,
 					feature_groups,
 					options,
 					..
-				}) => RegressionModel::GBT(GBTRegressor {
+				}) => RegressionModel::Tree(TreeRegressor {
 					model,
 					feature_groups,
 					options,
@@ -229,14 +229,14 @@ pub fn train(
 						options,
 					})
 				}
-				TrainModelOutput::GBTBinaryClassifier(GBTBinaryClassifierTrainModelOutput {
+				TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 					model,
 					feature_groups,
 					options,
 					..
 				}) => {
 					let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
-					ClassificationModel::GBTBinary(GBTBinaryClassifier {
+					ClassificationModel::TreeBinary(TreeBinaryClassifier {
 						auc_roc: binary_classifier_model_test_metrics.auc_roc,
 						class_metrics: binary_classifier_model_test_metrics.class_metrics,
 						feature_groups,
@@ -256,14 +256,14 @@ pub fn train(
 					feature_groups,
 					options,
 				}),
-				TrainModelOutput::GBTMulticlassClassifier(
-					GBTMulticlassClassifierTrainModelOutput {
+				TrainModelOutput::TreeMulticlassClassifier(
+					TreeMulticlassClassifierTrainModelOutput {
 						model,
 						feature_groups,
 						options,
 						..
 					},
-				) => ClassificationModel::GBTMulticlass(GBTMulticlassClassifier {
+				) => ClassificationModel::TreeMulticlass(TreeMulticlassClassifier {
 					model,
 					feature_groups,
 					options,
@@ -298,18 +298,18 @@ pub enum Task {
 	Classification { classes: Vec<String> },
 }
 
-pub struct GBTBinaryClassifier {
+pub struct TreeBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: gbt::BinaryClassifier,
+	pub model: tree::BinaryClassifier,
 	pub class_metrics: Vec<metrics::BinaryClassificationClassMetricsOutput>,
 	pub auc_roc: f32,
-	pub options: grid::GBTModelTrainOptions,
+	pub options: grid::TreeModelTrainOptions,
 }
 
-pub struct GBTMulticlassClassifier {
+pub struct TreeMulticlassClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: gbt::MulticlassClassifier,
-	pub options: grid::GBTModelTrainOptions,
+	pub model: tree::MulticlassClassifier,
+	pub options: grid::TreeModelTrainOptions,
 }
 
 #[derive(Debug)]
@@ -321,7 +321,7 @@ pub enum ClassificationComparisonMetric {
 
 pub enum RegressionModel {
 	Linear(LinearRegressor),
-	GBT(GBTRegressor),
+	Tree(TreeRegressor),
 }
 
 pub struct LinearRegressor {
@@ -330,10 +330,10 @@ pub struct LinearRegressor {
 	pub model: linear::Regressor,
 }
 
-pub struct GBTRegressor {
+pub struct TreeRegressor {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub options: grid::GBTModelTrainOptions,
-	pub model: gbt::Regressor,
+	pub options: grid::TreeModelTrainOptions,
+	pub model: tree::Regressor,
 }
 
 #[derive(Debug)]
@@ -347,8 +347,8 @@ pub enum RegressionComparisonMetric {
 pub enum ClassificationModel {
 	LinearBinary(LinearBinaryClassifier),
 	LinearMulticlass(LinearMulticlassClassifier),
-	GBTBinary(GBTBinaryClassifier),
-	GBTMulticlass(GBTMulticlassClassifier),
+	TreeBinary(TreeBinaryClassifier),
+	TreeMulticlass(TreeMulticlassClassifier),
 }
 
 pub struct LinearBinaryClassifier {
@@ -518,11 +518,11 @@ fn compute_hyperparameter_grid(
 
 enum TrainModelOutput {
 	LinearRegressor(LinearRegressorTrainModelOutput),
-	GBTRegressor(GBTRegressorTrainModelOutput),
+	TreeRegressor(TreeRegressorTrainModelOutput),
 	LinearBinaryClassifier(LinearBinaryClassifierTrainModelOutput),
-	GBTBinaryClassifier(GBTBinaryClassifierTrainModelOutput),
+	TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput),
 	LinearMulticlassClassifier(LinearMulticlassClassifierTrainModelOutput),
-	GBTMulticlassClassifier(GBTMulticlassClassifierTrainModelOutput),
+	TreeMulticlassClassifier(TreeMulticlassClassifierTrainModelOutput),
 }
 
 struct LinearRegressorTrainModelOutput {
@@ -532,11 +532,11 @@ struct LinearRegressorTrainModelOutput {
 	options: grid::LinearModelTrainOptions,
 }
 
-struct GBTRegressorTrainModelOutput {
-	model: gbt::Regressor,
+struct TreeRegressorTrainModelOutput {
+	model: tree::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::GBTModelTrainOptions,
+	options: grid::TreeModelTrainOptions,
 }
 
 struct LinearBinaryClassifierTrainModelOutput {
@@ -546,11 +546,11 @@ struct LinearBinaryClassifierTrainModelOutput {
 	options: grid::LinearModelTrainOptions,
 }
 
-struct GBTBinaryClassifierTrainModelOutput {
-	model: gbt::BinaryClassifier,
+struct TreeBinaryClassifierTrainModelOutput {
+	model: tree::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::GBTModelTrainOptions,
+	options: grid::TreeModelTrainOptions,
 }
 
 struct LinearMulticlassClassifierTrainModelOutput {
@@ -560,11 +560,11 @@ struct LinearMulticlassClassifierTrainModelOutput {
 	options: grid::LinearModelTrainOptions,
 }
 
-struct GBTMulticlassClassifierTrainModelOutput {
-	model: gbt::MulticlassClassifier,
+struct TreeMulticlassClassifierTrainModelOutput {
+	model: tree::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::GBTModelTrainOptions,
+	options: grid::TreeModelTrainOptions,
 }
 
 fn train_model(
@@ -584,11 +584,11 @@ fn train_model(
 			options,
 			update_progress,
 		),
-		grid::GridItem::GBTRegressor {
+		grid::GridItem::TreeRegressor {
 			target_column_index,
 			feature_groups,
 			options,
-		} => train_gbt_regressor(
+		} => train_tree_regressor(
 			dataframe_train,
 			target_column_index,
 			feature_groups,
@@ -606,11 +606,11 @@ fn train_model(
 			options,
 			update_progress,
 		),
-		grid::GridItem::GBTBinaryClassifier {
+		grid::GridItem::TreeBinaryClassifier {
 			target_column_index,
 			feature_groups,
 			options,
-		} => train_gbt_binary_classifier(
+		} => train_tree_binary_classifier(
 			dataframe_train,
 			target_column_index,
 			feature_groups,
@@ -628,11 +628,11 @@ fn train_model(
 			options,
 			update_progress,
 		),
-		grid::GridItem::GBTMulticlassClassifier {
+		grid::GridItem::TreeMulticlassClassifier {
 			target_column_index,
 			feature_groups,
 			options,
-		} => train_gbt_multiclass_classifier(
+		} => train_tree_multiclass_classifier(
 			dataframe_train,
 			target_column_index,
 			feature_groups,
@@ -686,11 +686,11 @@ fn train_linear_regressor(
 	})
 }
 
-fn train_gbt_regressor(
+fn train_tree_regressor(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
-	options: grid::GBTModelTrainOptions,
+	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
@@ -706,7 +706,7 @@ fn train_gbt_regressor(
 		.unwrap()
 		.clone();
 	let base: usize = 2;
-	let gbt_options = gbt::TrainOptions {
+	let tree_options = tree::TrainOptions {
 		compute_loss: true,
 		early_stopping_options: None,
 		l2_regularization: 0.0,
@@ -723,12 +723,12 @@ fn train_gbt_regressor(
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
 	};
-	let model = gbt::Regressor::train(features.view(), labels, gbt_options, &mut |progress| {
-		update_progress(TrainProgress::TrainingModel(ModelTrainProgress::GBT(
+	let model = tree::Regressor::train(features.view(), labels, tree_options, &mut |progress| {
+		update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 			progress,
 		)))
 	});
-	TrainModelOutput::GBTRegressor(GBTRegressorTrainModelOutput {
+	TrainModelOutput::TreeRegressor(TreeRegressorTrainModelOutput {
 		model,
 		feature_groups,
 		target_column_index,
@@ -784,11 +784,11 @@ fn train_linear_binary_classifier(
 	})
 }
 
-fn train_gbt_binary_classifier(
+fn train_tree_binary_classifier(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
-	options: grid::GBTModelTrainOptions,
+	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
@@ -804,7 +804,7 @@ fn train_gbt_binary_classifier(
 		.unwrap()
 		.clone();
 	let base: usize = 2;
-	let gbt_options = gbt::TrainOptions {
+	let tree_options = tree::TrainOptions {
 		compute_loss: true,
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
@@ -822,12 +822,12 @@ fn train_gbt_binary_classifier(
 		subsample_for_binning: 200_000,
 	};
 	let model =
-		gbt::BinaryClassifier::train(features.view(), labels, gbt_options, &mut |progress| {
-			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::GBT(
+		tree::BinaryClassifier::train(features.view(), labels, tree_options, &mut |progress| {
+			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 				progress,
 			)))
 		});
-	TrainModelOutput::GBTBinaryClassifier(GBTBinaryClassifierTrainModelOutput {
+	TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 		model,
 		feature_groups,
 		target_column_index,
@@ -883,11 +883,11 @@ fn train_linear_multiclass_classifier(
 	})
 }
 
-fn train_gbt_multiclass_classifier(
+fn train_tree_multiclass_classifier(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: Vec<features::FeatureGroup>,
-	options: grid::GBTModelTrainOptions,
+	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
@@ -903,7 +903,7 @@ fn train_gbt_multiclass_classifier(
 		.unwrap()
 		.clone();
 	let base: usize = 2;
-	let gbt_options = gbt::TrainOptions {
+	let tree_options = tree::TrainOptions {
 		compute_loss: true,
 		early_stopping_options: None,
 		l2_regularization: 0.0,
@@ -921,12 +921,12 @@ fn train_gbt_multiclass_classifier(
 		discrete_min_examples_per_branch: 100,
 	};
 	let model =
-		gbt::MulticlassClassifier::train(features.view(), labels, gbt_options, &mut |progress| {
-			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::GBT(
+		tree::MulticlassClassifier::train(features.view(), labels, tree_options, &mut |progress| {
+			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 				progress,
 			)))
 		});
-	TrainModelOutput::GBTMulticlassClassifier(GBTMulticlassClassifierTrainModelOutput {
+	TrainModelOutput::TreeMulticlassClassifier(TreeMulticlassClassifierTrainModelOutput {
 		model,
 		feature_groups,
 		target_column_index,
@@ -1019,14 +1019,14 @@ fn compute_model_comparison_metrics(
 				update_progress,
 			))
 		}
-		TrainModelOutput::GBTRegressor(train_model_output) => {
-			let GBTRegressorTrainModelOutput {
+		TrainModelOutput::TreeRegressor(train_model_output) => {
+			let TreeRegressorTrainModelOutput {
 				target_column_index,
 				feature_groups,
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::Regression(test::test_gbt_regressor(
+			TestMetrics::Regression(test::test_tree_regressor(
 				&dataframe_comparison,
 				*target_column_index,
 				feature_groups,
@@ -1050,14 +1050,14 @@ fn compute_model_comparison_metrics(
 			);
 			TestMetrics::Classification((metrics, Some(model_metrics)))
 		}
-		TrainModelOutput::GBTBinaryClassifier(train_model_output) => {
-			let GBTBinaryClassifierTrainModelOutput {
+		TrainModelOutput::TreeBinaryClassifier(train_model_output) => {
+			let TreeBinaryClassifierTrainModelOutput {
 				target_column_index,
 				feature_groups,
 				model,
 				..
 			} = &train_model_output;
-			let (metrics, model_metrics) = test::test_gbt_binary_classifier(
+			let (metrics, model_metrics) = test::test_tree_binary_classifier(
 				&dataframe_comparison,
 				*target_column_index,
 				feature_groups,
@@ -1084,15 +1084,15 @@ fn compute_model_comparison_metrics(
 				None,
 			))
 		}
-		TrainModelOutput::GBTMulticlassClassifier(train_model_output) => {
-			let GBTMulticlassClassifierTrainModelOutput {
+		TrainModelOutput::TreeMulticlassClassifier(train_model_output) => {
+			let TreeMulticlassClassifierTrainModelOutput {
 				target_column_index,
 				feature_groups,
 				model,
 				..
 			} = &train_model_output;
 			TestMetrics::Classification((
-				test::test_gbt_multiclass_classifier(
+				test::test_tree_multiclass_classifier(
 					&dataframe_comparison,
 					*target_column_index,
 					feature_groups,
@@ -1205,14 +1205,14 @@ fn test_model(
 				update_progress,
 			))
 		}
-		TrainModelOutput::GBTRegressor(train_model_output) => {
-			let GBTRegressorTrainModelOutput {
+		TrainModelOutput::TreeRegressor(train_model_output) => {
+			let TreeRegressorTrainModelOutput {
 				target_column_index,
 				feature_groups,
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::Regression(test::test_gbt_regressor(
+			TestMetrics::Regression(test::test_tree_regressor(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
@@ -1236,14 +1236,14 @@ fn test_model(
 			);
 			TestMetrics::Classification((metrics, Some(model_metrics)))
 		}
-		TrainModelOutput::GBTBinaryClassifier(train_model_output) => {
-			let GBTBinaryClassifierTrainModelOutput {
+		TrainModelOutput::TreeBinaryClassifier(train_model_output) => {
+			let TreeBinaryClassifierTrainModelOutput {
 				target_column_index,
 				feature_groups,
 				model,
 				..
 			} = &train_model_output;
-			let (metrics, model_metrics) = test::test_gbt_binary_classifier(
+			let (metrics, model_metrics) = test::test_tree_binary_classifier(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
@@ -1268,14 +1268,14 @@ fn test_model(
 			);
 			TestMetrics::Classification((metrics, None))
 		}
-		TrainModelOutput::GBTMulticlassClassifier(train_model_output) => {
-			let GBTMulticlassClassifierTrainModelOutput {
+		TrainModelOutput::TreeMulticlassClassifier(train_model_output) => {
+			let TreeMulticlassClassifierTrainModelOutput {
 				target_column_index,
 				feature_groups,
 				model,
 				..
 			} = &train_model_output;
-			let metrics = test::test_gbt_multiclass_classifier(
+			let metrics = test::test_tree_multiclass_classifier(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
@@ -1460,7 +1460,7 @@ impl Into<types::ClassMetrics> for metrics::ClassMetrics {
 	}
 }
 
-impl Into<types::Tree> for crate::gbt::Tree {
+impl Into<types::Tree> for crate::tree::Tree {
 	fn into(self) -> types::Tree {
 		types::Tree {
 			nodes: self.nodes.into_iter().map(Into::into).collect(),
@@ -1468,7 +1468,7 @@ impl Into<types::Tree> for crate::gbt::Tree {
 	}
 }
 
-impl Into<types::Node> for crate::gbt::Node {
+impl Into<types::Node> for crate::tree::Node {
 	fn into(self) -> types::Node {
 		match self {
 			Self::Branch(branch) => types::Node::Branch(branch.into()),
@@ -1477,7 +1477,7 @@ impl Into<types::Node> for crate::gbt::Node {
 	}
 }
 
-impl Into<types::BranchNode> for crate::gbt::BranchNode {
+impl Into<types::BranchNode> for crate::tree::BranchNode {
 	fn into(self) -> types::BranchNode {
 		types::BranchNode {
 			left_child_index: self.left_child_index.to_u64().unwrap(),
@@ -1488,7 +1488,7 @@ impl Into<types::BranchNode> for crate::gbt::BranchNode {
 	}
 }
 
-impl Into<types::BranchSplit> for crate::gbt::BranchSplit {
+impl Into<types::BranchSplit> for crate::tree::BranchSplit {
 	fn into(self) -> types::BranchSplit {
 		match self {
 			Self::Continuous(value) => types::BranchSplit::Continuous(value.into()),
@@ -1497,11 +1497,11 @@ impl Into<types::BranchSplit> for crate::gbt::BranchSplit {
 	}
 }
 
-impl Into<types::BranchSplitContinuous> for crate::gbt::BranchSplitContinuous {
+impl Into<types::BranchSplitContinuous> for crate::tree::BranchSplitContinuous {
 	fn into(self) -> types::BranchSplitContinuous {
 		let invalid_values_direction = match self.invalid_values_direction {
-			crate::gbt::SplitDirection::Left => false,
-			crate::gbt::SplitDirection::Right => true,
+			crate::tree::SplitDirection::Left => false,
+			crate::tree::SplitDirection::Right => true,
 		};
 		types::BranchSplitContinuous {
 			feature_index: self.feature_index.to_u64().unwrap(),
@@ -1511,7 +1511,7 @@ impl Into<types::BranchSplitContinuous> for crate::gbt::BranchSplitContinuous {
 	}
 }
 
-impl Into<types::BranchSplitDiscrete> for crate::gbt::BranchSplitDiscrete {
+impl Into<types::BranchSplitDiscrete> for crate::tree::BranchSplitDiscrete {
 	fn into(self) -> types::BranchSplitDiscrete {
 		let directions: Vec<bool> = (0..self.directions.n)
 			.map(|i| self.directions.get(i).unwrap())
@@ -1523,7 +1523,7 @@ impl Into<types::BranchSplitDiscrete> for crate::gbt::BranchSplitDiscrete {
 	}
 }
 
-impl Into<types::LeafNode> for crate::gbt::LeafNode {
+impl Into<types::LeafNode> for crate::tree::LeafNode {
 	fn into(self) -> types::LeafNode {
 		types::LeafNode {
 			value: self.value,
@@ -1537,8 +1537,8 @@ impl Into<types::ClassificationModel> for ClassificationModel {
 		match self {
 			Self::LinearBinary(m) => types::ClassificationModel::LinearBinary(m.into()),
 			Self::LinearMulticlass(m) => types::ClassificationModel::LinearMulticlass(m.into()),
-			Self::GBTBinary(m) => types::ClassificationModel::GBTBinary(m.into()),
-			Self::GBTMulticlass(m) => types::ClassificationModel::GBTMulticlass(m.into()),
+			Self::TreeBinary(m) => types::ClassificationModel::TreeBinary(m.into()),
+			Self::TreeMulticlass(m) => types::ClassificationModel::TreeMulticlass(m.into()),
 		}
 	}
 }
@@ -1571,9 +1571,9 @@ impl Into<types::LinearModelTrainOptions> for grid::LinearModelTrainOptions {
 	}
 }
 
-impl Into<types::GBTModelTrainOptions> for grid::GBTModelTrainOptions {
-	fn into(self) -> types::GBTModelTrainOptions {
-		types::GBTModelTrainOptions {
+impl Into<types::TreeModelTrainOptions> for grid::TreeModelTrainOptions {
+	fn into(self) -> types::TreeModelTrainOptions {
+		types::TreeModelTrainOptions {
 			depth: self.max_depth,
 			learning_rate: self.learning_rate,
 			min_examples_per_leaf: self.min_examples_per_leaf,
@@ -1599,14 +1599,14 @@ impl Into<types::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 	}
 }
 
-impl Into<types::GBTBinaryClassifier> for GBTBinaryClassifier {
-	fn into(self) -> types::GBTBinaryClassifier {
+impl Into<types::TreeBinaryClassifier> for TreeBinaryClassifier {
+	fn into(self) -> types::TreeBinaryClassifier {
 		let losses = self.model.losses.map(|l| l.into_raw_vec()).unwrap();
 		let trees = self.model.trees.into_iter().map(Into::into).collect();
 		let class_metrics = self.class_metrics.into_iter().map(Into::into).collect();
 		let feature_importances = self.model.feature_importances.unwrap().into_raw_vec();
 		let options = self.options.into();
-		types::GBTBinaryClassifier {
+		types::TreeBinaryClassifier {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
 			trees,
 			class_metrics,
@@ -1620,9 +1620,9 @@ impl Into<types::GBTBinaryClassifier> for GBTBinaryClassifier {
 	}
 }
 
-impl Into<types::GBTMulticlassClassifier> for GBTMulticlassClassifier {
-	fn into(self) -> types::GBTMulticlassClassifier {
-		types::GBTMulticlassClassifier {
+impl Into<types::TreeMulticlassClassifier> for TreeMulticlassClassifier {
+	fn into(self) -> types::TreeMulticlassClassifier {
+		types::TreeMulticlassClassifier {
 			n_rounds: self.model.n_rounds.to_u64().unwrap(),
 			n_classes: self.model.n_classes.to_u64().unwrap(),
 			biases: self.model.biases,
@@ -1676,7 +1676,7 @@ impl Into<types::RegressionModel> for RegressionModel {
 	fn into(self) -> types::RegressionModel {
 		match self {
 			Self::Linear(m) => types::RegressionModel::Linear(m.into()),
-			Self::GBT(m) => types::RegressionModel::GBT(m.into()),
+			Self::Tree(m) => types::RegressionModel::Tree(m.into()),
 		}
 	}
 }
@@ -1694,11 +1694,11 @@ impl Into<types::LinearRegressor> for LinearRegressor {
 	}
 }
 
-impl Into<types::GBTRegressor> for GBTRegressor {
-	fn into(self) -> types::GBTRegressor {
+impl Into<types::TreeRegressor> for TreeRegressor {
+	fn into(self) -> types::TreeRegressor {
 		let losses = self.model.losses.map(|l| l.into_raw_vec()).unwrap();
 		let trees = self.model.trees.into_iter().map(Into::into).collect();
-		types::GBTRegressor {
+		types::TreeRegressor {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
 			trees,
 			bias: self.model.bias,

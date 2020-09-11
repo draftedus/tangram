@@ -35,8 +35,8 @@ pub enum Shuffle {
 pub enum GridItem {
 	#[serde(rename = "linear")]
 	Linear(LinearGridItem),
-	#[serde(rename = "gbt")]
-	GBT(GBTGridItem),
+	#[serde(rename = "tree")]
+	Tree(TreeGridItem),
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -48,7 +48,7 @@ pub struct LinearGridItem {
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub struct GBTGridItem {
+pub struct TreeGridItem {
 	pub l2_regularization: f32,
 	pub learning_rate: f32,
 	pub max_depth: u64,

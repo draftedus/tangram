@@ -1,4 +1,4 @@
-use super::{shap, tree, types};
+use super::{shap, single, types};
 use crate::dataframe::*;
 use itertools::izip;
 use ndarray::prelude::*;
@@ -64,7 +64,7 @@ impl types::Regressor {
 }
 
 pub fn update_logits(
-	trees: &[tree::types::TrainTree],
+	trees: &[single::types::TrainTree],
 	features: ArrayView2<u8>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {

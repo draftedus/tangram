@@ -146,7 +146,7 @@ fn main() -> Result<()> {
 		&stats_settings,
 		&mut |_| {},
 	);
-	let feature_groups = tangram::features::compute_feature_groups_gbt(&overall_column_stats);
+	let feature_groups = tangram::features::compute_feature_groups_tree(&overall_column_stats);
 	let features_train = tangram::features::compute_features_dataframe(
 		&dataframe_train.view(),
 		&feature_groups,
@@ -154,7 +154,7 @@ fn main() -> Result<()> {
 	);
 
 	// train the model
-	let train_options = tangram::gbt::TrainOptions {
+	let train_options = tangram::tree::TrainOptions {
 		learning_rate: 0.1,
 		max_rounds: 100,
 		max_leaf_nodes: 512,
@@ -163,7 +163,7 @@ fn main() -> Result<()> {
 	};
 
 	let start = Instant::now();
-	let model = tangram::gbt::BinaryClassifier::train(
+	let model = tangram::tree::BinaryClassifier::train(
 		features_train.view().clone(),
 		labels_train.view(),
 		train_options,

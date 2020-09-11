@@ -1,6 +1,6 @@
 use super::features::FeatureGroup;
 use super::stats::{ColumnStats, StatsSettings};
-use super::train_options::{GBTModelTrainOptions, LinearModelTrainOptions};
+use super::train_options::{LinearModelTrainOptions, TreeModelTrainOptions};
 use super::tree::Tree;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
@@ -35,7 +35,7 @@ pub struct RegressionMetrics {
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
 pub enum RegressionModel {
 	Linear(LinearRegressor),
-	GBT(GBTRegressor),
+	Tree(TreeRegressor),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
@@ -49,9 +49,9 @@ pub struct LinearRegressor {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-pub struct GBTRegressor {
+pub struct TreeRegressor {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: GBTModelTrainOptions,
+	pub options: TreeModelTrainOptions,
 	pub bias: f32,
 	pub trees: Vec<Tree>,
 	pub losses: Vec<f32>,

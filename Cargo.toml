@@ -22,28 +22,28 @@ name = "tangram"
 path = "main.rs"
 
 [[bin]]
-name = "flights-gbt"
-path = "gbt/bench/flights.rs"
+name = "flights-tree"
+path = "tree/bench/flights.rs"
 
 [[bin]]
-name = "higgs-gbt"
-path = "gbt/bench/higgs.rs"
+name = "higgs-tree"
+path = "tree/bench/higgs.rs"
 
 [[bin]]
-name = "census-gbt"
-path = "gbt/bench/census.rs"
+name = "census-tree"
+path = "tree/bench/census.rs"
 
 [[bin]]
-name = "boston-gbt"
-path = "gbt/bench/boston.rs"
+name = "boston-tree"
+path = "tree/bench/boston.rs"
 
 [[bin]]
-name = "heart-disease-gbt"
-path = "gbt/bench/heart-disease.rs"
+name = "heart-disease-tree"
+path = "tree/bench/heart-disease.rs"
 
 [[bin]]
-name = "iris-gbt"
-path = "gbt/bench/iris.rs"
+name = "iris-tree"
+path = "tree/bench/iris.rs"
 
 
 [features]

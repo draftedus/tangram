@@ -42,11 +42,11 @@ impl<'a> std::fmt::Display for Overview<'a> {
 			types::ModelDescriptor::LinearRegressor(_) => "linear regressor",
 			types::ModelDescriptor::LinearBinaryClassifier(_) => "linear binary classifier",
 			types::ModelDescriptor::LinearMulticlassClassifier(_) => "linear multiclass classifier",
-			types::ModelDescriptor::GBTRegressor(_) => "gradient boosted trees regressor",
-			types::ModelDescriptor::GBTBinaryClassifier(_) => {
+			types::ModelDescriptor::TreeRegressor(_) => "gradient boosted trees regressor",
+			types::ModelDescriptor::TreeBinaryClassifier(_) => {
 				"gradient boosted trees binary classifier"
 			}
-			types::ModelDescriptor::GBTMulticlassClassifier(_) => {
+			types::ModelDescriptor::TreeMulticlassClassifier(_) => {
 				"gradient boosted trees multiclass classifier"
 			}
 		};
@@ -263,7 +263,7 @@ impl<'a> std::fmt::Display for Metrics<'a> {
 			}
 			(
 				types::TaskMetrics::Classification(metrics),
-				types::ModelMetrics::GBTBinaryClassifier(model_metrics),
+				types::ModelMetrics::TreeBinaryClassifier(model_metrics),
 			) => {
 				let accuracy = metrics.accuracy.to_string();
 				let auc = model_metrics.auc_roc.to_string();

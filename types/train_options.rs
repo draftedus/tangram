@@ -8,7 +8,7 @@ pub struct LinearModelTrainOptions {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
-pub struct GBTModelTrainOptions {
+pub struct TreeModelTrainOptions {
 	pub depth: u64,
 	pub learning_rate: f32,
 	pub min_examples_per_leaf: u64,

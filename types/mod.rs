@@ -65,9 +65,9 @@ impl Classifier {
 	pub fn classes(&self) -> &[String] {
 		match &self.model {
 			ClassificationModel::LinearBinary(model) => model.classes.as_slice(),
-			ClassificationModel::GBTBinary(model) => model.classes.as_slice(),
+			ClassificationModel::TreeBinary(model) => model.classes.as_slice(),
 			ClassificationModel::LinearMulticlass(model) => model.classes.as_slice(),
-			ClassificationModel::GBTMulticlass(model) => model.classes.as_slice(),
+			ClassificationModel::TreeMulticlass(model) => model.classes.as_slice(),
 		}
 	}
 }

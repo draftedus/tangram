@@ -44,12 +44,12 @@ fn main() -> Result<()> {
 		&stats_settings,
 		&mut |_| {},
 	);
-	let feature_groups = tangram::features::compute_feature_groups_gbt(&overall_column_stats);
+	let feature_groups = tangram::features::compute_feature_groups_tree(&overall_column_stats);
 	let features_train =
 		tangram::features::compute_features_dataframe(&dataframe_train, &feature_groups, &|| {});
 
 	// train the model
-	let train_options = tangram::gbt::TrainOptions {
+	let train_options = tangram::tree::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: 8,
 		max_leaf_nodes: 255,
@@ -59,7 +59,7 @@ fn main() -> Result<()> {
 		..Default::default()
 	};
 	let start = Instant::now();
-	let model = tangram::gbt::MulticlassClassifier::train(
+	let model = tangram::tree::MulticlassClassifier::train(
 		features_train.view(),
 		labels_train.clone(),
 		train_options,

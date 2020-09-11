@@ -51,11 +51,11 @@ pub extern "C" fn tangram_model_id(model: *const PredictModel, id_ptr: *mut *con
 		let model = model.as_ref().unwrap();
 		let id = match model {
 			PredictModel::LinearRegressor(model) => &model.id,
-			PredictModel::GBTRegressor(model) => &model.id,
+			PredictModel::TreeRegressor(model) => &model.id,
 			PredictModel::LinearBinaryClassifier(model) => &model.id,
-			PredictModel::GBTBinaryClassifier(model) => &model.id,
+			PredictModel::TreeBinaryClassifier(model) => &model.id,
 			PredictModel::LinearMulticlassClassifier(model) => &model.id,
-			PredictModel::GBTMulticlassClassifier(model) => &model.id,
+			PredictModel::TreeMulticlassClassifier(model) => &model.id,
 		};
 		let id = CString::new(id.to_owned()).unwrap();
 		*id_ptr = CString::into_raw(id) as *const u8;

@@ -1,4 +1,4 @@
-use crate::{dataframe, features, gbt, linear, types};
+use crate::{dataframe, features, linear, tree, types};
 use anyhow::Result;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -50,10 +50,10 @@ pub struct ShapValues {
 #[derive(Debug)]
 pub enum PredictModel {
 	LinearRegressor(LinearRegressorPredictModel),
-	GBTRegressor(GBTRegressorPredictModel),
+	TreeRegressor(TreeRegressorPredictModel),
 	LinearBinaryClassifier(LinearBinaryClassifierPredictModel),
-	GBTBinaryClassifier(GBTBinaryClassifierPredictModel),
-	GBTMulticlassClassifier(GBTMulticlassClassifierPredictModel),
+	TreeBinaryClassifier(TreeBinaryClassifierPredictModel),
+	TreeMulticlassClassifier(TreeMulticlassClassifierPredictModel),
 	LinearMulticlassClassifier(LinearMulticlassClassifierPredictModel),
 }
 
@@ -66,11 +66,11 @@ pub struct LinearRegressorPredictModel {
 }
 
 #[derive(Debug)]
-pub struct GBTRegressorPredictModel {
+pub struct TreeRegressorPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: gbt::Regressor,
+	pub model: tree::Regressor,
 }
 
 #[derive(Debug)]
@@ -82,11 +82,11 @@ pub struct LinearBinaryClassifierPredictModel {
 }
 
 #[derive(Debug)]
-pub struct GBTBinaryClassifierPredictModel {
+pub struct TreeBinaryClassifierPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: gbt::BinaryClassifier,
+	pub model: tree::BinaryClassifier,
 }
 
 #[derive(Debug)]
@@ -98,11 +98,11 @@ pub struct LinearMulticlassClassifierPredictModel {
 }
 
 #[derive(Debug)]
-pub struct GBTMulticlassClassifierPredictModel {
+pub struct TreeMulticlassClassifierPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: gbt::MulticlassClassifier,
+	pub model: tree::MulticlassClassifier,
 }
 
 #[derive(Debug)]
@@ -153,11 +153,11 @@ pub fn predict(
 	// initialize the dataframe
 	let columns = match model {
 		PredictModel::LinearRegressor(model) => model.columns.as_slice(),
-		PredictModel::GBTRegressor(model) => model.columns.as_slice(),
+		PredictModel::TreeRegressor(model) => model.columns.as_slice(),
 		PredictModel::LinearBinaryClassifier(model) => model.columns.as_slice(),
-		PredictModel::GBTBinaryClassifier(model) => model.columns.as_slice(),
+		PredictModel::TreeBinaryClassifier(model) => model.columns.as_slice(),
 		PredictModel::LinearMulticlassClassifier(model) => model.columns.as_slice(),
-		PredictModel::GBTMulticlassClassifier(model) => model.columns.as_slice(),
+		PredictModel::TreeMulticlassClassifier(model) => model.columns.as_slice(),
 	};
 	let column_names = columns.iter().map(|c| c.column_name()).collect();
 	let column_types = columns
@@ -248,7 +248,7 @@ pub fn predict(
 				.collect();
 			PredictOutput::Regression(output)
 		}
-		PredictModel::GBTRegressor(model) => {
+		PredictModel::TreeRegressor(model) => {
 			let n_examples = dataframe.nrows();
 			let feature_groups = &model.feature_groups;
 			let model = &model.model;
@@ -267,7 +267,7 @@ pub fn predict(
 				predictions.view_mut(),
 				Some(shap_values.view_mut()),
 			);
-			let shap_values = compute_shap_values_regression_output_gbt(
+			let shap_values = compute_shap_values_regression_output_tree(
 				feature_groups.as_slice(),
 				shap_values.view(),
 				features.view(),
@@ -337,7 +337,7 @@ pub fn predict(
 				.collect();
 			PredictOutput::Classification(output)
 		}
-		PredictModel::GBTBinaryClassifier(model) => {
+		PredictModel::TreeBinaryClassifier(model) => {
 			let n_examples = dataframe.nrows();
 			let feature_groups = &model.feature_groups;
 			let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -356,7 +356,7 @@ pub fn predict(
 				probabilities.view_mut(),
 				Some(shap_values.view_mut()),
 			);
-			let shap_values = compute_shap_values_classification_output_gbt(
+			let shap_values = compute_shap_values_classification_output_tree(
 				feature_groups.as_slice(),
 				&[model.classes[1].clone()],
 				shap_values.view(),
@@ -445,7 +445,7 @@ pub fn predict(
 				.collect();
 			PredictOutput::Classification(output)
 		}
-		PredictModel::GBTMulticlassClassifier(model) => {
+		PredictModel::TreeMulticlassClassifier(model) => {
 			let n_examples = dataframe.nrows();
 			let feature_groups = &model.feature_groups;
 			let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -466,7 +466,7 @@ pub fn predict(
 				probabilities.view_mut(),
 				Some(shap_values.view_mut()),
 			);
-			let shap_values = compute_shap_values_classification_output_gbt(
+			let shap_values = compute_shap_values_classification_output_tree(
 				feature_groups.as_slice(),
 				&model.classes.as_slice(),
 				shap_values.view(),
@@ -532,7 +532,7 @@ fn compute_shap_values_regression_output_linear(
 		.collect()
 }
 
-fn compute_shap_values_regression_output_gbt(
+fn compute_shap_values_regression_output_tree(
 	feature_groups: &[features::FeatureGroup],
 	shap_values: ArrayView3<f32>,
 	features: ArrayView2<dataframe::Value>,
@@ -545,7 +545,7 @@ fn compute_shap_values_regression_output_gbt(
 		.zip(features.axis_iter(Axis(0)))
 		.map(|(shap_values, features)| {
 			let baseline = shap_values.get([0, shap_values.len() - 1]).unwrap();
-			let mut shap_values = compute_shap_values_gbt(
+			let mut shap_values = compute_shap_values_tree(
 				feature_group_map.as_slice(),
 				feature_groups,
 				feature_names.as_slice(),
@@ -640,7 +640,7 @@ fn compute_shap_values_linear(
 		.collect::<Vec<(String, f32)>>()
 }
 
-fn compute_shap_values_classification_output_gbt(
+fn compute_shap_values_classification_output_tree(
 	feature_groups: &[features::FeatureGroup],
 	classes: &[String],
 	shap_values: ArrayView3<f32>,
@@ -659,7 +659,7 @@ fn compute_shap_values_classification_output_gbt(
 				.map(|(class_index, class)| {
 					let shap_values = shap_values.slice(s![class_index, ..]);
 					let baseline = shap_values[shap_values.len() - 1];
-					let mut shap_values = compute_shap_values_gbt(
+					let mut shap_values = compute_shap_values_tree(
 						feature_group_map.as_slice(),
 						feature_groups,
 						feature_names.as_slice(),
@@ -681,7 +681,7 @@ fn compute_shap_values_classification_output_gbt(
 		.collect()
 }
 
-fn compute_shap_values_gbt(
+fn compute_shap_values_tree(
 	feature_group_map: &[usize],
 	feature_groups: &[features::FeatureGroup],
 	feature_names: &[String],
@@ -814,17 +814,17 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						}))
 					}
-					types::RegressionModel::GBT(model) => {
+					types::RegressionModel::Tree(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::GBTRegressor(GBTRegressorPredictModel {
+						Ok(Self::TreeRegressor(TreeRegressorPredictModel {
 							id,
 							columns,
 							feature_groups,
-							model: gbt::Regressor {
+							model: tree::Regressor {
 								bias: model.bias,
 								trees: model
 									.trees
@@ -867,28 +867,30 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						))
 					}
-					types::ClassificationModel::GBTBinary(model) => {
+					types::ClassificationModel::TreeBinary(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::GBTBinaryClassifier(GBTBinaryClassifierPredictModel {
-							id,
-							columns,
-							feature_groups,
-							model: gbt::BinaryClassifier {
-								bias: model.bias,
-								trees: model
-									.trees
-									.into_iter()
-									.map(TryInto::try_into)
-									.collect::<Result<Vec<_>>>()?,
-								feature_importances: Some(model.feature_importances.into()),
-								losses: Some(model.losses.into()),
-								classes: model.classes,
+						Ok(Self::TreeBinaryClassifier(
+							TreeBinaryClassifierPredictModel {
+								id,
+								columns,
+								feature_groups,
+								model: tree::BinaryClassifier {
+									bias: model.bias,
+									trees: model
+										.trees
+										.into_iter()
+										.map(TryInto::try_into)
+										.collect::<Result<Vec<_>>>()?,
+									feature_importances: Some(model.feature_importances.into()),
+									losses: Some(model.losses.into()),
+									classes: model.classes,
+								},
 							},
-						}))
+						))
 					}
 					types::ClassificationModel::LinearMulticlass(model) => {
 						let n_classes = model.n_classes.to_usize().unwrap();
@@ -915,18 +917,18 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						))
 					}
-					types::ClassificationModel::GBTMulticlass(model) => {
+					types::ClassificationModel::TreeMulticlass(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::GBTMulticlassClassifier(
-							GBTMulticlassClassifierPredictModel {
+						Ok(Self::TreeMulticlassClassifier(
+							TreeMulticlassClassifierPredictModel {
 								id,
 								columns,
 								feature_groups,
-								model: gbt::MulticlassClassifier {
+								model: tree::MulticlassClassifier {
 									biases: model.biases,
 									trees: model
 										.trees
@@ -948,10 +950,10 @@ impl TryFrom<types::Model> for PredictModel {
 	}
 }
 
-impl TryInto<gbt::Tree> for types::Tree {
+impl TryInto<tree::Tree> for types::Tree {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<gbt::Tree> {
-		Ok(gbt::Tree {
+	fn try_into(self) -> Result<tree::Tree> {
+		Ok(tree::Tree {
 			nodes: self
 				.nodes
 				.into_iter()
@@ -961,17 +963,17 @@ impl TryInto<gbt::Tree> for types::Tree {
 	}
 }
 
-impl TryInto<gbt::Node> for types::Node {
+impl TryInto<tree::Node> for types::Node {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<gbt::Node> {
+	fn try_into(self) -> Result<tree::Node> {
 		match self {
-			Self::Branch(n) => Ok(gbt::Node::Branch(gbt::BranchNode {
+			Self::Branch(n) => Ok(tree::Node::Branch(tree::BranchNode {
 				left_child_index: n.left_child_index.to_usize().unwrap(),
 				right_child_index: n.right_child_index.to_usize().unwrap(),
 				split: n.split.try_into()?,
 				examples_fraction: n.examples_fraction,
 			})),
-			Self::Leaf(n) => Ok(gbt::Node::Leaf(gbt::LeafNode {
+			Self::Leaf(n) => Ok(tree::Node::Leaf(tree::LeafNode {
 				value: n.value,
 				examples_fraction: n.examples_fraction,
 			})),
@@ -979,28 +981,28 @@ impl TryInto<gbt::Node> for types::Node {
 	}
 }
 
-impl TryInto<gbt::BranchSplit> for types::BranchSplit {
+impl TryInto<tree::BranchSplit> for types::BranchSplit {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<gbt::BranchSplit> {
+	fn try_into(self) -> Result<tree::BranchSplit> {
 		match self {
-			Self::Continuous(s) => Ok(gbt::BranchSplit::Continuous(gbt::BranchSplitContinuous {
+			Self::Continuous(s) => Ok(tree::BranchSplit::Continuous(tree::BranchSplitContinuous {
 				feature_index: s.feature_index.to_usize().unwrap(),
 				split_value: s.split_value,
 				invalid_values_direction: if s.invalid_values_direction {
-					gbt::SplitDirection::Right
+					tree::SplitDirection::Right
 				} else {
-					gbt::SplitDirection::Left
+					tree::SplitDirection::Left
 				},
 			})),
 			Self::Discrete(s) => {
 				let value_directions = s.directions;
 				let mut directions =
-					crate::gbt::BinDirections::new(value_directions.len().to_u8().unwrap(), false);
+					crate::tree::BinDirections::new(value_directions.len().to_u8().unwrap(), false);
 				value_directions
 					.iter()
 					.enumerate()
 					.for_each(|(i, value)| directions.set(i.to_u8().unwrap(), *value));
-				Ok(gbt::BranchSplit::Discrete(gbt::BranchSplitDiscrete {
+				Ok(tree::BranchSplit::Discrete(tree::BranchSplitDiscrete {
 					feature_index: s.feature_index.to_usize().unwrap(),
 					directions,
 				}))

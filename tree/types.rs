@@ -4,7 +4,7 @@ This module contains definitions of the crate's public types.
 
 use ndarray::prelude::*;
 
-/// The options passed to tangram_gbt::train
+/// The options passed to tangram_tree::train
 #[derive(Debug)]
 pub struct TrainOptions {
 	/// If true, the model will include the loss on the training data at each round.
@@ -86,7 +86,7 @@ pub enum Model {
 	MulticlassClassifier(MulticlassClassifier),
 }
 
-/// This struct represents a gbt regressor model. Regressor models are used to predict continuous target values, e.g. the selling price of a home.
+/// This struct represents a tree regressor model. Regressor models are used to predict continuous target values, e.g. the selling price of a home.
 #[derive(Debug)]
 pub struct Regressor {
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
@@ -111,7 +111,7 @@ pub struct BinaryClassifier {
 	pub classes: Vec<String>,
 }
 
-/// This struct represents a gbt multiclass classifier model. Multiclass classifier models are used to predict multiclass target values, e.g. species of flower is one of Iris Setosa, Iris Virginica, or Iris Versicolor.
+/// This struct represents a tree multiclass classifier model. Multiclass classifier models are used to predict multiclass target values, e.g. species of flower is one of Iris Setosa, Iris Virginica, or Iris Versicolor.
 #[derive(Debug)]
 pub struct MulticlassClassifier {
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.

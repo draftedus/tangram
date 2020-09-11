@@ -1,4 +1,4 @@
-use super::{tree, types};
+use super::{single, types};
 use crate::dataframe::*;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -68,7 +68,7 @@ pub fn train_early_stopping_split<'features, 'labels>(
 
 pub fn compute_early_stopping_metrics(
 	task: &types::Task,
-	trees: &[tree::types::TrainTree],
+	trees: &[single::types::TrainTree],
 	features: ArrayView2<u8>,
 	labels: ColumnView,
 	mut logits: ArrayViewMut2<f32>,

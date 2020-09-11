@@ -70,7 +70,7 @@ pub fn compute_feature_groups_linear(column_stats: &[stats::ColumnStats]) -> Vec
 	result
 }
 
-pub fn compute_feature_groups_gbt(column_stats: &[stats::ColumnStats]) -> Vec<FeatureGroup> {
+pub fn compute_feature_groups_tree(column_stats: &[stats::ColumnStats]) -> Vec<FeatureGroup> {
 	let mut result = Vec::new();
 	for column_stats in column_stats.iter() {
 		match column_stats {

@@ -20,7 +20,7 @@ train_test_split:
   # validation: 0.1 # The percent of the dataset that will be held out to choose the best model.
   test: 0.2 # The percent of the dataset that will be held out to evaluate the final model chosen.
 grid:
-  - model: gbt
+  - model: tree
     learning_rate: 0.1
     depth: 3 # Each tree will have at most 2^depth nodes.
     max_trees: 100 # The maximum number of trees to train.

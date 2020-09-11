@@ -318,7 +318,7 @@ pub fn compute_shap(
 
 #[cfg(test)]
 mod brute {
-	// use crate::{dataframe, gbt::types};
+	// use crate::{dataframe, tree::types};
 	// use ndarray::prelude::*;
 	// use num_traits::ToPrimitive;
 

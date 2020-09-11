@@ -2,25 +2,26 @@ use anyhow::Result;
 use ndarray::prelude::*;
 use std::path::Path;
 use std::time::Instant;
-use tangram::{dataframe::*, metrics};
+use tangram::dataframe::*;
+use tangram::metrics;
 
 fn main() -> Result<()> {
 	// load the data
-	let csv_file_path = Path::new("data/boston.csv");
-	let nrows_train = 405;
-	let _nrows_test = 101;
-
+	let csv_file_path = Path::new("data/heart-disease.csv");
+	let nrows_train = 242;
+	let _nrows_test = 61;
 	let target_column_index = 13;
 	let mut csv_reader = csv::Reader::from_path(csv_file_path)?;
 	let options = FromCsvOptions {
 		..Default::default()
 	};
 	let mut features = DataFrame::from_csv(&mut csv_reader, options, |_| {})?;
+
 	let labels = features.columns.remove(target_column_index);
 	let (dataframe_train, dataframe_test) = features.view().split_at_row(nrows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
-	let labels_train = labels_train.as_number().unwrap();
-	let labels_test = labels_test.as_number().unwrap();
+	let labels_train = labels_train.as_enum().unwrap();
+	let labels_test = labels_test.as_enum().unwrap();
 
 	// compute stats
 	let stats_settings = tangram::stats::StatsSettings {
@@ -44,22 +45,22 @@ fn main() -> Result<()> {
 		&stats_settings,
 		&mut |_| {},
 	);
-	let feature_groups = tangram::features::compute_feature_groups_gbt(&overall_column_stats);
+	let feature_groups = tangram::features::compute_feature_groups_tree(&overall_column_stats);
 	let features_train =
 		tangram::features::compute_features_dataframe(&dataframe_train, &feature_groups, &|| {});
 
 	// train the model
-	let train_options = tangram::gbt::TrainOptions {
+	let train_options = tangram::tree::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: 8,
 		max_leaf_nodes: 255,
 		max_rounds: 100,
-		min_examples_leaf: 100,
+		min_examples_leaf: 10,
 		min_sum_hessians_in_leaf: 0.0,
 		..Default::default()
 	};
 	let start = Instant::now();
-	let model = tangram::gbt::Regressor::train(
+	let model = tangram::tree::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.clone(),
 		train_options,
@@ -68,7 +69,7 @@ fn main() -> Result<()> {
 	let end = Instant::now();
 	println!("duration: {:?}", end - start);
 
-	// compute rmse
+	// compute accuracy
 	let n_features = features.ncols();
 
 	let mut features_test = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
@@ -79,10 +80,11 @@ fn main() -> Result<()> {
 		&|| {},
 	);
 
-	let mut predictions: Array1<f32> = unsafe { Array::uninitialized(features_test.nrows()) };
-	model.predict(features_test.view(), predictions.view_mut(), None);
-	let mse = metrics::mean_squared_error(predictions.view(), labels_test.data.into());
-	println!("mse: {:?}", mse);
+	let mut probabilities: Array2<f32> =
+		unsafe { Array::uninitialized((features_test.nrows(), 2)) };
+	model.predict(features_test.view(), probabilities.view_mut(), None);
+	let accuracy = metrics::accuracy(probabilities.view(), labels_test.data.into());
+	println!("accuracy: {:?}", accuracy);
 
 	Ok(())
 }

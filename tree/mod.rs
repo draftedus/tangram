@@ -50,9 +50,9 @@ mod multiclass_classifier;
 mod progress;
 mod regressor;
 mod shap;
-// mod timing;
+mod single;
+mod timing;
 mod train;
-mod tree;
 mod types;
 
 pub use self::progress::Progress;

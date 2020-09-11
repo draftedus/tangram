@@ -1,5 +1,5 @@
 use crate::{
-	dataframe::*, features, gbt, linear, metrics, metrics::Metric, progress::ModelTestProgress,
+	dataframe::*, features, linear, metrics, metrics::Metric, progress::ModelTestProgress, tree,
 	util::progress_counter::ProgressCounter,
 };
 use itertools::izip;
@@ -65,11 +65,11 @@ pub fn test_linear_regressor(
 	metrics.finalize()
 }
 
-pub fn test_gbt_regressor(
+pub fn test_tree_regressor(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &gbt::Regressor,
+	model: &tree::Regressor,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::RegressionMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -178,11 +178,11 @@ pub fn test_linear_binary_classifier(
 	)
 }
 
-pub fn test_gbt_binary_classifier(
+pub fn test_tree_binary_classifier(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &gbt::BinaryClassifier,
+	model: &tree::BinaryClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> (
 	metrics::ClassificationMetricsOutput,
@@ -287,11 +287,11 @@ pub fn test_linear_multiclass_classifier(
 	metrics.finalize()
 }
 
-pub fn test_gbt_multiclass_classifier(
+pub fn test_tree_multiclass_classifier(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &gbt::MulticlassClassifier,
+	model: &tree::MulticlassClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::ClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();

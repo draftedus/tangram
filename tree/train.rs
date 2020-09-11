@@ -6,8 +6,8 @@ use super::{
 	early_stopping::{
 		compute_early_stopping_metrics, train_early_stopping_split, TrainStopMonitor,
 	},
-	tree,
-	tree::bin_stats::BinStatsPool,
+	single,
+	single::bin_stats::BinStatsPool,
 	types,
 };
 use crate::util::progress_counter::ProgressCounter;
@@ -105,7 +105,7 @@ pub fn train(
 		types::Task::MulticlassClassification { .. } => false,
 	};
 
-	// A GBT model's prediction will be a bias plus the sum of the outputs of each tree.
+	// A Tree model's prediction will be a bias plus the sum of the outputs of each tree.
 	// The bias will produce the baseline prediction.
 	let biases = match task {
 		// For regression, the baseline prediction is the mean of the labels.
@@ -148,7 +148,7 @@ pub fn train(
 	let mut n_rounds_trained = 0;
 	// These are the trees in round-major order. After training this will
 	// will have shape (n_rounds, n_trees_per_round).
-	let mut trees: Vec<tree::types::TrainTree> = Vec::new();
+	let mut trees: Vec<single::types::TrainTree> = Vec::new();
 	// Collect the loss on the training dataset for each round if enabled.
 	let mut losses: Option<Vec<f32>> = if options.compute_loss {
 		Some(Vec::new())
@@ -222,7 +222,7 @@ pub fn train(
 					*value = index;
 				}
 				// train the tree
-				let (tree, leaf_values) = tree::train::train(
+				let (tree, leaf_values) = single::train::train(
 					features_train.view(),
 					&include_features,
 					gradients.as_slice().unwrap(),
@@ -366,21 +366,23 @@ pub fn update_predictions_from_leaves(
 /// compute the feature importances using the "split" method,
 /// where a feature's importance is proportional to the number
 /// of nodes that use it to split.
-fn compute_feature_importances(trees: &[tree::types::TrainTree], n_features: usize) -> Array1<f32> {
+fn compute_feature_importances(
+	trees: &[single::types::TrainTree],
+	n_features: usize,
+) -> Array1<f32> {
 	let mut feature_importances = Array1::zeros(n_features);
 	for tree in trees.iter() {
 		tree.nodes.iter().for_each(|node| match node {
-			tree::types::TrainNode::Branch(tree::types::TrainBranchNode {
+			single::types::TrainNode::Branch(single::types::TrainBranchNode {
 				split:
-					tree::types::TrainBranchSplit::Continuous(tree::types::TrainBranchSplitContinuous {
-						feature_index,
-						..
-					}),
+					single::types::TrainBranchSplit::Continuous(
+						single::types::TrainBranchSplitContinuous { feature_index, .. },
+					),
 				..
 			})
-			| tree::types::TrainNode::Branch(tree::types::TrainBranchNode {
+			| single::types::TrainNode::Branch(single::types::TrainBranchNode {
 				split:
-					tree::types::TrainBranchSplit::Discrete(tree::types::TrainBranchSplitDiscrete {
+					single::types::TrainBranchSplit::Discrete(single::types::TrainBranchSplitDiscrete {
 						feature_index,
 						..
 					}),
@@ -388,7 +390,7 @@ fn compute_feature_importances(trees: &[tree::types::TrainTree], n_features: usi
 			}) => {
 				feature_importances[*feature_index] += 1.0;
 			}
-			tree::types::TrainNode::Leaf(_) => {}
+			single::types::TrainNode::Leaf(_) => {}
 		});
 	}
 	let total = feature_importances.sum();

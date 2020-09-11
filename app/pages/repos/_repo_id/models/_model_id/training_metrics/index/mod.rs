@@ -108,10 +108,10 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			tangram::types::ClassificationModel::LinearMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id))
 			}
-			tangram::types::ClassificationModel::GBTBinary(_) => {
+			tangram::types::ClassificationModel::TreeBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id))
 			}
-			tangram::types::ClassificationModel::GBTMulticlass(_) => {
+			tangram::types::ClassificationModel::TreeMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id))
 			}
 		},
@@ -148,7 +148,7 @@ fn build_inner_binary(model: tangram::types::Classifier, id: Id) -> BinaryClassi
 		.collect::<Vec<ClassMetrics>>();
 	let losses = match model.model {
 		tangram::types::ClassificationModel::LinearBinary(inner_model) => inner_model.losses,
-		tangram::types::ClassificationModel::GBTBinary(inner_model) => inner_model.losses,
+		tangram::types::ClassificationModel::TreeBinary(inner_model) => inner_model.losses,
 		_ => unreachable!(),
 	};
 	BinaryClassifier {
@@ -174,7 +174,7 @@ fn build_inner_multiclass(model: tangram::types::Classifier, id: Id) -> Multicla
 		.collect::<Vec<ClassMetrics>>();
 	let losses = match model.model {
 		tangram::types::ClassificationModel::LinearMulticlass(inner_model) => inner_model.losses,
-		tangram::types::ClassificationModel::GBTMulticlass(inner_model) => inner_model.losses,
+		tangram::types::ClassificationModel::TreeMulticlass(inner_model) => inner_model.losses,
 		_ => unreachable!(),
 	};
 	MulticlassClassifier {

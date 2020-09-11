@@ -7,30 +7,30 @@ pub enum GridItem {
 		feature_groups: Vec<features::FeatureGroup>,
 		options: LinearModelTrainOptions,
 	},
-	GBTRegressor {
+	TreeRegressor {
 		target_column_index: usize,
 		feature_groups: Vec<features::FeatureGroup>,
-		options: GBTModelTrainOptions,
+		options: TreeModelTrainOptions,
 	},
 	LinearBinaryClassifier {
 		target_column_index: usize,
 		feature_groups: Vec<features::FeatureGroup>,
 		options: LinearModelTrainOptions,
 	},
-	GBTBinaryClassifier {
+	TreeBinaryClassifier {
 		target_column_index: usize,
 		feature_groups: Vec<features::FeatureGroup>,
-		options: GBTModelTrainOptions,
+		options: TreeModelTrainOptions,
 	},
 	LinearMulticlassClassifier {
 		target_column_index: usize,
 		feature_groups: Vec<features::FeatureGroup>,
 		options: LinearModelTrainOptions,
 	},
-	GBTMulticlassClassifier {
+	TreeMulticlassClassifier {
 		target_column_index: usize,
 		feature_groups: Vec<features::FeatureGroup>,
-		options: GBTModelTrainOptions,
+		options: TreeModelTrainOptions,
 	},
 }
 
@@ -42,7 +42,7 @@ pub struct LinearModelTrainOptions {
 	pub early_stopping_fraction: f32,
 }
 
-pub struct GBTModelTrainOptions {
+pub struct TreeModelTrainOptions {
 	pub max_depth: u64,
 	pub learning_rate: f32,
 	pub l2_regularization: f32,
@@ -69,10 +69,10 @@ pub fn compute_regression_hyperparameter_grid(
 					n_examples_per_batch: item.n_examples_per_batch,
 				},
 			},
-			config::GridItem::GBT(item) => GridItem::GBTRegressor {
+			config::GridItem::Tree(item) => GridItem::TreeRegressor {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_gbt(column_stats),
-				options: GBTModelTrainOptions {
+				feature_groups: features::compute_feature_groups_tree(column_stats),
+				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
 					early_stopping_fraction: 0.1,
 					learning_rate: item.learning_rate,
@@ -103,10 +103,10 @@ pub fn compute_binary_classification_hyperparameter_grid(
 					n_examples_per_batch: item.n_examples_per_batch,
 				},
 			},
-			config::GridItem::GBT(item) => GridItem::GBTBinaryClassifier {
+			config::GridItem::Tree(item) => GridItem::TreeBinaryClassifier {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_gbt(column_stats),
-				options: GBTModelTrainOptions {
+				feature_groups: features::compute_feature_groups_tree(column_stats),
+				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
 					early_stopping_fraction: 0.1,
 					learning_rate: item.learning_rate,
@@ -137,10 +137,10 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 					n_examples_per_batch: item.n_examples_per_batch,
 				},
 			},
-			config::GridItem::GBT(item) => GridItem::GBTMulticlassClassifier {
+			config::GridItem::Tree(item) => GridItem::TreeMulticlassClassifier {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_gbt(column_stats),
-				options: GBTModelTrainOptions {
+				feature_groups: features::compute_feature_groups_tree(column_stats),
+				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
 					early_stopping_fraction: 0.1,
 					learning_rate: item.learning_rate,
@@ -162,16 +162,16 @@ const DEFAULT_LINEAR_L2_REGULARIZATION_VALUES: [f32; 1] = [1.0];
 const DEFAULT_LINEAR_MAX_EPOCHS_VALUES: [u64; 1] = [100];
 const DEFAULT_LINEAR_N_EXAMPLES_PER_BATCH_VALUES: [u64; 1] = [128];
 
-// const DEFAULT_GBT_LEARNING_RATE_VALUES: [f32; 3] = [0.1, 0.01, 0.001];
-// const DEFAULT_GBT_L2_REGULARIZATION_VALUES: [f32; 6] = [1.0, 0.1, 0.01, 0.001, 0.0001, 0.0];
-// const DEFAULT_GBT_DEPTH_VALUES: [u64; 2] = [3, 6];
-// const DEFAULT_GBT_MAX_TREES_VALUES: [u64; 2] = [100, 1000];
-// const DEFAULT_GBT_MIN_EXAMPLES_PER_LEAF_VALUES: [u64; 1] = [10];
-const DEFAULT_GBT_LEARNING_RATE_VALUES: [f32; 1] = [0.1];
-const DEFAULT_GBT_L2_REGULARIZATION_VALUES: [f32; 1] = [1.0];
-const DEFAULT_GBT_DEPTH_VALUES: [u64; 1] = [3];
-const DEFAULT_GBT_MAX_TREES_VALUES: [u64; 1] = [100];
-const DEFAULT_GBT_MIN_EXAMPLES_PER_LEAF_VALUES: [u64; 1] = [10];
+// const DEFAULT_TREE_LEARNING_RATE_VALUES: [f32; 3] = [0.1, 0.01, 0.001];
+// const DEFAULT_TREE_L2_REGULARIZATION_VALUES: [f32; 6] = [1.0, 0.1, 0.01, 0.001, 0.0001, 0.0];
+// const DEFAULT_TREE_DEPTH_VALUES: [u64; 2] = [3, 6];
+// const DEFAULT_TREE_MAX_TREES_VALUES: [u64; 2] = [100, 1000];
+// const DEFAULT_TREE_MIN_EXAMPLES_PER_LEAF_VALUES: [u64; 1] = [10];
+const DEFAULT_TREE_LEARNING_RATE_VALUES: [f32; 1] = [0.1];
+const DEFAULT_TREE_L2_REGULARIZATION_VALUES: [f32; 1] = [1.0];
+const DEFAULT_TREE_DEPTH_VALUES: [u64; 1] = [3];
+const DEFAULT_TREE_MAX_TREES_VALUES: [u64; 1] = [100];
+const DEFAULT_TREE_MIN_EXAMPLES_PER_LEAF_VALUES: [u64; 1] = [10];
 
 pub fn default_regression_hyperparameter_grid(
 	target_column_index: usize,
@@ -197,16 +197,16 @@ pub fn default_regression_hyperparameter_grid(
 		});
 	}
 	for (&max_depth, &learning_rate, &l2_regularization, &min_examples_per_leaf, &max_rounds) in iproduct!(
-		DEFAULT_GBT_DEPTH_VALUES.iter(),
-		DEFAULT_GBT_LEARNING_RATE_VALUES.iter(),
-		DEFAULT_GBT_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_GBT_MIN_EXAMPLES_PER_LEAF_VALUES.iter(),
-		DEFAULT_GBT_MAX_TREES_VALUES.iter()
+		DEFAULT_TREE_DEPTH_VALUES.iter(),
+		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
+		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
+		DEFAULT_TREE_MIN_EXAMPLES_PER_LEAF_VALUES.iter(),
+		DEFAULT_TREE_MAX_TREES_VALUES.iter()
 	) {
-		grid.push(GridItem::GBTRegressor {
+		grid.push(GridItem::TreeRegressor {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_gbt(column_stats),
-			options: GBTModelTrainOptions {
+			feature_groups: features::compute_feature_groups_tree(column_stats),
+			options: TreeModelTrainOptions {
 				max_depth,
 				learning_rate,
 				min_examples_per_leaf,
@@ -243,16 +243,16 @@ pub fn default_binary_classification_hyperparameter_grid(
 		});
 	}
 	for (&max_depth, &learning_rate, &l2_regularization, &min_examples_per_leaf, &max_rounds) in iproduct!(
-		DEFAULT_GBT_DEPTH_VALUES.iter(),
-		DEFAULT_GBT_LEARNING_RATE_VALUES.iter(),
-		DEFAULT_GBT_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_GBT_MIN_EXAMPLES_PER_LEAF_VALUES.iter(),
-		DEFAULT_GBT_MAX_TREES_VALUES.iter()
+		DEFAULT_TREE_DEPTH_VALUES.iter(),
+		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
+		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
+		DEFAULT_TREE_MIN_EXAMPLES_PER_LEAF_VALUES.iter(),
+		DEFAULT_TREE_MAX_TREES_VALUES.iter()
 	) {
-		grid.push(GridItem::GBTBinaryClassifier {
+		grid.push(GridItem::TreeBinaryClassifier {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_gbt(column_stats),
-			options: GBTModelTrainOptions {
+			feature_groups: features::compute_feature_groups_tree(column_stats),
+			options: TreeModelTrainOptions {
 				max_depth,
 				learning_rate,
 				min_examples_per_leaf,
@@ -289,16 +289,16 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 		});
 	}
 	for (&max_depth, &learning_rate, &l2_regularization, &min_examples_per_leaf, &max_rounds) in iproduct!(
-		DEFAULT_GBT_DEPTH_VALUES.iter(),
-		DEFAULT_GBT_LEARNING_RATE_VALUES.iter(),
-		DEFAULT_GBT_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_GBT_MIN_EXAMPLES_PER_LEAF_VALUES.iter(),
-		DEFAULT_GBT_MAX_TREES_VALUES.iter()
+		DEFAULT_TREE_DEPTH_VALUES.iter(),
+		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
+		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
+		DEFAULT_TREE_MIN_EXAMPLES_PER_LEAF_VALUES.iter(),
+		DEFAULT_TREE_MAX_TREES_VALUES.iter()
 	) {
-		grid.push(GridItem::GBTMulticlassClassifier {
+		grid.push(GridItem::TreeMulticlassClassifier {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_gbt(column_stats),
-			options: GBTModelTrainOptions {
+			feature_groups: features::compute_feature_groups_tree(column_stats),
+			options: TreeModelTrainOptions {
 				max_depth,
 				learning_rate,
 				min_examples_per_leaf,

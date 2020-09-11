@@ -44,9 +44,9 @@ enum Inner {
 	LinearRegressor(LinearRegressor),
 	LinearBinaryClassifier(LinearBinaryClassifier),
 	LinearMulticlassClassifier(LinearMulticlassClassifier),
-	GBTBinaryClassifier(GBTBinaryClassifier),
-	GBTMulticlassClassifier(GBTMulticlassClassifier),
-	GBTRegressor(GBTRegressor),
+	TreeBinaryClassifier(TreeBinaryClassifier),
+	TreeMulticlassClassifier(TreeMulticlassClassifier),
+	TreeRegressor(TreeRegressor),
 }
 
 #[derive(serde::Serialize)]
@@ -77,19 +77,19 @@ struct LinearMulticlassClassifier {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct GBTBinaryClassifier {
+struct TreeBinaryClassifier {
 	feature_importances: Vec<(String, f32)>,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct GBTMulticlassClassifier {
+struct TreeMulticlassClassifier {
 	feature_importances: Vec<(String, f32)>,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct GBTRegressor {
+struct TreeRegressor {
 	feature_importances: Vec<(String, f32)>,
 }
 
@@ -159,7 +159,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						weights,
 					})
 				}
-				tangram::types::ClassificationModel::GBTBinary(inner_model) => {
+				tangram::types::ClassificationModel::TreeBinary(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let feature_importances = inner_model.feature_importances.as_slice();
 					let feature_names = compute_feature_names(&feature_groups);
@@ -170,11 +170,11 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						.collect();
 					feature_importances
 						.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-					Inner::GBTBinaryClassifier(GBTBinaryClassifier {
+					Inner::TreeBinaryClassifier(TreeBinaryClassifier {
 						feature_importances,
 					})
 				}
-				tangram::types::ClassificationModel::GBTMulticlass(inner_model) => {
+				tangram::types::ClassificationModel::TreeMulticlass(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let feature_importances = inner_model.feature_importances.as_slice();
 					let feature_names = compute_feature_names(&feature_groups);
@@ -185,7 +185,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						.collect();
 					feature_importances
 						.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-					Inner::GBTMulticlassClassifier(GBTMulticlassClassifier {
+					Inner::TreeMulticlassClassifier(TreeMulticlassClassifier {
 						feature_importances,
 					})
 				}
@@ -209,7 +209,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					weights,
 				})
 			}
-			tangram::types::RegressionModel::GBT(inner_model) => {
+			tangram::types::RegressionModel::Tree(inner_model) => {
 				let feature_groups = inner_model.feature_groups;
 				let feature_importances = inner_model.feature_importances.as_slice();
 				let feature_names = compute_feature_names(&feature_groups);
@@ -219,7 +219,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					.map(|(f, w)| (f, *w))
 					.collect();
 				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-				Inner::GBTRegressor(GBTRegressor {
+				Inner::TreeRegressor(TreeRegressor {
 					feature_importances,
 				})
 			}
