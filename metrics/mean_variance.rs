@@ -20,6 +20,7 @@ pub fn merge_mean_m2(
 	)
 }
 
+/// This function computes the variance given the `m2` and `n`.
 pub fn m2_to_variance(m2: f64, n: NonZeroU64) -> f32 {
 	(m2 / n.get().to_f64().unwrap()).to_f32().unwrap()
 }

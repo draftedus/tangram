@@ -8,7 +8,7 @@ BinaryClassifierMetrics computes common metrics used to evaluate binary classifi
 */
 pub struct BinaryClassifierMetrics {
 	/// The confusion matrices is an array of shape n_thresholds x (n_classes x n_classes).
-	/// The inner Array2<u64> is a per-threshold [Confusion Matrix](https://en.wikipedia.org/wiki/Confusion_matrix).
+	/// The inner `Array2<u64>` is a per-threshold [Confusion Matrix](https://en.wikipedia.org/wiki/Confusion_matrix).
 	pub confusion_matrices: Array3<u64>,
 	/// The thresholds are evenly-spaced between 0 and 1 based on the total number of thresholds: `n_thresholds`, passed to [BinaryClassifierMetrics::new](struct.BinaryClassifierMetrics.html#method.new).
 	pub thresholds: Vec<f32>,

@@ -33,6 +33,7 @@ pub struct ClassificationMetricsOutput {
 	pub baseline_accuracy: f32,
 }
 
+/// ClassMetrics are class specific metrics used to evaluate the model's performance on each individual class.
 #[derive(Debug)]
 pub struct ClassMetrics {
 	/// The total number of examples whose label is equal to this class that the model predicted as belonging to this class.
