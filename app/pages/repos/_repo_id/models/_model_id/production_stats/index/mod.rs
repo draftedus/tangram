@@ -151,12 +151,12 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 	let production_stats =
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let target_column_stats = match model {
-		tangram::types::Model::Classifier(model) => model.overall_target_column_stats,
-		tangram::types::Model::Regressor(model) => model.overall_target_column_stats,
+		tangram::model::Model::Classifier(model) => model.overall_target_column_stats,
+		tangram::model::Model::Regressor(model) => model.overall_target_column_stats,
 	};
 	let overall_column_stats_table = production_stats
 		.overall
@@ -300,7 +300,7 @@ async fn props(
 }
 
 fn compute_production_training_quantiles(
-	target_column_stats: &tangram::types::NumberColumnStats,
+	target_column_stats: &tangram::model::NumberColumnStats,
 	prediction_stats: &RegressionProductionPredictionStatsOutput,
 ) -> ProductionTrainingQuantiles {
 	ProductionTrainingQuantiles {

@@ -19,7 +19,7 @@ pub struct GetProductionMetricsOutput {
 
 pub async fn get_production_metrics(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	model: &tangram::types::Model,
+	model: &tangram::model::Model,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,

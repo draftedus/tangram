@@ -1,11 +1,10 @@
-use crate::types;
 use derive_more::Constructor;
 use itertools::izip;
 use ndarray::prelude::*;
 
 #[derive(Constructor)]
 pub struct Model<'a> {
-	model: &'a types::Model,
+	model: &'a model::Model,
 }
 
 impl<'a> std::fmt::Display for Model<'a> {
@@ -31,7 +30,7 @@ impl<'a> std::fmt::Display for Model<'a> {
 
 #[derive(Constructor)]
 struct Overview<'a> {
-	model: &'a types::Model,
+	model: &'a model::Model,
 }
 
 impl<'a> std::fmt::Display for Overview<'a> {
@@ -39,14 +38,14 @@ impl<'a> std::fmt::Display for Overview<'a> {
 		writeln!(f, "## Overview")?;
 		writeln!(f)?;
 		let model_name = match self.model.model_descriptor {
-			types::ModelDescriptor::LinearRegressor(_) => "linear regressor",
-			types::ModelDescriptor::LinearBinaryClassifier(_) => "linear binary classifier",
-			types::ModelDescriptor::LinearMulticlassClassifier(_) => "linear multiclass classifier",
-			types::ModelDescriptor::TreeRegressor(_) => "gradient boosted trees regressor",
-			types::ModelDescriptor::TreeBinaryClassifier(_) => {
+			model::ModelDescriptor::LinearRegressor(_) => "linear regressor",
+			model::ModelDescriptor::LinearBinaryClassifier(_) => "linear binary classifier",
+			model::ModelDescriptor::LinearMulticlassClassifier(_) => "linear multiclass classifier",
+			model::ModelDescriptor::TreeRegressor(_) => "gradient boosted trees regressor",
+			model::ModelDescriptor::TreeBinaryClassifier(_) => {
 				"gradient boosted trees binary classifier"
 			}
-			types::ModelDescriptor::TreeMulticlassClassifier(_) => {
+			model::ModelDescriptor::TreeMulticlassClassifier(_) => {
 				"gradient boosted trees multiclass classifier"
 			}
 		};
@@ -58,11 +57,11 @@ impl<'a> std::fmt::Display for Overview<'a> {
 		)?;
 		writeln!(f)?;
 		let values = match &self.model.task_descriptor {
-			types::TaskDescriptor::Regression(_) => arr2(&[
+			model::TaskDescriptor::Regression(_) => arr2(&[
 				["Model Type", model_name],
 				["Target Column", target_column_name],
 			]),
-			types::TaskDescriptor::Classification(_) => arr2(&[
+			model::TaskDescriptor::Classification(_) => arr2(&[
 				["Model Type", model_name],
 				["Target Column", target_column_name],
 			]),
@@ -75,8 +74,8 @@ impl<'a> std::fmt::Display for Overview<'a> {
 
 #[derive(Constructor)]
 struct TargetColumn<'a> {
-	target_column: &'a types::Column,
-	target_column_stats: &'a types::ColumnStats,
+	target_column: &'a model::Column,
+	target_column_stats: &'a model::ColumnStats,
 }
 
 impl<'a> std::fmt::Display for TargetColumn<'a> {
@@ -85,19 +84,19 @@ impl<'a> std::fmt::Display for TargetColumn<'a> {
 		writeln!(f)?;
 		let column_name = self.target_column.column_name.as_str();
 		let column_type = match self.target_column.column_type {
-			types::ColumnType::Unknown => "Unknown",
-			types::ColumnType::Text => "Text",
-			types::ColumnType::Number => "Number",
-			types::ColumnType::Enum => "Enum",
+			model::ColumnType::Unknown => "Unknown",
+			model::ColumnType::Text => "Text",
+			model::ColumnType::Number => "Number",
+			model::ColumnType::Enum => "Enum",
 		};
 		let values = arr2(&[[column_name, column_type]]);
 		let table = Table::new().header(&["Name", "Type"]).values(&values);
 		write!(f, "{}", table)?;
 		writeln!(f)?;
 
-		if let types::ColumnType::Enum = self.target_column.column_type {
+		if let model::ColumnType::Enum = self.target_column.column_type {
 			let unique_values: Vec<&str> = match self.target_column_stats {
-				types::ColumnStats::Enum(s) => {
+				model::ColumnStats::Enum(s) => {
 					s.histogram.iter().map(|(k, _)| k.as_str()).collect()
 				}
 				_ => unreachable!(),
@@ -112,7 +111,7 @@ impl<'a> std::fmt::Display for TargetColumn<'a> {
 
 #[derive(Constructor)]
 struct Columns<'a> {
-	columns: &'a [types::Column],
+	columns: &'a [model::Column],
 }
 
 impl<'a> std::fmt::Display for Columns<'a> {
@@ -130,10 +129,10 @@ impl<'a> std::fmt::Display for Columns<'a> {
 				Array::from_shape_fn((self.columns.len(), 2), |(row, col)| match col {
 					0 => self.columns[row].column_name.as_str(),
 					1 => match self.columns[row].column_type {
-						types::ColumnType::Unknown => "Unknown",
-						types::ColumnType::Text => "Text",
-						types::ColumnType::Number => "Number",
-						types::ColumnType::Enum => "Enum",
+						model::ColumnType::Unknown => "Unknown",
+						model::ColumnType::Text => "Text",
+						model::ColumnType::Number => "Number",
+						model::ColumnType::Enum => "Enum",
 					},
 					_ => unreachable!(),
 				});
@@ -152,7 +151,7 @@ impl<'a> std::fmt::Display for Columns<'a> {
 
 #[derive(Constructor)]
 struct ColumnStats<'a> {
-	stats: &'a types::Stats,
+	stats: &'a model::Stats,
 }
 
 impl<'a> std::fmt::Display for ColumnStats<'a> {
@@ -164,23 +163,23 @@ impl<'a> std::fmt::Display for ColumnStats<'a> {
 			writeln!(f, "### {}", column_stats.column_name())?;
 			writeln!(f)?;
 			let column_type = match column_stats.column_type() {
-				types::ColumnType::Unknown => "Unknown",
-				types::ColumnType::Text => "Text",
-				types::ColumnType::Number => "Number",
-				types::ColumnType::Enum => "Enum",
+				model::ColumnType::Unknown => "Unknown",
+				model::ColumnType::Text => "Text",
+				model::ColumnType::Number => "Number",
+				model::ColumnType::Enum => "Enum",
 			};
 			let values = arr2(&[["Type", column_type]]);
 			let table = Table::new().values(&values);
 			write!(f, "{}", table)?;
 			match column_stats {
-				types::ColumnStats::Unknown(_) => {}
-				types::ColumnStats::Text(_) => {}
-				types::ColumnStats::Number(number_column_stats) => {
+				model::ColumnStats::Unknown(_) => {}
+				model::ColumnStats::Text(_) => {}
+				model::ColumnStats::Number(number_column_stats) => {
 					let number_column_stats = NumberColumnStats::new(number_column_stats);
 					writeln!(f)?;
 					write!(f, "{}", number_column_stats)?;
 				}
-				types::ColumnStats::Enum(_) => {}
+				model::ColumnStats::Enum(_) => {}
 			}
 		}
 		Ok(())
@@ -189,7 +188,7 @@ impl<'a> std::fmt::Display for ColumnStats<'a> {
 
 #[derive(Constructor)]
 struct NumberColumnStats<'a> {
-	column_stats: &'a types::NumberColumnStats,
+	column_stats: &'a model::NumberColumnStats,
 }
 
 impl<'a> std::fmt::Display for NumberColumnStats<'a> {
@@ -212,7 +211,7 @@ impl<'a> std::fmt::Display for NumberColumnStats<'a> {
 
 #[derive(Constructor)]
 struct Metrics<'a> {
-	model: &'a types::Model,
+	model: &'a model::Model,
 }
 
 impl<'a> std::fmt::Display for Metrics<'a> {
@@ -220,20 +219,20 @@ impl<'a> std::fmt::Display for Metrics<'a> {
 		writeln!(f, "## Metrics")?;
 		writeln!(f)?;
 		match &self.model.task_descriptor {
-			types::TaskDescriptor::Regression(_) => {
+			model::TaskDescriptor::Regression(_) => {
 				writeln!(f, "The baseline RMSE is the RMSE that a model would get if it always predicted the mean value in the training dataset of the target column.")?;
 			}
-			types::TaskDescriptor::Classification(_) => {
+			model::TaskDescriptor::Classification(_) => {
 				writeln!(f, "The baseline accuracy is the accuracy that a model would get if it always predicted the majority class.")?;
 			}
 		}
 		writeln!(f)?;
 		let baseline = match &self.model.task_metrics {
-			types::TaskMetrics::Regression(m) => m.baseline_rmse.to_string(),
-			types::TaskMetrics::Classification(m) => m.baseline_accuracy.to_string(),
+			model::TaskMetrics::Regression(m) => m.baseline_rmse.to_string(),
+			model::TaskMetrics::Classification(m) => m.baseline_accuracy.to_string(),
 		};
 		match (&self.model.task_metrics, &self.model.model_metrics) {
-			(types::TaskMetrics::Regression(metrics), _) => {
+			(model::TaskMetrics::Regression(metrics), _) => {
 				let mse = metrics.mse.to_string();
 				let rmse = metrics.rmse.to_string();
 				let mae = metrics.mae.to_string();
@@ -248,8 +247,8 @@ impl<'a> std::fmt::Display for Metrics<'a> {
 				write!(f, "{}", table)?;
 			}
 			(
-				types::TaskMetrics::Classification(metrics),
-				types::ModelMetrics::LinearBinaryClassifier(model_metrics),
+				model::TaskMetrics::Classification(metrics),
+				model::ModelMetrics::LinearBinaryClassifier(model_metrics),
 			) => {
 				let accuracy = metrics.accuracy.to_string();
 				let auc = model_metrics.auc_roc.to_string();
@@ -262,8 +261,8 @@ impl<'a> std::fmt::Display for Metrics<'a> {
 				write!(f, "{}", table)?;
 			}
 			(
-				types::TaskMetrics::Classification(metrics),
-				types::ModelMetrics::TreeBinaryClassifier(model_metrics),
+				model::TaskMetrics::Classification(metrics),
+				model::ModelMetrics::TreeBinaryClassifier(model_metrics),
 			) => {
 				let accuracy = metrics.accuracy.to_string();
 				let auc = model_metrics.auc_roc.to_string();
@@ -275,7 +274,7 @@ impl<'a> std::fmt::Display for Metrics<'a> {
 				let table = Table::new().values(&values);
 				write!(f, "{}", table)?;
 			}
-			(types::TaskMetrics::Classification(metrics), _) => {
+			(model::TaskMetrics::Classification(metrics), _) => {
 				let accuracy = metrics.accuracy.to_string();
 				let values = arr2(&[["Accuracy", &accuracy], ["Baseline Accuracy", &baseline]]);
 				let table = Table::new().values(&values);
@@ -288,7 +287,7 @@ impl<'a> std::fmt::Display for Metrics<'a> {
 
 #[derive(Constructor)]
 struct ClassMetrics<'a> {
-	class_metrics: &'a types::ClassMetrics,
+	class_metrics: &'a model::ClassMetrics,
 }
 
 impl<'a> std::fmt::Display for ClassMetrics<'a> {

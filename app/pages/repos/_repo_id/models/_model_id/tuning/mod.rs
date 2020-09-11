@@ -72,12 +72,12 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 	}
 	let Model { data, .. } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 	let tuning = match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram::model::Model::Classifier(model) => {
 			let classes = model.classes().to_owned();
 			match model.model {
-				tangram::types::ClassificationModel::LinearBinary(inner_model) => {
+				tangram::model::ClassificationModel::LinearBinary(inner_model) => {
 					let class_metrics = inner_model.class_metrics;
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
@@ -86,8 +86,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						classes,
 					})
 				}
-				tangram::types::ClassificationModel::LinearMulticlass(_) => None,
-				tangram::types::ClassificationModel::TreeBinary(inner_model) => {
+				tangram::model::ClassificationModel::LinearMulticlass(_) => None,
+				tangram::model::ClassificationModel::TreeBinary(inner_model) => {
 					let class_metrics = inner_model.class_metrics;
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
@@ -96,10 +96,10 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						classes,
 					})
 				}
-				tangram::types::ClassificationModel::TreeMulticlass(_) => None,
+				tangram::model::ClassificationModel::TreeMulticlass(_) => None,
 			}
 		}
-		tangram::types::Model::Regressor(_) => None,
+		tangram::model::Model::Regressor(_) => None,
 	};
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
@@ -110,7 +110,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 }
 
 fn build_threshold_class_metrics(
-	class_metrics: Vec<tangram::types::BinaryClassifierClassMetrics>,
+	class_metrics: Vec<tangram::model::BinaryClassifierClassMetrics>,
 ) -> Vec<Vec<Metrics>> {
 	class_metrics
 		.iter()

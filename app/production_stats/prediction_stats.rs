@@ -36,12 +36,12 @@ pub struct ClassificationProductionPredictionStatsOutput {
 }
 
 impl ProductionPredictionStats {
-	pub fn new(model: &tangram::types::Model) -> Self {
+	pub fn new(model: &tangram::model::Model) -> Self {
 		match &model {
-			tangram::types::Model::Regressor(_) => {
+			tangram::model::Model::Regressor(_) => {
 				ProductionPredictionStats::Regression(RegressionProductionPredictionStats::new())
 			}
-			tangram::types::Model::Classifier(model) => {
+			tangram::model::Model::Classifier(model) => {
 				let classes = model.classes();
 				ProductionPredictionStats::Classification(
 					ClassificationProductionPredictionStats::new(classes),

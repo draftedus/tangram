@@ -168,12 +168,12 @@ async fn props(
 		}
 	}
 	let Model { id, data } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 	let production_metrics =
 		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
 			.await?;
 	let inner = match &model {
-		tangram::types::Model::Regressor(model) => {
+		tangram::model::Model::Regressor(model) => {
 			let training_metrics = &model.test_metrics;
 			let true_values_count = production_metrics.overall.true_values_count;
 			let overall_production_metrics =
@@ -246,7 +246,7 @@ async fn props(
 				true_values_count_chart,
 			})
 		}
-		tangram::types::Model::Classifier(model) => {
+		tangram::model::Model::Classifier(model) => {
 			let training_metrics = &model.test_metrics;
 			let overall_production_metrics =
 				production_metrics

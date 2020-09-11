@@ -68,7 +68,7 @@ pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<
 
 async fn handle_prediction_monitor_event(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	models: &mut BTreeMap<Id, tangram::types::Model>,
+	models: &mut BTreeMap<Id, tangram::model::Model>,
 	monitor_event: PredictionMonitorEvent,
 ) -> Result<()> {
 	let model_id = monitor_event.model_id;
@@ -88,7 +88,7 @@ async fn handle_prediction_monitor_event(
 
 async fn handle_true_value_monitor_event(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	models: &mut BTreeMap<Id, tangram::types::Model>,
+	models: &mut BTreeMap<Id, tangram::model::Model>,
 	monitor_event: TrueValueMonitorEvent,
 ) -> Result<()> {
 	let model_id = monitor_event.model_id;
@@ -169,7 +169,7 @@ async fn write_true_value_monitor_event(
 async fn insert_or_update_production_stats_for_monitor_event(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
-	model: &tangram::types::Model,
+	model: &tangram::model::Model,
 	monitor_event: PredictionMonitorEvent,
 ) -> Result<()> {
 	let date = monitor_event.date;
@@ -240,7 +240,7 @@ async fn insert_or_update_production_stats_for_monitor_event(
 async fn insert_or_update_production_metrics_for_monitor_event(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
-	model: &tangram::types::Model,
+	model: &tangram::model::Model,
 	monitor_event: TrueValueMonitorEvent,
 ) -> Result<()> {
 	let identifier = monitor_event.identifier.as_string().to_string();
@@ -345,7 +345,7 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 pub async fn get_model(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
-) -> Result<tangram::types::Model> {
+) -> Result<tangram::model::Model> {
 	let data: String = sqlx::query(
 		"
 			select
@@ -360,6 +360,6 @@ pub async fn get_model(
 	.await?
 	.get(0);
 	let data: Vec<u8> = base64::decode(data)?;
-	let model = tangram::types::Model::from_slice(&data.as_slice())?;
+	let model = tangram::model::Model::from_slice(&data.as_slice())?;
 	Ok(model)
 }

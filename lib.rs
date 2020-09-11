@@ -15,11 +15,11 @@ pub mod features;
 pub mod id;
 pub mod linear;
 pub mod metrics;
+pub mod model;
 pub mod predict;
 pub mod progress;
 pub mod stats;
 pub mod tree;
-pub mod types;
 pub mod util;
 
 pub use self::predict::predict;

@@ -131,13 +131,13 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	let production_metrics =
 		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
 			.await?;
 	let model = match model {
-		tangram::types::Model::Classifier(model) => model,
+		tangram::model::Model::Classifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let classes = model.classes();

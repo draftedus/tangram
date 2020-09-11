@@ -1,15 +1,15 @@
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Tree {
 	pub nodes: Vec<Node>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Node {
 	Branch(BranchNode),
 	Leaf(LeafNode),
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BranchNode {
 	pub left_child_index: u64,
 	pub right_child_index: u64,
@@ -19,20 +19,20 @@ pub struct BranchNode {
 	pub examples_fraction: f32,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum BranchSplit {
 	Continuous(BranchSplitContinuous),
 	Discrete(BranchSplitDiscrete),
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BranchSplitContinuous {
 	pub feature_index: u64,
 	pub split_value: f32,
 	pub invalid_values_direction: bool,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BranchSplitDiscrete {
 	pub feature_index: u64,
 	/// the directions correspond to label id's
@@ -40,7 +40,7 @@ pub struct BranchSplitDiscrete {
 	pub directions: Vec<bool>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LeafNode {
 	pub value: f32,
 	/// this is the fraction of examples

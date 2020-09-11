@@ -79,10 +79,10 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 
 	let Model { data, .. } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 
 	let props = match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram::model::Model::Classifier(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
 				id: model.id.to_owned(),
@@ -96,7 +96,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
 			}
 		}
-		tangram::types::Model::Regressor(model) => {
+		tangram::model::Model::Regressor(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
 				id: model.id.to_owned(),
@@ -115,9 +115,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	Ok(props)
 }
 
-fn build_column_stats(column_stats: &tangram::types::ColumnStats) -> ColumnStats {
+fn build_column_stats(column_stats: &tangram::model::ColumnStats) -> ColumnStats {
 	match column_stats {
-		tangram::types::ColumnStats::Unknown(column_stats) => ColumnStats {
+		tangram::model::ColumnStats::Unknown(column_stats) => ColumnStats {
 			column_type: ColumnType::Unknown,
 			unique_count: None,
 			invalid_count: None,
@@ -128,7 +128,7 @@ fn build_column_stats(column_stats: &tangram::types::ColumnStats) -> ColumnStats
 			mean: None,
 			variance: None,
 		},
-		tangram::types::ColumnStats::Number(column_stats) => ColumnStats {
+		tangram::model::ColumnStats::Number(column_stats) => ColumnStats {
 			column_type: ColumnType::Number,
 			unique_count: Some(column_stats.unique_count.to_usize().unwrap()),
 			invalid_count: Some(column_stats.invalid_count.to_usize().unwrap()),
@@ -139,7 +139,7 @@ fn build_column_stats(column_stats: &tangram::types::ColumnStats) -> ColumnStats
 			mean: Some(column_stats.mean),
 			variance: Some(column_stats.variance),
 		},
-		tangram::types::ColumnStats::Enum(column_stats) => ColumnStats {
+		tangram::model::ColumnStats::Enum(column_stats) => ColumnStats {
 			column_type: ColumnType::Enum,
 			unique_count: column_stats.unique_count.to_usize(),
 			invalid_count: column_stats.invalid_count.to_usize(),
@@ -150,7 +150,7 @@ fn build_column_stats(column_stats: &tangram::types::ColumnStats) -> ColumnStats
 			mean: None,
 			variance: None,
 		},
-		tangram::types::ColumnStats::Text(column_stats) => ColumnStats {
+		tangram::model::ColumnStats::Text(column_stats) => ColumnStats {
 			column_type: ColumnType::Text,
 			unique_count: None,
 			invalid_count: None,

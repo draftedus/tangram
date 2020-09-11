@@ -100,14 +100,14 @@ async fn props(
 	}
 
 	let Model { data, .. } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 
 	let (mut column_stats, target_column_stats) = match model {
-		tangram::types::Model::Classifier(model) => (
+		tangram::model::Model::Classifier(model) => (
 			model.overall_column_stats,
 			model.overall_target_column_stats,
 		),
-		tangram::types::Model::Regressor(model) => (
+		tangram::model::Model::Regressor(model) => (
 			model.overall_column_stats,
 			model.overall_target_column_stats,
 		),
@@ -129,8 +129,8 @@ async fn props(
 	};
 
 	let inner = match column {
-		tangram::types::ColumnStats::Unknown(_) => unimplemented!(),
-		tangram::types::ColumnStats::Number(column) => Inner::Number(Number {
+		tangram::model::ColumnStats::Unknown(_) => unimplemented!(),
+		tangram::model::ColumnStats::Number(column) => Inner::Number(Number {
 			histogram: column.histogram,
 			invalid_count: column.invalid_count.to_owned(),
 			min: column.min,
@@ -143,13 +143,13 @@ async fn props(
 			std: column.std,
 			unique_count: column.unique_count,
 		}),
-		tangram::types::ColumnStats::Enum(column) => Inner::Enum(Enum {
+		tangram::model::ColumnStats::Enum(column) => Inner::Enum(Enum {
 			histogram: Some(column.histogram),
 			invalid_count: column.invalid_count.to_owned(),
 			name: column.column_name.to_owned(),
 			unique_count: column.unique_count,
 		}),
-		tangram::types::ColumnStats::Text(column) => Inner::Text(Text {
+		tangram::model::ColumnStats::Text(column) => Inner::Text(Text {
 			name: column.column_name.to_owned(),
 			tokens: column.top_tokens,
 		}),

@@ -143,7 +143,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	};
 	let file_data = file_data.ok_or(Error::BadRequest)?;
 
-	let model = match tangram::types::Model::from_slice(&file_data) {
+	let model = match tangram::model::Model::from_slice(&file_data) {
 		Ok(model) => model,
 		Err(e) => {
 			dbg!(e);

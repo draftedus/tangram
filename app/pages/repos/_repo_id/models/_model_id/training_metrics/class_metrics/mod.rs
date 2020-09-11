@@ -98,21 +98,21 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 	// assemble the response
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let inner = match model {
-		tangram::types::Model::Classifier(model) => match model.model {
-			tangram::types::ClassificationModel::LinearBinary(_) => {
+		tangram::model::Model::Classifier(model) => match model.model {
+			tangram::model::ClassificationModel::LinearBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram::types::ClassificationModel::LinearMulticlass(_) => {
+			tangram::model::ClassificationModel::LinearMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
-			tangram::types::ClassificationModel::TreeBinary(_) => {
+			tangram::model::ClassificationModel::TreeBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram::types::ClassificationModel::TreeMulticlass(_) => {
+			tangram::model::ClassificationModel::TreeMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
 		},
@@ -128,7 +128,7 @@ async fn props(
 }
 
 fn build_inner_binary(
-	model: tangram::types::Classifier,
+	model: tangram::model::Classifier,
 	id: Id,
 	class: Option<String>,
 ) -> BinaryClassifier {
@@ -160,7 +160,7 @@ fn build_inner_binary(
 }
 
 fn build_inner_multiclass(
-	model: tangram::types::Classifier,
+	model: tangram::model::Classifier,
 	id: Id,
 	class: Option<String>,
 ) -> MulticlassClassifier {

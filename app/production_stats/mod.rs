@@ -30,13 +30,13 @@ pub struct ProductionStatsOutput {
 
 impl ProductionStats {
 	pub fn new(
-		model: &tangram::types::Model,
+		model: &tangram::model::Model,
 		start_date: DateTime<Utc>,
 		end_date: DateTime<Utc>,
 	) -> Self {
 		let train_column_stats = match &model {
-			tangram::types::Model::Regressor(model) => model.train_column_stats.as_slice(),
-			tangram::types::Model::Classifier(model) => model.train_column_stats.as_slice(),
+			tangram::model::Model::Regressor(model) => model.train_column_stats.as_slice(),
+			tangram::model::Model::Classifier(model) => model.train_column_stats.as_slice(),
 		};
 		let column_stats = train_column_stats
 			.iter()

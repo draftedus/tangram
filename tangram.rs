@@ -4,7 +4,7 @@ This module implements the C api for libtangram, the tangram C library, which is
 
 #![allow(clippy::missing_safety_doc)]
 
-use crate::{predict::PredictInput, predict::PredictModel, types};
+use crate::{predict::PredictInput, predict::PredictModel};
 use std::{
 	alloc::{alloc, dealloc, Layout},
 	convert::TryInto,
@@ -34,7 +34,7 @@ pub extern "C" fn tangram_model_load(
 	let result = catch_unwind(|| unsafe {
 		assert!(!model_ptr.is_null());
 		let bytes = std::slice::from_raw_parts(model_data_ptr, model_data_len);
-		let model = types::Model::from_slice(bytes).unwrap();
+		let model = crate::model::Model::from_slice(bytes).unwrap();
 		let model: PredictModel = model.try_into().unwrap();
 		let model = Box::new(model);
 		*model_ptr = Box::into_raw(model);

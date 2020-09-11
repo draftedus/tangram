@@ -94,18 +94,18 @@ pub struct TextProductionColumnStatsOutput {
 }
 
 impl ProductionColumnStats {
-	pub fn new(column_stats: &tangram::types::ColumnStats) -> Self {
+	pub fn new(column_stats: &tangram::model::ColumnStats) -> Self {
 		match column_stats {
-			tangram::types::ColumnStats::Unknown(stats) => {
+			tangram::model::ColumnStats::Unknown(stats) => {
 				ProductionColumnStats::Unknown(UnknownProductionColumnStats::new(stats))
 			}
-			tangram::types::ColumnStats::Text(stats) => {
+			tangram::model::ColumnStats::Text(stats) => {
 				ProductionColumnStats::Text(TextProductionColumnStats::new(stats))
 			}
-			tangram::types::ColumnStats::Number(stats) => {
+			tangram::model::ColumnStats::Number(stats) => {
 				ProductionColumnStats::Number(NumberProductionColumnStats::new(stats))
 			}
-			tangram::types::ColumnStats::Enum(stats) => {
+			tangram::model::ColumnStats::Enum(stats) => {
 				ProductionColumnStats::Enum(EnumProductionColumnStats::new(stats))
 			}
 		}
@@ -178,7 +178,7 @@ impl<'a> Metric<'a> for ProductionColumnStats {
 }
 
 impl UnknownProductionColumnStats {
-	fn new(column_stats: &tangram::types::UnknownColumnStats) -> Self {
+	fn new(column_stats: &tangram::model::UnknownColumnStats) -> Self {
 		Self {
 			column_name: column_stats.column_name.clone(),
 			invalid_count: 0,
@@ -224,7 +224,7 @@ impl<'a> Metric<'a> for UnknownProductionColumnStats {
 }
 
 impl NumberProductionColumnStats {
-	fn new(column_stats: &tangram::types::NumberColumnStats) -> Self {
+	fn new(column_stats: &tangram::model::NumberColumnStats) -> Self {
 		Self {
 			column_name: column_stats.column_name.clone(),
 			absent_count: 0,
@@ -306,7 +306,7 @@ impl<'a> Metric<'a> for NumberProductionColumnStats {
 }
 
 impl EnumProductionColumnStats {
-	fn new(column_stats: &tangram::types::EnumColumnStats) -> Self {
+	fn new(column_stats: &tangram::model::EnumColumnStats) -> Self {
 		let column_name = &column_stats.column_name;
 		let histogram = column_stats
 			.histogram
@@ -407,16 +407,16 @@ impl<'a> Metric<'a> for EnumProductionColumnStats {
 }
 
 impl TextProductionColumnStats {
-	fn new(column_stats: &tangram::types::TextColumnStats) -> Self {
+	fn new(column_stats: &tangram::model::TextColumnStats) -> Self {
 		// let tokenizer = match feature_group {
-		// 	tangram::types::FeatureGroup::BagOfWords(feature_group) => {
+		// 	tangram::model::FeatureGroup::BagOfWords(feature_group) => {
 		// 		match feature_group.tokenizer {
-		// 			tangram::types::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
+		// 			tangram::model::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
 		// 		}
 		// 	}
-		// 	tangram::types::FeatureGroup::Identity(_) => unreachable!(),
-		// 	tangram::types::FeatureGroup::Normalized(_) => unreachable!(),
-		// 	tangram::types::FeatureGroup::OneHotEncoded(_) => unreachable!(),
+		// 	tangram::model::FeatureGroup::Identity(_) => unreachable!(),
+		// 	tangram::model::FeatureGroup::Normalized(_) => unreachable!(),
+		// 	tangram::model::FeatureGroup::OneHotEncoded(_) => unreachable!(),
 		// 	_ => unimplemented!(),
 		// };
 		Self {

@@ -3,7 +3,7 @@ use super::stats::{ColumnStats, StatsSettings};
 use super::train_options::{LinearModelTrainOptions, TreeModelTrainOptions};
 use super::tree::Tree;
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Regressor {
 	pub id: String,
 	pub target_column_name: String,
@@ -22,7 +22,7 @@ pub struct Regressor {
 	pub comparison_metric: RegressionComparisonMetric,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct RegressionMetrics {
 	pub mse: f32,
 	pub rmse: f32,
@@ -32,13 +32,13 @@ pub struct RegressionMetrics {
 	pub baseline_rmse: f32,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum RegressionModel {
 	Linear(LinearRegressor),
 	Tree(TreeRegressor),
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearRegressor {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub options: LinearModelTrainOptions,
@@ -48,7 +48,7 @@ pub struct LinearRegressor {
 	pub means: Vec<f32>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeRegressor {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub options: TreeModelTrainOptions,
@@ -58,7 +58,7 @@ pub struct TreeRegressor {
 	pub feature_importances: Vec<f32>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum RegressionComparisonMetric {
 	MeanAbsoluteError,
 	MeanSquaredError,

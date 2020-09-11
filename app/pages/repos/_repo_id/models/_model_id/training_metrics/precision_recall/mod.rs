@@ -70,9 +70,9 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 	let model = match model {
-		tangram::types::Model::Classifier(model) => model,
+		tangram::model::Model::Classifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let classes = model.classes().to_owned();
@@ -83,10 +83,10 @@ async fn props(
 	};
 	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
 	let class_metrics = match &model.model {
-		tangram::types::ClassificationModel::LinearBinary(inner_model) => {
+		tangram::model::ClassificationModel::LinearBinary(inner_model) => {
 			&inner_model.class_metrics
 		}
-		tangram::types::ClassificationModel::TreeBinary(inner_model) => &inner_model.class_metrics,
+		tangram::model::ClassificationModel::TreeBinary(inner_model) => &inner_model.class_metrics,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let data = class_metrics

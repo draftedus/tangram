@@ -45,7 +45,7 @@ pub enum ProductionPredictionMetricsOutput {
 
 impl ProductionMetrics {
 	pub fn new(
-		model: &tangram::types::Model,
+		model: &tangram::model::Model,
 		start_date: DateTime<Utc>,
 		end_date: DateTime<Utc>,
 	) -> Self {
@@ -86,12 +86,12 @@ impl Metric<'_> for ProductionMetrics {
 }
 
 impl ProductionPredictionMetrics {
-	pub fn new(model: &tangram::types::Model) -> Self {
+	pub fn new(model: &tangram::model::Model) -> Self {
 		match model {
-			tangram::types::Model::Regressor(_) => {
+			tangram::model::Model::Regressor(_) => {
 				ProductionPredictionMetrics::Regression(RegressionProductionPredictionMetrics::new())
 			}
-			tangram::types::Model::Classifier(model) => {
+			tangram::model::Model::Classifier(model) => {
 				ProductionPredictionMetrics::Classification(
 					ClassificationProductionPredictionMetrics::new(model.classes().to_owned()),
 				)

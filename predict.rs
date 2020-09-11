@@ -1,4 +1,4 @@
-use crate::{dataframe, features, linear, tree, types};
+use crate::{dataframe, features, linear, model, tree};
 use anyhow::Result;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -784,11 +784,11 @@ fn compute_feature_group_map(feature_groups: &[features::FeatureGroup]) -> Vec<u
 		.collect()
 }
 
-impl TryFrom<types::Model> for PredictModel {
+impl TryFrom<model::Model> for PredictModel {
 	type Error = anyhow::Error;
-	fn try_from(value: types::Model) -> Result<Self> {
+	fn try_from(value: model::Model) -> Result<Self> {
 		match value {
-			types::Model::Regressor(model) => {
+			model::Model::Regressor(model) => {
 				let id = model.id;
 				let columns = model
 					.overall_column_stats
@@ -796,7 +796,7 @@ impl TryFrom<types::Model> for PredictModel {
 					.map(column_from_column_stats)
 					.collect::<Result<Vec<_>>>()?;
 				match model.model {
-					types::RegressionModel::Linear(model) => {
+					model::RegressionModel::Linear(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
@@ -814,7 +814,7 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						}))
 					}
-					types::RegressionModel::Tree(model) => {
+					model::RegressionModel::Tree(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
@@ -838,7 +838,7 @@ impl TryFrom<types::Model> for PredictModel {
 					}
 				}
 			}
-			types::Model::Classifier(model) => {
+			model::Model::Classifier(model) => {
 				let id = model.id;
 				let columns = model
 					.overall_column_stats
@@ -846,7 +846,7 @@ impl TryFrom<types::Model> for PredictModel {
 					.map(column_from_column_stats)
 					.collect::<Result<Vec<_>>>()?;
 				match model.model {
-					types::ClassificationModel::LinearBinary(model) => {
+					model::ClassificationModel::LinearBinary(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
@@ -867,7 +867,7 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						))
 					}
-					types::ClassificationModel::TreeBinary(model) => {
+					model::ClassificationModel::TreeBinary(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
@@ -892,7 +892,7 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						))
 					}
-					types::ClassificationModel::LinearMulticlass(model) => {
+					model::ClassificationModel::LinearMulticlass(model) => {
 						let n_classes = model.n_classes.to_usize().unwrap();
 						let n_features = model.n_features.to_usize().unwrap();
 						let weights =
@@ -917,7 +917,7 @@ impl TryFrom<types::Model> for PredictModel {
 							},
 						))
 					}
-					types::ClassificationModel::TreeMulticlass(model) => {
+					model::ClassificationModel::TreeMulticlass(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
@@ -950,7 +950,7 @@ impl TryFrom<types::Model> for PredictModel {
 	}
 }
 
-impl TryInto<tree::Tree> for types::Tree {
+impl TryInto<tree::Tree> for model::Tree {
 	type Error = anyhow::Error;
 	fn try_into(self) -> Result<tree::Tree> {
 		Ok(tree::Tree {
@@ -963,7 +963,7 @@ impl TryInto<tree::Tree> for types::Tree {
 	}
 }
 
-impl TryInto<tree::Node> for types::Node {
+impl TryInto<tree::Node> for model::Node {
 	type Error = anyhow::Error;
 	fn try_into(self) -> Result<tree::Node> {
 		match self {
@@ -981,7 +981,7 @@ impl TryInto<tree::Node> for types::Node {
 	}
 }
 
-impl TryInto<tree::BranchSplit> for types::BranchSplit {
+impl TryInto<tree::BranchSplit> for model::BranchSplit {
 	type Error = anyhow::Error;
 	fn try_into(self) -> Result<tree::BranchSplit> {
 		match self {
@@ -1011,47 +1011,47 @@ impl TryInto<tree::BranchSplit> for types::BranchSplit {
 	}
 }
 
-fn column_from_column_stats(value: types::ColumnStats) -> Result<Column> {
+fn column_from_column_stats(value: model::ColumnStats) -> Result<Column> {
 	match value {
-		types::ColumnStats::Unknown(value) => Ok(Column::Unknown(UnknownColumn {
+		model::ColumnStats::Unknown(value) => Ok(Column::Unknown(UnknownColumn {
 			name: value.column_name,
 		})),
-		types::ColumnStats::Number(value) => Ok(Column::Number(NumberColumn {
+		model::ColumnStats::Number(value) => Ok(Column::Number(NumberColumn {
 			name: value.column_name,
 		})),
-		types::ColumnStats::Enum(value) => Ok(Column::Enum(EnumColumn {
+		model::ColumnStats::Enum(value) => Ok(Column::Enum(EnumColumn {
 			name: value.column_name,
 			options: value.histogram.into_iter().map(|v| v.0).collect(),
 		})),
-		types::ColumnStats::Text(value) => Ok(Column::Text(TextColumn {
+		model::ColumnStats::Text(value) => Ok(Column::Text(TextColumn {
 			name: value.column_name,
 		})),
 	}
 }
 
-impl TryFrom<types::FeatureGroup> for features::FeatureGroup {
+impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
 	type Error = anyhow::Error;
-	fn try_from(value: types::FeatureGroup) -> Result<Self> {
+	fn try_from(value: model::FeatureGroup) -> Result<Self> {
 		match value {
-			types::FeatureGroup::Identity(f) => Ok(features::FeatureGroup::Identity(
+			model::FeatureGroup::Identity(f) => Ok(features::FeatureGroup::Identity(
 				features::IdentityFeatureGroup {
 					source_column_name: f.source_column_name,
 				},
 			)),
-			types::FeatureGroup::Normalized(f) => Ok(features::FeatureGroup::Normalized(
+			model::FeatureGroup::Normalized(f) => Ok(features::FeatureGroup::Normalized(
 				features::NormalizedFeatureGroup {
 					source_column_name: f.source_column_name,
 					mean: f.mean,
 					variance: f.variance,
 				},
 			)),
-			types::FeatureGroup::OneHotEncoded(f) => Ok(features::FeatureGroup::OneHotEncoded(
+			model::FeatureGroup::OneHotEncoded(f) => Ok(features::FeatureGroup::OneHotEncoded(
 				features::OneHotEncodedFeatureGroup {
 					source_column_name: f.source_column_name,
 					categories: f.categories,
 				},
 			)),
-			types::FeatureGroup::BagOfWords(f) => Ok(features::FeatureGroup::BagOfWords(
+			model::FeatureGroup::BagOfWords(f) => Ok(features::FeatureGroup::BagOfWords(
 				features::BagOfWordsFeatureGroup {
 					source_column_name: f.source_column_name,
 					tokenizer: f.tokenizer.try_into()?,
@@ -1062,11 +1062,11 @@ impl TryFrom<types::FeatureGroup> for features::FeatureGroup {
 	}
 }
 
-impl TryFrom<types::Tokenizer> for features::Tokenizer {
+impl TryFrom<model::Tokenizer> for features::Tokenizer {
 	type Error = anyhow::Error;
-	fn try_from(value: types::Tokenizer) -> Result<features::Tokenizer> {
+	fn try_from(value: model::Tokenizer) -> Result<features::Tokenizer> {
 		match value {
-			types::Tokenizer::Alphanumeric => Ok(features::Tokenizer::Alphanumeric),
+			model::Tokenizer::Alphanumeric => Ok(features::Tokenizer::Alphanumeric),
 		}
 	}
 }

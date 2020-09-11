@@ -71,15 +71,15 @@ async fn props(
 	}
 
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 	// assemble the response
 	match model {
-		tangram::types::Model::Classifier(model) => {
+		tangram::model::Model::Classifier(model) => {
 			let (class_metrics, auc_roc) = match &model.model {
-				tangram::types::ClassificationModel::LinearBinary(inner_model) => {
+				tangram::model::ClassificationModel::LinearBinary(inner_model) => {
 					(&inner_model.class_metrics, inner_model.auc_roc)
 				}
-				tangram::types::ClassificationModel::TreeBinary(inner_model) => {
+				tangram::model::ClassificationModel::TreeBinary(inner_model) => {
 					(&inner_model.class_metrics, inner_model.auc_roc)
 				}
 				_ => return Err(Error::BadRequest.into()),

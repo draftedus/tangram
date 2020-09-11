@@ -3,7 +3,7 @@ use super::stats::{ColumnStats, StatsSettings};
 use super::train_options::{LinearModelTrainOptions, TreeModelTrainOptions};
 use super::tree::Tree;
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Classifier {
 	pub id: String,
 	pub target_column_name: String,
@@ -22,7 +22,7 @@ pub struct Classifier {
 	pub comparison_metric: ClassificationComparisonMetric,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ClassificationMetrics {
 	pub class_metrics: Vec<ClassMetrics>,
 	pub accuracy: f32,
@@ -33,7 +33,7 @@ pub struct ClassificationMetrics {
 	pub baseline_accuracy: f32,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ClassMetrics {
 	pub true_positives: u64,
 	pub false_positives: u64,
@@ -45,7 +45,7 @@ pub struct ClassMetrics {
 	pub f1_score: f32,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum ClassificationModel {
 	LinearBinary(LinearBinaryClassifier),
 	LinearMulticlass(LinearMulticlassClassifier),
@@ -53,7 +53,7 @@ pub enum ClassificationModel {
 	TreeMulticlass(TreeMulticlassClassifier),
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearBinaryClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub options: LinearModelTrainOptions,
@@ -66,7 +66,7 @@ pub struct LinearBinaryClassifier {
 	pub means: Vec<f32>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearMulticlassClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub options: LinearModelTrainOptions,
@@ -79,7 +79,7 @@ pub struct LinearMulticlassClassifier {
 	pub means: Vec<f32>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeBinaryClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub options: TreeModelTrainOptions,
@@ -92,7 +92,7 @@ pub struct TreeBinaryClassifier {
 	pub auc_roc: f32,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeMulticlassClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub options: TreeModelTrainOptions,
@@ -105,12 +105,12 @@ pub struct TreeMulticlassClassifier {
 	pub feature_importances: Vec<f32>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BinaryClassifierClassMetrics {
 	pub thresholds: Vec<ThresholdMetrics>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ThresholdMetrics {
 	pub threshold: f32,
 	pub true_positives: u64,
@@ -125,9 +125,20 @@ pub struct ThresholdMetrics {
 	pub false_positive_rate: f32,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum ClassificationComparisonMetric {
 	Accuracy,
 	Aucroc,
 	F1,
+}
+
+impl Classifier {
+	pub fn classes(&self) -> &[String] {
+		match &self.model {
+			ClassificationModel::LinearBinary(model) => model.classes.as_slice(),
+			ClassificationModel::TreeBinary(model) => model.classes.as_slice(),
+			ClassificationModel::LinearMulticlass(model) => model.classes.as_slice(),
+			ClassificationModel::TreeMulticlass(model) => model.classes.as_slice(),
+		}
+	}
 }

@@ -139,7 +139,7 @@ pub async fn post(
 			.await
 		}
 	};
-	let model = match tangram::types::Model::from_slice(&file) {
+	let model = match tangram::model::Model::from_slice(&file) {
 		Ok(model) => model,
 		Err(_) => {
 			return render(

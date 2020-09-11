@@ -1,4 +1,4 @@
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearModelTrainOptions {
 	pub max_epochs: u64,
 	pub n_examples_per_batch: u64,
@@ -7,7 +7,7 @@ pub struct LinearModelTrainOptions {
 	pub early_stopping_fraction: f32,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeModelTrainOptions {
 	pub depth: u64,
 	pub learning_rate: f32,

@@ -161,15 +161,15 @@ async fn props(
 		}
 	}
 	let Model { id, data } = get_model(&mut db, model_id).await?;
-	let model = tangram::types::Model::from_slice(&data)?;
+	let model = tangram::model::Model::from_slice(&data)?;
 	let column_stats = match &model {
-		tangram::types::Model::Classifier(model) => &model.overall_column_stats,
-		tangram::types::Model::Regressor(model) => &model.overall_column_stats,
+		tangram::model::Model::Classifier(model) => &model.overall_column_stats,
+		tangram::model::Model::Regressor(model) => &model.overall_column_stats,
 	};
 	let columns: Vec<Column> = column_stats
 		.iter()
 		.map(|column_stats| match column_stats {
-			tangram::types::ColumnStats::Unknown(column_stats) => {
+			tangram::model::ColumnStats::Unknown(column_stats) => {
 				let name = column_stats.column_name.to_owned();
 				let value = search_params
 					.as_ref()
@@ -178,7 +178,7 @@ async fn props(
 					.unwrap_or_else(|| "".to_string());
 				Column::Unknown(Unknown { name, value })
 			}
-			tangram::types::ColumnStats::Number(column_stats) => {
+			tangram::model::ColumnStats::Number(column_stats) => {
 				let name = column_stats.column_name.to_owned();
 				let mean = column_stats.mean;
 				let value = search_params
@@ -196,7 +196,7 @@ async fn props(
 					value,
 				})
 			}
-			tangram::types::ColumnStats::Enum(column_stats) => {
+			tangram::model::ColumnStats::Enum(column_stats) => {
 				let histogram = &column_stats.histogram;
 				let options = histogram.iter().map(|(key, _)| key.to_owned()).collect();
 				let name = column_stats.column_name.to_owned();
@@ -220,7 +220,7 @@ async fn props(
 					histogram,
 				})
 			}
-			tangram::types::ColumnStats::Text(column_stats) => {
+			tangram::model::ColumnStats::Text(column_stats) => {
 				let name = column_stats.column_name.to_owned();
 				let value = search_params
 					.as_ref()
@@ -250,7 +250,7 @@ async fn props(
 }
 
 fn predict(
-	model: tangram::types::Model,
+	model: tangram::model::Model,
 	columns: &[Column],
 	search_params: BTreeMap<String, String>,
 ) -> Prediction {
