@@ -1,6 +1,6 @@
 use super::{mean::Mean, Metric};
 
-/// The mean squared error.
+/// The mean squared error. The error is the difference between the predicted value and the label.
 #[derive(Default)]
 pub struct MeanSquaredError(Mean);
 

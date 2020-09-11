@@ -2,7 +2,7 @@ use super::{mean::Mean, Metric};
 use ndarray::prelude::*;
 use num_traits::clamp;
 
-/// CrossEntropy is the loss function used in multiclass classification models.
+/// CrossEntropy is the loss function used in multiclass classifiers. See [Cross Entropy](https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_loss_function_and_logistic_regression).
 #[derive(Default)]
 pub struct CrossEntropy(Mean);
 

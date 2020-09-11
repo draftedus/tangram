@@ -17,7 +17,9 @@ pub struct ClassificationMetricsInput<'a> {
 
 #[derive(Debug)]
 pub struct ClassificationMetricsOutput {
+	/// The class metrics contain class specific metrics.
 	pub class_metrics: Vec<ClassMetrics>,
+	/// The accuracy is the fraction of all of the predictions that are correct.
 	pub accuracy: f32,
 	/// The unweighted precision equal to the mean of each class's precision.
 	pub precision_unweighted: f32,
@@ -33,13 +35,23 @@ pub struct ClassificationMetricsOutput {
 
 #[derive(Debug)]
 pub struct ClassMetrics {
+	/// The total number of examples whose label is equal to this class that the model predicted as belonging to this class.
 	pub true_positives: u64,
+	/// The total number of examples whose label is *not* equal to this class that the model predicted as belonging to this class.
 	pub false_positives: u64,
+	/// The total number of examples whose label is *not* equal to this class that the model predicted as *not* belonging to this class.
 	pub true_negatives: u64,
+	/// The total number of examples whose label is equal to this class that the model predicted as *not* belonging to this class.
 	pub false_negatives: u64,
+	/// The fraction of examples of this class that were correctly classified.
 	pub accuracy: f32,
+	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class.
+	/// true_positives / (true_positives + false_positives). See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
 	pub precision: f32,
+	/// The recall is the fraction of examples in the dataset whose label is equal to this class that the model predicted as equal to this class.
+	/// true_positives / (true_positives + false_negatives)
 	pub recall: f32,
+	/// The f1 score is the harmonic mean of the precision and the recall. See [F1 Score](https://en.wikipedia.org/wiki/F1_score).
 	pub f1_score: f32,
 }
 
