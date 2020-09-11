@@ -1,3 +1,7 @@
+/*!
+This module defines the `Metric` trait and and a number of concrete types that implement it such as `MeanSquaredError` and `Accuracy`.
+*/
+
 mod accuracy;
 mod auc_roc;
 mod binary_classification;
@@ -21,7 +25,7 @@ pub use mean_variance::*;
 pub use regression::*;
 
 /**
-The `Metric` trait defines a common interface to compute metrics such as accuracy, precision, and recall, so that generic code can be written that computes arbitrary metrics.
+The `Metric` trait defines a common interface to compute metrics such as mean squared error and accuracy, so that generic code can be written that computes arbitrary metrics.
 
 After being initialized, a type `T` implementing the `Metric` trait can have `update()` called on it with values of the associated type `Input`. Multiple values of the type can be merged together by calling `merge()`. When finished aggregating, you can call `finalize()` on the metric to produce the associated type `Output`.
 
@@ -29,9 +33,10 @@ After being initialized, a type `T` implementing the `Metric` trait can have `up
 
 Here is a basic example implementation of a `Min` metric, which takes `f32`s and produces an `f32` that is the minimum of all the inputs.
 
-struct Min(f32);
 
 ```
+struct Min(f32);
+
 impl Metric for Min {
   type Input = f32;x
   type Output = f32;

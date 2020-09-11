@@ -1,27 +1,23 @@
 .callout-wrapper {
+	border-left-style: solid;
+	border-left-width: 4px;
 	display: grid;
 	gap: 0.5rem;
 	padding: 1rem;
 }
 
-.callout-level-info-wrapper {
+.callout-wrapper-info {
 	background-color: var(--surface-color);
-	border-left-width: 4px;
-	border-left-style: solid;
 	border-left-color: var(--blue);
 }
 
-.callout-level-warning-wrapper {
+.callout-wrapper-warning {
 	background-color: var(--surface-color);
-	border-left-width: 4px;
-	border-left-style: solid;
 	border-left-color: var(--yellow);
 }
 
-.callout-level-danger-wrapper {
+.callout-wrapper-danger {
 	background-color: var(--surface-color);
-	border-left-width: 4px;
-	border-left-style: solid;
 	border-left-color: var(--red);
 }
 

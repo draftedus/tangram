@@ -1,3 +1,7 @@
+/*!
+This file contains the main entrypoint to the tangram cli.
+*/
+
 use anyhow::{format_err, Context, Result};
 use clap::Clap;
 use colored::*;
@@ -29,7 +33,7 @@ enum Options {
 #[cfg(feature = "train")]
 #[derive(Clap)]
 #[clap(about = "train a model")]
-#[clap(long_about = "train a model from a csv file with a specified target column")]
+#[clap(long_about = "train a model from a csv file")]
 struct TrainOptions {
 	#[clap(short, long, about = "the path to your .csv file")]
 	file: PathBuf,
@@ -37,7 +41,7 @@ struct TrainOptions {
 	target: String,
 	#[clap(short, long, about = "the path to a config file")]
 	config: Option<PathBuf>,
-	#[clap(short, long, about = "the path to write the output to")]
+	#[clap(short, long, about = "the path to write the .tangram file to")]
 	output: Option<PathBuf>,
 	#[clap(long = "no-progress", about = "disable the cli progress view", parse(from_flag = std::ops::Not::not))]
 	progress: bool,
@@ -170,6 +174,9 @@ fn cli_app(options: AppOptions) -> Result<()> {
 	Ok(())
 }
 
+/**
+This function checks if a file with the given name and extension already exists at the path `base`, and if it does, it appends " 1", " 2", etc. to it until it finds a name that will not overwrite an existing file.
+*/
 fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
 	let mut i = 0;
 	loop {

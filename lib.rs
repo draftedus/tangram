@@ -1,3 +1,7 @@
+/*!
+Tangram is cool.
+*/
+
 mod tangram;
 
 pub use self::tangram::*;

@@ -1,3 +1,7 @@
+/*!
+This module implements linear models for regression and classification.
+*/
+
 mod binary_classifier;
 mod early_stopping;
 mod multiclass_classifier;

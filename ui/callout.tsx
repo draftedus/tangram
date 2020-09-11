@@ -1,4 +1,5 @@
 import { Level } from './alert'
+import { cx } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 
 type CalloutProps = {
@@ -8,25 +9,23 @@ type CalloutProps = {
 }
 
 export function Callout(props: CalloutProps) {
-	let wrapperClass
+	let levelClass
 	switch (props.level) {
 		case Level.Danger:
-			wrapperClass = 'callout-level-danger-wrapper'
+			levelClass = 'callout-wrapper-danger'
 			break
 		case Level.Info:
-			wrapperClass = 'callout-level-info-wrapper'
+			levelClass = 'callout-wrapper-info'
 			break
 		case Level.Warning:
-			wrapperClass = 'callout-level-warning-wrapper'
+			levelClass = 'callout-wrapper-warning'
 			break
 	}
 
 	return (
-		<div class={wrapperClass}>
-			<div class="callout-wrapper">
-				{props.title && <div class="callout-title">{props.title}</div>}
-				<div class="callout-inner">{props.children}</div>
-			</div>
+		<div class={cx('callout-wrapper', levelClass)}>
+			{props.title && <div class="callout-title">{props.title}</div>}
+			<div class="callout-inner">{props.children}</div>
 		</div>
 	)
 }
