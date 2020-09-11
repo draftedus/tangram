@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::user::{authorize_user, authorize_user_for_model},
 	error::Error,
 	Context,
@@ -6,7 +6,7 @@ use crate::{
 use anyhow::Result;
 use hyper::{header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 pub mod index;
 pub mod introspection;

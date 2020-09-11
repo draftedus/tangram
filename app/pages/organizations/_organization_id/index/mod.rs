@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		organizations, repos,
 		repos::Repo,
@@ -11,7 +11,7 @@ use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use sqlx::prelude::*;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 pub async fn get(
 	request: Request<Body>,

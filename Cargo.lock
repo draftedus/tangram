@@ -1733,27 +1733,13 @@ name = "tangram"
 version = "0.2.0-dev"
 dependencies = [
  "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
- "clap 3.0.0-beta.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "colored 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "once_cell 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.115 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.57 (registry+https://github.com/rust-lang/crates.io-index)",
- "tangram-app 0.0.0",
- "tangram-core 0.2.0-dev",
- "term-ui 0.0.1 (git+https://github.com/tangram-hq/term-ui)",
- "tokio 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "tangram-app"
-version = "0.0.0"
-dependencies = [
- "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytes 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono-tz 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clap 3.0.0-beta.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "colored 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csv 1.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "derive_more 0.99.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "dirs 3.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1762,40 +1748,25 @@ dependencies = [
  "insta 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lexical 5.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "maplit 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "multer 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ndarray 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "once_cell 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pinwheel 0.0.0",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "reqwest 0.10.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.115 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.57 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_urlencoded 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sqlx 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx)",
- "tangram-core 0.2.0-dev",
- "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "tangram-core"
-version = "0.2.0-dev"
-dependencies = [
- "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
- "csv 1.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "derive_more 0.99.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "insta 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "itertools 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "lexical 5.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "maplit 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ndarray 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_xoshiro 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "reqwest 0.10.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "rmp-serde 0.14.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.115 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.57 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_urlencoded 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_yaml 0.8.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sqlx 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx)",
+ "term-ui 0.0.1 (git+https://github.com/tangram-hq/term-ui)",
  "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "wee_alloc 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

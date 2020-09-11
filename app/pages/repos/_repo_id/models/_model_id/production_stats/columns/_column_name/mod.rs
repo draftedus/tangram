@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
 		model::{get_model, Model},
@@ -17,7 +17,7 @@ use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -182,33 +182,31 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(&data)?;
+	let model = tangram::types::Model::from_slice(&data)?;
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	let get_production_stats_output =
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let train_row_count = match &model {
-		tangram_core::types::Model::Regressor(model) => model.row_count,
-		tangram_core::types::Model::Classifier(model) => model.row_count,
+		tangram::types::Model::Regressor(model) => model.row_count,
+		tangram::types::Model::Classifier(model) => model.row_count,
 	};
 	let overall_column_stats = match &model {
-		tangram_core::types::Model::Classifier(model) => &model.overall_column_stats,
-		tangram_core::types::Model::Regressor(model) => &model.overall_column_stats,
+		tangram::types::Model::Classifier(model) => &model.overall_column_stats,
+		tangram::types::Model::Regressor(model) => &model.overall_column_stats,
 	};
 	let train_column_stats = overall_column_stats
 		.iter()
 		.find(|column| column.column_name() == column_name)
 		.unwrap();
 	let inner = match train_column_stats {
-		tangram_core::types::ColumnStats::Number(train_column_stats) => {
-			Inner::Number(number_props(
-				get_production_stats_output,
-				train_column_stats,
-				date_window,
-				date_window_interval,
-				timezone,
-			))
-		}
-		tangram_core::types::ColumnStats::Enum(train_column_stats) => Inner::Enum(enum_props(
+		tangram::types::ColumnStats::Number(train_column_stats) => Inner::Number(number_props(
+			get_production_stats_output,
+			train_column_stats,
+			date_window,
+			date_window_interval,
+			timezone,
+		)),
+		tangram::types::ColumnStats::Enum(train_column_stats) => Inner::Enum(enum_props(
 			get_production_stats_output,
 			train_column_stats,
 			train_row_count,
@@ -216,7 +214,7 @@ async fn props(
 			date_window_interval,
 			timezone,
 		)),
-		tangram_core::types::ColumnStats::Text(train_column_stats) => Inner::Text(text_props(
+		tangram::types::ColumnStats::Text(train_column_stats) => Inner::Text(text_props(
 			get_production_stats_output,
 			train_column_stats,
 			date_window,
@@ -237,7 +235,7 @@ async fn props(
 
 fn number_props(
 	get_production_stats_output: GetProductionStatsOutput,
-	train_column_stats: &tangram_core::types::NumberColumnStats,
+	train_column_stats: &tangram::types::NumberColumnStats,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,
@@ -343,7 +341,7 @@ fn number_props(
 
 fn enum_props(
 	get_production_stats_output: GetProductionStatsOutput,
-	train_column_stats: &tangram_core::types::EnumColumnStats,
+	train_column_stats: &tangram::types::EnumColumnStats,
 	train_row_count: u64,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
@@ -397,7 +395,7 @@ fn enum_props(
 
 fn text_props(
 	get_production_stats_output: GetProductionStatsOutput,
-	train_column_stats: &tangram_core::types::TextColumnStats,
+	train_column_stats: &tangram::types::TextColumnStats,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	_timezone: Tz,

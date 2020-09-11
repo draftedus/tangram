@@ -1,4 +1,5 @@
-use crate::{dataframe, gbt::types};
+use super::types;
+use crate::dataframe;
 use ndarray::prelude::*;
 
 // computes for a single output

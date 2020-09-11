@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
 		model::{get_model, Model},
@@ -16,7 +16,7 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -131,13 +131,13 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(&data)?;
+	let model = tangram::types::Model::from_slice(&data)?;
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	let production_metrics =
 		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
 			.await?;
 	let model = match model {
-		tangram_core::types::Model::Classifier(model) => model,
+		tangram::types::Model::Classifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let classes = model.classes();

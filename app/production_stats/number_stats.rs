@@ -1,6 +1,6 @@
 use num_traits::ToPrimitive;
 use rand::random;
-use tangram_core::metrics::Metric;
+use tangram::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct NumberStats {
@@ -46,7 +46,7 @@ impl Metric<'_> for NumberStats {
 	type Output = NumberStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
-		let (new_mean, new_m2) = tangram_core::metrics::merge_mean_m2(
+		let (new_mean, new_m2) = tangram::metrics::merge_mean_m2(
 			self.n,
 			self.mean,
 			self.m2,
@@ -73,7 +73,7 @@ impl Metric<'_> for NumberStats {
 	}
 
 	fn merge(&mut self, other: Self) {
-		let (new_mean, new_m2) = tangram_core::metrics::merge_mean_m2(
+		let (new_mean, new_m2) = tangram::metrics::merge_mean_m2(
 			self.n, self.mean, self.m2, other.n, other.mean, other.m2,
 		);
 		self.n += other.n;
@@ -120,8 +120,8 @@ impl Metric<'_> for NumberStats {
 			p50: quantiles[1],
 			p75: quantiles[2],
 			mean: self.mean.to_f32().unwrap(),
-			variance: tangram_core::metrics::m2_to_variance(self.m2, self.n),
-			std: tangram_core::metrics::m2_to_variance(self.m2, self.n).sqrt(),
+			variance: tangram::metrics::m2_to_variance(self.m2, self.n),
+			std: tangram::metrics::m2_to_variance(self.m2, self.n).sqrt(),
 			min: self.min,
 			max: self.max,
 		}

@@ -1,5 +1,4 @@
-use super::mean::Mean;
-use super::Metric;
+use super::{mean::Mean, Metric};
 use ndarray::prelude::*;
 use num_traits::clamp;
 

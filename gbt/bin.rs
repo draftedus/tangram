@@ -25,7 +25,7 @@ impl BinInfo {
 	* (2, infinity)
 	### Enum Bins
 	Enum features have n valid bins equal to the number of enum variants.
-	*/
+	// */
 	pub fn n_valid_bins(&self) -> u8 {
 		match self {
 			Self::Number { thresholds } => (thresholds.len() + 1).to_u8().unwrap(),

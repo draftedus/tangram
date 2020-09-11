@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -10,7 +10,7 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -79,10 +79,10 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 
 	let Model { data, .. } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(&data)?;
+	let model = tangram::types::Model::from_slice(&data)?;
 
 	let props = match model {
-		tangram_core::types::Model::Classifier(model) => {
+		tangram::types::Model::Classifier(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
 				id: model.id.to_owned(),
@@ -96,7 +96,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
 			}
 		}
-		tangram_core::types::Model::Regressor(model) => {
+		tangram::types::Model::Regressor(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
 				id: model.id.to_owned(),
@@ -115,9 +115,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	Ok(props)
 }
 
-fn build_column_stats(column_stats: &tangram_core::types::ColumnStats) -> ColumnStats {
+fn build_column_stats(column_stats: &tangram::types::ColumnStats) -> ColumnStats {
 	match column_stats {
-		tangram_core::types::ColumnStats::Unknown(column_stats) => ColumnStats {
+		tangram::types::ColumnStats::Unknown(column_stats) => ColumnStats {
 			column_type: ColumnType::Unknown,
 			unique_count: None,
 			invalid_count: None,
@@ -128,7 +128,7 @@ fn build_column_stats(column_stats: &tangram_core::types::ColumnStats) -> Column
 			mean: None,
 			variance: None,
 		},
-		tangram_core::types::ColumnStats::Number(column_stats) => ColumnStats {
+		tangram::types::ColumnStats::Number(column_stats) => ColumnStats {
 			column_type: ColumnType::Number,
 			unique_count: Some(column_stats.unique_count.to_usize().unwrap()),
 			invalid_count: Some(column_stats.invalid_count.to_usize().unwrap()),
@@ -139,7 +139,7 @@ fn build_column_stats(column_stats: &tangram_core::types::ColumnStats) -> Column
 			mean: Some(column_stats.mean),
 			variance: Some(column_stats.variance),
 		},
-		tangram_core::types::ColumnStats::Enum(column_stats) => ColumnStats {
+		tangram::types::ColumnStats::Enum(column_stats) => ColumnStats {
 			column_type: ColumnType::Enum,
 			unique_count: column_stats.unique_count.to_usize(),
 			invalid_count: column_stats.invalid_count.to_usize(),
@@ -150,7 +150,7 @@ fn build_column_stats(column_stats: &tangram_core::types::ColumnStats) -> Column
 			mean: None,
 			variance: None,
 		},
-		tangram_core::types::ColumnStats::Text(column_stats) => ColumnStats {
+		tangram::types::ColumnStats::Text(column_stats) => ColumnStats {
 			column_type: ColumnType::Text,
 			unique_count: None,
 			invalid_count: None,

@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
 		model::{get_model, Model},
@@ -15,7 +15,7 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -168,12 +168,12 @@ async fn props(
 		}
 	}
 	let Model { id, data } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(&data)?;
+	let model = tangram::types::Model::from_slice(&data)?;
 	let production_metrics =
 		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
 			.await?;
 	let inner = match &model {
-		tangram_core::types::Model::Regressor(model) => {
+		tangram::types::Model::Regressor(model) => {
 			let training_metrics = &model.test_metrics;
 			let true_values_count = production_metrics.overall.true_values_count;
 			let overall_production_metrics =
@@ -246,7 +246,7 @@ async fn props(
 				true_values_count_chart,
 			})
 		}
-		tangram_core::types::Model::Classifier(model) => {
+		tangram::types::Model::Classifier(model) => {
 			let training_metrics = &model.test_metrics;
 			let overall_production_metrics =
 				production_metrics

@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::date_window::{DateWindow, DateWindowInterval},
 	production_metrics::{ProductionMetrics, ProductionMetricsOutput},
 };
@@ -8,7 +8,7 @@ use chrono::Duration;
 use chrono_tz::Tz;
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
-use tangram_core::metrics::Metric;
+use tangram::metrics::Metric;
 
 #[derive(Debug)]
 pub struct GetProductionMetricsOutput {
@@ -20,7 +20,7 @@ pub struct GetProductionMetricsOutput {
 
 pub async fn get_production_metrics(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	model: &tangram_core::types::Model,
+	model: &tangram::types::Model,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,

@@ -3,8 +3,8 @@ use maplit::btreemap;
 use ndarray::prelude::*;
 use std::path::Path;
 use std::time::Instant;
-use tangram_core::dataframe::*;
-use tangram_core::metrics;
+use tangram::dataframe::*;
+use tangram::metrics;
 
 fn main() -> Result<()> {
 	let month_options = vec![
@@ -125,7 +125,7 @@ fn main() -> Result<()> {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// compute stats
-	let stats_settings = tangram_core::stats::StatsSettings {
+	let stats_settings = tangram::stats::StatsSettings {
 		number_histogram_max_size: 100,
 		text_histogram_max_size: 100,
 	};
@@ -136,25 +136,25 @@ fn main() -> Result<()> {
 		.map(|column| column.name().to_owned())
 		.collect();
 
-	let tangram_core::stats::ComputeStatsOutput {
+	let tangram::stats::ComputeStatsOutput {
 		overall_column_stats,
 		..
-	} = tangram_core::stats::compute_stats(
+	} = tangram::stats::compute_stats(
 		&column_names,
 		&dataframe_train.view(),
 		&dataframe_test.view(),
 		&stats_settings,
 		&mut |_| {},
 	);
-	let feature_groups = tangram_core::features::compute_feature_groups_gbt(&overall_column_stats);
-	let features_train = tangram_core::features::compute_features_dataframe(
+	let feature_groups = tangram::features::compute_feature_groups_gbt(&overall_column_stats);
+	let features_train = tangram::features::compute_features_dataframe(
 		&dataframe_train.view(),
 		&feature_groups,
 		&|| {},
 	);
 
 	// train the model
-	let train_options = tangram_core::gbt::TrainOptions {
+	let train_options = tangram::gbt::TrainOptions {
 		learning_rate: 0.1,
 		max_rounds: 100,
 		max_leaf_nodes: 512,
@@ -163,7 +163,7 @@ fn main() -> Result<()> {
 	};
 
 	let start = Instant::now();
-	let model = tangram_core::gbt::BinaryClassifier::train(
+	let model = tangram::gbt::BinaryClassifier::train(
 		features_train.view().clone(),
 		labels_train.view(),
 		train_options,
@@ -174,7 +174,7 @@ fn main() -> Result<()> {
 
 	let n_features = dataframe_train.ncols();
 	let mut features_test = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	tangram_core::features::compute_features_ndarray_value(
+	tangram::features::compute_features_ndarray_value(
 		&dataframe_test.view(),
 		&feature_groups,
 		features_test.view_mut(),

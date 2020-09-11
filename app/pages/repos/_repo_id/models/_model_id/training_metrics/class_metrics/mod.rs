@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -10,7 +10,7 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -98,21 +98,21 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(&data)?;
+	let model = tangram::types::Model::from_slice(&data)?;
 	// assemble the response
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let inner = match model {
-		tangram_core::types::Model::Classifier(model) => match model.model {
-			tangram_core::types::ClassificationModel::LinearBinary(_) => {
+		tangram::types::Model::Classifier(model) => match model.model {
+			tangram::types::ClassificationModel::LinearBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram_core::types::ClassificationModel::LinearMulticlass(_) => {
+			tangram::types::ClassificationModel::LinearMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
-			tangram_core::types::ClassificationModel::GBTBinary(_) => {
+			tangram::types::ClassificationModel::GBTBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram_core::types::ClassificationModel::GBTMulticlass(_) => {
+			tangram::types::ClassificationModel::GBTMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
 		},
@@ -128,7 +128,7 @@ async fn props(
 }
 
 fn build_inner_binary(
-	model: tangram_core::types::Classifier,
+	model: tangram::types::Classifier,
 	id: Id,
 	class: Option<String>,
 ) -> BinaryClassifier {
@@ -160,7 +160,7 @@ fn build_inner_binary(
 }
 
 fn build_inner_multiclass(
-	model: tangram_core::types::Classifier,
+	model: tangram::types::Classifier,
 	id: Id,
 	class: Option<String>,
 ) -> MulticlassClassifier {

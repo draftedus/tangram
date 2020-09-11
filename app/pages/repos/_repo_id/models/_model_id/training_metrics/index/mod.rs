@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -9,7 +9,7 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -99,23 +99,23 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(&data)?;
+	let model = tangram::types::Model::from_slice(&data)?;
 	let inner = match model {
-		tangram_core::types::Model::Classifier(model) => match model.model {
-			tangram_core::types::ClassificationModel::LinearBinary(_) => {
+		tangram::types::Model::Classifier(model) => match model.model {
+			tangram::types::ClassificationModel::LinearBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id))
 			}
-			tangram_core::types::ClassificationModel::LinearMulticlass(_) => {
+			tangram::types::ClassificationModel::LinearMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id))
 			}
-			tangram_core::types::ClassificationModel::GBTBinary(_) => {
+			tangram::types::ClassificationModel::GBTBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id))
 			}
-			tangram_core::types::ClassificationModel::GBTMulticlass(_) => {
+			tangram::types::ClassificationModel::GBTMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id))
 			}
 		},
-		tangram_core::types::Model::Regressor(model) => {
+		tangram::types::Model::Regressor(model) => {
 			let test_metrics = model.test_metrics;
 			Inner::Regressor(Regressor {
 				id: id.to_string(),
@@ -135,7 +135,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	})
 }
 
-fn build_inner_binary(model: tangram_core::types::Classifier, id: Id) -> BinaryClassifier {
+fn build_inner_binary(model: tangram::types::Classifier, id: Id) -> BinaryClassifier {
 	let test_metrics = &model.test_metrics;
 	let class_metrics = &test_metrics.class_metrics;
 	let classes = model.classes().to_owned();
@@ -147,8 +147,8 @@ fn build_inner_binary(model: tangram_core::types::Classifier, id: Id) -> BinaryC
 		})
 		.collect::<Vec<ClassMetrics>>();
 	let losses = match model.model {
-		tangram_core::types::ClassificationModel::LinearBinary(inner_model) => inner_model.losses,
-		tangram_core::types::ClassificationModel::GBTBinary(inner_model) => inner_model.losses,
+		tangram::types::ClassificationModel::LinearBinary(inner_model) => inner_model.losses,
+		tangram::types::ClassificationModel::GBTBinary(inner_model) => inner_model.losses,
 		_ => unreachable!(),
 	};
 	BinaryClassifier {
@@ -161,7 +161,7 @@ fn build_inner_binary(model: tangram_core::types::Classifier, id: Id) -> BinaryC
 	}
 }
 
-fn build_inner_multiclass(model: tangram_core::types::Classifier, id: Id) -> MulticlassClassifier {
+fn build_inner_multiclass(model: tangram::types::Classifier, id: Id) -> MulticlassClassifier {
 	let test_metrics = &model.test_metrics;
 	let classes = model.classes().to_owned();
 	let class_metrics = &test_metrics.class_metrics;
@@ -173,10 +173,8 @@ fn build_inner_multiclass(model: tangram_core::types::Classifier, id: Id) -> Mul
 		})
 		.collect::<Vec<ClassMetrics>>();
 	let losses = match model.model {
-		tangram_core::types::ClassificationModel::LinearMulticlass(inner_model) => {
-			inner_model.losses
-		}
-		tangram_core::types::ClassificationModel::GBTMulticlass(inner_model) => inner_model.losses,
+		tangram::types::ClassificationModel::LinearMulticlass(inner_model) => inner_model.losses,
+		tangram::types::ClassificationModel::GBTMulticlass(inner_model) => inner_model.losses,
 		_ => unreachable!(),
 	};
 	MulticlassClassifier {

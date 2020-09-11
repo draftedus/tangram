@@ -4,8 +4,8 @@ use maplit::btreemap;
 use ndarray::prelude::*;
 use std::path::Path;
 use std::time::Instant;
-use tangram_core::dataframe::*;
-use tangram_core::metrics;
+use tangram::dataframe::*;
+use tangram::metrics;
 
 fn main() -> Result<()> {
 	let start = Instant::now();
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// train the model
-	let train_options = tangram_core::gbt::TrainOptions {
+	let train_options = tangram::gbt::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: 8,
 		max_leaf_nodes: 255,
@@ -70,7 +70,7 @@ fn main() -> Result<()> {
 		min_sum_hessians_in_leaf: 0.0,
 		..Default::default()
 	};
-	let model = tangram_core::gbt::BinaryClassifier::train(
+	let model = tangram::gbt::BinaryClassifier::train(
 		dataframe_train,
 		labels_train.clone(),
 		train_options,

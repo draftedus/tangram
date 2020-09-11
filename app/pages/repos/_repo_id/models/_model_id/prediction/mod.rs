@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -12,7 +12,7 @@ use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::ops::Neg;
-use tangram_core::{id::Id, *};
+use tangram::{id::Id, *};
 
 pub async fn get(
 	request: Request<Body>,
@@ -161,15 +161,15 @@ async fn props(
 		}
 	}
 	let Model { id, data } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(&data)?;
+	let model = tangram::types::Model::from_slice(&data)?;
 	let column_stats = match &model {
-		tangram_core::types::Model::Classifier(model) => &model.overall_column_stats,
-		tangram_core::types::Model::Regressor(model) => &model.overall_column_stats,
+		tangram::types::Model::Classifier(model) => &model.overall_column_stats,
+		tangram::types::Model::Regressor(model) => &model.overall_column_stats,
 	};
 	let columns: Vec<Column> = column_stats
 		.iter()
 		.map(|column_stats| match column_stats {
-			tangram_core::types::ColumnStats::Unknown(column_stats) => {
+			tangram::types::ColumnStats::Unknown(column_stats) => {
 				let name = column_stats.column_name.to_owned();
 				let value = search_params
 					.as_ref()
@@ -178,7 +178,7 @@ async fn props(
 					.unwrap_or_else(|| "".to_string());
 				Column::Unknown(Unknown { name, value })
 			}
-			tangram_core::types::ColumnStats::Number(column_stats) => {
+			tangram::types::ColumnStats::Number(column_stats) => {
 				let name = column_stats.column_name.to_owned();
 				let mean = column_stats.mean;
 				let value = search_params
@@ -196,7 +196,7 @@ async fn props(
 					value,
 				})
 			}
-			tangram_core::types::ColumnStats::Enum(column_stats) => {
+			tangram::types::ColumnStats::Enum(column_stats) => {
 				let histogram = &column_stats.histogram;
 				let options = histogram.iter().map(|(key, _)| key.to_owned()).collect();
 				let name = column_stats.column_name.to_owned();
@@ -220,7 +220,7 @@ async fn props(
 					histogram,
 				})
 			}
-			tangram_core::types::ColumnStats::Text(column_stats) => {
+			tangram::types::ColumnStats::Text(column_stats) => {
 				let name = column_stats.column_name.to_owned();
 				let value = search_params
 					.as_ref()
@@ -250,7 +250,7 @@ async fn props(
 }
 
 fn predict(
-	model: tangram_core::types::Model,
+	model: tangram::types::Model,
 	columns: &[Column],
 	search_params: BTreeMap<String, String>,
 ) -> Prediction {
@@ -300,11 +300,11 @@ fn predict(
 			None => panic!(),
 		}
 	}
-	let examples: tangram_core::predict::PredictInput = vec![example];
-	let options = tangram_core::predict::PredictOptions { threshold: 0.5 };
-	let output = tangram_core::predict::predict(&predict_model, examples, Some(options));
+	let examples: tangram::predict::PredictInput = vec![example];
+	let options = tangram::predict::PredictOptions { threshold: 0.5 };
+	let output = tangram::predict::predict(&predict_model, examples, Some(options));
 	let predict_output: Prediction = match output {
-		tangram_core::predict::PredictOutput::Classification(mut output) => {
+		tangram::predict::PredictOutput::Classification(mut output) => {
 			// get baseline probabliities
 			let softmax = |logits: &[f32]| {
 				let mut probabilities = logits.to_owned();
@@ -371,7 +371,7 @@ fn predict(
 			};
 			Prediction::Classification(prediction)
 		}
-		tangram_core::predict::PredictOutput::Regression(mut output) => {
+		tangram::predict::PredictOutput::Regression(mut output) => {
 			let output = output.remove(0);
 			let shap_values = output.shap_values.unwrap();
 			let prediction = RegressionPredictOutput {

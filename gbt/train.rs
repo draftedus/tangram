@@ -3,11 +3,10 @@ use super::{
 		compute_bin_info, compute_binned_features, filter_binned_features, ComputeBinInfoOptions,
 		FilterBinnedFeaturesOptions,
 	},
-	binary_classifier,
 	early_stopping::{
 		compute_early_stopping_metrics, train_early_stopping_split, TrainStopMonitor,
 	},
-	multiclass_classifier, regressor, tree,
+	tree,
 	tree::bin_stats::BinStatsPool,
 	types,
 };
@@ -112,19 +111,19 @@ pub fn train(
 		// For regression, the baseline prediction is the mean of the labels.
 		types::Task::Regression => {
 			let labels_train = labels_train.as_number().unwrap().values();
-			regressor::compute_biases(labels_train)
+			super::regressor::compute_biases(labels_train)
 		}
 		// For binary classification, the bias is the log of the ratio of positive examples
 		// to negative examples in the training set, so the baseline prediction is the majority class.
 		types::Task::BinaryClassification => {
 			let labels_train = labels_train.as_enum().unwrap().values();
-			binary_classifier::compute_biases(labels_train)
+			super::binary_classifier::compute_biases(labels_train)
 		}
 		// For multiclass classification the biases are the logs of each class's
 		// proporation in the training set, so the baseline prediction is the majority class.
 		types::Task::MulticlassClassification { .. } => {
 			let labels_train = labels_train.as_enum().unwrap().values();
-			multiclass_classifier::compute_biases(labels_train, n_trees_per_round)
+			super::multiclass_classifier::compute_biases(labels_train, n_trees_per_round)
 		}
 	};
 
@@ -168,7 +167,7 @@ pub fn train(
 		match task {
 			types::Task::Regression => {
 				let labels_train = labels_train.as_number().unwrap();
-				self::regressor::update_gradients_and_hessians(
+				super::regressor::update_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
 					labels_train.values(),
@@ -177,7 +176,7 @@ pub fn train(
 			}
 			types::Task::BinaryClassification => {
 				let labels_train = labels_train.as_enum().unwrap();
-				self::binary_classifier::update_gradients_and_hessians(
+				super::binary_classifier::update_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
 					labels_train.values(),
@@ -186,7 +185,7 @@ pub fn train(
 			}
 			types::Task::MulticlassClassification { .. } => {
 				let labels_train = labels_train.as_enum().unwrap();
-				self::multiclass_classifier::update_gradients_and_hessians(
+				super::multiclass_classifier::update_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
 					labels_train.values(),
@@ -255,15 +254,15 @@ pub fn train(
 			let loss = match task {
 				types::Task::Regression => {
 					let labels_train = labels_train.as_number().unwrap().values();
-					self::regressor::compute_loss(labels_train.view(), predictions.view())
+					super::regressor::compute_loss(labels_train.view(), predictions.view())
 				}
 				types::Task::BinaryClassification => {
 					let labels_train = labels_train.as_enum().unwrap().values();
-					self::binary_classifier::compute_loss(labels_train, predictions.view())
+					super::binary_classifier::compute_loss(labels_train, predictions.view())
 				}
 				types::Task::MulticlassClassification { .. } => {
 					let labels_train = labels_train.as_enum().unwrap().values();
-					self::multiclass_classifier::compute_loss(labels_train, predictions.view())
+					super::multiclass_classifier::compute_loss(labels_train, predictions.view())
 				}
 			};
 			losses.push(loss);

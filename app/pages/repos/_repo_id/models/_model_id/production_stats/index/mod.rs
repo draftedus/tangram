@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
 		model::{get_model, Model},
@@ -18,7 +18,7 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -151,12 +151,12 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::types::Model::from_slice(&data)?;
+	let model = tangram::types::Model::from_slice(&data)?;
 	let production_stats =
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let target_column_stats = match model {
-		tangram_core::types::Model::Classifier(model) => model.overall_target_column_stats,
-		tangram_core::types::Model::Regressor(model) => model.overall_target_column_stats,
+		tangram::types::Model::Classifier(model) => model.overall_target_column_stats,
+		tangram::types::Model::Regressor(model) => model.overall_target_column_stats,
 	};
 	let overall_column_stats_table = production_stats
 		.overall
@@ -300,7 +300,7 @@ async fn props(
 }
 
 fn compute_production_training_quantiles(
-	target_column_stats: &tangram_core::types::NumberColumnStats,
+	target_column_stats: &tangram::types::NumberColumnStats,
 	prediction_stats: &RegressionProductionPredictionStatsOutput,
 ) -> ProductionTrainingQuantiles {
 	ProductionTrainingQuantiles {

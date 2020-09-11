@@ -6,9 +6,9 @@ use self::{
 		RegressionProductionPredictionMetrics, RegressionProductionPredictionMetricsOutput,
 	},
 };
-use crate::monitor_event::NumberOrString;
+use crate::app::monitor_event::NumberOrString;
 use chrono::prelude::*;
-use tangram_core::metrics::Metric;
+use tangram::metrics::Metric;
 
 mod classification_production_metrics;
 mod regression_production_metrics;
@@ -45,7 +45,7 @@ pub enum ProductionPredictionMetricsOutput {
 
 impl ProductionMetrics {
 	pub fn new(
-		model: &tangram_core::types::Model,
+		model: &tangram::types::Model,
 		start_date: DateTime<Utc>,
 		end_date: DateTime<Utc>,
 	) -> Self {
@@ -86,12 +86,12 @@ impl Metric<'_> for ProductionMetrics {
 }
 
 impl ProductionPredictionMetrics {
-	pub fn new(model: &tangram_core::types::Model) -> Self {
+	pub fn new(model: &tangram::types::Model) -> Self {
 		match model {
-			tangram_core::types::Model::Regressor(_) => {
+			tangram::types::Model::Regressor(_) => {
 				ProductionPredictionMetrics::Regression(RegressionProductionPredictionMetrics::new())
 			}
-			tangram_core::types::Model::Classifier(model) => {
+			tangram::types::Model::Classifier(model) => {
 				ProductionPredictionMetrics::Classification(
 					ClassificationProductionPredictionMetrics::new(model.classes().to_owned()),
 				)

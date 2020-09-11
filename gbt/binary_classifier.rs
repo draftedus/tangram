@@ -1,8 +1,5 @@
-use super::shap;
-use crate::{
-	dataframe::*,
-	gbt::{tree, types},
-};
+use super::{shap, tree, types};
+use crate::dataframe::*;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};

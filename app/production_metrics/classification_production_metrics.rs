@@ -1,7 +1,7 @@
-use crate::monitor_event::NumberOrString;
+use crate::app::monitor_event::NumberOrString;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram_core::metrics::Metric;
+use tangram::metrics::Metric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

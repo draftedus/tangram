@@ -3,23 +3,23 @@ use super::{
 	shap, types,
 };
 use crate::{
-	dataframe::*, metrics::*, util::progress_counter::ProgressCounter,
+	dataframe::*,
+	metrics::{MeanSquaredError, Metric},
+	util::progress_counter::ProgressCounter,
 	util::super_unsafe::SuperUnsafe,
 };
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use std::ops::Neg;
 
-impl types::BinaryClassifier {
+impl types::Regressor {
 	pub fn train(
 		features: ArrayView2<f32>,
-		labels: &EnumColumnView,
+		labels: &NumberColumnView,
 		options: &types::TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
-	) -> types::BinaryClassifier {
+	) -> Self {
 		let n_features = features.ncols();
-		let classes: Vec<String> = labels.options.to_vec();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
 				features,
@@ -30,19 +30,17 @@ impl types::BinaryClassifier {
 			.axis_iter(Axis(1))
 			.map(|column| column.mean().unwrap())
 			.collect();
-		let mut model = types::BinaryClassifier {
+		let mut model = Self {
 			bias: 0.0,
 			weights: Array1::<f32>::zeros(n_features),
 			means,
 			losses: vec![].into(),
-			classes: classes.into(),
 		};
 		let mut early_stopping_monitor = if options.early_stopping_fraction > 0.0 {
 			Some(EarlyStoppingMonitor::new())
 		} else {
 			None
 		};
-
 		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
 		update_progress(super::Progress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {
@@ -76,35 +74,24 @@ impl types::BinaryClassifier {
 	pub fn train_batch(
 		&mut self,
 		features: ArrayView2<f32>,
-		labels: ArrayView1<usize>,
+		labels: ArrayView1<f32>,
 		options: &types::TrainOptions,
 	) {
 		let learning_rate = options.learning_rate;
-		let logits = features.dot(&self.weights) + self.bias;
-		let mut predictions = logits.mapv_into(|logit| 1.0 / (logit.neg().exp() + 1.0));
-		izip!(predictions.view_mut(), labels).for_each(|(prediction, label)| {
-			let label = match label {
-				1 => 0.0,
-				2 => 1.0,
-				_ => unreachable!(),
-			};
-			*prediction -= label
-		});
-		let py = predictions.insert_axis(Axis(1));
+		let predictions = features.dot(&self.weights) + self.bias;
+		let py = (predictions - labels).insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
-		let bias_gradient = py.mean_axis(Axis(0)).unwrap()[0];
-		izip!(self.weights.view_mut(), weight_gradients.view()).for_each(
-			|(weight, weight_gradient)| {
-				*weight += -learning_rate * weight_gradient;
-			},
-		);
+		let bias_gradient: f32 = py.mean_axis(Axis(0)).unwrap()[0];
+		for (weight, weight_gradient) in izip!(self.weights.iter_mut(), weight_gradients.iter()) {
+			*weight += -learning_rate * weight_gradient;
+		}
 		self.bias += -learning_rate * bias_gradient;
 	}
 
 	fn compute_early_stopping_metric_value(
 		&self,
 		features: ArrayView2<f32>,
-		labels: ArrayView1<usize>,
+		labels: ArrayView1<f32>,
 		options: &types::TrainOptions,
 	) -> f32 {
 		izip!(
@@ -114,20 +101,17 @@ impl types::BinaryClassifier {
 		.fold(
 			{
 				let predictions =
-					unsafe { <Array2<f32>>::uninitialized((options.n_examples_per_batch, 2)) };
-				let metric = BinaryCrossEntropy::default();
+					unsafe { <Array1<f32>>::uninitialized(options.n_examples_per_batch) };
+				let metric = MeanSquaredError::default();
 				(predictions, metric)
 			},
 			|mut state, (features, labels)| {
 				let (predictions, metric) = &mut state;
-				let slice = s![0..features.nrows(), ..];
+				let slice = s![0..features.nrows()];
 				let mut predictions = predictions.slice_mut(slice);
 				self.predict(features, predictions.view_mut(), None);
-				for (prediction, label) in predictions.column(1).iter().zip(labels.iter()) {
-					metric.update(BinaryCrossEntropyInput {
-						probability: *prediction,
-						label: *label,
-					});
+				for (prediction, label) in predictions.iter().zip(labels.iter()) {
+					metric.update((*prediction, *label));
 				}
 				state
 			},
@@ -140,25 +124,11 @@ impl types::BinaryClassifier {
 	pub fn predict(
 		&self,
 		features: ArrayView2<f32>,
-		mut probabilities: ArrayViewMut2<f32>,
+		mut predictions: ArrayViewMut1<f32>,
 		mut shap_values: Option<ArrayViewMut3<f32>>,
 	) {
-		let mut probabilities_pos = probabilities.column_mut(1);
-		probabilities_pos.fill(self.bias);
-		ndarray::linalg::general_mat_vec_mul(
-			1.0,
-			&features,
-			&self.weights,
-			1.0,
-			&mut probabilities_pos,
-		);
-		let (mut probabilities_neg, mut probabilities_pos) = probabilities.split_at(Axis(1), 1);
-		for probability_pos in probabilities_pos.iter_mut() {
-			*probability_pos = 1.0 / (probability_pos.neg().exp() + 1.0);
-		}
-		for (neg, pos) in izip!(probabilities_neg.view_mut(), probabilities_pos.view()) {
-			*neg = 1.0 - *pos;
-		}
+		predictions.fill(self.bias);
+		ndarray::linalg::general_mat_vec_mul(1.0, &features, &self.weights, 1.0, &mut predictions);
 		if let Some(shap_values) = &mut shap_values {
 			izip!(
 				features.axis_iter(Axis(0)),

@@ -2,10 +2,29 @@
 Tangram is cool.
 */
 
-mod tangram;
+#![allow(clippy::tabs_in_doc_comments)]
 
+mod config;
+mod grid;
+mod tangram;
+mod test;
+mod train;
+
+pub mod dataframe;
+pub mod features;
+pub mod gbt;
+pub mod id;
+pub mod linear;
+pub mod metrics;
+pub mod predict;
+pub mod progress;
+pub mod stats;
+pub mod types;
+pub mod util;
+
+pub use self::predict::predict;
 pub use self::tangram::*;
-pub use tangram_core::*;
+pub use self::train::train;
 
 #[cfg(target_arch = "wasm32")]
 #[global_allocator]

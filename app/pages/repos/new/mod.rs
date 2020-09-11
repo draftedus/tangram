@@ -1,4 +1,4 @@
-use crate::{
+use crate::app::{
 	common::user::{authorize_user, authorize_user_for_organization, User},
 	error::Error,
 	Context,
@@ -9,7 +9,7 @@ use chrono::prelude::*;
 use hyper::{header, Body, Request, Response, StatusCode};
 use multer::Multipart;
 use sqlx::prelude::*;
-use tangram_core::id::Id;
+use tangram::id::Id;
 
 #[derive(serde::Serialize)]
 struct Props {
@@ -143,7 +143,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	};
 	let file_data = file_data.ok_or(Error::BadRequest)?;
 
-	let model = match tangram_core::types::Model::from_slice(&file_data) {
+	let model = match tangram::types::Model::from_slice(&file_data) {
 		Ok(model) => model,
 		Err(e) => {
 			dbg!(e);
