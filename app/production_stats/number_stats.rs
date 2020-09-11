@@ -1,5 +1,6 @@
 use num_traits::ToPrimitive;
 use rand::random;
+use std::num::NonZeroU64;
 use tangram::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -9,9 +10,9 @@ pub struct NumberStats {
 	pub max: f32,
 	pub mean: f64,
 	pub m2: f64,
-	/// used to get an estimate for quantiles
+	/// We keep a reservoir of random samples to get an estimate for quantiles.
 	pub reservoir: Vec<f32>,
-	pub reservoir_size: usize,
+	pub reservoir_max_size: usize,
 }
 
 #[derive(Debug)]
@@ -36,7 +37,7 @@ impl NumberStats {
 			mean: value.to_f64().unwrap(),
 			m2: 0.0,
 			reservoir: vec![value],
-			reservoir_size: 100,
+			reservoir_max_size: 100,
 		}
 	}
 }
@@ -59,14 +60,14 @@ impl Metric<'_> for NumberStats {
 		self.m2 = new_m2;
 		self.min = f32::min(self.min, value);
 		self.max = f32::max(self.max, value);
-		if self.reservoir.len() < self.reservoir_size {
+		if self.reservoir.len() < self.reservoir_max_size {
 			self.reservoir.push(value)
 		} else {
 			let index = (random::<f32>() * self.n.to_f32().unwrap())
 				.floor()
 				.to_usize()
 				.unwrap();
-			if index < self.reservoir_size {
+			if index < self.reservoir_max_size {
 				self.reservoir[index] = value;
 			}
 		}
@@ -120,8 +121,8 @@ impl Metric<'_> for NumberStats {
 			p50: quantiles[1],
 			p75: quantiles[2],
 			mean: self.mean.to_f32().unwrap(),
-			variance: tangram::metrics::m2_to_variance(self.m2, self.n),
-			std: tangram::metrics::m2_to_variance(self.m2, self.n).sqrt(),
+			variance: tangram::metrics::m2_to_variance(self.m2, NonZeroU64::new(self.n).unwrap()),
+			std: tangram::metrics::m2_to_variance(self.m2, NonZeroU64::new(self.n).unwrap()).sqrt(),
 			min: self.min,
 			max: self.max,
 		}

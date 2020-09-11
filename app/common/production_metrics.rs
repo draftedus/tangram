@@ -3,8 +3,7 @@ use crate::app::{
 	production_metrics::{ProductionMetrics, ProductionMetricsOutput},
 };
 use anyhow::Result;
-use chrono::prelude::*;
-use chrono::Duration;
+use chrono::{prelude::*, Duration};
 use chrono_tz::Tz;
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;

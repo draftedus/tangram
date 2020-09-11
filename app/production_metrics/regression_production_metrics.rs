@@ -1,10 +1,8 @@
-use crate::app::monitor_event::NumberOrString;
-use crate::app::production_stats::NumberStats;
+use crate::app::{monitor_event::NumberOrString, production_stats::NumberStats};
 use num_traits::ToPrimitive;
 use tangram::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct RegressionProductionPredictionMetrics {
 	stats: Option<NumberStats>,
 	absolute_error: f64,
