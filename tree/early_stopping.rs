@@ -75,17 +75,17 @@ pub fn compute_early_stopping_metrics(
 ) -> f32 {
 	match task {
 		types::Task::Regression => {
-			let labels = labels.as_number().unwrap().values();
+			let labels = labels.as_number().unwrap().data.into();
 			super::regressor::update_logits(trees, features, logits.view_mut());
 			super::regressor::compute_loss(labels, logits.view())
 		}
 		types::Task::BinaryClassification => {
-			let labels = labels.as_enum().unwrap().values();
+			let labels = labels.as_enum().unwrap().data.into();
 			super::binary_classifier::update_logits(trees, features, logits.view_mut());
 			super::binary_classifier::compute_loss(labels, logits.view())
 		}
 		types::Task::MulticlassClassification { .. } => {
-			let labels = labels.as_enum().unwrap().values();
+			let labels = labels.as_enum().unwrap().data.into();
 			super::multiclass_classifier::update_logits(trees, features, logits.view_mut());
 			super::multiclass_classifier::compute_loss(labels, logits.view())
 		}

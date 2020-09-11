@@ -110,24 +110,24 @@ pub fn train(
 	let biases = match task {
 		// For regression, the baseline prediction is the mean of the labels.
 		types::Task::Regression => {
-			let labels_train = labels_train.as_number().unwrap().values();
+			let labels_train = labels_train.as_number().unwrap().data.into();
 			super::regressor::compute_biases(labels_train)
 		}
 		// For binary classification, the bias is the log of the ratio of positive examples
 		// to negative examples in the training set, so the baseline prediction is the majority class.
 		types::Task::BinaryClassification => {
-			let labels_train = labels_train.as_enum().unwrap().values();
+			let labels_train = labels_train.as_enum().unwrap().data.into();
 			super::binary_classifier::compute_biases(labels_train)
 		}
 		// For multiclass classification the biases are the logs of each class's
 		// proporation in the training set, so the baseline prediction is the majority class.
 		types::Task::MulticlassClassification { .. } => {
-			let labels_train = labels_train.as_enum().unwrap().values();
+			let labels_train = labels_train.as_enum().unwrap().data.into();
 			super::multiclass_classifier::compute_biases(labels_train, n_trees_per_round)
 		}
 	};
 
-	// pre-allocate memory to be used in training
+	// Pre-allocate memory to be used in training.
 	let mut predictions = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
 	for mut predictions_column in predictions.gencolumns_mut() {
 		predictions_column.assign(&biases)
@@ -141,13 +141,13 @@ pub fn train(
 	let mut examples_index = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
 	let mut examples_index_left = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
 	let mut examples_index_right = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
-	let mut bin_stats_pools: Array1<BinStatsPool> =
-		vec![BinStatsPool::new(options.max_leaf_nodes, &bin_info); n_trees_per_round].into();
+	let mut bin_stats_pools: Vec<BinStatsPool> =
+		vec![BinStatsPool::new(options.max_leaf_nodes, &bin_info); n_trees_per_round];
 
-	// this is the total number of rounds that have been trained thus far.
+	// This is the total number of rounds that have been trained thus far.
 	let mut n_rounds_trained = 0;
 	// These are the trees in round-major order. After training this will
-	// will have shape (n_rounds, n_trees_per_round).
+	// This will have shape (n_rounds, n_trees_per_round).
 	let mut trees: Vec<single::types::TrainTree> = Vec::new();
 	// Collect the loss on the training dataset for each round if enabled.
 	let mut losses: Option<Vec<f32>> = if options.compute_loss {
@@ -158,19 +158,17 @@ pub fn train(
 
 	let progress_counter = ProgressCounter::new(options.max_rounds.to_u64().unwrap());
 	update_progress(super::Progress::Training(progress_counter.clone()));
-	// this is the primary training loop
+	// This is the primary training loop.
 	for round_index in 0..options.max_rounds {
 		progress_counter.inc(1);
-		// Update the gradients and hessians before each iteration.
-		// In the first iteration we update the gradients and hessians
-		// using the loss computed between the baseline prediction and the labels.
+		// Update the gradients and hessians before each iteration. In the first iteration we update the gradients and hessians using the loss computed between the baseline prediction and the labels.
 		match task {
 			types::Task::Regression => {
 				let labels_train = labels_train.as_number().unwrap();
 				super::regressor::update_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
-					labels_train.values(),
+					labels_train.data.into(),
 					predictions.view(),
 				);
 			}
@@ -179,7 +177,7 @@ pub fn train(
 				super::binary_classifier::update_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
-					labels_train.values(),
+					labels_train.data.into(),
 					predictions.view(),
 				);
 			}
@@ -188,12 +186,12 @@ pub fn train(
 				super::multiclass_classifier::update_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
-					labels_train.values(),
+					labels_train.data.into(),
 					predictions.view(),
 				);
 			}
 		};
-		// train n_trees_per_round trees in parallel
+		// Train n_trees_per_round trees in parallel.
 		let trees_for_round = izip!(
 			predictions.axis_iter_mut(Axis(0)),
 			examples_index.axis_iter_mut(Axis(0)),
@@ -203,7 +201,7 @@ pub fn train(
 			hessians.axis_iter(Axis(0)),
 			ordered_gradients.axis_iter_mut(Axis(0)),
 			ordered_hessians.axis_iter_mut(Axis(0)),
-			bin_stats_pools.axis_iter_mut(Axis(0)),
+			bin_stats_pools.iter_mut(),
 		)
 		.map(
 			|(
@@ -232,7 +230,7 @@ pub fn train(
 					examples_index.as_slice_mut().unwrap(),
 					examples_index_left.as_slice_mut().unwrap(),
 					examples_index_right.as_slice_mut().unwrap(),
-					bin_stats_pool.into_scalar(),
+					bin_stats_pool,
 					has_constant_hessians,
 					&options,
 				);
@@ -240,8 +238,8 @@ pub fn train(
 				if round_index < options.max_rounds - 1 {
 					update_predictions_from_leaves(
 						&leaf_values,
-						predictions.view_mut(),
-						examples_index.view(),
+						predictions.as_slice_mut().unwrap(),
+						examples_index.as_slice().unwrap(),
 					);
 				}
 				tree
@@ -253,15 +251,15 @@ pub fn train(
 		if let Some(losses) = losses.as_mut() {
 			let loss = match task {
 				types::Task::Regression => {
-					let labels_train = labels_train.as_number().unwrap().values();
-					super::regressor::compute_loss(labels_train.view(), predictions.view())
+					let labels_train = labels_train.as_number().unwrap().data.into();
+					super::regressor::compute_loss(labels_train, predictions.view())
 				}
 				types::Task::BinaryClassification => {
-					let labels_train = labels_train.as_enum().unwrap().values();
+					let labels_train = labels_train.as_enum().unwrap().data.into();
 					super::binary_classifier::compute_loss(labels_train, predictions.view())
 				}
 				types::Task::MulticlassClassification { .. } => {
-					let labels_train = labels_train.as_enum().unwrap().values();
+					let labels_train = labels_train.as_enum().unwrap().data.into();
 					super::multiclass_classifier::compute_loss(labels_train, predictions.view())
 				}
 			};
@@ -348,13 +346,12 @@ pub fn train(
 /// Update predictions by traversing the leaf nodes
 pub fn update_predictions_from_leaves(
 	leaf_values: &[(Range<usize>, f32)],
-	predictions: ArrayViewMut1<f32>,
-	examples_index: ArrayView1<usize>,
+	predictions: &mut [f32],
+	examples_index: &[usize],
 ) {
 	let predictions_cell = SuperUnsafe::new(predictions);
 	leaf_values.iter().for_each(|(range, value)| {
-		examples_index
-			.slice(s![range.clone()])
+		examples_index[range.clone()]
 			.iter()
 			.for_each(|&example_index| {
 				let predictions = unsafe { predictions_cell.get() };
@@ -363,14 +360,11 @@ pub fn update_predictions_from_leaves(
 	});
 }
 
-/// compute the feature importances using the "split" method,
-/// where a feature's importance is proportional to the number
-/// of nodes that use it to split.
-fn compute_feature_importances(
-	trees: &[single::types::TrainTree],
-	n_features: usize,
-) -> Array1<f32> {
-	let mut feature_importances = Array1::zeros(n_features);
+/**
+This function computes feature importances using the "split" method, where a feature's importance is proportional to the number of nodes that use it to split.
+*/
+fn compute_feature_importances(trees: &[single::types::TrainTree], n_features: usize) -> Vec<f32> {
+	let mut feature_importances = vec![0.0; n_features];
 	for tree in trees.iter() {
 		tree.nodes.iter().for_each(|node| match node {
 			single::types::TrainNode::Branch(single::types::TrainBranchNode {
@@ -393,7 +387,10 @@ fn compute_feature_importances(
 			single::types::TrainNode::Leaf(_) => {}
 		});
 	}
-	let total = feature_importances.sum();
-	feature_importances.mapv_inplace(|f| f / total);
+	// Normalize the feature_importances.
+	let total: f32 = feature_importances.iter().sum();
+	for feature_importance in feature_importances.iter_mut() {
+		*feature_importance /= total;
+	}
 	feature_importances
 }

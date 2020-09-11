@@ -1,10 +1,9 @@
 use anyhow::Result;
+use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use std::path::Path;
-use std::time::Instant;
-use tangram::dataframe::*;
-use tangram::metrics;
+use tangram::{dataframe::*, metrics::Metric};
 
 fn main() -> Result<()> {
 	let month_options = vec![
@@ -115,43 +114,14 @@ fn main() -> Result<()> {
 		},
 	};
 	let mut csv_reader = csv::Reader::from_path(csv_file_path_train)?;
-	let mut dataframe_train = DataFrame::from_csv(&mut csv_reader, options.clone(), |_| {})?;
-	let labels_train = dataframe_train.columns.remove(target_column_index);
+	let mut features_train = DataFrame::from_csv(&mut csv_reader, options.clone(), |_| {})?;
+	let labels_train = features_train.columns.remove(target_column_index);
 	let labels_train = labels_train.as_enum().unwrap();
 
 	let mut csv_reader = csv::Reader::from_path(csv_file_path_test)?;
-	let mut dataframe_test = DataFrame::from_csv(&mut csv_reader, options, |_| {})?;
-	let labels_test = dataframe_test.columns.remove(target_column_index);
+	let mut features_test = DataFrame::from_csv(&mut csv_reader, options, |_| {})?;
+	let labels_test = features_test.columns.remove(target_column_index);
 	let labels_test = labels_test.as_enum().unwrap();
-
-	// compute stats
-	let stats_settings = tangram::stats::StatsSettings {
-		number_histogram_max_size: 100,
-		text_histogram_max_size: 100,
-	};
-	// retrieve the column names
-	let column_names: Vec<String> = dataframe_train
-		.columns
-		.iter()
-		.map(|column| column.name().to_owned())
-		.collect();
-
-	let tangram::stats::ComputeStatsOutput {
-		overall_column_stats,
-		..
-	} = tangram::stats::compute_stats(
-		&column_names,
-		&dataframe_train.view(),
-		&dataframe_test.view(),
-		&stats_settings,
-		&mut |_| {},
-	);
-	let feature_groups = tangram::features::compute_feature_groups_tree(&overall_column_stats);
-	let features_train = tangram::features::compute_features_dataframe(
-		&dataframe_train.view(),
-		&feature_groups,
-		&|| {},
-	);
 
 	// train the model
 	let train_options = tangram::tree::TrainOptions {
@@ -161,42 +131,47 @@ fn main() -> Result<()> {
 		max_depth: 10,
 		..Default::default()
 	};
-
-	let start = Instant::now();
 	let model = tangram::tree::BinaryClassifier::train(
 		features_train.view().clone(),
 		labels_train.view(),
 		train_options,
 		&mut |_| {},
 	);
-	let end = Instant::now();
-	println!("duration: {:?}", end - start);
 
-	let n_features = dataframe_train.ncols();
-	let mut features_test = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	tangram::features::compute_features_ndarray_value(
-		&dataframe_test.view(),
-		&feature_groups,
-		features_test.view_mut(),
-		&|| {},
+	// make predictions on the test data
+	let n_features = features_train.ncols();
+	let nrows = features_test.nrows();
+	let columns = features_test.view().columns;
+	let mut features_ndarray = unsafe { Array2::uninitialized((nrows, n_features)) };
+	izip!(features_ndarray.gencolumns_mut(), columns.as_slice()).for_each(
+		|(mut feature_column, column)| match column {
+			ColumnView::Number(column) => {
+				feature_column
+					.iter_mut()
+					.zip(column.data)
+					.for_each(|(f, d)| *f = Value::Number(*d));
+			}
+			ColumnView::Enum(column) => {
+				feature_column
+					.iter_mut()
+					.zip(column.data)
+					.for_each(|(f, d)| *f = Value::Enum(*d));
+			}
+			_ => panic!(),
+		},
 	);
-
 	let mut probabilities: Array2<f32> =
 		unsafe { Array::uninitialized((features_test.nrows(), 2).f()) };
-	model.predict(features_test.view(), probabilities.view_mut(), None);
-	let accuracy = metrics::accuracy(probabilities.view(), labels_test.view().data.into());
-	let baseline_accuracy = labels_test
-		.data
-		.iter()
-		.map(|label| label.checked_sub(1).unwrap())
-		.sum::<usize>() as f32
-		/ labels_test.data.len() as f32;
-	println!("baseline accuracy: {:?}", baseline_accuracy);
-	println!("accuracy: {:?}", accuracy);
-	let auc = metrics::auc_roc(
-		&probabilities.column(1).as_slice().unwrap(),
-		&labels_test.view().data,
-	);
-	println!("auc: {:?}", auc);
+	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
+
+	// compute metrics
+	let mut metrics = tangram::metrics::BinaryClassifierMetrics::new(100);
+	metrics.update(tangram::metrics::BinaryClassifierMetricsInput {
+		probabilities: probabilities.view(),
+		labels: labels_test.view().data.into(),
+	});
+	let metrics = metrics.finalize();
+	println!("{:?}", metrics);
+
 	Ok(())
 }

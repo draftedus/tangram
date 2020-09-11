@@ -3,10 +3,13 @@ use ndarray::prelude::*;
 use ndarray::s;
 use num_traits::ToPrimitive;
 
+/**
+BinaryClassifierMetrics computes common metrics used to evaluate binary classifiers at various classification thresholds.
+Instead of computing threshold metrics for each prediction probability, we instead compute metrics for a fixed number of threshold values given by `n_thresholds` passed to BinaryClassifierMetrics::new.
+This is an approximation but is more memory efficient.
+*/
 pub struct BinaryClassifierMetrics {
-	/// The shape of the confusion matrix is
-	/// thresholds x (n_classes x n_classes).
-	/// The two lower indexes are a confusion matrix.
+	/// This array has shape n_thresholds x (n_classes x n_classes).
 	pub confusion_matrices: Array3<u64>,
 	pub thresholds: Vec<f32>,
 }
@@ -16,9 +19,12 @@ pub struct BinaryClassifierMetricsInput<'a> {
 	pub labels: ArrayView1<'a, usize>,
 }
 
+/// BinaryClassifierMetrics contains common metrics used to evaluate binary classifiers at various classification thresholds.
 #[derive(Debug)]
 pub struct BinaryClassificationMetricsOutput {
+	/// Class metrics for each class for each classification threshold.
 	pub class_metrics: Vec<BinaryClassificationClassMetricsOutput>,
+	/// Area under the receiver operating characteristic curve. Computes the integral using a fixed number of thresholds equal to `n_thresholds`, passed when creating BinaryClassifierMetrics.
 	pub auc_roc: f32,
 }
 
@@ -147,14 +153,14 @@ impl<'a> Metric<'a> for BinaryClassifierMetrics {
 	}
 }
 
-// computes the auc using a riemann sum given a confusion matrix
-// with a predefined number of thresholds
-//
-//                threshold_index  prediction   label
-//                      |             |           |
-//                      v             v           v
-// let dimension = (n_thresholds, n_classes, n_classes);
-// confusion_matrix: Array3::zeros(dimension),
+/**
+This function computes the AUC ROC using a riemann sum given a confusion matrix with a predefined number of thresholds.
+								   threshold_index  prediction   label
+										 |             |           |
+										 v             v           v
+let dimension = (n_thresholds, n_classes, n_classes);
+confusion_matrix: Array3::zeros(dimension),
+*/
 fn auc_roc(confusion_matrix: ArrayView3<u64>) -> f32 {
 	let class_index = 1;
 	let n_thresholds = confusion_matrix.shape()[0];

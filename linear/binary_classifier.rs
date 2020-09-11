@@ -36,8 +36,8 @@ impl types::BinaryClassifier {
 			bias: 0.0,
 			weights: Array1::<f32>::zeros(n_features),
 			means,
-			losses: vec![].into(),
-			classes: classes.into(),
+			losses: vec![],
+			classes,
 		};
 		let mut early_stopping_monitor = if options.early_stopping_fraction > 0.0 {
 			Some(EarlyStoppingMonitor::new())
@@ -171,7 +171,7 @@ impl types::BinaryClassifier {
 					features,
 					self.bias,
 					self.weights.view(),
-					self.means.view(),
+					&self.means,
 					shap_values.row_mut(0),
 				);
 			});

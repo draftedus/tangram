@@ -7,7 +7,7 @@ use tangram::metrics::Metric;
 #[serde(rename_all = "camelCase")]
 pub struct ClassificationProductionPredictionMetrics {
 	classes: Vec<String>,
-	confusion_matrix: Array2<u64>,
+	confusion_matrix: Vec<u64>,
 }
 
 #[derive(Debug)]
@@ -40,7 +40,7 @@ impl ClassificationProductionPredictionMetrics {
 		let confusion_matrix = Array2::<u64>::zeros((n_classes, n_classes));
 		Self {
 			classes,
-			confusion_matrix,
+			confusion_matrix: confusion_matrix.into_raw_vec(),
 		}
 	}
 }
@@ -75,7 +75,8 @@ impl Metric<'_> for ClassificationProductionPredictionMetrics {
 		let n_classes = self.classes.len();
 		let n_examples = self.confusion_matrix.sum();
 
-		let confusion_matrix = self.confusion_matrix;
+		let confusion_matrix =
+			ArrayView2::from_shape_vec((n_classes, n_classes), self.confusion_matrix);
 		let class_metrics: Vec<_> = self
 			.classes
 			.into_iter()

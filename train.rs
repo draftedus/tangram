@@ -365,13 +365,11 @@ pub struct LinearMulticlassClassifier {
 	pub options: grid::LinearModelTrainOptions,
 }
 
-#[derive(Debug)]
 enum ComparisonMetric {
 	Regression(RegressionComparisonMetric),
 	Classification(ClassificationComparisonMetric),
 }
 
-#[derive(Debug)]
 enum TestMetrics {
 	Regression(metrics::RegressionMetricsOutput),
 	Classification(
@@ -1550,11 +1548,11 @@ impl Into<types::LinearBinaryClassifier> for LinearBinaryClassifier {
 			options: self.options.into(),
 			class_metrics: self.class_metrics.into_iter().map(Into::into).collect(),
 			auc_roc: self.auc_roc,
-			means: self.model.means.into_raw_vec(),
+			means: self.model.means,
 			weights: self.model.weights.into_raw_vec(),
 			bias: self.model.bias,
-			losses: self.model.losses.into_raw_vec(),
-			classes: self.model.classes.into_raw_vec(),
+			losses: self.model.losses,
+			classes: self.model.classes,
 		}
 	}
 }
@@ -1591,20 +1589,20 @@ impl Into<types::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 			n_classes: self.model.weights.ncols().to_u64().unwrap(),
 			weights: self.model.weights.into_raw_vec(),
 			biases: self.model.biases.into_raw_vec(),
-			losses: self.model.losses.into_raw_vec(),
+			losses: self.model.losses,
 			options: self.options.into(),
-			classes: self.model.classes.into_raw_vec(),
-			means: self.model.means.into_raw_vec(),
+			classes: self.model.classes,
+			means: self.model.means,
 		}
 	}
 }
 
 impl Into<types::TreeBinaryClassifier> for TreeBinaryClassifier {
 	fn into(self) -> types::TreeBinaryClassifier {
-		let losses = self.model.losses.map(|l| l.into_raw_vec()).unwrap();
+		let losses = self.model.losses.unwrap();
 		let trees = self.model.trees.into_iter().map(Into::into).collect();
 		let class_metrics = self.class_metrics.into_iter().map(Into::into).collect();
-		let feature_importances = self.model.feature_importances.unwrap().into_raw_vec();
+		let feature_importances = self.model.feature_importances.unwrap();
 		let options = self.options.into();
 		types::TreeBinaryClassifier {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
@@ -1629,9 +1627,9 @@ impl Into<types::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 			options: self.options.into(),
 			trees: self.model.trees.into_iter().map(|t| t.into()).collect(),
 			feature_groups: self.feature_groups.into_iter().map(|t| t.into()).collect(),
-			losses: self.model.losses.unwrap().into_raw_vec(),
+			losses: self.model.losses.unwrap(),
 			classes: self.model.classes,
-			feature_importances: self.model.feature_importances.unwrap().into_raw_vec(),
+			feature_importances: self.model.feature_importances.unwrap(),
 		}
 	}
 }
@@ -1687,8 +1685,8 @@ impl Into<types::LinearRegressor> for LinearRegressor {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
 			weights: self.model.weights.into_raw_vec(),
 			bias: self.model.bias,
-			losses: self.model.losses.into_raw_vec(),
-			means: self.model.means.into_raw_vec(),
+			losses: self.model.losses,
+			means: self.model.means,
 			options: self.options.into(),
 		}
 	}
@@ -1696,7 +1694,7 @@ impl Into<types::LinearRegressor> for LinearRegressor {
 
 impl Into<types::TreeRegressor> for TreeRegressor {
 	fn into(self) -> types::TreeRegressor {
-		let losses = self.model.losses.map(|l| l.into_raw_vec()).unwrap();
+		let losses = self.model.losses.unwrap();
 		let trees = self.model.trees.into_iter().map(Into::into).collect();
 		types::TreeRegressor {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
@@ -1704,7 +1702,7 @@ impl Into<types::TreeRegressor> for TreeRegressor {
 			bias: self.model.bias,
 			losses,
 			options: self.options.into(),
-			feature_importances: self.model.feature_importances.unwrap().into_raw_vec(),
+			feature_importances: self.model.feature_importances.unwrap(),
 		}
 	}
 }

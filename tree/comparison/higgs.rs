@@ -3,13 +3,9 @@ use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use std::path::Path;
-use std::time::Instant;
-use tangram::dataframe::*;
-use tangram::metrics;
+use tangram::{dataframe::*, metrics::Metric};
 
 fn main() -> Result<()> {
-	let start = Instant::now();
-
 	// load the data
 	// let csv_file_path = Path::new("data/higgs.csv");
 	// let nrows_train = 10_500_000;
@@ -90,13 +86,15 @@ fn main() -> Result<()> {
 		},
 	);
 
-	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((nrows_test, 2)) };
+	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((nrows_test, 2)) };
 	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
-	let accuracy = metrics::accuracy(probabilities.view(), labels_test.data.into());
-
-	let end = Instant::now();
-	println!("duration: {:?}", end - start);
-	println!("accuracy: {:?}", accuracy);
+	let mut metrics = tangram::metrics::BinaryClassifierMetrics::new(100);
+	metrics.update(tangram::metrics::BinaryClassifierMetricsInput {
+		probabilities: probabilities.view(),
+		labels: labels_test.data.into(),
+	});
+	let metrics = metrics.finalize();
+	println!("{:?}", metrics);
 
 	Ok(())
 }

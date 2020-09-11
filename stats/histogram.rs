@@ -1,7 +1,7 @@
 use super::dataset::*;
 use crate::{metrics, util::finite::Finite};
 use num_traits::ToPrimitive;
-use std::{cmp::Ordering, collections::BTreeMap};
+use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
 
 #[derive(Debug, PartialEq)]
 pub enum HistogramStats {
@@ -118,7 +118,10 @@ fn compute_number_histogram_stats(
 		max,
 		binned_histogram: None,
 		mean: mean.to_f32().unwrap(),
-		variance: metrics::m2_to_variance(m2, current_count.to_u64().unwrap()),
+		variance: metrics::m2_to_variance(
+			m2,
+			NonZeroU64::new(current_count.to_u64().unwrap()).unwrap(),
+		),
 	}
 }
 

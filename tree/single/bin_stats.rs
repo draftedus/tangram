@@ -68,11 +68,13 @@ pub fn compute_bin_stats_for_root_node(
 				*entry = 0.0;
 			}
 			if hessians_are_constant {
-				compute_bin_stats_for_feature_root_no_hessian(
-					gradients,
-					binned_feature_values.as_slice().unwrap(),
-					bin_stats_for_feature,
-				)
+				unsafe {
+					compute_bin_stats_for_feature_root_no_hessian(
+						gradients,
+						binned_feature_values.as_slice().unwrap(),
+						bin_stats_for_feature,
+					)
+				}
 			} else {
 				unsafe {
 					compute_bin_stats_for_feature_root(
@@ -158,12 +160,29 @@ pub fn compute_bin_stats_for_non_root_node(
 	);
 }
 
-fn compute_bin_stats_for_feature_root_no_hessian(
-	_gradients: &[f32],
-	_binned_feature_values: &[u8],
-	_bin_stats_for_feature: &mut [f64],
+unsafe fn compute_bin_stats_for_feature_root_no_hessian(
+	gradients: &[f32],
+	binned_feature_values: &[u8],
+	bin_stats_for_feature: &mut [f64],
 ) {
-	todo!()
+	let unroll = ROOT_UNROLL;
+	let len = gradients.len();
+	for i in 0..len / unroll {
+		for i in i * unroll..i * unroll + unroll {
+			let ordered_gradient = *gradients.get_unchecked(i);
+			let bin_index = *binned_feature_values.get_unchecked(i) as usize;
+			let bin_index = bin_index << 1;
+			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
+			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
+		}
+	}
+	for i in (len / unroll) * unroll..len {
+		let ordered_gradient = *gradients.get_unchecked(i);
+		let bin_index = *binned_feature_values.get_unchecked(i) as usize;
+		let bin_index = bin_index << 1;
+		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
+		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
+	}
 }
 
 pub unsafe fn compute_bin_stats_for_feature_root(
@@ -195,12 +214,34 @@ pub unsafe fn compute_bin_stats_for_feature_root(
 }
 
 unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
-	_ordered_gradients: &[f32],
-	_binned_feature_values: &[u8],
-	_bin_stats_for_feature: &mut [f64],
-	_examples_index: &[usize],
+	ordered_gradients: &[f32],
+	binned_feature_values: &[u8],
+	bin_stats_for_feature: &mut [f64],
+	examples_index: &[usize],
 ) {
-	todo!()
+	let unroll = NOT_ROOT_UNROLL;
+	let len = examples_index.len();
+	for i in 0..len / unroll {
+		for i in i * unroll..i * unroll + unroll {
+			let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
+			let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
+			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+			let ordered_gradient = *ordered_gradients.get_unchecked(i);
+			let example_index = *examples_index.get_unchecked(i);
+			let bin_index = *binned_feature_values.get_unchecked(example_index) as usize;
+			let bin_index = bin_index << 1;
+			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
+			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
+		}
+	}
+	for i in (len / unroll) * unroll..len {
+		let ordered_gradient = *ordered_gradients.get_unchecked(i);
+		let example_index = *examples_index.get_unchecked(i);
+		let bin_index = *binned_feature_values.get_unchecked(example_index) as usize;
+		let bin_index = bin_index << 1;
+		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
+		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
+	}
 }
 
 unsafe fn compute_bin_stats_for_feature_not_root(

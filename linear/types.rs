@@ -48,24 +48,24 @@ pub enum Model {
 pub struct Regressor {
 	pub bias: f32,
 	pub weights: Array1<f32>,
-	pub means: Array1<f32>,
-	pub losses: Array1<f32>,
+	pub means: Vec<f32>,
+	pub losses: Vec<f32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BinaryClassifier {
 	pub weights: Array1<f32>,
 	pub bias: f32,
-	pub means: Array1<f32>,
-	pub losses: Array1<f32>,
-	pub classes: Array1<String>,
+	pub means: Vec<f32>,
+	pub losses: Vec<f32>,
+	pub classes: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MulticlassClassifier {
 	pub weights: Array2<f32>,
 	pub biases: Array1<f32>,
-	pub means: Array1<f32>,
-	pub losses: Array1<f32>,
-	pub classes: Array1<String>,
+	pub means: Vec<f32>,
+	pub losses: Vec<f32>,
+	pub classes: Vec<String>,
 }

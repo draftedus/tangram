@@ -51,7 +51,7 @@ impl types::MulticlassClassifier {
 						*logit += tree.predict(&row);
 					}
 				}
-				softmax_inplace(logits);
+				softmax(logits);
 			},
 		);
 		if let Some(shap_values) = &mut shap_values {
@@ -70,7 +70,7 @@ impl types::MulticlassClassifier {
 						trees.column(class_index),
 						biases[class_index],
 					);
-					shap_values.row_mut(class_index).assign(&x);
+					shap_values.row_mut(class_index).assign(&Array1::from(x));
 				}
 			});
 		}
@@ -95,7 +95,8 @@ pub fn update_logits(
 pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
 	for (label, logits) in labels.into_iter().zip(logits.gencolumns()) {
-		let probabilities = softmax(logits);
+		let mut probabilities = logits.to_owned();
+		softmax(probabilities.view_mut());
 		for (index, &probability) in probabilities.indexed_iter() {
 			let probability = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
 			if index == (*label - 1) {
@@ -139,7 +140,7 @@ pub fn update_gradients_and_hessians(
 		labels
 	)
 	.for_each(|(mut gradients, mut hessians, mut predictions, label)| {
-		softmax_inplace(predictions.view_mut());
+		softmax(predictions.view_mut());
 		izip!(
 			predictions.iter().enumerate(),
 			gradients.iter_mut(),
@@ -153,20 +154,11 @@ pub fn update_gradients_and_hessians(
 	});
 }
 
-fn softmax_inplace(mut logits: ArrayViewMut1<f32>) {
+fn softmax(mut logits: ArrayViewMut1<f32>) {
 	let max = logits.iter().fold(std::f32::MIN, |a, &b| a.max(b));
-	logits -= max;
-	logits.mapv_inplace(|l| l.exp());
-	let sum = logits.iter().fold(0.0, |a, b| a + b);
+	for logit in logits.iter_mut() {
+		*logit = (*logit - max).exp();
+	}
+	let sum = logits.iter().sum::<f32>();
 	logits /= sum;
-}
-
-fn softmax(logits: ArrayView1<f32>) -> Array1<f32> {
-	let mut probabilities = logits.to_owned();
-	let max = probabilities.iter().fold(std::f32::MIN, |a, &b| a.max(b));
-	probabilities -= max;
-	probabilities.mapv_inplace(|l| l.exp());
-	let sum = probabilities.iter().fold(0.0, |a, b| a + b);
-	probabilities /= sum;
-	probabilities
 }

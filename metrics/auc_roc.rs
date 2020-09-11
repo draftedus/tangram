@@ -1,4 +1,4 @@
-// computes the auc_roc given labels and probabilities
+/// This function computes the area under the receiver operating characteristic curve using the trapezoid method.
 pub fn auc_roc(probabilities: &[f32], labels: &[usize]) -> f32 {
 	let roc_curve = compute_roc_curve(probabilities, labels);
 	// compute the riemann sum of the auc_roc_curve
@@ -17,11 +17,15 @@ pub fn auc_roc(probabilities: &[f32], labels: &[usize]) -> f32 {
 
 #[derive(Debug, std::cmp::PartialEq)]
 pub struct ROCCurvePoint {
+	/// The classification threshold.
 	pub threshold: f32,
+	/// The true positive rate for all predictions with probability <= threshold.
 	pub true_positive_rate: f32,
+	/// The false positive rate for all predictions with probability <= threshold.
 	pub false_positive_rate: f32,
 }
 
+/// This function computes the ROC curve. The ROC curve plot the false positive rate on the x axis and the true positive rate on the y axis for various classification thresholds.
 pub fn compute_roc_curve(probabilities: &[f32], labels: &[usize]) -> Vec<ROCCurvePoint> {
 	let mut tps_fps = compute_tps_fps_by_threshold(probabilities, labels);
 	for i in 1..tps_fps.len() {
@@ -35,7 +39,7 @@ pub fn compute_roc_curve(probabilities: &[f32], labels: &[usize]) -> Vec<ROCCurv
 	let count_negatives = labels.len() - count_positives;
 	// add a point at (0,0) on the roc curve with a dummy threshold of 1.0
 	let mut roc_curve = vec![ROCCurvePoint {
-		threshold: 1.1,
+		threshold: 1.0,
 		true_positive_rate: 0.0,
 		false_positive_rate: 0.0,
 	}];
@@ -50,14 +54,18 @@ pub fn compute_roc_curve(probabilities: &[f32], labels: &[usize]) -> Vec<ROCCurv
 }
 
 #[derive(Debug)]
-pub struct TpsFpsPoint {
-	pub threshold: f32,
-	pub true_positives: usize,
-	pub false_positives: usize,
+struct TpsFpsPoint {
+	/// The classification threshold.
+	threshold: f32,
+	/// The true positives for this threshold.
+	true_positives: usize,
+	/// The false positives for this threshold.
+	false_positives: usize,
 }
 
-// collects the tps/fps in each threshold
-// unlike roc curve, each point is not cumulative from the last
+/**
+This function computes the counts of true positives and false postiives at each classification threshold. Unlike the roc curve, each point contains just the count of true positives and false positives at this threshold instead of all values less than or equal to this threshold.
+*/
 fn compute_tps_fps_by_threshold(probabilities: &[f32], labels: &[usize]) -> Vec<TpsFpsPoint> {
 	let mut probabilities_labels: Vec<(f32, usize)> = probabilities
 		.iter()

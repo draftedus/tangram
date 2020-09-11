@@ -2,13 +2,13 @@ use super::{mean::Mean, Metric};
 use ndarray::prelude::*;
 use num_traits::clamp;
 
+/// CrossEntropy is the loss function used in multiclass classification models.
 #[derive(Default)]
 pub struct CrossEntropy(Mean);
 
 pub struct CrossEntropyInput<'a> {
-	// (n_classes)
+	/// (n_classes)
 	pub probabilities: ArrayView1<'a, f32>,
-	// 1-indexed
 	pub label: usize,
 }
 
@@ -32,8 +32,7 @@ impl<'a> Metric<'a> for CrossEntropy {
 	}
 }
 
-/// computes the cross_entropy given a probability array of size (n_classes,)
-/// and a class label that is 1-indexed.
+/// This function computes the cross_entropy given a probability array of size (n_classes,) and a class label that is 1-indexed.
 pub fn cross_entropy(probabilities: ArrayView1<f32>, label: usize) -> f32 {
 	// labels are 1-indexed, convert to 0-indexed
 	let label = label.checked_sub(1).unwrap();

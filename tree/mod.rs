@@ -51,7 +51,7 @@ mod progress;
 mod regressor;
 mod shap;
 mod single;
-mod timing;
+// mod timing;
 mod train;
 mod types;
 

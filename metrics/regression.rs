@@ -1,16 +1,18 @@
 use super::{mean_variance::merge_mean_m2, Metric};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use std::num::NonZeroU64;
 
+/// RegressionMetrics computes common metrics used to evaluate regressors.
 pub struct RegressionMetrics {
 	mean_variance: Option<MeanVariance>,
 	absolute_error: f64,
 	squared_error: f64,
 }
 
-#[derive(Debug)]
+/// MeanVariance holds the information needed to compute streaming mean and variance. It is required that `n` be >= 1, so you should use `Option<MeanVariance>` if `n` may be zero.
 struct MeanVariance {
-	pub n: u64,
+	pub n: NonZeroU64,
 	pub m2: f64,
 	pub mean: f64,
 }
@@ -20,14 +22,27 @@ pub struct RegressionMetricsInput<'a> {
 	pub labels: &'a [f32],
 }
 
+/// RegressionMetrics contains common metrics used to evaluate regressors.
 #[derive(Debug)]
 pub struct RegressionMetricsOutput {
+	/// The mean squared error is equal to the mean of the squared errors. For a given example, the error is the difference between the true value and the model's predicted value.
 	pub mse: f32,
+	/// The root mean squared error is equal to the square root of the mean squared error.
 	pub rmse: f32,
+	/// The mean of the absolute value of the errors.
 	pub mae: f32,
+	/// The r-squared value. https://en.wikipedia.org/wiki/Coefficient_of_determination.
 	pub r2: f32,
+	/// The baseline mean squared error is the mean squared error if the model always predicted the mean value.
 	pub baseline_mse: f32,
+	/// The baseline root mean squared error is the square root of the baseline mean squared error.
 	pub baseline_rmse: f32,
+}
+
+impl RegressionMetrics {
+	pub fn new() -> Self {
+		Self::default()
+	}
 }
 
 impl Default for RegressionMetrics {
@@ -53,20 +68,20 @@ impl<'a> Metric<'a> for RegressionMetrics {
 			match &mut self.mean_variance {
 				Some(mean_variance) => {
 					let (mean, m2) = merge_mean_m2(
-						mean_variance.n,
+						mean_variance.n.get(),
 						mean_variance.mean,
 						mean_variance.m2,
 						1,
 						label.to_f64().unwrap(),
 						0.0,
 					);
-					mean_variance.n += 1;
+					mean_variance.n = NonZeroU64::new(mean_variance.n.get() + 1).unwrap();
 					mean_variance.mean = mean;
 					mean_variance.m2 = m2;
 				}
 				None => {
 					self.mean_variance = Some(MeanVariance {
-						n: 1,
+						n: NonZeroU64::new(1).unwrap(),
 						mean: label.to_f64().unwrap(),
 						m2: 0.0,
 					})
@@ -84,16 +99,17 @@ impl<'a> Metric<'a> for RegressionMetrics {
 			Some(mean_variance) => {
 				if let Some(other) = other.mean_variance {
 					let (mean, m2) = merge_mean_m2(
-						mean_variance.n,
+						mean_variance.n.get(),
 						mean_variance.mean,
 						mean_variance.m2,
-						other.n,
+						other.n.get(),
 						other.mean,
 						other.m2,
 					);
 					mean_variance.mean = mean;
 					mean_variance.m2 = m2;
-					mean_variance.n += other.n;
+					mean_variance.n =
+						NonZeroU64::new(mean_variance.n.get() + other.n.get()).unwrap();
 				}
 			}
 			None => {
@@ -106,7 +122,10 @@ impl<'a> Metric<'a> for RegressionMetrics {
 
 	fn finalize(self) -> Self::Output {
 		let (n, variance) = match self.mean_variance {
-			Some(m) => (m.n.to_f64().unwrap(), m.m2 / m.n.to_f64().unwrap()),
+			Some(m) => (
+				m.n.get().to_f64().unwrap(),
+				m.m2 / m.n.get().to_f64().unwrap(),
+			),
 			None => (0.0, f64::NAN),
 		};
 		let mae = self.absolute_error / n;

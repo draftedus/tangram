@@ -2,8 +2,6 @@
 This module contains definitions of the crate's public types.
 */
 
-use ndarray::prelude::*;
-
 /// The options passed to tangram_tree::train
 #[derive(Debug)]
 pub struct TrainOptions {
@@ -92,8 +90,8 @@ pub struct Regressor {
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
 	pub bias: f32,
 	pub trees: Vec<Tree>,
-	pub feature_importances: Option<Array1<f32>>,
-	pub losses: Option<Array1<f32>>,
+	pub feature_importances: Option<Vec<f32>>,
+	pub losses: Option<Vec<f32>>,
 }
 
 /// A Binary classifier model is trained to predict binary target values, e.g. does the patient have heart disease or not.
@@ -104,9 +102,9 @@ pub struct BinaryClassifier {
 	/// The trees in this model.
 	pub trees: Vec<Tree>,
 	/// The feature importances of this model. These importances are computed using the ...TODO.
-	pub feature_importances: Option<Array1<f32>>,
+	pub feature_importances: Option<Vec<f32>>,
 	/// The training losses in each round of training this model.
-	pub losses: Option<Array1<f32>>,
+	pub losses: Option<Vec<f32>>,
 	/// The names of the unique values in the target column.
 	pub classes: Vec<String>,
 }
@@ -123,9 +121,9 @@ pub struct MulticlassClassifier {
 	/// The number of boosting rounds == the number of trained trees.
 	pub n_rounds: usize,
 	/// TODO
-	pub feature_importances: Option<Array1<f32>>,
+	pub feature_importances: Option<Vec<f32>>,
 	/// The training losses in each round of training this model.
-	pub losses: Option<Array1<f32>>,
+	pub losses: Option<Vec<f32>>,
 	/// The names of the unique values in the target column.
 	pub classes: Vec<String>,
 }

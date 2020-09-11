@@ -76,7 +76,7 @@ impl types::BinaryClassifier {
 					*v = *feature;
 				});
 				let x = shap::compute_shap(row.as_slice(), trees, self.bias);
-				shap_values.row_mut(0).assign(&x);
+				shap_values.row_mut(0).assign(&Array1::from(x));
 			});
 		}
 	}

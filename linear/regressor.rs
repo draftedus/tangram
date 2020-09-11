@@ -34,7 +34,7 @@ impl types::Regressor {
 			bias: 0.0,
 			weights: Array1::<f32>::zeros(n_features),
 			means,
-			losses: vec![].into(),
+			losses: vec![],
 		};
 		let mut early_stopping_monitor = if options.early_stopping_fraction > 0.0 {
 			Some(EarlyStoppingMonitor::new())
@@ -139,7 +139,7 @@ impl types::Regressor {
 					features,
 					self.bias,
 					self.weights.view(),
-					self.means.view(),
+					&self.means,
 					shap_values.row_mut(0),
 				);
 			});

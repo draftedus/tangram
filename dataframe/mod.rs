@@ -1,5 +1,3 @@
-use ndarray::prelude::*;
-
 pub mod load;
 
 pub use self::load::*;
@@ -432,17 +430,5 @@ impl<'a> ColumnView<'a> {
 				)
 			}
 		}
-	}
-}
-
-impl<'a> NumberColumnView<'a> {
-	pub fn values(&self) -> ArrayView1<f32> {
-		self.data.into()
-	}
-}
-
-impl<'a> EnumColumnView<'a> {
-	pub fn values(&self) -> ArrayView1<usize> {
-		self.data.into()
 	}
 }

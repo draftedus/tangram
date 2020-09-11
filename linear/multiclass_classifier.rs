@@ -36,8 +36,8 @@ impl types::MulticlassClassifier {
 			biases: Array1::<f32>::zeros(n_classes),
 			weights: Array2::<f32>::zeros((n_features, n_classes)),
 			means,
-			losses: vec![].into(),
-			classes: classes.into(),
+			losses: vec![],
+			classes,
 		};
 		let mut early_stopping_monitor = if options.early_stopping_fraction > 0.0 {
 			Some(EarlyStoppingMonitor::new())
@@ -173,7 +173,7 @@ impl types::MulticlassClassifier {
 						features,
 						self.biases[class_index],
 						self.weights.row(class_index),
-						self.means.view(),
+						&self.means,
 						shap_values.row_mut(class_index),
 					)
 				}

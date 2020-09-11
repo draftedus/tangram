@@ -1,6 +1,6 @@
 use super::{mean::Mean, Metric};
-use ndarray::prelude::*;
 
+/// The mean squared error.
 #[derive(Default)]
 pub struct MeanSquaredError(Mean);
 
@@ -19,16 +19,4 @@ impl Metric<'_> for MeanSquaredError {
 	fn finalize(self) -> Option<f32> {
 		self.0.finalize()
 	}
-}
-
-/// compute the mean squared error given predictions and labels
-/// where predictions have shape (n_examples)
-/// and labels have shape (n_examples)
-pub fn mean_squared_error(predictions: ArrayView1<f32>, labels: ArrayView1<f32>) -> f32 {
-	let mut metric = MeanSquaredError::default();
-	predictions
-		.iter()
-		.zip(labels.iter())
-		.for_each(|(p, l)| metric.update((*p, *l)));
-	metric.finalize().unwrap()
 }

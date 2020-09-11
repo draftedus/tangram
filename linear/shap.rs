@@ -6,7 +6,7 @@ pub fn compute_shap(
 	example: ArrayView1<f32>,
 	bias: f32,
 	weights: ArrayView1<f32>,
-	means: ArrayView1<f32>,
+	means: &[f32],
 	mut shap_values: ArrayViewMut1<f32>,
 ) {
 	let mut bias_shap_value: f32 = bias;

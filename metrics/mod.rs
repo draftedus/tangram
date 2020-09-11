@@ -2,7 +2,6 @@
 This module defines the `Metric` trait and and a number of concrete types that implement it such as `MeanSquaredError` and `Accuracy`.
 */
 
-mod accuracy;
 mod auc_roc;
 mod binary_classification;
 mod binary_cross_entropy;
@@ -13,7 +12,6 @@ mod mean_squared_error;
 mod mean_variance;
 mod regression;
 
-pub use accuracy::*;
 pub use auc_roc::*;
 pub use binary_classification::*;
 pub use binary_cross_entropy::*;
@@ -27,12 +25,11 @@ pub use regression::*;
 /**
 The `Metric` trait defines a common interface to compute metrics such as mean squared error and accuracy, so that generic code can be written that computes arbitrary metrics.
 
-After being initialized, a type `T` implementing the `Metric` trait can have `update()` called on it with values of the associated type `Input`. Multiple values of the type can be merged together by calling `merge()`. When finished aggregating, you can call `finalize()` on the metric to produce the associated type `Output`.
+After being initialized, a value of type `T` implementing the `Metric` trait can have `update()` called on it with values of the associated type `Input`. Multiple values of `T` can be merged together by calling `merge()`. This is useful when computing a metric across multiple threads. When finished aggregating, you can call `finalize()` on the metric to produce the associated type `Output`.
 
 # Examples
 
 Here is a basic example implementation of a `Min` metric, which takes `f32`s and produces an `f32` that is the minimum of all the inputs.
-
 
 ```
 struct Min(f32);
@@ -46,13 +43,7 @@ impl Metric for Min {
 }
 ```
 
-We can write a generic function to compute arbitrary metrics in parallel with `rayon` like so:
-
-```
-
-```
-
-The seeminly unused generic lifetime `'a` exists here to allow `Input`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
+The seeminly unused generic lifetime `'a` exists here to allow `Input`s and `Output`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
 
 */
 pub trait Metric<'a> {

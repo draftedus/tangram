@@ -414,7 +414,7 @@ pub fn predict(
 			);
 			let shap_values = compute_shap_values_classification_output_linear(
 				feature_groups.as_slice(),
-				&model.classes.as_slice().unwrap(),
+				&model.classes,
 				shap_values.view(),
 				features.view(),
 				dataframe.view(),
@@ -809,8 +809,8 @@ impl TryFrom<types::Model> for PredictModel {
 							model: linear::Regressor {
 								bias: model.bias,
 								weights: model.weights.into(),
-								means: model.means.into(),
-								losses: model.losses.into(),
+								means: model.means,
+								losses: model.losses,
 							},
 						}))
 					}
@@ -831,8 +831,8 @@ impl TryFrom<types::Model> for PredictModel {
 									.into_iter()
 									.map(TryInto::try_into)
 									.collect::<Result<Vec<_>>>()?,
-								feature_importances: Some(model.feature_importances.into()),
-								losses: Some(model.losses.into()),
+								feature_importances: Some(model.feature_importances),
+								losses: Some(model.losses),
 							},
 						}))
 					}
@@ -860,9 +860,9 @@ impl TryFrom<types::Model> for PredictModel {
 								model: linear::BinaryClassifier {
 									weights: model.weights.into(),
 									bias: model.bias,
-									means: model.means.into(),
-									losses: model.losses.into(),
-									classes: model.classes.into(),
+									means: model.means,
+									losses: model.losses,
+									classes: model.classes,
 								},
 							},
 						))
@@ -885,8 +885,8 @@ impl TryFrom<types::Model> for PredictModel {
 										.into_iter()
 										.map(TryInto::try_into)
 										.collect::<Result<Vec<_>>>()?,
-									feature_importances: Some(model.feature_importances.into()),
-									losses: Some(model.losses.into()),
+									feature_importances: Some(model.feature_importances),
+									losses: Some(model.losses),
 									classes: model.classes,
 								},
 							},
@@ -910,9 +910,9 @@ impl TryFrom<types::Model> for PredictModel {
 								model: linear::MulticlassClassifier {
 									weights,
 									biases: model.biases.into(),
-									means: model.means.into(),
-									losses: model.losses.into(),
-									classes: model.classes.into(),
+									means: model.means,
+									losses: model.losses,
+									classes: model.classes,
 								},
 							},
 						))
@@ -935,8 +935,8 @@ impl TryFrom<types::Model> for PredictModel {
 										.into_iter()
 										.map(TryInto::try_into)
 										.collect::<Result<Vec<_>>>()?,
-									feature_importances: Some(model.feature_importances.into()),
-									losses: Some(model.losses.into()),
+									feature_importances: Some(model.feature_importances),
+									losses: Some(model.losses),
 									classes: model.classes,
 									n_classes: model.n_classes.to_usize().unwrap(),
 									n_rounds: model.n_rounds.to_usize().unwrap(),

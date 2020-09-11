@@ -1,9 +1,8 @@
-//! https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
-
 use super::Metric;
 use num_traits::ToPrimitive;
 use std::num::NonZeroU64;
 
+/// The Mean metric is computed using Welford's algorithm, detailed here: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm. This is used instead of the naive method to ensure numeric stability.
 #[derive(Debug, Clone, Default)]
 pub struct Mean(Option<(NonZeroU64, f64)>);
 
@@ -18,7 +17,7 @@ impl Metric<'_> for Mean {
 			None => Some((one, value)),
 			Some(n_mean) => {
 				let (n, mean) = n_mean;
-				let new_mean = merge_mean(mean, n, value, one);
+				let new_mean = merge(mean, n, value, one);
 				Some((NonZeroU64::new(n.get() + 1).unwrap(), new_mean))
 			}
 		}
@@ -31,7 +30,7 @@ impl Metric<'_> for Mean {
 			(Some((n, mean)), None) => Some((n, mean)),
 			(Some((n_a, mean_a)), Some((n_b, mean_b))) => Some((
 				NonZeroU64::new(n_a.get() + n_b.get()).unwrap(),
-				merge_mean(mean_a, n_a, mean_b, n_b),
+				merge(mean_a, n_a, mean_b, n_b),
 			)),
 		};
 	}
@@ -41,9 +40,7 @@ impl Metric<'_> for Mean {
 	}
 }
 
-/// takes two means and counts and computes the joint mean
-/// useful in parallel algorithms
-pub fn merge_mean(mean_a: f64, n_a: NonZeroU64, mean_b: f64, n_b: NonZeroU64) -> f64 {
+fn merge(mean_a: f64, n_a: NonZeroU64, mean_b: f64, n_b: NonZeroU64) -> f64 {
 	let n_a = n_a.get().to_f64().unwrap();
 	let n_b = n_b.get().to_f64().unwrap();
 	((n_a * mean_a) + (n_b * mean_b)) / (n_a + n_b)

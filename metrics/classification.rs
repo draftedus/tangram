@@ -2,6 +2,7 @@ use super::Metric;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
+/// ClassificationMetrics computes common metrics used to evaluate classifiers.
 pub struct ClassificationMetrics {
 	/// The shape of the confusion matrix is (n_classes x n_classes).
 	confusion_matrix: Array2<u64>,
@@ -18,10 +19,15 @@ pub struct ClassificationMetricsInput<'a> {
 pub struct ClassificationMetricsOutput {
 	pub class_metrics: Vec<ClassMetrics>,
 	pub accuracy: f32,
+	/// The unweighted precision equal to the mean of each class's precision.
 	pub precision_unweighted: f32,
+	/// The weighted precision is a weighted mean of each class's precision weighted by the fraction of the total examples in the class.
 	pub precision_weighted: f32,
+	/// The unweighted recall equal to the mean of each class's recall.
 	pub recall_unweighted: f32,
+	/// The weighted recall is a weighted mean of each class's recall weighted by the fraction of the total examples in the class.
 	pub recall_weighted: f32,
+	/// The accuracy if the model always predicted the majority class.
 	pub baseline_accuracy: f32,
 }
 
