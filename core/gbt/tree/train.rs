@@ -12,7 +12,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::{collections::BinaryHeap, ops::Range};
 
-/// Train a single tree.
+/// Trains a single tree.
 #[allow(clippy::too_many_arguments)]
 pub fn train(
 	binned_features: ArrayView2<u8>,

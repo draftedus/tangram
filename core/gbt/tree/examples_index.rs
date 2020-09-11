@@ -3,11 +3,12 @@ use super::types::*;
 use itertools::izip;
 use ndarray::prelude::*;
 
-/// returns the examples_index_ranges for the left and right nodes
-/// and rearranges the examples_index so that the example indexes
-/// in the first returned range are contained by the left node
-/// and the example indexes in the second returned range
-/// are contained by the right node.
+/** Returns the examples_index_ranges for the left and right nodes
+and rearranges the examples_index so that the example indexes
+in the first returned range are contained by the left node
+and the example indexes in the second returned range
+are contained by the right node.
+*/
 pub fn rearrange_examples_index(
 	binned_features: ArrayView2<u8>,
 	split: &TrainBranchSplit,
