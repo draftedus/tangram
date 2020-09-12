@@ -3,7 +3,7 @@ use crate::{metrics, util::finite::Finite};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
 
-/// Histogram stats contain statistics based on histograms of the dataset.
+/// HistogramStats contain statistics computed using aggregated histograms of the original column. We use aggregated histogram statistics for computing quantiles on number columns. Instead of sorting `O(n_examples)`, we only need to sort `O(n_unique_values)`.
 #[derive(Debug, PartialEq)]
 pub enum HistogramStats {
 	Unknown(UnknownHistogramStats),
@@ -12,12 +12,15 @@ pub enum HistogramStats {
 	Enum(EnumHistogramStats),
 }
 
+/// UnknownHistogramStats are empty.
 #[derive(Debug, PartialEq)]
 pub struct UnknownHistogramStats {}
 
+/// TextHistogramStats are empty.
 #[derive(Debug, PartialEq)]
 pub struct TextHistogramStats {}
 
+/// NumberHistogramStats contain statistics computed using aggregated histograms of the original column.
 #[derive(Debug, PartialEq)]
 pub struct NumberHistogramStats {
 	pub mean: f32,
@@ -30,9 +33,11 @@ pub struct NumberHistogramStats {
 	pub binned_histogram: Option<Vec<((f32, f32), usize)>>,
 }
 
+/// EnumHistogramStats are emtpy.
 #[derive(Debug, PartialEq)]
 pub struct EnumHistogramStats {}
 
+/// Compute stats using the `dataset_stats` which contain histograms of the original data.
 pub fn compute_histogram_stats(
 	dataset_stats: &DatasetStats,
 	progress: impl Fn(),
@@ -51,6 +56,7 @@ pub fn compute_histogram_stats(
 	}
 }
 
+/// Compute stats for number columns using the `dataset_stats` which contain histograms of the original data.
 fn compute_number_histogram_stats(
 	histogram: &BTreeMap<Finite<f32>, usize>,
 	total_values_count: usize,

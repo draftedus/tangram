@@ -17,7 +17,7 @@ pub struct StatsSettings {
 	pub number_histogram_max_size: usize,
 }
 
-/// This struct is the output from computing stats.
+/// This struct is the output from computing stats. It contains stats for the overall dataset and also stats for just the train and test portions.
 pub struct ComputeStatsOutput {
 	/// The overall column stats contain stats for the whole dataset.
 	pub overall_column_stats: Vec<ColumnStats>,
@@ -27,7 +27,7 @@ pub struct ComputeStatsOutput {
 	pub test_column_stats: Vec<ColumnStats>,
 }
 
-/// An enum descibing the different types of column stats.
+/// An enum describing the different types of column stats.
 #[derive(Debug)]
 pub enum ColumnStats {
 	Unknown(UnknownColumnStats),
@@ -46,7 +46,7 @@ impl ColumnStats {
 			Self::Enum(value) => &value.column_name,
 		}
 	}
-	/// Return an option of the number of unique values in this column. For number columns, this value is `None` if `number_histogram_max_size` is exceeded, and `Some` otherwise.
+	/// Return an option of the number of unique values in this column.
 	pub fn unique_values(&self) -> Option<Vec<String>> {
 		match self {
 			Self::Unknown(_) => None,
@@ -72,14 +72,14 @@ impl ColumnStats {
 	}
 }
 
-/// This struct contains stats for columns of unknown type.
+/// This struct contains stats for unknown columns.
 #[derive(Debug)]
 pub struct UnknownColumnStats {
 	pub column_name: String,
 	pub count: u64,
 }
 
-/// This struct contains stats for columns of number type.
+/// This struct contains stats for number columns.
 #[derive(Debug)]
 pub struct NumberColumnStats {
 	pub column_name: String,
@@ -97,7 +97,7 @@ pub struct NumberColumnStats {
 	pub p75: f32,
 }
 
-/// This struct contains stats for columns of enum type.
+/// This struct contains stats for enum columns.
 #[derive(Debug)]
 pub struct EnumColumnStats {
 	pub column_name: String,
@@ -107,7 +107,7 @@ pub struct EnumColumnStats {
 	pub unique_count: usize,
 }
 
-/// This struct contains stats for columns of text type.
+/// This struct contains stats for text columns.
 #[derive(Debug)]
 pub struct TextColumnStats {
 	pub column_name: String,
@@ -253,6 +253,7 @@ fn compute_column_stats_for_column(
 	}
 }
 
+/// Compute [ColumnStats](struct.ColumnStats.html) for a number column by combining stats computed in dataset_stats and histogram_stats.
 fn compute_column_stats_number(
 	column_name: &str,
 	dataset_stats: &NumberDatasetStats,
@@ -289,6 +290,7 @@ fn compute_column_stats_number(
 	})
 }
 
+/// Compute [ColumnStats](struct.ColumnStats.html) for an enum column.
 fn compute_column_stats_enum(
 	column_name: &str,
 	dataset_stats: &EnumDatasetStats,
@@ -329,6 +331,7 @@ impl std::cmp::PartialEq for TokenEntry {
 	}
 }
 
+/// Compute [ColumnStats](struct.ColumnStats.html) for a text column.
 fn compute_column_stats_text(
 	column_name: &str,
 	dataset_stats: &TextDatasetStats,

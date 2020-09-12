@@ -115,7 +115,7 @@ impl NumberDatasetStats {
 		}
 		stats
 	}
-	/// Merge two number stats structs togehter. This is useful for parallel computation of stats.
+	/// Merge two number stats structs together. This is useful for parallel computation of stats.
 	pub fn merge(&self, other: &Self) -> Self {
 		let mut stats = self.clone();
 		for (value, count) in other.histogram.iter() {
@@ -144,7 +144,7 @@ impl EnumDatasetStats {
 		stats.invalid_count = stats.histogram[0];
 		stats
 	}
-	/// Merge two enum stats structs togehter. This is useful for parallel computation of stats.
+	/// Merge two enum stats structs together. This is useful for parallel computation of stats.
 	pub fn merge(&self, other: &Self) -> Self {
 		let mut stats = self.clone();
 		for (a, b) in stats.histogram.iter_mut().zip(other.histogram.iter()) {
@@ -185,7 +185,7 @@ impl TextDatasetStats {
 		}
 		stats
 	}
-	/// Merge two text stats structs togehter. This is useful for parallel computation of stats.
+	/// Merge two text stats structs together. This is useful for parallel computation of stats.
 	pub fn merge(&self, other: &Self) -> Self {
 		let mut stats = self.clone();
 		stats.count += other.count;
