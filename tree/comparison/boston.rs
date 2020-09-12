@@ -66,7 +66,7 @@ fn main() {
 	// compute metrics
 	let mut metrics = tangram::metrics::RegressionMetrics::new();
 	metrics.update(tangram::metrics::RegressionMetricsInput {
-		predictions: predictions.view(),
+		predictions: predictions.as_slice().unwrap(),
 		labels: labels_test.data,
 	});
 	let metrics = metrics.finalize();

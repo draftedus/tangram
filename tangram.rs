@@ -1,5 +1,5 @@
 /*!
-This module implements the C api for libtangram, the tangram C library, which is used by the libraries for each programming language to make predictions using a model trained with the the tangram cli.
+This module implements the C api for libtangram, the tangram C library, which is used by the libraries for each programming language to make predictions using a model trained with the the tangram cli. While the API for the language libraries are stable, this API is unstable and subject to change. All functions return a status code which will be zero on success or non-zero on error.
 */
 
 #![allow(clippy::missing_safety_doc)]
@@ -12,6 +12,7 @@ use std::{
 	panic::catch_unwind,
 };
 
+/// Retrieve the version of libtangram that is in use. On success, a pointer to the C string with the version will be written to `version_ptr`. You must call `tangram_string_free` when you are done with it.
 #[no_mangle]
 pub extern "C" fn tangram_version(version_ptr: *mut *const u8) -> isize {
 	let result = catch_unwind(|| unsafe {
@@ -25,6 +26,7 @@ pub extern "C" fn tangram_version(version_ptr: *mut *const u8) -> isize {
 	}
 }
 
+/// Load a model from the bytes pointed to by `model_data_ptr` with length `model_data_len`. On success, a pointer to the loaded model will be written to `model_ptr`. You must call `tangram_model_free` when you are done with it.
 #[no_mangle]
 pub extern "C" fn tangram_model_load(
 	model_data_ptr: *const u8,
@@ -45,6 +47,7 @@ pub extern "C" fn tangram_model_load(
 	}
 }
 
+/// Retrieve the id of the model. On success, a pointer to the model id as a C string will be written to `id_ptr`. You must call `tangram_string_free` when you are done with it.
 #[no_mangle]
 pub extern "C" fn tangram_model_id(model: *const PredictModel, id_ptr: *mut *const u8) -> isize {
 	let result = catch_unwind(|| unsafe {
@@ -66,6 +69,7 @@ pub extern "C" fn tangram_model_id(model: *const PredictModel, id_ptr: *mut *con
 	}
 }
 
+/// Make a prediction! `model_ptr` should point to a model loaded with `tangram_model_load`. `input_ptr` should be a C string of a json serialized PredictInput. On success, a pointer to the output as a json serialized C string will be written to `output_ptr`. You must call `tangram_string_free` when you are done with it.
 #[no_mangle]
 pub extern "C" fn tangram_model_predict(
 	model_ptr: *const PredictModel,
@@ -95,6 +99,7 @@ pub extern "C" fn tangram_model_predict(
 	}
 }
 
+/// Free the C string created by libtangram pointed to by `ptr`.
 #[no_mangle]
 pub extern "C" fn tangram_string_free(ptr: *mut u8) -> isize {
 	let result = catch_unwind(|| unsafe {
@@ -106,6 +111,7 @@ pub extern "C" fn tangram_string_free(ptr: *mut u8) -> isize {
 	}
 }
 
+/// Free the model pointed to by `model_ptr`.
 #[no_mangle]
 pub extern "C" fn tangram_model_free(model_ptr: *mut PredictModel) -> isize {
 	let result = catch_unwind(|| unsafe {
@@ -117,19 +123,19 @@ pub extern "C" fn tangram_model_free(model_ptr: *mut PredictModel) -> isize {
 	}
 }
 
+/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because webassembly does not (yet) include its own allocator.
 #[no_mangle]
-pub extern "C" fn tangram_alloc(size: usize) -> *mut u8 {
-	let align = std::mem::align_of::<usize>();
+pub extern "C" fn tangram_alloc(size: usize, align: usize) -> *mut u8 {
 	let layout = Layout::from_size_align(size, align).unwrap();
 	unsafe { alloc(layout) }
 }
 
+/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because webassembly does not (yet) include its own allocator.
 #[no_mangle]
-pub unsafe extern "C" fn tangram_dealloc(ptr: *mut u8, size: usize) {
+pub unsafe extern "C" fn tangram_dealloc(ptr: *mut u8, size: usize, align: usize) {
 	if size == 0 {
 		return;
 	}
-	let align = std::mem::align_of::<usize>();
 	let layout = Layout::from_size_align_unchecked(size, align);
 	dealloc(ptr, layout);
 }

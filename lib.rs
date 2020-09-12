@@ -7,8 +7,7 @@ Tangram is cool.
 mod config;
 mod grid;
 mod tangram;
-mod test;
-mod train;
+pub mod test;
 
 pub mod dataframe;
 pub mod features;
@@ -16,8 +15,8 @@ pub mod linear;
 pub mod metrics;
 pub mod model;
 pub mod predict;
-pub mod progress;
 pub mod stats;
+pub mod train;
 pub mod tree;
 pub mod util;
 

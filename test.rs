@@ -1,5 +1,5 @@
 use crate::{
-	dataframe::*, features, linear, metrics, metrics::Metric, progress::ModelTestProgress, tree,
+	dataframe::*, features, linear, metrics, metrics::Metric, train::ModelTestProgress, tree,
 	util::progress_counter::ProgressCounter,
 };
 use itertools::izip;
@@ -55,7 +55,7 @@ pub fn test_linear_regressor(
 			let slice = s![0..features.nrows()];
 			model.predict(features, state.predictions.slice_mut(slice), None);
 			state.metrics.update(metrics::RegressionMetricsInput {
-				predictions: state.predictions.slice(slice),
+				predictions: state.predictions.slice(slice).as_slice().unwrap(),
 				labels,
 			});
 			state
@@ -96,7 +96,7 @@ pub fn test_tree_regressor(
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut(), None);
 	metrics.update(metrics::RegressionMetricsInput {
-		predictions: predictions.view(),
+		predictions: predictions.as_slice().unwrap(),
 		labels,
 	});
 	metrics.finalize()

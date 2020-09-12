@@ -5,7 +5,7 @@ use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug)]
 pub struct PredictOptions {
 	pub threshold: f32,
 }
@@ -16,7 +16,8 @@ impl Default for PredictOptions {
 	}
 }
 
-pub type PredictInput = Vec<serde_json::Map<String, serde_json::Value>>;
+#[derive(serde::Deserialize, Debug)]
+pub struct PredictInput(pub Vec<serde_json::Map<String, serde_json::Value>>);
 
 #[derive(serde::Serialize, Debug)]
 #[serde(untagged)]
@@ -174,7 +175,7 @@ pub fn predict(
 	let mut dataframe = dataframe::DataFrame::new(column_names, column_types);
 
 	// fill the dataframe with the input
-	for input in input {
+	for input in input.0 {
 		for column in dataframe.columns.iter_mut() {
 			match column {
 				dataframe::Column::Unknown(column) => column.len += 1,

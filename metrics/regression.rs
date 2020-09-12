@@ -1,9 +1,8 @@
 use super::{mean_variance::merge_mean_m2, Metric};
-use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::num::NonZeroU64;
 
-/// RegressionMetrics computes common metrics used to evaluate regressors.
+/// RegressionMetrics computes metrics used to evaluate regressors.
 pub struct RegressionMetrics {
 	mean_variance: Option<MeanVariance>,
 	absolute_error: f64,
@@ -19,7 +18,7 @@ struct MeanVariance {
 
 /// The input to [RegressionMetrics](struct.RegressionMetrics.html).
 pub struct RegressionMetricsInput<'a> {
-	pub predictions: ArrayView1<'a, f32>,
+	pub predictions: &'a [f32],
 	pub labels: &'a [f32],
 }
 

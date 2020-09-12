@@ -1,9 +1,7 @@
 use crate::{
 	config::{self, Config},
 	dataframe::*,
-	features, grid, linear, metrics, model,
-	progress::{GridTrainProgress, ModelTestProgress, ModelTrainProgress, Progress, TrainProgress},
-	stats, test, tree,
+	features, grid, linear, metrics, model, stats, test, tree,
 	util::{id::Id, progress_counter::ProgressCounter},
 };
 use anyhow::{format_err, Context, Result};
@@ -291,12 +289,12 @@ pub fn train(
 	Ok(model)
 }
 
-pub enum Task {
+enum Task {
 	Regression,
 	Classification { classes: Vec<String> },
 }
 
-pub struct TreeBinaryClassifier {
+struct TreeBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: tree::BinaryClassifier,
 	pub class_metrics: Vec<metrics::BinaryClassificationClassMetricsOutput>,
@@ -304,52 +302,50 @@ pub struct TreeBinaryClassifier {
 	pub options: grid::TreeModelTrainOptions,
 }
 
-pub struct TreeMulticlassClassifier {
+struct TreeMulticlassClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: tree::MulticlassClassifier,
 	pub options: grid::TreeModelTrainOptions,
 }
 
-#[derive(Debug)]
-pub enum ClassificationComparisonMetric {
+enum ClassificationComparisonMetric {
 	Accuracy,
 	Aucroc,
 	F1,
 }
 
-pub enum RegressionModel {
+enum RegressionModel {
 	Linear(LinearRegressor),
 	Tree(TreeRegressor),
 }
 
-pub struct LinearRegressor {
+struct LinearRegressor {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub options: grid::LinearModelTrainOptions,
 	pub model: linear::Regressor,
 }
 
-pub struct TreeRegressor {
+struct TreeRegressor {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub options: grid::TreeModelTrainOptions,
 	pub model: tree::Regressor,
 }
 
-#[derive(Debug)]
-pub enum RegressionComparisonMetric {
+enum RegressionComparisonMetric {
 	MeanAbsoluteError,
 	MeanSquaredError,
 	RootMeanSquaredError,
 	R2,
 }
 
-pub enum ClassificationModel {
+enum ClassificationModel {
 	LinearBinary(LinearBinaryClassifier),
 	LinearMulticlass(LinearMulticlassClassifier),
 	TreeBinary(TreeBinaryClassifier),
 	TreeMulticlass(TreeMulticlassClassifier),
 }
 
-pub struct LinearBinaryClassifier {
+struct LinearBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: linear::BinaryClassifier,
 	pub class_metrics: Vec<metrics::BinaryClassificationClassMetricsOutput>,
@@ -357,7 +353,7 @@ pub struct LinearBinaryClassifier {
 	pub options: grid::LinearModelTrainOptions,
 }
 
-pub struct LinearMulticlassClassifier {
+struct LinearMulticlassClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: linear::MulticlassClassifier,
 	pub options: grid::LinearModelTrainOptions,
@@ -376,6 +372,47 @@ enum TestMetrics {
 			Option<metrics::BinaryClassificationMetricsOutput>,
 		),
 	),
+}
+
+#[derive(Debug)]
+pub enum Progress {
+	Loading(ProgressCounter),
+	Shuffling,
+	Stats(StatsProgress),
+	Training(GridTrainProgress),
+	Testing,
+}
+
+#[derive(Debug)]
+pub enum StatsProgress {
+	DatasetStats(ProgressCounter),
+	HistogramStats(ProgressCounter),
+}
+
+#[derive(Debug)]
+pub struct GridTrainProgress {
+	pub current: u64,
+	pub total: u64,
+	pub grid_item_progress: TrainProgress,
+}
+
+#[derive(Debug)]
+pub enum TrainProgress {
+	ComputingFeatures(ProgressCounter),
+	TrainingModel(ModelTrainProgress),
+	ComputingModelComparisonMetrics(ModelTestProgress),
+}
+
+#[derive(Clone, Debug)]
+pub enum ModelTrainProgress {
+	Linear(crate::linear::Progress),
+	Tree(crate::tree::Progress),
+}
+
+#[derive(Clone, Debug)]
+pub enum ModelTestProgress {
+	ComputingFeatures(ProgressCounter),
+	Testing,
 }
 
 fn load_config(config_path: Option<&Path>) -> Result<Option<Config>> {

@@ -1,5 +1,5 @@
-watchexec --exts rs --restart --watch . -- \
-DATABASE_URL=sqlite:data/tangram.db \
+watchexec --exts rs --restart -- \
+DATABASE_URL=sqlite:// \
 HOST=0.0.0.0 \
 PORT=8080 \
 STRIPE_PUBLISHABLE_KEY=pk_test_IdZDlwnF8QDZoDB3dIdtIZ5K00p4enlqGE \

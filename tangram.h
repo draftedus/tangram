@@ -1,5 +1,5 @@
 // After training a model using the tangram command line tool, you can load the `.tangram` file using libtangram to make predictions.
-// All functions return an int status code, either zero for success or non-zero to indicate an error has occurred.
+// All functions return a status code which will be zero for success or non-zero to indicate an error has occurred.
 
 // `tangram_model` is an opaque handle to a tangram model.
 typedef void tangram_model;

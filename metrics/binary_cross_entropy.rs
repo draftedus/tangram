@@ -2,7 +2,7 @@ use super::mean::Mean;
 use super::Metric;
 use num_traits::clamp;
 
-/// BinaryCrossEntropy is the loss function used for binary classifiers. See [Cross Entropy](https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_loss_function_and_logistic_regression).
+/// BinaryCrossEntropy is the loss function used for binary classification. [Learn more](https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_loss_function_and_logistic_regression).
 #[derive(Debug, Default)]
 pub struct BinaryCrossEntropy(Mean);
 

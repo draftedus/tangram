@@ -300,7 +300,7 @@ fn predict(
 			None => panic!(),
 		}
 	}
-	let examples: tangram::predict::PredictInput = vec![example];
+	let examples = tangram::predict::PredictInput(vec![example]);
 	let options = tangram::predict::PredictOptions { threshold: 0.5 };
 	let output = tangram::predict::predict(&predict_model, examples, Some(options));
 	let predict_output: Prediction = match output {

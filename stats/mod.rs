@@ -1,7 +1,5 @@
 use self::{dataset::*, histogram::*};
-use crate::{
-	dataframe::*, progress::StatsProgress, stats, util::progress_counter::ProgressCounter,
-};
+use crate::{dataframe::*, stats, train::StatsProgress, util::progress_counter::ProgressCounter};
 use num_traits::ToPrimitive;
 
 mod dataset;
