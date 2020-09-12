@@ -1,3 +1,6 @@
+/** Tokenizer that splits text into tokens. All non-alphanumeric characters are considered token boundaries. The text is lowercased before splitting.
+
+*/
 #[derive(Clone, Debug)]
 pub struct AlphanumericTokenizer;
 

@@ -1,6 +1,14 @@
 /*!
 This module defines feature groups that are used to transform raw data into values used by the [linear](../linear/index.html) and [tree](../tree/index.html) models.
 
+*/
+
+use crate::{dataframe::*, stats, util::text};
+use itertools::izip;
+use ndarray::{prelude::*, s};
+
+/** A FeatureGroup is an enum describing the type of feature.
+
 The following table shows which combinations or dataframe columns, feature groups, and models are used.
 
 | Source Column                                         | Feature Group                 | Model Types    |
@@ -11,12 +19,6 @@ The following table shows which combinations or dataframe columns, feature group
 | [EnumColumn](../dataframe/struct.EnumColumn.html) | [IdentifyFeatureGroup](struct.IdentityFeatureGroup.html) | [tree](../tree/index.html) |
 | [TextColumn](../dataframe/struct.TextColumn.html) | [BagOfWordsFeatureGroup](struct.BagOfWordsFeatureGroup.html) | [linear](../linear/index.html), [tree](../tree/index.html) |
 */
-
-use crate::{dataframe::*, stats, util::text};
-use itertools::izip;
-use ndarray::{prelude::*, s};
-
-/// A FeatureGroup is an enum describing the type of feature.
 #[derive(Debug)]
 pub enum FeatureGroup {
 	Identity(IdentityFeatureGroup),
