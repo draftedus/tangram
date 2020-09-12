@@ -41,6 +41,7 @@ impl Metric<'_> for Mean {
 	}
 }
 
+/// This function merges two means together given their means and n's.
 fn merge(mean_a: f64, n_a: NonZeroU64, mean_b: f64, n_b: NonZeroU64) -> f64 {
 	let n_a = n_a.get().to_f64().unwrap();
 	let n_b = n_b.get().to_f64().unwrap();

@@ -8,6 +8,7 @@ pub struct ClassificationMetrics {
 	confusion_matrix: Array2<u64>,
 }
 
+/// The input to [ClassificationMetrics](struct.ClassificationMetrics.html).
 pub struct ClassificationMetricsInput<'a> {
 	// (n_classes, n_examples)
 	pub probabilities: ArrayView2<'a, f32>,
@@ -15,6 +16,7 @@ pub struct ClassificationMetricsInput<'a> {
 	pub labels: ArrayView1<'a, usize>,
 }
 
+/// The output from [ClassificationMetrics](struct.ClassificationMetrics.html).
 #[derive(Debug)]
 pub struct ClassificationMetricsOutput {
 	/// The class metrics contain class specific metrics.

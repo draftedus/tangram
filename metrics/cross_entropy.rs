@@ -6,13 +6,15 @@ use num_traits::clamp;
 #[derive(Default)]
 pub struct CrossEntropy(Mean);
 
+/// The input to [CrossEntropy](struct.CrossEntropy.html).
 pub struct CrossEntropyInput<'a> {
 	/// (n_classes)
 	pub probabilities: ArrayView1<'a, f32>,
 	pub label: usize,
 }
 
-pub type CrossEntropyOutput = Option<f32>;
+/// The output from [CrossEntropy](struct.CrossEntropy.html).
+pub struct CrossEntropyOutput(pub Option<f32>);
 
 impl<'a> Metric<'a> for CrossEntropy {
 	type Input = CrossEntropyInput<'a>;
@@ -27,8 +29,8 @@ impl<'a> Metric<'a> for CrossEntropy {
 		self.0.merge(other.0)
 	}
 
-	fn finalize(self) -> Option<f32> {
-		self.0.finalize()
+	fn finalize(self) -> Self::Output {
+		CrossEntropyOutput(self.0.finalize())
 	}
 }
 

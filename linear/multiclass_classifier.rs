@@ -145,6 +145,7 @@ impl MulticlassClassifier {
 		)
 		.1
 		.finalize()
+		.0
 		.unwrap()
 	}
 

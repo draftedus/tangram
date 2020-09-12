@@ -6,6 +6,7 @@ use num_traits::clamp;
 #[derive(Debug, Default)]
 pub struct BinaryCrossEntropy(Mean);
 
+/// The input to [BinaryCrossEntropy](struct.BinaryCrossEntropy.html).
 pub struct BinaryCrossEntropyInput {
 	pub probability: f32,
 	pub label: usize,

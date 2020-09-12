@@ -15,18 +15,19 @@ pub fn auc_roc(probabilities: &[f32], labels: &[usize]) -> f32 {
 		.sum()
 }
 
+/// A point on the ROC curve, parameterized by thresholds.
 #[derive(Debug, std::cmp::PartialEq)]
-pub struct ROCCurvePoint {
+struct ROCCurvePoint {
 	/// The classification threshold.
-	pub threshold: f32,
+	threshold: f32,
 	/// The true positive rate for all predictions with probability <= threshold.
-	pub true_positive_rate: f32,
+	true_positive_rate: f32,
 	/// The false positive rate for all predictions with probability <= threshold.
-	pub false_positive_rate: f32,
+	false_positive_rate: f32,
 }
 
 /// This function computes the ROC curve. The ROC curve plot the false positive rate on the x axis and the true positive rate on the y axis for various classification thresholds.
-pub fn compute_roc_curve(probabilities: &[f32], labels: &[usize]) -> Vec<ROCCurvePoint> {
+fn compute_roc_curve(probabilities: &[f32], labels: &[usize]) -> Vec<ROCCurvePoint> {
 	let mut tps_fps = compute_tps_fps_by_threshold(probabilities, labels);
 	for i in 1..tps_fps.len() {
 		tps_fps[i].true_positives += tps_fps[i - 1].true_positives;

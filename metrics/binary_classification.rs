@@ -14,6 +14,7 @@ pub struct BinaryClassifierMetrics {
 	pub thresholds: Vec<f32>,
 }
 
+/// The input to [BinaryClassifierMetrics](struct.BinaryClassifierMetrics.html).
 pub struct BinaryClassifierMetricsInput<'a> {
 	pub probabilities: ArrayView2<'a, f32>,
 	pub labels: ArrayView1<'a, usize>,
@@ -34,6 +35,7 @@ pub struct BinaryClassificationClassMetricsOutput {
 	pub thresholds: Vec<BinaryClassificationThresholdMetricsOutput>,
 }
 
+/// The output from [BinaryClassifierMetrics](struct.BinaryClassifierMetrics.html).
 #[derive(Debug)]
 pub struct BinaryClassificationThresholdMetricsOutput {
 	/// The classification threshold.

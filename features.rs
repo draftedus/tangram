@@ -1,7 +1,12 @@
+/*!
+This module defines feature groups that are used to transform raw data into values used by the [linear](../linear/index.html) and [tree](../tree/index.html) models.
+*/
+
 use crate::{dataframe::*, stats, util::text};
 use itertools::izip;
 use ndarray::{prelude::*, s};
 
+/// A FeatureGroup is an enum describing the type of feature.
 #[derive(Debug)]
 pub enum FeatureGroup {
 	Identity(IdentityFeatureGroup),
@@ -10,31 +15,79 @@ pub enum FeatureGroup {
 	BagOfWords(BagOfWordsFeatureGroup),
 }
 
+/** An IdentityFeatureGroup describes an *identity* mapped feature. The IdentityFeatureGroup is only used for NumberColumns and EnumColumns.
+
+# Example
+1. **Source Column Type**: [NumberColumn](../dataframe/struct.NumberColumn.html).
+
+| dataframe data  | feature values  |
+|-----------------|-----------------|
+| [0.2, 3.0, 2.1] | [0.2, 3.0, 2.1] |
+
+2. **Source Column Type**: [EnumColumn](../dataframe/struct.EnumColumn.html).
+
+The source column:
+```
+EnumColumn {
+	name: "color",
+	options: ["red", "green", "blue"],
+	data: [1, 0, 1, 3],
+}
+```
+
+The encoding:
+
+| value       | encoding |
+|-------------|----------|
+| \<MISSING\> | 0        |
+| red         | 1        |
+| green       | 2        |
+| blue        | 3        |
+
+
+| original data in csv                  | dataframe [data](../dataframe/struct.EnumColumn.html#structfield.data) | feature values  |
+|---------------------------------------|------------------------------------------------------------------------|-----------------|
+| ["red", \<MISSING\>, "red", "blue"]   | [1, 0, 1, 3]                                                           | [1, 0, 1, 3]    |
+
+
+*/
 #[derive(Debug)]
 pub struct IdentityFeatureGroup {
+	/// The name of the column in the source dataset.
 	pub source_column_name: String,
 }
 
+/// A NormalizedFeatureGroup describes a normalized feature. Raw values will be normalized by the mean and standard deviation of the column. See [Z-score Normalization](https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization)).
 #[derive(Debug)]
 pub struct NormalizedFeatureGroup {
+	/// The name of the column in the source dataset.
 	pub source_column_name: String,
 	pub mean: f32,
 	pub variance: f32,
 }
 
+/// A OneHotEncodedFeatureGroup describes a *one-hot-encoded* feature. For each variant in the raw data, a new *feature* will be created whose value is 1 if the raw data's value is equal to this variant and 0 otherwise. It is called *one-hot* because for every source column, only one of the `n` generated features will have a value of 1.
 #[derive(Debug)]
 pub struct OneHotEncodedFeatureGroup {
+	/// The name of the column in the source dataset.
 	pub source_column_name: String,
 	pub categories: Vec<String>,
 }
 
+/** A BagOfWordsFeatureGroup describes a text feature that is transformed using the *bag-of-words* method. The raw text value is tokenized. There are `n` features, one for each token found in the training dataset. A feature will have a value of _count_*_idf_ if it appears in the raw text and 0 otherwise, where *count* is the number of times the token appears in the raw text and *idf* is the inverse document frequency. See [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
+*/
 #[derive(Debug)]
 pub struct BagOfWordsFeatureGroup {
+	/// The name of the column in the source dataset.
 	pub source_column_name: String,
+	/// The tokenizer used to split the text into individual tokens.
 	pub tokenizer: Tokenizer,
+	/// The tokens produced by splitting the text using the tokenizer.
+	/// The second value in the tuple is the [inverse document frequency](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 	pub tokens: Vec<(String, f32)>,
 }
 
+/// A Tokenizer describes how raw text is transformed into tokens.
 #[derive(Debug)]
 pub enum Tokenizer {
 	Alphanumeric,
@@ -51,6 +104,9 @@ impl FeatureGroup {
 	}
 }
 
+/// This is a function to compute feature groups suitable for training [linear](../linear/index.html) models.
+///
+/// The difference between this function and [compute_feature_groups_tree](fn.compute_feature_groups_tree.html) is that tree models have native support for enum columns and they do not require that number columns are normalized.
 pub fn compute_feature_groups_linear(column_stats: &[stats::ColumnStats]) -> Vec<FeatureGroup> {
 	let mut result = Vec::new();
 	for column_stats in column_stats.iter() {
@@ -70,6 +126,10 @@ pub fn compute_feature_groups_linear(column_stats: &[stats::ColumnStats]) -> Vec
 	result
 }
 
+/// This is a function to compute feature groups suitable for training [tree](../tree/index.html) models.
+///
+/// The difference between this function and [compute_feature_groups_linear](fn.compute_feature_groups_linear.html) is that tree models have native support for enum columns and they do not require that number columns are normalized.
+/// The [FeatureGroups](enum.FeatureGroup.html) for enum and number columns are [IdentityFeatureGroups](struct.IdentityFeatureGroup.html).
 pub fn compute_feature_groups_tree(column_stats: &[stats::ColumnStats]) -> Vec<FeatureGroup> {
 	let mut result = Vec::new();
 	for column_stats in column_stats.iter() {
@@ -93,10 +153,12 @@ pub fn compute_feature_groups_tree(column_stats: &[stats::ColumnStats]) -> Vec<F
 	result
 }
 
+/// This is a function that returns a IdentifyFeatureGroup.
 fn compute_identity_feature_group(source_column_name: String) -> FeatureGroup {
 	FeatureGroup::Identity(IdentityFeatureGroup { source_column_name })
 }
 
+/// This is a function that returns a NormalizedFeatureGroup. It uses the mean and variance from the [ColumnStats](../stats/struct.ColumnStats.html).
 fn compute_normalized_feature_group(column_stats: &stats::ColumnStats) -> FeatureGroup {
 	let column_stats = match &column_stats {
 		stats::ColumnStats::Number(column_stats) => column_stats,
@@ -109,6 +171,7 @@ fn compute_normalized_feature_group(column_stats: &stats::ColumnStats) -> Featur
 	})
 }
 
+/// This is a function that returns a OneHotEncodedFeatureGroup. It uses the categories taken from the [ColumnStats](../stats/struct.ColumnStats.html).
 fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStats) -> FeatureGroup {
 	FeatureGroup::OneHotEncoded(OneHotEncodedFeatureGroup {
 		source_column_name: column_stats.column_name().to_owned(),
@@ -116,6 +179,7 @@ fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStats) -> F
 	})
 }
 
+/// This is a function that returns a BagOfWordsFeatureGroup.
 fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStats) -> FeatureGroup {
 	let column_stats = match &column_stats {
 		stats::ColumnStats::Text(column_stats) => column_stats,
@@ -134,6 +198,7 @@ fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStats) -> Feat
 	})
 }
 
+/// This is a function to compute features given the original data `dataframe` and a slice of [FeatureGroup](enum.FeatureGroup.html) one for each column in the dataframe. The resulting features are placed into the passed in `features` array. `progress` is used to keep track of the progress of this function. This function is used to compute features for **training** [linear](../linear/index.html) models.
 pub fn compute_features_ndarray(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
@@ -165,6 +230,7 @@ pub fn compute_features_ndarray(
 	}
 }
 
+/// This is a function to compute normalized features given a NormalizedFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
 fn compute_features_normalized_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &NormalizedFeatureGroup,
@@ -189,6 +255,7 @@ fn compute_features_normalized_ndarray(
 	}
 }
 
+/// This is a function to compute one hot encoded features given a OneHotEncodedFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
 fn compute_features_one_hot_encoded_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &OneHotEncodedFeatureGroup,
@@ -210,6 +277,7 @@ fn compute_features_one_hot_encoded_ndarray(
 	}
 }
 
+/// This is a function to compute bag of words encoded features given a BagOfWordsFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
 fn compute_features_bag_of_words_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
@@ -252,7 +320,7 @@ fn compute_features_bag_of_words_ndarray(
 	}
 }
 
-/// progress gets ticked for each
+/// This is a function to compute features given the original data `dataframe` and a slice of [FeatureGroup](enum.FeatureGroup.html) one for each column in the dataframe. The function returns a new DataFrame with the computed features. A `progress` function is passed in and called to track progress of the function. This function is used to compute features for training [tree](../tree/index.html) models.
 pub fn compute_features_dataframe<'a>(
 	dataframe: &DataFrameView<'a>,
 	feature_groups: &[FeatureGroup],
@@ -301,6 +369,7 @@ pub fn compute_features_dataframe<'a>(
 	result
 }
 
+/// This is a function to compute bag of words encoded features given a BagOfWordsFeatureGroup, `dataframe` with the original data. The returned Vec<Column> has length equal to the number of tokens in the original column for which the feature group is for.
 fn compute_features_bag_of_words_dataframe(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
@@ -353,6 +422,7 @@ fn compute_features_bag_of_words_dataframe(
 	columns.into_iter().map(Column::Number).collect()
 }
 
+/// This is a function to compute features given the original data `dataframe` and a slice of [FeatureGroup](enum.FeatureGroup.html) one for each column in the dataframe. The function returns an Array of [Value](../dataframe/enum.Value.html). A `progress` function is passed in and called to track progress of the function. This function is used to compute features for making **predictions** with [tree](../tree/index.html) models.
 pub fn compute_features_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
@@ -384,6 +454,7 @@ pub fn compute_features_ndarray_value(
 	}
 }
 
+/// This is a function to identity features given a IdentityFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
 fn compute_features_identity_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
@@ -413,6 +484,7 @@ fn compute_features_identity_ndarray_value(
 	}
 }
 
+/// This is a function to compute bag of words encoded features given a BagOfWordsFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
 fn compute_features_bag_of_words_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
