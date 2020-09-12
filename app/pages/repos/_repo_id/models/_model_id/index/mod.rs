@@ -10,7 +10,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::cast::ToPrimitive;
-use tangram::id::Id;
+use tangram::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,

@@ -8,7 +8,7 @@ use bytes::Buf;
 use chrono::prelude::*;
 use hyper::{header, Body, Request, Response, StatusCode};
 use multer::Multipart;
-use tangram::id::Id;
+use tangram::util::id::Id;
 
 #[derive(serde::Serialize)]
 struct Props {

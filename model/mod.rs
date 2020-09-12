@@ -12,7 +12,7 @@ pub use stats::*;
 pub use train_options::*;
 pub use tree::*;
 
-use crate::id::Id;
+use crate::util::id::Id;
 use anyhow::{format_err, Result};
 use std::{
 	io::{Read, Write},

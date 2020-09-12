@@ -11,7 +11,7 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram::id::Id;
+use tangram::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,

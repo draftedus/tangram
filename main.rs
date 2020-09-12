@@ -113,7 +113,7 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 			None
 		};
 		tangram::train(
-			tangram::id::Id::new(),
+			tangram::util::id::Id::new(),
 			&options.file,
 			&options.target,
 			options.config.as_deref(),

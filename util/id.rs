@@ -1,5 +1,8 @@
 use thiserror::Error;
 
+/**
+Tangram uses this `Id` type to uniquely identify models, users, and anything that needs a primary key. This type is almost identical to a UUID v4, except there are no bits reserved to specify the version, and the string representation has no dashes. We do not like dashes in our unique identifiers.
+*/
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Id(u128);
 

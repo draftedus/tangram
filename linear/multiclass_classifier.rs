@@ -174,7 +174,7 @@ impl MulticlassClassifier {
 						self.biases[class_index],
 						self.weights.row(class_index),
 						&self.means,
-						shap_values.row_mut(class_index),
+						shap_values.row_mut(class_index).as_slice_mut().unwrap(),
 					)
 				}
 			})

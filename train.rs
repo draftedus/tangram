@@ -1,12 +1,10 @@
 use crate::{
 	config::{self, Config},
 	dataframe::*,
-	features, grid,
-	id::Id,
-	linear, metrics, model,
+	features, grid, linear, metrics, model,
 	progress::{GridTrainProgress, ModelTestProgress, ModelTrainProgress, Progress, TrainProgress},
 	stats, test, tree,
-	util::progress_counter::ProgressCounter,
+	util::{id::Id, progress_counter::ProgressCounter},
 };
 use anyhow::{format_err, Context, Result};
 use ndarray::prelude::*;

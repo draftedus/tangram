@@ -12,7 +12,6 @@ mod train;
 
 pub mod dataframe;
 pub mod features;
-pub mod id;
 pub mod linear;
 pub mod metrics;
 pub mod model;

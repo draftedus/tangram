@@ -7,11 +7,15 @@ use std::{
 };
 use thiserror::Error;
 
+/**
+The `Finite` type is used to indicate that a floating point number is not infinite and not NaN. It is similar in spirit to the standard library's NonZero{U8, I8, etc.} types.
+*/
 #[derive(Clone, Copy, Debug)]
 pub struct Finite<T>(T)
 where
 	T: Float;
 
+/// An error type indicating that the number is not finite.
 #[derive(Debug, Error)]
 #[error("not finite")]
 pub struct NotFiniteError;
@@ -165,11 +169,12 @@ where
 	}
 }
 
+/// Use this trait to conveniently convert a floating point number to its `Finite` counterpart.
 pub trait ToFinite<T>
 where
 	T: Float,
 {
-	/// if the value is finite, return Some(Finite(self)), otherwise return None.
+	/// If the value is finite, return Some(Finite(self)), otherwise return None.
 	fn to_finite(self) -> Result<Finite<T>, NotFiniteError>;
 }
 

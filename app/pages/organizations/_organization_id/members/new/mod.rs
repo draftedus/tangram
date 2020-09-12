@@ -7,7 +7,7 @@ use anyhow::{format_err, Result};
 use chrono::Utc;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
-use tangram::id::Id;
+use tangram::util::id::Id;
 
 pub async fn get(
 	_request: Request<Body>,

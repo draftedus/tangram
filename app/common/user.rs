@@ -2,7 +2,7 @@ use crate::app::common::cookies::parse_cookies;
 use anyhow::Result;
 use hyper::{header, Body, Request};
 use sqlx::prelude::*;
-use tangram::id::Id;
+use tangram::util::id::Id;
 
 #[derive(Debug)]
 pub struct User {

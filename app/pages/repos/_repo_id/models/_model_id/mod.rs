@@ -6,7 +6,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use tangram::id::Id;
+use tangram::util::id::Id;
 
 pub mod index;
 pub mod introspection;

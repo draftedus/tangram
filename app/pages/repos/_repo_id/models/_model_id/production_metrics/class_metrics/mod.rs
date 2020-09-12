@@ -16,7 +16,7 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram::id::Id;
+use tangram::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,

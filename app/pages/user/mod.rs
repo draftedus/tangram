@@ -10,7 +10,7 @@ use anyhow::Result;
 use chrono::Utc;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use tangram::id::Id;
+use tangram::util::id::Id;
 
 pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context

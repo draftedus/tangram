@@ -140,7 +140,7 @@ impl Regressor {
 					self.bias,
 					self.weights.view(),
 					&self.means,
-					shap_values.row_mut(0),
+					shap_values.row_mut(0).as_slice_mut().unwrap(),
 				);
 			});
 		}
