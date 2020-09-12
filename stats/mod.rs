@@ -8,18 +8,26 @@ mod histogram;
 const TOP_TOKENS_COUNT: usize = 20000;
 const MIN_DOCUMENT_FREQUENCY: u64 = 2;
 
+/// This struct contains settings used to compute stats.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StatsSettings {
+	/// This is the maximum number of tokens to store in the histogram.
 	pub text_histogram_max_size: usize,
+	/// This is the maximum number of unique numeric values to store in the histogram.
 	pub number_histogram_max_size: usize,
 }
 
+/// This struct is the output from computing stats.
 pub struct ComputeStatsOutput {
+	/// The overall column stats contain stats for the whole dataset.
 	pub overall_column_stats: Vec<ColumnStats>,
+	/// The train column stats contain stats for the train portion of the dataset.
 	pub train_column_stats: Vec<ColumnStats>,
+	/// The test column stats contain stats for the test portion of the dataset.
 	pub test_column_stats: Vec<ColumnStats>,
 }
 
+/// An enum descibing the different types of column stats.
 #[derive(Debug)]
 pub enum ColumnStats {
 	Unknown(UnknownColumnStats),
@@ -29,6 +37,7 @@ pub enum ColumnStats {
 }
 
 impl ColumnStats {
+	/// Return the name of the source column.
 	pub fn column_name(&self) -> &str {
 		match self {
 			Self::Unknown(value) => &value.column_name,
@@ -37,6 +46,7 @@ impl ColumnStats {
 			Self::Enum(value) => &value.column_name,
 		}
 	}
+	/// Return an option of the number of unique values in this column. For number columns, this value is `None` if `number_histogram_max_size` is exceeded, and `Some` otherwise.
 	pub fn unique_values(&self) -> Option<Vec<String>> {
 		match self {
 			Self::Unknown(_) => None,
@@ -62,12 +72,14 @@ impl ColumnStats {
 	}
 }
 
+/// This struct contains stats for columns of unknown type.
 #[derive(Debug)]
 pub struct UnknownColumnStats {
 	pub column_name: String,
 	pub count: u64,
 }
 
+/// This struct contains stats for columns of number type.
 #[derive(Debug)]
 pub struct NumberColumnStats {
 	pub column_name: String,
@@ -85,6 +97,7 @@ pub struct NumberColumnStats {
 	pub p75: f32,
 }
 
+/// This struct contains stats for columns of enum type.
 #[derive(Debug)]
 pub struct EnumColumnStats {
 	pub column_name: String,
@@ -94,6 +107,7 @@ pub struct EnumColumnStats {
 	pub unique_count: usize,
 }
 
+/// This struct contains stats for columns of text type.
 #[derive(Debug)]
 pub struct TextColumnStats {
 	pub column_name: String,
@@ -101,6 +115,7 @@ pub struct TextColumnStats {
 	pub top_tokens: Vec<(String, u64, f32)>,
 }
 
+/// Compute stats given a train and test dataframe.
 pub fn compute_stats(
 	column_names: &[String],
 	dataframe_train: &DataFrameView,

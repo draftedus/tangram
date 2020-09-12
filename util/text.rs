@@ -1,4 +1,14 @@
-/** Tokenizer that splits text into tokens. All non-alphanumeric characters are considered token boundaries. The text is lowercased before splitting.
+/** This splits text into tokens. All non-alphanumeric characters are considered token boundaries. The text is lowercased before splitting. All tokens must be >1 character long.
+
+# Example
+
+| text        | tokens          |
+|-------------|-----------------|
+| Don't       | ["don"]         |
+| $50         | ["50"]          |
+| 50(hello)   | ["50", "hello"] |
+| 50_hello    | ["50", "hello"] |
+| C.E.O.      | []              |
 
 */
 #[derive(Clone, Debug)]

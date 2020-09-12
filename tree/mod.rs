@@ -14,7 +14,7 @@ The type of model you are going to train depends on the type of the column you w
 | [Enum](../dataframe/struct.EnumColumn.html)     | 2                      | [`BinaryClassifier`](struct.BinaryClassifier.html)         |
 | [Enum](../dataframe/struct.EnumColumn.html)     | > 2                    | [`MulticlassClassifier`](struct.MulticlassClassifier.html) |
 
-Under the hood, Tangram Tree's are Gradient Boosted Decision Trees.
+Under the hood, tangram trees are Gradient Boosted Decision Trees.
 
 ## Training
 
@@ -23,24 +23,22 @@ All models consist of a bias and a series of trees.
 ### Bias
 Training begins by choosing an appropriate bias based on the training dataset and the type of model being trained. The bias for binary classification models is chosen such that the model predicts the "positive" label with probability equal to the percentage of the target column that has the positive label. The bias for multiclass classification models is chosen such that the model predicts the class with the largest representation in the training dataset.
 
-1. **Regression**:  Mean(training_dataset_target_column)
-2. **BinaryClassification**:
-Log(%training_dataset_target_column==1/%training_dataset_target_column==0)
-///TODO: fill in an examples
-3. **MulticlassClassification**: Todo
-/// Fill in the example of Softmax
+1. **Regression**: mean of values in the target column.
+2. **BinaryClassification**: log of the ratio of the number of examples in class a and the number of examples in class b. `log(count_class_a / count_class_b)` where `class_a` is the positive class.
+3. **MulticlassClassification**: log of the ratio of the number of examples in each class divided by the total number of classes. The bias is a vec with one entry per class. `[log(count_class_a / total_count), log(count_class_b/ total_count), log(count_class_c / total_count), ...]`
 
 ### Trees
-Begin by measuring the "error" of the naiive model that uses the bias. We then use this error to train the first tree. The goal is to predict the error for each training example.
 
-Each tree is a "regression" tree in that it tries to predict a continous value which is the "error". In order to train a single tree, we need to decide how to split training examples into leaves. The algorithm we use is called "histogram" gradient boosting.
+* **Step 1.** Measure the *error* our bias only model generates. For each training example, use the derivative of the loss function for the given model to measure the error of the current model's prediction.
+* **Step 2.** Train a regression tree to predict the error for each example obtained in the previous step.
+* **Step 3.** Measure the new *error* of our bias + currently trained trees model.
+* **Step 4.** Repeat steps 2 and 3 until we reach the early stopping criteria or we reach `max_rounds`, whichever comes first.
 
-We train trees until we reach the early stopping criteria or the number of trees is equal to max_rounds, whichever comes first.
-
-That's it!
+### Single Tree
+The goal of training a single tree is to split training examples into leaves such training examples in the same leaves have similar errors. We use the features to split training examples and choose the features that result in the "best" split. [TODO]
 
 #### Histogram Gradient Boosting
-This just means that instead of using the actual raw feature values, we map the values into a discrete number of "bins". This greatly reduces the computational cost of finding optimal splits for the trees and reduces the memory usage significantly. Instead of iterating over `O(n_examples)` to find the optimal split, we only have ot iterate over `O(n_bins)`.
+Histogram gradient boosting differs from regular gradient boosting in that instead of using the actual raw feature values, we map the values into a discrete number of `bins`. This greatly reduces the computational cost of finding optimal splits for the trees and reduces the memory usage significantly. Instead of iterating over `O(n_examples)` to find the optimal split, we only have ot iterate over `O(n_bins)`.
 */
 
 mod bin;
@@ -124,6 +122,7 @@ impl Default for TrainOptions {
 	}
 }
 
+/// An enum describing the different task types.
 #[derive(Debug)]
 pub enum Task {
 	Regression,
@@ -131,6 +130,7 @@ pub enum Task {
 	MulticlassClassification { n_trees_per_round: usize },
 }
 
+/// An enum describing the different model types.
 #[derive(Debug)]
 pub enum Model {
 	Regressor(Regressor),
@@ -254,6 +254,7 @@ pub struct BranchSplitContinuous {
 	pub invalid_values_direction: SplitDirection,
 }
 
+/// An enum describing the split direction, either `Left` or `Right`.
 #[derive(Clone, Debug)]
 pub enum SplitDirection {
 	Left,

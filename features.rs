@@ -202,10 +202,12 @@ pub struct BagOfWordsFeatureGroup {
 /// A Tokenizer describes how raw text is transformed into tokens.
 #[derive(Debug)]
 pub enum Tokenizer {
+	/// See [AlphanumericTokenizer](../util/text/struct.AlphanumericTokenizer.html).
 	Alphanumeric,
 }
 
 impl FeatureGroup {
+	/// The number of features described by this feature group. For example, OneHotEncoded features generate one feature for every category in the source column and BagOfWords features generate one feature for every token in the vocabulary of the source column. Identity and Normalized features generate a single feature.
 	pub fn n_features(&self) -> usize {
 		match self {
 			Self::Identity(_) => 1,

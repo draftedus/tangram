@@ -3,6 +3,7 @@ use crate::{metrics, util::finite::Finite};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
 
+/// Histogram stats contain statistics based on histograms of the dataset.
 #[derive(Debug, PartialEq)]
 pub enum HistogramStats {
 	Unknown(UnknownHistogramStats),

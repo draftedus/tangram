@@ -2,7 +2,7 @@ use super::StatsSettings;
 use crate::{dataframe::*, util::finite::Finite, util::text};
 use std::collections::{BTreeMap, BTreeSet};
 
-// TODO use max histogram size from stats settings, it's ignored right now.
+// This is an enum describing the different types of stats where the type matches the type of the source column.
 #[derive(Clone, Debug)]
 pub enum DatasetStats {
 	Unknown(UnknownDatasetStats),
@@ -11,12 +11,14 @@ pub enum DatasetStats {
 	Text(TextDatasetStats),
 }
 
+/// This struct contains stats for unknown columns.
 #[derive(Clone, Debug)]
 pub struct UnknownDatasetStats {
 	pub count: usize,
 	pub invalid_count: usize,
 }
 
+/// This struct contains stats for number columns.
 #[derive(Clone, Debug)]
 pub struct NumberDatasetStats {
 	/// The total number of values.
@@ -30,6 +32,7 @@ pub struct NumberDatasetStats {
 	pub histogram: BTreeMap<Finite<f32>, usize>,
 }
 
+/// This struct contains stats for enum columns.
 #[derive(Clone, Debug)]
 pub struct EnumDatasetStats {
 	/// The total number of values.
@@ -45,6 +48,7 @@ pub struct EnumDatasetStats {
 	pub histogram: Vec<usize>,
 }
 
+/// This struct contains stats for text columns.
 #[derive(Clone, Debug)]
 pub struct TextDatasetStats {
 	/// The total number of values.
@@ -60,6 +64,7 @@ pub struct TextDatasetStats {
 }
 
 impl DatasetStats {
+	/// Compute the stats for a given column and settings.
 	pub fn compute(column: &ColumnView, settings: &StatsSettings) -> Self {
 		match column {
 			ColumnView::Unknown(column) => Self::Unknown(UnknownDatasetStats {
@@ -74,6 +79,7 @@ impl DatasetStats {
 		}
 	}
 
+	/// Merge two stats structs of the same type together. This is useful for parallel computation of stats.
 	pub fn merge(&self, other: &Self) -> Self {
 		match (self, other) {
 			(Self::Unknown(a), Self::Unknown(b)) => Self::Unknown(UnknownDatasetStats {
@@ -89,6 +95,7 @@ impl DatasetStats {
 }
 
 impl NumberDatasetStats {
+	/// Compute the stats for a number column.
 	pub fn compute(column: &NumberColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			count: column.data.len(),
@@ -108,6 +115,7 @@ impl NumberDatasetStats {
 		}
 		stats
 	}
+	/// Merge two number stats structs togehter. This is useful for parallel computation of stats.
 	pub fn merge(&self, other: &Self) -> Self {
 		let mut stats = self.clone();
 		for (value, count) in other.histogram.iter() {
@@ -121,6 +129,7 @@ impl NumberDatasetStats {
 }
 
 impl EnumDatasetStats {
+	/// Compute the stats for an enum column.
 	pub fn compute(column: &EnumColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			count: column.data.len(),
@@ -135,6 +144,7 @@ impl EnumDatasetStats {
 		stats.invalid_count = stats.histogram[0];
 		stats
 	}
+	/// Merge two enum stats structs togehter. This is useful for parallel computation of stats.
 	pub fn merge(&self, other: &Self) -> Self {
 		let mut stats = self.clone();
 		for (a, b) in stats.histogram.iter_mut().zip(other.histogram.iter()) {
@@ -148,6 +158,7 @@ impl EnumDatasetStats {
 }
 
 impl TextDatasetStats {
+	/// Compute the stats for a text column.
 	pub fn compute(column: &TextColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			count: column.data.len(),
@@ -174,6 +185,7 @@ impl TextDatasetStats {
 		}
 		stats
 	}
+	/// Merge two text stats structs togehter. This is useful for parallel computation of stats.
 	pub fn merge(&self, other: &Self) -> Self {
 		let mut stats = self.clone();
 		stats.count += other.count;
