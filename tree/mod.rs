@@ -16,29 +16,6 @@ The type of model you are going to train depends on the type of the column you w
 
 Under the hood, tangram trees are Gradient Boosted Decision Trees.
 
-## Training
-
-All models consist of a bias and a series of trees.
-
-### Bias
-Training begins by choosing an appropriate bias based on the training dataset and the type of model being trained. The bias for binary classification models is chosen such that the model predicts the "positive" label with probability equal to the percentage of the target column that has the positive label. The bias for multiclass classification models is chosen such that the model predicts the class with the largest representation in the training dataset.
-
-1. **Regression**: mean of values in the target column.
-2. **BinaryClassification**: log of the ratio of the number of examples in class a and the number of examples in class b. `log(count_class_a / count_class_b)` where `class_a` is the positive class.
-3. **MulticlassClassification**: log of the ratio of the number of examples in each class divided by the total number of classes. The bias is a vec with one entry per class. `[log(count_class_a / total_count), log(count_class_b/ total_count), log(count_class_c / total_count), ...]`
-
-### Trees
-
-* **Step 1.** Measure the *error* our bias only model generates. For each training example, use the derivative of the loss function for the given model to measure the error of the current model's prediction.
-* **Step 2.** Train a regression tree to predict the error for each example obtained in the previous step.
-* **Step 3.** Measure the new *error* of our bias + currently trained trees model.
-* **Step 4.** Repeat steps 2 and 3 until we reach the early stopping criteria or we reach `max_rounds`, whichever comes first.
-
-### Single Tree
-The goal of training a single tree is to split training examples into leaves such training examples in the same leaves have similar errors. We use the features to split training examples and choose the features that result in the "best" split. [TODO]
-
-#### Histogram Gradient Boosting
-Histogram gradient boosting differs from regular gradient boosting in that instead of using the actual raw feature values, we map the values into a discrete number of `bins`. This greatly reduces the computational cost of finding optimal splits for the trees and reduces the memory usage significantly. Instead of iterating over `O(n_examples)` to find the optimal split, we only have ot iterate over `O(n_bins)`.
 */
 
 mod bin;
