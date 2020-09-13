@@ -10,7 +10,11 @@ Tree models consist of a bias and a series of trees.
 
 ## Prediction
 
-Let's use an example to see how to make a prediction using a tree model. A tree consists of a list of nodes. Each node contains a split telling us whether to go to the left subtree or to the right. There are two types of splits: continous splits and categorical splits. Continuous splits split examples based on numeric features that take on a range of continuous values while categorical splits split examples based on enum features, where a subset of the enum variants go to the left subtree and the other subset goes to the right.
+Before we go through an example to see how we make predictions using tree models, let's cover some tree basics.
+
+A tree consists of a list of nodes. Each node contains a split telling us whether to go to the left subtree or to the right and the index of the left and right child in the list of nodes.
+
+There are two types of splits: continous splits and categorical splits. Continuous splits split examples based on numeric features that take on a range of continuous values while categorical splits split examples based on enum features, where a subset of the enum variants go to the left subtree and the other subset goes to the right.
 
 **Continuous Split**:
 
@@ -33,6 +37,16 @@ pub struct BranchSplitDiscrete {
   pub feature_index: usize,
   /// The child node direction each enum variant belongs to, 0 for the left child and 1 for the right.
   pub directions: BinDirections,
+}
+```
+
+Once we reach a leaf node, we are done. The value in the leaf node is the prediction for this example.
+
+```rust
+pub struct LeafNode {
+  /// The output of the leaf node.
+  pub value: f32,
+  ...
 }
 ```
 
@@ -84,6 +98,14 @@ All code under `single` pertains to training a single tree. In the case of multi
 | **bin_stats.rs**      | This contains code that computes aggregate gradient and hessian statistics for all of the examples in a given node.                                 |
 | **split.rs**          | This contains code that finds the optimal split for a node. It uses the bin_stats for the node computed earlier in order to find the optimal split. |
 | **examples_index.rs** | This contains code to maintain the examples_index lookup so we keep track of which nodes contain which examples.                                    |
+
+```
+
+```
+
+```
+
+```
 
 ```
 
