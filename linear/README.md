@@ -6,6 +6,13 @@
 
 Tangram linear contains the code for training and making predictions on linear models.
 
+Linear models consist of a bias and a series of weights, one for each feature.
+
+`y_predict = bias + weights • feature_values`
+
+where weights and feature_values are both vectors of length n and
+• is the dot-product.
+
 | file                     | description                                                                                                 |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | binary_classifier.rs     | This file contains code for training binary classifiers.                                                    |
