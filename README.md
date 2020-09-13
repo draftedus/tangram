@@ -2,21 +2,25 @@
   <img src="tangram.svg" title="Tangram">
 </p>
 
-<h1 align="center">Tangram</h1>
-
 [![GitHub Release](https://img.shields.io/github/release/tangram-hq/tangram.svg?style=flat-square)](https://github.com/tangram-hq/tangram/releases)
-[![GitHub License](https://img.shields.io/badge/license-Tangram-blue)](https://github.com/pachyderm/pachyderm/blob/master/LICENSE)
-[![CLA Assistant](https://cla-assistant.io/readme/badge/tangram-hq/tangram)](https://cla-assistant.io/tangram-hq/tangram)
 
-Tangram is an all-in-one machine learning toolkit for developers. Watch the video at the link below to learn more.
+# Tangram
+
+Tangram is an all-in-one machine learning toolkit for developers. Using existing tools, a lot of pieces have to come together to form a complete solution. Instead, Tangram provides all the tools, designed from the start to fit together perfectly, just like a Tangram. If you want to make predictions on behalf of your customers from your applications but have struggled to piece together the constellation of tools to make it happen, Tangram is for you. Watch the video at the link below to learn more.
 
 [Watch the Video](tangramhq.com).
 
 ## Repo Structure
 
-At the root, this repo is a Rust crate called `tangram` that is both a library and a binary. This means you can run `cargo run` from the root to run a debug build of the cli, or `cargo build --release` to produce a release build of both the cli and the library. The library has a C API, called libtangram, defined in [tangram.h](tangram.h) and implemented in [tangram.rs](tangram.rs), that is used by the libraries for each programming language to load models and make predictions.
+This repository is both a Cargo workspace and a Yarn workspace. Each folder in the root of the repository is either a Rust or NPM package. Below is a description of the most important packages:
 
-The `www` directory contains the source code for the marketing and documentation website at tangramhq.com.
+### `cli`
+
+### `www`
+
+`www` is the marketing and documentation website at deployed to tangramhq.com.
+
+At the root, this repo is a Rust crate called `tangram` that is both a library and a binary. This means you can run `cargo run` from the root to run a debug build of the cli, or `cargo build --release` to produce a release build of both the cli and the library. The library has a C API, called libtangram, defined in [tangram.h](tangram.h) and implemented in [tangram.rs](tangram.rs), that is used by the libraries for each programming language to load models and make predictions.
 
 ## Contributing
 
