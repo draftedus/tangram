@@ -50,6 +50,17 @@ pub struct LeafNode {
 }
 ```
 
+Let's use the same housing price prediction that we use in linear models, where we have 3 features: `number_of_bedrooms`, `total_square_footage`, and `has_garage`.
+
+Our model consists of a bias and two trees. The prediction is given by:
+
+`y_predict = bias + output_tree_1 + output_tree_2`.
+
+The bias is computed by taking the average of all of the housing prices in our training dataset, let's assume its 256_000.
+
+`Tree_1` []
+`Tree_2`: []
+
 ## Training
 
 ### Bias
