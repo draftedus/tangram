@@ -8,6 +8,36 @@ Tangram tree contains the code for training and making predictions on gradient b
 
 Tree models consist of a bias and a series of trees.
 
+## Prediction
+
+Let's use an example to see how to make a prediction using a tree model. A tree consists of a list of nodes. Each node contains a split telling us whether to go to the left subtree or to the right. There are two types of splits: continous splits and categorical splits. Continuous splits split examples based on numeric features that take on a range of continuous values while categorical splits split examples based on enum features, where a subset of the enum variants go to the left subtree and the other subset goes to the right.
+
+**Continuous Split**:
+
+```rust
+pub struct BranchSplitContinuous {
+	/// The index of the feature used to split the node.
+	pub feature_index: usize,
+	/// The threshold value of the split. All features <= split_value go to the left subtree and all features  > split_value go to the right.
+  pub split_value: f32,
+  /// The subtree (left or right) that invalid values for this feature should go to.
+  pub invalid_values_direction: SplitDirection,
+}
+```
+
+**Discrete Split**:
+
+```rust
+pub struct BranchSplitDiscrete {
+  /// The index of the feature used to split the node.
+  pub feature_index: usize,
+  /// The child node direction each enum variant belongs to, 0 for the left child and 1 for the right.
+  pub directions: BinDirections,
+}
+```
+
+## Training
+
 ### Bias
 
 The bias is computed differently depending on the type of model trained: regressor, binary classifier, multiclass classifier. Each of `binary_classifier.rs`, and `multiclass_classifier.rs` have a function called `compute_biases` used to compute biases for that model.
@@ -54,3 +84,7 @@ All code under `single` pertains to training a single tree. In the case of multi
 | **bin_stats.rs**      | This contains code that computes aggregate gradient and hessian statistics for all of the examples in a given node.                                 |
 | **split.rs**          | This contains code that finds the optimal split for a node. It uses the bin_stats for the node computed earlier in order to find the optimal split. |
 | **examples_index.rs** | This contains code to maintain the examples_index lookup so we keep track of which nodes contain which examples.                                    |
+
+```
+
+```
