@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::{
 		organizations,
 		user::{authorize_user, authorize_user_for_organization},
@@ -8,7 +8,7 @@ use crate::app::{
 };
 use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,

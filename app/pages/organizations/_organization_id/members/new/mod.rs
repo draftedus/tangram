@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::user::{authorize_user, authorize_user_for_organization, User},
 	error::Error,
 	Context,
@@ -7,7 +7,7 @@ use anyhow::{format_err, Result};
 use chrono::Utc;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 pub async fn get(
 	_request: Request<Body>,

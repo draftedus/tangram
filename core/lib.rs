@@ -6,7 +6,6 @@ Tangram is cool.
 
 mod config;
 mod grid;
-mod tangram;
 pub mod test;
 
 pub mod dataframe;
@@ -20,7 +19,7 @@ pub mod train;
 pub mod tree;
 pub mod util;
 
-pub use self::{predict::predict, tangram::*, train::train};
+pub use self::{predict::predict, train::train};
 
 #[cfg(target_arch = "wasm32")]
 #[global_allocator]

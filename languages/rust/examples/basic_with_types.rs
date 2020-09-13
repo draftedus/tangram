@@ -93,7 +93,7 @@ enum ThalliumStressTest {
 	FixedDefect,
 }
 
-type Output = tangram::ClassificationOutput<Diagnosis>;
+type Output = tangram_core::ClassificationOutput<Diagnosis>;
 
 #[derive(serde::Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum Diagnosis {
@@ -104,7 +104,7 @@ enum Diagnosis {
 fn main() {
 	// Load the model from the file.
 	let model =
-		tangram::Model::<Input, Output>::from_slice(include_bytes!("./heart-disease.tangram"));
+		tangram_core::Model::<Input, Output>::from_slice(include_bytes!("./heart-disease.tangram"));
 
 	// Create an example input matching the schema of the CSV file the model was trained on. Here the data is just hard-coded, but in your application you will probably get this from a database or user input.
 	let input = Input {

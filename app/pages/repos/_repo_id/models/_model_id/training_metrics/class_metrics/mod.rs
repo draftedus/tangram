@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -10,7 +10,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -98,21 +98,21 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram::model::Model::from_slice(&data)?;
+	let model = tangram_core::model::Model::from_slice(&data)?;
 	// assemble the response
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let inner = match model {
-		tangram::model::Model::Classifier(model) => match model.model {
-			tangram::model::ClassificationModel::LinearBinary(_) => {
+		tangram_core::model::Model::Classifier(model) => match model.model {
+			tangram_core::model::ClassificationModel::LinearBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram::model::ClassificationModel::LinearMulticlass(_) => {
+			tangram_core::model::ClassificationModel::LinearMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
-			tangram::model::ClassificationModel::TreeBinary(_) => {
+			tangram_core::model::ClassificationModel::TreeBinary(_) => {
 				Inner::BinaryClassifier(build_inner_binary(model, id, class))
 			}
-			tangram::model::ClassificationModel::TreeMulticlass(_) => {
+			tangram_core::model::ClassificationModel::TreeMulticlass(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, id, class))
 			}
 		},
@@ -128,7 +128,7 @@ async fn props(
 }
 
 fn build_inner_binary(
-	model: tangram::model::Classifier,
+	model: tangram_core::model::Classifier,
 	id: Id,
 	class: Option<String>,
 ) -> BinaryClassifier {
@@ -160,7 +160,7 @@ fn build_inner_binary(
 }
 
 fn build_inner_multiclass(
-	model: tangram::model::Classifier,
+	model: tangram_core::model::Classifier,
 	id: Id,
 	class: Option<String>,
 ) -> MulticlassClassifier {

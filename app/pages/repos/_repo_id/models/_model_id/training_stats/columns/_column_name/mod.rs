@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -9,7 +9,7 @@ use crate::app::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -100,14 +100,14 @@ async fn props(
 	}
 
 	let Model { data, .. } = get_model(&mut db, model_id).await?;
-	let model = tangram::model::Model::from_slice(&data)?;
+	let model = tangram_core::model::Model::from_slice(&data)?;
 
 	let (mut column_stats, target_column_stats) = match model {
-		tangram::model::Model::Classifier(model) => (
+		tangram_core::model::Model::Classifier(model) => (
 			model.overall_column_stats,
 			model.overall_target_column_stats,
 		),
-		tangram::model::Model::Regressor(model) => (
+		tangram_core::model::Model::Regressor(model) => (
 			model.overall_column_stats,
 			model.overall_target_column_stats,
 		),
@@ -129,8 +129,8 @@ async fn props(
 	};
 
 	let inner = match column {
-		tangram::model::ColumnStats::Unknown(_) => unimplemented!(),
-		tangram::model::ColumnStats::Number(column) => Inner::Number(Number {
+		tangram_core::model::ColumnStats::Unknown(_) => unimplemented!(),
+		tangram_core::model::ColumnStats::Number(column) => Inner::Number(Number {
 			histogram: column.histogram,
 			invalid_count: column.invalid_count.to_owned(),
 			min: column.min,
@@ -143,13 +143,13 @@ async fn props(
 			std: column.std,
 			unique_count: column.unique_count,
 		}),
-		tangram::model::ColumnStats::Enum(column) => Inner::Enum(Enum {
+		tangram_core::model::ColumnStats::Enum(column) => Inner::Enum(Enum {
 			histogram: Some(column.histogram),
 			invalid_count: column.invalid_count.to_owned(),
 			name: column.column_name.to_owned(),
 			unique_count: column.unique_count,
 		}),
-		tangram::model::ColumnStats::Text(column) => Inner::Text(Text {
+		tangram_core::model::ColumnStats::Text(column) => Inner::Text(Text {
 			name: column.column_name.to_owned(),
 			tokens: column.top_tokens,
 		}),

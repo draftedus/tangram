@@ -1,6 +1,6 @@
 use anyhow::Result;
 use sqlx::prelude::*;
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 pub struct Model {
 	pub id: Id,

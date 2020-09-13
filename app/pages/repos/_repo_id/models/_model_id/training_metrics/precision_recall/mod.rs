@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -10,7 +10,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -70,9 +70,9 @@ async fn props(
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram::model::Model::from_slice(&data)?;
+	let model = tangram_core::model::Model::from_slice(&data)?;
 	let model = match model {
-		tangram::model::Model::Classifier(model) => model,
+		tangram_core::model::Model::Classifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let classes = model.classes().to_owned();
@@ -83,10 +83,12 @@ async fn props(
 	};
 	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
 	let class_metrics = match &model.model {
-		tangram::model::ClassificationModel::LinearBinary(inner_model) => {
+		tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
 			&inner_model.class_metrics
 		}
-		tangram::model::ClassificationModel::TreeBinary(inner_model) => &inner_model.class_metrics,
+		tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
+			&inner_model.class_metrics
+		}
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let data = class_metrics

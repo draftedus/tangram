@@ -1,6 +1,6 @@
-use crate::app::monitor_event::PredictionMonitorEvent;
+use crate::monitor_event::PredictionMonitorEvent;
 use chrono::prelude::*;
-use tangram::metrics::Metric;
+use tangram_core::metrics::Metric;
 
 mod column_stats;
 mod number_stats;
@@ -30,13 +30,13 @@ pub struct ProductionStatsOutput {
 
 impl ProductionStats {
 	pub fn new(
-		model: &tangram::model::Model,
+		model: &tangram_core::model::Model,
 		start_date: DateTime<Utc>,
 		end_date: DateTime<Utc>,
 	) -> Self {
 		let train_column_stats = match &model {
-			tangram::model::Model::Regressor(model) => model.train_column_stats.as_slice(),
-			tangram::model::Model::Classifier(model) => model.train_column_stats.as_slice(),
+			tangram_core::model::Model::Regressor(model) => model.train_column_stats.as_slice(),
+			tangram_core::model::Model::Classifier(model) => model.train_column_stats.as_slice(),
 		};
 		let column_stats = train_column_stats
 			.iter()

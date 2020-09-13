@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -9,7 +9,7 @@ use crate::app::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -72,12 +72,12 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 	}
 	let Model { data, .. } = get_model(&mut db, model_id).await?;
-	let model = tangram::model::Model::from_slice(&data)?;
+	let model = tangram_core::model::Model::from_slice(&data)?;
 	let tuning = match model {
-		tangram::model::Model::Classifier(model) => {
+		tangram_core::model::Model::Classifier(model) => {
 			let classes = model.classes().to_owned();
 			match model.model {
-				tangram::model::ClassificationModel::LinearBinary(inner_model) => {
+				tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
 					let class_metrics = inner_model.class_metrics;
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
@@ -86,8 +86,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						classes,
 					})
 				}
-				tangram::model::ClassificationModel::LinearMulticlass(_) => None,
-				tangram::model::ClassificationModel::TreeBinary(inner_model) => {
+				tangram_core::model::ClassificationModel::LinearMulticlass(_) => None,
+				tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
 					let class_metrics = inner_model.class_metrics;
 					let metrics = build_threshold_class_metrics(class_metrics);
 					Some(Inner {
@@ -96,10 +96,10 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						classes,
 					})
 				}
-				tangram::model::ClassificationModel::TreeMulticlass(_) => None,
+				tangram_core::model::ClassificationModel::TreeMulticlass(_) => None,
 			}
 		}
-		tangram::model::Model::Regressor(_) => None,
+		tangram_core::model::Model::Regressor(_) => None,
 	};
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
@@ -110,7 +110,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 }
 
 fn build_threshold_class_metrics(
-	class_metrics: Vec<tangram::model::BinaryClassifierClassMetrics>,
+	class_metrics: Vec<tangram_core::model::BinaryClassifierClassMetrics>,
 ) -> Vec<Vec<Metrics>> {
 	class_metrics
 		.iter()

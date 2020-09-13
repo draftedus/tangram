@@ -4,13 +4,13 @@ This module implements the C api for libtangram, the tangram C library, which is
 
 #![allow(clippy::missing_safety_doc)]
 
-use crate::{predict::PredictInput, predict::PredictModel};
 use std::{
 	alloc::{alloc, dealloc, Layout},
 	convert::TryInto,
 	ffi::{CStr, CString},
 	panic::catch_unwind,
 };
+use tangram_core::{predict::PredictInput, predict::PredictModel};
 
 /// Retrieve the version of libtangram that is in use. On success, a pointer to the C string with the version will be written to `version_ptr`. You must call `tangram_string_free` when you are done with it.
 #[no_mangle]
@@ -36,7 +36,7 @@ pub extern "C" fn tangram_model_load(
 	let result = catch_unwind(|| unsafe {
 		assert!(!model_ptr.is_null());
 		let bytes = std::slice::from_raw_parts(model_data_ptr, model_data_len);
-		let model = crate::model::Model::from_slice(bytes).unwrap();
+		let model = tangram_core::model::Model::from_slice(bytes).unwrap();
 		let model: PredictModel = model.try_into().unwrap();
 		let model = Box::new(model);
 		*model_ptr = Box::into_raw(model);
@@ -81,14 +81,14 @@ pub extern "C" fn tangram_model_predict(
 		let model = model_ptr.as_ref().unwrap();
 		let input = CStr::from_ptr(input_ptr as *const i8).to_str().unwrap();
 		let input: PredictInput = serde_json::from_str(input).unwrap();
-		let options: Option<crate::predict::PredictOptions> =
+		let options: Option<tangram_core::predict::PredictOptions> =
 			options_ptr.as_ref().map(|options_ptr| {
 				let options = CStr::from_ptr(options_ptr as *const u8 as *const i8)
 					.to_str()
 					.unwrap();
 				serde_json::from_str(options).unwrap()
 			});
-		let output = crate::predict::predict(model, input, options);
+		let output = tangram_core::predict::predict(model, input, options);
 		let output = serde_json::to_string(&output).unwrap();
 		let output = CString::new(output).unwrap();
 		*output_ptr = CString::into_raw(output) as *const u8;
@@ -123,14 +123,14 @@ pub extern "C" fn tangram_model_free(model_ptr: *mut PredictModel) -> isize {
 	}
 }
 
-/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because webassembly does not (yet) include its own allocator.
+/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because webassembly does not yet include its own allocator.
 #[no_mangle]
 pub extern "C" fn tangram_alloc(size: usize, align: usize) -> *mut u8 {
 	let layout = Layout::from_size_align(size, align).unwrap();
 	unsafe { alloc(layout) }
 }
 
-/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because webassembly does not (yet) include its own allocator.
+/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because webassembly does not yet include its own allocator.
 #[no_mangle]
 pub unsafe extern "C" fn tangram_dealloc(ptr: *mut u8, size: usize, align: usize) {
 	if size == 0 {

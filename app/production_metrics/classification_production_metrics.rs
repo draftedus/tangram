@@ -1,7 +1,7 @@
-use crate::app::monitor_event::NumberOrString;
+use crate::monitor_event::NumberOrString;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram::metrics::Metric;
+use tangram_core::metrics::Metric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 pub struct ClassificationProductionPredictionMetrics {

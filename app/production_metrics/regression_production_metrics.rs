@@ -1,6 +1,6 @@
-use crate::app::{monitor_event::NumberOrString, production_stats::NumberStats};
+use crate::{monitor_event::NumberOrString, production_stats::NumberStats};
 use num_traits::ToPrimitive;
-use tangram::metrics::Metric;
+use tangram_core::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct RegressionProductionPredictionMetrics {

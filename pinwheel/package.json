@@ -1,5 +1,5 @@
 {
-	"name": "@tangramhq/pinwheel",
 	"main": "mod.ts",
+	"name": "@tangramhq/pinwheel",
 	"version": "0.0.0"
 }

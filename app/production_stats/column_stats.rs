@@ -1,7 +1,7 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram::metrics::Metric;
+use tangram_core::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum ProductionColumnStats {
@@ -94,18 +94,18 @@ pub struct TextProductionColumnStatsOutput {
 }
 
 impl ProductionColumnStats {
-	pub fn new(column_stats: &tangram::model::ColumnStats) -> Self {
+	pub fn new(column_stats: &tangram_core::model::ColumnStats) -> Self {
 		match column_stats {
-			tangram::model::ColumnStats::Unknown(stats) => {
+			tangram_core::model::ColumnStats::Unknown(stats) => {
 				ProductionColumnStats::Unknown(UnknownProductionColumnStats::new(stats))
 			}
-			tangram::model::ColumnStats::Text(stats) => {
+			tangram_core::model::ColumnStats::Text(stats) => {
 				ProductionColumnStats::Text(TextProductionColumnStats::new(stats))
 			}
-			tangram::model::ColumnStats::Number(stats) => {
+			tangram_core::model::ColumnStats::Number(stats) => {
 				ProductionColumnStats::Number(NumberProductionColumnStats::new(stats))
 			}
-			tangram::model::ColumnStats::Enum(stats) => {
+			tangram_core::model::ColumnStats::Enum(stats) => {
 				ProductionColumnStats::Enum(EnumProductionColumnStats::new(stats))
 			}
 		}
@@ -178,7 +178,7 @@ impl<'a> Metric<'a> for ProductionColumnStats {
 }
 
 impl UnknownProductionColumnStats {
-	fn new(column_stats: &tangram::model::UnknownColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::model::UnknownColumnStats) -> Self {
 		Self {
 			column_name: column_stats.column_name.clone(),
 			invalid_count: 0,
@@ -224,7 +224,7 @@ impl<'a> Metric<'a> for UnknownProductionColumnStats {
 }
 
 impl NumberProductionColumnStats {
-	fn new(column_stats: &tangram::model::NumberColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::model::NumberColumnStats) -> Self {
 		Self {
 			column_name: column_stats.column_name.clone(),
 			absent_count: 0,
@@ -306,7 +306,7 @@ impl<'a> Metric<'a> for NumberProductionColumnStats {
 }
 
 impl EnumProductionColumnStats {
-	fn new(column_stats: &tangram::model::EnumColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::model::EnumColumnStats) -> Self {
 		let column_name = &column_stats.column_name;
 		let histogram = column_stats
 			.histogram
@@ -407,16 +407,16 @@ impl<'a> Metric<'a> for EnumProductionColumnStats {
 }
 
 impl TextProductionColumnStats {
-	fn new(column_stats: &tangram::model::TextColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::model::TextColumnStats) -> Self {
 		// let tokenizer = match feature_group {
-		// 	tangram::model::FeatureGroup::BagOfWords(feature_group) => {
+		// 	tangram_core::model::FeatureGroup::BagOfWords(feature_group) => {
 		// 		match feature_group.tokenizer {
-		// 			tangram::model::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
+		// 			tangram_core::model::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
 		// 		}
 		// 	}
-		// 	tangram::model::FeatureGroup::Identity(_) => unreachable!(),
-		// 	tangram::model::FeatureGroup::Normalized(_) => unreachable!(),
-		// 	tangram::model::FeatureGroup::OneHotEncoded(_) => unreachable!(),
+		// 	tangram_core::model::FeatureGroup::Identity(_) => unreachable!(),
+		// 	tangram_core::model::FeatureGroup::Normalized(_) => unreachable!(),
+		// 	tangram_core::model::FeatureGroup::OneHotEncoded(_) => unreachable!(),
 		// 	_ => unimplemented!(),
 		// };
 		Self {
@@ -448,9 +448,9 @@ impl<'a> Metric<'a> for TextProductionColumnStats {
 		// if let Some(serde_json::Value::String(value)) = value {
 		// match self.tokenizer {
 		// 	Tokenizer::Alphanumeric => {
-		// 		let tokenizer = tangram::util::text::AlphanumericTokenizer;
+		// 		let tokenizer = tangram_core::util::text::AlphanumericTokenizer;
 		// 		let tokens = tokenizer.tokenize(value);
-		// 		let bigrams = tangram::util::text::bigrams(&tokens);
+		// 		let bigrams = tangram_core::util::text::bigrams(&tokens);
 		// 		for token in tokens.iter().chain(bigrams.iter()) {
 		// 			// insert the token into the histogram
 		// 			match self.token_histogram.get_mut(token) {

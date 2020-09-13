@@ -4,7 +4,7 @@ use std::{
 	thread::{sleep, spawn, JoinHandle},
 	time::Duration,
 };
-use tangram::train::Progress;
+use tangram_core::train::Progress;
 use term_ui::{Screen, Style};
 
 pub struct ProgressView {
@@ -207,47 +207,47 @@ fn thread_main(mut screen: Screen, receiver: Receiver<Option<Progress>>) {
 // let mut update_progress = |progress| match progress_view.as_mut() {
 // 	Some(progress_manager) => progress_manager.update(progress),
 // 	None => match progress {
-// 		tangram::progress::Progress::Loading(_) => println!("Loading Data"),
-// 		tangram::progress::Progress::Shuffling => {
+// 		tangram_core::progress::Progress::Loading(_) => println!("Loading Data"),
+// 		tangram_core::progress::Progress::Shuffling => {
 // 			print!("\x1b[1A\x1b[0K");
 // 			println!("Loading Data \x1b[1;92m✓\x1b[0m");
 // 			println!("Shuffling Data");
 // 		}
-// 		tangram::progress::Progress::Stats(p) => match p {
-// 			tangram::progress::StatsProgress::DatasetStats(_) => {
+// 		tangram_core::progress::Progress::Stats(p) => match p {
+// 			tangram_core::progress::StatsProgress::DatasetStats(_) => {
 // 				print!("\x1b[1A\x1b[0K");
 // 				println!("Shuffling Data \x1b[1;92m✓\x1b[0m");
 // 				println!("Computing Stats step 1 of 2");
 // 			}
-// 			tangram::progress::StatsProgress::HistogramStats(_) => {
+// 			tangram_core::progress::StatsProgress::HistogramStats(_) => {
 // 				print!("\x1b[1A\x1b[0K");
 // 				println!("Computing Stats step 2 of 2")
 // 			}
 // 		},
-// 		tangram::progress::Progress::Training(p) => match p {
-// 			tangram::progress::GridTrainProgress {
+// 		tangram_core::progress::Progress::Training(p) => match p {
+// 			tangram_core::progress::GridTrainProgress {
 // 				current,
 // 				total,
 // 				grid_item_progress,
 // 			} => match grid_item_progress {
-// 				tangram::progress::TrainProgress::ComputingFeatures(p) => {
+// 				tangram_core::progress::TrainProgress::ComputingFeatures(p) => {
 // 					print!("\x1b[1A\x1b[0K");
 // 					if current == 1 {
 // 						println!("Computing Stats \x1b[1;92m✓\x1b[0m");
 // 					}
 // 					println!("Training model {} of {} {:?}", current, total, p);
 // 				}
-// 				tangram::progress::TrainProgress::TrainingModel(p) => {
+// 				tangram_core::progress::TrainProgress::TrainingModel(p) => {
 // 					print!("\x1b[1A\x1b[0K");
 // 					println!("Training model {} of {} {:?}", current, total, p);
 // 				}
-// 				tangram::progress::TrainProgress::ComputingModelComparisonMetrics(p) => {
+// 				tangram_core::progress::TrainProgress::ComputingModelComparisonMetrics(p) => {
 // 					print!("\x1b[1A\x1b[0K");
 // 					println!("Training model {} of {} {:?}", current, total, p);
 // 				}
 // 			},
 // 		},
-// 		tangram::progress::Progress::Testing => {
+// 		tangram_core::progress::Progress::Testing => {
 // 			print!("\x1b[1A\x1b[0K");
 // 			println!("Training \x1b[1;92m✓\x1b[0m",);
 // 			println!("Testing best model");

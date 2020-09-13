@@ -1,28 +1,28 @@
-use anyhow::Result;
 use itertools::izip;
 use ndarray::prelude::*;
 use std::path::Path;
-use tangram::{dataframe::*, metrics::Metric};
+use tangram_core::{dataframe::*, metrics::Metric};
 
-fn main() -> Result<()> {
+fn main() {
 	// load the data
-	let csv_file_path = Path::new("data/census.csv");
-	let nrows_train = 26049;
-	let _nrows_test = 6512;
-	let target_column_index = 14;
-	let mut csv_reader = csv::Reader::from_path(csv_file_path)?;
+	let csv_file_path = Path::new("data/boston.csv");
+	let nrows_train = 405;
+	let _nrows_test = 101;
+
+	let target_column_index = 13;
+	let mut csv_reader = csv::Reader::from_path(csv_file_path).unwrap();
 	let options = FromCsvOptions {
 		..Default::default()
 	};
-	let mut features = DataFrame::from_csv(&mut csv_reader, options, |_| {})?;
+	let mut features = DataFrame::from_csv(&mut csv_reader, options, |_| {}).unwrap();
 	let labels = features.columns.remove(target_column_index);
 	let (features_train, features_test) = features.view().split_at_row(nrows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
-	let labels_train = labels_train.as_enum().unwrap();
-	let labels_test = labels_test.as_enum().unwrap();
+	let labels_train = labels_train.as_number().unwrap();
+	let labels_test = labels_test.as_number().unwrap();
 
 	// train the model
-	let train_options = tangram::tree::TrainOptions {
+	let train_options = tangram_core::tree::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: 8,
 		max_leaf_nodes: 255,
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
 		min_sum_hessians_in_leaf: 0.0,
 		..Default::default()
 	};
-	let model = tangram::tree::BinaryClassifier::train(
+	let model = tangram_core::tree::Regressor::train(
 		features_train,
 		labels_train.clone(),
 		train_options,
@@ -60,19 +60,15 @@ fn main() -> Result<()> {
 			_ => panic!(),
 		},
 	);
-
-	let mut probabilities: Array2<f32> =
-		unsafe { Array::uninitialized((features_ndarray.nrows(), 2)) };
-	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
+	let mut predictions: Array1<f32> = unsafe { Array::uninitialized(nrows) };
+	model.predict(features_ndarray.view(), predictions.view_mut(), None);
 
 	// compute metrics
-	let mut metrics = tangram::metrics::BinaryClassifierMetrics::new(100);
-	metrics.update(tangram::metrics::BinaryClassifierMetricsInput {
-		probabilities: probabilities.view(),
-		labels: labels_test.data.into(),
+	let mut metrics = tangram_core::metrics::RegressionMetrics::new();
+	metrics.update(tangram_core::metrics::RegressionMetricsInput {
+		predictions: predictions.as_slice().unwrap(),
+		labels: labels_test.data,
 	});
 	let metrics = metrics.finalize();
 	println!("{:?}", metrics);
-
-	Ok(())
 }

@@ -1,4 +1,4 @@
-use crate::app::Error;
+use crate::Error;
 use anyhow::Result;
 use std::collections::BTreeMap;
 

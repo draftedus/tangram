@@ -3,7 +3,7 @@ use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use std::path::Path;
-use tangram::{dataframe::*, metrics::Metric};
+use tangram_core::{dataframe::*, metrics::Metric};
 
 fn main() -> Result<()> {
 	// load the data
@@ -57,7 +57,7 @@ fn main() -> Result<()> {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// train the model
-	let train_options = tangram::tree::TrainOptions {
+	let train_options = tangram_core::tree::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: 8,
 		max_leaf_nodes: 255,
@@ -66,7 +66,7 @@ fn main() -> Result<()> {
 		min_sum_hessians_in_leaf: 0.0,
 		..Default::default()
 	};
-	let model = tangram::tree::BinaryClassifier::train(
+	let model = tangram_core::tree::BinaryClassifier::train(
 		dataframe_train,
 		labels_train.clone(),
 		train_options,
@@ -88,8 +88,8 @@ fn main() -> Result<()> {
 
 	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((nrows_test, 2)) };
 	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
-	let mut metrics = tangram::metrics::BinaryClassifierMetrics::new(100);
-	metrics.update(tangram::metrics::BinaryClassifierMetricsInput {
+	let mut metrics = tangram_core::metrics::BinaryClassifierMetrics::new(100);
+	metrics.update(tangram_core::metrics::BinaryClassifierMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels_test.data.into(),
 	});

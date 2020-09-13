@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -11,7 +11,7 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -109,13 +109,13 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 	}
 	let Model { id, data } = get_model(&mut db, model_id).await?;
-	let model = tangram::model::Model::from_slice(&data)?;
+	let model = tangram_core::model::Model::from_slice(&data)?;
 	let inner = match model {
-		tangram::model::Model::Classifier(model) => {
+		tangram_core::model::Model::Classifier(model) => {
 			let target_column_name = model.target_column_name.to_owned();
 			let classes = model.classes().to_owned();
 			match model.model {
-				tangram::model::ClassificationModel::LinearBinary(inner_model) => {
+				tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let feature_names = compute_feature_names(&feature_groups);
 					let weights = inner_model.weights;
@@ -132,7 +132,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						weights,
 					})
 				}
-				tangram::model::ClassificationModel::LinearMulticlass(inner_model) => {
+				tangram_core::model::ClassificationModel::LinearMulticlass(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let n_classes = inner_model.n_classes.to_usize().unwrap();
 					let n_features = inner_model.n_features.to_usize().unwrap();
@@ -159,7 +159,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						weights,
 					})
 				}
-				tangram::model::ClassificationModel::TreeBinary(inner_model) => {
+				tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let feature_importances = inner_model.feature_importances.as_slice();
 					let feature_names = compute_feature_names(&feature_groups);
@@ -174,7 +174,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						feature_importances,
 					})
 				}
-				tangram::model::ClassificationModel::TreeMulticlass(inner_model) => {
+				tangram_core::model::ClassificationModel::TreeMulticlass(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let feature_importances = inner_model.feature_importances.as_slice();
 					let feature_names = compute_feature_names(&feature_groups);
@@ -191,8 +191,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				}
 			}
 		}
-		tangram::model::Model::Regressor(model) => match model.model {
-			tangram::model::RegressionModel::Linear(inner_model) => {
+		tangram_core::model::Model::Regressor(model) => match model.model {
+			tangram_core::model::RegressionModel::Linear(inner_model) => {
 				let target_column_name = model.target_column_name.to_owned();
 				let feature_groups = inner_model.feature_groups;
 				let weights = inner_model.weights;
@@ -209,7 +209,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					weights,
 				})
 			}
-			tangram::model::RegressionModel::Tree(inner_model) => {
+			tangram_core::model::RegressionModel::Tree(inner_model) => {
 				let feature_groups = inner_model.feature_groups;
 				let feature_importances = inner_model.feature_importances.as_slice();
 				let feature_names = compute_feature_names(&feature_groups);
@@ -237,28 +237,30 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	})
 }
 
-fn compute_feature_names(feature_groups: &[tangram::model::FeatureGroup]) -> Vec<String> {
+fn compute_feature_names(feature_groups: &[tangram_core::model::FeatureGroup]) -> Vec<String> {
 	feature_groups
 		.iter()
 		.flat_map(|feature_group| match feature_group {
-			tangram::model::FeatureGroup::Identity(feature_group) => {
+			tangram_core::model::FeatureGroup::Identity(feature_group) => {
 				vec![feature_group.source_column_name.to_owned()]
 			}
-			tangram::model::FeatureGroup::Normalized(feature_group) => {
+			tangram_core::model::FeatureGroup::Normalized(feature_group) => {
 				vec![feature_group.source_column_name.to_owned()]
 			}
-			tangram::model::FeatureGroup::OneHotEncoded(feature_group) => vec!["OOV".to_string()]
-				.iter()
-				.chain(feature_group.categories.iter())
-				.map(|category| {
-					format!(
-						"{} = {}",
-						feature_group.source_column_name.to_owned(),
-						category.to_owned()
-					)
-				})
-				.collect(),
-			tangram::model::FeatureGroup::BagOfWords(feature_group) => feature_group
+			tangram_core::model::FeatureGroup::OneHotEncoded(feature_group) => {
+				vec!["OOV".to_string()]
+					.iter()
+					.chain(feature_group.categories.iter())
+					.map(|category| {
+						format!(
+							"{} = {}",
+							feature_group.source_column_name.to_owned(),
+							category.to_owned()
+						)
+					})
+					.collect()
+			}
+			tangram_core::model::FeatureGroup::BagOfWords(feature_group) => feature_group
 				.tokens
 				.iter()
 				.map(|(token, _)| {

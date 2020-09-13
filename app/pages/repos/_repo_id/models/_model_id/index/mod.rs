@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::{
 		model::{get_model, Model},
 		repos::{get_model_layout_info, ModelLayoutInfo},
@@ -10,7 +10,7 @@ use crate::app::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::cast::ToPrimitive;
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -111,11 +111,11 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 	}
 	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram::model::Model::from_slice(&data)?;
+	let model = tangram_core::model::Model::from_slice(&data)?;
 	// assemble the response
 	let training_summary = training_summary(&model);
 	let inner = match &model {
-		tangram::model::Model::Classifier(model) => {
+		tangram_core::model::Model::Classifier(model) => {
 			let test_metrics = &model.test_metrics;
 			let class_metrics = &test_metrics.class_metrics;
 			let class_metrics = class_metrics
@@ -136,7 +136,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				training_summary,
 			})
 		}
-		tangram::model::Model::Regressor(model) => {
+		tangram_core::model::Model::Regressor(model) => {
 			let test_metrics = &model.test_metrics;
 			Inner::Regressor(Regressor {
 				id: id.to_string(),
@@ -161,10 +161,10 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	})
 }
 
-fn training_summary(model: &tangram::model::Model) -> TrainingSummary {
+fn training_summary(model: &tangram_core::model::Model) -> TrainingSummary {
 	let chosen_model_type_name = model_type_name(model);
 	match model {
-		tangram::model::Model::Regressor(model) => TrainingSummary {
+		tangram_core::model::Model::Regressor(model) => TrainingSummary {
 			chosen_model_type_name,
 			column_count: model.overall_column_stats.len() + 1,
 			model_comparison_metric_type_name: regression_model_comparison_type_name(
@@ -173,7 +173,7 @@ fn training_summary(model: &tangram::model::Model) -> TrainingSummary {
 			row_count: model.row_count.to_usize().unwrap(),
 			test_fraction: model.test_fraction,
 		},
-		tangram::model::Model::Classifier(model) => TrainingSummary {
+		tangram_core::model::Model::Classifier(model) => TrainingSummary {
 			chosen_model_type_name,
 			column_count: model.overall_column_stats.len() + 1,
 			model_comparison_metric_type_name: classification_model_comparison_type_name(
@@ -186,49 +186,53 @@ fn training_summary(model: &tangram::model::Model) -> TrainingSummary {
 }
 
 fn regression_model_comparison_type_name(
-	comparison_metric: &tangram::model::RegressionComparisonMetric,
+	comparison_metric: &tangram_core::model::RegressionComparisonMetric,
 ) -> String {
 	match comparison_metric {
-		tangram::model::RegressionComparisonMetric::MeanAbsoluteError => {
+		tangram_core::model::RegressionComparisonMetric::MeanAbsoluteError => {
 			"Mean Absolute Error".into()
 		}
-		tangram::model::RegressionComparisonMetric::MeanSquaredError => "Mean Squared Error".into(),
-		tangram::model::RegressionComparisonMetric::RootMeanSquaredError => {
+		tangram_core::model::RegressionComparisonMetric::MeanSquaredError => {
+			"Mean Squared Error".into()
+		}
+		tangram_core::model::RegressionComparisonMetric::RootMeanSquaredError => {
 			"Root Mean Squared Error".into()
 		}
-		tangram::model::RegressionComparisonMetric::R2 => "R2".into(),
+		tangram_core::model::RegressionComparisonMetric::R2 => "R2".into(),
 	}
 }
 
 fn classification_model_comparison_type_name(
-	comparison_metric: &tangram::model::ClassificationComparisonMetric,
+	comparison_metric: &tangram_core::model::ClassificationComparisonMetric,
 ) -> String {
 	match comparison_metric {
-		tangram::model::ClassificationComparisonMetric::Accuracy => "Accuracy".into(),
-		tangram::model::ClassificationComparisonMetric::Aucroc => {
+		tangram_core::model::ClassificationComparisonMetric::Accuracy => "Accuracy".into(),
+		tangram_core::model::ClassificationComparisonMetric::Aucroc => {
 			"Area Under the Receiver Operating Characteristic".into()
 		}
-		tangram::model::ClassificationComparisonMetric::F1 => "F1 Score".into(),
+		tangram_core::model::ClassificationComparisonMetric::F1 => "F1 Score".into(),
 	}
 }
 
-fn model_type_name(model: &tangram::model::Model) -> String {
+fn model_type_name(model: &tangram_core::model::Model) -> String {
 	match model {
-		tangram::model::Model::Regressor(model) => match &model.model {
-			tangram::model::RegressionModel::Linear(_) => "Linear Regressor".into(),
-			tangram::model::RegressionModel::Tree(_) => "Gradient Boosted Tree Regressor".into(),
+		tangram_core::model::Model::Regressor(model) => match &model.model {
+			tangram_core::model::RegressionModel::Linear(_) => "Linear Regressor".into(),
+			tangram_core::model::RegressionModel::Tree(_) => {
+				"Gradient Boosted Tree Regressor".into()
+			}
 		},
-		tangram::model::Model::Classifier(model) => match &model.model {
-			tangram::model::ClassificationModel::LinearBinary(_) => {
+		tangram_core::model::Model::Classifier(model) => match &model.model {
+			tangram_core::model::ClassificationModel::LinearBinary(_) => {
 				"Linear Binary Classifier".into()
 			}
-			tangram::model::ClassificationModel::TreeBinary(_) => {
+			tangram_core::model::ClassificationModel::TreeBinary(_) => {
 				"Gradient Boosted Tree Binary Classifier".into()
 			}
-			tangram::model::ClassificationModel::LinearMulticlass(_) => {
+			tangram_core::model::ClassificationModel::LinearMulticlass(_) => {
 				"Linear Multiclass Classifier".into()
 			}
-			tangram::model::ClassificationModel::TreeMulticlass(_) => {
+			tangram_core::model::ClassificationModel::TreeMulticlass(_) => {
 				"Gradient Boosted Tree Multiclass Classifier".into()
 			}
 		},

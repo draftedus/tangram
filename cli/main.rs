@@ -21,9 +21,6 @@ use url::Url;
 #[cfg(feature = "train")]
 mod progress_view;
 
-#[cfg(feature = "app")]
-mod app;
-
 #[derive(Clap)]
 #[clap(
 	about = "Train and deploy a machine learning model in minutes.",
@@ -112,8 +109,8 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 		} else {
 			None
 		};
-		tangram::train(
-			tangram::util::id::Id::new(),
+		tangram_core::train(
+			tangram_core::util::id::Id::new(),
 			&options.file,
 			&options.target,
 			options.config.as_deref(),
@@ -170,7 +167,7 @@ fn cli_app(options: AppOptions) -> Result<()> {
 		.threaded_scheduler()
 		.enable_all()
 		.build()?;
-	runtime.block_on(app::run(app::AppOptions {
+	runtime.block_on(tangram_app::run(tangram_app::AppOptions {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
 		database_url: options.database_url,

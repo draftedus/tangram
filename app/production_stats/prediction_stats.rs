@@ -1,7 +1,7 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
-use crate::app::monitor_event::Output;
+use crate::monitor_event::Output;
 use std::collections::BTreeMap;
-use tangram::metrics::Metric;
+use tangram_core::metrics::Metric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum ProductionPredictionStats {
@@ -36,12 +36,12 @@ pub struct ClassificationProductionPredictionStatsOutput {
 }
 
 impl ProductionPredictionStats {
-	pub fn new(model: &tangram::model::Model) -> Self {
+	pub fn new(model: &tangram_core::model::Model) -> Self {
 		match &model {
-			tangram::model::Model::Regressor(_) => {
+			tangram_core::model::Model::Regressor(_) => {
 				ProductionPredictionStats::Regression(RegressionProductionPredictionStats::new())
 			}
-			tangram::model::Model::Classifier(model) => {
+			tangram_core::model::Model::Classifier(model) => {
 				let classes = model.classes();
 				ProductionPredictionStats::Classification(
 					ClassificationProductionPredictionStats::new(classes),

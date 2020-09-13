@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::{
 	common::user::{authorize_user, authorize_user_for_repo},
 	error::Error,
 	Context,
@@ -8,7 +8,7 @@ use bytes::Buf;
 use chrono::prelude::*;
 use hyper::{header, Body, Request, Response, StatusCode};
 use multer::Multipart;
-use tangram::util::id::Id;
+use tangram_core::util::id::Id;
 
 #[derive(serde::Serialize)]
 struct Props {
@@ -139,7 +139,7 @@ pub async fn post(
 			.await
 		}
 	};
-	let model = match tangram::model::Model::from_slice(&file) {
+	let model = match tangram_core::model::Model::from_slice(&file) {
 		Ok(model) => model,
 		Err(_) => {
 			return render(
