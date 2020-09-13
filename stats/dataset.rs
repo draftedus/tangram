@@ -25,10 +25,9 @@ pub struct NumberDatasetStats {
 	pub count: usize,
 	/// The total number of valid values.
 	pub valid_count: usize,
-	/// The total number of invalid values.
-	/// Invalid values are values that fail to parse as finite f32.
+	/// This is the total number of invalid values. Invalid values are values that fail to parse as finite f32.
 	pub invalid_count: usize,
-	/// Stores counts for each unique value.
+	/// This stores counts for each unique value.
 	pub histogram: BTreeMap<Finite<f32>, usize>,
 }
 
