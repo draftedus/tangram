@@ -11,9 +11,9 @@ const MIN_DOCUMENT_FREQUENCY: u64 = 2;
 /// This struct contains settings used to compute stats.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StatsSettings {
-	/// This is the maximum number of tokens to store in the histogram.
+	/// The maximum number of tokens to store in the histogram.
 	pub text_histogram_max_size: usize,
-	/// This is the maximum number of unique numeric values to store in the histogram.
+	/// The maximum number of unique numeric values to store in the histogram.
 	pub number_histogram_max_size: usize,
 }
 
@@ -75,66 +75,66 @@ impl ColumnStats {
 /// This struct contains stats for unknown columns.
 #[derive(Debug)]
 pub struct UnknownColumnStats {
-	/// This is the name of the column as it appears in the csv.
+	/// The name of the column as it appears in the csv.
 	pub column_name: String,
-	/// This is the total number of examples.
+	/// The total number of examples.
 	pub count: u64,
 }
 
 /// This struct contains stats for number columns.
 #[derive(Debug)]
 pub struct NumberColumnStats {
-	/// This is the name of the column as it appears in the csv.
+	/// The name of the column as it appears in the csv.
 	pub column_name: String,
-	/// This is the total number of examples.
+	/// The total number of examples.
 	pub count: u64,
-	/// This is a histogram mapping unique values to their counts. It is `None` if the number of unique values exceeds [`number_histogram_max_size`](struct.StatsSettings.html#structfield.number_histogram_max_size).
+	/// A histogram mapping unique values to their counts. It is `None` if the number of unique values exceeds [`number_histogram_max_size`](struct.StatsSettings.html#structfield.number_histogram_max_size).
 	pub histogram: Option<Vec<(f32, u64)>>,
-	/// This is the total number of unique values.
+	/// The total number of unique values.
 	pub unique_count: u64,
-	/// This is the max of the values in the column.
+	/// The max of the values in the column.
 	pub max: f32,
-	/// This is the mean of the values in the column.
+	/// The mean of the values in the column.
 	pub mean: f32,
-	/// This is the min of the values in the column.
+	/// The min of the values in the column.
 	pub min: f32,
-	/// This is the total number of invalid values. Invalid values are values that fail to parse as floating point numbers.
+	/// The total number of invalid values. Invalid values are values that fail to parse as floating point numbers.
 	pub invalid_count: u64,
-	/// This is the variance of the values in the column.
+	/// The variance of the values in the column.
 	pub variance: f32,
-	/// This is the standard deviation of the values in the column. It is equal to the square root of the variance.
+	/// The standard deviation of the values in the column. It is equal to the square root of the variance.
 	pub std: f32,
-	/// This is the p25, or 25th-percentile value in the column.
+	/// The p25, or 25th-percentile value in the column.
 	pub p25: f32,
-	/// This is the p50, or 50th-percentile value in the column. This is the median.
+	/// The p50, or 50th-percentile value in the column. The median.
 	pub p50: f32,
-	/// This is the p75, or 75th-percentile value in the column.
+	/// The p75, or 75th-percentile value in the column.
 	pub p75: f32,
 }
 
 /// This struct contains stats for enum columns.
 #[derive(Debug)]
 pub struct EnumColumnStats {
-	/// This is the name of the column as it appears in the csv.
+	/// The name of the column as it appears in the csv.
 	pub column_name: String,
-	/// This is the total number of examples.
+	/// The total number of examples.
 	pub count: u64,
-	/// This is a histogram mapping unique variants of the enum to the total count of occurrences of the variant in the dataset.
+	/// A histogram mapping unique variants of the enum to the total count of occurrences of the variant in the dataset.
 	pub histogram: Vec<(String, usize)>,
-	/// This is the total number of values in the dataset that are invalid. A value is invalid if it is not one of the enum's variants.
+	/// The total number of values in the dataset that are invalid. A value is invalid if it is not one of the enum's variants.
 	pub invalid_count: usize,
-	/// This is the total number of unique values, excluding invalid values.
+	/// The total number of unique values, excluding invalid values.
 	pub unique_count: usize,
 }
 
 /// This struct contains stats for text columns.
 #[derive(Debug)]
 pub struct TextColumnStats {
-	/// This is the name of the column as it appears in the csv.
+	/// The name of the column as it appears in the csv.
 	pub column_name: String,
-	/// This is the total number of examples.
+	/// The total number of examples.
 	pub count: u64,
-	/// This is a vector of the most frequently occurring tokens. It is a tuple where the first entry is the token, the second is the number of times it appears in the dataset and the third is its idf score.
+	/// A vector of the most frequently occurring tokens. It is a tuple where the first entry is the token, the second is the number of times it appears in the dataset and the third is its idf score.
 	pub top_tokens: Vec<(String, u64, f32)>,
 }
 
@@ -375,7 +375,7 @@ fn compute_column_stats_text(
 		.filter_map(|(token, count)| {
 			let document_frequency = dataset_stats.per_example_histogram.get(&token).unwrap();
 			if *document_frequency >= MIN_DOCUMENT_FREQUENCY.to_usize().unwrap() {
-				// idf = log (n + 1 / (1 + document_frequency))+ 1
+				// idf = log ((n + 1) / (1 + document_frequency)) + 1
 				let n_examples = dataset_stats.count;
 				let idf = ((1.0 + n_examples.to_f32().unwrap())
 					/ (1.0 + (document_frequency.to_f32().unwrap())))

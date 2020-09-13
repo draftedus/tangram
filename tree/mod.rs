@@ -143,8 +143,11 @@ pub enum Model {
 pub struct Regressor {
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
 	pub bias: f32,
+	/// The trees in this model.
 	pub trees: Vec<Tree>,
+	/// The importance of each feature as measured by the number of times the feature was used in a split for a branch node.
 	pub feature_importances: Option<Vec<f32>>,
+	/// The training losses in each round of training this model.
 	pub losses: Option<Vec<f32>>,
 }
 
@@ -170,11 +173,11 @@ pub struct MulticlassClassifier {
 	pub biases: Vec<f32>,
 	/// The trees in this model. It has shape (n_rounds, n_classes) because for each round, we train n_classes trees.
 	pub trees: Vec<Tree>,
-	// The number of classes.
+	/// The number of classes.
 	pub n_classes: usize,
-	/// The number of boosting rounds == the number of trained trees.
+	/// The number of boosting rounds.
 	pub n_rounds: usize,
-	/// TODO
+	/// The importance of each feature as measured by the number of times the feature was used in a split for a branch node.
 	pub feature_importances: Option<Vec<f32>>,
 	/// The training losses in each round of training this model.
 	pub losses: Option<Vec<f32>>,
