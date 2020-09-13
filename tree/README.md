@@ -16,9 +16,9 @@ Let's use an example to see how to make a prediction using a tree model. A tree 
 
 ```rust
 pub struct BranchSplitContinuous {
-	/// The index of the feature used to split the node.
-	pub feature_index: usize,
-	/// The threshold value of the split. All features <= split_value go to the left subtree and all features  > split_value go to the right.
+  /// The index of the feature used to split the node.
+  pub feature_index: usize,
+  /// The threshold value of the split. All features <= split_value go to the left subtree and all features  > split_value go to the right.
   pub split_value: f32,
   /// The subtree (left or right) that invalid values for this feature should go to.
   pub invalid_values_direction: SplitDirection,
