@@ -1,3 +1,4 @@
+import { BarChart, BoxChart } from '@tangramhq/charts'
 import { MetricsRow } from 'common/metrics_row'
 import { h, ui } from 'deps'
 
@@ -97,7 +98,7 @@ export function NumberColumnDetail(props: Props) {
 				</MetricsRow>
 				{quantilesData && (
 					<ui.Card>
-						<ui.BoxChart
+						<BoxChart
 							data={quantilesData}
 							id="number_quantiles"
 							title={`Distribution of Values for ${props.name}`}
@@ -106,7 +107,7 @@ export function NumberColumnDetail(props: Props) {
 				)}
 				{histogramData && (
 					<ui.Card>
-						<ui.BarChart
+						<BarChart
 							data={histogramData}
 							id="number_histogram"
 							shouldDrawXAxisLabels={true}

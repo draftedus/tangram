@@ -1,3 +1,4 @@
+import { LineChart } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 export function ProductionMetrics() {
@@ -5,7 +6,7 @@ export function ProductionMetrics() {
 		<ui.Window>
 			<div class="production-metrics-wrapper">
 				<ui.Card>
-					<ui.LineChart
+					<LineChart
 						data={accuracyData}
 						labels={accuracyLabels}
 						title="Monthly Accuracy"

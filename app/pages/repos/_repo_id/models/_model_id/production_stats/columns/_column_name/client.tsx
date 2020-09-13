@@ -1,18 +1,18 @@
+import { hydrateBarChart, hydrateBoxChart } from '@tangramhq/charts'
 import { bootClassSelectField } from 'common/class_select'
 import { bootDateWindowSelectField } from 'common/time'
-import { ui } from 'deps'
 
 bootClassSelectField()
 bootDateWindowSelectField()
 if (document.getElementById('number_intervals')) {
-	ui.hydrateBoxChart('number_intervals')
+	hydrateBoxChart('number_intervals')
 }
 if (document.getElementById('number_overall')) {
-	ui.hydrateBoxChart('number_overall')
+	hydrateBoxChart('number_overall')
 }
 if (document.getElementById('enum_overall')) {
-	ui.hydrateBarChart('enum_overall')
+	hydrateBarChart('enum_overall')
 }
 if (document.getElementById('text_overall')) {
-	ui.hydrateBarChart('text_overall')
+	hydrateBarChart('text_overall')
 }

@@ -1,4 +1,3 @@
-import { formatNumber } from '../util'
 import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
 import {
 	Box,
@@ -12,6 +11,7 @@ import {
 	drawYAxisGridLines,
 	drawYAxisLabels,
 	drawYAxisTitle,
+	formatNumber,
 } from './common'
 import { chartColors, chartConfig } from './config'
 import { drawTooltip } from './tooltip'

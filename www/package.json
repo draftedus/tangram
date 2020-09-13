@@ -1,6 +1,8 @@
 {
 	"dependencies": {
+		"@tangramhq/charts": "*",
 		"@tangramhq/pinwheel": "*",
+		"@tangramhq/ui": "*",
 		"preact": "10.4.8",
 		"preact-render-to-string": "5.1.10"
 	},

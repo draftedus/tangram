@@ -1,8 +1,8 @@
-import { ui } from 'deps'
+import { hydrateBarChart } from '@tangramhq/charts'
 
 if (document.getElementById('feature_importances')) {
-	ui.hydrateBarChart('feature_importances')
+	hydrateBarChart('feature_importances')
 }
 if (document.getElementById('feature_weights')) {
-	ui.hydrateBarChart('feature_weights')
+	hydrateBarChart('feature_weights')
 }

@@ -1,3 +1,4 @@
+import { BarChart, BoxChart } from '@tangramhq/charts'
 import { renderPage } from 'common/render'
 import {
 	DateWindow,
@@ -141,7 +142,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 					</ui.Card>
 				)}
 				<ui.Card>
-					<ui.BarChart
+					<BarChart
 						data={predictionCountData}
 						id="prediction_count"
 						title={predictionCountTitle}
@@ -262,7 +263,7 @@ function RegressionProductionStatsChart(props: {
 		props.dateWindow,
 		'Prediction Distribution Stats',
 	)
-	return <ui.BoxChart data={data} id="quantiles_overall" title={title} />
+	return <BoxChart data={data} id="quantiles_overall" title={title} />
 }
 
 function RegressionProductionStatsIntervalChart(props: {
@@ -294,7 +295,7 @@ function RegressionProductionStatsIntervalChart(props: {
 		props.dateWindowInterval,
 		'Prediction Distribution Stats',
 	)
-	return <ui.BoxChart data={data} id="quantiles_intervals" title={title} />
+	return <BoxChart data={data} id="quantiles_intervals" title={title} />
 }
 
 function ClassificationProductionStatsChart(props: {
@@ -328,7 +329,7 @@ function ClassificationProductionStatsChart(props: {
 	}))
 
 	let title = overallChartTitle(props.dateWindow, 'Prediction Stats')
-	return <ui.BarChart data={data} id="histogram_overall" title={title} />
+	return <BarChart data={data} id="histogram_overall" title={title} />
 }
 
 function ClassificationProductionStatsIntervalChart(props: {
@@ -357,5 +358,5 @@ function ClassificationProductionStatsIntervalChart(props: {
 		title: categories[i],
 	}))
 	let title = intervalChartTitle(props.dateWindowInterval, 'Prediction Stats')
-	return <ui.BarChart data={data} id="histogram_intervals" title={title} />
+	return <BarChart data={data} id="histogram_intervals" title={title} />
 }

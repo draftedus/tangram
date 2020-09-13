@@ -1,3 +1,4 @@
+import { BarChart } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 type Props = {
@@ -23,7 +24,7 @@ export function TreeFeatureImportances(props: Props) {
 		<ui.S2>
 			<ui.H2>{'Feature Importances'}</ui.H2>
 			<ui.Card>
-				<ui.BarChart
+				<BarChart
 					data={data}
 					id="feature_importances"
 					title="Feature Importances"

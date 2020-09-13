@@ -7,7 +7,8 @@ use crate::{dataframe::*, stats, util::text};
 use itertools::izip;
 use ndarray::{prelude::*, s};
 
-/** A FeatureGroup is an enum describing the type of feature.
+/**
+A FeatureGroup is an enum describing the type of feature.
 
 The following table shows which combinations or dataframe columns, feature groups, and models are used.
 
@@ -27,7 +28,8 @@ pub enum FeatureGroup {
 	BagOfWords(BagOfWordsFeatureGroup),
 }
 
-/** An IdentityFeatureGroup describes an *identity* mapped feature. The IdentityFeatureGroup is only used for NumberColumns and EnumColumns.
+/**
+An IdentityFeatureGroup describes an *identity* mapped feature. The IdentityFeatureGroup is only used for `NumberColumn`s and `EnumColumn`s.
 
 # Example
 1. **Source Column Type**: [NumberColumn](../dataframe/struct.NumberColumn.html).
@@ -49,7 +51,6 @@ EnumColumn {
 }
 ```
 
-
 | value       | encoding |
 |-------------|----------|
 | \<MISSING\> | 0        |
@@ -57,16 +58,12 @@ EnumColumn {
 | green       | 2        |
 | blue        | 3        |
 
-
 | original data in csv                  | dataframe [data](../dataframe/struct.EnumColumn.html#structfield.data) | feature values |
 |---------------------------------------|------------------------------------------------------------------------|----------------|
 | "red"                                 | 1                                                                      | 1              |
 |\<MISSING\>                            | 0                                                                      | 0              |
 | "red"                                 | 1                                                                      | 1              |
 | "blue"                                | 3                                                                      | 3              |
-
-
-
 */
 #[derive(Debug)]
 pub struct IdentityFeatureGroup {

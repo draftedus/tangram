@@ -1,3 +1,4 @@
+import { BarChart } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 type Props = {
@@ -21,7 +22,7 @@ export function LinearFeatureWeights(props: Props) {
 		<ui.S2>
 			<ui.H2>{'Feature Weights'}</ui.H2>
 			<ui.Card>
-				<ui.BarChart
+				<BarChart
 					data={data}
 					id="feature_weights"
 					shouldDrawXAxisLabels={false}

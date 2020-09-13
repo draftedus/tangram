@@ -1,10 +1,10 @@
+import { hydrateLineChart } from '@tangramhq/charts'
 import { bootDateWindowSelectField } from 'common/time'
-import { ui } from 'deps'
 
 bootDateWindowSelectField()
 if (document.getElementById('mse')) {
-	ui.hydrateLineChart('mse')
+	hydrateLineChart('mse')
 }
 if (document.getElementById('accuracy')) {
-	ui.hydrateLineChart('accuracy')
+	hydrateLineChart('accuracy')
 }

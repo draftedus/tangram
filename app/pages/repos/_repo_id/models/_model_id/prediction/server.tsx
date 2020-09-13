@@ -1,3 +1,4 @@
+import { BarChart, BoxChart, ShapChart } from '@tangramhq/charts'
 import { renderPage } from 'common/render'
 import {
 	EnumColumnToken,
@@ -197,7 +198,7 @@ function NumberField(props: NumberFieldProps) {
 				/>
 			</div>
 			<div class="predict-column-chart-wrapper">
-				<ui.BoxChart
+				<BoxChart
 					class="column-chart"
 					data={[
 						{
@@ -247,7 +248,7 @@ function EnumField(props: EnumFieldProps) {
 				/>
 			</div>
 			<div class="predict-column-chart-wrapper">
-				<ui.BarChart
+				<BarChart
 					class="column-chart"
 					data={[
 						{
@@ -331,7 +332,7 @@ function RegressionPredictionOutput(props: RegressionPredictionOutputProps) {
 				}
 			</ui.P>
 			<ui.Card>
-				<ui.ShapChart
+				<ShapChart
 					data={props.shapChartData}
 					id="regression_shap"
 					includeXAxisTitle={true}
@@ -374,7 +375,7 @@ function ClassificationPredictionOutput(
 				/>
 			</ui.Card>
 			{props.probabilities.length > 2 && (
-				<ui.BarChart
+				<BarChart
 					data={probabilityData}
 					id="probabilities"
 					title="Predicted Probabilities"
@@ -387,7 +388,7 @@ function ClassificationPredictionOutput(
 				}
 			</ui.P>
 			<ui.Card>
-				<ui.ShapChart
+				<ShapChart
 					data={props.shapChartData}
 					id="classification_shap"
 					includeXAxisTitle={true}

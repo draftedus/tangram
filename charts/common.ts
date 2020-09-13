@@ -646,8 +646,11 @@ function times<T>(n: number, fn: (index: number) => T): T[] {
 	return result
 }
 
-export function formatNumber(value: number, maxDigits?: number): string {
-	let result = value.toPrecision(maxDigits || 6)
+export function formatNumber(value: number | null, maxDigits?: number): string {
+	if (value === undefined || value === null) {
+		return ''
+	}
+	let result = value.toPrecision(maxDigits ?? 6)
 	// remove trailing zeros including decimal point, for example 12345.000
 	result = result.replace(/\.(0*)$/, '')
 	// remove trailing zeros excluding decimal point, for example .01234500

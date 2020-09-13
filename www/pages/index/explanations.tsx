@@ -1,3 +1,4 @@
+import { BarChart, ShapChart } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 export function Explanations() {
@@ -57,7 +58,7 @@ export function Explanations() {
 					</ui.Card>
 				</div>
 				{data.classes.length > 2 && (
-					<ui.BarChart
+					<BarChart
 						data={[
 							{
 								color: ui.colors.blue,
@@ -69,7 +70,7 @@ export function Explanations() {
 					/>
 				)}
 				<ui.Card>
-					<ui.ShapChart
+					<ShapChart
 						data={data.shapChartData}
 						includeXAxisTitle={true}
 						includeYAxisLabels={true}

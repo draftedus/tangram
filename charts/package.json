@@ -1,9 +1,8 @@
 {
 	"dependencies": {
-		"@tangramhq/pinwheel": "*",
 		"preact": "10.4.8"
 	},
 	"main": "mod.ts",
-	"name": "@tangramhq/ui",
+	"name": "@tangramhq/charts",
 	"version": "0.0.0"
 }

@@ -1,4 +1,5 @@
-import { font, fontSize } from '../theme'
+let font = '14px JetBrains Mono'
+let fontSize = 14
 
 export let chartConfig = {
 	axisWidth: 2,

@@ -19,6 +19,7 @@
 	"type": "module",
 	"workspaces": [
 		"app",
+		"charts",
 		"pinwheel",
 		"ui",
 		"www"

@@ -1,3 +1,4 @@
+import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 export function TrainingMetrics() {
@@ -5,7 +6,7 @@ export function TrainingMetrics() {
 		{
 			color: ui.colors.blue,
 			data: data.rocData,
-			pointStyle: ui.PointStyle.Hidden,
+			pointStyle: PointStyle.Hidden,
 			title: 'ROC',
 		},
 		{
@@ -14,8 +15,8 @@ export function TrainingMetrics() {
 				{ x: 0, y: 0 },
 				{ x: 1, y: 1 },
 			],
-			lineStyle: ui.LineStyle.Dashed,
-			pointStyle: ui.PointStyle.Hidden,
+			lineStyle: LineStyle.Dashed,
+			pointStyle: PointStyle.Hidden,
 			title: 'Reference',
 		},
 	]
@@ -23,7 +24,7 @@ export function TrainingMetrics() {
 		{
 			color: ui.colors.blue,
 			data: data.prData,
-			pointStyle: ui.PointStyle.Circle,
+			pointStyle: PointStyle.Circle,
 			title: 'PR',
 		},
 	]
@@ -46,7 +47,7 @@ export function TrainingMetrics() {
 				</div>
 				<div style={{ gridArea: 'pr' }}>
 					<ui.Card>
-						<ui.LineChart
+						<LineChart
 							data={prData}
 							hideLegend={true}
 							title="PR Curve"
@@ -61,7 +62,7 @@ export function TrainingMetrics() {
 				</div>
 				<div style={{ gridArea: 'roc' }}>
 					<ui.Card>
-						<ui.LineChart
+						<LineChart
 							data={rocData}
 							hideLegend={true}
 							title="ROC Curve"

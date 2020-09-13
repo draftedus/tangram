@@ -1,3 +1,4 @@
+import { BoxChart } from '@tangramhq/charts'
 import { MetricsRow } from 'common/metrics_row'
 import {
 	DateWindow,
@@ -129,14 +130,14 @@ export function Number(props: Props) {
 				<ui.Alert level={ui.Level.Danger}>{props.alert}</ui.Alert>
 			)}
 			<ui.Card>
-				<ui.BoxChart
+				<BoxChart
 					data={overallBoxChartData}
 					id="number_overall"
 					title={statsOverallChartTitle}
 				/>
 			</ui.Card>
 			<ui.Card>
-				<ui.BoxChart
+				<BoxChart
 					data={intervalBoxChartData}
 					id="number_intervals"
 					title={statsIntervalChartTitle}

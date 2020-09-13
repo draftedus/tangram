@@ -1,3 +1,4 @@
+import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
 import { ClassSelect } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { renderPage } from 'common/render'
@@ -44,8 +45,8 @@ export default function TrainingMetricsIndexPage(props: Props) {
 				{ x: 0, y: 0 },
 				{ x: 1, y: 1 },
 			],
-			lineStyle: ui.LineStyle.Dashed,
-			pointStyle: ui.PointStyle.Hidden,
+			lineStyle: LineStyle.Dashed,
+			pointStyle: PointStyle.Hidden,
 			title: 'Reference',
 		},
 	]
@@ -81,7 +82,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					<ui.H2>{'Receiver Operating Characteristic Curve'}</ui.H2>
 					<ui.P>{definitions.receiverOperatingCharacteristic}</ui.P>
 					<ui.Card>
-						<ui.LineChart
+						<LineChart
 							data={data}
 							hideLegend={false}
 							id="roc"

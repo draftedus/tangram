@@ -1,3 +1,4 @@
+import { BarChart } from '@tangramhq/charts'
 import { MetricsRow } from 'common/metrics_row'
 import { DateWindow, DateWindowInterval, overallChartTitle } from 'common/time'
 import { productionColor } from 'common/tokens'
@@ -36,7 +37,7 @@ export function Text(props: Props) {
 				<ui.Alert level={ui.Level.Danger}>{props.alert}</ui.Alert>
 			)}
 			<ui.Card>
-				<ui.BarChart
+				<BarChart
 					data={overallChartData}
 					id="text_overall"
 					title={overallDistributionChartTitle}

@@ -1,3 +1,4 @@
+import { LineChart } from '@tangramhq/charts'
 import { MetricsRow } from 'common/metrics_row'
 import {
 	DateWindow,
@@ -71,7 +72,7 @@ export function RegressorProductionMetricsPage(props: Props) {
 				</ui.P>
 				{mseData && (
 					<ui.Card>
-						<ui.LineChart
+						<LineChart
 							data={mseData}
 							id="mse"
 							labels={props.mseChart.data.map(entry => entry.label)}

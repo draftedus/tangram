@@ -1,4 +1,3 @@
-import { formatNumber } from '../util'
 import { drawBarChartXAxisLabels } from './bar_chart'
 import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
 import {
@@ -11,6 +10,7 @@ import {
 	drawYAxisGridLines,
 	drawYAxisLabels,
 	drawYAxisTitle,
+	formatNumber,
 } from './common'
 import { chartColors, chartConfig } from './config'
 import { TooltipData, drawTooltip } from './tooltip'

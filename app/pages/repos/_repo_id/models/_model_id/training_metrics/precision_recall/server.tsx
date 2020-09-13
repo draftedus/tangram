@@ -1,3 +1,4 @@
+import { LineChart } from '@tangramhq/charts'
 import { ClassSelect } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { renderPage } from 'common/render'
@@ -83,7 +84,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					<ui.H2>{'Parametric Precision Recall Curve'}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Card>
-						<ui.LineChart
+						<LineChart
 							data={parametricData}
 							hideLegend={true}
 							id="parametric_pr"
@@ -101,7 +102,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					<ui.H2>{'Non-Parametric Precision Recall Curve'}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Card>
-						<ui.LineChart
+						<LineChart
 							data={nonParametricData}
 							hideLegend={false}
 							id="non_parametric_pr"

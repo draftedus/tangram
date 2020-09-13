@@ -1,3 +1,4 @@
+import { BarChart } from '@tangramhq/charts'
 import { MetricsRow } from 'common/metrics_row'
 import { h, ui } from 'deps'
 
@@ -39,7 +40,7 @@ export function EnumColumnDetail(props: Props) {
 					</ui.Card>
 				</MetricsRow>
 				<ui.Card>
-					<ui.BarChart
+					<BarChart
 						data={histogramData}
 						id="enum_histogram"
 						title={`Histogram of Unique Values for ${props.name}`}

@@ -1,3 +1,4 @@
+import { BarChart } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 export function Introspection() {
@@ -5,7 +6,7 @@ export function Introspection() {
 		<ui.Window>
 			<div class="introspection-wrapper">
 				<ui.Card>
-					<ui.BarChart
+					<BarChart
 						data={data}
 						shouldDrawXAxisLabels={false}
 						title="Feature Weights"

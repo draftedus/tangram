@@ -1,3 +1,4 @@
+import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { renderPage } from 'common/render'
@@ -115,8 +116,8 @@ export default function ProductionMetricsPage(props: Props) {
 				x: index,
 				y: interval.precision.training,
 			})),
-			lineStyle: ui.LineStyle.Dashed,
-			pointStyle: ui.PointStyle.Hidden,
+			lineStyle: LineStyle.Dashed,
+			pointStyle: PointStyle.Hidden,
 			title: 'Training Precision',
 		},
 		{
@@ -136,8 +137,8 @@ export default function ProductionMetricsPage(props: Props) {
 				x: index,
 				y: interval.recall.training,
 			})),
-			lineStyle: ui.LineStyle.Dashed,
-			pointStyle: ui.PointStyle.Hidden,
+			lineStyle: LineStyle.Dashed,
+			pointStyle: PointStyle.Hidden,
 			title: 'Training Recall',
 		},
 		{
@@ -157,8 +158,8 @@ export default function ProductionMetricsPage(props: Props) {
 				x: index,
 				y: interval.f1Score.training,
 			})),
-			lineStyle: ui.LineStyle.Dashed,
-			pointStyle: ui.PointStyle.Hidden,
+			lineStyle: LineStyle.Dashed,
+			pointStyle: PointStyle.Hidden,
 			title: 'Training F1 Score',
 		},
 		{
@@ -238,7 +239,7 @@ export default function ProductionMetricsPage(props: Props) {
 								</ui.Card>
 							</MetricsRow>
 							<ui.Card>
-								<ui.LineChart
+								<LineChart
 									data={precisionChartData}
 									id="precision_intervals"
 									labels={chartLabels}
@@ -249,7 +250,7 @@ export default function ProductionMetricsPage(props: Props) {
 								/>
 							</ui.Card>
 							<ui.Card>
-								<ui.LineChart
+								<LineChart
 									data={recallChartData}
 									id="recall_intervals"
 									labels={chartLabels}
@@ -274,7 +275,7 @@ export default function ProductionMetricsPage(props: Props) {
 								</ui.Card>
 							</MetricsRow>
 							<ui.Card>
-								<ui.LineChart
+								<LineChart
 									data={f1ScoreChartData}
 									id="f1_intervals"
 									labels={chartLabels}

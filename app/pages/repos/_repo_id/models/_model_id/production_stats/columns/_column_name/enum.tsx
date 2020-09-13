@@ -1,3 +1,4 @@
+import { BarChart } from '@tangramhq/charts'
 import { MetricsRow } from 'common/metrics_row'
 import { DateWindow, DateWindowInterval, overallChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
@@ -57,7 +58,7 @@ export function Enum(props: Props) {
 				<ui.Alert level={ui.Level.Danger}>{props.alert}</ui.Alert>
 			)}
 			<ui.Card>
-				<ui.BarChart
+				<BarChart
 					data={overallChartData}
 					id="enum_overall"
 					title={overallDistributionChartTitle}

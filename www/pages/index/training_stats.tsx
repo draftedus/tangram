@@ -1,3 +1,4 @@
+import { BoxChart } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 export function TrainingStats() {
@@ -35,7 +36,7 @@ export function TrainingStats() {
 				</div>
 				<div style={{ gridArea: 'age' }}>
 					<ui.Card>
-						<ui.BoxChart
+						<BoxChart
 							data={series}
 							shouldDrawXAxisLabels={false}
 							title="Age"

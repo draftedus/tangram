@@ -1,3 +1,4 @@
+import { BarChart } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 export type Props = {
@@ -22,7 +23,7 @@ export function TextColumnDetail(props: Props) {
 			<ui.H1>{props.name}</ui.H1>
 			<ui.S2>
 				<ui.Card>
-					<ui.BarChart
+					<BarChart
 						data={data}
 						id="text_histogram"
 						title="Most Frequent Tokens"

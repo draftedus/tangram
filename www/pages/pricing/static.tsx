@@ -15,7 +15,9 @@ export default function Pricing(props: Props) {
 				<h2 class="pricing-subtitle">
 					{'Training and prediction are free forever.'}
 					<br />
-					{'Reporting, tuning, and monitoring are paid after a free trial.'}
+					{
+						'Reporting, tuning, and monitoring are paid after a free trial. We are committed to simple public pricing.'
+					}
 				</h2>
 				<PricingCards
 					enterpriseCta={

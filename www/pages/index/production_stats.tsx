@@ -1,3 +1,4 @@
+import { BarChart } from '@tangramhq/charts'
 import { h, ui } from 'deps'
 
 export function ProductionStats() {
@@ -37,7 +38,7 @@ export function ProductionStats() {
 				</div>
 				<div style={{ gridArea: 'comparison' }}>
 					<ui.Card>
-						<ui.BarChart
+						<BarChart
 							data={series}
 							title="Chest Pain"
 							xAxisTitle="Chest Pain"

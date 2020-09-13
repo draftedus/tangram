@@ -1,6 +1,10 @@
+/*!
+*/
+
 use crate::{config, features, stats};
 use itertools::iproduct;
 
+/// A `GridItem` is a description of a single entry in a hyperparameter grid. It specifies what feature engineering to perform on the training data, which model to train, and which hyperparameters to use.
 pub enum GridItem {
 	LinearRegressor {
 		target_column_index: usize,
@@ -173,6 +177,7 @@ const DEFAULT_TREE_DEPTH_VALUES: [u64; 1] = [3];
 const DEFAULT_TREE_MAX_TREES_VALUES: [u64; 1] = [100];
 const DEFAULT_TREE_MIN_EXAMPLES_PER_LEAF_VALUES: [u64; 1] = [10];
 
+/// Compute the default hyperparameter grid for regression.
 pub fn default_regression_hyperparameter_grid(
 	target_column_index: usize,
 	column_stats: &[stats::ColumnStats],
@@ -219,6 +224,7 @@ pub fn default_regression_hyperparameter_grid(
 	grid
 }
 
+/// Compute the default hyperparameter grid for binary classification.
 pub fn default_binary_classification_hyperparameter_grid(
 	target_column_index: usize,
 	column_stats: &[stats::ColumnStats],
@@ -265,6 +271,7 @@ pub fn default_binary_classification_hyperparameter_grid(
 	grid
 }
 
+/// Compute the default hyperparameter grid for multiclass classification.
 pub fn default_multiclass_classification_hyperparameter_grid(
 	target_column_index: usize,
 	column_stats: &[stats::ColumnStats],

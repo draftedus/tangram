@@ -1,3 +1,4 @@
+import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import {
@@ -49,8 +50,8 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 				x: index,
 				y: props.accuracyChart.trainingAccuracy,
 			})),
-			lineStyle: ui.LineStyle.Dashed,
-			pointStyle: ui.PointStyle.Hidden,
+			lineStyle: LineStyle.Dashed,
+			pointStyle: PointStyle.Hidden,
 			title: 'Training Accuracy',
 		},
 		{
@@ -109,7 +110,7 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 					/>
 				</ui.Card>
 				<ui.Card>
-					<ui.LineChart
+					<LineChart
 						data={accuracyData}
 						id="accuracy"
 						labels={chartLabels}
