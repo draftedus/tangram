@@ -1,5 +1,6 @@
-use super::{
-	SplitDirection, TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
+use crate::{
+	single::{TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete},
+	SplitDirection,
 };
 use itertools::izip;
 use ndarray::prelude::*;

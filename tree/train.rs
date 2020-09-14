@@ -1,14 +1,13 @@
-use super::{
+use crate::{
 	bin::{
 		compute_bin_info, compute_binned_features, filter_binned_features, ComputeBinInfoOptions,
 		FilterBinnedFeaturesOptions,
 	},
+	bin_stats::BinStatsPool,
 	early_stopping::{
 		compute_early_stopping_metrics, train_early_stopping_split, TrainStopMonitor,
 	},
-	single,
-	single::bin_stats::BinStatsPool,
-	*,
+	single, BinaryClassifier, Model, MulticlassClassifier, Regressor, Task, TrainOptions, Tree,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -221,7 +220,7 @@ pub fn train(
 					*value = index;
 				}
 				// train the tree
-				let (tree, leaf_values) = single::train::train(
+				let (tree, leaf_values) = single::train(
 					features_train.view(),
 					&include_features,
 					gradients.as_slice().unwrap(),

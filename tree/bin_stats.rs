@@ -1,4 +1,4 @@
-use super::super::bin::BinInfo;
+use super::bin::BinInfo;
 use itertools::izip;
 use ndarray::prelude::*;
 
