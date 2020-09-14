@@ -85,14 +85,14 @@ The bias is computed differently depending on the type of model trained: regress
 ### Training Trees
 
 - **Step 1.** Measure the _error_ our bias only model generates. In regressor's the loss function is the mean squared error. In binary classifiers the loss function is the binary cross entropy loss, also known as log loss. In multiclass classifiers, the loss function is the cross entropy loss. The code for computing the derivate of the loss function is nested inside a function called `update_gradients_and_hessians` inside each of `regressor.rs`, `binary_classifier.rs`, `multiclass_classifier.rs`.
-- **Step 2.** Train a regression tree to predict the error for each example obtained in the previous step. The tree is called a regression tree because the target we are trying to predict for each example is a continuous value. See [Single Tree](single-tree) below for more details.
-- **Step 3.** Update the predictions for each example using the output from the previously trained tree. The function to do this is called `update_predictions_from_leaves`, located in `train.rs`. This prediction function is more optimal than running a traditional forward prediction pass for each example through the tree. We are able to do this in a single pass through O(n_examples) because we know which examples ended up in each leaf during training. If we had to predict the naive way, the computational complexity would be O(n_examples)\*O(tree_depth).
+- **Step 2.** Train a regression tree to predict the error for each example obtained in the previous step. The tree is called a regression tree because the target we are trying to predict for each example is a continuous value. See [Single Tree](#single-tree) below for more details.
+- **Step 3.** Update the predictions for each example using the output from the previously trained tree.
 - **Step 4.** Update the gradients and hessians for each example, using the predictions and labels.
 - **Step 5.** Repeat steps 2 and 3 until we reach the early stopping criteria or we reach `max_rounds`, whichever comes first.
 
 ### Single Tree
 
-The goal of training a single tree is to split training examples into leaves such training examples in the same leaves have similar errors. We use the features to split training examples and choose the features that result in the "best" split.
+The goal of training a single tree is to split training examples into leaves such training examples in the same leaves have similar errors. We use the features to split training examples and choose the features that result in the "best" split. See the `train` function in `single.rs`.
 
 ### Histogram Gradient Boosting
 
@@ -113,7 +113,3 @@ Histogram gradient boosting differs from regular gradient boosting in that inste
 | **bin_stats.rs**             | This contains code that computes aggregate gradient and hessian statistics for all of the examples in a given node.                                                                                |
 | **split.rs**                 | This contains code that finds the optimal split for a node. It uses the bin_stats for the node computed earlier in order to find the optimal split.                                                |
 | **examples_index.rs**        | This contains code to maintain the examples_index lookup so we keep track of which nodes contain which examples.                                                                                   |
-
-### Training a single tree
-
-The code in training a single tree is located inside `single.rs`. At each iteration of training, we first compute the bin stats for the node. The code for this is located in `bin_stats.rs`. Once the bin stats are computed, we find the best split. The code for finding the optimal split is located in `split.rs`. If there is a split that is valid, we split the node and push the two newly created nodes into the queue. If there is no valid split, we make the node a leaf node. Once we have split a node, we need to reorder the examples_index lookup table such that all examples that go to the left subtree are contiguous and all examples that go the right are contiguous. The code to reorder to examples_index is in `examples_index.rs`. We continue this process, popping items of the queue and splitting nodes until there are no more nodes in the priority queue or the `max_leaves` or `max_depth` criteria have been met.
