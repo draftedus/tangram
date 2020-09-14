@@ -1,8 +1,8 @@
 use super::{shap, single, Model, MulticlassClassifier, Task, TrainOptions};
-use crate::dataframe::*;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
+use tangram_dataframe::*;
 
 impl MulticlassClassifier {
 	pub fn train(

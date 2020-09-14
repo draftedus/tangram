@@ -1,4 +1,4 @@
-use crate::{dataframe, features, linear, model, tree};
+use crate::{features, linear, model, tree};
 use anyhow::Result;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -164,22 +164,22 @@ pub fn predict(
 	let column_types = columns
 		.iter()
 		.map(|c| match c {
-			Column::Unknown(_) => dataframe::ColumnType::Unknown,
-			Column::Number(_) => dataframe::ColumnType::Number,
-			Column::Enum(s) => dataframe::ColumnType::Enum {
+			Column::Unknown(_) => tangram_dataframe::ColumnType::Unknown,
+			Column::Number(_) => tangram_dataframe::ColumnType::Number,
+			Column::Enum(s) => tangram_dataframe::ColumnType::Enum {
 				options: s.options.clone(),
 			},
-			Column::Text(_) => dataframe::ColumnType::Text,
+			Column::Text(_) => tangram_dataframe::ColumnType::Text,
 		})
 		.collect();
-	let mut dataframe = dataframe::DataFrame::new(column_names, column_types);
+	let mut dataframe = tangram_dataframe::DataFrame::new(column_names, column_types);
 
 	// fill the dataframe with the input
 	for input in input.0 {
 		for column in dataframe.columns.iter_mut() {
 			match column {
-				dataframe::Column::Unknown(column) => column.len += 1,
-				dataframe::Column::Number(column) => {
+				tangram_dataframe::Column::Unknown(column) => column.len += 1,
+				tangram_dataframe::Column::Number(column) => {
 					let value = match input.get(&column.name) {
 						Some(serde_json::Value::Number(value)) => {
 							value.as_f64().unwrap().to_f32().unwrap()
@@ -188,7 +188,7 @@ pub fn predict(
 					};
 					column.data.push(value);
 				}
-				dataframe::Column::Enum(column) => {
+				tangram_dataframe::Column::Enum(column) => {
 					let value = input.get(&column.name).and_then(|value| value.as_str());
 					let value = value
 						.and_then(|value| {
@@ -201,7 +201,7 @@ pub fn predict(
 						.unwrap_or(0);
 					column.data.push(value);
 				}
-				dataframe::Column::Text(column) => {
+				tangram_dataframe::Column::Text(column) => {
 					let value = input
 						.get(&column.name)
 						.and_then(|value| value.as_str())
@@ -507,7 +507,7 @@ fn compute_shap_values_regression_output_linear(
 	feature_groups: &[features::FeatureGroup],
 	shap_values: ArrayView3<f32>,
 	features: ArrayView2<f32>,
-	dataframe: dataframe::DataFrameView,
+	dataframe: tangram_dataframe::DataFrameView,
 ) -> Vec<ShapValues> {
 	let feature_names = compute_feature_names(feature_groups);
 	let feature_group_map = compute_feature_group_map(feature_groups);
@@ -536,8 +536,8 @@ fn compute_shap_values_regression_output_linear(
 fn compute_shap_values_regression_output_tree(
 	feature_groups: &[features::FeatureGroup],
 	shap_values: ArrayView3<f32>,
-	features: ArrayView2<dataframe::Value>,
-	dataframe: dataframe::DataFrameView,
+	features: ArrayView2<tangram_dataframe::Value>,
+	dataframe: tangram_dataframe::DataFrameView,
 ) -> Vec<ShapValues> {
 	let feature_names = compute_feature_names(feature_groups);
 	let feature_group_map = compute_feature_group_map(feature_groups);
@@ -568,7 +568,7 @@ fn compute_shap_values_classification_output_linear(
 	classes: &[String],
 	shap_values: ArrayView3<f32>,
 	features: ArrayView2<f32>,
-	dataframe: dataframe::DataFrameView,
+	dataframe: tangram_dataframe::DataFrameView,
 ) -> Vec<BTreeMap<String, ShapValues>> {
 	let feature_names = compute_feature_names(feature_groups);
 	let feature_group_map = compute_feature_group_map(feature_groups);
@@ -610,7 +610,7 @@ fn compute_shap_values_linear(
 	feature_names: &[String],
 	features: &[f32],
 	shap_values: &[f32],
-	_dataframe: &dataframe::DataFrameView,
+	_dataframe: &tangram_dataframe::DataFrameView,
 ) -> Vec<(String, f32)> {
 	feature_names
 		.iter()
@@ -645,8 +645,8 @@ fn compute_shap_values_classification_output_tree(
 	feature_groups: &[features::FeatureGroup],
 	classes: &[String],
 	shap_values: ArrayView3<f32>,
-	features: ArrayView2<dataframe::Value>,
-	dataframe: dataframe::DataFrameView,
+	features: ArrayView2<tangram_dataframe::Value>,
+	dataframe: tangram_dataframe::DataFrameView,
 ) -> Vec<BTreeMap<String, ShapValues>> {
 	let feature_names = compute_feature_names(feature_groups);
 	let feature_group_map = compute_feature_group_map(feature_groups);
@@ -686,9 +686,9 @@ fn compute_shap_values_tree(
 	feature_group_map: &[usize],
 	feature_groups: &[features::FeatureGroup],
 	feature_names: &[String],
-	features: ArrayView1<dataframe::Value>,
+	features: ArrayView1<tangram_dataframe::Value>,
 	shap_values: ArrayView1<f32>,
-	dataframe: &dataframe::DataFrameView,
+	dataframe: &tangram_dataframe::DataFrameView,
 ) -> Vec<(String, f32)> {
 	feature_names
 		.iter()
@@ -698,7 +698,7 @@ fn compute_shap_values_tree(
 		.map(|(((name, value), feature), feature_group_index)| {
 			let feature = match feature_groups[*feature_group_index] {
 				features::FeatureGroup::BagOfWords(_) => match feature {
-					dataframe::Value::Number(v) => match v.partial_cmp(&0.0) {
+					tangram_dataframe::Value::Number(v) => match v.partial_cmp(&0.0) {
 						Some(std::cmp::Ordering::Equal) => "does not contain".to_string(),
 						_ => "contains".to_string(),
 					},
@@ -706,7 +706,7 @@ fn compute_shap_values_tree(
 				},
 				features::FeatureGroup::Normalized(_) => "".to_string(),
 				features::FeatureGroup::OneHotEncoded(_) => match feature {
-					dataframe::Value::Number(v) => {
+					tangram_dataframe::Value::Number(v) => {
 						if v.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
 							"false".to_string()
 						} else {
@@ -716,15 +716,15 @@ fn compute_shap_values_tree(
 					_ => unreachable!(),
 				},
 				features::FeatureGroup::Identity(_) => match feature {
-					dataframe::Value::Number(v) => v.to_string(),
-					dataframe::Value::Enum(v) => {
+					tangram_dataframe::Value::Number(v) => v.to_string(),
+					tangram_dataframe::Value::Enum(v) => {
 						// get the name of the category
 						if *v == 0 {
 							"oov".to_string()
 						} else {
 							let column = &dataframe.columns[*feature_group_index];
 							match &column {
-								dataframe::ColumnView::Enum(column) => {
+								tangram_dataframe::ColumnView::Enum(column) => {
 									column.options[*v - 1].to_string()
 								}
 								_ => unreachable!(),

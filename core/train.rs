@@ -1,6 +1,5 @@
 use crate::{
 	config::{self, Config},
-	dataframe::*,
 	features, grid, linear, metrics, model, stats, test, tree,
 	util::progress_counter::ProgressCounter,
 };
@@ -11,6 +10,7 @@ use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::BTreeMap, path::Path};
+use tangram_dataframe::*;
 use tangram_id::Id;
 
 /**
@@ -438,7 +438,6 @@ fn load_dataframe(
 	let len = std::fs::metadata(file_path)?.len();
 	let progress_counter = ProgressCounter::new(len);
 	update_progress(Progress::Loading(progress_counter.clone()));
-	let mut csv_reader = csv::Reader::from_path(file_path)?;
 	let column_types: Option<BTreeMap<String, ColumnType>> = config
 		.as_ref()
 		.and_then(|config| config.column_types.as_ref())
@@ -458,8 +457,8 @@ fn load_dataframe(
 				})
 				.collect()
 		});
-	let dataframe = DataFrame::from_csv(
-		&mut csv_reader,
+	let dataframe = DataFrame::from_path(
+		file_path,
 		FromCsvOptions {
 			column_types,
 			infer_options: Default::default(),

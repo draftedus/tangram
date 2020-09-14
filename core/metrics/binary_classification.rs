@@ -171,14 +171,7 @@ impl<'a> Metric<'a> for BinaryClassifierMetrics {
 	}
 }
 
-/**
-This function computes the AUC ROC using a riemann sum given a confusion matrix with a predefined number of thresholds.
-								   threshold_index  prediction   label
-										 |             |           |
-										 v             v           v
-let dimension = (n_thresholds, n_classes, n_classes);
-confusion_matrix: Array3::zeros(dimension),
-*/
+/// This function computes the AUC ROC using a riemann sum given a confusion matrix with a predefined number of thresholds.
 fn auc_roc(confusion_matrix: ArrayView3<u64>) -> f32 {
 	let class_index = 1;
 	let n_thresholds = confusion_matrix.shape()[0];

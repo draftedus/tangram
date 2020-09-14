@@ -1,10 +1,11 @@
 use crate::{
-	dataframe::*, features, linear, metrics, metrics::Metric, train::ModelTestProgress, tree,
+	features, linear, metrics, metrics::Metric, train::ModelTestProgress, tree,
 	util::progress_counter::ProgressCounter,
 };
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use tangram_dataframe::*;
 
 pub fn test_linear_regressor(
 	dataframe_test: &DataFrameView,

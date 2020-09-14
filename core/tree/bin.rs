@@ -1,9 +1,9 @@
-use crate::dataframe::*;
 use itertools::{izip, Itertools};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
+use tangram_dataframe::*;
 use tangram_finite::Finite;
 
 #[derive(Clone, Debug)]
@@ -26,7 +26,7 @@ impl BinInfo {
 	* (2, infinity)
 	### Enum Bins
 	Enum features have n valid bins equal to the number of enum variants.
-	// */
+	*/
 	pub fn n_valid_bins(&self) -> u8 {
 		match self {
 			Self::Number { thresholds } => (thresholds.len() + 1).to_u8().unwrap(),

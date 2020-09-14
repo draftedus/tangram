@@ -1,0 +1,15 @@
+[package]
+name = "tangram_dataframe"
+version = "1.0.0"
+edition = "2018"
+
+[lib]
+path = "lib.rs"
+
+[dev-dependencies]
+insta = "0.16"
+
+[dependencies]
+anyhow = "1"
+csv = "1"
+lexical = "5"

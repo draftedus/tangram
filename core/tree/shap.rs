@@ -1,12 +1,15 @@
 use super::{
 	BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete, Node, SplitDirection, Tree,
 };
-use crate::dataframe;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
 // computes for a single output
-pub fn compute_shap(example: &[dataframe::Value], trees: ArrayView1<Tree>, bias: f32) -> Vec<f32> {
+pub fn compute_shap(
+	example: &[tangram_dataframe::Value],
+	trees: ArrayView1<Tree>,
+	bias: f32,
+) -> Vec<f32> {
 	let n_features = example.len();
 	let mut shap_values =
 		trees
@@ -26,7 +29,7 @@ pub fn compute_shap(example: &[dataframe::Value], trees: ArrayView1<Tree>, bias:
 	shap_values
 }
 
-fn tree_shap(example: &[dataframe::Value], tree: &Tree) -> Vec<f32> {
+fn tree_shap(example: &[tangram_dataframe::Value], tree: &Tree) -> Vec<f32> {
 	let n_features = example.len();
 	let mut phi = vec![0.0; n_features + 1];
 	let max_depth = max_depth(tree, 0, 0) + 2;
@@ -70,7 +73,7 @@ impl PathItem {
 #[allow(unconditional_recursion, clippy::too_many_arguments)]
 fn tree_shap_recursive(
 	phi: &mut [f32],
-	example: &[dataframe::Value],
+	example: &[tangram_dataframe::Value],
 	tree: &Tree,
 	node_index: usize,
 	unique_path: &mut [PathItem],
@@ -222,14 +225,17 @@ fn unwound_path_sum(unique_path: &[PathItem], unique_depth: usize, path_index: u
 	total * (unique_depth + 1).to_f32().unwrap()
 }
 
-fn compute_hot_cold_child(node: &BranchNode, example: &[dataframe::Value]) -> (usize, usize) {
+fn compute_hot_cold_child(
+	node: &BranchNode,
+	example: &[tangram_dataframe::Value],
+) -> (usize, usize) {
 	match &node.split {
 		BranchSplit::Continuous(BranchSplitContinuous {
 			feature_index,
 			split_value,
 			invalid_values_direction,
 		}) => match example[*feature_index] {
-			dataframe::Value::Number(v) => {
+			tangram_dataframe::Value::Number(v) => {
 				if v.is_nan() {
 					if let SplitDirection::Left = invalid_values_direction {
 						(node.left_child_index, node.right_child_index)
@@ -248,7 +254,7 @@ fn compute_hot_cold_child(node: &BranchNode, example: &[dataframe::Value]) -> (u
 			feature_index,
 			directions,
 		}) => match example[*feature_index] {
-			dataframe::Value::Enum(v) => {
+			tangram_dataframe::Value::Enum(v) => {
 				if !directions.get(v.to_u8().unwrap()).unwrap() {
 					(node.left_child_index, node.right_child_index)
 				} else {

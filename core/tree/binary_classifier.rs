@@ -1,9 +1,9 @@
 use super::{shap, single, *};
-use crate::dataframe::*;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use std::ops::Neg;
+use tangram_dataframe::*;
 
 impl BinaryClassifier {
 	pub fn train(

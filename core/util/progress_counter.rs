@@ -17,8 +17,8 @@ You want to track the progress of this loop. You can use `Arc<Mutex<T>>` like so
 ```
 let progress_counter = Arc::new(Mutex::new(0));
 orders.into_par_iter().for_each(|i| {
-	ship_order(i);
-	*progress_counter.lock().unwrap() += 1;
+  ship_order(i);
+  *progress_counter.lock().unwrap() += 1;
 });
 ```
 
@@ -27,8 +27,8 @@ However, if `ship_order` is sufficiently fast, a large portion of each thread's 
 ```
 let progress_counter = ProgressCounter::new(orders.len() as u64);
 orders.into_par_iter().for_each(|i| {
-	ship_order(i);
-	progress_counter.inc();
+  ship_order(i);
+  progress_counter.inc();
 });
 ```
 */

@@ -11,11 +11,12 @@ use super::{
 	*,
 };
 use crate::util::progress_counter::ProgressCounter;
-use crate::{dataframe::*, util::super_unsafe::SuperUnsafe};
+use crate::util::super_unsafe::SuperUnsafe;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::ops::Range;
+use tangram_dataframe::*;
 
 /// Train a gradient boosted decision tree model.
 pub fn train(

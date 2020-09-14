@@ -3,7 +3,7 @@ use super::{
 	BinDirections, BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete, LeafNode,
 	Node, SplitDirection, Tree,
 };
-use crate::{dataframe::*, tree};
+use crate::tree;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::cmp::Ordering;
@@ -197,7 +197,7 @@ impl TrainNode {
 }
 
 impl tree::Tree {
-	pub fn predict(&self, row: &[Value]) -> f32 {
+	pub fn predict(&self, row: &[tangram_dataframe::Value]) -> f32 {
 		let mut node_index = 0;
 		loop {
 			match &self.nodes[node_index] {
@@ -214,7 +214,7 @@ impl tree::Tree {
 					..
 				}) => {
 					let feature_value = match row[*feature_index] {
-						Value::Number(value) => value,
+						tangram_dataframe::Value::Number(value) => value,
 						_ => unreachable!(),
 					};
 					node_index = if feature_value.is_nan() {
@@ -240,7 +240,7 @@ impl tree::Tree {
 					..
 				}) => {
 					let feature_value = match row[*feature_index] {
-						Value::Enum(value) => value.to_u8().unwrap(),
+						tangram_dataframe::Value::Enum(value) => value.to_u8().unwrap(),
 						_ => unreachable!(),
 					};
 					node_index = if !directions.get(feature_value).unwrap() {

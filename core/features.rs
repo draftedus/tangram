@@ -3,9 +3,10 @@ This module defines feature groups that are used to transform raw data into valu
 
 */
 
-use crate::{dataframe::*, stats, text};
+use crate::{stats, text};
 use itertools::izip;
 use ndarray::{prelude::*, s};
+use tangram_dataframe::*;
 
 /**
 A FeatureGroup is an enum describing the type of feature.
@@ -45,9 +46,9 @@ An IdentityFeatureGroup describes an *identity* mapped feature. The IdentityFeat
 The source column:
 ```
 EnumColumn {
-	name: "color",
-	options: ["red", "green", "blue"],
-	data: [1, 0, 1, 3],
+  name: "color",
+  options: ["red", "green", "blue"],
+  data: [1, 0, 1, 3],
 }
 ```
 
@@ -110,9 +111,9 @@ OneHotEncodedFeatureGroups are used for transforming EnumColumns into features f
 # Example
 ```
 EnumColumn {
-	name: "color",
-	options: ["red", "green", "blue"]
-	data: [3, 2, 0, 1]
+  name: "color",
+  options: ["red", "green", "blue"]
+  data: [3, 2, 0, 1]
 }
 ```
 
@@ -150,8 +151,8 @@ A feature will have a value of _count_*_idf_ if it appears in the raw text and 0
 **Source Column Type**: [TextColumn](../dataframe/struct.TextColumn.html).
 ```
 TextColumn {
-	name: "book_titles",
-	data: ["The Little Prince", "Stuart Little", "The Cat in the Hat"]
+  name: "book_titles",
+  data: ["The Little Prince", "Stuart Little", "The Cat in the Hat"]
 }
 ```
 

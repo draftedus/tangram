@@ -3,7 +3,6 @@ use super::{
 	shap, MulticlassClassifier, Progress, TrainOptions,
 };
 use crate::{
-	dataframe::*,
 	metrics::{CrossEntropy, CrossEntropyInput, Metric},
 	util::progress_counter::ProgressCounter,
 	util::super_unsafe::SuperUnsafe,
@@ -11,6 +10,7 @@ use crate::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use tangram_dataframe::*;
 
 impl MulticlassClassifier {
 	pub fn train(

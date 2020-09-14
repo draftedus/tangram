@@ -1,6 +1,9 @@
 use super::*;
 use anyhow::Result;
-use std::collections::{BTreeMap, BTreeSet};
+use std::{
+	collections::{BTreeMap, BTreeSet},
+	path::Path,
+};
 
 // TODO add option to specify invalid values.
 #[derive(Default, Clone)]
@@ -28,6 +31,10 @@ const DEFAULT_INVALID_VALUES: &[&str] = &[
 ];
 
 impl DataFrame {
+	pub fn from_path(path: &Path, options: FromCsvOptions, progress: impl Fn(u64)) -> Result<Self> {
+		Self::from_csv(&mut csv::Reader::from_path(path)?, options, progress)
+	}
+
 	pub fn from_csv<R>(
 		reader: &mut csv::Reader<R>,
 		options: FromCsvOptions,

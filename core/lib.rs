@@ -1,5 +1,5 @@
 /*!
-Tangram is cool.
+Tangram .
 */
 
 #![allow(clippy::tabs_in_doc_comments)]
@@ -9,7 +9,6 @@ mod grid;
 mod test;
 mod text;
 
-pub mod dataframe;
 pub mod features;
 pub mod linear;
 pub mod metrics;

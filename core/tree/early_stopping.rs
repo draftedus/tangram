@@ -1,7 +1,7 @@
 use super::{single, *};
-use crate::dataframe::*;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use tangram_dataframe::*;
 
 #[derive(Clone)]
 pub struct TrainStopMonitor {

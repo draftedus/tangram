@@ -3,7 +3,6 @@ use super::{
 	shap, BinaryClassifier, Progress, TrainOptions,
 };
 use crate::{
-	dataframe::*,
 	metrics::{BinaryCrossEntropy, BinaryCrossEntropyInput, Metric},
 	util::progress_counter::ProgressCounter,
 	util::super_unsafe::SuperUnsafe,
@@ -12,6 +11,7 @@ use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::ops::Neg;
+use tangram_dataframe::*;
 
 impl BinaryClassifier {
 	pub fn train(
