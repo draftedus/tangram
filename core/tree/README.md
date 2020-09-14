@@ -106,15 +106,3 @@ All code under `single` pertains to training a single tree. In the case of multi
 | **bin_stats.rs**      | This contains code that computes aggregate gradient and hessian statistics for all of the examples in a given node.                                 |
 | **split.rs**          | This contains code that finds the optimal split for a node. It uses the bin_stats for the node computed earlier in order to find the optimal split. |
 | **examples_index.rs** | This contains code to maintain the examples_index lookup so we keep track of which nodes contain which examples.                                    |
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
