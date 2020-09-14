@@ -585,6 +585,7 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	}
 	std::fs::create_dir_all(&dst_dir).unwrap();
 	let manifest_path = dst_dir.join("manifest.json");
+	let cmd = "yarn";
 	let mut args = vec![
 		"run".to_string(),
 		"-s".to_string(),
@@ -619,10 +620,7 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 			args.push(format!("{}", client_source_path.display()));
 		}
 	}
-	let mut process = std::process::Command::new("yarn")
-		.args(&args)
-		.spawn()
-		.unwrap();
+	let mut process = std::process::Command::new(cmd).args(&args).spawn().unwrap();
 	let status = process.wait().unwrap();
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
