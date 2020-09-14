@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="tangram_tree.svg" title="Tangram">
+  <img src="tree.svg" title="Tangram">
 </p>
 
 # Tangram Tree
