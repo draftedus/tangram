@@ -6,7 +6,7 @@ use rand::Rng;
 use serde_json::json;
 use sqlx::prelude::*;
 use std::{collections::BTreeMap, sync::Arc};
-use tangram_core::util::id::Id;
+use tangram_id::Id;
 
 pub async fn get(
 	_request: Request<Body>,

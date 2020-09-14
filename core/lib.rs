@@ -6,7 +6,8 @@ Tangram is cool.
 
 mod config;
 mod grid;
-pub mod test;
+mod test;
+mod text;
 
 pub mod dataframe;
 pub mod features;

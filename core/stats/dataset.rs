@@ -1,6 +1,7 @@
 use super::StatsSettings;
-use crate::{dataframe::*, util::finite::Finite, util::text};
+use crate::{dataframe::*, text};
 use std::collections::{BTreeMap, BTreeSet};
+use tangram_finite::Finite;
 
 // This is an enum describing the different types of stats where the type matches the type of the source column.
 #[derive(Clone, Debug)]

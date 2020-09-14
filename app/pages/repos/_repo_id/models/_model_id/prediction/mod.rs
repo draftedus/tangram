@@ -12,7 +12,7 @@ use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::ops::Neg;
-use tangram_core::{util::id::Id, *};
+use tangram_id::Id;
 
 pub async fn get(
 	request: Request<Body>,
@@ -269,7 +269,7 @@ fn predict(
 			_ => unreachable!(),
 		}
 	}
-	let predict_model: predict::PredictModel = model.try_into().unwrap();
+	let predict_model: tangram_core::predict::PredictModel = model.try_into().unwrap();
 	let mut example: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
 	for (key, value) in search_params.into_iter() {
 		match column_lookup.get(&key) {
@@ -320,10 +320,14 @@ fn predict(
 				vec![1.0 / (logit.neg().exp() + 1.0)]
 			};
 			let get_baseline_probabilities: Box<dyn Fn(&[f32]) -> Vec<f32>> = match predict_model {
-				predict::PredictModel::LinearBinaryClassifier(_) => Box::new(sigmoid),
-				predict::PredictModel::TreeBinaryClassifier(_) => Box::new(sigmoid),
-				predict::PredictModel::LinearMulticlassClassifier(_) => Box::new(softmax),
-				predict::PredictModel::TreeMulticlassClassifier(_) => Box::new(softmax),
+				tangram_core::predict::PredictModel::LinearBinaryClassifier(_) => Box::new(sigmoid),
+				tangram_core::predict::PredictModel::TreeBinaryClassifier(_) => Box::new(sigmoid),
+				tangram_core::predict::PredictModel::LinearMulticlassClassifier(_) => {
+					Box::new(softmax)
+				}
+				tangram_core::predict::PredictModel::TreeMulticlassClassifier(_) => {
+					Box::new(softmax)
+				}
 				_ => unreachable!(),
 			};
 			let output = output.remove(0);

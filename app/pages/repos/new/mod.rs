@@ -8,7 +8,7 @@ use bytes::Buf;
 use hyper::{header, Body, Request, Response, StatusCode};
 use multer::Multipart;
 use sqlx::prelude::*;
-use tangram_core::util::id::Id;
+use tangram_id::Id;
 
 #[derive(serde::Serialize)]
 struct Props {

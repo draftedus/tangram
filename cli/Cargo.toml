@@ -8,11 +8,6 @@ default-run = "tangram"
 name = "tangram"
 path = "main.rs"
 
-[features]
-default = ["app", "train"]
-train = ["tangram_core"]
-app = ["tangram_app"]
-
 [dependencies]
 anyhow = "1"
 base64 = "0.12"
@@ -43,8 +38,9 @@ serde_json = "1"
 serde_urlencoded = "0.7"
 serde_yaml = "0.8"
 sqlx = { git = "https://github.com/nitsky/sqlx", branch = "master", default-features = false, features = ["any", "chrono", "postgres", "runtime-tokio", "sqlite"] }
-tangram_app = { path = "../app", optional = true }
-tangram_core = { path = "../core", optional = true }
+tangram_app = { path = "../app" }
+tangram_core = { path = "../core" }
+tangram_id = { path = "../id" }
 term-ui = { git = "https://github.com/tangram-hq/term-ui" }
 thiserror = "1"
 tokio = { version = "0.2", features = ["rt-threaded"] }

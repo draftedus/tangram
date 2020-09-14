@@ -9,7 +9,7 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use tangram_core::util::id::Id;
+use tangram_id::Id;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

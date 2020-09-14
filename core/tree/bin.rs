@@ -1,9 +1,10 @@
-use crate::{dataframe::*, util::finite::Finite};
+use crate::dataframe::*;
 use itertools::{izip, Itertools};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
+use tangram_finite::Finite;
 
 #[derive(Clone, Debug)]
 pub enum BinInfo {

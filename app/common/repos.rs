@@ -1,7 +1,7 @@
 use anyhow::Result;
 use chrono::Utc;
 use sqlx::prelude::*;
-use tangram_core::util::id::Id;
+use tangram_id::Id;
 
 pub async fn create_root_repo(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,

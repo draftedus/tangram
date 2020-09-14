@@ -10,7 +10,7 @@ use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use sqlx::prelude::*;
-use tangram_core::util::id::Id;
+use tangram_id::Id;
 
 pub async fn get(
 	request: Request<Body>,

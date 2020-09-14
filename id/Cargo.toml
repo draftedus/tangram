@@ -1,0 +1,13 @@
+[package]
+name = "tangram_id"
+version = "1.0.0"
+edition = "2018"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+num-traits = "0.2"
+rand = "0.7"
+serde = "1"
+thiserror = "1"

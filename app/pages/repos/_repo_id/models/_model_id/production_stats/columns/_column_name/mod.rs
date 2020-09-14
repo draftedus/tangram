@@ -17,7 +17,7 @@ use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram_core::util::id::Id;
+use tangram_id::Id;
 
 pub async fn get(
 	request: Request<Body>,

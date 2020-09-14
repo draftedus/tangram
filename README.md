@@ -47,11 +47,11 @@ This folder contains the `tangram_core` crate that defines the model file format
 
 ### `app`
 
-This folder contains the `tangram_app` crate that contains the implementation of the web app. [Learn more](app/README.md).
+This folder contains the `tangram_app` crate that implementats the reporting and monitoring web app. [Learn more](app/README.md).
 
 ### `cli`
 
-This folder contains the `tangram_cli` crate. It uses the `tangram_core` crate to train a model, and the `tangram_app` to run the reporting and monitoring web app. See `main()` in `cli/main.rs` for the entrypoint.
+This folder contains the `tangram_cli` crate. It uses the `tangram_core` crate to train a model, and the `tangram_app` crate to run the reporting and monitoring web app. See `main()` in [cli/main.rs](cli/main.rs) for the entrypoint.
 
 ### `libtangram`
 
@@ -67,4 +67,4 @@ This folder contains the source for the marketing and documentation website depl
 
 ## License
 
-Most of this repository is MIT licensed, except for the `core` and `app` folders, which are presently unlicensed. We plan to make the `core` folder available under a community license that is similar to the MIT license, except it restricts you from using it to make a competing product. We plan to make the `app` folder free to use for an individual, but require a paid license to use as part of a team. We are committed to simple public pricing. See here: https://www.tangramhq.com/pricing.
+Most of this repository is MIT licensed, except for the `core` and `app` folders, which are presently unlicensed. We plan to make the `core` folder available under a community license that is similar to the MIT license, except it restricts you from using it to make a competing product. We plan to make the `app` folder free to use for an individual, but require a paid license to use as part of a team. Our pricing is simple and public: https://www.tangramhq.com/pricing.

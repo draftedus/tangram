@@ -1,24 +1,17 @@
-/*!
-This file contains the main entrypoint to the tangram cli.
-*/
+//! This module contains the main entrypoint to the tangram cli.
 
 use anyhow::{format_err, Context, Result};
 use clap::Clap;
 use colored::*;
 use once_cell::sync::Lazy;
+use progress_view::ProgressView;
 use std::{
 	borrow::Cow,
 	path::{Path, PathBuf},
 	sync::Mutex,
 };
-
-#[cfg(feature = "train")]
-use progress_view::ProgressView;
-
-#[cfg(feature = "app")]
 use url::Url;
 
-#[cfg(feature = "train")]
 mod progress_view;
 
 #[derive(Clap)]
@@ -27,15 +20,12 @@ mod progress_view;
 	setting = clap::AppSettings::DisableHelpSubcommand,
 )]
 enum Options {
-	#[cfg(feature = "train")]
 	#[clap(name = "train")]
 	Train(Box<TrainOptions>),
-	#[cfg(feature = "app")]
 	#[clap(name = "app")]
 	App(Box<AppOptions>),
 }
 
-#[cfg(feature = "train")]
 #[derive(Clap)]
 #[clap(about = "train a model")]
 #[clap(long_about = "train a model from a csv file")]
@@ -52,7 +42,6 @@ struct TrainOptions {
 	progress: bool,
 }
 
-#[cfg(feature = "app")]
 #[derive(Clap)]
 #[clap(about = "run the app")]
 #[clap(long_about = "run the reporting and monitoring app")]
@@ -61,8 +50,8 @@ struct AppOptions {
 	auth_enabled: bool,
 	#[clap(long, env = "COOKIE_DOMAIN")]
 	cookie_domain: Option<String>,
-	#[clap(long, env = "DATABASE_URL", default_value = "sqlite://")]
-	database_url: Url,
+	#[clap(long, env = "DATABASE_URL")]
+	database_url: Option<Url>,
 	#[clap(long, default_value = "0.0.0.0")]
 	host: std::net::IpAddr,
 	#[clap(long)]
@@ -82,9 +71,7 @@ struct AppOptions {
 fn main() {
 	let options = Options::parse();
 	let result = match options {
-		#[cfg(feature = "train")]
 		Options::Train(options) => cli_train(*options),
-		#[cfg(feature = "app")]
 		Options::App(options) => cli_app(*options),
 	};
 	if let Err(error) = result {
@@ -97,7 +84,6 @@ fn main() {
 	}
 }
 
-#[cfg(feature = "train")]
 fn cli_train(options: TrainOptions) -> Result<()> {
 	// Start the progress view if enabled and train the model. However, we need to do some extra work to make panic messages display properly. The problem is that the progress view enables the terminal's alternative screen and returns to the default screen when it is dropped. However, if a panic occurs during training, it will be printed by the default panic hook while the alternative screen is active, and then the progress view will be dropped, causing the panic message to be immediately erased. To work around this, we create a custom panic hook that stores the panic message, wrap the progress view and training with `catch_unwind`, and then print the panic message if `catch_unwind` returns an `Err`. This ensure the progress view will be dropped before the panic message is displayed.
 	pub static PANIC_INFO: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
@@ -112,7 +98,7 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 			None
 		};
 		tangram_core::train(
-			tangram_core::util::id::Id::new(),
+			tangram_id::Id::new(),
 			&options.file,
 			&options.target,
 			options.config.as_deref(),
@@ -159,7 +145,6 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 	Ok(())
 }
 
-#[cfg(feature = "app")]
 fn cli_app(options: AppOptions) -> Result<()> {
 	let hook = std::panic::take_hook();
 	std::panic::set_hook(Box::new(|panic_info| {
@@ -169,10 +154,11 @@ fn cli_app(options: AppOptions) -> Result<()> {
 		.threaded_scheduler()
 		.enable_all()
 		.build()?;
+	let database_url = options.database_url.unwrap_or_else(default_database_url);
 	runtime.block_on(tangram_app::run(tangram_app::AppOptions {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
-		database_url: options.database_url,
+		database_url,
 		host: options.host,
 		model: options.model,
 		port: options.port,
@@ -185,9 +171,7 @@ fn cli_app(options: AppOptions) -> Result<()> {
 	Ok(())
 }
 
-/**
-This function checks if a file with the given name and extension already exists at the path `base`, and if it does, it appends " 1", " 2", etc. to it until it finds a name that will not overwrite an existing file.
-*/
+/// This function checks if a file with the given name and extension already exists at the path `base`, and if it does, it appends " 1", " 2", etc. to it until it finds a name that will not overwrite an existing file.
 fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
 	let mut i = 0;
 	loop {
@@ -208,23 +192,26 @@ fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
 	}
 }
 
-// fn data_dir() -> PathBuf {
-// 	let tangram_data_dir = dirs::data_dir()
-// 		.expect("failed to find user data directory")
-// 		.join("tangram");
-// 	std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
-// 		panic!(
-// 			"failed to create tangram data directory in {}",
-// 			tangram_data_dir.display()
-// 		)
-// 	});
-// 	tangram_data_dir
-// }
+/// Retrieve the user data directory using the `dirs` crate.
+fn data_dir() -> PathBuf {
+	let tangram_data_dir = dirs::data_dir()
+		.expect("failed to find user data directory")
+		.join("tangram");
+	std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
+		panic!(
+			"failed to create tangram data directory in {}",
+			tangram_data_dir.display()
+		)
+	});
+	tangram_data_dir
+}
 
-// fn default_database_url() -> Url {
-// 	let tangram_database_path = data_dir().join("tangram.db");
-// 	format!(
-// 		"sqlite:{}",
-// 		tangram_database_path.to_str().unwrap().to_owned()
-// 	)
-// }
+/// Retrieve the default database url, which is a sqlite database in the user data directory.
+fn default_database_url() -> Url {
+	let tangram_database_path = data_dir().join("tangram.db");
+	let url = format!(
+		"sqlite:{}",
+		tangram_database_path.to_str().unwrap().to_owned()
+	);
+	Url::parse(&url).unwrap()
+}

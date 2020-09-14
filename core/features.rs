@@ -3,7 +3,7 @@ This module defines feature groups that are used to transform raw data into valu
 
 */
 
-use crate::{dataframe::*, stats, util::text};
+use crate::{dataframe::*, stats, text};
 use itertools::izip;
 use ndarray::{prelude::*, s};
 
@@ -407,7 +407,7 @@ fn compute_features_bag_of_words_ndarray(
 	for (mut features, value) in features.genrows_mut().into_iter().zip(data.iter()) {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = crate::util::text::AlphanumericTokenizer;
+				let tokenizer = crate::text::AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
 				let bigrams = text::bigrams(&tokens);
 				let mut total = 0.0;
@@ -506,7 +506,7 @@ fn compute_features_bag_of_words_dataframe(
 	for (example_index, value) in data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = crate::util::text::AlphanumericTokenizer;
+				let tokenizer = crate::text::AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
 				let bigrams = text::bigrams(&tokens);
 				let mut total = 0.0;
@@ -618,7 +618,7 @@ fn compute_features_bag_of_words_ndarray_value(
 	for (example_index, value) in data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = crate::util::text::AlphanumericTokenizer;
+				let tokenizer = crate::text::AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
 				let bigrams = text::bigrams(&tokens);
 				let mut total = 0.0;

@@ -1,5 +1,6 @@
 use std::{borrow::Cow, collections::BTreeMap};
-use tangram_core::util::{finite::NotFiniteError, id::Id};
+use tangram_finite::NotFiniteError;
+use tangram_id::Id;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", untagged)]

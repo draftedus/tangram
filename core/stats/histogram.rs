@@ -1,7 +1,8 @@
 use super::dataset::*;
-use crate::{metrics, util::finite::Finite};
+use crate::metrics;
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
+use tangram_finite::Finite;
 
 /// HistogramStats contain statistics computed using aggregated histograms of the original column. We use aggregated histogram statistics for computing quantiles on number columns. Instead of sorting `O(n_examples)`, we only need to sort `O(n_unique_values)`.
 #[derive(Debug, PartialEq)]

@@ -12,12 +12,12 @@ pub use stats::*;
 pub use train_options::*;
 pub use tree::*;
 
-use crate::util::id::Id;
 use anyhow::{format_err, Result};
 use std::{
 	io::{Read, Write},
 	path::Path,
 };
+use tangram_id::Id;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Model {

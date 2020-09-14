@@ -2,7 +2,7 @@ use crate::{
 	config::{self, Config},
 	dataframe::*,
 	features, grid, linear, metrics, model, stats, test, tree,
-	util::{id::Id, progress_counter::ProgressCounter},
+	util::progress_counter::ProgressCounter,
 };
 use anyhow::{format_err, Context, Result};
 use ndarray::prelude::*;
@@ -11,7 +11,10 @@ use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::BTreeMap, path::Path};
+use tangram_id::Id;
 
+/**
+*/
 pub fn train(
 	model_id: Id,
 	file_path: &Path,

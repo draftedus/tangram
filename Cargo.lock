@@ -1770,6 +1770,8 @@ dependencies = [
  "serde_urlencoded 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sqlx 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx)",
  "tangram_core 0.2.0-dev",
+ "tangram_finite 1.0.0",
+ "tangram_id 1.0.0",
  "tokio 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1809,6 +1811,7 @@ dependencies = [
  "sqlx 0.4.0-beta.1 (git+https://github.com/nitsky/sqlx)",
  "tangram_app 0.0.0",
  "tangram_core 0.2.0-dev",
+ "tangram_id 1.0.0",
  "term-ui 0.0.1 (git+https://github.com/tangram-hq/term-ui)",
  "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1834,6 +1837,26 @@ dependencies = [
  "serde 1.0.116 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.57 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_yaml 0.8.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tangram_finite 1.0.0",
+ "tangram_id 1.0.0",
+ "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "tangram_finite"
+version = "1.0.0"
+dependencies = [
+ "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "tangram_id"
+version = "1.0.0"
+dependencies = [
+ "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.116 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
