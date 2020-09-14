@@ -1,0 +1,14 @@
+[package]
+edition = "2018"
+name = "tangram_metrics"
+version = "0.0.0"
+
+[lib]
+path = "lib.rs"
+
+[dev-dependencies]
+insta = "0.16"
+
+[dependencies]
+ndarray = "0.13"
+num-traits = "0.2"

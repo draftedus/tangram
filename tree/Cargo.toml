@@ -1,0 +1,42 @@
+[package]
+edition = "2018"
+name = "tangram_tree"
+version = "0.0.0"
+
+[lib]
+path = "lib.rs"
+
+[[bin]]
+name = "boston-tree"
+path = "comparison/boston.rs"
+
+[[bin]]
+name = "census-tree"
+path = "comparison/census.rs"
+
+[[bin]]
+name = "flights-tree"
+path = "comparison/flights.rs"
+
+[[bin]]
+name = "heart-disease-tree"
+path = "comparison/heart-disease.rs"
+
+[[bin]]
+name = "higgs-tree"
+path = "comparison/higgs.rs"
+
+[[bin]]
+name = "iris-tree"
+path = "comparison/iris.rs"
+
+[dependencies]
+itertools = "0.9"
+maplit = "1"
+ndarray = "0.13"
+num-traits = "0.2"
+super_unsafe = { path = "../super_unsafe" }
+tangram_dataframe = { path = "../dataframe" }
+tangram_finite = { path = "../finite" }
+tangram_metrics = { path = "../metrics" }
+tangram_progress = { path = "../progress" }

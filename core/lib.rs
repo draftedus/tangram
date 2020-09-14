@@ -10,14 +10,10 @@ mod test;
 mod text;
 
 pub mod features;
-pub mod linear;
-pub mod metrics;
 pub mod model;
 pub mod predict;
 pub mod stats;
 pub mod train;
-pub mod tree;
-pub mod util;
 
 pub use self::{predict::predict, train::train};
 

@@ -1,7 +1,7 @@
 [package]
+edition = "2018"
 name = "tangram_core"
 version = "0.2.0-dev"
-edition = "2018"
 
 [lib]
 path = "lib.rs"
@@ -9,35 +9,10 @@ path = "lib.rs"
 [dev-dependencies]
 insta = "0.16"
 
-# [[bin]]
-# name = "boston-tree"
-# path = "tree/comparison/boston.rs"
-
-# [[bin]]
-# name = "census-tree"
-# path = "tree/comparison/census.rs"
-
-# [[bin]]
-# name = "flights-tree"
-# path = "tree/comparison/flights.rs"
-
-# [[bin]]
-# name = "heart-disease-tree"
-# path = "tree/comparison/heart-disease.rs"
-
-# [[bin]]
-# name = "higgs-tree"
-# path = "tree/comparison/higgs.rs"
-
-# [[bin]]
-# name = "iris-tree"
-# path = "tree/comparison/iris.rs"
-
 [dependencies]
 anyhow = "1"
 derive_more = "0.99"
 itertools = "0.9"
-maplit = "1"
 ndarray = { version = "0.13", features = ["serde"] }
 num-traits = "0.2"
 rand = "0.7"
@@ -49,4 +24,8 @@ serde_yaml = "0.8"
 tangram_dataframe = { path = "../dataframe" }
 tangram_finite = { path = "../finite" }
 tangram_id = { path = "../id" }
+tangram_linear = { path = "../linear" }
+tangram_metrics = { path = "../metrics" }
+tangram_progress = { path = "../progress" }
+tangram_tree = { path = "../tree" }
 thiserror = "1"

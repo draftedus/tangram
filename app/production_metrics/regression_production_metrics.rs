@@ -1,6 +1,6 @@
 use crate::{monitor_event::NumberOrString, production_stats::NumberStats};
 use num_traits::ToPrimitive;
-use tangram_core::metrics::Metric;
+use tangram_metrics::StreamingMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct RegressionProductionPredictionMetrics {
@@ -29,7 +29,7 @@ impl RegressionProductionPredictionMetrics {
 	}
 }
 
-impl Metric<'_> for RegressionProductionPredictionMetrics {
+impl StreamingMetric<'_> for RegressionProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
 	type Output = Option<RegressionProductionPredictionMetricsOutput>;
 

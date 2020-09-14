@@ -1,7 +1,6 @@
 use crate::{
 	config::{self, Config},
-	features, grid, linear, metrics, model, stats, test, tree,
-	util::progress_counter::ProgressCounter,
+	features, grid, model, stats, test,
 };
 use anyhow::{format_err, Context, Result};
 use ndarray::prelude::*;
@@ -12,6 +11,8 @@ use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::BTreeMap, path::Path};
 use tangram_dataframe::*;
 use tangram_id::Id;
+use tangram_metrics::{self as metrics};
+use tangram_progress::ProgressCounter;
 
 /**
 */
@@ -299,7 +300,7 @@ enum Task {
 
 struct TreeBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tree::BinaryClassifier,
+	pub model: tangram_tree::BinaryClassifier,
 	pub class_metrics: Vec<metrics::BinaryClassificationClassMetricsOutput>,
 	pub auc_roc: f32,
 	pub options: grid::TreeModelTrainOptions,
@@ -307,7 +308,7 @@ struct TreeBinaryClassifier {
 
 struct TreeMulticlassClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tree::MulticlassClassifier,
+	pub model: tangram_tree::MulticlassClassifier,
 	pub options: grid::TreeModelTrainOptions,
 }
 
@@ -325,13 +326,13 @@ enum RegressionModel {
 struct LinearRegressor {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub options: grid::LinearModelTrainOptions,
-	pub model: linear::Regressor,
+	pub model: tangram_linear::Regressor,
 }
 
 struct TreeRegressor {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub options: grid::TreeModelTrainOptions,
-	pub model: tree::Regressor,
+	pub model: tangram_tree::Regressor,
 }
 
 enum RegressionComparisonMetric {
@@ -350,7 +351,7 @@ enum ClassificationModel {
 
 struct LinearBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: linear::BinaryClassifier,
+	pub model: tangram_linear::BinaryClassifier,
 	pub class_metrics: Vec<metrics::BinaryClassificationClassMetricsOutput>,
 	pub auc_roc: f32,
 	pub options: grid::LinearModelTrainOptions,
@@ -358,7 +359,7 @@ struct LinearBinaryClassifier {
 
 struct LinearMulticlassClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: linear::MulticlassClassifier,
+	pub model: tangram_linear::MulticlassClassifier,
 	pub options: grid::LinearModelTrainOptions,
 }
 
@@ -408,8 +409,8 @@ pub enum TrainProgress {
 
 #[derive(Clone, Debug)]
 pub enum ModelTrainProgress {
-	Linear(crate::linear::Progress),
-	Tree(crate::tree::Progress),
+	Linear(tangram_linear::Progress),
+	Tree(tangram_tree::Progress),
 }
 
 #[derive(Clone, Debug)]
@@ -561,42 +562,42 @@ enum TrainModelOutput {
 }
 
 struct LinearRegressorTrainModelOutput {
-	model: linear::Regressor,
+	model: tangram_linear::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
 	options: grid::LinearModelTrainOptions,
 }
 
 struct TreeRegressorTrainModelOutput {
-	model: tree::Regressor,
+	model: tangram_tree::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
 	options: grid::TreeModelTrainOptions,
 }
 
 struct LinearBinaryClassifierTrainModelOutput {
-	model: linear::BinaryClassifier,
+	model: tangram_linear::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
 	options: grid::LinearModelTrainOptions,
 }
 
 struct TreeBinaryClassifierTrainModelOutput {
-	model: tree::BinaryClassifier,
+	model: tangram_tree::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
 	options: grid::TreeModelTrainOptions,
 }
 
 struct LinearMulticlassClassifierTrainModelOutput {
-	model: linear::MulticlassClassifier,
+	model: tangram_linear::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
 	options: grid::LinearModelTrainOptions,
 }
 
 struct TreeMulticlassClassifierTrainModelOutput {
-	model: tree::MulticlassClassifier,
+	model: tangram_tree::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
 	options: grid::TreeModelTrainOptions,
@@ -700,19 +701,23 @@ fn train_linear_regressor(
 		.unwrap()
 		.as_number()
 		.unwrap();
-	let linear_options = linear::TrainOptions {
+	let linear_options = tangram_linear::TrainOptions {
 		early_stopping_fraction: options.early_stopping_fraction,
 		l2_regularization: options.l2_regularization,
 		learning_rate: options.learning_rate,
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
 	};
-	let model =
-		linear::Regressor::train(features.view(), &labels, &linear_options, &mut |progress| {
+	let model = tangram_linear::Regressor::train(
+		features.view(),
+		&labels,
+		&linear_options,
+		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
 				progress,
 			)))
-		});
+		},
+	);
 	TrainModelOutput::LinearRegressor(LinearRegressorTrainModelOutput {
 		model,
 		feature_groups,
@@ -741,7 +746,7 @@ fn train_tree_regressor(
 		.unwrap()
 		.clone();
 	let base: usize = 2;
-	let tree_options = tree::TrainOptions {
+	let tree_options = tangram_tree::TrainOptions {
 		compute_loss: true,
 		early_stopping_options: None,
 		l2_regularization: 0.0,
@@ -758,11 +763,12 @@ fn train_tree_regressor(
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
 	};
-	let model = tree::Regressor::train(features.view(), labels, tree_options, &mut |progress| {
-		update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
-			progress,
-		)))
-	});
+	let model =
+		tangram_tree::Regressor::train(features.view(), labels, tree_options, &mut |progress| {
+			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
+				progress,
+			)))
+		});
 	TrainModelOutput::TreeRegressor(TreeRegressorTrainModelOutput {
 		model,
 		feature_groups,
@@ -794,14 +800,14 @@ fn train_linear_binary_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let linear_options = linear::TrainOptions {
+	let linear_options = tangram_linear::TrainOptions {
 		early_stopping_fraction: options.early_stopping_fraction,
 		l2_regularization: options.l2_regularization,
 		learning_rate: options.learning_rate,
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
 	};
-	let model = linear::BinaryClassifier::train(
+	let model = tangram_linear::BinaryClassifier::train(
 		features.view(),
 		&labels,
 		&linear_options,
@@ -839,7 +845,7 @@ fn train_tree_binary_classifier(
 		.unwrap()
 		.clone();
 	let base: usize = 2;
-	let tree_options = tree::TrainOptions {
+	let tree_options = tangram_tree::TrainOptions {
 		compute_loss: true,
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
@@ -856,12 +862,16 @@ fn train_tree_binary_classifier(
 		min_sum_hessians_in_leaf: 1e-3,
 		subsample_for_binning: 200_000,
 	};
-	let model =
-		tree::BinaryClassifier::train(features.view(), labels, tree_options, &mut |progress| {
+	let model = tangram_tree::BinaryClassifier::train(
+		features.view(),
+		labels,
+		tree_options,
+		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 				progress,
 			)))
-		});
+		},
+	);
 	TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 		model,
 		feature_groups,
@@ -893,14 +903,14 @@ fn train_linear_multiclass_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let linear_options = linear::TrainOptions {
+	let linear_options = tangram_linear::TrainOptions {
 		early_stopping_fraction: options.early_stopping_fraction,
 		l2_regularization: options.l2_regularization,
 		learning_rate: options.learning_rate,
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
 	};
-	let model = linear::MulticlassClassifier::train(
+	let model = tangram_linear::MulticlassClassifier::train(
 		features.view(),
 		&labels,
 		&linear_options,
@@ -938,7 +948,7 @@ fn train_tree_multiclass_classifier(
 		.unwrap()
 		.clone();
 	let base: usize = 2;
-	let tree_options = tree::TrainOptions {
+	let tree_options = tangram_tree::TrainOptions {
 		compute_loss: true,
 		early_stopping_options: None,
 		l2_regularization: 0.0,
@@ -955,12 +965,16 @@ fn train_tree_multiclass_classifier(
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
 	};
-	let model =
-		tree::MulticlassClassifier::train(features.view(), labels, tree_options, &mut |progress| {
+	let model = tangram_tree::MulticlassClassifier::train(
+		features.view(),
+		labels,
+		tree_options,
+		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 				progress,
 			)))
-		});
+		},
+	);
 	TrainModelOutput::TreeMulticlassClassifier(TreeMulticlassClassifierTrainModelOutput {
 		model,
 		feature_groups,
@@ -1495,7 +1509,7 @@ impl Into<model::ClassMetrics> for metrics::ClassMetrics {
 	}
 }
 
-impl Into<model::Tree> for crate::tree::Tree {
+impl Into<model::Tree> for tangram_tree::Tree {
 	fn into(self) -> model::Tree {
 		model::Tree {
 			nodes: self.nodes.into_iter().map(Into::into).collect(),
@@ -1503,7 +1517,7 @@ impl Into<model::Tree> for crate::tree::Tree {
 	}
 }
 
-impl Into<model::Node> for crate::tree::Node {
+impl Into<model::Node> for tangram_tree::Node {
 	fn into(self) -> model::Node {
 		match self {
 			Self::Branch(branch) => model::Node::Branch(branch.into()),
@@ -1512,7 +1526,7 @@ impl Into<model::Node> for crate::tree::Node {
 	}
 }
 
-impl Into<model::BranchNode> for crate::tree::BranchNode {
+impl Into<model::BranchNode> for tangram_tree::BranchNode {
 	fn into(self) -> model::BranchNode {
 		model::BranchNode {
 			left_child_index: self.left_child_index.to_u64().unwrap(),
@@ -1523,7 +1537,7 @@ impl Into<model::BranchNode> for crate::tree::BranchNode {
 	}
 }
 
-impl Into<model::BranchSplit> for crate::tree::BranchSplit {
+impl Into<model::BranchSplit> for tangram_tree::BranchSplit {
 	fn into(self) -> model::BranchSplit {
 		match self {
 			Self::Continuous(value) => model::BranchSplit::Continuous(value.into()),
@@ -1532,11 +1546,11 @@ impl Into<model::BranchSplit> for crate::tree::BranchSplit {
 	}
 }
 
-impl Into<model::BranchSplitContinuous> for crate::tree::BranchSplitContinuous {
+impl Into<model::BranchSplitContinuous> for tangram_tree::BranchSplitContinuous {
 	fn into(self) -> model::BranchSplitContinuous {
 		let invalid_values_direction = match self.invalid_values_direction {
-			crate::tree::SplitDirection::Left => false,
-			crate::tree::SplitDirection::Right => true,
+			tangram_tree::SplitDirection::Left => false,
+			tangram_tree::SplitDirection::Right => true,
 		};
 		model::BranchSplitContinuous {
 			feature_index: self.feature_index.to_u64().unwrap(),
@@ -1546,7 +1560,7 @@ impl Into<model::BranchSplitContinuous> for crate::tree::BranchSplitContinuous {
 	}
 }
 
-impl Into<model::BranchSplitDiscrete> for crate::tree::BranchSplitDiscrete {
+impl Into<model::BranchSplitDiscrete> for tangram_tree::BranchSplitDiscrete {
 	fn into(self) -> model::BranchSplitDiscrete {
 		let directions: Vec<bool> = (0..self.directions.n)
 			.map(|i| self.directions.get(i).unwrap())
@@ -1558,7 +1572,7 @@ impl Into<model::BranchSplitDiscrete> for crate::tree::BranchSplitDiscrete {
 	}
 }
 
-impl Into<model::LeafNode> for crate::tree::LeafNode {
+impl Into<model::LeafNode> for tangram_tree::LeafNode {
 	fn into(self) -> model::LeafNode {
 		model::LeafNode {
 			value: self.value,

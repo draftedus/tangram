@@ -1,6 +1,19 @@
 [workspace]
-members = ["app", "cli", "core", "finite", "id", "libtangram", "pinwheel"]
 exclude = ["languages/rust"]
+members = [
+  "app",
+  "cli",
+  "core",
+  "finite",
+  "id",
+  "libtangram",
+  "linear",
+  "metrics",
+  "pinwheel",
+  "progress",
+  "super_unsafe",
+  "tree",
+]
 
 # [profile.release]
 # debug = true

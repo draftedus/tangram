@@ -1,7 +1,7 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
 use crate::monitor_event::Output;
 use std::collections::BTreeMap;
-use tangram_core::metrics::Metric;
+use tangram_metrics::StreamingMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum ProductionPredictionStats {
@@ -51,7 +51,7 @@ impl ProductionPredictionStats {
 	}
 }
 
-impl Metric<'_> for ProductionPredictionStats {
+impl StreamingMetric<'_> for ProductionPredictionStats {
 	type Input = Output;
 	type Output = ProductionPredictionStatsOutput;
 
@@ -95,7 +95,7 @@ impl RegressionProductionPredictionStats {
 	}
 }
 
-impl Metric<'_> for RegressionProductionPredictionStats {
+impl StreamingMetric<'_> for RegressionProductionPredictionStats {
 	type Input = Output;
 	type Output = RegressionProductionPredictionStatsOutput;
 
@@ -136,7 +136,7 @@ impl ClassificationProductionPredictionStats {
 	}
 }
 
-impl Metric<'_> for ClassificationProductionPredictionStats {
+impl StreamingMetric<'_> for ClassificationProductionPredictionStats {
 	type Input = Output;
 	type Output = ClassificationProductionPredictionStatsOutput;
 

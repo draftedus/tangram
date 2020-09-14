@@ -1,7 +1,7 @@
 [package]
+edition = "2018"
 name = "tangram_app"
 version = "0.0.0"
-edition = "2018"
 
 [lib]
 path = "lib.rs"
@@ -41,5 +41,6 @@ sqlx = { git = "https://github.com/nitsky/sqlx", branch = "master", default-feat
 tangram_core = { path = "../core" }
 tangram_finite = { path = "../finite" }
 tangram_id = { path = "../id" }
+tangram_metrics = { path = "../metrics" }
 tokio = { version = "0.2", features = ["rt-threaded"] }
 url = "2"

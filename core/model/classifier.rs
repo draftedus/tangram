@@ -1,7 +1,9 @@
-use super::features::FeatureGroup;
-use super::stats::{ColumnStats, StatsSettings};
-use super::train_options::{LinearModelTrainOptions, TreeModelTrainOptions};
-use super::tree::Tree;
+use super::{
+	features::FeatureGroup,
+	stats::{ColumnStats, StatsSettings},
+	train_options::{LinearModelTrainOptions, TreeModelTrainOptions},
+	tree::Tree,
+};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Classifier {

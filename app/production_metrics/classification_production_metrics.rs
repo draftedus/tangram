@@ -1,7 +1,7 @@
 use crate::monitor_event::NumberOrString;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram_core::metrics::Metric;
+use tangram_metrics::StreamingMetric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 pub struct ClassificationProductionPredictionMetrics {
@@ -44,7 +44,7 @@ impl ClassificationProductionPredictionMetrics {
 	}
 }
 
-impl Metric<'_> for ClassificationProductionPredictionMetrics {
+impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
 	type Output = Option<ClassificationProductionPredictionMetricsOutput>;
 

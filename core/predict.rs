@@ -1,4 +1,4 @@
-use crate::{features, linear, model, tree};
+use crate::{features, model};
 use anyhow::Result;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -63,7 +63,7 @@ pub struct LinearRegressorPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: linear::Regressor,
+	pub model: tangram_linear::Regressor,
 }
 
 #[derive(Debug)]
@@ -71,7 +71,7 @@ pub struct TreeRegressorPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tree::Regressor,
+	pub model: tangram_tree::Regressor,
 }
 
 #[derive(Debug)]
@@ -79,7 +79,7 @@ pub struct LinearBinaryClassifierPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: linear::BinaryClassifier,
+	pub model: tangram_linear::BinaryClassifier,
 }
 
 #[derive(Debug)]
@@ -87,7 +87,7 @@ pub struct TreeBinaryClassifierPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tree::BinaryClassifier,
+	pub model: tangram_tree::BinaryClassifier,
 }
 
 #[derive(Debug)]
@@ -95,7 +95,7 @@ pub struct LinearMulticlassClassifierPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: linear::MulticlassClassifier,
+	pub model: tangram_linear::MulticlassClassifier,
 }
 
 #[derive(Debug)]
@@ -103,7 +103,7 @@ pub struct TreeMulticlassClassifierPredictModel {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tree::MulticlassClassifier,
+	pub model: tangram_tree::MulticlassClassifier,
 }
 
 #[derive(Debug)]
@@ -807,7 +807,7 @@ impl TryFrom<model::Model> for PredictModel {
 							id,
 							columns,
 							feature_groups,
-							model: linear::Regressor {
+							model: tangram_linear::Regressor {
 								bias: model.bias,
 								weights: model.weights.into(),
 								means: model.means,
@@ -825,7 +825,7 @@ impl TryFrom<model::Model> for PredictModel {
 							id,
 							columns,
 							feature_groups,
-							model: tree::Regressor {
+							model: tangram_tree::Regressor {
 								bias: model.bias,
 								trees: model
 									.trees
@@ -858,7 +858,7 @@ impl TryFrom<model::Model> for PredictModel {
 								id,
 								columns,
 								feature_groups,
-								model: linear::BinaryClassifier {
+								model: tangram_linear::BinaryClassifier {
 									weights: model.weights.into(),
 									bias: model.bias,
 									means: model.means,
@@ -879,7 +879,7 @@ impl TryFrom<model::Model> for PredictModel {
 								id,
 								columns,
 								feature_groups,
-								model: tree::BinaryClassifier {
+								model: tangram_tree::BinaryClassifier {
 									bias: model.bias,
 									trees: model
 										.trees
@@ -908,7 +908,7 @@ impl TryFrom<model::Model> for PredictModel {
 								id,
 								columns,
 								feature_groups,
-								model: linear::MulticlassClassifier {
+								model: tangram_linear::MulticlassClassifier {
 									weights,
 									biases: model.biases.into(),
 									means: model.means,
@@ -929,7 +929,7 @@ impl TryFrom<model::Model> for PredictModel {
 								id,
 								columns,
 								feature_groups,
-								model: tree::MulticlassClassifier {
+								model: tangram_tree::MulticlassClassifier {
 									biases: model.biases,
 									trees: model
 										.trees
@@ -951,10 +951,10 @@ impl TryFrom<model::Model> for PredictModel {
 	}
 }
 
-impl TryInto<tree::Tree> for model::Tree {
+impl TryInto<tangram_tree::Tree> for model::Tree {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<tree::Tree> {
-		Ok(tree::Tree {
+	fn try_into(self) -> Result<tangram_tree::Tree> {
+		Ok(tangram_tree::Tree {
 			nodes: self
 				.nodes
 				.into_iter()
@@ -964,17 +964,17 @@ impl TryInto<tree::Tree> for model::Tree {
 	}
 }
 
-impl TryInto<tree::Node> for model::Node {
+impl TryInto<tangram_tree::Node> for model::Node {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<tree::Node> {
+	fn try_into(self) -> Result<tangram_tree::Node> {
 		match self {
-			Self::Branch(n) => Ok(tree::Node::Branch(tree::BranchNode {
+			Self::Branch(n) => Ok(tangram_tree::Node::Branch(tangram_tree::BranchNode {
 				left_child_index: n.left_child_index.to_usize().unwrap(),
 				right_child_index: n.right_child_index.to_usize().unwrap(),
 				split: n.split.try_into()?,
 				examples_fraction: n.examples_fraction,
 			})),
-			Self::Leaf(n) => Ok(tree::Node::Leaf(tree::LeafNode {
+			Self::Leaf(n) => Ok(tangram_tree::Node::Leaf(tangram_tree::LeafNode {
 				value: n.value,
 				examples_fraction: n.examples_fraction,
 			})),
@@ -982,31 +982,37 @@ impl TryInto<tree::Node> for model::Node {
 	}
 }
 
-impl TryInto<tree::BranchSplit> for model::BranchSplit {
+impl TryInto<tangram_tree::BranchSplit> for model::BranchSplit {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<tree::BranchSplit> {
+	fn try_into(self) -> Result<tangram_tree::BranchSplit> {
 		match self {
-			Self::Continuous(s) => Ok(tree::BranchSplit::Continuous(tree::BranchSplitContinuous {
-				feature_index: s.feature_index.to_usize().unwrap(),
-				split_value: s.split_value,
-				invalid_values_direction: if s.invalid_values_direction {
-					tree::SplitDirection::Right
-				} else {
-					tree::SplitDirection::Left
+			Self::Continuous(s) => Ok(tangram_tree::BranchSplit::Continuous(
+				tangram_tree::BranchSplitContinuous {
+					feature_index: s.feature_index.to_usize().unwrap(),
+					split_value: s.split_value,
+					invalid_values_direction: if s.invalid_values_direction {
+						tangram_tree::SplitDirection::Right
+					} else {
+						tangram_tree::SplitDirection::Left
+					},
 				},
-			})),
+			)),
 			Self::Discrete(s) => {
 				let value_directions = s.directions;
-				let mut directions =
-					crate::tree::BinDirections::new(value_directions.len().to_u8().unwrap(), false);
+				let mut directions = tangram_tree::BinDirections::new(
+					value_directions.len().to_u8().unwrap(),
+					false,
+				);
 				value_directions
 					.iter()
 					.enumerate()
 					.for_each(|(i, value)| directions.set(i.to_u8().unwrap(), *value));
-				Ok(tree::BranchSplit::Discrete(tree::BranchSplitDiscrete {
-					feature_index: s.feature_index.to_usize().unwrap(),
-					directions,
-				}))
+				Ok(tangram_tree::BranchSplit::Discrete(
+					tangram_tree::BranchSplitDiscrete {
+						feature_index: s.feature_index.to_usize().unwrap(),
+						directions,
+					},
+				))
 			}
 		}
 	}

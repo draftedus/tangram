@@ -1,17 +1,16 @@
-use crate::{
-	features, linear, metrics, metrics::Metric, train::ModelTestProgress, tree,
-	util::progress_counter::ProgressCounter,
-};
+use crate::{features, train::ModelTestProgress};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_dataframe::*;
+use tangram_metrics::{self as metrics, StreamingMetric};
+use tangram_progress::ProgressCounter;
 
 pub fn test_linear_regressor(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &linear::Regressor,
+	model: &tangram_linear::Regressor,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::RegressionMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -70,7 +69,7 @@ pub fn test_tree_regressor(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &tree::Regressor,
+	model: &tangram_tree::Regressor,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::RegressionMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -107,7 +106,7 @@ pub fn test_linear_binary_classifier(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &linear::BinaryClassifier,
+	model: &tangram_linear::BinaryClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> (
 	metrics::ClassificationMetricsOutput,
@@ -183,7 +182,7 @@ pub fn test_tree_binary_classifier(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &tree::BinaryClassifier,
+	model: &tangram_tree::BinaryClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> (
 	metrics::ClassificationMetricsOutput,
@@ -230,7 +229,7 @@ pub fn test_linear_multiclass_classifier(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &linear::MulticlassClassifier,
+	model: &tangram_linear::MulticlassClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::ClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -292,7 +291,7 @@ pub fn test_tree_multiclass_classifier(
 	dataframe_test: &DataFrameView,
 	target_column_index: usize,
 	feature_groups: &[features::FeatureGroup],
-	model: &tree::MulticlassClassifier,
+	model: &tangram_tree::MulticlassClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::ClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();

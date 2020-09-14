@@ -1,0 +1,17 @@
+[package]
+edition = "2018"
+name = "tangram_linear"
+version = "0.0.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+itertools = "0.9"
+ndarray = "0.13"
+num-traits = "0.2"
+super_unsafe = { path = "../super_unsafe" }
+tangram_dataframe = { path = "../dataframe" }
+tangram_metrics = { path = "../metrics" }
+tangram_progress = { path = "../progress" }
+thiserror = "1"
