@@ -1,3 +1,5 @@
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { renderPage } from 'common/render'
 import {
@@ -6,12 +8,12 @@ import {
 	TextColumnToken,
 	UnknownColumnToken,
 } from 'common/tokens'
-import { Fragment, PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { Fragment, h } from 'preact'
 
 let description = `The following are statistics for the columns in your dataset. A column is a Number column if every non-null value in the column parses as a finite floating point number. A column is an Enum column if it is not a Number column and the count of unique non-null values is less than 100. A column is a Text column if it is neither a Number column nor an Enum column.`
 

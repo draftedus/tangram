@@ -1,12 +1,13 @@
 import { ClassifierIndexPage, Props as ClassifierProps } from './classifier'
 import { RegressorIndexPage, Props as RegressorProps } from './regressor'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 
 export type Props = {
 	inner: Inner

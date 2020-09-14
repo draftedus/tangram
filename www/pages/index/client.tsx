@@ -6,7 +6,7 @@ import { Training } from './training'
 import { TrainingMetrics } from './training_metrics'
 import { TrainingStats } from './training_stats'
 import { Tuning } from './tuning'
-import { hydrateComponent } from 'deps'
+import { hydrateComponent } from '@tangramhq/pinwheel'
 
 hydrateComponent('training', Training)
 hydrateComponent('training-stats', TrainingStats)

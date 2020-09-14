@@ -1,5 +1,7 @@
 import { Layout } from './topbar_layout'
-import { ComponentChildren, Fragment, PinwheelInfo, h, ui } from 'deps'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
+import { ComponentChildren, Fragment, h } from 'preact'
 
 type ModelLayoutProps = {
 	children?: ComponentChildren

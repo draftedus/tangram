@@ -1,13 +1,14 @@
 import { EnumColumnDetail, Props as EnumProps } from './enum'
 import { NumberColumnDetail, Props as NumberProps } from './number'
 import { TextColumnDetail, Props as TextProps } from './text'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 
 export type Props = {
 	inner: Inner

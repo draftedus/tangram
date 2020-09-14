@@ -1,7 +1,9 @@
 import { PricingCards } from '../../../../../www/pages/pricing/pricing_cards'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
+import { h } from 'preact'
 
 export type Props = {
 	card: {

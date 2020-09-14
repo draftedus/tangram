@@ -1,6 +1,7 @@
 import { BarChart, BoxChart } from '@tangramhq/charts'
+import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
-import { h, ui } from 'deps'
+import { h } from 'preact'
 
 export type Props = {
 	histogram: Array<[number, number]> | null

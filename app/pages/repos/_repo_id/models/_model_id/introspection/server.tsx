@@ -1,10 +1,11 @@
+import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 
 import { LinearBinaryClassifierModelPage } from './linear_binary_classifier'
 import { LinearMulticlassClassifierModelPage } from './linear_multiclass_classifier'

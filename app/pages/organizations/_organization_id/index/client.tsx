@@ -1,8 +1,4 @@
-import { ui } from 'deps'
-// ui.toaster.show({
-// 	backgroundColor: 'var(--blue)',
-// 	message: `🎉 You are now on the ${plan} plan!`,
-// })
+import * as ui from '@tangramhq/ui'
 
 let onAddPaymentMethod = async () => {
 	// get the stripe publishable key

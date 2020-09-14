@@ -1,5 +1,7 @@
-import { PinwheelInfo, h, ui } from './deps'
 import { AppLayout } from './layouts/app_layout'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
+import { h } from 'preact'
 
 type Props = {
 	pinwheelInfo: PinwheelInfo

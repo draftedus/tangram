@@ -1,4 +1,5 @@
-import { Fragment, h, ui } from 'deps'
+import * as ui from '@tangramhq/ui'
+import { Fragment, h } from 'preact'
 
 export function Install() {
 	return (

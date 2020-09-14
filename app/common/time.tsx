@@ -1,4 +1,5 @@
-import { h, ui } from 'deps'
+import * as ui from '@tangramhq/ui'
+import { h } from 'preact'
 
 export enum DateWindow {
 	Today = 'today',

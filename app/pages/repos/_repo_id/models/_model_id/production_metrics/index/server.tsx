@@ -6,13 +6,14 @@ import {
 	RegressorProductionMetricsPage,
 	Props as RegresssorProps,
 } from './regressor'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 export type { Props as RegressorProps } from './regressor'
 export type { Props as ClassifierProps } from './classifier'
 

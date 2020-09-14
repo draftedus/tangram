@@ -1,5 +1,6 @@
-import { h, ui } from 'deps'
+import * as ui from '@tangramhq/ui'
 import { Language } from 'layouts/language'
+import { h } from 'preact'
 
 export function CodeFix() {
 	return <ui.CodeSelect languages={codeForLanguage} />

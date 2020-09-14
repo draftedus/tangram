@@ -265,26 +265,22 @@ impl TrainTree {
 					split,
 					..
 				}) => match split {
-					TrainBranchSplit::Continuous(
-						TrainBranchSplitContinuous {
-							feature_index,
-							bin_index,
-							..
-						},
-					) => {
+					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+						feature_index,
+						bin_index,
+						..
+					}) => {
 						node_index = if features[*feature_index] <= *bin_index {
 							left_child_index.unwrap()
 						} else {
 							right_child_index.unwrap()
 						};
 					}
-					TrainBranchSplit::Discrete(
-						TrainBranchSplitDiscrete {
-							feature_index,
-							directions,
-							..
-						},
-					) => {
+					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+						feature_index,
+						directions,
+						..
+					}) => {
 						let bin_index = features[*feature_index];
 						node_index = if !directions.get(bin_index).unwrap() {
 							left_child_index.unwrap()
@@ -293,9 +289,7 @@ impl TrainTree {
 						};
 					}
 				},
-				TrainNode::Leaf(TrainLeafNode { value, .. }) => {
-					return *value
-				}
+				TrainNode::Leaf(TrainLeafNode { value, .. }) => return *value,
 			}
 		}
 	}

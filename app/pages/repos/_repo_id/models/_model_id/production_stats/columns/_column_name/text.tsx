@@ -1,8 +1,9 @@
 import { BarChart } from '@tangramhq/charts'
+import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { DateWindow, DateWindowInterval, overallChartTitle } from 'common/time'
 import { productionColor } from 'common/tokens'
-import { h, ui } from 'deps'
+import { h } from 'preact'
 
 export type Props = {
 	absentCount: number

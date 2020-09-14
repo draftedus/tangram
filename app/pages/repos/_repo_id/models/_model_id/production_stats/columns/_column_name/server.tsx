@@ -1,14 +1,16 @@
 import { Enum, Props as EnumProps } from './enum'
 import { Number, Props as NumberProps } from './number'
 import { Text, Props as TextProps } from './text'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { DateWindow, DateWindowSelectField } from 'common/time'
-import { PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 export type { Props as EnumProps } from './enum'
 
 export type Props = {

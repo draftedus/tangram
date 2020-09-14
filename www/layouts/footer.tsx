@@ -1,5 +1,6 @@
-import { h, ui } from '../deps'
 import { Logo, LogoScheme } from './layout'
+import * as ui from '@tangramhq/ui'
+import { h } from 'preact'
 
 export function Footer() {
 	return (

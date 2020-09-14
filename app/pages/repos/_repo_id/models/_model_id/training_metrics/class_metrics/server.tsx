@@ -6,13 +6,14 @@ import {
 	MulticlassClassifierClassMetricsPage,
 	Props as MulticlassClassifierProps,
 } from './multiclass_classifier'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 
 export type Props = {
 	inner: Inner

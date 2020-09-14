@@ -1,4 +1,6 @@
 import { BarChart, BoxChart } from '@tangramhq/charts'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import {
 	DateWindow,
@@ -12,12 +14,12 @@ import {
 	NumberColumnToken,
 	TextColumnToken,
 } from 'common/tokens'
-import { PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 
 export type Props = {
 	dateWindow: DateWindow

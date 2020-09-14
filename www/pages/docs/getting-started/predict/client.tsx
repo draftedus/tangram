@@ -1,3 +1,3 @@
-import { ui } from 'deps'
+import * as ui from '@tangramhq/ui'
 
 ui.bootCodeSelect()

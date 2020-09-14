@@ -1,5 +1,6 @@
+import * as ui from '@tangramhq/ui'
 import { baselineColor, trainingColor } from 'common/tokens'
-import { h, ui } from 'deps'
+import { h } from 'preact'
 
 export type Props = {
 	id: string

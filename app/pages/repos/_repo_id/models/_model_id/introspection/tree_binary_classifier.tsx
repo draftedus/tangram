@@ -1,5 +1,5 @@
 import { TreeFeatureImportances } from './tree'
-import { h } from 'deps'
+import { h } from 'preact'
 
 type Props = {
 	featureImportances: Array<[string, number]>

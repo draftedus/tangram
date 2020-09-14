@@ -1,4 +1,3 @@
-
 #[derive(Clone, Debug)]
 pub enum Progress {
 	Initializing(tangram_progress::ProgressCounter),

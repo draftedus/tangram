@@ -1,6 +1,8 @@
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h, ui } from 'deps'
 import { DocsLayout, DocsPage } from 'layouts/docs_layout'
+import { h } from 'preact'
 
 import tuning from './screenshots/tuning.png'
 import tuningConfusionMatrix from './screenshots/tuning_confusion_matrix.png'

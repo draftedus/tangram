@@ -1,6 +1,7 @@
+import * as ui from '@tangramhq/ui'
 import * as definitions from 'common/definitions'
 import { baselineColor, trainingColor } from 'common/tokens'
-import { h, ui } from 'deps'
+import { h } from 'preact'
 
 export type Props = {
 	accuracy: number

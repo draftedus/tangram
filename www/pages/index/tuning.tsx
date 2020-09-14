@@ -1,4 +1,6 @@
-import { h, ui, useState } from 'deps'
+import * as ui from '@tangramhq/ui'
+import { h } from 'preact'
+import { useState } from 'preact/hooks'
 
 export function Tuning() {
 	let [thresholdIndex, setThresholdIndex] = useState(9)

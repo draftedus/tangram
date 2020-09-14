@@ -1,5 +1,7 @@
-import { ComponentChildren, PinwheelInfo, h, ui } from '../deps'
 import { Layout } from './layout'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
+import { ComponentChildren, h } from 'preact'
 
 type DocsLayoutProps = {
 	children?: ComponentChildren

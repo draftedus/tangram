@@ -1,11 +1,13 @@
 import { Tuning, TuningProps } from './tuning'
+import { Client, PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
-import { Client, PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 
 export type Props = {
 	modelLayoutInfo: ModelLayoutInfo

@@ -1,6 +1,7 @@
+import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { baselineColor, trainingColor } from 'common/tokens'
-import { h, ui } from 'deps'
+import { h } from 'preact'
 
 export type Props = {
 	baselineMse: number

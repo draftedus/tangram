@@ -1,4 +1,6 @@
 import { BarChart, BoxChart, ShapChart } from '@tangramhq/charts'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import {
 	EnumColumnToken,
@@ -6,13 +8,12 @@ import {
 	TextColumnToken,
 	UnknownColumnToken,
 } from 'common/tokens'
-import { PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
-import { Fragment } from 'preact'
+import { Fragment, h } from 'preact'
 
 export type Props = {
 	columns: Column[]

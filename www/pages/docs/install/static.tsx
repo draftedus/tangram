@@ -1,8 +1,10 @@
 import { Install } from '../shared/install'
 import { LibraryInstall } from '../shared/library_install'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h, ui } from 'deps'
 import { DocsLayout, DocsPage } from 'layouts/docs_layout'
+import { h } from 'preact'
 
 type Props = {
 	pinwheelInfo: PinwheelInfo

@@ -1,4 +1,5 @@
 import { LineChart } from '@tangramhq/charts'
+import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import {
 	DateWindow,
@@ -7,7 +8,7 @@ import {
 	intervalChartTitle,
 } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
-import { h, ui } from 'deps'
+import { h } from 'preact'
 
 export type Props = {
 	dateWindow: DateWindow

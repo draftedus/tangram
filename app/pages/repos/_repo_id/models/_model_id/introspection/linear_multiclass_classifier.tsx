@@ -1,5 +1,6 @@
 import { LinearFeatureWeights } from './linear'
-import { h, ui } from 'deps'
+import * as ui from '@tangramhq/ui'
+import { h } from 'preact'
 
 type Props = {
 	biases: number[]

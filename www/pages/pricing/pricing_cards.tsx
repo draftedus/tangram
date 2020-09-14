@@ -1,4 +1,6 @@
-import { JSX, cx, h, ui } from 'deps'
+import { cx } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
+import { JSX, h } from 'preact'
 
 type PricingCardsProps = {
 	enterpriseCta: JSX.Element

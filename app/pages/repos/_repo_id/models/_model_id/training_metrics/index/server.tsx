@@ -10,13 +10,14 @@ import {
 	Props as RegressorProps,
 	RegressorTrainingMetricsIndexPage,
 } from './regressor'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 
 export enum Type {
 	Regressor = 'regressor',

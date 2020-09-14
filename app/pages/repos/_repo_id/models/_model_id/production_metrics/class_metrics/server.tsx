@@ -1,15 +1,17 @@
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { renderPage } from 'common/render'
 import { DateWindow, DateWindowInterval, intervalChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
-import { Fragment, PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { Fragment, h } from 'preact'
 
 export type Props = {
 	class: string

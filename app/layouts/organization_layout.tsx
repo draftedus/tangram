@@ -1,5 +1,7 @@
 import { AppLayout } from './app_layout'
-import { ComponentChildren, PinwheelInfo, h, ui } from 'deps'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
+import { ComponentChildren, h } from 'preact'
 
 type Props = {
 	children?: ComponentChildren

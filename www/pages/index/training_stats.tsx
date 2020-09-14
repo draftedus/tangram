@@ -1,5 +1,6 @@
 import { BoxChart } from '@tangramhq/charts'
-import { h, ui } from 'deps'
+import * as ui from '@tangramhq/ui'
+import { h } from 'preact'
 
 export function TrainingStats() {
 	let series = [

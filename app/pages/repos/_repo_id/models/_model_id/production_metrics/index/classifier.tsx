@@ -1,4 +1,5 @@
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
+import * as ui from '@tangramhq/ui'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import {
@@ -8,7 +9,7 @@ import {
 	intervalChartTitle,
 } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
-import { h, ui } from 'deps'
+import { h } from 'preact'
 
 export type Props = {
 	accuracyChart: {

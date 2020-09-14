@@ -1,6 +1,8 @@
 import backgroundImage from './background.svg'
 import { Footer } from './footer'
-import { Body, ComponentChildren, Head, PinwheelInfo, h, ui } from 'deps'
+import { Body, Head, PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
+import { ComponentChildren, h } from 'preact'
 
 export type DocumentProps = {
 	children?: ComponentChildren

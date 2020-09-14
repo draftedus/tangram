@@ -1,5 +1,6 @@
-import { ComponentChildren, PinwheelInfo, h } from '../deps'
 import { Layout } from './layout'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { ComponentChildren, h } from 'preact'
 
 type PageLayoutProps = {
 	background?: boolean

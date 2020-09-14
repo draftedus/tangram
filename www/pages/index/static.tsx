@@ -16,9 +16,11 @@ import { TrainingStats } from './training_stats'
 import trainingStats from './training_stats.svg'
 import { Tuning } from './tuning'
 import tuning from './tuning.svg'
+import { Client, PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
-import { Client, PinwheelInfo, h, ui } from 'deps'
 import { PageLayout } from 'layouts/page_layout'
+import { h } from 'preact'
 
 type Props = {
 	pinwheelInfo: PinwheelInfo

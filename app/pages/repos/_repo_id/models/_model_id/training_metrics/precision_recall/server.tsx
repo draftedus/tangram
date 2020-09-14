@@ -1,13 +1,15 @@
 import { LineChart } from '@tangramhq/charts'
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { ClassSelect } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { renderPage } from 'common/render'
-import { PinwheelInfo, h, ui } from 'deps'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
 } from 'layouts/model_layout'
+import { h } from 'preact'
 
 export type Props = {
 	class: string

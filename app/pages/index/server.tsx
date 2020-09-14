@@ -1,6 +1,8 @@
+import { PinwheelInfo } from '@tangramhq/pinwheel'
+import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
-import { Fragment, PinwheelInfo, h, ui } from 'deps'
 import { AppLayout } from 'layouts/app_layout'
+import { Fragment, h } from 'preact'
 
 export type Props = {
 	pinwheelInfo: PinwheelInfo
