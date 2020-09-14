@@ -298,7 +298,7 @@ pub async fn run(options: AppOptions) -> Result<()> {
 	}
 	#[cfg(not(debug_assertions))]
 	fn pinwheel() -> Pinwheel {
-		Pinwheel::prod(include_dir::include_dir!("target/app"))
+		Pinwheel::prod(include_dir::include_dir!("../target/app"))
 	}
 	let pinwheel = pinwheel();
 
