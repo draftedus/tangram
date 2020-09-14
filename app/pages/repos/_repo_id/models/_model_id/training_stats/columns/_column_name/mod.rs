@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		model::{get_model, Model},
+		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		user::{authorize_user, authorize_user_for_model},
 	},
@@ -98,10 +98,7 @@ async fn props(
 			return Err(Error::NotFound.into());
 		}
 	}
-
-	let Model { data, .. } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::model::Model::from_slice(&data)?;
-
+	let model = get_model(&mut db, model_id).await?;
 	let (mut column_stats, target_column_stats) = match model {
 		tangram_core::model::Model::Classifier(model) => (
 			model.overall_column_stats,

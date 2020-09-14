@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		model::{get_model, Model},
+		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		user::{authorize_user, authorize_user_for_model},
 	},
@@ -160,8 +160,7 @@ async fn props(
 			return Err(Error::NotFound.into());
 		}
 	}
-	let Model { id, data } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::model::Model::from_slice(&data)?;
+	let model = get_model(&mut db, model_id).await?;
 	let column_stats = match &model {
 		tangram_core::model::Model::Classifier(model) => &model.overall_column_stats,
 		tangram_core::model::Model::Regressor(model) => &model.overall_column_stats,
@@ -231,7 +230,7 @@ async fn props(
 			}
 		})
 		.collect();
-	let model_layout_info = get_model_layout_info(&mut db, id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 
 	// fill in prediction information
 	let prediction = if let Some(search_params) = search_params {
@@ -243,7 +242,7 @@ async fn props(
 	db.commit().await?;
 	Ok(Props {
 		model_layout_info,
-		id: id.to_string(),
+		id: model_id.to_string(),
 		columns,
 		prediction,
 	})

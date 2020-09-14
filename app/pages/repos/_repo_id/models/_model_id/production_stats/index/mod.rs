@@ -1,7 +1,7 @@
 use crate::{
 	common::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
-		model::{get_model, Model},
+		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		production_stats::get_production_stats,
 		time::{format_date_window, format_date_window_interval},
@@ -150,8 +150,7 @@ async fn props(
 			return Err(Error::NotFound.into());
 		}
 	}
-	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::model::Model::from_slice(&data)?;
+	let model = get_model(&mut db, model_id).await?;
 	let production_stats =
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let target_column_stats = match model {
@@ -289,7 +288,7 @@ async fn props(
 	db.commit().await?;
 	Ok(Props {
 		overall_column_stats_table,
-		model_id: id.to_string(),
+		model_id: model_id.to_string(),
 		date_window,
 		date_window_interval,
 		prediction_count_chart,

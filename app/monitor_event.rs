@@ -3,26 +3,6 @@ use tangram_finite::NotFiniteError;
 use tangram_id::Id;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", untagged)]
-pub enum Output {
-	Regression(RegressionOutput),
-	Classification(ClassificationOutput),
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RegressionOutput {
-	pub value: f32,
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ClassificationOutput {
-	pub class_name: String,
-	pub probabilities: Option<BTreeMap<String, f32>>,
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type")]
 pub enum MonitorEvent {
 	#[serde(rename = "prediction")]
@@ -48,6 +28,26 @@ pub struct TrueValueMonitorEvent {
 	pub identifier: NumberOrString,
 	pub true_value: NumberOrString,
 	pub date: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", untagged)]
+pub enum Output {
+	Regression(RegressionOutput),
+	Classification(ClassificationOutput),
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RegressionOutput {
+	pub value: f32,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClassificationOutput {
+	pub class_name: String,
+	pub probabilities: Option<BTreeMap<String, f32>>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

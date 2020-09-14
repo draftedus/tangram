@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		model::{get_model, Model},
+		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		user::{authorize_user, authorize_user_for_model},
 	},
@@ -69,10 +69,7 @@ async fn props(
 			return Err(Error::NotFound.into());
 		}
 	}
-
-	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::model::Model::from_slice(&data)?;
-	// assemble the response
+	let model = get_model(&mut db, model_id).await?;
 	match model {
 		tangram_core::model::Model::Classifier(model) => {
 			let (class_metrics, auc_roc) = match &model.model {
@@ -111,7 +108,7 @@ async fn props(
 			let class = class.unwrap_or_else(|| classes[class_index].to_owned());
 
 			Ok(Props {
-				id: id.to_string(),
+				id: model_id.to_string(),
 				classes,
 				class,
 				auc_roc,

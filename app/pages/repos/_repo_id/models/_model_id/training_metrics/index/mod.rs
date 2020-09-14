@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		model::{get_model, Model},
+		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		user::{authorize_user, authorize_user_for_model},
 	},
@@ -98,27 +98,26 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			return Err(Error::NotFound.into());
 		}
 	}
-	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::model::Model::from_slice(&data)?;
+	let model = get_model(&mut db, model_id).await?;
 	let inner = match model {
 		tangram_core::model::Model::Classifier(model) => match model.model {
 			tangram_core::model::ClassificationModel::LinearBinary(_) => {
-				Inner::BinaryClassifier(build_inner_binary(model, id))
+				Inner::BinaryClassifier(build_inner_binary(model, model_id))
 			}
 			tangram_core::model::ClassificationModel::LinearMulticlass(_) => {
-				Inner::MulticlassClassifier(build_inner_multiclass(model, id))
+				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id))
 			}
 			tangram_core::model::ClassificationModel::TreeBinary(_) => {
-				Inner::BinaryClassifier(build_inner_binary(model, id))
+				Inner::BinaryClassifier(build_inner_binary(model, model_id))
 			}
 			tangram_core::model::ClassificationModel::TreeMulticlass(_) => {
-				Inner::MulticlassClassifier(build_inner_multiclass(model, id))
+				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id))
 			}
 		},
 		tangram_core::model::Model::Regressor(model) => {
 			let test_metrics = model.test_metrics;
 			Inner::Regressor(Regressor {
-				id: id.to_string(),
+				id: model_id.to_string(),
 				rmse: test_metrics.rmse,
 				baseline_rmse: test_metrics.baseline_rmse,
 				mse: test_metrics.mse,
@@ -129,7 +128,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
-		id: id.to_string(),
+		id: model_id.to_string(),
 		inner,
 		model_layout_info,
 	})

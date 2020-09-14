@@ -95,7 +95,6 @@ pub async fn get_organization(
 			}
 		})
 		.collect();
-	// assemble the response
 	Ok(Some(OrganizationResponse {
 		id: organization_id.to_string(),
 		members,

@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		model::{get_model, Model},
+		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		user::{authorize_user, authorize_user_for_model},
 	},
@@ -110,9 +110,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			return Err(Error::NotFound.into());
 		}
 	}
-	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::model::Model::from_slice(&data)?;
-	// assemble the response
+	let model = get_model(&mut db, model_id).await?;
 	let training_summary = training_summary(&model);
 	let inner = match &model {
 		tangram_core::model::Model::Classifier(model) => {
@@ -126,7 +124,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				})
 				.collect::<Vec<ClassMetrics>>();
 			Inner::Classifier(Classifier {
-				id: id.to_string(),
+				id: model_id.to_string(),
 				metrics: ClassifierMetrics {
 					accuracy: test_metrics.accuracy,
 					baseline_accuracy: test_metrics.baseline_accuracy,
@@ -139,7 +137,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		tangram_core::model::Model::Regressor(model) => {
 			let test_metrics = &model.test_metrics;
 			Inner::Regressor(Regressor {
-				id: id.to_string(),
+				id: model_id.to_string(),
 				metrics: RegressorMetrics {
 					rmse: test_metrics.rmse,
 					baseline_rmse: test_metrics.baseline_rmse,
@@ -151,11 +149,11 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 	};
 
-	let model_layout_info = get_model_layout_info(&mut db, id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
 
 	Ok(Props {
-		id: id.to_string(),
+		id: model_id.to_string(),
 		inner,
 		model_layout_info,
 	})

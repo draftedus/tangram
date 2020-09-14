@@ -1,7 +1,7 @@
 use crate::{
 	common::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
-		model::{get_model, Model},
+		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		production_metrics::{get_production_metrics, GetProductionMetricsOutput},
 		time::format_date_window_interval,
@@ -130,8 +130,7 @@ async fn props(
 			return Err(Error::NotFound.into());
 		}
 	}
-	let Model { data, id } = get_model(&mut db, model_id).await?;
-	let model = tangram_core::model::Model::from_slice(&data)?;
+	let model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	let production_metrics =
 		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
@@ -295,7 +294,7 @@ async fn props(
 	};
 	let class = class.unwrap_or_else(|| classes.get(class_index).unwrap().to_owned());
 	Ok(Props {
-		id: id.to_string(),
+		id: model_id.to_string(),
 		class_metrics,
 		date_window,
 		date_window_interval,
