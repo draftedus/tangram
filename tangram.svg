@@ -1,17 +1,10 @@
 <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
 <rect width="200" height="200" fill="white"/>
-<path d="M4.344 9.656V98.343L46.344 140.343V51.657L4.344 9.656Z" fill="#FF375F"/>
-<path d="M100.344 105.657L56.001 150L100.344 194.343L144.687 150L100.344 105.657Z" fill="#FFD60A"/>
-<path d="M4.344 109.656V196H90.687L4.344 109.656Z" fill="#4DD0E1"/>
-<path d="M150.344 155.657L110 196L190.686 195.999L150.344 155.657Z" fill="#5E5CE6"/>
-<path d="M54.344 59.657V140.342L94.687 100L54.344 59.657Z" fill="#BF5AF2"/>
-<path d="M196.343 9.657L106.001 100L196.343 190.342V9.657Z" fill="#30D158"/>
-<path d="M190.687 4H10L100.344 94.343L190.687 4Z" fill="#0A84FF"/>
-<path d="M0 0L50 50V150L0 100V0Z" fill="white" fill-opacity="0.01"/>
-<path d="M100 100L150 150L100 200L50 150L100 100Z" fill="white" fill-opacity="0.01"/>
-<path d="M0 100L100 200H0V100Z" fill="white" fill-opacity="0.01"/>
-<path d="M150 150L200 200H100L150 150Z" fill="white" fill-opacity="0.01"/>
-<path d="M50 50L100 100L50 150V50Z" fill="white" fill-opacity="0.01"/>
-<path d="M200 0V200L100 100L200 0Z" fill="white" fill-opacity="0.01"/>
-<path d="M200 0L100 100L0 0H200Z" fill="white" fill-opacity="0.01"/>
+<path d="M0 0L50 50V150L0 100V0Z" fill="#FF375F"/>
+<path d="M100 100L150 150L100 200L50 150L100 100Z" fill="#FFD60A"/>
+<path d="M0 100L100 200H0V100Z" fill="#4DD0E1"/>
+<path d="M150 150L200 200H100L150 150Z" fill="#5E5CE6"/>
+<path d="M50 50L100 100L50 150V50Z" fill="#BF5AF2"/>
+<path d="M200 0V200L100 100L200 0Z" fill="#30D158"/>
+<path d="M200 0L100 100L0 0H200Z" fill="#0A84FF"/>
 </svg>
