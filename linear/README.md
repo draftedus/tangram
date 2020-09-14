@@ -10,12 +10,12 @@ Linear models consist of a bias and a series of weights, one for each feature.
 
 `y_predict = bias + weights • feature_values`
 
-where weights and feature_values are both vectors of length n and
+where `weights` and `feature_values` are both vectors of length n and
 • is the dot-product.
 
 ## Example
 
-Imagine we are trying to predict the price of a house. We have two features, the number of bedrooms, the total square footage and whether or not the house has a garage.
+Imagine we are trying to predict the price of a house. We have three features, the number of bedrooms, the total square footage and whether or not the house has a garage.
 
 _Features_: `number_of_bedrooms`, `total_square_feet`, `has_garage`.
 

@@ -6,15 +6,27 @@
 
 Tangram tree contains the code for training and making predictions on gradient boosted decision trees.
 
-Tree models consist of a bias and a series of trees.
+Tree models consist of a bias and a series of trees. To make a prediction:
 
-## Prediction
+`y_predict = bias + output_tree_1 + output_tree_2 + ... + output_tree_n`
 
-Before we go through an example to see how we make predictions using tree models, let's cover some tree basics.
+## Tree Basics
 
-In Tangram, a tree model is represented as a list of nodes. Each node is either a `BranchNode` if it is an internal node, or a `LeafNode` if it is a terminal node. A `BranchNode` has a split describing how to decide whether an example should go to the left or right subtree. There are two types of splits: continous splits and categorical splits. If the feature we are using to split examples is a numeric feature, we use a continuous split: all examples with feature value less than or equal to the split threshold value go to the left subtree, and all examples with a feature value greater go to the right subtree. If the feature we are using to split examples is an enum feature, we use a categorical split where the direction we should split based on the enum variant is encoded by the split.
+Before we go through an example prediction, lets cover some tree basics. In Tangram, a tree model is represented as a list of nodes. There are two types of nodes:
 
-**Continuous Split**:
+- `BranchNode`
+- `LeafNode`
+
+A `BranchNode` is an internal tree node and a `LeafNode` is a terminal node. A `BranchNode` has a split describing how to decide whether an example should go to the left or right subtree. There are two types of splits:
+
+- `Continuous`
+- `Categorical`
+
+We use `Continuous` splits for numeric features where all examples whose feature value is less than or equal to the threshold go to the left subtree and the rest go to the right. We use `Categorical` splits for enum features where a subset of enum variants should go to the left subtree and the others to the right.
+
+In code:
+
+**`Continuous` Split**:
 
 ```rust
 pub struct BranchSplitContinuous {
@@ -27,7 +39,7 @@ pub struct BranchSplitContinuous {
 }
 ```
 
-**Discrete Split**:
+**`Discrete` Split**:
 
 ```rust
 pub struct BranchSplitDiscrete {
@@ -38,15 +50,15 @@ pub struct BranchSplitDiscrete {
 }
 ```
 
-Assume we trained a model to predict the price of a home using three features: `number_of_bedrooms`, `total_square_footage`, and `has_garage`.
+## Prediction
 
-To make a prediction for a new example:
+Imagine we are trying to predict the price of a house. We have three features: the number of bedrooms, the total square footage and whether or not the house has a garage.
 
-`y_predict = bias + output_tree_1`
+_Features_: `number_of_bedrooms`, `total_square_feet`, `has_garage`.
 
-Assume the bias of our model is 256_000.
+Let's assume we are a real estate agent who wants to use our tree model to assess the price of a new home. The home has _4 bedrooms_, _3,200_ square feet and _no garage_.
 
-We would like to predict the price of a house with _4 bedrooms_, _3_200 square feet_ and _no garage_.
+Our trained model consists of 2 trees and a bias. Assume the bias of our model is 256_000.
 
 Let's start at the root node of tree_1.
 
@@ -59,6 +71,8 @@ The final prediction:
 `y_predict= 256_000 + 30_000 - 10_000 = 276_000`.
 
 ## Training
+
+We saw how to make a prediction using an already trained tree. Let's learn a little bit about how trees are trained. This description should be supplemented by walking through the code which we have done our best to document and make easy to follow.
 
 ### Bias
 
