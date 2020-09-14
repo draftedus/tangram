@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="pinwheel.svg" title="Pinwheel">
+</p>
+
 # pinwheel
 
 Pinwheel is Tangram's front end build tool that powers the Tangram app and website. It is a wrapper around [Rollup]() that bundles the TypeScript and CSS.
