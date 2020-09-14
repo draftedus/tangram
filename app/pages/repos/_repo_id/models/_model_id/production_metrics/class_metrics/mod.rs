@@ -2,8 +2,8 @@ use crate::{
 	common::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
 		model::{get_model, Model},
+		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		production_metrics::{get_production_metrics, GetProductionMetricsOutput},
-		repos::{get_model_layout_info, ModelLayoutInfo},
 		time::format_date_window_interval,
 		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_model},

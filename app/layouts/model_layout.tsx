@@ -12,11 +12,7 @@ export type ModelLayoutInfo = {
 	id: string
 	modelId: string
 	modelTitle: string
-	models: Array<{
-		id: string
-		isMain: boolean
-		title: string
-	}>
+	modelVersionIds: string[]
 	owner?: Owner
 	title: string
 }
@@ -38,8 +34,8 @@ export enum ModelSideNavItem {
 }
 
 export function ModelLayout(props: ModelLayoutProps) {
-	let selectedModel = props.info.models.find(
-		model => model.id == props.info.modelId,
+	let selectedModelVersionId = props.info.modelVersionIds.find(
+		modelVersionId => modelVersionId == props.info.modelId,
 	)
 	return (
 		<Layout pinwheelInfo={props.pinwheelInfo}>
@@ -73,12 +69,12 @@ export function ModelLayout(props: ModelLayoutProps) {
 							{'Version:'}
 							<ui.Details
 								options={
-									props.info.models.map(model => ({
-										href: `/repos/${props.info.id}/models/${model.id}/`,
-										name: model.id,
+									props.info.modelVersionIds.map(modelVersionId => ({
+										href: `/repos/${props.info.id}/models/${modelVersionId}/`,
+										name: modelVersionId,
 									})) ?? []
 								}
-								summary={selectedModel?.id ?? null}
+								summary={selectedModelVersionId ?? null}
 							/>
 						</div>
 						<ui.Button

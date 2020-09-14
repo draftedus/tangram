@@ -5,7 +5,6 @@ use crate::{
 };
 use anyhow::Result;
 use bytes::Buf;
-use chrono::prelude::*;
 use hyper::{header, Body, Request, Response, StatusCode};
 use multer::Multipart;
 use sqlx::prelude::*;
@@ -158,7 +157,6 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			return Ok(response);
 		}
 	};
-	let now = Utc::now().timestamp();
 	let repo_id = Id::new();
 	let result = if let Some(owner) = &owner {
 		let owner_parts: Vec<&str> = owner.split(':').collect();
@@ -169,19 +167,22 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			.parse()
 			.map_err(|_| Error::BadRequest)?;
 		match *owner_type {
-			"user" => create_user_repo(&mut db, owner_id, repo_id, now, &title).await,
+			"user" => {
+				crate::common::repos::create_user_repo(&mut db, owner_id, repo_id, &title).await
+			}
 			"organization" => {
 				if !authorize_user_for_organization(&mut db, user.as_ref().unwrap(), owner_id)
 					.await?
 				{
 					return Err(Error::Unauthorized.into());
 				}
-				create_org_repo(&mut db, owner_id, repo_id, now, title.as_str()).await
+				crate::common::repos::create_org_repo(&mut db, owner_id, repo_id, title.as_str())
+					.await
 			}
 			_ => return Err(Error::BadRequest.into()),
 		}
 	} else {
-		create_root_repo(&mut db, repo_id, now, title.as_str()).await
+		crate::common::repos::create_root_repo(&mut db, repo_id, title.as_str()).await
 	};
 
 	if result.is_err() {
@@ -195,24 +196,10 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			.unwrap();
 		return Ok(response);
 	}
-
-	let result = sqlx::query(
-		"
-			insert into models
-				(id, repo_id, created_at, data)
-			values (
-				?, ?, ?, ?
-			)
-		",
-	)
-	.bind(&model.id().to_string())
-	.bind(&repo_id.to_string())
-	.bind(&now)
-	.bind(&base64::encode(&file_data))
-	.execute(&mut *db)
-	.await;
+	let result =
+		crate::common::repos::add_model_version(&mut db, repo_id, model.id(), &file_data).await;
 	if result.is_err() {
-		let error = "This model has already been uploaded. Tangram models have unique identifiers and can only belong to one account.";
+		let error = "There was an error uploading your model.";
 		let props = props(&mut db, user, Some(String::from(error)), Some(title), owner).await?;
 		let html = context.pinwheel.render_with("/repos/new", props)?;
 		let response = Response::builder()
@@ -232,74 +219,4 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		.body(Body::empty())
 		.unwrap();
 	Ok(response)
-}
-
-async fn create_user_repo(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	user_id: Id,
-	repo_id: Id,
-	now: i64,
-	title: &str,
-) -> std::result::Result<sqlx::any::AnyDone, sqlx::error::Error> {
-	sqlx::query(
-		"
-			insert into repos (
-				id, created_at, title, user_id
-			) values (
-				?, ?, ?, ?
-			)
-		",
-	)
-	.bind(&repo_id.to_string())
-	.bind(&now)
-	.bind(&title)
-	.bind(&user_id.to_string())
-	.execute(&mut *db)
-	.await
-}
-
-async fn create_org_repo(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	org_id: Id,
-	repo_id: Id,
-	now: i64,
-	title: &str,
-) -> std::result::Result<sqlx::any::AnyDone, sqlx::error::Error> {
-	sqlx::query(
-		"
-			insert into repos (
-				id, created_at, title, organization_id
-			) values (
-				?, ?, ?, ?
-			)
-		",
-	)
-	.bind(&repo_id.to_string())
-	.bind(&now)
-	.bind(&title)
-	.bind(&org_id.to_string())
-	.execute(&mut *db)
-	.await
-}
-
-async fn create_root_repo(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	repo_id: Id,
-	now: i64,
-	title: &str,
-) -> std::result::Result<sqlx::any::AnyDone, sqlx::error::Error> {
-	sqlx::query(
-		"
-			insert into repos (
-				id, created_at, title
-			) values (
-				?, ?, ?
-			)
-		",
-	)
-	.bind(&repo_id.to_string())
-	.bind(&now)
-	.bind(&title)
-	.execute(&mut *db)
-	.await
 }

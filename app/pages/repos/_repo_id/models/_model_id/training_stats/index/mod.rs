@@ -1,7 +1,7 @@
 use crate::{
 	common::{
 		model::{get_model, Model},
-		repos::{get_model_layout_info, ModelLayoutInfo},
+		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		user::{authorize_user, authorize_user_for_model},
 	},
 	error::Error,

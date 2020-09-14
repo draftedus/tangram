@@ -1,7 +1,6 @@
 use crate::{
 	common::{
-		organizations, repos,
-		repos::Repo,
+		organizations,
 		user::{authorize_user, authorize_user_for_organization, User},
 	},
 	error::Error,
@@ -41,8 +40,15 @@ struct Props {
 	name: String,
 	plan: organizations::Plan,
 	user_id: String,
-	repos: Vec<repos::Repo>,
+	repos: Vec<Repo>,
 	stripe_publishable_key: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Repo {
+	pub id: String,
+	pub title: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]

@@ -1,8 +1,1 @@
-watchexec --exts rs --restart -- \
-DATABASE_URL=sqlite:// \
-HOST=0.0.0.0 \
-PORT=8080 \
-STRIPE_PUBLISHABLE_KEY=pk_test_IdZDlwnF8QDZoDB3dIdtIZ5K00p4enlqGE \
-STRIPE_SECRET_KEY=sk_test_8HE9tiU8FcQ3qKmo2nWADZrW00zstANVQE \
-URL=http://localhost:8080 \
-cargo run -- app
+watchexec --exts rs --restart -- cargo run -- app --model data/heart-disease.tangram

@@ -29,10 +29,10 @@ mod progress_view;
 enum Options {
 	#[cfg(feature = "train")]
 	#[clap(name = "train")]
-	Train(TrainOptions),
+	Train(Box<TrainOptions>),
 	#[cfg(feature = "app")]
 	#[clap(name = "app")]
-	App(AppOptions),
+	App(Box<AppOptions>),
 }
 
 #[cfg(feature = "train")]
@@ -61,10 +61,12 @@ struct AppOptions {
 	auth_enabled: bool,
 	#[clap(long, env = "COOKIE_DOMAIN")]
 	cookie_domain: Option<String>,
-	#[clap(long, env = "DATABASE_URL")]
-	database_url: Option<Url>,
+	#[clap(long, env = "DATABASE_URL", default_value = "sqlite://")]
+	database_url: Url,
 	#[clap(long, default_value = "0.0.0.0")]
 	host: std::net::IpAddr,
+	#[clap(long)]
+	model: Option<PathBuf>,
 	#[clap(long, env = "PORT", default_value = "8080")]
 	port: u16,
 	#[clap(long, env = "SENDGRID_API_TOKEN")]
@@ -81,9 +83,9 @@ fn main() {
 	let options = Options::parse();
 	let result = match options {
 		#[cfg(feature = "train")]
-		Options::Train(options) => cli_train(options),
+		Options::Train(options) => cli_train(*options),
 		#[cfg(feature = "app")]
-		Options::App(options) => cli_app(options),
+		Options::App(options) => cli_app(*options),
 	};
 	if let Err(error) = result {
 		eprintln!("{}: {}", "error".red().bold(), error);
@@ -172,6 +174,7 @@ fn cli_app(options: AppOptions) -> Result<()> {
 		cookie_domain: options.cookie_domain,
 		database_url: options.database_url,
 		host: options.host,
+		model: options.model,
 		port: options.port,
 		sendgrid_api_token: options.sendgrid_api_token,
 		stripe_publishable_key: options.stripe_publishable_key,
@@ -204,3 +207,24 @@ fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
 		i += 1;
 	}
 }
+
+// fn data_dir() -> PathBuf {
+// 	let tangram_data_dir = dirs::data_dir()
+// 		.expect("failed to find user data directory")
+// 		.join("tangram");
+// 	std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
+// 		panic!(
+// 			"failed to create tangram data directory in {}",
+// 			tangram_data_dir.display()
+// 		)
+// 	});
+// 	tangram_data_dir
+// }
+
+// fn default_database_url() -> Url {
+// 	let tangram_database_path = data_dir().join("tangram.db");
+// 	format!(
+// 		"sqlite:{}",
+// 		tangram_database_path.to_str().unwrap().to_owned()
+// 	)
+// }

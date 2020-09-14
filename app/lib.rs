@@ -1,5 +1,5 @@
 use self::error::Error;
-use anyhow::Result;
+use anyhow::{format_err, Result};
 use futures::FutureExt;
 use hyper::{
 	header,
@@ -8,8 +8,10 @@ use hyper::{
 };
 use pinwheel::Pinwheel;
 use std::{
-	collections::BTreeMap, convert::Infallible, panic::AssertUnwindSafe, str::FromStr, sync::Arc,
+	collections::BTreeMap, convert::Infallible, panic::AssertUnwindSafe, path::PathBuf,
+	str::FromStr, sync::Arc,
 };
+use tangram_core::util::id::Id;
 use url::Url;
 
 mod common;
@@ -24,8 +26,9 @@ mod track;
 pub struct AppOptions {
 	pub auth_enabled: bool,
 	pub cookie_domain: Option<String>,
-	pub database_url: Option<Url>,
+	pub database_url: Url,
 	pub host: std::net::IpAddr,
+	pub model: Option<PathBuf>,
 	pub port: u16,
 	pub sendgrid_api_token: Option<String>,
 	pub stripe_publishable_key: Option<String>,
@@ -300,26 +303,7 @@ pub async fn run(options: AppOptions) -> Result<()> {
 	let pinwheel = pinwheel();
 
 	// configure the database pool
-	let database_url = options
-		.database_url
-		.as_ref()
-		.map(|url| url.to_string())
-		.unwrap_or_else(|| {
-			let tangram_data_dir = dirs::data_dir()
-				.expect("failed to find user data directory")
-				.join("tangram");
-			std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
-				panic!(
-					"failed to create tangram data directory in {}",
-					tangram_data_dir.display()
-				)
-			});
-			let tangram_database_path = tangram_data_dir.join("tangram.db");
-			format!(
-				"sqlite:{}",
-				tangram_database_path.to_str().unwrap().to_owned()
-			)
-		});
+	let database_url = options.database_url.to_string();
 	let database_pool_max_size: u32 = std::env::var("DATABASE_POOL_MAX_SIZE")
 		.map(|s| {
 			s.parse()
@@ -343,8 +327,24 @@ pub async fn run(options: AppOptions) -> Result<()> {
 		.connect_with(pool_options)
 		.await?;
 
-	// run any pending migrations
+	// Run any pending migrations.
 	migrations::run(&pool).await?;
+
+	// If a model was included in the options, add it to the database now.
+	if let Some(model_path) = &options.model {
+		let mut db = pool.begin().await?;
+		let repo_id = Id::new();
+		let model_data = std::fs::read(model_path)?;
+		let model = tangram_core::model::Model::from_slice(&model_data)?;
+		let title = model_path
+			.file_stem()
+			.ok_or_else(|| format_err!("bad model path"))?
+			.to_str()
+			.ok_or_else(|| format_err!("bad model path"))?;
+		crate::common::repos::create_root_repo(&mut db, repo_id, title).await?;
+		crate::common::repos::add_model_version(&mut db, repo_id, model.id(), &model_data).await?;
+		db.commit().await?;
+	}
 
 	// run the server
 	let context = Arc::new(Context {

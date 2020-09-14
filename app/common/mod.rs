@@ -1,6 +1,7 @@
 pub mod cookies;
 pub mod date_window;
 pub mod model;
+pub mod model_layout_info;
 pub mod organizations;
 pub mod production_metrics;
 pub mod production_stats;

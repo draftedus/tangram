@@ -1,95 +1,106 @@
 use anyhow::Result;
+use chrono::Utc;
 use sqlx::prelude::*;
 use tangram_core::util::id::Id;
 
-#[derive(serde::Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ModelLayoutInfo {
-	pub id: String,
-	pub title: String,
-	pub models: Vec<RepoModel>,
-	pub owner: Option<Owner>,
-	pub model_id: String,
-}
-
-#[derive(serde::Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Owner {
-	pub name: String,
-	pub url: String,
-}
-
-pub async fn get_model_layout_info(
-	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	model_id: Id,
-) -> Result<ModelLayoutInfo> {
-	let row = sqlx::query(
+pub async fn create_root_repo(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	repo_id: Id,
+	title: &str,
+) -> Result<()> {
+	sqlx::query(
 		"
-			select
-				repos.id,
-				repos.title,
-				repos.organization_id,
-				organizations.name,
-				repos.user_id,
-				users.email
-			from repos
-			join models
-				on models.repo_id = repos.id
-			left join organizations
-				on organizations.id = repos.organization_id
-			left join users
-				on users.id = repos.user_id
-			where models.id = ?1
+			insert into repos (
+				id, title, created_at
+			) values (
+				?, ?, ?
+			)
+		",
+	)
+	.bind(&repo_id.to_string())
+	.bind(&title)
+	.bind(&Utc::now().timestamp())
+	.execute(&mut *db)
+	.await?;
+	Ok(())
+}
+
+pub async fn create_user_repo(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user_id: Id,
+	repo_id: Id,
+	title: &str,
+) -> Result<()> {
+	sqlx::query(
+		"
+			insert into repos (
+				id, title, user_id, created_at
+			) values (
+				?, ?, ?, ?
+			)
+		",
+	)
+	.bind(&repo_id.to_string())
+	.bind(&title)
+	.bind(&user_id.to_string())
+	.bind(&Utc::now().timestamp())
+	.execute(&mut *db)
+	.await?;
+	Ok(())
+}
+
+pub async fn create_org_repo(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	org_id: Id,
+	repo_id: Id,
+	title: &str,
+) -> Result<()> {
+	sqlx::query(
+		"
+			insert into repos (
+				id, title, organization_id, created_at
+			) values (
+				?, ?, ?, ?
+			)
+		",
+	)
+	.bind(&repo_id.to_string())
+	.bind(&title)
+	.bind(&org_id.to_string())
+	.bind(&Utc::now().timestamp())
+	.execute(&mut *db)
+	.await?;
+	Ok(())
+}
+
+pub async fn add_model_version(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	repo_id: Id,
+	model_id: Id,
+	model_data: &[u8],
+) -> Result<()> {
+	sqlx::query(
+		"
+			insert into models
+				(id, repo_id, data, created_at)
+			values (
+				?, ?, ?, ?
+			)
 		",
 	)
 	.bind(&model_id.to_string())
-	.fetch_one(&mut *db)
+	.bind(&repo_id.to_string())
+	.bind(&base64::encode(&model_data))
+	.bind(&Utc::now().timestamp())
+	.execute(&mut *db)
 	.await?;
-	let id: String = row.get(0);
-	let id: Id = id.parse()?;
-	let title: String = row.get(1);
-	let models = get_models_for_repo(&mut db, id).await?;
-	let organization_id: Option<String> = row.get(2);
-	let organization_name: Option<String> = row.get(3);
-	let user_id: Option<String> = row.get(4);
-	let user_email: Option<String> = row.get(5);
-	let owner = match (organization_id, user_id) {
-		(Some(organization_id), None) => Some(Owner {
-			name: organization_name.unwrap(),
-			url: format!("/organizations/{}/", organization_id),
-		}),
-		(None, Some(_)) => Some(Owner {
-			name: user_email.unwrap(),
-			url: "/user".to_string(),
-		}),
-		(None, None) => None,
-		(_, _) => unreachable!(),
-	};
-
-	let RepoModel { id: model_id, .. } = models
-		.iter()
-		.find(|model| model.id == model_id.to_string())
-		.unwrap();
-	let model_id = model_id.clone();
-	Ok(ModelLayoutInfo {
-		id: id.to_string(),
-		title,
-		models,
-		owner,
-		model_id,
-	})
+	Ok(())
 }
 
-#[derive(serde::Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct RepoModel {
-	pub id: String,
-}
-
-async fn get_models_for_repo(
+pub async fn get_model_version_ids(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	repo_id: Id,
-) -> Result<Vec<RepoModel>> {
+) -> Result<Vec<Id>> {
 	Ok(sqlx::query(
 		"
 			select
@@ -105,16 +116,6 @@ async fn get_models_for_repo(
 	.fetch_all(&mut *db)
 	.await?
 	.iter()
-	.map(|row| {
-		let id: String = row.get(0);
-		RepoModel { id }
-	})
+	.map(|row| row.get::<String, _>(0).parse().unwrap())
 	.collect())
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Repo {
-	pub id: String,
-	pub title: String,
 }

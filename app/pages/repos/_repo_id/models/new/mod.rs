@@ -166,12 +166,11 @@ pub async fn post(
 	.bind(&base64::encode(file))
 	.execute(&mut *db)
 	.await;
-
 	if result.is_err() {
 		return render(
 			context,
 			Some(Options {
-				error: "This model has already been uploaded. Tangram models have unique identifiers and can only belong to one account.".into(),
+				error: "There was an error uploading your model.".into(),
 			}),
 		)
 		.await;
