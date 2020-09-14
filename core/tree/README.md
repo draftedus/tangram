@@ -12,9 +12,7 @@ Tree models consist of a bias and a series of trees.
 
 Before we go through an example to see how we make predictions using tree models, let's cover some tree basics.
 
-A tree consists of a list of nodes. Each node contains a split telling us whether to go to the left subtree or to the right and the index of the left and right child in the list of nodes.
-
-There are two types of splits: continous splits and categorical splits. Continuous splits split examples based on numeric features that take on a range of continuous values while categorical splits split examples based on enum features, where a subset of the enum variants go to the left subtree and the other subset goes to the right.
+In Tangram, a tree model is represented as a list of nodes. Each node is either a `BranchNode` if it is an internal node, or a `LeafNode` if it is a terminal node. A `BranchNode` has a split describing how to decide whether an example should go to the left or right subtree. There are two types of splits: continous splits and categorical splits. If the feature we are using to split examples is a numeric feature, we use a continuous split: all examples with feature value less than or equal to the split threshold value go to the left subtree, and all examples with a feature value greater go to the right subtree. If the feature we are using to split examples is an enum feature, we use a categorical split where the direction we should split based on the enum variant is encoded by the split.
 
 **Continuous Split**:
 
@@ -40,26 +38,25 @@ pub struct BranchSplitDiscrete {
 }
 ```
 
-Once we reach a leaf node, we are done. The value in the leaf node is the prediction for this example.
+Assume we trained a model to predict the price of a home using three features: `number_of_bedrooms`, `total_square_footage`, and `has_garage`.
 
-```rust
-pub struct LeafNode {
-  /// The output of the leaf node.
-  pub value: f32,
-  ...
-}
-```
+To make a prediction for a new example:
 
-Let's use the same housing price prediction that we use in linear models, where we have 3 features: `number_of_bedrooms`, `total_square_footage`, and `has_garage`.
+`y_predict = bias + output_tree_1`
 
-Our model consists of a bias and two trees. The prediction is given by:
+Assume the bias of our model is 256_000.
 
-`y_predict = bias + output_tree_1 + output_tree_2`.
+We would like to predict the price of a house with _4 bedrooms_, _3_200 square feet_ and _no garage_.
 
-The bias is computed by taking the average of all of the housing prices in our training dataset, let's assume its 256_000.
+Let's start at the root node of tree_1.
 
-`Tree_1` []
-`Tree_2`: []
+**tree_1**
+
+If we had more trees, we would repeat the process we used in determining the output from tree_1, adding the leaf values until we reach the final tree.
+
+The final prediction:
+
+`y_predict= 256_000 + 30_000 - 10_000 = 276_000`.
 
 ## Training
 
