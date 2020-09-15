@@ -24,19 +24,19 @@ pub fn train_early_stopping_split<'features, 'labels, Label>(
 	)
 }
 
-const TOLERANCE: f32 = 0.0001;
-const NUM_ROUNDS_NO_IMPROVE: usize = 5;
-
-#[derive(Clone)]
 pub struct EarlyStoppingMonitor {
-	previous_stopping_metric_value: Option<f32>,
+	threshold: f32,
+	epochs: usize,
 	n_rounds_no_improve: usize,
+	previous_stopping_metric_value: Option<f32>,
 }
 
 impl EarlyStoppingMonitor {
 	// Create a new EarlyStoppingMonitor.
-	pub fn new() -> Self {
+	pub fn new(threshold: f32, epochs: usize) -> Self {
 		EarlyStoppingMonitor {
+			threshold,
+			epochs,
 			previous_stopping_metric_value: None,
 			n_rounds_no_improve: 0,
 		}
@@ -47,10 +47,10 @@ impl EarlyStoppingMonitor {
 		let stopping_metric = value;
 		let result = if let Some(previous_stopping_metric) = self.previous_stopping_metric_value {
 			if stopping_metric > previous_stopping_metric
-				|| f32::abs(stopping_metric - previous_stopping_metric) < TOLERANCE
+				|| f32::abs(stopping_metric - previous_stopping_metric) < self.threshold
 			{
 				self.n_rounds_no_improve += 1;
-				self.n_rounds_no_improve >= NUM_ROUNDS_NO_IMPROVE
+				self.n_rounds_no_improve >= self.epochs
 			} else {
 				self.n_rounds_no_improve = 0;
 				false

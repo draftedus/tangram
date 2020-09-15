@@ -36,7 +36,11 @@ impl MulticlassClassifier {
 			train_early_stopping_split(
 				features,
 				labels.data.into(),
-				options.early_stopping_fraction,
+				options
+					.early_stopping_options
+					.as_ref()
+					.map(|o| o.early_stopping_fraction)
+					.unwrap_or(0.0),
 			);
 		let means = features_train
 			.axis_iter(Axis(1))
@@ -49,11 +53,15 @@ impl MulticlassClassifier {
 			losses: vec![],
 			classes,
 		};
-		let mut early_stopping_monitor = if options.early_stopping_fraction > 0.0 {
-			Some(EarlyStoppingMonitor::new())
-		} else {
-			None
-		};
+		let mut early_stopping_monitor =
+			if let Some(early_stopping_options) = &options.early_stopping_options {
+				Some(EarlyStoppingMonitor::new(
+					early_stopping_options.early_stopping_threshold,
+					early_stopping_options.early_stopping_epochs,
+				))
+			} else {
+				None
+			};
 		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
 		update_progress(Progress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {

@@ -43,7 +43,6 @@ pub struct LinearModelTrainOptions {
 	pub n_examples_per_batch: u64,
 	pub learning_rate: f32,
 	pub l2_regularization: f32,
-	pub early_stopping_fraction: f32,
 }
 
 pub struct TreeModelTrainOptions {
@@ -52,7 +51,6 @@ pub struct TreeModelTrainOptions {
 	pub l2_regularization: f32,
 	pub min_examples_per_leaf: u64,
 	pub max_rounds: u64,
-	pub early_stopping_fraction: f32,
 }
 
 pub fn compute_regression_hyperparameter_grid(
@@ -66,7 +64,6 @@ pub fn compute_regression_hyperparameter_grid(
 				target_column_index,
 				feature_groups: features::compute_feature_groups_linear(column_stats),
 				options: LinearModelTrainOptions {
-					early_stopping_fraction: 0.1,
 					l2_regularization: item.l2_regularization,
 					learning_rate: item.learning_rate,
 					max_epochs: item.max_epochs,
@@ -78,7 +75,6 @@ pub fn compute_regression_hyperparameter_grid(
 				feature_groups: features::compute_feature_groups_tree(column_stats),
 				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
-					early_stopping_fraction: 0.1,
 					learning_rate: item.learning_rate,
 					l2_regularization: item.l2_regularization,
 					min_examples_per_leaf: item.min_examples_per_leaf,
@@ -100,7 +96,6 @@ pub fn compute_binary_classification_hyperparameter_grid(
 				target_column_index,
 				feature_groups: features::compute_feature_groups_linear(column_stats),
 				options: LinearModelTrainOptions {
-					early_stopping_fraction: 0.1,
 					l2_regularization: item.l2_regularization,
 					learning_rate: item.learning_rate,
 					max_epochs: item.max_epochs,
@@ -112,7 +107,6 @@ pub fn compute_binary_classification_hyperparameter_grid(
 				feature_groups: features::compute_feature_groups_tree(column_stats),
 				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
-					early_stopping_fraction: 0.1,
 					learning_rate: item.learning_rate,
 					min_examples_per_leaf: item.min_examples_per_leaf,
 					max_rounds: item.max_rounds,
@@ -134,7 +128,6 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 				target_column_index,
 				feature_groups: features::compute_feature_groups_linear(column_stats),
 				options: LinearModelTrainOptions {
-					early_stopping_fraction: 0.1,
 					l2_regularization: item.l2_regularization,
 					learning_rate: item.learning_rate,
 					max_epochs: item.max_epochs,
@@ -146,7 +139,6 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 				feature_groups: features::compute_feature_groups_tree(column_stats),
 				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
-					early_stopping_fraction: 0.1,
 					learning_rate: item.learning_rate,
 					min_examples_per_leaf: item.min_examples_per_leaf,
 					max_rounds: item.max_rounds,
@@ -197,7 +189,6 @@ pub fn default_regression_hyperparameter_grid(
 				learning_rate,
 				max_epochs,
 				n_examples_per_batch,
-				early_stopping_fraction: 0.1,
 			},
 		});
 	}
@@ -216,7 +207,6 @@ pub fn default_regression_hyperparameter_grid(
 				learning_rate,
 				min_examples_per_leaf,
 				max_rounds,
-				early_stopping_fraction: 0.1,
 				l2_regularization,
 			},
 		});
@@ -244,7 +234,6 @@ pub fn default_binary_classification_hyperparameter_grid(
 				learning_rate,
 				max_epochs,
 				n_examples_per_batch,
-				early_stopping_fraction: 0.1,
 			},
 		});
 	}
@@ -263,7 +252,6 @@ pub fn default_binary_classification_hyperparameter_grid(
 				learning_rate,
 				min_examples_per_leaf,
 				max_rounds,
-				early_stopping_fraction: 0.1,
 				l2_regularization,
 			},
 		});
@@ -291,7 +279,6 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 				learning_rate,
 				max_epochs,
 				n_examples_per_batch,
-				early_stopping_fraction: 0.1,
 			},
 		});
 	}
@@ -310,7 +297,6 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 				learning_rate,
 				min_examples_per_leaf,
 				max_rounds,
-				early_stopping_fraction: 0.1,
 				l2_regularization,
 			},
 		});

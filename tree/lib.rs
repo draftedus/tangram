@@ -90,9 +90,9 @@ pub struct TrainOptions {
 pub struct EarlyStoppingOptions {
 	/// the fraction of the dataset that we should set aside for use in early stopping
 	pub early_stopping_fraction: f32,
-	/// the maximum number of rounds of boosting that we will do if we don't see an improvement by at least `early_stopping_threshold` in the loss.
+	/// the maximum number of rounds of boosting that we will do if we don't see an improvement by at least `early_stopping_threshold` in the loss
 	pub early_stopping_rounds: usize,
-	/// the minimum amount a subsequent round of boosting must decrease the loss by. Early stopping can be thought of as a simple state machine: If we have a round that doesn't decrease the loss by at least tol, we increment our counter. If we decrease the loss by at least tol, the counter is reset to 0. If the counter hits early_stopping_rounds rounds, we stop training the tree.
+	/// This is the minimum amount a subsequent round of boosting must decrease the loss by. Early stopping can be thought of as a simple state machine: If we have a round that doesn't decrease the loss by at least tol, we increment our counter. If we decrease the loss by at least tol, the counter is reset to 0. If the counter hits early_stopping_rounds rounds, we stop training the tree.
 	pub early_stopping_threshold: f32,
 }
 

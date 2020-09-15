@@ -702,11 +702,11 @@ fn train_linear_regressor(
 		.as_number()
 		.unwrap();
 	let linear_options = tangram_linear::TrainOptions {
-		early_stopping_fraction: options.early_stopping_fraction,
 		l2_regularization: options.l2_regularization,
 		learning_rate: options.learning_rate,
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
+		..Default::default()
 	};
 	let model = tangram_linear::Regressor::train(
 		features.view(),
@@ -801,11 +801,11 @@ fn train_linear_binary_classifier(
 		.as_enum()
 		.unwrap();
 	let linear_options = tangram_linear::TrainOptions {
-		early_stopping_fraction: options.early_stopping_fraction,
 		l2_regularization: options.l2_regularization,
 		learning_rate: options.learning_rate,
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
+		..Default::default()
 	};
 	let model = tangram_linear::BinaryClassifier::train(
 		features.view(),
@@ -904,11 +904,11 @@ fn train_linear_multiclass_classifier(
 		.as_enum()
 		.unwrap();
 	let linear_options = tangram_linear::TrainOptions {
-		early_stopping_fraction: options.early_stopping_fraction,
 		l2_regularization: options.l2_regularization,
 		learning_rate: options.learning_rate,
 		max_epochs: options.max_epochs.to_usize().unwrap(),
 		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
+		..Default::default()
 	};
 	let model = tangram_linear::MulticlassClassifier::train(
 		features.view(),
@@ -1611,7 +1611,6 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
 impl Into<model::LinearModelTrainOptions> for grid::LinearModelTrainOptions {
 	fn into(self) -> model::LinearModelTrainOptions {
 		model::LinearModelTrainOptions {
-			early_stopping_fraction: self.early_stopping_fraction,
 			l2_regularization: self.l2_regularization,
 			learning_rate: self.learning_rate,
 			max_epochs: self.max_epochs,
@@ -1627,7 +1626,6 @@ impl Into<model::TreeModelTrainOptions> for grid::TreeModelTrainOptions {
 			learning_rate: self.learning_rate,
 			min_examples_per_leaf: self.min_examples_per_leaf,
 			max_rounds: self.max_rounds,
-			early_stopping_fraction: self.early_stopping_fraction,
 		}
 	}
 }

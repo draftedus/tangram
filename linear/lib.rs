@@ -20,8 +20,8 @@ pub use regressor::Regressor;
 /// These are the options passed to `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
 #[derive(Debug)]
 pub struct TrainOptions {
-	/// the percent of the dataset to set aside for computing early stopping metrics
-	pub early_stopping_fraction: f32,
+	/// Specify options for early stopping. If the value is `Some`, early stopping will be enabled. If it is `None`, early stopping will be disabled.
+	pub early_stopping_options: Option<EarlyStoppingOptions>,
 	/// the L2 regularization value to use when updating the model parameters
 	pub l2_regularization: f32,
 	/// the learning rate to use when updating the model parameters
@@ -39,9 +39,24 @@ impl Default for TrainOptions {
 			learning_rate: 0.1,
 			max_epochs: 100,
 			n_examples_per_batch: 128,
-			early_stopping_fraction: 0.1,
+			early_stopping_options: Some(EarlyStoppingOptions {
+				early_stopping_fraction: 0.1,
+				early_stopping_epochs: 3,
+				early_stopping_threshold: 1e-3,
+			}),
 		}
 	}
+}
+
+/// This struct specifies the early stopping parameters that control what percentage of the dataset should be held out for early stopping, the number of early stopping rounds, and the threshold to determine when to stop training.
+#[derive(Debug)]
+pub struct EarlyStoppingOptions {
+	/// the fraction of the dataset that we should set aside for use in early stopping
+	pub early_stopping_fraction: f32,
+	/// the maximum number of epochs that we will train if we don't see an improvement by at least `early_stopping_threshold` in the loss
+	pub early_stopping_epochs: usize,
+	/// This is the minimum amount a subsequent epoch must decrease the loss by. Early stopping can be thought of as a simple state machine: If we have a round that doesn't decrease the loss by at least tol, we increment our counter. If we decrease the loss by at least tol, the counter is reset to 0. If the counter hits early_stopping_rounds rounds, we stop training the tree.
+	pub early_stopping_threshold: f32,
 }
 
 /// the training progress, which tracks the current epoch
