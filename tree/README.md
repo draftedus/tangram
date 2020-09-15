@@ -115,14 +115,14 @@ The bias is computed differently depending on the type of model trained: regress
 ### Training Trees
 
 - **Step 1.** Measure the _error_ our bias only model generates. In regressor's the loss function is the mean squared error. In binary classifiers the loss function is the binary cross entropy loss, also known as log loss. In multiclass classifiers, the loss function is the cross entropy loss. The code for computing the derivate of the loss function is nested inside a function called `update_gradients_and_hessians` inside each of `regressor.rs`, `binary_classifier.rs`, `multiclass_classifier.rs`.
-- **Step 2.** Train a regression tree to predict the error for each example obtained in the previous step. The tree is called a regression tree because the target we are trying to predict for each example is a continuous value. See [Single Tree](#single-tree) below for more details.
+- **Step 2.** Train a regression tree to predict the gradients for each example obtained in the previous step. The tree is called a regression tree because the target we are trying to predict for each example is a continuous value. See [Single Tree](#single-tree) below for more details.
 - **Step 3.** Update the predictions for each example using the output from the previously trained tree.
 - **Step 4.** Update the gradients and hessians for each example, using the predictions and labels.
 - **Step 5.** Repeat steps 2 and 3 until we reach the early stopping criteria or we reach `max_rounds`, whichever comes first.
 
 ### Single Tree
 
-The goal of training a single tree is to split training examples into leaves such training examples in the same leaves have similar errors. We use the features to split training examples and choose the features that result in the "best" split. See the `train` function in `single.rs`.
+The goal of training a single tree is to split training examples into leaves such training examples in the same leaves have similar gradients. We use the features to split training examples and choose the features that result in the "best" split. See the `train` function in `single.rs`.
 
 ### Histogram Gradient Boosting
 
@@ -143,7 +143,3 @@ Histogram gradient boosting differs from regular gradient boosting in that inste
 | **bin_stats.rs**             | This contains code that computes aggregate gradient and hessian statistics for all of the examples in a given node.                                                                                |
 | **split.rs**                 | This contains code that finds the optimal split for a node. It uses the bin_stats for the node computed earlier in order to find the optimal split.                                                |
 | **examples_index.rs**        | This contains code to maintain the examples_index lookup so we keep track of which nodes contain which examples.                                                                                   |
-
-```
-
-```
