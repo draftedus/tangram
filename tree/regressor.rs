@@ -1,4 +1,4 @@
-use super::{shap, single, Model, Regressor, Task, TrainOptions};
+use super::{shap, single, Model, Regressor, TrainOptions};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -12,8 +12,8 @@ impl Regressor {
 		options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
-		let task = Task::Regression;
-		let model = super::train::train(
+		let task = crate::train::Task::Regression;
+		let model = crate::train::train(
 			&task,
 			features,
 			ColumnView::Number(labels),

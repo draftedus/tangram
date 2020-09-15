@@ -40,7 +40,7 @@ mod regressor;
 mod shap;
 mod single;
 mod split;
-mod timing;
+// mod timing;
 mod train;
 
 pub use self::progress::Progress;
@@ -111,14 +111,6 @@ impl Default for TrainOptions {
 			discrete_min_examples_per_branch: 100,
 		}
 	}
-}
-
-/// An enum describing the different task types.
-#[derive(Debug)]
-pub enum Task {
-	Regression,
-	BinaryClassification,
-	MulticlassClassification { n_trees_per_round: usize },
 }
 
 /// An enum describing the different model types.

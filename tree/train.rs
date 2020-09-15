@@ -6,8 +6,14 @@ use crate::{
 	bin_stats::BinStatsPool,
 	feature_importances::compute_feature_importances,
 	single,
-	timing::Timing,
-	BinaryClassifier, Model, MulticlassClassifier, Progress, Regressor, Task, TrainOptions, Tree,
+	// timing::Timing,
+	BinaryClassifier,
+	Model,
+	MulticlassClassifier,
+	Progress,
+	Regressor,
+	TrainOptions,
+	Tree,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -15,6 +21,14 @@ use num_traits::ToPrimitive;
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_progress::ProgressCounter;
+
+/// An enum describing the different task types.
+#[derive(Debug)]
+pub enum Task {
+	Regression,
+	BinaryClassification,
+	MulticlassClassification { n_trees_per_round: usize },
+}
 
 /// To avoid code duplication, this shared `train` method is called by `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
 pub fn train(

@@ -13,8 +13,8 @@ impl BinaryClassifier {
 		options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
-		let task = Task::BinaryClassification;
-		let model = super::train::train(
+		let task = crate::train::Task::BinaryClassification;
+		let model = crate::train::train(
 			&task,
 			features,
 			ColumnView::Enum(labels),

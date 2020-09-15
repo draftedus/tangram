@@ -18,10 +18,6 @@ name = "census-tree"
 path = "comparison/census.rs"
 
 [[bin]]
-name = "flights-tree"
-path = "comparison/flights.rs"
-
-[[bin]]
 name = "heart-disease-tree"
 path = "comparison/heart-disease.rs"
 

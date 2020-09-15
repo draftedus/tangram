@@ -1,4 +1,4 @@
-use super::{shap, single, Model, MulticlassClassifier, Task, TrainOptions};
+use super::{shap, single, Model, MulticlassClassifier, TrainOptions};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
@@ -12,10 +12,10 @@ impl MulticlassClassifier {
 		options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {
-		let task = Task::MulticlassClassification {
+		let task = crate::train::Task::MulticlassClassification {
 			n_trees_per_round: labels.options.len(),
 		};
-		let model = super::train::train(
+		let model = crate::train::train(
 			&task,
 			features,
 			ColumnView::Enum(labels),
