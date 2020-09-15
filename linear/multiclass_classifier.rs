@@ -10,19 +10,21 @@ use tangram_dataframe::*;
 use tangram_metrics::{CrossEntropy, CrossEntropyInput, StreamingMetric};
 use tangram_progress::ProgressCounter;
 
-#[derive(Clone, Debug, PartialEq)]
+/// This struct describes a linear multiclass classifier model. You can train one by calling `MulticlassClassifier::train`.
+#[derive(Debug)]
 pub struct MulticlassClassifier {
 	pub weights: Array2<f32>,
 	pub biases: Array1<f32>,
-	/// the mean of each feature value in the training set, which is used to compute SHAP values
+	/// These are the mean values of each feature in the training set, which are used to compute SHAP values.
 	pub means: Vec<f32>,
-	/// the loss value for each epoch
+	/// These are the loss values for each epoch.
 	pub losses: Vec<f32>,
-	/// the class names of the target column
+	/// These are the class names of the target column.
 	pub classes: Vec<String>,
 }
 
 impl MulticlassClassifier {
+	/// Train a linear multiclass classifier.
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: &EnumColumnView,
@@ -92,7 +94,7 @@ impl MulticlassClassifier {
 		model
 	}
 
-	pub fn train_batch(
+	fn train_batch(
 		&mut self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<usize>,

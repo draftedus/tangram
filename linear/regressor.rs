@@ -9,18 +9,19 @@ use tangram_dataframe::*;
 use tangram_metrics::{MeanSquaredError, StreamingMetric};
 use tangram_progress::ProgressCounter;
 
-#[derive(Clone, Debug, PartialEq)]
+/// This struct describes a linear regressor model. You can train one by calling `Regressor::train`.
+#[derive(Debug)]
 pub struct Regressor {
 	pub bias: f32,
 	pub weights: Array1<f32>,
-	/// the mean of each feature value in the training set, which is used to compute SHAP values
+	/// These are the mean values of each feature in the training set, which are used to compute SHAP values.
 	pub means: Vec<f32>,
-	/// the loss value for each epoch
+	/// These are the loss values for each epoch.
 	pub losses: Vec<f32>,
 }
 
 impl Regressor {
-	/// Train a regressor.
+	/// Train a linear regressor.
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: &NumberColumnView,
