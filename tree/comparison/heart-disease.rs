@@ -61,7 +61,7 @@ fn main() {
 		},
 	);
 	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((nrows, 2)) };
-	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
+	model.predict(features_ndarray.view(), probabilities.view_mut());
 
 	// compute metrics
 	let mut metrics = tangram_metrics::BinaryClassifierMetrics::new(100);

@@ -94,7 +94,7 @@ pub fn test_tree_regressor(
 	let mut metrics = metrics::RegressionMetrics::default();
 	let mut predictions = unsafe { Array1::uninitialized(features.nrows()) };
 	update_progress(ModelTestProgress::Testing);
-	model.predict(features.view(), predictions.view_mut(), None);
+	model.predict(features.view(), predictions.view_mut());
 	metrics.update(metrics::RegressionMetricsInput {
 		predictions: predictions.as_slice().unwrap(),
 		labels,
@@ -213,7 +213,7 @@ pub fn test_tree_binary_classifier(
 	);
 	let mut predictions = unsafe { Array2::uninitialized((features.nrows(), n_classes)) };
 	update_progress(ModelTestProgress::Testing);
-	model.predict(features.view(), predictions.view_mut(), None);
+	model.predict(features.view(), predictions.view_mut());
 	metrics.0.update(metrics::ClassificationMetricsInput {
 		probabilities: predictions.view(),
 		labels: labels.data.into(),
@@ -316,7 +316,7 @@ pub fn test_tree_multiclass_classifier(
 	let mut metrics = metrics::ClassificationMetrics::new(n_classes);
 	let mut predictions = unsafe { Array2::uninitialized((features.nrows(), n_classes)) };
 	update_progress(ModelTestProgress::Testing);
-	model.predict(features.view(), predictions.view_mut(), None);
+	model.predict(features.view(), predictions.view_mut());
 	metrics.update(metrics::ClassificationMetricsInput {
 		probabilities: predictions.view(),
 		labels: labels.data.into(),

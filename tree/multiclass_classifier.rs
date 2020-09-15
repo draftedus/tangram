@@ -29,53 +29,58 @@ impl MulticlassClassifier {
 	}
 
 	// Make predictions with a Tree Multiclass Classifer.
-	pub fn predict(
+	pub fn predict(&self, features: ArrayView2<Value>, mut probabilities: ArrayViewMut2<f32>) {
+		let n_rounds = self.n_rounds;
+		let n_classes = self.n_classes;
+		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
+		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
+		izip!(
+			probabilities.axis_iter_mut(Axis(0)),
+			features.axis_iter(Axis(0))
+		)
+		.for_each(|(mut logits, features)| {
+			let mut row = vec![Value::Number(0.0); features.len()];
+			row.iter_mut().zip(features).for_each(|(v, feature)| {
+				*v = *feature;
+			});
+			logits.assign(&biases);
+			for trees in trees.genrows() {
+				for (logit, tree) in logits.iter_mut().zip(trees.iter()) {
+					*logit += tree.predict(&row);
+				}
+			}
+			softmax(logits);
+		});
+	}
+
+	/// Compute SHAP values.
+	pub fn compute_shap_values(
 		&self,
 		features: ArrayView2<Value>,
-		probabilities: ArrayViewMut2<f32>,
-		mut shap_values: Option<ArrayViewMut3<f32>>,
-		// progress: &dyn Fn(),
+		mut shap_values: ArrayViewMut3<f32>,
 	) {
 		let n_rounds = self.n_rounds;
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
-		let mut logits = probabilities;
 		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
-		izip!(logits.axis_iter_mut(Axis(0)), features.axis_iter(Axis(0))).for_each(
-			|(mut logits, features)| {
-				let mut row = vec![Value::Number(0.0); features.len()];
-				row.iter_mut().zip(features).for_each(|(v, feature)| {
-					*v = *feature;
-				});
-				logits.assign(&biases);
-				for trees in trees.genrows() {
-					for (logit, tree) in logits.iter_mut().zip(trees.iter()) {
-						*logit += tree.predict(&row);
-					}
-				}
-				softmax(logits);
-			},
-		);
-		if let Some(shap_values) = &mut shap_values {
-			izip!(
-				features.axis_iter(Axis(0)),
-				shap_values.axis_iter_mut(Axis(0)),
-			)
-			.for_each(|(features, mut shap_values)| {
-				let mut row = vec![Value::Number(0.0); features.len()];
-				row.iter_mut().zip(features).for_each(|(v, feature)| {
-					*v = *feature;
-				});
-				for class_index in 0..n_classes {
-					let x = shap::compute_shap(
-						row.as_slice(),
-						trees.column(class_index),
-						biases[class_index],
-					);
-					shap_values.row_mut(class_index).assign(&Array1::from(x));
-				}
+		izip!(
+			features.axis_iter(Axis(0)),
+			shap_values.axis_iter_mut(Axis(0)),
+		)
+		.for_each(|(features, mut shap_values)| {
+			let mut row = vec![Value::Number(0.0); features.len()];
+			row.iter_mut().zip(features).for_each(|(v, feature)| {
+				*v = *feature;
 			});
-		}
+			for class_index in 0..n_classes {
+				let x = shap::compute_shap(
+					row.as_slice(),
+					trees.column(class_index),
+					biases[class_index],
+				);
+				shap_values.row_mut(class_index).assign(&Array1::from(x));
+			}
+		});
 	}
 }
 

@@ -1,9 +1,14 @@
 /*!
 The tangram_tree crates contains functions to train tree based machine learning models. It is similar to [LightGBM](), [XGBoost](), [CatBoost](), and others, but written in pure Rust.
 
-Here's is a basic example usage.
+Here's how to use it.
 
 ```
+use tangram_tree::Regressor;
+let features = /* */
+let model = Regressor::train(features, labels, Default::default(), &mut |_| {});
+let predictions =
+model.predict();
 ```
 
 There are three model types:

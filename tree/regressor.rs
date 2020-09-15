@@ -27,12 +27,7 @@ impl Regressor {
 	}
 
 	/// Make predictions with a Tree Regressor.
-	pub fn predict(
-		&self,
-		features: ArrayView2<Value>,
-		mut predictions: ArrayViewMut1<f32>,
-		mut shap_values: Option<ArrayViewMut3<f32>>,
-	) {
+	pub fn predict(&self, features: ArrayView2<Value>, mut predictions: ArrayViewMut1<f32>) {
 		predictions.fill(self.bias);
 		let mut row = vec![Value::Number(0.0); features.ncols()];
 		for (i, prediction) in predictions.iter_mut().enumerate() {
@@ -45,22 +40,27 @@ impl Regressor {
 				*prediction += tree.predict(&row);
 			}
 		}
+	}
+
+	/// Compute SHAP values.
+	pub fn compute_shap_values(
+		&self,
+		features: ArrayView2<Value>,
+		mut shap_values: ArrayViewMut3<f32>,
+	) {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
-		if let Some(shap_values) = &mut shap_values {
-			izip!(
-				features.axis_iter(Axis(0)),
-				shap_values.axis_iter_mut(Axis(0)),
-			)
-			.for_each(|(features, mut shap_values)| {
-				// n_examples times
-				let mut row = vec![Value::Number(0.0); features.len()];
-				row.iter_mut().zip(features).for_each(|(v, feature)| {
-					*v = *feature;
-				});
-				let x = shap::compute_shap(row.as_slice(), trees, self.bias);
-				shap_values.row_mut(0).assign(&Array1::from(x));
+		izip!(
+			features.axis_iter(Axis(0)),
+			shap_values.axis_iter_mut(Axis(0)),
+		)
+		.for_each(|(features, mut shap_values)| {
+			let mut row = vec![Value::Number(0.0); features.len()];
+			row.iter_mut().zip(features).for_each(|(v, feature)| {
+				*v = *feature;
 			});
-		}
+			let x = shap::compute_shap(row.as_slice(), trees, self.bias);
+			shap_values.row_mut(0).assign(&Array1::from(x));
+		});
 	}
 }
 

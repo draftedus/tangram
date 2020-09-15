@@ -28,12 +28,7 @@ impl BinaryClassifier {
 	}
 
 	/// Make predictions on a Tree Binary Classifier.
-	pub fn predict(
-		&self,
-		features: ArrayView2<Value>,
-		mut probabilities: ArrayViewMut2<f32>,
-		mut shap_values: Option<ArrayViewMut3<f32>>,
-	) {
+	pub fn predict(&self, features: ArrayView2<Value>, mut probabilities: ArrayViewMut2<f32>) {
 		let mut logits = probabilities.column_mut(1);
 		logits.fill(self.bias);
 		for (example_index, logit) in logits.iter_mut().enumerate() {
@@ -53,22 +48,27 @@ impl BinaryClassifier {
 		let (mut probabilities_neg, probabilities_pos) = probabilities.split_at(Axis(1), 1);
 		izip!(probabilities_neg.view_mut(), probabilities_pos.view())
 			.for_each(|(neg, pos)| *neg = 1.0 - *pos);
+	}
 
+	/// Compute SHAP values.
+	pub fn compute_shap_values(
+		&self,
+		features: ArrayView2<Value>,
+		mut shap_values: ArrayViewMut3<f32>,
+	) {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
-		if let Some(shap_values) = &mut shap_values {
-			izip!(
-				features.axis_iter(Axis(0)),
-				shap_values.axis_iter_mut(Axis(0)),
-			)
-			.for_each(|(features, mut shap_values)| {
-				let mut row = vec![Value::Number(0.0); features.len()];
-				row.iter_mut().zip(features).for_each(|(v, feature)| {
-					*v = *feature;
-				});
-				let x = shap::compute_shap(row.as_slice(), trees, self.bias);
-				shap_values.row_mut(0).assign(&Array1::from(x));
+		izip!(
+			features.axis_iter(Axis(0)),
+			shap_values.axis_iter_mut(Axis(0)),
+		)
+		.for_each(|(features, mut shap_values)| {
+			let mut row = vec![Value::Number(0.0); features.len()];
+			row.iter_mut().zip(features).for_each(|(v, feature)| {
+				*v = *feature;
 			});
-		}
+			let x = shap::compute_shap(row.as_slice(), trees, self.bias);
+			shap_values.row_mut(0).assign(&Array1::from(x));
+		});
 	}
 }
 

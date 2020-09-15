@@ -51,7 +51,7 @@ fn main() {
 				.for_each(|(f, d)| *f = Value::Number(*d));
 		},
 	);
-	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
+	model.predict(features_ndarray.view(), probabilities.view_mut());
 
 	// compute metrics
 	let mut metrics = tangram_metrics::ClassificationMetrics::new(100);

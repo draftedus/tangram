@@ -61,7 +61,7 @@ fn main() {
 		},
 	);
 	let mut predictions: Array1<f32> = unsafe { Array::uninitialized(nrows) };
-	model.predict(features_ndarray.view(), predictions.view_mut(), None);
+	model.predict(features_ndarray.view(), predictions.view_mut());
 
 	// compute metrics
 	let mut metrics = tangram_metrics::RegressionMetrics::new();

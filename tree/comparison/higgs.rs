@@ -72,6 +72,7 @@ fn main() {
 		&mut |_| {},
 	);
 
+	// make predictions on the test data
 	let n_features = features.ncols();
 	let columns = dataframe_test.columns;
 	let mut features_ndarray = unsafe { Array2::uninitialized((nrows_test, n_features)) };
@@ -84,9 +85,10 @@ fn main() {
 				.for_each(|(f, d)| *f = Value::Number(*d));
 		},
 	);
-
 	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((nrows_test, 2)) };
-	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
+	model.predict(features_ndarray.view(), probabilities.view_mut());
+
+	// compute metrics
 	let mut metrics = tangram_metrics::ClassificationMetrics::new(2);
 	metrics.update(tangram_metrics::ClassificationMetricsInput {
 		probabilities: probabilities.view(),

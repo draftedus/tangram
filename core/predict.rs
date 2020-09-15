@@ -263,11 +263,8 @@ pub fn predict(
 				&|| {},
 			);
 			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
-			model.predict(
-				features.view(),
-				predictions.view_mut(),
-				Some(shap_values.view_mut()),
-			);
+			model.predict(features.view(), predictions.view_mut());
+			model.compute_shap_values(features.view(), shap_values.view_mut());
 			let shap_values = compute_shap_values_regression_output_tree(
 				feature_groups.as_slice(),
 				shap_values.view(),
@@ -352,11 +349,8 @@ pub fn predict(
 			);
 			let mut probabilities = unsafe { Array2::uninitialized((n_examples, 2)) };
 			let mut shap_values = Array3::zeros((features.nrows(), 1, features.ncols() + 1));
-			model.predict(
-				features.view(),
-				probabilities.view_mut(),
-				Some(shap_values.view_mut()),
-			);
+			model.predict(features.view(), probabilities.view_mut());
+			model.compute_shap_values(features.view(), shap_values.view_mut());
 			let shap_values = compute_shap_values_classification_output_tree(
 				feature_groups.as_slice(),
 				&[model.classes[1].clone()],
@@ -462,11 +456,8 @@ pub fn predict(
 			let mut probabilities = unsafe { Array2::uninitialized((n_examples, n_classes)) };
 			let mut shap_values =
 				Array3::zeros((features.nrows(), n_classes, features.ncols() + 1));
-			model.predict(
-				features.view(),
-				probabilities.view_mut(),
-				Some(shap_values.view_mut()),
-			);
+			model.predict(features.view(), probabilities.view_mut());
+			model.compute_shap_values(features.view(), shap_values.view_mut());
 			let shap_values = compute_shap_values_classification_output_tree(
 				feature_groups.as_slice(),
 				&model.classes.as_slice(),
