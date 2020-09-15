@@ -86,6 +86,10 @@ You can think of the sigmoid function as a special function that squashes values
 
 Instead of training a single tree per round, we now train n trees per round, one for each class. To make a prediction for a model with `n` classes and `m` rounds:
 
+<p align="center">
+  <img src="multiclass.svg" title="Tree">
+</p>
+
 ```
 y_predict = softmax(
   [bias_class_1, bias_class_2, ..., bias_class_n] +
@@ -93,6 +97,7 @@ y_predict = softmax(
   [output_round_2_tree_class_1, output_round_2_tree_class_2, ..., output_round_2_tree_class_n] +
   [output_round_m_tree_class_1, output_round_m_tree_class_2, ..., output_round_m_tree_class_n]
 )
+
 ```
 
 ## Training
