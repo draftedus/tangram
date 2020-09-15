@@ -64,7 +64,7 @@ Our trained model consists of 2 trees and a bias. Assume the bias of our model i
   <img src="trees.svg" title="Tree">
 </p>
 
-Let's start at the root node of `tree_1`. We have a continuous split on the `square_feet` feature, where are examples who's square footage is less than or equal to 4,000 should go left. Our house has _3,200_ square feet so we go left. The next node is a categorical split on whether our home has a garage. Homes with a garage go to the right and homes without go to the left. Now we have reached a leaf node and we update our prediction with this value:
+Let's start at the root node of `tree_1`. We have a `Continuous` split on the `square_feet` feature, where are examples who's square footage is less than or equal to 4,000 should go left. Our house has _3,200_ square feet so we go left. The next node is a `Categorical` split on whether our home has a garage. Homes with a garage go to the right and homes without go to the left. Now we have reached a leaf node and we update our prediction with this value:
 
 `y_current_prediction = 256_000 + 30_108 +...`
 
@@ -72,7 +72,7 @@ We repeat this process with the second tree, using the splits to determine our p
 
 `y_predict= 256_000 + 30_108 - 1_304 = 284_804`.
 
-We just went through a simple example of how to make predictions with a Tree Regressor. How does this work with classifiers? Each leaf's value is now a logit and our final prediction is:
+We just went through a simple example of how to make predictions with a Tree Regressor. How does this work with classifiers? Each leaf's value is now an intermediate value called a _logit_. To make our final prediction, we take the sum of the bias and outputs of each tree and pass it through the sigmoid function:
 
 `y_predict = sigmoid(bias + output_tree_1 + output_tree_2 + ...)`
 
