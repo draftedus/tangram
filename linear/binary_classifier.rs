@@ -1,6 +1,6 @@
 use super::{
-	early_stopping::{train_early_stopping_split, EarlyStoppingMonitor},
-	shap, Progress, TrainOptions,
+	compute_shap_values_common, train_early_stopping_split, EarlyStoppingMonitor, Progress,
+	TrainOptions,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -56,8 +56,8 @@ impl BinaryClassifier {
 		let mut early_stopping_monitor =
 			if let Some(early_stopping_options) = &options.early_stopping_options {
 				Some(EarlyStoppingMonitor::new(
-					early_stopping_options.early_stopping_threshold,
-					early_stopping_options.early_stopping_epochs,
+					early_stopping_options.min_decrease_in_loss_for_significant_change,
+					early_stopping_options.n_epochs_without_improvement_to_stop,
 				))
 			} else {
 				None
@@ -186,7 +186,7 @@ impl BinaryClassifier {
 			features.axis_iter(Axis(0)),
 			shap_values.axis_iter_mut(Axis(0)),
 		) {
-			shap::compute_shap(
+			compute_shap_values_common(
 				features,
 				self.bias,
 				self.weights.view(),

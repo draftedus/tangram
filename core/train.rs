@@ -407,13 +407,13 @@ pub enum TrainProgress {
 	ComputingModelComparisonMetrics(ModelTestProgress),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum ModelTrainProgress {
 	Linear(tangram_linear::Progress),
 	Tree(tangram_tree::Progress),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum ModelTestProgress {
 	ComputingFeatures(ProgressCounter),
 	Testing,

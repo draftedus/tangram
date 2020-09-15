@@ -119,7 +119,7 @@ impl Default for TrainOptions {
 }
 
 /// This struct reports the training progress.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Progress {
 	Initializing(tangram_progress::ProgressCounter),
 	Training(tangram_progress::ProgressCounter),

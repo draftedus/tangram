@@ -14,4 +14,3 @@ super_unsafe = { path = "../super_unsafe" }
 tangram_dataframe = { path = "../dataframe" }
 tangram_metrics = { path = "../metrics" }
 tangram_progress = { path = "../progress" }
-thiserror = "1"

@@ -1,6 +1,6 @@
 use super::{
-	early_stopping::{train_early_stopping_split, EarlyStoppingMonitor},
-	shap, Progress, TrainOptions,
+	compute_shap_values_common, train_early_stopping_split, EarlyStoppingMonitor, Progress,
+	TrainOptions,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -56,8 +56,8 @@ impl MulticlassClassifier {
 		let mut early_stopping_monitor =
 			if let Some(early_stopping_options) = &options.early_stopping_options {
 				Some(EarlyStoppingMonitor::new(
-					early_stopping_options.early_stopping_threshold,
-					early_stopping_options.early_stopping_epochs,
+					early_stopping_options.min_decrease_in_loss_for_significant_change,
+					early_stopping_options.n_epochs_without_improvement_to_stop,
 				))
 			} else {
 				None
@@ -188,7 +188,7 @@ impl MulticlassClassifier {
 			shap_values.axis_iter_mut(Axis(0)),
 		) {
 			for class_index in 0..n_classes {
-				shap::compute_shap(
+				compute_shap_values_common(
 					features,
 					self.biases[class_index],
 					self.weights.row(class_index),

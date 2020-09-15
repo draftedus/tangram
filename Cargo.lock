@@ -1888,7 +1888,6 @@ dependencies = [
  "tangram_dataframe 1.0.0",
  "tangram_metrics 0.0.0",
  "tangram_progress 0.0.0",
- "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
