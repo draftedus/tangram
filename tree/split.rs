@@ -9,7 +9,6 @@ pub struct FindSplitOutput {
 	pub gain: f32,
 	pub feature_index: usize,
 	pub split: single::TrainBranchSplit,
-
 	pub left_sum_gradients: f64,
 	pub left_sum_hessians: f64,
 	pub left_n_examples: usize,
@@ -23,38 +22,32 @@ pub struct FindSplitOutput {
 /// are violated for all potential splits.
 pub fn find_split(
 	bin_stats: &BinStats,
-	include_features: &[bool],
 	sum_gradients: f64,
 	sum_hessians: f64,
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
 ) -> Option<FindSplitOutput> {
-	izip!(&bin_stats.entries, include_features, &bin_stats.bin_info)
+	izip!(&bin_stats.entries, &bin_stats.bin_info)
 		.enumerate()
-		.filter_map(|(feature_index, (bin_stats, include_feature, bin_info))| {
-			if !include_feature {
-				return None;
-			}
-			match bin_info {
-				BinInfo::Number { .. } => find_best_continuous_split_for_feature_left_to_right(
-					feature_index,
-					&bin_info,
-					bin_stats,
-					sum_gradients,
-					sum_hessians,
-					examples_index_range.clone(),
-					options,
-				),
-				BinInfo::Enum { .. } => find_best_discrete_split_for_feature_left_to_right(
-					feature_index,
-					&bin_info,
-					bin_stats,
-					sum_gradients,
-					sum_hessians,
-					examples_index_range.clone(),
-					options,
-				),
-			}
+		.filter_map(|(feature_index, (bin_stats, bin_info))| match bin_info {
+			BinInfo::Number { .. } => find_best_continuous_split_for_feature_left_to_right(
+				feature_index,
+				&bin_info,
+				bin_stats,
+				sum_gradients,
+				sum_hessians,
+				examples_index_range.clone(),
+				options,
+			),
+			BinInfo::Enum { .. } => find_best_discrete_split_for_feature_left_to_right(
+				feature_index,
+				&bin_info,
+				bin_stats,
+				sum_gradients,
+				sum_hessians,
+				examples_index_range.clone(),
+				options,
+			),
 		})
 		.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 }
@@ -74,15 +67,11 @@ pub fn find_split_both(
 	right_sum_gradients: f64,
 	right_sum_hessians: f64,
 	right_examples_index_range: Range<usize>,
-	include_features: &[bool],
 	options: &TrainOptions,
 ) -> (Option<FindSplitOutput>, Option<FindSplitOutput>) {
 	let best: Vec<(Option<FindSplitOutput>, Option<FindSplitOutput>)> =
 		(0..left_bin_stats.entries.len())
 			.map(|feature_index| {
-				if !include_features[feature_index] {
-					return (None, None);
-				}
 				let bin_info = &left_bin_stats.bin_info[feature_index];
 				match bin_info {
 					BinInfo::Number { .. } => (

@@ -299,7 +299,6 @@ impl TrainTree {
 #[allow(clippy::too_many_arguments)]
 pub fn train(
 	binned_features: ArrayView2<u8>,
-	include_features: &[bool],
 	gradients: &[f32],
 	hessians: &[f32],
 	ordered_gradients: &mut [f32],
@@ -349,7 +348,6 @@ pub fn train(
 	let mut root_bin_stats = bin_stats_pool.get();
 	compute_bin_stats_for_root_node(
 		&mut root_bin_stats,
-		&include_features,
 		binned_features,
 		gradients,
 		hessians,
@@ -359,7 +357,6 @@ pub fn train(
 	// based on the node stats and bin stats, find a split, if any.
 	let find_split_output = find_split(
 		&root_bin_stats,
-		&include_features,
 		sum_gradients,
 		sum_hessians,
 		examples_index_range.clone(),
@@ -564,7 +561,6 @@ pub fn train(
 		// Compute the bin stats for the child with fewer examples.
 		compute_bin_stats_for_non_root_node(
 			&mut smaller_child_bin_stats,
-			include_features,
 			ordered_gradients,
 			ordered_hessians,
 			binned_features,
@@ -598,7 +594,6 @@ pub fn train(
 					queue_item.right_sum_gradients,
 					queue_item.right_sum_hessians,
 					right_examples_index_range.clone(),
-					include_features,
 					&options,
 				);
 				(left_find_split_output, right_find_split_output)
@@ -606,7 +601,6 @@ pub fn train(
 				// based on the node stats and bin stats, find a split, if any.
 				let find_split_output = find_split(
 					&left_bin_stats,
-					&include_features,
 					queue_item.left_sum_gradients,
 					queue_item.left_sum_hessians,
 					left_examples_index_range.clone(),
@@ -617,7 +611,6 @@ pub fn train(
 				// based on the node stats and bin stats, find a split, if any.
 				let find_split_output = find_split(
 					&right_bin_stats,
-					&include_features,
 					queue_item.right_sum_gradients,
 					queue_item.right_sum_hessians,
 					right_examples_index_range.clone(),

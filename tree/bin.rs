@@ -162,10 +162,12 @@ pub fn compute_binned_features(
 	let n_features = features.ncols();
 	let mut binned_features: Array2<u8> =
 		unsafe { Array::uninitialized((n_examples, n_features).f()) };
-	let mut binned_features_stats: Array2<usize> = Array::zeros((max_n_bins, n_features).f());
+	// this array keeps track of how many examples are in each bin
+	let mut binned_features_examples_counts: Array2<usize> =
+		Array::zeros((max_n_bins, n_features).f());
 	izip!(
 		binned_features.axis_iter_mut(Axis(1)),
-		binned_features_stats.axis_iter_mut(Axis(1)),
+		binned_features_examples_counts.axis_iter_mut(Axis(1)),
 		&features.columns,
 		bin_info,
 	)
@@ -206,64 +208,5 @@ pub fn compute_binned_features(
 			}
 		},
 	);
-	(binned_features, binned_features_stats)
-}
-
-pub struct FilterBinnedFeaturesOptions {
-	pub min_examples_split: usize,
-}
-
-/** Filters out features that would result in invalid splits because no split exists such that there are more than min_examples_split.
-For number features, iterate through bins sequentially to see if there exists a threshold such that min_examples_split is not violated.
-For categorical features, determine if there exists any partition of the feature such that min_examples_split is not violated.
-*/
-pub fn filter_binned_features(
-	binned_features: ArrayView2<u8>,
-	binned_features_stats: Array2<usize>,
-	bin_info: &[BinInfo],
-	options: FilterBinnedFeaturesOptions,
-) -> Vec<bool> {
-	let n_examples = binned_features.nrows();
-	binned_features_stats
-		.axis_iter(Axis(1))
-		.zip(bin_info)
-		.map(|(binned_feature_stats, bin_info)| {
-			match bin_info {
-				BinInfo::Number { thresholds } => {
-					// must be contiguous subset greater than threshold
-					let mut count_so_far = 0;
-					for count in binned_feature_stats
-						.slice(s![0..thresholds.len() + 1])
-						.iter()
-					{
-						count_so_far += count;
-						if count_so_far >= options.min_examples_split
-							&& n_examples - count_so_far >= options.min_examples_split
-						{
-							return true;
-						}
-					}
-					false
-				}
-				BinInfo::Enum { n_options } => {
-					// any subset is valid
-					// sort the bins by size, if there is no partition where the left and right are above the threshold, don't include the feature
-					let mut b = binned_feature_stats
-						.slice(s![0..(*n_options as usize)])
-						.to_vec();
-					b.sort();
-					let mut count_so_far = 0;
-					for count in b.iter() {
-						count_so_far += count;
-						if count_so_far >= options.min_examples_split
-							&& n_examples - count_so_far >= options.min_examples_split
-						{
-							return true;
-						}
-					}
-					false
-				}
-			}
-		})
-		.collect::<Vec<bool>>()
+	(binned_features, binned_features_examples_counts)
 }

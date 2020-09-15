@@ -1,14 +1,19 @@
 /*!
-The tangram_tree crates contains functions to train tree based machine learning models. It is similar to [LightGBM](), [XGBoost](), [CatBoost](), and others, but written in pure Rust.
+This crate is an implementation of machine learning models for regression and classification using ensembles of decision trees. The implementation has many similarities to [LightGBM](github.com/microsoft/lightgbm), [XGBoost](github.com/xgboost/xgboost), and many others, but written in pure Rust.
 
-Here's how to use it.
+Through extensive optimization, `tangram_tree` is the fastest such implementation in our benchmarks, while achieving indistinguishable accuracy. All benchmarks are biased, and it is especially difficult to produce apples-to-apples comparisons because the algorithms to train decision trees are so complex and there are so ways to tweak them. However, we have done our best to choose widely accepted example datasets and set as few parameters away from defaults as possible.
+
+## Benchmark results
+
+Here's how to use `tangram_tree` to train a `Regressor`.
 
 ```
-use tangram_tree::Regressor;
-let features = /* */
-let model = Regressor::train(features, labels, Default::default(), &mut |_| {});
-let predictions =
-model.predict();
+let mut features = tangram_dataframe::DataFrame::from_path("boston.csv", options, |_| {}).unwrap();
+let labels = features.columns.remove(13);
+let model = tangram_tree::Regressor::train(features, labels, Default::default(), &mut |_| {});
+let features =
+let mut predictions: Array1<f32> = Array::zeros(nrows);
+model.predict(&features, &mut predictions);
 ```
 
 There are three model types:
@@ -26,7 +31,6 @@ The type of model you are going to train depends on the type of the column you w
 | [Enum](../dataframe/struct.EnumColumn.html)     | > 2                    | [`MulticlassClassifier`](struct.MulticlassClassifier.html) |
 
 Under the hood, tangram trees are Gradient Boosted Decision Trees.
-
 */
 
 mod bin;
@@ -35,7 +39,6 @@ mod binary_classifier;
 mod examples_index;
 mod feature_importances;
 mod multiclass_classifier;
-mod progress;
 mod regressor;
 mod shap;
 mod single;
@@ -43,9 +46,11 @@ mod split;
 // mod timing;
 mod train;
 
-pub use self::progress::Progress;
+pub use binary_classifier::BinaryClassifier;
+pub use multiclass_classifier::MulticlassClassifier;
+pub use regressor::Regressor;
 
-/// These are the options passed to [train](fn.train.html).
+/// These are the options passed to `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
 #[derive(Debug)]
 pub struct TrainOptions {
 	/// If true, the model will include the loss on the training data at each round.
@@ -113,65 +118,17 @@ impl Default for TrainOptions {
 	}
 }
 
-/// An enum describing the different model types.
-#[derive(Debug)]
-pub enum Model {
-	Regressor(Regressor),
-	BinaryClassifier(BinaryClassifier),
-	MulticlassClassifier(MulticlassClassifier),
+/// This struct reports the training progress.
+#[derive(Clone, Debug)]
+pub enum Progress {
+	Initializing(tangram_progress::ProgressCounter),
+	Training(tangram_progress::ProgressCounter),
 }
 
-/// This struct represents a tree regressor model. Regressor models are used to predict continuous target values, e.g. the selling price of a home.
-#[derive(Debug)]
-pub struct Regressor {
-	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
-	pub bias: f32,
-	/// The trees in this model.
-	pub trees: Vec<Tree>,
-	/// The importance of each feature as measured by the number of times the feature was used in a split for a branch node.
-	pub feature_importances: Option<Vec<f32>>,
-	/// The training losses in each round of training this model.
-	pub losses: Option<Vec<f32>>,
-}
-
-/// A Binary classifier model is trained to predict binary target values, e.g. does the patient have heart disease or not.
-#[derive(Debug)]
-pub struct BinaryClassifier {
-	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
-	pub bias: f32,
-	/// The trees in this model.
-	pub trees: Vec<Tree>,
-	/// The feature importances of this model. These importances are computed using the ...TODO.
-	pub feature_importances: Option<Vec<f32>>,
-	/// The training losses in each round of training this model.
-	pub losses: Option<Vec<f32>>,
-	/// The names of the unique values in the target column.
-	pub classes: Vec<String>,
-}
-
-/// This struct represents a tree multiclass classifier model. Multiclass classifier models are used to predict multiclass target values, e.g. species of flower is one of Iris Setosa, Iris Virginica, or Iris Versicolor.
-#[derive(Debug)]
-pub struct MulticlassClassifier {
-	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
-	pub biases: Vec<f32>,
-	/// The trees in this model. It has shape (n_rounds, n_classes) because for each round, we train n_classes trees.
-	pub trees: Vec<Tree>,
-	/// The number of classes.
-	pub n_classes: usize,
-	/// The number of boosting rounds.
-	pub n_rounds: usize,
-	/// The importance of each feature as measured by the number of times the feature was used in a split for a branch node.
-	pub feature_importances: Option<Vec<f32>>,
-	/// The training losses in each round of training this model.
-	pub losses: Option<Vec<f32>>,
-	/// The names of the unique values in the target column.
-	pub classes: Vec<String>,
-}
-
-/// A Tree is described by a single vector of nodes.
+/// A tree is described by a single vector of nodes.
 #[derive(Debug)]
 pub struct Tree {
-	/// Nodes in the trained tree.
+	/// nodes in the tree
 	pub nodes: Vec<Node>,
 }
 
@@ -183,19 +140,6 @@ pub struct Tree {
 pub enum Node {
 	Branch(BranchNode),
 	Leaf(LeafNode),
-}
-
-impl Node {
-	pub fn examples_fraction(&self) -> f32 {
-		match self {
-			Self::Leaf(LeafNode {
-				examples_fraction, ..
-			}) => *examples_fraction,
-			Self::Branch(BranchNode {
-				examples_fraction, ..
-			}) => *examples_fraction,
-		}
-	}
 }
 
 /// A BranchNode describes an internal node in a trained tree.
@@ -217,15 +161,6 @@ pub struct BranchNode {
 pub enum BranchSplit {
 	Continuous(BranchSplitContinuous),
 	Discrete(BranchSplitDiscrete),
-}
-
-impl BranchSplit {
-	pub fn feature_index(&self) -> usize {
-		match self {
-			Self::Continuous(b) => b.feature_index,
-			Self::Discrete(b) => b.feature_index,
-		}
-	}
 }
 
 /// This struct describes a continuous split used to determine how continuous numeric features are split into left/right subtrees.
@@ -279,6 +214,28 @@ pub struct BinDirections {
 	pub bytes: [u8; 32],
 }
 
+/// This struct describes a leaf node in a trained tree.
+#[derive(Debug)]
+pub struct LeafNode {
+	/// The output of the leaf node... TODO
+	pub value: f32,
+	/// The fraction of the training examples that ended up in this leaf node, used to compute SHAP values.
+	pub examples_fraction: f32,
+}
+
+impl Node {
+	pub fn examples_fraction(&self) -> f32 {
+		match self {
+			Self::Leaf(LeafNode {
+				examples_fraction, ..
+			}) => *examples_fraction,
+			Self::Branch(BranchNode {
+				examples_fraction, ..
+			}) => *examples_fraction,
+		}
+	}
+}
+
 /// Categorical splits are represented as a space-efficient bit vector.
 /// If the entry at index i is 0, then the i-th enum variant goes to the left subtree
 /// and if the value is 1, the i-th enum variant goes to the right subtree.
@@ -314,11 +271,11 @@ impl BinDirections {
 	}
 }
 
-/// This struct describes a leaf node in a trained tree.
-#[derive(Debug)]
-pub struct LeafNode {
-	/// The output of the leaf node... TODO
-	pub value: f32,
-	/// The fraction of the training examples that ended up in this leaf node, used to compute SHAP values.
-	pub examples_fraction: f32,
+impl BranchSplit {
+	pub fn feature_index(&self) -> usize {
+		match self {
+			Self::Continuous(b) => b.feature_index,
+			Self::Discrete(b) => b.feature_index,
+		}
+	}
 }

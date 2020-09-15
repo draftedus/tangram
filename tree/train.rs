@@ -1,19 +1,11 @@
 use crate::{
-	bin::{
-		compute_bin_info, compute_binned_features, filter_binned_features, ComputeBinInfoOptions,
-		FilterBinnedFeaturesOptions,
-	},
+	bin::{compute_bin_info, compute_binned_features, ComputeBinInfoOptions},
 	bin_stats::BinStatsPool,
+	binary_classifier::BinaryClassifier,
 	feature_importances::compute_feature_importances,
-	single,
-	// timing::Timing,
-	BinaryClassifier,
-	Model,
-	MulticlassClassifier,
-	Progress,
-	Regressor,
-	TrainOptions,
-	Tree,
+	multiclass_classifier::MulticlassClassifier,
+	regressor::Regressor,
+	single, Progress, TrainOptions, Tree,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -30,6 +22,14 @@ pub enum Task {
 	MulticlassClassification { n_trees_per_round: usize },
 }
 
+/// This is the return type of the common `train` function.
+#[derive(Debug)]
+pub enum Model {
+	Regressor(Regressor),
+	BinaryClassifier(BinaryClassifier),
+	MulticlassClassifier(MulticlassClassifier),
+}
+
 /// To avoid code duplication, this shared `train` method is called by `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
 pub fn train(
 	task: &Task,
@@ -38,8 +38,6 @@ pub fn train(
 	options: TrainOptions,
 	update_progress: &mut dyn FnMut(Progress),
 ) -> Model {
-	// let timing = Timing::new();
-
 	// determine how to bin each column
 	let bin_options = ComputeBinInfoOptions {
 		max_valid_bins: options.max_non_missing_bins,
@@ -51,17 +49,9 @@ pub fn train(
 	let n_bins = options.max_non_missing_bins as usize + 1;
 	let progress_counter = ProgressCounter::new(features.nrows().to_u64().unwrap());
 	update_progress(super::Progress::Initializing(progress_counter.clone()));
-	let (features, features_stats) =
-		compute_binned_features(&features, &bin_info, n_bins as usize, &|| {
-			progress_counter.inc(1)
-		});
-
-	// TODO fold this step into compute_bin_info and compute_binned_features
-	let filter_options = FilterBinnedFeaturesOptions {
-		min_examples_split: options.min_examples_leaf,
-	};
-	let include_features =
-		filter_binned_features(features.view(), features_stats, &bin_info, filter_options);
+	let (features, _) = compute_binned_features(&features, &bin_info, n_bins as usize, &|| {
+		progress_counter.inc(1)
+	});
 
 	// if early stopping is enabled then split the features and labels into train and early stopping sets.
 	let early_stopping_enabled = options.early_stopping_options.is_some();
@@ -170,7 +160,7 @@ pub fn train(
 	update_progress(super::Progress::Training(round_counter.clone()));
 	for round_index in 0..options.max_rounds {
 		round_counter.inc(1);
-		// Update the gradients and hessians before each iteration. In the first iteration we update the gradients and hessians using the loss computed between the baseline prediction and the labels.
+		// Before training the next round of trees, we need to determine which value for each example we would like the tree . In gradient boosting, each round of trees
 		match task {
 			Task::Regression => {
 				let labels_train = labels_train.as_number().unwrap();
@@ -231,7 +221,6 @@ pub fn train(
 				// train the tree
 				let (tree, leaf_values) = single::train(
 					features_train.view(),
-					&include_features,
 					gradients.as_slice().unwrap(),
 					hessians.as_slice().unwrap(),
 					ordered_gradients.as_slice_mut().unwrap(),
@@ -415,6 +404,7 @@ impl EarlyStoppingMonitor {
 	}
 }
 
+/// Compute the metric
 fn compute_early_stopping_metric(
 	task: &Task,
 	trees: &[single::TrainTree],

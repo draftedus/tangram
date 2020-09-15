@@ -228,11 +228,8 @@ pub fn predict(
 				features.view_mut(),
 				&|| {},
 			);
-			model.predict(
-				features.view(),
-				predictions.view_mut(),
-				Some(shap_values.view_mut()),
-			);
+			model.predict(features.view(), predictions.view_mut());
+			model.compute_shap_values(features.view(), shap_values.view_mut());
 			let shap_values = compute_shap_values_regression_output_linear(
 				feature_groups.as_slice(),
 				shap_values.view(),
@@ -295,11 +292,8 @@ pub fn predict(
 				features.view_mut(),
 				&|| {},
 			);
-			model.predict(
-				features.view(),
-				probabilities.view_mut(),
-				Some(shap_values.view_mut()),
-			);
+			model.predict(features.view(), probabilities.view_mut());
+			model.compute_shap_values(features.view(), shap_values.view_mut());
 			let shap_values = compute_shap_values_classification_output_linear(
 				feature_groups.as_slice(),
 				&[model.classes[1].clone()],
@@ -402,11 +396,8 @@ pub fn predict(
 				features.view_mut(),
 				&|| {},
 			);
-			model.predict(
-				features.view(),
-				probabilities.view_mut(),
-				Some(shap_values.view_mut()),
-			);
+			model.predict(features.view(), probabilities.view_mut());
+			model.compute_shap_values(features.view(), shap_values.view_mut());
 			let shap_values = compute_shap_values_classification_output_linear(
 				feature_groups.as_slice(),
 				&model.classes,

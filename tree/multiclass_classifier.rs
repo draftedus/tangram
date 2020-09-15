@@ -1,8 +1,27 @@
-use super::{shap, single, Model, MulticlassClassifier, TrainOptions};
+use super::{shap, single, train::Model, TrainOptions, Tree};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use tangram_dataframe::*;
+
+/// This struct represents a tree multiclass classifier model. Multiclass classifier models are used to predict multiclass target values, for example which of several species a flower is.
+#[derive(Debug)]
+pub struct MulticlassClassifier {
+	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
+	pub biases: Vec<f32>,
+	/// The trees for this model. It has shape (n_rounds, n_classes) because for each round, we train n_classes trees.
+	pub trees: Vec<Tree>,
+	/// The number of classes.
+	pub n_classes: usize,
+	/// The number of rounds.
+	pub n_rounds: usize,
+	/// The importance of each feature as measured by the number of times the feature was used in a branch node.
+	pub feature_importances: Option<Vec<f32>>,
+	/// The training losses in each round of training this model.
+	pub losses: Option<Vec<f32>>,
+	/// The names of the unique values in the target column.
+	pub classes: Vec<String>,
+}
 
 impl MulticlassClassifier {
 	// Train a Tree Multiclass Classifier.

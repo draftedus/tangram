@@ -53,7 +53,7 @@ pub fn test_linear_regressor(
 		},
 		|mut state, (features, labels)| {
 			let slice = s![0..features.nrows()];
-			model.predict(features, state.predictions.slice_mut(slice), None);
+			model.predict(features, state.predictions.slice_mut(slice));
 			state.metrics.update(metrics::RegressionMetricsInput {
 				predictions: state.predictions.slice(slice).as_slice().unwrap(),
 				labels,
@@ -154,7 +154,7 @@ pub fn test_linear_binary_classifier(
 		|mut state, (features, labels)| {
 			let slice = s![0..features.nrows(), ..];
 			let predictions = state.predictions.slice_mut(slice);
-			model.predict(features, predictions, None);
+			model.predict(features, predictions);
 			let predictions = state.predictions.slice(slice);
 			let labels = labels.view();
 			state
@@ -273,7 +273,7 @@ pub fn test_linear_multiclass_classifier(
 		|mut state, (features, labels)| {
 			let slice = s![0..features.nrows(), ..];
 			let predictions = state.predictions.slice_mut(slice);
-			model.predict(features, predictions, None);
+			model.predict(features, predictions);
 			let predictions = state.predictions.slice(slice);
 			let labels = labels.view();
 			state.metrics.update(metrics::ClassificationMetricsInput {

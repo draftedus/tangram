@@ -1,6 +1,6 @@
 use super::{
 	early_stopping::{train_early_stopping_split, EarlyStoppingMonitor},
-	shap, BinaryClassifier, Progress, TrainOptions,
+	shap, Progress, TrainOptions,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -10,6 +10,18 @@ use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_metrics::{BinaryCrossEntropy, BinaryCrossEntropyInput, StreamingMetric};
 use tangram_progress::ProgressCounter;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct BinaryClassifier {
+	pub weights: Array1<f32>,
+	pub bias: f32,
+	/// the mean of each feature value in the training set, which is used to compute SHAP values
+	pub means: Vec<f32>,
+	/// the loss value for each epoch
+	pub losses: Vec<f32>,
+	/// the class names of the target column
+	pub classes: Vec<String>,
+}
 
 impl BinaryClassifier {
 	pub fn train(
@@ -42,7 +54,6 @@ impl BinaryClassifier {
 		} else {
 			None
 		};
-
 		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
 		update_progress(Progress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {
@@ -122,7 +133,7 @@ impl BinaryClassifier {
 				let (predictions, metric) = &mut state;
 				let slice = s![0..features.nrows(), ..];
 				let mut predictions = predictions.slice_mut(slice);
-				self.predict(features, predictions.view_mut(), None);
+				self.predict(features, predictions.view_mut());
 				for (prediction, label) in predictions.column(1).iter().zip(labels.iter()) {
 					metric.update(BinaryCrossEntropyInput {
 						probability: *prediction,
@@ -137,12 +148,8 @@ impl BinaryClassifier {
 		.unwrap()
 	}
 
-	pub fn predict(
-		&self,
-		features: ArrayView2<f32>,
-		mut probabilities: ArrayViewMut2<f32>,
-		mut shap_values: Option<ArrayViewMut3<f32>>,
-	) {
+	/// Write predicted probabilities into `probabilities` for the input `features`.
+	pub fn predict(&self, features: ArrayView2<f32>, mut probabilities: ArrayViewMut2<f32>) {
 		let mut probabilities_pos = probabilities.column_mut(1);
 		probabilities_pos.fill(self.bias);
 		ndarray::linalg::general_mat_vec_mul(
@@ -159,20 +166,25 @@ impl BinaryClassifier {
 		for (neg, pos) in izip!(probabilities_neg.view_mut(), probabilities_pos.view()) {
 			*neg = 1.0 - *pos;
 		}
-		if let Some(shap_values) = &mut shap_values {
-			izip!(
-				features.axis_iter(Axis(0)),
-				shap_values.axis_iter_mut(Axis(0)),
-			)
-			.for_each(|(features, mut shap_values)| {
-				shap::compute_shap(
-					features,
-					self.bias,
-					self.weights.view(),
-					&self.means,
-					shap_values.row_mut(0).as_slice_mut().unwrap(),
-				);
-			});
+	}
+
+	/// Write SHAP values into `shap_values` for the input `features`.
+	pub fn compute_shap_values(
+		&self,
+		features: ArrayView2<f32>,
+		mut shap_values: ArrayViewMut3<f32>,
+	) {
+		for (features, mut shap_values) in izip!(
+			features.axis_iter(Axis(0)),
+			shap_values.axis_iter_mut(Axis(0)),
+		) {
+			shap::compute_shap(
+				features,
+				self.bias,
+				self.weights.view(),
+				&self.means,
+				shap_values.row_mut(0).as_slice_mut().unwrap(),
+			);
 		}
 	}
 }

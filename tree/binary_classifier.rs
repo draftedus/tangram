@@ -1,9 +1,24 @@
-use super::{shap, single, *};
+use super::{shap, single, train::Model, TrainOptions, Tree};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use std::ops::Neg;
 use tangram_dataframe::*;
+
+/// A Binary classifier model is trained to predict binary target values, for example whether a patient has heart disease or not.
+#[derive(Debug)]
+pub struct BinaryClassifier {
+	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
+	pub bias: f32,
+	/// The trees for this model.
+	pub trees: Vec<Tree>,
+	/// The importance of each feature as measured by the number of times the feature was used in a branch node.
+	pub feature_importances: Option<Vec<f32>>,
+	/// The training losses in each round of training this model.
+	pub losses: Option<Vec<f32>>,
+	/// The names of the unique values in the target column.
+	pub classes: Vec<String>,
+}
 
 impl BinaryClassifier {
 	/// Train a Tree Binary Classifier.

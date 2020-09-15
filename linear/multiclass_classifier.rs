@@ -1,6 +1,6 @@
 use super::{
 	early_stopping::{train_early_stopping_split, EarlyStoppingMonitor},
-	shap, MulticlassClassifier, Progress, TrainOptions,
+	shap, Progress, TrainOptions,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -9,6 +9,18 @@ use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_metrics::{CrossEntropy, CrossEntropyInput, StreamingMetric};
 use tangram_progress::ProgressCounter;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct MulticlassClassifier {
+	pub weights: Array2<f32>,
+	pub biases: Array1<f32>,
+	/// the mean of each feature value in the training set, which is used to compute SHAP values
+	pub means: Vec<f32>,
+	/// the loss value for each epoch
+	pub losses: Vec<f32>,
+	/// the class names of the target column
+	pub classes: Vec<String>,
+}
 
 impl MulticlassClassifier {
 	pub fn train(
@@ -131,7 +143,7 @@ impl MulticlassClassifier {
 				let (predictions, metric) = &mut state;
 				let slice = s![0..features.nrows(), ..];
 				let mut predictions = predictions.slice_mut(slice);
-				self.predict(features, predictions.view_mut(), None);
+				self.predict(features, predictions.view_mut());
 				for (prediction, label) in predictions.axis_iter(Axis(0)).zip(labels.iter()) {
 					metric.update(CrossEntropyInput {
 						probabilities: prediction,
@@ -147,36 +159,35 @@ impl MulticlassClassifier {
 		.unwrap()
 	}
 
-	pub fn predict(
-		&self,
-		features: ArrayView2<f32>,
-		mut probabilities: ArrayViewMut2<f32>,
-		mut shap_values: Option<ArrayViewMut3<f32>>,
-	) {
-		let n_classes = probabilities.ncols();
+	/// Write predicted probabilities into `probabilities` for the input `features`.
+	pub fn predict(&self, features: ArrayView2<f32>, mut probabilities: ArrayViewMut2<f32>) {
 		for mut row in probabilities.genrows_mut() {
 			row.assign(&self.biases.view());
 		}
 		ndarray::linalg::general_mat_mul(1.0, &features, &self.weights, 1.0, &mut probabilities);
 		softmax(probabilities);
+	}
 
-		// compute shap
-		if let Some(shap_values) = &mut shap_values {
-			izip!(
-				features.axis_iter(Axis(0)),
-				shap_values.axis_iter_mut(Axis(0)),
-			)
-			.for_each(|(features, mut shap_values)| {
-				for class_index in 0..n_classes {
-					shap::compute_shap(
-						features,
-						self.biases[class_index],
-						self.weights.row(class_index),
-						&self.means,
-						shap_values.row_mut(class_index).as_slice_mut().unwrap(),
-					)
-				}
-			})
+	/// Write SHAP values into `shap_values` for the input `features`.
+	pub fn compute_shap_values(
+		&self,
+		features: ArrayView2<f32>,
+		mut shap_values: ArrayViewMut3<f32>,
+	) {
+		let n_classes = self.classes.len();
+		for (features, mut shap_values) in izip!(
+			features.axis_iter(Axis(0)),
+			shap_values.axis_iter_mut(Axis(0)),
+		) {
+			for class_index in 0..n_classes {
+				shap::compute_shap(
+					features,
+					self.biases[class_index],
+					self.weights.row(class_index),
+					&self.means,
+					shap_values.row_mut(class_index).as_slice_mut().unwrap(),
+				)
+			}
 		}
 	}
 }

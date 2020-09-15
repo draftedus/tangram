@@ -1,11 +1,24 @@
-use super::{shap, single, Model, Regressor, TrainOptions};
+use super::{shap, single, train::Model, TrainOptions, Tree};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_dataframe::*;
 
+/// This struct represents a tree regressor model. Regressor models are used to predict continuous target values, for example the selling price of a home.
+#[derive(Debug)]
+pub struct Regressor {
+	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
+	pub bias: f32,
+	/// The trees for this model.
+	pub trees: Vec<Tree>,
+	/// The importance of each feature as measured by the number of times the feature was used in a branch node.
+	pub feature_importances: Option<Vec<f32>>,
+	/// The training losses in each round of training this model.
+	pub losses: Option<Vec<f32>>,
+}
+
 impl Regressor {
-	/// Train a Tree Regressor.
+	/// Train a Regressor.
 	pub fn train(
 		features: DataFrameView,
 		labels: NumberColumnView,
@@ -26,7 +39,7 @@ impl Regressor {
 		}
 	}
 
-	/// Make predictions with a Tree Regressor.
+	/// Make predictions.
 	pub fn predict(&self, features: ArrayView2<Value>, mut predictions: ArrayViewMut1<f32>) {
 		predictions.fill(self.bias);
 		let mut row = vec![Value::Number(0.0); features.ncols()];
@@ -76,8 +89,7 @@ pub fn update_logits(
 	}
 }
 
-/// squared error loss
-/// loss = 0.5 * (label - prediction)^2
+/// For `Regressor`s we use the mean squared error loss.
 pub fn compute_loss(labels: ArrayView1<f32>, predictions: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
 	for (label, prediction) in labels.iter().zip(predictions) {

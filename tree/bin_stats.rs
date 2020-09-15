@@ -1,9 +1,18 @@
+/*!
+This module contains by far the hottest code path in training. We have therefore taken a lot of time to optimize it, including the use of unsafe unchecked slice access and loop unrolling.
+*/
+
 use super::bin::BinInfo;
 use itertools::izip;
 use ndarray::prelude::*;
 
+/// This static control how far ahead in the `examples_index` the `compute_bin_stats_*` functions should prefetch binned_features to be used in subsequent iterations.
 static PREFETCH_OFFSET: usize = 64;
+
+/// This static control how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
 static ROOT_UNROLL: usize = 16;
+
+/// This static control how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
 static NOT_ROOT_UNROLL: usize = 4;
 
 #[derive(Clone)]
@@ -41,7 +50,6 @@ impl BinStats {
 
 pub fn compute_bin_stats_for_root_node(
 	node_bin_stats: &mut BinStats,
-	include_features: &[bool],
 	// (n_examples, n_features) column major
 	binned_features: ArrayView2<u8>,
 	// (n_examples)
@@ -55,13 +63,9 @@ pub fn compute_bin_stats_for_root_node(
 		&mut node_bin_stats.bin_info,
 		&mut node_bin_stats.entries,
 		binned_features.gencolumns(),
-		include_features,
 	)
 	.for_each(
-		|(bin_info_for_feature, bin_stats_for_feature, binned_feature_values, include_feature)| {
-			if !include_feature {
-				return;
-			}
+		|(bin_info_for_feature, bin_stats_for_feature, binned_feature_values)| {
 			for entry in
 				&mut bin_stats_for_feature[0..bin_info_for_feature.n_valid_bins() as usize * 2]
 			{
@@ -93,7 +97,6 @@ pub fn compute_bin_stats_for_root_node(
 #[allow(clippy::too_many_arguments)]
 pub fn compute_bin_stats_for_non_root_node(
 	node_bin_stats: &mut BinStats,
-	include_features: &[bool],
 	// (n_examples)
 	ordered_gradients: &mut [f32],
 	// (n_examples)
@@ -124,13 +127,9 @@ pub fn compute_bin_stats_for_non_root_node(
 		&mut node_bin_stats.bin_info,
 		&mut node_bin_stats.entries,
 		binned_features.gencolumns(),
-		include_features
 	)
 	.for_each(
-		|(bin_info_for_feature, bin_stats_for_feature, binned_feature_values, include_feature)| {
-			if !include_feature {
-				return;
-			}
+		|(bin_info_for_feature, bin_stats_for_feature, binned_feature_values)| {
 			for entry in
 				&mut bin_stats_for_feature[0..bin_info_for_feature.n_valid_bins() as usize * 2]
 			{

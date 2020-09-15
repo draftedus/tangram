@@ -3,14 +3,24 @@ use super::{
 	shap, *,
 };
 use itertools::izip;
-use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_metrics::{MeanSquaredError, StreamingMetric};
 use tangram_progress::ProgressCounter;
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Regressor {
+	pub bias: f32,
+	pub weights: Array1<f32>,
+	/// the mean of each feature value in the training set, which is used to compute SHAP values
+	pub means: Vec<f32>,
+	/// the loss value for each epoch
+	pub losses: Vec<f32>,
+}
+
 impl Regressor {
+	/// Train a regressor.
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: &NumberColumnView,
@@ -39,10 +49,10 @@ impl Regressor {
 		} else {
 			None
 		};
-		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
-		update_progress(super::Progress(progress_counter.clone()));
+		let epoch_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
+		update_progress(super::Progress(epoch_counter.clone()));
 		for _ in 0..options.max_epochs {
-			progress_counter.inc(1);
+			epoch_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
 			izip!(
 				features_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
@@ -69,7 +79,7 @@ impl Regressor {
 		model
 	}
 
-	pub fn train_batch(
+	fn train_batch(
 		&mut self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<f32>,
@@ -107,7 +117,7 @@ impl Regressor {
 				let (predictions, metric) = &mut state;
 				let slice = s![0..features.nrows()];
 				let mut predictions = predictions.slice_mut(slice);
-				self.predict(features, predictions.view_mut(), None);
+				self.predict(features, predictions.view_mut());
 				for (prediction, label) in predictions.iter().zip(labels.iter()) {
 					metric.update((*prediction, *label));
 				}
@@ -119,28 +129,30 @@ impl Regressor {
 		.unwrap()
 	}
 
-	pub fn predict(
-		&self,
-		features: ArrayView2<f32>,
-		mut predictions: ArrayViewMut1<f32>,
-		mut shap_values: Option<ArrayViewMut3<f32>>,
-	) {
+	/// Write predictions into `predictions` for the input `features`.
+	pub fn predict(&self, features: ArrayView2<f32>, mut predictions: ArrayViewMut1<f32>) {
 		predictions.fill(self.bias);
 		ndarray::linalg::general_mat_vec_mul(1.0, &features, &self.weights, 1.0, &mut predictions);
-		if let Some(shap_values) = &mut shap_values {
-			izip!(
-				features.axis_iter(Axis(0)),
-				shap_values.axis_iter_mut(Axis(0)),
-			)
-			.for_each(|(features, mut shap_values)| {
-				shap::compute_shap(
-					features,
-					self.bias,
-					self.weights.view(),
-					&self.means,
-					shap_values.row_mut(0).as_slice_mut().unwrap(),
-				);
-			});
-		}
+	}
+
+	/// Write SHAP values into `shap_values` for the input `features`.
+	pub fn compute_shap_values(
+		&self,
+		features: ArrayView2<f32>,
+		mut shap_values: ArrayViewMut3<f32>,
+	) {
+		izip!(
+			features.axis_iter(Axis(0)),
+			shap_values.axis_iter_mut(Axis(0)),
+		)
+		.for_each(|(features, mut shap_values)| {
+			shap::compute_shap(
+				features,
+				self.bias,
+				self.weights.view(),
+				&self.means,
+				shap_values.row_mut(0).as_slice_mut().unwrap(),
+			);
+		});
 	}
 }

@@ -1,7 +1,7 @@
 use itertools::izip;
 use ndarray::prelude::*;
 
-/// compute the shap values for a single example
+/// This function is common code used by `compute_shap_values` for each model type.
 pub fn compute_shap(
 	example: ArrayView1<f32>,
 	bias: f32,
