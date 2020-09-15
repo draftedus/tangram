@@ -293,6 +293,10 @@ impl<'a> DataFrameView<'a> {
 		self.columns.first().map(|column| column.len()).unwrap_or(0)
 	}
 
+	pub fn view(&self) -> Self {
+		self.clone()
+	}
+
 	pub fn read_row(&self, index: usize, row: &mut [Value<'a>]) {
 		for (value, column) in row.iter_mut().zip(self.columns.iter()) {
 			*value = match column {
@@ -430,5 +434,38 @@ impl<'a> ColumnView<'a> {
 				)
 			}
 		}
+	}
+
+	pub fn view(&self) -> Self {
+		match self {
+			ColumnView::Unknown(s) => ColumnView::Unknown(s.view()),
+			ColumnView::Number(s) => ColumnView::Number(s.view()),
+			ColumnView::Enum(s) => ColumnView::Enum(s.view()),
+			ColumnView::Text(s) => ColumnView::Text(s.view()),
+		}
+	}
+}
+
+impl<'a> UnknownColumnView<'a> {
+	pub fn view(&self) -> Self {
+		self.clone()
+	}
+}
+
+impl<'a> NumberColumnView<'a> {
+	pub fn view(&self) -> Self {
+		self.clone()
+	}
+}
+
+impl<'a> EnumColumnView<'a> {
+	pub fn view(&self) -> Self {
+		self.clone()
+	}
+}
+
+impl<'a> TextColumnView<'a> {
+	pub fn view(&self) -> Self {
+		self.clone()
 	}
 }

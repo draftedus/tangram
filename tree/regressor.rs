@@ -5,6 +5,7 @@ use num_traits::ToPrimitive;
 use tangram_dataframe::*;
 
 impl Regressor {
+	/// Train a Tree Regressor.
 	pub fn train(
 		features: DataFrameView,
 		labels: NumberColumnView,
@@ -15,7 +16,7 @@ impl Regressor {
 		let model = super::train::train(
 			&task,
 			features,
-			ColumnView::Number(labels.clone()),
+			ColumnView::Number(labels),
 			options,
 			update_progress,
 		);
@@ -25,6 +26,7 @@ impl Regressor {
 		}
 	}
 
+	/// Make predictions with a Tree Regressor.
 	pub fn predict(
 		&self,
 		features: ArrayView2<Value>,
@@ -43,7 +45,6 @@ impl Regressor {
 				*prediction += tree.predict(&row);
 			}
 		}
-
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
 		if let Some(shap_values) = &mut shap_values {
 			izip!(

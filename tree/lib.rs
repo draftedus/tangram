@@ -1,4 +1,10 @@
-/*!The tree module contains functions to train and predict tree models.
+/*!
+The tangram_tree crates contains functions to train tree based machine learning models. It is similar to [LightGBM](), [XGBoost](), [CatBoost](), and others, but written in pure Rust.
+
+Here's is a basic example usage.
+
+```
+```
 
 There are three model types:
 
@@ -21,37 +27,37 @@ Under the hood, tangram trees are Gradient Boosted Decision Trees.
 mod bin;
 mod bin_stats;
 mod binary_classifier;
-mod early_stopping;
 mod examples_index;
+mod feature_importances;
 mod multiclass_classifier;
 mod progress;
 mod regressor;
 mod shap;
 mod single;
 mod split;
-// mod timing;
+mod timing;
 mod train;
 
 pub use self::progress::Progress;
 
-/// The options passed to tangram_tree::train
+/// These are the options passed to [train](fn.train.html).
 #[derive(Debug)]
 pub struct TrainOptions {
 	/// If true, the model will include the loss on the training data at each round.
 	pub compute_loss: bool,
 	/// l2 regularization value to use for discrete splits.
 	pub discrete_l2_regularization: f32,
-	/// TODO
+	/// The minumum number of training examples that pass through this node for it to be considered for splitting.
 	pub discrete_min_examples_per_branch: usize,
-	/// TODO
+	/// TODO I don't know what this is.
 	pub discrete_smoothing_factor: f32,
 	/// Specify options for early stopping. If the value is `Some`, early stopping will be enabled. If it is `None`, early stopping will be disabled.
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
-	/// serves to help avoid overfitting. Refer to XGBOOST paper section 2.1 Regularized Learning Objective.
+	/// L2 regularization helps avoid overfitting.
 	pub l2_regularization: f32,
-	/// We multiply the output of each tree by this value. It serves to prevent overfitting. It is known as eta in xgboost. Common values are [0.1, 0.01, 0.001]. The smaller the learning rate, the more rounds you need. > 0
+	/// The learning rate to use when computing the targets for the next tree.
 	pub learning_rate: f32,
-	/// maximum depth we will grow a tree. Related to max_leaf_nodes. A fully dense tree will have a maximum of 2^depth leaf nodes.
+	/// The maximum depth we will grow a tree. Related to max_leaf_nodes. A fully dense tree will have a maximum of 2^depth leaf nodes.
 	pub max_depth: usize,
 	/// maximum number of leaf nodes before stopping to train an individual tree.
 	pub max_leaf_nodes: usize,
@@ -69,10 +75,10 @@ pub struct TrainOptions {
 	pub subsample_for_binning: usize,
 }
 
-/// This struct is used to specify the early stopping parameters that control what percentage of the dataset should be held out for early stopping, the number of early stopping rounds and the threshold to determine when to stop training.
+/// This struct specifies the early stopping parameters that control what percentage of the dataset should be held out for early stopping, the number of early stopping rounds, and the threshold to determine when to stop training.
 #[derive(Debug)]
 pub struct EarlyStoppingOptions {
-	// the fraction of the dataset that we should set aside for use in early stopping
+	/// the fraction of the dataset that we should set aside for use in early stopping
 	pub early_stopping_fraction: f32,
 	/// the maximum number of rounds of boosting that we will do if we don't see an improvement by at least `early_stopping_threshold` in the loss.
 	pub early_stopping_rounds: usize,

@@ -70,7 +70,7 @@ impl PathItem {
 	}
 }
 
-#[allow(unconditional_recursion, clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 fn tree_shap_recursive(
 	phi: &mut [f32],
 	example: &[tangram_dataframe::Value],
@@ -89,10 +89,8 @@ fn tree_shap_recursive(
 		parent_one_fraction,
 		parent_feature_index,
 	);
-
 	let mut unique_depth = unique_depth;
 	let node = &tree.nodes[node_index];
-
 	match node {
 		Node::Leaf(n) => (1..=unique_depth).for_each(|path_index| {
 			let weight = unwound_path_sum(unique_path, unique_depth, path_index);

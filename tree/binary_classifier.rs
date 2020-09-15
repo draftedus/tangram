@@ -6,6 +6,7 @@ use std::ops::Neg;
 use tangram_dataframe::*;
 
 impl BinaryClassifier {
+	/// Train a Tree Binary Classifier.
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumColumnView,
@@ -16,7 +17,7 @@ impl BinaryClassifier {
 		let model = super::train::train(
 			&task,
 			features,
-			ColumnView::Enum(labels.clone()),
+			ColumnView::Enum(labels),
 			options,
 			update_progress,
 		);
@@ -26,18 +27,7 @@ impl BinaryClassifier {
 		}
 	}
 
-	pub fn predict_logit(&self, features: &DataFrameView, mut probabilities: ArrayViewMut2<f32>) {
-		let mut logits = probabilities.column_mut(1);
-		logits.fill(self.bias);
-		let mut row = vec![Value::Number(0.0); features.ncols()];
-		for tree in &self.trees {
-			for (i, logit) in logits.iter_mut().enumerate() {
-				features.read_row(i, &mut row);
-				*logit += tree.predict(&row);
-			}
-		}
-	}
-
+	/// Make predictions on a Tree Binary Classifier.
 	pub fn predict(
 		&self,
 		features: ArrayView2<Value>,
@@ -82,6 +72,7 @@ impl BinaryClassifier {
 	}
 }
 
+/// Update the logits with the predictions from a single round of trees.
 pub fn update_logits(
 	trees: &[single::TrainTree],
 	features: ArrayView2<u8>,
@@ -94,6 +85,7 @@ pub fn update_logits(
 	}
 }
 
+/// Compute the binary cross entropy loss.
 pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
 	let mut total = 0.0;
 	for (label, logit) in labels.iter().zip(logits) {
@@ -106,6 +98,7 @@ pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
 	total / labels.len().to_f32().unwrap()
 }
 
+/// Compute the biases.
 pub fn compute_biases(labels: ArrayView1<usize>) -> Array1<f32> {
 	// positive label = 2
 	// negative label = 1
@@ -115,6 +108,7 @@ pub fn compute_biases(labels: ArrayView1<usize>) -> Array1<f32> {
 	arr1(&[log_odds])
 }
 
+/// Compute the gradients and hessians for each example given the labels and predictions.
 pub fn update_gradients_and_hessians(
 	// (n_trees_per_round, n_examples)
 	mut gradients: ArrayViewMut2<f32>,
@@ -142,6 +136,6 @@ pub fn update_gradients_and_hessians(
 	});
 }
 
-pub fn sigmoid(value: f32) -> f32 {
+fn sigmoid(value: f32) -> f32 {
 	1.0 / (value.neg().exp() + 1.0)
 }

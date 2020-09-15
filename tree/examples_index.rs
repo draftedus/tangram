@@ -5,7 +5,8 @@ use crate::{
 use itertools::izip;
 use ndarray::prelude::*;
 
-/** Returns the examples_index_ranges for the left and right nodes
+/**
+Returns the examples_index_ranges for the left and right nodes
 and rearranges the examples_index so that the example indexes
 in the first returned range are contained by the left node
 and the example indexes in the second returned range
@@ -31,6 +32,7 @@ pub fn rearrange_examples_index(
 	}
 }
 
+/// Rearrange examples index serially.
 fn rearrange_examples_index_serial(
 	binned_features: ArrayView2<u8>,
 	split: &TrainBranchSplit,
@@ -84,6 +86,7 @@ fn rearrange_examples_index_serial(
 	(start..n_left, n_left..end)
 }
 
+/// Rearrange examples index in parallel.
 fn rearrange_examples_index_parallel(
 	binned_features: ArrayView2<u8>,
 	split: &TrainBranchSplit,

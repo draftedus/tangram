@@ -87,11 +87,11 @@ fn main() {
 
 	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((nrows_test, 2)) };
 	model.predict(features_ndarray.view(), probabilities.view_mut(), None);
-	let mut metrics = tangram_metrics::BinaryClassifierMetrics::new(100);
-	metrics.update(tangram_metrics::BinaryClassifierMetricsInput {
+	let mut metrics = tangram_metrics::ClassificationMetrics::new(2);
+	metrics.update(tangram_metrics::ClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels_test.data.into(),
 	});
 	let metrics = metrics.finalize();
-	println!("{:?}", metrics);
+	println!("{:?}", metrics.accuracy);
 }

@@ -1,6 +1,29 @@
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
+pub fn train_early_stopping_split<'features, 'labels, Label>(
+	features: ArrayView2<'features, f32>,
+	labels: ArrayView1<'labels, Label>,
+	early_stopping_fraction: f32,
+) -> (
+	ArrayView2<'features, f32>,
+	ArrayView1<'labels, Label>,
+	ArrayView2<'features, f32>,
+	ArrayView1<'labels, Label>,
+) {
+	let split_index = ((1.0 - early_stopping_fraction) * features.nrows().to_f32().unwrap())
+		.to_usize()
+		.unwrap();
+	let (features_train, features_early_stopping) = features.split_at(Axis(0), split_index);
+	let (labels_train, labels_early_stopping) = labels.split_at(Axis(0), split_index);
+	(
+		features_train,
+		labels_train,
+		features_early_stopping,
+		labels_early_stopping,
+	)
+}
+
 const TOLERANCE: f32 = 0.0001;
 const NUM_ROUNDS_NO_IMPROVE: usize = 5;
 
@@ -38,27 +61,4 @@ impl EarlyStoppingMonitor {
 		self.previous_stopping_metric_value = Some(stopping_metric);
 		result
 	}
-}
-
-pub fn train_early_stopping_split<'features, 'labels, Label>(
-	features: ArrayView2<'features, f32>,
-	labels: ArrayView1<'labels, Label>,
-	early_stopping_fraction: f32,
-) -> (
-	ArrayView2<'features, f32>,
-	ArrayView1<'labels, Label>,
-	ArrayView2<'features, f32>,
-	ArrayView1<'labels, Label>,
-) {
-	let split_index = ((1.0 - early_stopping_fraction) * features.nrows().to_f32().unwrap())
-		.to_usize()
-		.unwrap();
-	let (features_train, features_early_stopping) = features.split_at(Axis(0), split_index);
-	let (labels_train, labels_early_stopping) = labels.split_at(Axis(0), split_index);
-	(
-		features_train,
-		labels_train,
-		features_early_stopping,
-		labels_early_stopping,
-	)
 }

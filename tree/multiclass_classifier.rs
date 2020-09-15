@@ -5,6 +5,7 @@ use num_traits::{clamp, ToPrimitive};
 use tangram_dataframe::*;
 
 impl MulticlassClassifier {
+	// Train a Tree Multiclass Classifier.
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumColumnView,
@@ -27,6 +28,7 @@ impl MulticlassClassifier {
 		}
 	}
 
+	// Make predictions with a Tree Multiclass Classifer.
 	pub fn predict(
 		&self,
 		features: ArrayView2<Value>,
@@ -77,7 +79,7 @@ impl MulticlassClassifier {
 	}
 }
 
-// updates the logits with a single round of trees
+/// Update the logits with the predictions from a single round of trees.
 pub fn update_logits(
 	trees: &[single::TrainTree],
 	features: ArrayView2<u8>,
@@ -92,6 +94,7 @@ pub fn update_logits(
 	}
 }
 
+/// Compute the cross entropy loss.
 pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
 	for (label, logits) in labels.into_iter().zip(logits.gencolumns()) {
@@ -107,6 +110,7 @@ pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
 	loss / labels.len().to_f32().unwrap()
 }
 
+/// Compute the biases.
 pub fn compute_biases(labels: ArrayView1<usize>, n_trees_per_round: usize) -> Array1<f32> {
 	let mut baseline: Array1<f32> = Array::zeros(n_trees_per_round);
 	for label in labels {
@@ -122,6 +126,7 @@ pub fn compute_biases(labels: ArrayView1<usize>, n_trees_per_round: usize) -> Ar
 	baseline
 }
 
+/// Compute the gradients and hessians for each example given the labels and predictions.
 pub fn update_gradients_and_hessians(
 	// (n_trees_per_round, n_examples)
 	mut gradients: ArrayViewMut2<f32>,
