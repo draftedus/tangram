@@ -60,6 +60,10 @@ Let's assume we are a real estate agent who wants to use our tree model to asses
 
 Our trained model consists of 2 trees and a bias. Assume the bias of our model is 256_000.
 
+<p align="center">
+  <img src="trees.svg" title="Tree">
+</p>
+
 Let's start at the root node of tree_1.
 
 **tree_1**
