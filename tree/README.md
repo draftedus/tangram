@@ -72,9 +72,22 @@ We repeat this process with the second tree, using the splits to determine our p
 
 `y_predict= 256_000 + 30_108 - 1_304 = 284_804`.
 
-We just went through a simple example of how to make predictions with a Tree Regressor. How does this work with classifiers? Each leaf's value is now an intermediate value called a _logit_. To make our final prediction, we take the sum of the bias and outputs of each tree and pass it through the sigmoid function:
+We just went through a simple example of how to make predictions with a Tree Regressor.
+
+### Predicting Binary Classifier Outputs
+
+How do we use this method to make predictions with binary classifiers? Each leaf's value is now an intermediate value called a _logit_. To make our final prediction, we take the sum of the bias and outputs of each tree and pass it through the sigmoid function:
 
 `y_predict = sigmoid(bias + output_tree_1 + output_tree_2 + ...)`
+
+You can think of the sigmoid function as a special function that squashes values that range from -infinity to infinity to values that range from 0 to 1.
+
+### Predicting Multiclass Classifier Outputs
+
+Instead of training a single tree per round, we now train 3 trees per round, one for each class. To make a prediction:
+`y_predict = softmax(bias + output_round_1 + output_round_2 + ...)`
+
+where bias, and output\_\* are each vectors with n_classes entries.
 
 ## Training
 
