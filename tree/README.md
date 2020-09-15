@@ -84,11 +84,11 @@ You can think of the sigmoid function as a special function that squashes values
 
 ### Predicting Multiclass Classifier Outputs
 
-Instead of training a single tree per round, we now train n trees per round, one for each class. To make a prediction for a model with `n` classes and `m` rounds:
-
 <p align="center">
   <img src="multiclass.svg" title="Tree">
 </p>
+
+Instead of training a single tree per round, we now train n trees per round, one for each class. To make a prediction for a model with `n` classes and `m` rounds:
 
 ```
 y_predict = softmax(
