@@ -54,25 +54,27 @@ pub struct BranchSplitDiscrete {
 
 Imagine we are trying to predict the price of a house. We have three features: the number of bedrooms, the total square footage and whether or not the house has a garage.
 
-_Features_: `number_of_bedrooms`, `total_square_feet`, `has_garage`.
+_Features_: `number_of_bedrooms`, `square_feet`, `has_garage`.
 
 Let's assume we are a real estate agent who wants to use our tree model to assess the price of a new home. The home has _4 bedrooms_, _3,200_ square feet and _no garage_.
 
-Our trained model consists of 2 trees and a bias. Assume the bias of our model is 256_000.
+Our trained model consists of 2 trees and a bias. Assume the bias of our model is 256_000. Our final prediction is the sum of the bias and the output of each of the trees.
 
 <p align="center">
   <img src="trees.svg" title="Tree">
 </p>
 
-Let's start at the root node of tree_1.
+Let's start at the root node of `tree_1`. We have a continuous split on the `square_feet` feature, where are examples who's square footage is less than or equal to 4,000 should go left. Our house has _3,200_ square feet so we go left. The next node is a categorical split on whether our home has a garage. Homes with a garage go to the right and homes without go to the left. Now we have reached a leaf node and we update our prediction with this value:
 
-**tree_1**
+`y_current_prediction = 256_000 + 30_108 +...`
 
-If we had more trees, we would repeat the process we used in determining the output from tree_1, adding the leaf values until we reach the final tree.
+We repeat this process with the second tree, using the splits to determine our path to a leaf node. When we reach the final tree, we are done and we are left with the prediction:
 
-The final prediction:
+`y_predict= 256_000 + 30_108 - 1_304 = 284_804`.
 
-`y_predict= 256_000 + 30_000 - 10_000 = 276_000`.
+We just went through a simple example of how to make predictions with a Tree Regressor. How does this work with classifiers? Each leaf's value is now a logit and our final prediction is:
+
+`y_predict = sigmoid(bias + output_tree_1 + output_tree_2 + ...)`
 
 ## Training
 
