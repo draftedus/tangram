@@ -18,6 +18,7 @@ impl<'a> Metric<'a> for AUCROC {
 		// sort by probabilities in descending order
 		probabilities_labels.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 		probabilities_labels.reverse();
+		// collect the true_positives and false_positives counts for each unique probability
 		let mut true_positives_false_positives: Vec<TpsFpsPoint> = Vec::new();
 		for (probability, label) in probabilities_labels.iter() {
 			// labels are 1-indexed
@@ -43,6 +44,7 @@ impl<'a> Metric<'a> for AUCROC {
 				}
 			}
 		}
+		// compute the cumulative sum of true positives and false positives
 		for i in 1..true_positives_false_positives.len() {
 			true_positives_false_positives[i].true_positives +=
 				true_positives_false_positives[i - 1].true_positives;
