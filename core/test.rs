@@ -135,7 +135,7 @@ pub fn test_linear_binary_classifier(
 	struct State {
 		predictions: Array2<f32>,
 		classification_metrics: metrics::ClassificationMetrics,
-		binary_classifier_metrics: metrics::BinaryClassifierMetrics,
+		binary_classifier_metrics: metrics::BinaryClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
 	let metrics = izip!(
@@ -148,7 +148,7 @@ pub fn test_linear_binary_classifier(
 			State {
 				predictions,
 				classification_metrics: metrics::ClassificationMetrics::new(n_classes),
-				binary_classifier_metrics: metrics::BinaryClassifierMetrics::new(100),
+				binary_classifier_metrics: metrics::BinaryClassificationMetrics::new(100),
 			}
 		},
 		|mut state, (features, labels)| {
@@ -165,7 +165,7 @@ pub fn test_linear_binary_classifier(
 				});
 			state
 				.binary_classifier_metrics
-				.update(metrics::BinaryClassifierMetricsInput {
+				.update(metrics::BinaryClassificationMetricsInput {
 					probabilities: predictions,
 					labels,
 				});
@@ -209,7 +209,7 @@ pub fn test_tree_binary_classifier(
 	let n_classes = labels.options.len();
 	let mut metrics = (
 		metrics::ClassificationMetrics::new(n_classes),
-		metrics::BinaryClassifierMetrics::new(100),
+		metrics::BinaryClassificationMetrics::new(100),
 	);
 	let mut predictions = unsafe { Array2::uninitialized((features.nrows(), n_classes)) };
 	update_progress(ModelTestProgress::Testing);
@@ -218,7 +218,7 @@ pub fn test_tree_binary_classifier(
 		probabilities: predictions.view(),
 		labels: labels.data.into(),
 	});
-	metrics.1.update(metrics::BinaryClassifierMetricsInput {
+	metrics.1.update(metrics::BinaryClassificationMetricsInput {
 		probabilities: predictions.view(),
 		labels: labels.data.into(),
 	});

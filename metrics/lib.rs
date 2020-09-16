@@ -1,7 +1,8 @@
 /*!
-This module defines the `StreamingMetric` trait and and a number of concrete types that implement it such as `MeanSquaredError` and `Accuracy`.
+This module defines the [`Metric`](trait.Metric.html) and [`StreamingMetric`](trait.StreamingMetric.html) traits and and a number of concrete types that implement them such as [`MeanSquaredError`](struct.MeanSquaredError.html) and [`Accuracy`](struct.Accuracy.html).
 */
 
+mod accuracy;
 mod auc_roc;
 mod binary_classification;
 mod binary_cross_entropy;
@@ -9,23 +10,36 @@ mod classification;
 mod cross_entropy;
 mod mean;
 mod mean_squared_error;
-mod mean_variance;
 mod regression;
 
-pub use auc_roc::*;
-pub use binary_classification::*;
-pub use binary_cross_entropy::*;
-pub use classification::*;
-pub use cross_entropy::*;
-pub use mean::*;
-pub use mean_squared_error::*;
-pub use mean_variance::*;
-pub use regression::*;
+pub use self::accuracy::Accuracy;
+pub use self::auc_roc::*;
+pub use self::binary_classification::{
+	BinaryClassificationClassMetricsOutput, BinaryClassificationMetrics,
+	BinaryClassificationMetricsInput, BinaryClassificationMetricsOutput,
+	BinaryClassificationThresholdMetricsOutput,
+};
+pub use self::binary_cross_entropy::{BinaryCrossEntropy, BinaryCrossEntropyInput};
+pub use self::classification::{
+	ClassMetrics, ClassificationMetrics, ClassificationMetricsInput, ClassificationMetricsOutput,
+};
+pub use self::cross_entropy::{CrossEntropy, CrossEntropyInput, CrossEntropyOutput};
+pub use self::mean::Mean;
+pub use self::mean_squared_error::MeanSquaredError;
+pub use self::regression::{
+	m2_to_variance, merge_mean_m2, RegressionMetrics, RegressionMetricsInput,
+	RegressionMetricsOutput,
+};
 
-trait Metric {
+/**
+The `Metric` trait defines a common interface to metrics that can be computed when all inputs are available at once. All [`StreamingMetric`](trait.StreamingMetric.html)s are `Metric`s, but not all `Metrics` are `StreamingMetrics`.
+
+The seeminly unused generic lifetime `'a` exists here to allow `Input`s and `Output`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
+*/
+trait Metric<'a> {
 	type Input;
 	type Output;
-	fn compute(inputs: &[Self::Input]) -> Self::Output;
+	fn compute(input: Self::Input) -> Self::Output;
 }
 
 /**

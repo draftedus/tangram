@@ -150,11 +150,10 @@ impl Regressor {
 		features: ArrayView2<f32>,
 		mut shap_values: ArrayViewMut3<f32>,
 	) {
-		izip!(
+		for (features, mut shap_values) in izip!(
 			features.axis_iter(Axis(0)),
 			shap_values.axis_iter_mut(Axis(0)),
-		)
-		.for_each(|(features, mut shap_values)| {
+		) {
 			compute_shap_values_common(
 				features,
 				self.bias,
@@ -162,6 +161,6 @@ impl Regressor {
 				&self.means,
 				shap_values.row_mut(0).as_slice_mut().unwrap(),
 			);
-		});
+		}
 	}
 }

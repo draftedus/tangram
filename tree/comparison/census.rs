@@ -65,8 +65,8 @@ fn main() {
 	model.predict(features_ndarray.view(), probabilities.view_mut());
 
 	// compute metrics
-	let mut metrics = tangram_metrics::BinaryClassifierMetrics::new(100);
-	metrics.update(tangram_metrics::BinaryClassifierMetricsInput {
+	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
+	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels_test.data.into(),
 	});

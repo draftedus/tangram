@@ -2,8 +2,7 @@ use super::StreamingMetric;
 use num_traits::ToPrimitive;
 use std::num::NonZeroU64;
 
-/// The Mean metric is computed using [Welford's](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm) algorithm.
-/// This is used instead of the naive method to ensure numeric stability.
+/// The Mean metric is computed using [Welford's algorithm](https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm) to ensure numeric stability.
 #[derive(Debug, Clone, Default)]
 pub struct Mean(Option<(NonZeroU64, f64)>);
 

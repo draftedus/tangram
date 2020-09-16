@@ -1,18 +1,25 @@
-/// This function computes the area under the receiver operating characteristic curve using the trapezoid method.
-pub fn auc_roc(probabilities: &[f32], labels: &[usize]) -> f32 {
-	let roc_curve = compute_roc_curve(probabilities, labels);
-	// compute the riemann sum of the auc_roc_curve
-	(0..roc_curve.len() - 1)
-		.map(|i| {
-			let left = &roc_curve[i];
-			let right = &roc_curve[i + 1];
-			let y_left = left.true_positive_rate;
-			let y_right = right.true_positive_rate;
-			let y_average = (y_left + y_right) / 2.0;
-			let dx = right.false_positive_rate - left.false_positive_rate;
-			y_average * dx
-		})
-		.sum()
+use super::Metric;
+
+struct AUCROC;
+
+impl<'a> Metric<'a> for AUCROC {
+	type Input = (&'a [f32], &'a [usize]);
+	type Output = f32;
+	fn compute(input: Self::Input) -> Self::Output {
+		let (probabilities, labels) = input;
+		let roc_curve = compute_roc_curve(probabilities, labels);
+		(0..roc_curve.len() - 1)
+			.map(|i| {
+				let left = &roc_curve[i];
+				let right = &roc_curve[i + 1];
+				let y_left = left.true_positive_rate;
+				let y_right = right.true_positive_rate;
+				let y_average = (y_left + y_right) / 2.0;
+				let dx = right.false_positive_rate - left.false_positive_rate;
+				y_average * dx
+			})
+			.sum()
+	}
 }
 
 /// A point on the ROC curve, parameterized by thresholds.
@@ -135,6 +142,6 @@ fn test_roc_curve() {
 	left.iter()
 		.zip(right.iter())
 		.for_each(|(left, right)| assert_eq!(left, right));
-	let auc = auc_roc(probabilities.as_slice(), labels.as_slice());
+	let auc = AUCROC::compute((probabilities.as_slice(), labels.as_slice()));
 	assert!(f32::abs(auc - 0.875) < f32::EPSILON)
 }

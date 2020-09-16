@@ -103,22 +103,20 @@ impl BinaryClassifier {
 		let learning_rate = options.learning_rate;
 		let logits = features.dot(&self.weights) + self.bias;
 		let mut predictions = logits.mapv_into(|logit| 1.0 / (logit.neg().exp() + 1.0));
-		izip!(predictions.view_mut(), labels).for_each(|(prediction, label)| {
+		for (prediction, label) in izip!(predictions.view_mut(), labels) {
 			let label = match label {
 				1 => 0.0,
 				2 => 1.0,
 				_ => unreachable!(),
 			};
 			*prediction -= label
-		});
+		}
 		let py = predictions.insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
 		let bias_gradient = py.mean_axis(Axis(0)).unwrap()[0];
-		izip!(self.weights.view_mut(), weight_gradients.view()).for_each(
-			|(weight, weight_gradient)| {
-				*weight += -learning_rate * weight_gradient;
-			},
-		);
+		for (weight, weight_gradient) in izip!(self.weights.view_mut(), weight_gradients.view()) {
+			*weight += -learning_rate * weight_gradient;
+		}
 		self.bias += -learning_rate * bias_gradient;
 	}
 

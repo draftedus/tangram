@@ -4,28 +4,28 @@ use ndarray::s;
 use num_traits::ToPrimitive;
 
 /**
-BinaryClassifierMetrics computes common metrics used to evaluate binary classifiers at various classification thresholds. Instead of computing threshold metrics for each prediction probability, we instead compute metrics for a fixed number of threshold values given by `n_thresholds` passed to [BinaryClassifierMetrics::new](struct.BinaryClassifierMetrics.html#method.new). This is an approximation but is more memory efficient.
+BinaryClassificationMetrics computes common metrics used to evaluate binary classifiers at various classification thresholds. Instead of computing threshold metrics for each prediction probability, we instead compute metrics for a fixed number of threshold values given by `n_thresholds` passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new). This is an approximation but is more memory efficient.
 */
-pub struct BinaryClassifierMetrics {
+pub struct BinaryClassificationMetrics {
 	/// The confusion matrices is an array of shape n_thresholds x (n_classes x n_classes).
 	/// The inner `Array2<u64>` is a per-threshold [Confusion Matrix](https://en.wikipedia.org/wiki/Confusion_matrix).
 	pub confusion_matrices: Array3<u64>,
-	/// The thresholds are evenly-spaced between 0 and 1 based on the total number of thresholds: `n_thresholds`, passed to [BinaryClassifierMetrics::new](struct.BinaryClassifierMetrics.html#method.new).
+	/// The thresholds are evenly-spaced between 0 and 1 based on the total number of thresholds: `n_thresholds`, passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
 	pub thresholds: Vec<f32>,
 }
 
-/// The input to [BinaryClassifierMetrics](struct.BinaryClassifierMetrics.html).
-pub struct BinaryClassifierMetricsInput<'a> {
+/// The input to [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
+pub struct BinaryClassificationMetricsInput<'a> {
 	pub probabilities: ArrayView2<'a, f32>,
 	pub labels: ArrayView1<'a, usize>,
 }
 
-/// BinaryClassifierMetrics contains common metrics used to evaluate binary classifiers at various classification thresholds.
+/// BinaryClassificationMetrics contains common metrics used to evaluate binary classifiers at various classification thresholds.
 #[derive(Debug)]
 pub struct BinaryClassificationMetricsOutput {
 	/// Class metrics for each class for each classification threshold.
 	pub class_metrics: Vec<BinaryClassificationClassMetricsOutput>,
-	/// Area under the receiver operating characteristic curve. Computes the integral using a fixed number of thresholds equal to `n_thresholds`, passed to[BinaryClassifierMetrics::new](struct.BinaryClassifierMetrics.html#method.new).
+	/// Area under the receiver operating characteristic curve. Computes the integral using a fixed number of thresholds equal to `n_thresholds`, passed to[BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
 	pub auc_roc: f32,
 }
 
@@ -35,7 +35,7 @@ pub struct BinaryClassificationClassMetricsOutput {
 	pub thresholds: Vec<BinaryClassificationThresholdMetricsOutput>,
 }
 
-/// The output from [BinaryClassifierMetrics](struct.BinaryClassifierMetrics.html).
+/// The output from [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
 #[derive(Debug)]
 pub struct BinaryClassificationThresholdMetricsOutput {
 	/// The classification threshold.
@@ -66,7 +66,7 @@ pub struct BinaryClassificationThresholdMetricsOutput {
 	pub false_positive_rate: f32,
 }
 
-impl BinaryClassifierMetrics {
+impl BinaryClassificationMetrics {
 	pub fn new(n_thresholds: usize) -> Self {
 		let thresholds = (0..n_thresholds)
 			.map(|i| i.to_f32().unwrap() * (1.0 / n_thresholds.to_f32().unwrap()))
@@ -83,11 +83,11 @@ impl BinaryClassifierMetrics {
 	}
 }
 
-impl<'a> StreamingMetric<'a> for BinaryClassifierMetrics {
-	type Input = BinaryClassifierMetricsInput<'a>;
+impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
+	type Input = BinaryClassificationMetricsInput<'a>;
 	type Output = BinaryClassificationMetricsOutput;
 
-	fn update(&mut self, value: BinaryClassifierMetricsInput) {
+	fn update(&mut self, value: BinaryClassificationMetricsInput) {
 		let n_examples = value.labels.len();
 		for (threshold_index, &threshold) in self.thresholds.iter().enumerate() {
 			for example_index in 0..n_examples {
@@ -207,7 +207,7 @@ fn auc_roc(confusion_matrix: ArrayView3<u64>) -> f32 {
 
 #[test]
 fn test() {
-	let mut metrics = BinaryClassifierMetrics::new(4);
+	let mut metrics = BinaryClassificationMetrics::new(4);
 	let labels = arr1(&[0, 0, 0, 0, 1, 1, 1, 1]);
 	let probabilities = arr2(&[
 		[0.6, 0.4],
@@ -219,7 +219,7 @@ fn test() {
 		[0.4, 0.6],
 		[0.6, 0.4],
 	]);
-	metrics.update(BinaryClassifierMetricsInput {
+	metrics.update(BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels.view(),
 	});
