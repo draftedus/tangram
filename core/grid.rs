@@ -56,7 +56,7 @@ pub struct TreeModelTrainOptions {
 pub fn compute_regression_hyperparameter_grid(
 	grid: &[config::GridItem],
 	target_column_index: usize,
-	column_stats: &[stats::ColumnStats],
+	column_stats: &[stats::ColumnStatsOutput],
 ) -> Vec<GridItem> {
 	grid.iter()
 		.map(|item| match item {
@@ -88,7 +88,7 @@ pub fn compute_regression_hyperparameter_grid(
 pub fn compute_binary_classification_hyperparameter_grid(
 	grid: &[config::GridItem],
 	target_column_index: usize,
-	column_stats: &[stats::ColumnStats],
+	column_stats: &[stats::ColumnStatsOutput],
 ) -> Vec<GridItem> {
 	grid.iter()
 		.map(|item| match item {
@@ -120,7 +120,7 @@ pub fn compute_binary_classification_hyperparameter_grid(
 pub fn compute_multiclass_classification_hyperparameter_grid(
 	grid: &[config::GridItem],
 	target_column_index: usize,
-	column_stats: &[stats::ColumnStats],
+	column_stats: &[stats::ColumnStatsOutput],
 ) -> Vec<GridItem> {
 	grid.iter()
 		.map(|item| match item {
@@ -172,7 +172,7 @@ const DEFAULT_TREE_MIN_EXAMPLES_PER_LEAF_VALUES: [u64; 1] = [10];
 /// Compute the default hyperparameter grid for regression.
 pub fn default_regression_hyperparameter_grid(
 	target_column_index: usize,
-	column_stats: &[stats::ColumnStats],
+	column_stats: &[stats::ColumnStatsOutput],
 ) -> Vec<GridItem> {
 	let mut grid = Vec::new();
 	for (&l2_regularization, &learning_rate, &max_epochs, &n_examples_per_batch) in iproduct!(
@@ -217,7 +217,7 @@ pub fn default_regression_hyperparameter_grid(
 /// Compute the default hyperparameter grid for binary classification.
 pub fn default_binary_classification_hyperparameter_grid(
 	target_column_index: usize,
-	column_stats: &[stats::ColumnStats],
+	column_stats: &[stats::ColumnStatsOutput],
 ) -> Vec<GridItem> {
 	let mut grid = Vec::new();
 	for (&l2_regularization, &learning_rate, &max_epochs, &n_examples_per_batch) in iproduct!(
@@ -262,7 +262,7 @@ pub fn default_binary_classification_hyperparameter_grid(
 /// Compute the default hyperparameter grid for multiclass classification.
 pub fn default_multiclass_classification_hyperparameter_grid(
 	target_column_index: usize,
-	column_stats: &[stats::ColumnStats],
+	column_stats: &[stats::ColumnStatsOutput],
 ) -> Vec<GridItem> {
 	let mut grid = Vec::new();
 	for (&l2_regularization, &learning_rate, &max_epochs, &n_examples_per_batch) in iproduct!(

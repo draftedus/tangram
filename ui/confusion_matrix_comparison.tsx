@@ -1,4 +1,4 @@
-import { Token } from '../token'
+import { Token } from './token'
 import { cx } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 

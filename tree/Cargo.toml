@@ -11,23 +11,23 @@ timing = []
 
 [[bin]]
 name = "boston-tree"
-path = "comparison/boston.rs"
+path = "benchmarks/boston.rs"
 
 [[bin]]
 name = "census-tree"
-path = "comparison/census.rs"
+path = "benchmarks/census.rs"
 
 [[bin]]
 name = "heart-disease-tree"
-path = "comparison/heart-disease.rs"
+path = "benchmarks/heart-disease.rs"
 
 [[bin]]
 name = "higgs-tree"
-path = "comparison/higgs.rs"
+path = "benchmarks/higgs.rs"
 
 [[bin]]
 name = "iris-tree"
-path = "comparison/iris.rs"
+path = "benchmarks/iris.rs"
 
 [dependencies]
 itertools = "0.9"

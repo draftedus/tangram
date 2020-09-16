@@ -85,8 +85,8 @@ pub fn train(
 
 	// determine the task
 	let task = match &overall_target_column_stats {
-		stats::ColumnStats::Number(_) => Task::Regression,
-		stats::ColumnStats::Enum(target_column) => Task::Classification {
+		stats::ColumnStatsOutput::Number(_) => Task::Regression,
+		stats::ColumnStatsOutput::Enum(target_column) => Task::Classification {
 			classes: target_column
 				.histogram
 				.iter()
@@ -509,7 +509,7 @@ fn compute_hyperparameter_grid(
 	config: &Option<Config>,
 	task: &Task,
 	target_column_index: usize,
-	train_column_stats: &[stats::ColumnStats],
+	train_column_stats: &[stats::ColumnStatsOutput],
 ) -> Vec<grid::GridItem> {
 	config
 		.as_ref()
@@ -1397,7 +1397,7 @@ impl Into<model::Tokenizer> for features::Tokenizer {
 	}
 }
 
-impl Into<model::ColumnStats> for stats::ColumnStats {
+impl Into<model::ColumnStats> for stats::ColumnStatsOutput {
 	fn into(self) -> model::ColumnStats {
 		match self {
 			Self::Unknown(c) => model::ColumnStats::Unknown(c.into()),
@@ -1408,7 +1408,7 @@ impl Into<model::ColumnStats> for stats::ColumnStats {
 	}
 }
 
-impl Into<model::UnknownColumnStats> for stats::UnknownColumnStats {
+impl Into<model::UnknownColumnStats> for stats::UnknownColumnStatsOutput {
 	fn into(self) -> model::UnknownColumnStats {
 		model::UnknownColumnStats {
 			column_name: self.column_name,
@@ -1416,7 +1416,7 @@ impl Into<model::UnknownColumnStats> for stats::UnknownColumnStats {
 	}
 }
 
-impl Into<model::NumberColumnStats> for stats::NumberColumnStats {
+impl Into<model::NumberColumnStats> for stats::NumberColumnStatsOutput {
 	fn into(self) -> model::NumberColumnStats {
 		model::NumberColumnStats {
 			column_name: self.column_name,
@@ -1435,7 +1435,7 @@ impl Into<model::NumberColumnStats> for stats::NumberColumnStats {
 	}
 }
 
-impl Into<model::EnumColumnStats> for stats::EnumColumnStats {
+impl Into<model::EnumColumnStats> for stats::EnumColumnStatsOutput {
 	fn into(self) -> model::EnumColumnStats {
 		model::EnumColumnStats {
 			column_name: self.column_name,
@@ -1450,7 +1450,7 @@ impl Into<model::EnumColumnStats> for stats::EnumColumnStats {
 	}
 }
 
-impl Into<model::TextColumnStats> for stats::TextColumnStats {
+impl Into<model::TextColumnStats> for stats::TextColumnStatsOutput {
 	fn into(self) -> model::TextColumnStats {
 		model::TextColumnStats {
 			column_name: self.column_name,

@@ -1,6 +1,10 @@
-export * from './document'
-export * from './client'
-export * from './types'
+export { Head, Body, Document } from './document'
+export { Client, hydrateComponent } from './client'
+
+export type PinwheelInfo = {
+	clientJsSrc?: string
+	preloadJsSrcs?: string[]
+}
 
 export function cx(
 	...classes: Array<string | null | undefined | false>

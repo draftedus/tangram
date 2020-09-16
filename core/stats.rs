@@ -38,89 +38,89 @@ impl Default for StatsSettings {
 /// This struct is the output from `compute_stats`. It contains stats for the overall dataset and also stats for just the train and test portions.
 pub struct ComputeStatsOutput {
 	/// This reports column stats for the whole dataset.
-	pub overall_column_stats: Vec<ColumnStats>,
+	pub overall_column_stats: Vec<ColumnStatsOutput>,
 	/// This reports stats for the train portion of the dataset.
-	pub train_column_stats: Vec<ColumnStats>,
+	pub train_column_stats: Vec<ColumnStatsOutput>,
 	/// This reports stats for the test portion of the dataset.
-	pub test_column_stats: Vec<ColumnStats>,
+	pub test_column_stats: Vec<ColumnStatsOutput>,
 }
 
 /// An enum describing the different types of column stats.
 #[derive(Debug)]
-pub enum ColumnStats {
-	Unknown(UnknownColumnStats),
-	Number(NumberColumnStats),
-	Enum(EnumColumnStats),
-	Text(TextColumnStats),
+pub enum ColumnStatsOutput {
+	Unknown(UnknownColumnStatsOutput),
+	Number(NumberColumnStatsOutput),
+	Enum(EnumColumnStatsOutput),
+	Text(TextColumnStatsOutput),
 }
 
 /// This struct contains stats for unknown columns.
 #[derive(Debug)]
-pub struct UnknownColumnStats {
-	/// The name of the column as it appears in the csv.
+pub struct UnknownColumnStatsOutput {
+	/// This is the name of the column as it appears in the csv.
 	pub column_name: String,
-	/// The total number of examples.
+	/// This is the total number of examples that these stats were computed on.
 	pub count: u64,
 }
 
 /// This struct contains stats for number columns.
 #[derive(Debug)]
-pub struct NumberColumnStats {
-	/// The name of the column as it appears in the csv.
+pub struct NumberColumnStatsOutput {
+	/// This is the name of the column as it appears in the csv.
 	pub column_name: String,
-	/// The total number of examples.
+	/// This is the total number of examples that these stats were computed on.
 	pub count: u64,
-	/// A histogram mapping unique values to their counts. It is `None` if the number of unique values exceeds [`number_histogram_max_size`](struct.StatsSettings.html#structfield.number_histogram_max_size).
+	/// This is a histogram mapping unique values to their counts. It is `None` if the number of unique values exceeds [`number_histogram_max_size`](struct.StatsSettings.html#structfield.number_histogram_max_size).
 	pub histogram: Option<Vec<(f32, u64)>>,
-	/// The total number of unique values.
+	/// This is the total number of unique values.
 	pub unique_count: u64,
-	/// The max of the values in the column.
+	/// This is the max of the values in the column.
 	pub max: f32,
-	/// The mean of the values in the column.
+	/// This is the mean of the values in the column.
 	pub mean: f32,
-	/// The min of the values in the column.
+	/// This is the min of the values in the column.
 	pub min: f32,
-	/// The total number of invalid values. Invalid values are values that fail to parse as floating point numbers.
+	/// This is the total number of invalid values. Invalid values are values that fail to parse as floating point numbers.
 	pub invalid_count: u64,
-	/// The variance of the values in the column.
+	/// This is the variance of the values in the column.
 	pub variance: f32,
-	/// The standard deviation of the values in the column. It is equal to the square root of the variance.
+	/// This is the standard deviation of the values in the column. It is equal to the square root of the variance.
 	pub std: f32,
-	/// The p25, or 25th-percentile value in the column.
+	/// This is the p25, or 25th-percentile value in the column.
 	pub p25: f32,
-	/// The p50, or 50th-percentile value in the column. The median.
+	/// This is the p50, or 50th-percentile value in the column, i.e. the median.
 	pub p50: f32,
-	/// The p75, or 75th-percentile value in the column.
+	/// This is the p75, or 75th-percentile value in the column.
 	pub p75: f32,
 }
 
 /// This struct contains stats for enum columns.
 #[derive(Debug)]
-pub struct EnumColumnStats {
-	/// The name of the column as it appears in the csv.
+pub struct EnumColumnStatsOutput {
+	/// This is the name of the column as it appears in the csv.
 	pub column_name: String,
-	/// The total number of examples.
+	/// This is the total number of examples that these stats were computed on.
 	pub count: u64,
-	/// A histogram mapping unique variants of the enum to the total count of occurrences of the variant in the dataset.
+	/// This is a histogram mapping unique variants of the enum to the total count of occurrences of the variant in the dataset.
 	pub histogram: Vec<(String, usize)>,
-	/// The total number of values in the dataset that are invalid. A value is invalid if it is not one of the enum's variants.
+	/// This is the total number of values in the dataset that are invalid. A value is invalid if it is not one of the enum's variants.
 	pub invalid_count: usize,
-	/// The total number of unique values, excluding invalid values.
+	/// This is the total number of unique values, excluding invalid values.
 	pub unique_count: usize,
 }
 
 /// This struct contains stats for text columns.
 #[derive(Debug)]
-pub struct TextColumnStats {
-	/// The name of the column as it appears in the csv.
+pub struct TextColumnStatsOutput {
+	/// This is the name of the column as it appears in the csv.
 	pub column_name: String,
-	/// The total number of examples.
+	/// This is the total number of examples that these stats were computed on.
 	pub count: u64,
-	/// A vector of the most frequently occurring tokens. It is a tuple where the first entry is the token, the second is the number of times it appears in the dataset and the third is its idf score.
+	/// This is a list of the most frequently occurring tokens, as well as the number of occurrences in the dataset and its IDF score.
 	pub top_tokens: Vec<(String, u64, f32)>,
 }
 
-/// Compute stats given a train and test dataframe.
+/// This function computes a range of statistics on the data in the train and test dataframes provided. After some transformations, these become the stats that appear under the "Training Stats" section in the reporting and monitoring web app.
 pub fn compute_stats(
 	dataframe_train: &DataFrameView,
 	dataframe_test: &DataFrameView,
@@ -133,9 +133,8 @@ pub fn compute_stats(
 	// compute histograms
 	// first we collect the whole dataset into histograms
 	// then we will use these histograms to compute subsequent statistics
-	let progress_counter =
-		ProgressCounter::new(n_cols.to_u64().unwrap() * n_rows.to_u64().unwrap());
-	update_progress(StatsProgress::DatasetStats(progress_counter));
+	let dataset_counter = ProgressCounter::new(n_cols.to_u64().unwrap() * n_rows.to_u64().unwrap());
+	update_progress(StatsProgress::DatasetStats(dataset_counter));
 	let train_dataset_stats: Vec<DatasetStats> = dataframe_train
 		.columns
 		.iter()
@@ -146,6 +145,7 @@ pub fn compute_stats(
 		.iter()
 		.map(|column| DatasetStats::compute(column, &settings))
 		.collect();
+	// rather than recompute stats over the whole data
 	let overall_dataset_stats: Vec<DatasetStats> = train_dataset_stats
 		.iter()
 		.cloned()
@@ -175,19 +175,19 @@ pub fn compute_stats(
 	let n_histogram_entries_overall: usize = n_histogram_entries_train + n_histogram_entries_test;
 	let n = n_histogram_entries_train + n_histogram_entries_test + n_histogram_entries_overall;
 	let n = n.to_u64().unwrap();
-	let progress_counter = ProgressCounter::new(n);
-	update_progress(StatsProgress::HistogramStats(progress_counter.clone()));
+	let histogram_counter = ProgressCounter::new(n);
+	update_progress(StatsProgress::HistogramStats(histogram_counter.clone()));
 	let train_histogram_stats: Vec<HistogramStats> = train_dataset_stats
 		.iter()
-		.map(|h| compute_histogram_stats(h, || progress_counter.inc(1)))
+		.map(|h| compute_histogram_stats(h, || histogram_counter.inc(1)))
 		.collect();
 	let test_histogram_stats: Vec<HistogramStats> = test_dataset_stats
 		.iter()
-		.map(|h| compute_histogram_stats(h, || progress_counter.inc(1)))
+		.map(|h| compute_histogram_stats(h, || histogram_counter.inc(1)))
 		.collect();
 	let overall_histogram_stats: Vec<HistogramStats> = overall_dataset_stats
 		.iter()
-		.map(|h| compute_histogram_stats(h, || progress_counter.inc(1)))
+		.map(|h| compute_histogram_stats(h, || histogram_counter.inc(1)))
 		.collect();
 
 	// transform histograms and histogram_stats into column_stats
@@ -209,7 +209,7 @@ fn compute_column_stats(
 	dataset_stats: &[DatasetStats],
 	histogram_stats: Vec<HistogramStats>,
 	settings: &StatsSettings,
-) -> Vec<stats::ColumnStats> {
+) -> Vec<stats::ColumnStatsOutput> {
 	dataset_stats
 		.iter()
 		.zip(histogram_stats.into_iter())
@@ -223,10 +223,10 @@ fn compute_column_stats_for_column(
 	dataset_stats: &DatasetStats,
 	histogram_stats: HistogramStats,
 	settings: &StatsSettings,
-) -> stats::ColumnStats {
+) -> stats::ColumnStatsOutput {
 	match (dataset_stats, &histogram_stats) {
 		(DatasetStats::Unknown(dataset_stats), _) => {
-			stats::ColumnStats::Unknown(stats::UnknownColumnStats {
+			stats::ColumnStatsOutput::Unknown(stats::UnknownColumnStatsOutput {
 				column_name: dataset_stats.column_name.to_owned(),
 				count: dataset_stats.count.to_u64().unwrap(),
 			})
@@ -235,21 +235,21 @@ fn compute_column_stats_for_column(
 			compute_column_stats_text(dataset_stats, settings)
 		}
 		(DatasetStats::Number(dataset_stats), HistogramStats::Number(histogram_stats)) => {
-			compute_column_stats_number(dataset_stats, histogram_stats, settings)
+			compute_number_column_stats(dataset_stats, histogram_stats, settings)
 		}
 		(DatasetStats::Enum(dataset_stats), _) => {
-			compute_column_stats_enum(dataset_stats, settings)
+			compute_enum_column_stats(dataset_stats, settings)
 		}
 		_ => unreachable!(),
 	}
 }
 
 /// Compute [ColumnStats](struct.ColumnStats.html) for a number column by combining stats computed in dataset_stats and histogram_stats.
-fn compute_column_stats_number(
+fn compute_number_column_stats(
 	dataset_stats: &NumberDatasetStats,
 	histogram_stats: &NumberHistogramStats,
 	settings: &StatsSettings,
-) -> stats::ColumnStats {
+) -> stats::ColumnStatsOutput {
 	let unique_values_count = dataset_stats.histogram.len().to_u64().unwrap();
 	let invalid_count = dataset_stats.invalid_count.to_u64().unwrap();
 	let histogram = if dataset_stats.histogram.len() <= settings.number_histogram_max_size {
@@ -263,7 +263,7 @@ fn compute_column_stats_number(
 	} else {
 		None
 	};
-	stats::ColumnStats::Number(stats::NumberColumnStats {
+	stats::ColumnStatsOutput::Number(stats::NumberColumnStatsOutput {
 		column_name: dataset_stats.column_name.to_owned(),
 		count: dataset_stats.count.to_u64().unwrap(),
 		histogram,
@@ -281,11 +281,11 @@ fn compute_column_stats_number(
 }
 
 /// Compute [ColumnStats](struct.ColumnStats.html) for an enum column.
-fn compute_column_stats_enum(
+fn compute_enum_column_stats(
 	dataset_stats: &EnumDatasetStats,
 	_settings: &StatsSettings,
-) -> stats::ColumnStats {
-	stats::ColumnStats::Enum(stats::EnumColumnStats {
+) -> stats::ColumnStatsOutput {
+	stats::ColumnStatsOutput::Enum(stats::EnumColumnStatsOutput {
 		column_name: dataset_stats.column_name.to_owned(),
 		count: dataset_stats.count.to_u64().unwrap(),
 		invalid_count: dataset_stats.invalid_count,
@@ -299,32 +299,11 @@ fn compute_column_stats_enum(
 	})
 }
 
-#[derive(Eq, Debug, Clone)]
-struct TokenEntry(String, u64);
-
-impl std::cmp::Ord for TokenEntry {
-	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		self.1.cmp(&other.1)
-	}
-}
-
-impl std::cmp::PartialOrd for TokenEntry {
-	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		self.1.partial_cmp(&other.1)
-	}
-}
-
-impl std::cmp::PartialEq for TokenEntry {
-	fn eq(&self, other: &Self) -> bool {
-		self.1.eq(&other.1)
-	}
-}
-
 /// Compute [ColumnStats](struct.ColumnStats.html) for a text column.
 fn compute_column_stats_text(
 	dataset_stats: &TextDatasetStats,
 	settings: &StatsSettings,
-) -> stats::ColumnStats {
+) -> stats::ColumnStatsOutput {
 	let mut top_tokens = std::collections::BinaryHeap::new();
 	for (token, count) in dataset_stats.unigram_histogram.iter() {
 		let entry = TokenEntry(token.clone(), count.to_u64().unwrap());
@@ -351,11 +330,32 @@ fn compute_column_stats_text(
 			}
 		})
 		.collect::<Vec<(String, u64, f32)>>();
-	stats::ColumnStats::Text(stats::TextColumnStats {
+	stats::ColumnStatsOutput::Text(stats::TextColumnStatsOutput {
 		column_name: dataset_stats.column_name.to_owned(),
 		count: dataset_stats.count.to_u64().unwrap(),
 		top_tokens,
 	})
+}
+
+#[derive(Eq, Debug, Clone)]
+struct TokenEntry(String, u64);
+
+impl std::cmp::Ord for TokenEntry {
+	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+		self.1.cmp(&other.1)
+	}
+}
+
+impl std::cmp::PartialOrd for TokenEntry {
+	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+		self.1.partial_cmp(&other.1)
+	}
+}
+
+impl std::cmp::PartialEq for TokenEntry {
+	fn eq(&self, other: &Self) -> bool {
+		self.1.eq(&other.1)
+	}
 }
 
 // This is an enum describing the different types of stats where the type matches the type of the source column.
@@ -607,7 +607,6 @@ pub struct NumberHistogramStats {
 	pub p50: f32,
 	pub p75: f32,
 	pub max: f32,
-	pub binned_histogram: Option<Vec<((f32, f32), usize)>>,
 }
 
 /// EnumHistogramStats are emtpy.
@@ -700,7 +699,6 @@ fn compute_number_histogram_stats(
 		p75: quantiles[2],
 		min,
 		max,
-		binned_histogram: None,
 		mean: mean.to_f32().unwrap(),
 		variance: metrics::m2_to_variance(
 			m2,
@@ -709,7 +707,7 @@ fn compute_number_histogram_stats(
 	}
 }
 
-impl ColumnStats {
+impl ColumnStatsOutput {
 	/// Return the name of the source column.
 	pub fn column_name(&self) -> &str {
 		match self {
@@ -758,7 +756,6 @@ fn test_compute_number_histogram_stats_one() {
 		p75: 1.0,
 		mean: 1.0,
 		variance: 0.0,
-		binned_histogram: None,
 	};
 	assert_eq!(left, right);
 }
@@ -777,7 +774,6 @@ fn test_compute_number_histogram_stats_two() {
 		p75: 1.75,
 		mean: 1.5,
 		variance: 0.25,
-		binned_histogram: None,
 	};
 	assert_eq!(left, right);
 }
@@ -796,7 +792,6 @@ fn test_compute_number_histogram_stats_multiple() {
 		p75: 1.25,
 		mean: 1.25,
 		variance: 0.1875,
-		binned_histogram: None,
 	};
 	assert_eq!(left, right);
 }

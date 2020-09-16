@@ -1,4 +1,4 @@
-import { PinwheelInfo } from './types'
+import type { PinwheelInfo } from './mod'
 import { ComponentChildren, Fragment, h } from 'preact'
 
 export type HeadProps = {
@@ -38,7 +38,7 @@ export type DocumentProps = {
 	pinwheelInfo: PinwheelInfo
 }
 
-export default function Document(props: DocumentProps) {
+export function Document(props: DocumentProps) {
 	return (
 		<>
 			<html>

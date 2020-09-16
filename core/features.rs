@@ -219,18 +219,20 @@ impl FeatureGroup {
 /// Compute feature groups for [linear](../linear/index.html) models.
 ///
 /// The difference between this function and [compute_feature_groups_tree](fn.compute_feature_groups_tree.html) is that tree models have native support for enum columns and they do not require that number columns are normalized.
-pub fn compute_feature_groups_linear(column_stats: &[stats::ColumnStats]) -> Vec<FeatureGroup> {
+pub fn compute_feature_groups_linear(
+	column_stats: &[stats::ColumnStatsOutput],
+) -> Vec<FeatureGroup> {
 	let mut result = Vec::new();
 	for column_stats in column_stats.iter() {
 		match column_stats {
-			stats::ColumnStats::Unknown(_) => {}
-			stats::ColumnStats::Number(_) => {
+			stats::ColumnStatsOutput::Unknown(_) => {}
+			stats::ColumnStatsOutput::Number(_) => {
 				result.push(compute_normalized_feature_group(column_stats));
 			}
-			stats::ColumnStats::Enum(_) => {
+			stats::ColumnStatsOutput::Enum(_) => {
 				result.push(compute_one_hot_encoded_feature_group(column_stats));
 			}
-			stats::ColumnStats::Text(_) => {
+			stats::ColumnStatsOutput::Text(_) => {
 				result.push(compute_bag_of_words_feature_group(column_stats))
 			}
 		};
@@ -242,22 +244,22 @@ pub fn compute_feature_groups_linear(column_stats: &[stats::ColumnStats]) -> Vec
 ///
 /// The difference between this function and [compute_feature_groups_linear](fn.compute_feature_groups_linear.html) is that tree models have native support for enum columns and they do not require that number columns are normalized.
 /// The [FeatureGroups](enum.FeatureGroup.html) for enum and number columns are [IdentityFeatureGroups](struct.IdentityFeatureGroup.html).
-pub fn compute_feature_groups_tree(column_stats: &[stats::ColumnStats]) -> Vec<FeatureGroup> {
+pub fn compute_feature_groups_tree(column_stats: &[stats::ColumnStatsOutput]) -> Vec<FeatureGroup> {
 	let mut result = Vec::new();
 	for column_stats in column_stats.iter() {
 		match column_stats {
-			stats::ColumnStats::Unknown(_) => {}
-			stats::ColumnStats::Number(_) => {
+			stats::ColumnStatsOutput::Unknown(_) => {}
+			stats::ColumnStatsOutput::Number(_) => {
 				result.push(compute_identity_feature_group(
 					column_stats.column_name().to_owned(),
 				));
 			}
-			stats::ColumnStats::Enum(_) => {
+			stats::ColumnStatsOutput::Enum(_) => {
 				result.push(compute_identity_feature_group(
 					column_stats.column_name().to_owned(),
 				));
 			}
-			stats::ColumnStats::Text(_) => {
+			stats::ColumnStatsOutput::Text(_) => {
 				result.push(compute_bag_of_words_feature_group(column_stats))
 			}
 		};
@@ -271,9 +273,9 @@ fn compute_identity_feature_group(source_column_name: String) -> FeatureGroup {
 }
 
 /// Create a NormalizedFeatureGroup. This function uses the mean and variance from the [ColumnStats](../stats/struct.ColumnStats.html).
-fn compute_normalized_feature_group(column_stats: &stats::ColumnStats) -> FeatureGroup {
+fn compute_normalized_feature_group(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
 	let column_stats = match &column_stats {
-		stats::ColumnStats::Number(column_stats) => column_stats,
+		stats::ColumnStatsOutput::Number(column_stats) => column_stats,
 		_ => unreachable!(),
 	};
 	FeatureGroup::Normalized(NormalizedFeatureGroup {
@@ -284,7 +286,7 @@ fn compute_normalized_feature_group(column_stats: &stats::ColumnStats) -> Featur
 }
 
 /// Create a OneHotEncodedFeatureGroup. This function uses the categories taken from the [ColumnStats](../stats/struct.ColumnStats.html).
-fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStats) -> FeatureGroup {
+fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
 	FeatureGroup::OneHotEncoded(OneHotEncodedFeatureGroup {
 		source_column_name: column_stats.column_name().to_owned(),
 		categories: column_stats.unique_values().unwrap(),
@@ -292,9 +294,9 @@ fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStats) -> F
 }
 
 /// Create a BagOfWordsFeatureGroup.
-fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStats) -> FeatureGroup {
+fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
 	let column_stats = match &column_stats {
-		stats::ColumnStats::Text(column_stats) => column_stats,
+		stats::ColumnStatsOutput::Text(column_stats) => column_stats,
 		_ => unreachable!(),
 	};
 	let mut tokens: Vec<(String, f32)> = column_stats

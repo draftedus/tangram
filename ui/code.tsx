@@ -1,4 +1,4 @@
-import { Language, SyntaxColors, grammars, highlight } from './syntax/mod'
+import { Language, SyntaxColors, grammars, highlight } from './syntax'
 import { times } from './util'
 import { ComponentChildren, Fragment, h } from 'preact'
 import { useEffect } from 'preact/hooks'
