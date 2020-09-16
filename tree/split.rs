@@ -219,11 +219,12 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 			options.l2_regularization,
 		);
 
+		// Figure out whether invalid values should go to the left subtree or to the right when predicting depending on whether the training dataset contains missing values or not.
 		let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
-			// we are in the function that splits from left to right
+			// there are missing values in the training dataset and they have been added to the left subtree
 			SplitDirection::Left
 		} else {
-			// there are no missing values, we take the branch with more examples
+			// there are no missing values in the training dataset. missing values should go to the branch with more examples
 			if left_n_examples >= right_n_examples {
 				SplitDirection::Left
 			} else {
@@ -378,15 +379,12 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 			l2_regularization,
 		);
 
-		// TODO: comment this better
-		// The first bucket contains the null values, if there are null values in the training set
-		// then the invalid values direction is left, if there are none, then choose the node with more
-		// training examples
+		// Figure out whether invalid values should go to the left subtree or to the right when predicting depending on whether the training dataset contains missing values or not.
 		let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
-			// we are in the function that splits from left to right
+			// there are missing values in the training dataset and they have been added to the left subtree
 			SplitDirection::Left
 		} else {
-			// there are no missing values, we take the branch with more examples
+			// there are no missing values in the training dataset. missing values should go to the branch with more examples
 			if left_n_examples >= right_n_examples {
 				SplitDirection::Left
 			} else {
@@ -429,8 +427,9 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 	best_split_so_far
 }
 
+/// The gain is a value that is used to measure how good a given split is.
 #[inline(always)]
-pub fn gain(
+fn gain(
 	sum_gradients_left: f64,
 	sum_hessians_left: f64,
 	sum_gradients_right: f64,
@@ -443,8 +442,9 @@ pub fn gain(
 	left + right - negative_loss_current_node
 }
 
+/// The negative loss is used to compute the gain of a given split.
 #[inline(always)]
-pub fn negative_loss(sum_gradients: f64, sum_hessians: f64, l2_regularization: f32) -> f32 {
+fn negative_loss(sum_gradients: f64, sum_hessians: f64, l2_regularization: f32) -> f32 {
 	((sum_gradients * sum_gradients) / (sum_hessians + l2_regularization.to_f64().unwrap()))
 		.to_f32()
 		.unwrap()
