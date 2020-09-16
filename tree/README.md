@@ -6,9 +6,7 @@
 
 Tangram tree contains the code for training and making predictions on gradient boosted decision trees.
 
-Tree models consist of a bias and a series of trees. To make a prediction:
-
-`y_predict = bias + output_tree_1 + output_tree_2 + ... + output_tree_n`
+Tree models consist of a bias and a series of trees.
 
 ## Tree Basics
 
@@ -54,6 +52,10 @@ pub struct BranchSplitDiscrete {
 
 Imagine we are trying to predict the price of a house. We have three features: the number of bedrooms, the total square footage and whether or not the house has a garage.
 
+To make a prediction:
+
+`y_predict = bias + output_tree_1 + output_tree_2 + ... + output_tree_n`
+
 _Features_: `number_of_bedrooms`, `square_feet`, `has_garage`.
 
 Let's assume we are a real estate agent who wants to use our tree model to assess the price of a new home. The home has _4 bedrooms_, _3,200_ square feet and _no garage_.
@@ -88,7 +90,7 @@ You can think of the sigmoid function as a special function that squashes values
   <img src="multiclass.svg" title="Tree">
 </p>
 
-Instead of training a single tree per round, we now train n trees per round, one for each class. To make a prediction for a model with `n` classes and `m` rounds:
+Instead of training a single tree per round, we now train `n` trees per round, one for each class. To make a prediction for a model with `n` classes and `m` rounds:
 
 ```
 y_predict = softmax(
