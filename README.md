@@ -43,6 +43,10 @@ This repository is both a Cargo workspace and a Yarn workspace. Almost every fol
 
 - [`core`](core): The `core` folder contains the `tangram_core` crate that defines the model file format and automated machine learning functionality. It is used by the `tangram_cli` crate to train a model, and by the `libtangram` crate to expose its functionality as a C api for the language libraries.
 
+- [`linear`](linear): The `linear` folder contains the `tangram_linear` crate that implements linear machine learning models.
+
+- [`tree`](tree): The `tree` folder contains the `tangram_tree` crate that implements tree machin learning model.
+
 - [`app`](app): The `app` folder contains the `tangram_app` crate that implementats the reporting and monitoring web app. [Learn more](app/README.md).
 
 - [`cli`](cli): The `cli` folder contains the `tangram_cli` crate. It uses the `tangram_core` crate to train a model, and the `tangram_app` crate to run the reporting and monitoring web app. See `main()` in [cli/main.rs](cli/main.rs) for the entrypoint.
