@@ -1,5 +1,5 @@
 use anyhow::Result;
-use chrono::Utc;
+use chrono::prelude::*;
 use sqlx::prelude::*;
 use tangram_id::Id;
 

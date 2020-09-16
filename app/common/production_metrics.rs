@@ -3,7 +3,7 @@ use crate::{
 	production_metrics::{ProductionMetrics, ProductionMetricsOutput},
 };
 use anyhow::Result;
-use chrono::{prelude::*, Duration};
+use chrono::prelude::*;
 use chrono_tz::Tz;
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
@@ -37,9 +37,10 @@ pub async fn get_production_metrics(
 		DateWindow::ThisYear => timezone.ymd(now.year(), 1, 1).and_hms(0, 0, 0),
 	};
 	let end_date = match date_window {
-		DateWindow::Today => start_date + Duration::days(1),
+		DateWindow::Today => start_date + chrono::Duration::days(1),
 		DateWindow::ThisMonth => {
-			start_date + Duration::days(n_days_in_month(start_date.year(), start_date.month()))
+			start_date
+				+ chrono::Duration::days(n_days_in_month(start_date.year(), start_date.month()))
 		}
 		DateWindow::ThisYear => timezone.ymd(now.year() + 1, 1, 1).and_hms(0, 0, 0),
 	};
@@ -80,10 +81,10 @@ pub async fn get_production_metrics(
 				DateWindowInterval::Monthly => start_date.with_month0(i).unwrap(),
 			};
 			let end = match date_window_interval {
-				DateWindowInterval::Hourly => start + Duration::hours(1),
-				DateWindowInterval::Daily => start + Duration::days(1),
+				DateWindowInterval::Hourly => start + chrono::Duration::hours(1),
+				DateWindowInterval::Daily => start + chrono::Duration::days(1),
 				DateWindowInterval::Monthly => {
-					start + Duration::days(n_days_in_month(start.year(), start.month()))
+					start + chrono::Duration::days(n_days_in_month(start.year(), start.month()))
 				}
 			};
 			ProductionMetrics::new(&model, start.with_timezone(&Utc), end.with_timezone(&Utc))
@@ -95,8 +96,7 @@ pub async fn get_production_metrics(
 		let data: String = row.get(0);
 		let data: Vec<u8> = base64::decode(data)?;
 		let hour: i64 = row.get(1);
-		let hour: DateTime<Utc> = Utc.datetime_from_str(hour.to_string().as_str(), "%s")?;
-		let hour: DateTime<Tz> = hour.with_timezone(&timezone);
+		let hour = timezone.timestamp(hour, 0);
 		let interval = match date_window_interval {
 			DateWindowInterval::Hourly => {
 				let hour = hour.hour().to_usize().unwrap();

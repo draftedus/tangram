@@ -184,7 +184,7 @@ pub fn train(
 			};
 			model::Model::Regressor(model::Regressor {
 				id: model_id.to_string(),
-				target_column_name: target_column_name.to_string(),
+				target_column_name: target_column_name.to_owned(),
 				row_count: row_count.to_u64().unwrap(),
 				stats_settings: stats_settings.into(),
 				overall_column_stats: overall_column_stats.into_iter().map(Into::into).collect(),
@@ -268,7 +268,7 @@ pub fn train(
 			};
 			model::Model::Classifier(model::Classifier {
 				id: model_id.to_string(),
-				target_column_name: target_column_name.to_string(),
+				target_column_name: target_column_name.to_owned(),
 				row_count: row_count.to_u64().unwrap(),
 				stats_settings: stats_settings.into(),
 				overall_column_stats: overall_column_stats.into_iter().map(Into::into).collect(),

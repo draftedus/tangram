@@ -287,9 +287,21 @@ fn compute_normalized_feature_group(column_stats: &stats::ColumnStatsOutput) -> 
 
 /// Create a OneHotEncodedFeatureGroup. This function uses the categories taken from the [ColumnStats](../stats/struct.ColumnStats.html).
 fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
+	let categories = match column_stats {
+		stats::ColumnStatsOutput::Enum(stats) => {
+			let mut unique_values: Vec<_> = stats
+				.histogram
+				.iter()
+				.map(|(value, _)| value.clone())
+				.collect();
+			unique_values.sort_unstable();
+			unique_values
+		}
+		_ => unreachable!(),
+	};
 	FeatureGroup::OneHotEncoded(OneHotEncodedFeatureGroup {
 		source_column_name: column_stats.column_name().to_owned(),
-		categories: column_stats.unique_values().unwrap(),
+		categories,
 	})
 }
 

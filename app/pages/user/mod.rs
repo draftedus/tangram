@@ -7,7 +7,7 @@ use crate::{
 	Context,
 };
 use anyhow::Result;
-use chrono::Utc;
+use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use tangram_id::Id;

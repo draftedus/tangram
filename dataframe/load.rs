@@ -229,7 +229,7 @@ impl<'a> InferStats<'a> {
 		}
 		if let Some(unique_values) = self.unique_values.as_mut() {
 			if !unique_values.contains(value) {
-				unique_values.insert(value.to_string());
+				unique_values.insert(value.to_owned());
 			}
 			if unique_values.len() > self.infer_options.enum_max_unique_values {
 				self.unique_values = None;
@@ -346,11 +346,11 @@ fn test_column_types() {
 2,test,world
 "#;
 	let mut column_types = BTreeMap::new();
-	column_types.insert("text".to_string(), ColumnType::Text);
+	column_types.insert("text".to_owned(), ColumnType::Text);
 	column_types.insert(
-		"enum".to_string(),
+		"enum".to_owned(),
 		ColumnType::Enum {
-			options: vec!["hello".to_string(), "world".to_string()],
+			options: vec!["hello".to_owned(), "world".to_owned()],
 		},
 	);
 	let df = DataFrame::from_csv(

@@ -286,7 +286,7 @@ async fn props(
 		})
 		.collect();
 	db.commit().await?;
-	let class = search_params.and_then(|s| s.get("class").map(|class| class.to_string()));
+	let class = search_params.and_then(|s| s.get("class").map(|class| class.to_owned()));
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {

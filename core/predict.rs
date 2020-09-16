@@ -603,17 +603,17 @@ fn compute_shap_values_linear(
 			let feature_str = match &feature_groups[*feature_group_index] {
 				features::FeatureGroup::BagOfWords(_) => {
 					if feature.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
-						"does not contain".to_string()
+						"does not contain".to_owned()
 					} else {
-						"contains".to_string()
+						"contains".to_owned()
 					}
 				}
-				features::FeatureGroup::Normalized(_) => "".to_string(),
+				features::FeatureGroup::Normalized(_) => "".to_owned(),
 				features::FeatureGroup::OneHotEncoded(_) => {
 					if feature.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
-						"false".to_string()
+						"false".to_owned()
 					} else {
-						"true".to_string()
+						"true".to_owned()
 					}
 				}
 				features::FeatureGroup::Identity(_) => feature.to_string(),
@@ -681,33 +681,33 @@ fn compute_shap_values_tree(
 			let feature = match feature_groups[*feature_group_index] {
 				features::FeatureGroup::BagOfWords(_) => match feature {
 					tangram_dataframe::Value::Number(v) => match v.partial_cmp(&0.0) {
-						Some(std::cmp::Ordering::Equal) => "does not contain".to_string(),
-						_ => "contains".to_string(),
+						Some(std::cmp::Ordering::Equal) => "does not contain".to_owned(),
+						_ => "contains".to_owned(),
 					},
 					_ => unreachable!(),
 				},
-				features::FeatureGroup::Normalized(_) => "".to_string(),
+				features::FeatureGroup::Normalized(_) => "".to_owned(),
 				features::FeatureGroup::OneHotEncoded(_) => match feature {
 					tangram_dataframe::Value::Number(v) => {
 						if v.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
-							"false".to_string()
+							"false".to_owned()
 						} else {
-							"true".to_string()
+							"true".to_owned()
 						}
 					}
 					_ => unreachable!(),
 				},
 				features::FeatureGroup::Identity(_) => match feature {
-					tangram_dataframe::Value::Number(v) => v.to_string(),
-					tangram_dataframe::Value::Enum(v) => {
+					tangram_dataframe::Value::Number(value) => value.to_string(),
+					tangram_dataframe::Value::Enum(value) => {
 						// get the name of the category
-						if *v == 0 {
-							"oov".to_string()
+						if *value == 0 {
+							"oov".to_owned()
 						} else {
 							let column = &dataframe.columns[*feature_group_index];
 							match &column {
 								tangram_dataframe::ColumnView::Enum(column) => {
-									column.options[*v - 1].to_string()
+									column.options[*value - 1].clone()
 								}
 								_ => unreachable!(),
 							}

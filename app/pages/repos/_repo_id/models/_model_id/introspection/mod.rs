@@ -247,7 +247,7 @@ fn compute_feature_names(feature_groups: &[tangram_core::model::FeatureGroup]) -
 				vec![feature_group.source_column_name.to_owned()]
 			}
 			tangram_core::model::FeatureGroup::OneHotEncoded(feature_group) => {
-				vec!["OOV".to_string()]
+				vec!["OOV".to_owned()]
 					.iter()
 					.chain(feature_group.categories.iter())
 					.map(|category| {

@@ -182,8 +182,8 @@ fn test_binary() {
 		.zip(predictions.into_iter())
 		.for_each(|(label, prediction)| {
 			metrics.update((
-				NumberOrString::String(prediction.to_string()),
-				NumberOrString::String(label.to_string()),
+				NumberOrString::String(prediction.to_owned()),
+				NumberOrString::String(label.to_owned()),
 			));
 		});
 	let metrics = metrics.finalize();
@@ -251,8 +251,8 @@ fn test_multiclass() {
 		.zip(predictions.into_iter())
 		.for_each(|(label, prediction)| {
 			metrics.update((
-				NumberOrString::String(prediction.to_string()),
-				NumberOrString::String(label.to_string()),
+				NumberOrString::String(prediction.to_owned()),
+				NumberOrString::String(label.to_owned()),
 			));
 		});
 	let metrics = metrics.finalize();

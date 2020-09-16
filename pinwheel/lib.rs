@@ -49,9 +49,9 @@ impl Pinwheel {
 	{
 		// compute the page entry from the pagename
 		let page_entry = if pagename.ends_with('/') {
-			pagename.to_string() + "index"
+			pagename.to_owned() + "index"
 		} else {
-			pagename.to_string()
+			pagename.to_owned()
 		};
 		let page_entry = page_entry.strip_prefix('/').unwrap().to_owned();
 
@@ -68,17 +68,17 @@ impl Pinwheel {
 		let static_js_url = Url::parse("dst:/")
 			.unwrap()
 			.join(&if self.src_dir.is_some() {
-				"static.js".to_string()
+				"static.js".to_owned()
 			} else {
-				page_entry.to_string() + "/static.js"
+				page_entry.to_owned() + "/static.js"
 			})
 			.unwrap();
 		let server_js_url = Url::parse("dst:/")
 			.unwrap()
 			.join(&if self.src_dir.is_some() {
-				"server.js".to_string()
+				"server.js".to_owned()
 			} else {
-				page_entry.to_string() + "/server.js"
+				page_entry.to_owned() + "/server.js"
 			})
 			.unwrap();
 		let page_js_url = if self.fs.exists(&static_js_url) {
@@ -91,16 +91,16 @@ impl Pinwheel {
 		let client_js_url = Url::parse("dst:/")
 			.unwrap()
 			.join(&if self.src_dir.is_some() {
-				"client.js".to_string()
+				"client.js".to_owned()
 			} else {
-				page_entry.to_string() + "/client.js"
+				page_entry.to_owned() + "/client.js"
 			})
 			.unwrap();
 		let client_js_src = if self.fs.exists(&client_js_url) {
 			Some(
-				"/".to_string()
+				"/".to_owned()
 					+ &if self.src_dir.is_some() {
-						"".to_string()
+						"".to_owned()
 					} else {
 						page_entry + "/"
 					} + "client.js",
@@ -187,7 +187,7 @@ impl Pinwheel {
 		let path_and_query = uri.path_and_query().unwrap();
 		let path = path_and_query.path();
 		// serve static files from pinwheel
-		let mut static_path = path.to_string();
+		let mut static_path = path.to_owned();
 		if static_path.ends_with('/') {
 			static_path.push_str("index.html");
 		}
@@ -563,10 +563,10 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 	for page_entry in static_page_entries {
 		let mut pagename = String::from("/") + &page_entry;
 		if pagename.ends_with("/index") {
-			pagename = pagename.strip_suffix("index").unwrap().to_string();
+			pagename = pagename.strip_suffix("index").unwrap().to_owned();
 		}
 		let html = pinwheel.render(&pagename)?;
-		let html_path = dst_dir.join(page_entry.to_string() + ".html");
+		let html_path = dst_dir.join(page_entry.to_owned() + ".html");
 		let html_parent = html_path.parent().unwrap();
 		std::fs::create_dir_all(html_parent).unwrap();
 		std::fs::write(html_path, html).unwrap();
@@ -587,17 +587,17 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	let manifest_path = dst_dir.join("manifest.json");
 	let cmd = "yarn";
 	let mut args = vec![
-		"run".to_string(),
-		"-s".to_string(),
-		"esbuild".to_string(),
-		"--format=esm".to_string(),
-		"--minify".to_string(),
-		"--bundle".to_string(),
-		"--splitting".to_string(),
-		"--resolve-extensions=.ts,.tsx,.svg,.png".to_string(),
-		"--loader:.svg=dataurl".to_string(),
-		"--loader:.png=file".to_string(),
-		"--sourcemap".to_string(),
+		"run".to_owned(),
+		"-s".to_owned(),
+		"esbuild".to_owned(),
+		"--format=esm".to_owned(),
+		"--minify".to_owned(),
+		"--bundle".to_owned(),
+		"--splitting".to_owned(),
+		"--resolve-extensions=.ts,.tsx,.svg,.png".to_owned(),
+		"--loader:.svg=dataurl".to_owned(),
+		"--loader:.png=file".to_owned(),
+		"--sourcemap".to_owned(),
 		format!("--metafile={}", manifest_path.display()),
 		format!("--outdir={}", dst_dir.display()),
 	];

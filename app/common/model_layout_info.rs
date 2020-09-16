@@ -60,7 +60,7 @@ pub async fn get_model_layout_info(
 		}),
 		(None, Some(_)) => Some(Owner {
 			name: user_email.unwrap(),
-			url: "/user".to_string(),
+			url: "/user".to_owned(),
 		}),
 		(None, None) => None,
 		(_, _) => unreachable!(),

@@ -174,7 +174,7 @@ async fn props(
 					.as_ref()
 					.and_then(|s| s.get(&name))
 					.map(|s| s.to_owned())
-					.unwrap_or_else(|| "".to_string());
+					.unwrap_or_else(|| "".to_owned());
 				Column::Unknown(Unknown { name, value })
 			}
 			tangram_core::model::ColumnStats::Number(column_stats) => {
@@ -225,7 +225,7 @@ async fn props(
 					.as_ref()
 					.and_then(|s| s.get(&name))
 					.map(|s| s.to_owned())
-					.unwrap_or_else(|| "".to_string());
+					.unwrap_or_else(|| "".to_owned());
 				Column::Text(Text { name, value })
 			}
 		})
@@ -356,7 +356,7 @@ fn predict(
 						baseline_probability,
 						baseline_label: format!("{:.2}%", baseline_probability * 100.0),
 						output,
-						label: class.to_string(),
+						label: class,
 						output_label: format!("{:.2}%", output_probability * 100.0),
 						values: shap_values
 							.values
@@ -381,7 +381,7 @@ fn predict(
 				shap_chart_data: vec![RegressionShapValuesOutput {
 					baseline: shap_values.baseline,
 					baseline_label: shap_values.baseline.to_string(),
-					label: "output".to_string(),
+					label: "output".to_owned(),
 					output: output.value,
 					output_label: output.value.to_string(),
 					values: shap_values

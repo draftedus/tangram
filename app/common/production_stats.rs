@@ -3,7 +3,7 @@ use crate::{
 	production_stats::{ProductionStats, ProductionStatsOutput},
 };
 use anyhow::Result;
-use chrono::{prelude::*, Duration};
+use chrono::prelude::*;
 use chrono_tz::Tz;
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
@@ -24,10 +24,10 @@ pub async fn get_production_stats(
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> Result<GetProductionStatsOutput> {
-	// compute the start date given the date window
-	// * for today, use the start of this utc day
-	// * for this month, use the start of this utc month
-	// * for this year, use the start of this utc year
+	// Compute the start date given the date window.
+	// * For today, use the start of this utc day.
+	// * For this month, use the start of this utc month.
+	// * For this year, use the start of this utc year.
 	let now: DateTime<Tz> = Utc::now().with_timezone(&timezone);
 	let start_date = match date_window {
 		DateWindow::Today => timezone
@@ -37,14 +37,15 @@ pub async fn get_production_stats(
 		DateWindow::ThisYear => timezone.ymd(now.year(), 1, 1).and_hms(0, 0, 0),
 	};
 	let end_date = match date_window {
-		DateWindow::Today => start_date + Duration::days(1),
+		DateWindow::Today => start_date + chrono::Duration::days(1),
 		DateWindow::ThisMonth => {
-			start_date + Duration::days(n_days_in_month(start_date.year(), start_date.month()))
+			start_date
+				+ chrono::Duration::days(n_days_in_month(start_date.year(), start_date.month()))
 		}
 		DateWindow::ThisYear => timezone.ymd(now.year() + 1, 1, 1).and_hms(0, 0, 0),
 	};
 	let start_date = &start_date.with_timezone(&Utc);
-	// retrieve the production stats for the date window
+	// Retrieve the production stats for the date window.
 	let rows = sqlx::query(
 		"
 			select
@@ -61,10 +62,10 @@ pub async fn get_production_stats(
 	.bind(&start_date.timestamp())
 	.fetch_all(&mut *db)
 	.await?;
-	// compute the number of intervals
-	// * for today, use 24
-	// * for this month, use the number of days in this month
-	// * for this year, use 12
+	// Compute the number of intervals.
+	// * For today, use 24.
+	// * For this month, use the number of days in this month.
+	// * For this year, use 12.
 	let n_intervals: usize = match date_window_interval {
 		DateWindowInterval::Hourly => 24,
 		DateWindowInterval::Daily => n_days_in_month(start_date.year(), start_date.month())
@@ -72,33 +73,31 @@ pub async fn get_production_stats(
 			.unwrap(),
 		DateWindowInterval::Monthly => 12,
 	};
-	// initialize the intervals with start and end dates
+	// Initialize the intervals with start and end dates.
 	let mut intervals: Vec<ProductionStats> = (0..n_intervals.to_u32().unwrap())
 		.map(|i| {
-			// determine the start and end dates for the interval
+			// Determine the start and end dates for the interval.
 			let start = match date_window_interval {
 				DateWindowInterval::Hourly => start_date.with_hour(i).unwrap(),
 				DateWindowInterval::Daily => start_date.with_day0(i).unwrap(),
 				DateWindowInterval::Monthly => start_date.with_month0(i).unwrap(),
 			};
 			let end = match date_window_interval {
-				DateWindowInterval::Hourly => start + Duration::hours(1),
-				DateWindowInterval::Daily => start + Duration::days(1),
+				DateWindowInterval::Hourly => start + chrono::Duration::hours(1),
+				DateWindowInterval::Daily => start + chrono::Duration::days(1),
 				DateWindowInterval::Monthly => {
-					start + Duration::days(n_days_in_month(start.year(), start.month()))
+					start + chrono::Duration::days(n_days_in_month(start.year(), start.month()))
 				}
 			};
 			ProductionStats::new(&model, start.with_timezone(&Utc), end.with_timezone(&Utc))
 		})
 		.collect();
-	// merge each hourly production stats
-	// entry into its corresponding interval
+	// Merge each hourly production stats entry into its corresponding interval.
 	for row in rows {
 		let data: String = row.get(0);
 		let data: Vec<u8> = base64::decode(data)?;
 		let hour: i64 = row.get(1);
-		let hour: DateTime<Utc> = Utc.datetime_from_str(hour.to_string().as_str(), "%s")?;
-		let hour: DateTime<Tz> = hour.with_timezone(&timezone);
+		let hour = timezone.timestamp(hour, 0);
 		let interval = match date_window_interval {
 			DateWindowInterval::Hourly => {
 				let hour = hour.hour().to_usize().unwrap();

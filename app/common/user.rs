@@ -37,7 +37,7 @@ pub async fn authorize_user(
 		};
 		let mut components = authorization.split(' ');
 		match (components.next(), components.next()) {
-			(Some("Bearer"), Some(token)) => token.to_string(),
+			(Some("Bearer"), Some(token)) => token.to_owned(),
 			_ => return Ok(Err(AuthorizeUserError::AuthorizationInvalid)),
 		}
 	} else if let Some(cookies) = request.headers().get(header::COOKIE) {

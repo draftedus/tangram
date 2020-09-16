@@ -1,5 +1,5 @@
 use super::cookies::parse_cookies;
-use chrono_tz::{Tz, UTC};
+use chrono_tz::Tz;
 use hyper::{header, Body, Request};
 
 pub fn get_timezone(request: &Request<Body>) -> Tz {
@@ -10,5 +10,5 @@ pub fn get_timezone(request: &Request<Body>) -> Tz {
 		.and_then(|cookie_header_value| parse_cookies(cookie_header_value).ok())
 		.and_then(|cookies| cookies.get("tangram-timezone").cloned())
 		.and_then(|timezone_str| timezone_str.parse().ok())
-		.unwrap_or(UTC)
+		.unwrap_or(Tz::UTC)
 }

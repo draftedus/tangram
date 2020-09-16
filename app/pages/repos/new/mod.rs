@@ -115,7 +115,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	while let Some(mut field) = multipart.next_field().await? {
 		let name = field
 			.name()
-			.map(|name| name.to_string())
+			.map(|name| name.to_owned())
 			.ok_or(Error::BadRequest)?;
 		let mut field_data = Vec::new();
 		while let Some(chunk) = field.chunk().await? {

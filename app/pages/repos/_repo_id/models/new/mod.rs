@@ -180,7 +180,7 @@ pub async fn post(
 		.status(StatusCode::SEE_OTHER)
 		.header(
 			header::LOCATION,
-			format!("/repos/{}/models/{}/", repo_id, model.id().to_string()),
+			format!("/repos/{}/models/{}/", repo_id, model.id()),
 		)
 		.body(Body::empty())
 		.unwrap();
