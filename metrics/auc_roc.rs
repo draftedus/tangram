@@ -1,4 +1,5 @@
 use super::Metric;
+use itertools::Itertools;
 
 /// This function computes the ROC curve. The ROC curve plot the false positive rate on the x axis and the true positive rate on the y axis for various classification thresholds.
 struct AUCROC;
@@ -17,60 +18,67 @@ impl<'a> Metric<'a> for AUCROC {
 		// sort by probabilities in descending order
 		probabilities_labels.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 		probabilities_labels.reverse();
-		// Compute the counts of true positives and false positives at each classification threshold. Unlike the roc curve, each point contains just the count of true positives and false positives at this threshold instead of the cumulative sum of true positives and false positives up to this threshold.
-		let mut tps_fps: Vec<TpsFpsPoint> = Vec::new();
+		let mut true_positives_false_positives: Vec<TpsFpsPoint> = Vec::new();
 		for (probability, label) in probabilities_labels.iter() {
+			// labels are 1-indexed
 			let label = label.checked_sub(1).unwrap();
-			let tp = label;
-			match tps_fps.last() {
+			// if the classification threshold were to be this probability and the label is 1, the prediction is a true_positive. If the label is 0, its not a true_positive.
+			let true_positive = label;
+			// if the classification threshold were to be this probability and the label is 0, the prediction is a false_positive. If the label is 1, its not a false_positive.
+			let false_positive = 1 - label;
+			match true_positives_false_positives.last() {
 				Some(last_point)
-					if probability.partial_cmp(&last_point.threshold).unwrap()
-						== std::cmp::Ordering::Equal =>
+					if f32::abs(probability - last_point.probability) < std::f32::EPSILON =>
 				{
-					let last = tps_fps.last_mut().unwrap();
-					last.true_positives += tp;
-					last.false_positives += 1 - tp;
+					let last = true_positives_false_positives.last_mut().unwrap();
+					last.true_positives += true_positive;
+					last.false_positives += false_positive;
 				}
 				_ => {
-					tps_fps.push(TpsFpsPoint {
-						threshold: *probability,
-						true_positives: tp,
-						false_positives: 1 - tp,
+					true_positives_false_positives.push(TpsFpsPoint {
+						probability: *probability,
+						true_positives: true_positive,
+						false_positives: false_positive,
 					});
 				}
 			}
 		}
-		for i in 1..tps_fps.len() {
-			tps_fps[i].true_positives += tps_fps[i - 1].true_positives;
-			tps_fps[i].false_positives += tps_fps[i - 1].false_positives;
+		for i in 1..true_positives_false_positives.len() {
+			true_positives_false_positives[i].true_positives +=
+				true_positives_false_positives[i - 1].true_positives;
+			true_positives_false_positives[i].false_positives +=
+				true_positives_false_positives[i - 1].false_positives;
 		}
+		// get the total count of positives
 		let count_positives = labels
 			.iter()
 			.map(|l| l.checked_sub(1).unwrap())
 			.sum::<usize>();
+		// get the total count of negatives
 		let count_negatives = labels.len() - count_positives;
-		// add a point at (0,0) on the roc curve with a dummy threshold of 1.0
+		// The true_positive_rate at threshold x is the percent of the total positives that have a prediction probability >= x. At the maximum probability `x` observed in the dataset, either the true_positive_rate or false_positive_rate will be nonzero depending on whether the label at the this highest probability point is positive or negative respectively. This means that we will not have a point on the ROC curve with a true_positive_rate and false_positive_rate of 0. We create a dummy point with an impossible threshold of 1.1 such that no predictions have probability >= 1.1. At this threshold, both the true_positive_rate and false_positive_rate is 0.
 		let mut roc_curve = vec![ROCCurvePoint {
-			threshold: 1.0,
+			threshold: 1.1,
 			true_positive_rate: 0.0,
 			false_positive_rate: 0.0,
 		}];
-		for tps_fps_point in tps_fps.iter() {
+		for tps_fps_point in true_positives_false_positives.iter() {
 			roc_curve.push(ROCCurvePoint {
+				// The true positive rate is the number of true_positives divided by the total number of positives
 				true_positive_rate: tps_fps_point.true_positives as f32 / count_positives as f32,
-				threshold: tps_fps_point.threshold,
+				threshold: tps_fps_point.probability,
+				// The false positive rate is the number of false_positives divided by the total number of negatives
 				false_positive_rate: tps_fps_point.false_positives as f32 / count_negatives as f32,
 			})
 		}
-		(0..roc_curve.len() - 1)
-			.map(|i| {
-				let left = &roc_curve[i];
-				let right = &roc_curve[i + 1];
-				let y_left = left.true_positive_rate;
-				let y_right = right.true_positive_rate;
-				let y_average = (y_left + y_right) / 2.0;
+		// compute the riemann sum using the trapezoidal rule
+		roc_curve
+			.iter()
+			.tuple_windows()
+			.map(|(left, right)| {
+				let y_avg = (left.true_positive_rate + right.true_positive_rate) / 2.0;
 				let dx = right.false_positive_rate - left.false_positive_rate;
-				y_average * dx
+				y_avg * dx
 			})
 			.sum()
 	}
@@ -89,8 +97,8 @@ struct ROCCurvePoint {
 
 #[derive(Debug)]
 struct TpsFpsPoint {
-	/// The classification threshold.
-	threshold: f32,
+	/// The prediction probability.
+	probability: f32,
 	/// The true positives for this threshold.
 	true_positives: usize,
 	/// The false positives for this threshold.
