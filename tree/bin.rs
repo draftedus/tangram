@@ -12,7 +12,6 @@ pub enum BinInfo {
 	Enum { n_options: u8 },
 }
 
-// TODO
 /*
 Returns the number of valid bins. The total number of bins is the number of valid bins + 1 bin reserved for missing values.
 ## Number Bins
@@ -45,6 +44,7 @@ pub struct ComputeBinInfoOptions {
 	pub max_number_column_examples_for_bin_info: usize,
 }
 
+/// Figure out how to bin features. Enum columns have one bin per variant. Numeric columns have bins whose endpoints are computed using `max_valid_bins` quantiles such that each bin contains approximately the same number of training examples.
 pub fn compute_bin_info(features: &DataFrameView, options: &ComputeBinInfoOptions) -> Vec<BinInfo> {
 	features
 		.columns
@@ -104,8 +104,7 @@ fn compute_bin_info_for_number_column(
 	BinInfo::Number { thresholds }
 }
 
-/// Computes the bin thresholds given a histogram of numeric values.
-/// Instead of storing and sorting all values as an array, we collect values into a histogram which reduces the memory needed to compute thresholds for columns with many duplicate values.
+/// Computes the bin thresholds given a histogram of numeric values. Instead of storing and sorting all values as an array, we collect values into a histogram which reduces the memory needed to compute thresholds for columns with many duplicate values.
 fn compute_bin_thresholds_for_histogram(
 	histogram: BTreeMap<Finite<f32>, usize>,
 	histogram_values_count: usize,

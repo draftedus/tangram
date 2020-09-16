@@ -38,7 +38,7 @@ pub fn train(
 	options: TrainOptions,
 	update_progress: &mut dyn FnMut(Progress),
 ) -> Model {
-	// determine how to bin each column
+	// determine how to bin each feature
 	let bin_options = ComputeBinInfoOptions {
 		max_valid_bins: options.max_non_missing_bins,
 		max_number_column_examples_for_bin_info: options.subsample_for_binning,
