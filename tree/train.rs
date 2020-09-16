@@ -38,14 +38,14 @@ pub fn train(
 	options: TrainOptions,
 	update_progress: &mut dyn FnMut(Progress),
 ) -> Model {
-	// determine how to bin each feature
+	// Determine how to bin each feature.
 	let bin_options = ComputeBinInfoOptions {
 		max_valid_bins: options.max_non_missing_bins,
 		max_number_column_examples_for_bin_info: options.subsample_for_binning,
 	};
 	let bin_info = compute_bin_info(&features, &bin_options);
 
-	// compute the binned values
+	// Use the bin instructions from the previous step to compute the binned values.
 	let n_bins = options.max_non_missing_bins as usize + 1;
 	let progress_counter = ProgressCounter::new(features.nrows().to_u64().unwrap());
 	update_progress(super::Progress::Initializing(progress_counter.clone()));
@@ -53,7 +53,7 @@ pub fn train(
 		progress_counter.inc(1)
 	});
 
-	// if early stopping is enabled then split the features and labels into train and early stopping sets.
+	// If early stopping is enabled, split the features and labels into train and early stopping sets.
 	let early_stopping_enabled = options.early_stopping_options.is_some();
 	let (
 		features_train,
