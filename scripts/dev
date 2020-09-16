@@ -1,1 +1,1 @@
-watchexec --exts rs --restart -- cargo run -- app --model data/heart-disease.tangram
+watchexec --exts rs --restart -- cargo run -- app
