@@ -305,8 +305,10 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
 
+	// reduces noise in sorting categorical features for categories with few examples
+	let discrete_smoothing_factor = 10.0;
 	let categorical_bin_score =
-		|bin: &[f64]| bin[0] / (bin[1] + options.discrete_smoothing_factor.to_f64().unwrap());
+		|bin: &[f64]| bin[0] / (bin[1] + discrete_smoothing_factor.to_f64().unwrap());
 	let mut sorted_bin_stats: Vec<(usize, &[f64])> = bin_stats_for_feature
 		[0..bin_info.n_valid_bins() as usize * 2]
 		.chunks(2)

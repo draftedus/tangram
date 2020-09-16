@@ -59,8 +59,6 @@ pub struct TrainOptions {
 	pub discrete_l2_regularization: f32,
 	/// The minumum number of training examples that pass through this node for it to be considered for splitting.
 	pub discrete_min_examples_per_branch: usize,
-	/// TODO I don't know what this is.
-	pub discrete_smoothing_factor: f32,
 	/// Specify options for early stopping. If the value is `Some`, early stopping will be enabled. If it is `None`, early stopping will be disabled.
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 	/// L2 regularization helps avoid overfitting.
@@ -111,7 +109,6 @@ impl Default for TrainOptions {
 			min_examples_leaf: 20,
 			min_sum_hessians_in_leaf: 1e-3,
 			min_gain_to_split: 0.0,
-			discrete_smoothing_factor: 10.0,
 			discrete_l2_regularization: 10.0,
 			discrete_min_examples_per_branch: 100,
 		}
