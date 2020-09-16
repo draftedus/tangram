@@ -45,7 +45,7 @@ This repository is both a Cargo workspace and a Yarn workspace. Almost every fol
 
 - [`linear`](linear): The `linear` folder contains the `tangram_linear` crate that implements linear machine learning models.
 
-- [`tree`](tree): The `tree` folder contains the `tangram_tree` crate that implements tree machin learning model.
+- [`tree`](tree): The `tree` folder contains the `tangram_tree` crate that implements tree machine learning models.
 
 - [`app`](app): The `app` folder contains the `tangram_app` crate that implementats the reporting and monitoring web app. [Learn more](app/README.md).
 
