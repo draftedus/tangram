@@ -1,4 +1,5 @@
 use super::StreamingMetric;
+use itertools::Itertools;
 use ndarray::prelude::*;
 use ndarray::s;
 use num_traits::ToPrimitive;
@@ -171,11 +172,11 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 	}
 }
 
-/// This function computes the AUC ROC using a riemann sum given a confusion matrix with a predefined number of thresholds.
+/// This function computes the area under the receiver operating characteristic curve using a riemann sum given a confusion matrix with a predefined number of thresholds.
 fn auc_roc(confusion_matrix: ArrayView3<u64>) -> f32 {
 	let class_index = 1;
 	let n_thresholds = confusion_matrix.shape()[0];
-	let roc_curve = (0..n_thresholds)
+	let mut roc_curve = (0..n_thresholds)
 		.map(|threshold_index| {
 			let slice = s![threshold_index, .., ..];
 			let confusion_matrix = confusion_matrix.slice(slice);
@@ -192,15 +193,14 @@ fn auc_roc(confusion_matrix: ArrayView3<u64>) -> f32 {
 			(false_positive_rate, true_positive_rate)
 		})
 		.collect::<Vec<(f32, f32)>>();
-	(0..roc_curve.len() - 1)
-		.map(|i| {
-			let left = &roc_curve[i + 1];
-			let right = &roc_curve[i];
-			let y_left = left.1;
-			let y_right = right.1;
-			let y_average = (y_left + y_right) / 2.0;
+	roc_curve.reverse();
+	roc_curve
+		.iter()
+		.tuple_windows()
+		.map(|(left, right)| {
+			let y_avg = (left.1 + right.1) / 2.0;
 			let dx = right.0 - left.0;
-			y_average * dx
+			y_avg * dx
 		})
 		.sum()
 }

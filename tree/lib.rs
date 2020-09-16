@@ -33,6 +33,8 @@ The type of model you are going to train depends on the type of the column you w
 Under the hood, tangram trees are Gradient Boosted Decision Trees.
 */
 
+#![allow(clippy::tabs_in_doc_comments)]
+
 mod bin;
 mod bin_stats;
 mod binary_classifier;

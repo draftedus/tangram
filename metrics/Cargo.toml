@@ -10,5 +10,6 @@ path = "lib.rs"
 insta = "0.16"
 
 [dependencies]
+itertools = "0.9"
 ndarray = "0.13"
 num-traits = "0.2"

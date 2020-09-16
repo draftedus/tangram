@@ -7,6 +7,7 @@ use itertools::izip;
 use ndarray::prelude::*;
 
 /// This static control how far ahead in the `examples_index` the `compute_bin_stats_*` functions should prefetch binned_features to be used in subsequent iterations.
+#[cfg(target_arch = "x86_64")]
 static PREFETCH_OFFSET: usize = 64;
 
 /// This static control how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
@@ -222,7 +223,7 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
 	let len = examples_index.len();
 	for i in 0..len / unroll {
 		for i in i * unroll..i * unroll + unroll {
-			#[cfg(arch = "x86_64")]
+			#[cfg(target_arch = "x86_64")]
 			{
 				let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
 				let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
@@ -257,7 +258,7 @@ unsafe fn compute_bin_stats_for_feature_not_root(
 	let len = examples_index.len();
 	for i in 0..len / unroll {
 		for i in i * unroll..i * unroll + unroll {
-			#[cfg(arch = "x86_64")]
+			#[cfg(target_arch = "x86_64")]
 			{
 				let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
 				let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
