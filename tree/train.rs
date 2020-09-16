@@ -14,7 +14,7 @@ use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_progress::ProgressCounter;
 
-/// An enum describing the different task types.
+/// These are the different task types. The Regression task is for predicting continuous numeric values. The Binary Classification task is for predicting enum values with two variants. The Multiclass Classification task is for predicting enum values with greater than two variants.
 #[derive(Debug)]
 pub enum Task {
 	Regression,
