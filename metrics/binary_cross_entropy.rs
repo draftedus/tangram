@@ -2,7 +2,7 @@ use super::mean::Mean;
 use super::StreamingMetric;
 use num_traits::clamp;
 
-/// BinaryCrossEntropy is the loss function used for binary classification. [Learn more](https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_loss_function_and_logistic_regression).
+/// BinaryCrossEntropy is the loss function used in binary classification. [Learn more](https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_loss_function_and_logistic_regression).
 #[derive(Debug, Default)]
 pub struct BinaryCrossEntropy(Mean);
 
@@ -23,8 +23,7 @@ impl StreamingMetric<'_> for BinaryCrossEntropy {
 			2 => 1.0,
 			_ => unreachable!(),
 		};
-		// Binary cross entropy is undefined when the probability = 0 or probability = 1.
-		// We clamp the probability to be between (std::f32::EPSILON, 1.0-std::f32::EPSILON).
+		// Binary cross entropy is undefined when the probability = 0 or probability = 1, so we clamp the probability to be between (std::f32::EPSILON, 1.0-std::f32::EPSILON).
 		let probability_clamped = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
 		let binary_cross_entropy = -1.0 * label * probability_clamped.ln()
 			+ -1.0 * (1.0 - label) * (1.0 - probability_clamped).ln();

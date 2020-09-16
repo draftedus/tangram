@@ -11,25 +11,37 @@ use tangram_finite::Finite;
 use tangram_metrics as metrics;
 use tangram_progress::ProgressCounter;
 
-const TOP_TOKENS_COUNT: usize = 20000;
-const MIN_DOCUMENT_FREQUENCY: u64 = 2;
-
 /// This struct contains settings used to compute stats.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StatsSettings {
-	/// The maximum number of tokens to store in the histogram.
+	/// This is the maximum number of tokens to store in the histogram.
 	pub text_histogram_max_size: usize,
-	/// The maximum number of unique numeric values to store in the histogram.
+	/// This is the maximum number of unique numeric values to store in the histogram.
 	pub number_histogram_max_size: usize,
+	/// This is the maximum number of tokens to track for text columns.
+	pub top_tokens_count: usize,
+	/// This is the minimum number of rows with a token for it to be considered for tracking.
+	pub min_document_frequency: usize,
 }
 
-/// This struct is the output from computing stats. It contains stats for the overall dataset and also stats for just the train and test portions.
+impl Default for StatsSettings {
+	fn default() -> Self {
+		Self {
+			text_histogram_max_size: 100,
+			number_histogram_max_size: 100,
+			top_tokens_count: 20_000,
+			min_document_frequency: 2,
+		}
+	}
+}
+
+/// This struct is the output from `compute_stats`. It contains stats for the overall dataset and also stats for just the train and test portions.
 pub struct ComputeStatsOutput {
-	/// The overall column stats contain stats for the whole dataset.
+	/// This reports column stats for the whole dataset.
 	pub overall_column_stats: Vec<ColumnStats>,
-	/// The train column stats contain stats for the train portion of the dataset.
+	/// This reports stats for the train portion of the dataset.
 	pub train_column_stats: Vec<ColumnStats>,
-	/// The test column stats contain stats for the test portion of the dataset.
+	/// This reports stats for the test portion of the dataset.
 	pub test_column_stats: Vec<ColumnStats>,
 }
 
@@ -364,7 +376,7 @@ impl std::cmp::PartialEq for TokenEntry {
 fn compute_column_stats_text(
 	column_name: &str,
 	dataset_stats: &TextDatasetStats,
-	_settings: &StatsSettings,
+	settings: &StatsSettings,
 ) -> stats::ColumnStats {
 	let mut top_tokens = std::collections::BinaryHeap::new();
 	for (token, count) in dataset_stats.unigram_histogram.iter() {
@@ -375,12 +387,12 @@ fn compute_column_stats_text(
 		let entry = TokenEntry(token.clone(), count.to_u64().unwrap());
 		top_tokens.push(entry);
 	}
-	let top_tokens = (0..TOP_TOKENS_COUNT)
+	let top_tokens = (0..settings.top_tokens_count)
 		.map(|_| top_tokens.pop())
 		.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
 		.filter_map(|(token, count)| {
 			let document_frequency = dataset_stats.per_example_histogram.get(&token).unwrap();
-			if *document_frequency >= MIN_DOCUMENT_FREQUENCY.to_usize().unwrap() {
+			if *document_frequency >= settings.min_document_frequency.to_usize().unwrap() {
 				// idf = log ((n + 1) / (1 + document_frequency)) + 1
 				let n_examples = dataset_stats.count;
 				let idf = ((1.0 + n_examples.to_f32().unwrap())

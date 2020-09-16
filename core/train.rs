@@ -53,8 +53,7 @@ pub fn train(
 
 	// compute stats
 	let stats_settings = stats::StatsSettings {
-		number_histogram_max_size: 100,
-		text_histogram_max_size: 100,
+		..Default::default()
 	};
 	let stats::ComputeStatsOutput {
 		mut overall_column_stats,
@@ -463,6 +462,7 @@ fn load_dataframe(
 		FromCsvOptions {
 			column_types,
 			infer_options: Default::default(),
+			..Default::default()
 		},
 		|byte| progress_counter.set(byte),
 	)?;

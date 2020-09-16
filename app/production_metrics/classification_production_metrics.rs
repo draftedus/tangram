@@ -189,10 +189,10 @@ fn test_binary() {
 	let metrics = metrics.finalize();
 
 	insta::assert_debug_snapshot!(metrics, @r###"
- NonZero(
-     NonZeroClassificationProductionTaskMetrics {
+ Some(
+     ClassificationProductionPredictionMetricsOutput {
          class_metrics: [
-             ProductionClassMetrics {
+             ClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Cat",
                  true_positives: 5,
                  false_positives: 2,
@@ -203,7 +203,7 @@ fn test_binary() {
                  recall: 0.625,
                  f1_score: 0.6666667,
              },
-             ProductionClassMetrics {
+             ClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Dog",
                  true_positives: 3,
                  false_positives: 3,
@@ -258,10 +258,10 @@ fn test_multiclass() {
 	let metrics = metrics.finalize();
 
 	insta::assert_debug_snapshot!(metrics, @r###"
- NonZero(
-     NonZeroClassificationProductionTaskMetrics {
+ Some(
+     ClassificationProductionPredictionMetricsOutput {
          class_metrics: [
-             ProductionClassMetrics {
+             ClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Cat",
                  true_positives: 5,
                  false_positives: 2,
@@ -272,7 +272,7 @@ fn test_multiclass() {
                  recall: 0.625,
                  f1_score: 0.6666667,
              },
-             ProductionClassMetrics {
+             ClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Dog",
                  true_positives: 3,
                  false_positives: 5,
@@ -283,7 +283,7 @@ fn test_multiclass() {
                  recall: 0.5,
                  f1_score: 0.42857143,
              },
-             ProductionClassMetrics {
+             ClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Rabbit",
                  true_positives: 11,
                  false_positives: 1,

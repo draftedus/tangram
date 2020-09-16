@@ -5,11 +5,21 @@ use std::{
 	path::Path,
 };
 
-// TODO add option to specify invalid values.
-#[derive(Default, Clone)]
-pub struct FromCsvOptions {
+#[derive(Clone)]
+pub struct FromCsvOptions<'a> {
 	pub column_types: Option<BTreeMap<String, ColumnType>>,
 	pub infer_options: InferOptions,
+	pub invalid_values: &'a [&'a str],
+}
+
+impl<'a> Default for FromCsvOptions<'a> {
+	fn default() -> Self {
+		Self {
+			column_types: None,
+			infer_options: InferOptions::default(),
+			invalid_values: DEFAULT_INVALID_VALUES,
+		}
+	}
 }
 
 #[derive(Clone)]
@@ -286,6 +296,7 @@ fn test_infer() {
 			infer_options: InferOptions {
 				enum_max_unique_values: 1,
 			},
+			..Default::default()
 		},
 		Box::new(|_| {}),
 	)
@@ -349,6 +360,7 @@ fn test_column_types() {
 			infer_options: InferOptions {
 				enum_max_unique_values: 2,
 			},
+			..Default::default()
 		},
 		Box::new(|_| {}),
 	)
