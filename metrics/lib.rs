@@ -54,14 +54,16 @@ After being initialized, a value of type `T` implementing the `StreamingMetric` 
 Here is a basic example implementation of a `Min` metric, which takes `f32`s and produces an `f32` that is the minimum of all the inputs.
 
 ```
+use tangram_metrics::StreamingMetric;
+
 struct Min(f32);
 
-impl StreamingMetric for Min {
-	type Input = f32;x
+impl StreamingMetric<'_> for Min {
+	type Input = f32;
 	type Output = f32;
 	fn update(&mut self, input: Self::Input) {
 		self.0 = self.0.min(input)
-	};
+	}
 	fn merge(&mut self, other: Self) { self.0 = self.0.min(other.0) }
 	fn finalize(self) -> Self::Output { self.0 }
 }

@@ -8,7 +8,7 @@ Through extensive optimization, `tangram_tree` is the fastest such implementatio
 Here's how to use `tangram_tree` to train a `Regressor`.
 
 ```
-let mut features = tangram_dataframe::DataFrame::from_path("boston.csv", options, |_| {}).unwrap();
+let mut features = tangram_dataframe::DataFrame::from_path("boston.csv", Default::default(), |_| {}).unwrap();
 let labels = features.columns.remove(13);
 let model = tangram_tree::Regressor::train(features, labels, Default::default(), &mut |_| {});
 let features =
@@ -197,10 +197,10 @@ pub struct BranchSplitDiscrete {
 /// # Example
 /// Consider an enum feature with three variants: `red`, `green`, and `blue`. We always reserve bin 0 for features with missing values.
 /// ```
-/// BinDirections {
-/// 	n: 4,
-/// 	bytes: [2, ..]
-/// }
+/// // BinDirections {
+/// // 	n: 4,
+/// // 	bytes: [2, ..]
+/// // }
 /// ```
 /// We only need one byte to represent this feature since there are only 4 bins: 3 enum variants + 1 for the missing bin.
 /// The first byte, represented as bits is `00000010`.

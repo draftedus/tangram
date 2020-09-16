@@ -8,25 +8,29 @@ use std::sync::{
 /**
 A `ProgressCounter` is used to efficiently track the progress of a task occurring across multiple threads.
 
-Imagine you have the following code to ship one million orders in parallel:
+Imagine you have the following code to ship order in parallel:
 
-```
-orders.into_par_iter().for_each(|i| ship_order(i));
+```ignore
+orders.into_par_iter().for_each(|order| { order.ship() });
 ```
 
-You want to track the progress of this loop. You can use `Arc<Mutex<T>>` like so:
+Now you want to track the progress of this loop. You can use `Arc<Mutex<T>>` like so:
 
-```
+```ignore
+use std::sync::{Arc, Mutex};
+
 let progress_counter = Arc::new(Mutex::new(0));
-orders.into_par_iter().for_each(|i| {
-	ship_order(i);
+orders.into_par_iter().for_each(|order| {
+	order.ship();
 	*progress_counter.lock().unwrap() += 1;
 });
 ```
 
 However, if `ship_order` is sufficiently fast, a large portion of each thread's time will be spent waiting on the mutex. A better choice in this case is to use [atomics](https://doc.rust-lang.org/stable/std/sync/atomic/index.html). `ProgressCounter` is a convenient wrapper around atomics for use in tracking progress. This example will now run much faster:
 
-```
+```ignore
+use tangram_progress::ProgressCounter;
+
 let progress_counter = ProgressCounter::new(orders.len() as u64);
 orders.into_par_iter().for_each(|i| {
 	ship_order(i);

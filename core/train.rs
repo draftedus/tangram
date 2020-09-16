@@ -60,7 +60,6 @@ pub fn train(
 		mut test_column_stats,
 		mut train_column_stats,
 	} = stats::compute_stats(
-		&column_names,
 		&dataframe_train,
 		&dataframe_test,
 		&stats_settings,
