@@ -759,7 +759,6 @@ fn train_tree_regressor(
 		min_examples_leaf: 20,
 		min_sum_hessians_in_leaf: 1e-3,
 		min_gain_to_split: 0.0,
-		discrete_smoothing_factor: 10.0,
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
 	};
@@ -849,7 +848,6 @@ fn train_tree_binary_classifier(
 		compute_loss: true,
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
-		discrete_smoothing_factor: 10.0,
 		early_stopping_options: None,
 		l2_regularization: 0.0,
 		learning_rate: options.learning_rate,
@@ -961,7 +959,6 @@ fn train_tree_multiclass_classifier(
 		min_examples_leaf: options.min_examples_per_leaf.to_usize().unwrap(),
 		min_sum_hessians_in_leaf: 1e-3,
 		min_gain_to_split: 0.0,
-		discrete_smoothing_factor: 10.0,
 		discrete_l2_regularization: 10.0,
 		discrete_min_examples_per_branch: 100,
 	};
