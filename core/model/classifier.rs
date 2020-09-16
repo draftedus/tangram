@@ -64,7 +64,6 @@ pub struct LinearBinaryClassifier {
 	pub classes: Vec<String>,
 	pub losses: Vec<f32>,
 	pub class_metrics: Vec<BinaryClassifierClassMetrics>,
-	pub auc_roc: f32,
 	pub means: Vec<f32>,
 }
 
@@ -91,7 +90,6 @@ pub struct TreeBinaryClassifier {
 	pub losses: Vec<f32>,
 	pub feature_importances: Vec<f32>,
 	pub class_metrics: Vec<BinaryClassifierClassMetrics>,
-	pub auc_roc: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -110,6 +108,7 @@ pub struct TreeMulticlassClassifier {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BinaryClassifierClassMetrics {
 	pub thresholds: Vec<ThresholdMetrics>,
+	pub auc_roc: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

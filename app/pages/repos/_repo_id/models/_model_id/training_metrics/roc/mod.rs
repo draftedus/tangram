@@ -35,11 +35,11 @@ pub async fn get(
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
-	auc_roc: f32,
 	roc_curve_data: Vec<Vec<ROCCurveData>>,
 	classes: Vec<String>,
 	model_layout_info: ModelLayoutInfo,
 	class: String,
+	auc_roc: Vec<f32>,
 }
 
 #[derive(serde::Serialize)]
@@ -72,12 +72,12 @@ async fn props(
 	let model = get_model(&mut db, model_id).await?;
 	match model {
 		tangram_core::model::Model::Classifier(model) => {
-			let (class_metrics, auc_roc) = match &model.model {
+			let class_metrics = match &model.model {
 				tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
-					(&inner_model.class_metrics, inner_model.auc_roc)
+					&inner_model.class_metrics
 				}
 				tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
-					(&inner_model.class_metrics, inner_model.auc_roc)
+					&inner_model.class_metrics
 				}
 				_ => return Err(Error::BadRequest.into()),
 			};
@@ -94,9 +94,11 @@ async fn props(
 						.collect()
 				})
 				.collect();
-
+			let auc_roc = class_metrics
+				.iter()
+				.map(|class_metrics| class_metrics.auc_roc)
+				.collect();
 			let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-
 			db.commit().await?;
 
 			let classes = model.classes().to_owned();
@@ -111,8 +113,8 @@ async fn props(
 				id: model_id.to_string(),
 				classes,
 				class,
-				auc_roc,
 				roc_curve_data,
+				auc_roc,
 				model_layout_info,
 			})
 		}

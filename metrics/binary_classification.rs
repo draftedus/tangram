@@ -21,19 +21,19 @@ pub struct BinaryClassificationMetricsInput<'a> {
 	pub labels: ArrayView1<'a, usize>,
 }
 
-/// BinaryClassificationMetrics contains common metrics used to evaluate binary classifiers at various classification thresholds.
+/// BinaryClassificationMetrics contains common metrics used to evaluate binary classifiers.
 #[derive(Debug)]
 pub struct BinaryClassificationMetricsOutput {
-	/// Class metrics for each class for each classification threshold.
+	/// This contains metrics specific to each class.
 	pub class_metrics: Vec<BinaryClassificationClassMetricsOutput>,
-	/// Area under the receiver operating characteristic curve. Computes the integral using a fixed number of thresholds equal to `n_thresholds`, passed to[BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
-	pub auc_roc: f32,
 }
 
-/// BinaryClassificationClassMetricsOutput contains class specific metrics for each threshold.
+/// BinaryClassificationClassMetricsOutput contains class specific metrics including metrics at each classification threshold.
 #[derive(Debug)]
 pub struct BinaryClassificationClassMetricsOutput {
 	pub thresholds: Vec<BinaryClassificationThresholdMetricsOutput>,
+	/// The area under the receiver operating characteristic curve is computed using a fixed number of thresholds equal to `n_thresholds` which is passed to[BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
+	pub auc_roc: f32,
 }
 
 /// The output from [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
@@ -92,11 +92,12 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 		let n_examples = value.labels.len();
 		for (threshold_index, &threshold) in self.thresholds.iter().enumerate() {
 			for example_index in 0..n_examples {
-				let predicted_label_id = if value.probabilities[(example_index, 1)] > threshold {
+				let predicted_label_id = if value.probabilities[(example_index, 1)] >= threshold {
 					1
 				} else {
 					0
 				};
+				// labels are 1-indexed
 				let actual_label_id = if value.labels[example_index] == 2 {
 					1
 				} else {
@@ -113,103 +114,126 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 	}
 
 	fn finalize(self) -> BinaryClassificationMetricsOutput {
-		let class_metrics = [0usize, 1]
-			.iter()
-			.map(|&class_index| {
-				let thresholds: Vec<_> = self
-					.thresholds
-					.iter()
-					.enumerate()
-					.map(|(threshold_index, &threshold)| {
-						let slice = s![threshold_index, .., ..];
-						let confusion_matrix = self.confusion_matrices.slice(slice);
-						let n_examples = confusion_matrix.sum();
-						let true_positives = confusion_matrix[(class_index, class_index)];
-						let false_positives =
-							confusion_matrix.row(class_index).sum() - true_positives;
-						let false_negatives =
-							confusion_matrix.column(class_index).sum() - true_positives;
-						let true_negatives =
-							n_examples - false_positives - false_negatives - true_positives;
-						let accuracy = (true_positives + true_negatives).to_f32().unwrap()
-							/ n_examples.to_f32().unwrap();
-						let precision = true_positives.to_f32().unwrap()
-							/ (true_positives + false_positives).to_f32().unwrap();
-						let recall = true_positives.to_f32().unwrap()
-							/ (true_positives + false_negatives).to_f32().unwrap();
-						let f1_score = 2.0 * (precision * recall) / (precision + recall);
-						// tpr = tp / p = tp / (tp + fn)
-						let true_positive_rate = (true_positives.to_f32().unwrap())
-							/ (true_positives.to_f32().unwrap()
-								+ false_negatives.to_f32().unwrap());
-						// fpr = fp / n = fp / (fp + tn)
-						let false_positive_rate = false_positives.to_f32().unwrap()
-							/ (true_negatives.to_f32().unwrap()
-								+ false_positives.to_f32().unwrap());
-						BinaryClassificationThresholdMetricsOutput {
-							threshold,
-							false_negatives,
-							false_positives,
-							true_negatives,
-							true_positives,
-							accuracy,
-							precision,
-							recall,
-							f1_score,
-							false_positive_rate,
-							true_positive_rate,
-						}
-					})
-					.collect();
-				BinaryClassificationClassMetricsOutput { thresholds }
-			})
-			.collect();
-		let auc_roc = auc_roc(self.confusion_matrices.view());
-		BinaryClassificationMetricsOutput {
-			class_metrics,
-			auc_roc,
-		}
+		let negative_class_metrics = compute_class_metrics(
+			0,
+			self.thresholds.as_slice(),
+			self.confusion_matrices.view(),
+		);
+		let positive_class_metrics = compute_class_metrics(
+			1,
+			self.thresholds.as_slice(),
+			self.confusion_matrices.view(),
+		);
+		let class_metrics = vec![negative_class_metrics, positive_class_metrics];
+		BinaryClassificationMetricsOutput { class_metrics }
 	}
 }
 
-/// This function computes the area under the receiver operating characteristic curve using a riemann sum given a confusion matrix with a predefined number of thresholds.
-fn auc_roc(confusion_matrix: ArrayView3<u64>) -> f32 {
-	let class_index = 1;
-	let n_thresholds = confusion_matrix.shape()[0];
-	let mut roc_curve = (0..n_thresholds)
-		.map(|threshold_index| {
-			let slice = s![threshold_index, .., ..];
-			let confusion_matrix = confusion_matrix.slice(slice);
-			let n_examples: u64 = confusion_matrix.sum();
-			let true_positives: u64 = confusion_matrix[(class_index, class_index)];
-			let false_positives: u64 = confusion_matrix.row(class_index).sum() - true_positives;
-			let false_negatives: u64 = confusion_matrix.column(class_index).sum() - true_positives;
-			let true_negatives: u64 =
-				n_examples - false_negatives - false_positives - true_positives;
-			let false_positive_rate = false_positives.to_f32().unwrap()
-				/ (false_positives + true_negatives).to_f32().unwrap();
-			let true_positive_rate = true_positives.to_f32().unwrap()
-				/ (true_positives + false_negatives).to_f32().unwrap();
-			(false_positive_rate, true_positive_rate)
-		})
-		.collect::<Vec<(f32, f32)>>();
-	println!("{:?}", roc_curve);
-	roc_curve.reverse();
-	roc_curve
+/// Compute class metrics for each threshold.
+fn compute_class_metrics(
+	class_index: usize,
+	thresholds: &[f32],
+	confusion_matrices: ArrayView3<u64>,
+) -> BinaryClassificationClassMetricsOutput {
+	let thresholds: Vec<_> = thresholds
 		.iter()
-		.tuple_windows()
-		.map(|(left, right)| {
-			let y_avg = (left.1 + right.1) / 2.0;
-			let dx = right.0 - left.0;
-			y_avg * dx
+		.enumerate()
+		.map(|(threshold_index, &threshold)| {
+			let slice = s![threshold_index, .., ..];
+			let confusion_matrix = confusion_matrices.slice(slice);
+			/*
+			class 0:
+									actual
+									0		1
+			predicted	0	tp	fp
+								1	fn	tn
+
+			class 1:
+									actual
+									0		1
+			predicted	0	tn	fn
+								1	fp	tp
+			*/
+			let n_examples = confusion_matrix.sum();
+			// true positives for a given class are when the predicted == actual which for the negative (0th) class this is in the 0, 0 entry and for the 1st (positive) class, this is in the 1, 1 entry
+			let true_positives = confusion_matrix[(class_index, class_index)];
+			// false positives are computed by taking the total predicted positives and subtracting the true positives
+			let false_positives = confusion_matrix.row(class_index).sum() - true_positives;
+			// false negatives are computed by taking the total actual positives and subtracting the true positives
+			let false_negatives = confusion_matrix.column(class_index).sum() - true_positives;
+			// true negatives are computed by subtracting false_positives, false_negatives, and true_positives from the total number of examples
+			let true_negatives = n_examples - false_positives - false_negatives - true_positives;
+			// the fraction of the total predictions that are correct
+			let accuracy =
+				(true_positives + true_negatives).to_f32().unwrap() / n_examples.to_f32().unwrap();
+			// the fraction of the total predictive positive examples that are actually positive
+			let precision = true_positives.to_f32().unwrap()
+				/ (true_positives + false_positives).to_f32().unwrap();
+			// the fraction of the total positive examples that are correctly predicted as positive
+			let recall = true_positives.to_f32().unwrap()
+				/ (true_positives + false_negatives).to_f32().unwrap();
+			let f1_score = 2.0 * (precision * recall) / (precision + recall);
+			// true_positive_rate = true_positives / positives
+			let true_positive_rate = (true_positives.to_f32().unwrap())
+				/ (true_positives.to_f32().unwrap() + false_negatives.to_f32().unwrap());
+			// false_positive_rate = false_positives / negatives
+			let false_positive_rate = false_positives.to_f32().unwrap()
+				/ (true_negatives.to_f32().unwrap() + false_positives.to_f32().unwrap());
+			BinaryClassificationThresholdMetricsOutput {
+				threshold,
+				false_negatives,
+				false_positives,
+				true_negatives,
+				true_positives,
+				accuracy,
+				precision,
+				recall,
+				f1_score,
+				false_positive_rate,
+				true_positive_rate,
+			}
 		})
-		.sum()
+		.collect();
+
+	// compute the area under the receiver operating characteristic curve using a riemann sum
+	let auc_roc = if class_index == 0 {
+		// for the negative class, the thresholds are in the correct order
+		thresholds
+			.iter()
+			.tuple_windows()
+			.map(|(left, right)| {
+				// trapezoidal rule
+				let y_avg = (left.true_positive_rate + right.true_positive_rate) / 2.0;
+				let dx = right.false_positive_rate - left.false_positive_rate;
+				y_avg * dx
+			})
+			.sum::<f32>()
+	} else {
+		// for the positive class, the thresholds are in the reverse order
+		thresholds
+			.iter()
+			.rev()
+			.tuple_windows()
+			.map(|(left, right)| {
+				// trapezoidal rule
+				let y_avg = (left.true_positive_rate + right.true_positive_rate) / 2.0;
+				let dx = right.false_positive_rate - left.false_positive_rate;
+				y_avg * dx
+			})
+			.sum::<f32>()
+	};
+
+	BinaryClassificationClassMetricsOutput {
+		thresholds,
+		auc_roc,
+	}
 }
 
 #[test]
 fn test() {
 	let mut metrics = BinaryClassificationMetrics::new(4);
-	let labels = arr1(&[0, 0, 0, 0, 1, 1, 1, 1]);
+	// labels are 1-indexed
+	let labels = arr1(&[1, 1, 1, 1, 2, 2, 2, 2]);
 	let probabilities = arr2(&[
 		[0.6, 0.4],
 		[0.6, 0.4],
@@ -225,6 +249,7 @@ fn test() {
 		labels: labels.view(),
 	});
 	let metrics = metrics.finalize();
+	println!("{:?}", metrics);
 	insta::assert_debug_snapshot!(metrics, @r###"
  BinaryClassificationMetricsOutput {
      class_metrics: [
@@ -234,114 +259,115 @@ fn test() {
                      threshold: 0.0,
                      true_positives: 0,
                      false_positives: 0,
-                     true_negatives: 0,
-                     false_negatives: 8,
-                     accuracy: 0.0,
+                     true_negatives: 4,
+                     false_negatives: 4,
+                     accuracy: 0.5,
                      precision: NaN,
                      recall: 0.0,
                      f1_score: NaN,
                      true_positive_rate: 0.0,
-                     false_positive_rate: NaN,
+                     false_positive_rate: 0.0,
                  },
                  BinaryClassificationThresholdMetricsOutput {
                      threshold: 0.25,
                      true_positives: 0,
                      false_positives: 0,
-                     true_negatives: 0,
-                     false_negatives: 8,
-                     accuracy: 0.0,
+                     true_negatives: 4,
+                     false_negatives: 4,
+                     accuracy: 0.5,
                      precision: NaN,
                      recall: 0.0,
                      f1_score: NaN,
                      true_positive_rate: 0.0,
-                     false_positive_rate: NaN,
+                     false_positive_rate: 0.0,
                  },
                  BinaryClassificationThresholdMetricsOutput {
                      threshold: 0.5,
-                     true_positives: 4,
-                     false_positives: 0,
-                     true_negatives: 0,
-                     false_negatives: 4,
-                     accuracy: 0.5,
-                     precision: 1.0,
-                     recall: 0.5,
-                     f1_score: 0.6666667,
-                     true_positive_rate: 0.5,
-                     false_positive_rate: NaN,
+                     true_positives: 3,
+                     false_positives: 1,
+                     true_negatives: 3,
+                     false_negatives: 1,
+                     accuracy: 0.75,
+                     precision: 0.75,
+                     recall: 0.75,
+                     f1_score: 0.75,
+                     true_positive_rate: 0.75,
+                     false_positive_rate: 0.25,
                  },
                  BinaryClassificationThresholdMetricsOutput {
                      threshold: 0.75,
-                     true_positives: 8,
-                     false_positives: 0,
+                     true_positives: 4,
+                     false_positives: 4,
                      true_negatives: 0,
                      false_negatives: 0,
-                     accuracy: 1.0,
-                     precision: 1.0,
+                     accuracy: 0.5,
+                     precision: 0.5,
                      recall: 1.0,
-                     f1_score: 1.0,
+                     f1_score: 0.6666667,
                      true_positive_rate: 1.0,
-                     false_positive_rate: NaN,
+                     false_positive_rate: 1.0,
                  },
              ],
+             auc_roc: 0.75,
          },
          BinaryClassificationClassMetricsOutput {
              thresholds: [
                  BinaryClassificationThresholdMetricsOutput {
                      threshold: 0.0,
-                     true_positives: 0,
-                     false_positives: 8,
+                     true_positives: 4,
+                     false_positives: 4,
                      true_negatives: 0,
                      false_negatives: 0,
-                     accuracy: 0.0,
-                     precision: 0.0,
-                     recall: NaN,
-                     f1_score: NaN,
-                     true_positive_rate: NaN,
+                     accuracy: 0.5,
+                     precision: 0.5,
+                     recall: 1.0,
+                     f1_score: 0.6666667,
+                     true_positive_rate: 1.0,
                      false_positive_rate: 1.0,
                  },
                  BinaryClassificationThresholdMetricsOutput {
                      threshold: 0.25,
-                     true_positives: 0,
-                     false_positives: 8,
+                     true_positives: 4,
+                     false_positives: 4,
                      true_negatives: 0,
                      false_negatives: 0,
-                     accuracy: 0.0,
-                     precision: 0.0,
-                     recall: NaN,
-                     f1_score: NaN,
-                     true_positive_rate: NaN,
+                     accuracy: 0.5,
+                     precision: 0.5,
+                     recall: 1.0,
+                     f1_score: 0.6666667,
+                     true_positive_rate: 1.0,
                      false_positive_rate: 1.0,
                  },
                  BinaryClassificationThresholdMetricsOutput {
                      threshold: 0.5,
-                     true_positives: 0,
-                     false_positives: 4,
-                     true_negatives: 4,
-                     false_negatives: 0,
-                     accuracy: 0.5,
-                     precision: 0.0,
-                     recall: NaN,
-                     f1_score: NaN,
-                     true_positive_rate: NaN,
-                     false_positive_rate: 0.5,
+                     true_positives: 3,
+                     false_positives: 1,
+                     true_negatives: 3,
+                     false_negatives: 1,
+                     accuracy: 0.75,
+                     precision: 0.75,
+                     recall: 0.75,
+                     f1_score: 0.75,
+                     true_positive_rate: 0.75,
+                     false_positive_rate: 0.25,
                  },
                  BinaryClassificationThresholdMetricsOutput {
                      threshold: 0.75,
                      true_positives: 0,
                      false_positives: 0,
-                     true_negatives: 8,
-                     false_negatives: 0,
-                     accuracy: 1.0,
+                     true_negatives: 4,
+                     false_negatives: 4,
+                     accuracy: 0.5,
                      precision: NaN,
-                     recall: NaN,
+                     recall: 0.0,
                      f1_score: NaN,
-                     true_positive_rate: NaN,
+                     true_positive_rate: 0.0,
                      false_positive_rate: 0.0,
                  },
              ],
+             auc_roc: 0.75,
          },
      ],
-     auc_roc: NaN,
  }
  "###);
 }

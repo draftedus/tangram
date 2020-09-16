@@ -12,7 +12,7 @@ import {
 import { h } from 'preact'
 
 export type Props = {
-	aucRoc: number
+	aucRoc: number[]
 	class: string
 	classes: string[]
 	modelId: string
@@ -35,6 +35,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 			y: truePositiveRate,
 		}),
 	)
+	let aucRoc = props.aucRoc[selectedClassIndex]
 	let data = [
 		{
 			color: ui.colors.blue,
@@ -76,7 +77,7 @@ export default function TrainingMetricsIndexPage(props: Props) {
 						<ui.NumberChart
 							key="auc"
 							title="AUC"
-							value={ui.formatNumber(props.aucRoc)}
+							value={ui.formatNumber(aucRoc)}
 						/>
 					</ui.Card>
 				</ui.S2>

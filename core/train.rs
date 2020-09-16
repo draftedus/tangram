@@ -220,7 +220,6 @@ pub fn train(
 				) => {
 					let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
 					ClassificationModel::LinearBinary(LinearBinaryClassifier {
-						auc_roc: binary_classifier_model_test_metrics.auc_roc,
 						class_metrics: binary_classifier_model_test_metrics.class_metrics,
 						feature_groups,
 						model,
@@ -235,7 +234,6 @@ pub fn train(
 				}) => {
 					let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
 					ClassificationModel::TreeBinary(TreeBinaryClassifier {
-						auc_roc: binary_classifier_model_test_metrics.auc_roc,
 						class_metrics: binary_classifier_model_test_metrics.class_metrics,
 						feature_groups,
 						model,
@@ -300,7 +298,6 @@ struct TreeBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: tangram_tree::BinaryClassifier,
 	pub class_metrics: Vec<metrics::BinaryClassificationClassMetricsOutput>,
-	pub auc_roc: f32,
 	pub options: grid::TreeModelTrainOptions,
 }
 
@@ -351,7 +348,6 @@ struct LinearBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: tangram_linear::BinaryClassifier,
 	pub class_metrics: Vec<metrics::BinaryClassificationClassMetricsOutput>,
-	pub auc_roc: f32,
 	pub options: grid::LinearModelTrainOptions,
 }
 
@@ -1216,12 +1212,13 @@ fn choose_best_model_classification(
 					.accuracy
 					.partial_cmp(&task_metrics_b.accuracy)
 					.unwrap(),
-				ClassificationComparisonMetric::Aucroc => model_metrics_a
-					.as_ref()
-					.unwrap()
-					.auc_roc
-					.partial_cmp(&model_metrics_b.as_ref().unwrap().auc_roc)
-					.unwrap(),
+				// compare the auc_roc for the positive class
+				ClassificationComparisonMetric::Aucroc => {
+					model_metrics_a.as_ref().unwrap().class_metrics[1]
+						.auc_roc
+						.partial_cmp(&model_metrics_b.as_ref().unwrap().class_metrics[1].auc_roc)
+						.unwrap()
+				}
 				ClassificationComparisonMetric::F1 => todo!(),
 			}
 		})
@@ -1594,7 +1591,6 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
 			options: self.options.into(),
 			class_metrics: self.class_metrics.into_iter().map(Into::into).collect(),
-			auc_roc: self.auc_roc,
 			means: self.model.means,
 			weights: self.model.weights.into_raw_vec(),
 			bias: self.model.bias,
@@ -1655,7 +1651,6 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 			class_metrics,
 			bias: self.model.bias,
 			losses,
-			auc_roc: self.auc_roc,
 			classes: self.model.classes,
 			feature_importances,
 			options,
@@ -1683,6 +1678,7 @@ impl Into<model::BinaryClassifierClassMetrics> for metrics::BinaryClassification
 	fn into(self) -> model::BinaryClassifierClassMetrics {
 		model::BinaryClassifierClassMetrics {
 			thresholds: self.thresholds.into_iter().map(Into::into).collect(),
+			auc_roc: self.auc_roc,
 		}
 	}
 }
