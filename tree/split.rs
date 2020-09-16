@@ -17,9 +17,7 @@ pub struct FindSplitOutput {
 	pub right_n_examples: usize,
 }
 
-/// Find the split with the highest gain across all features,
-/// if a valid one exists. A valid split will not exist if the split conditions
-/// are violated for all potential splits.
+/// Find the split with the highest gain across all features, if a valid one exists. A valid split will not exist if the split conditions are violated for all potential splits.
 pub fn find_split(
 	bin_stats: &BinStats,
 	sum_gradients: f64,
@@ -52,11 +50,7 @@ pub fn find_split(
 		.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 }
 
-/// Find the split with the highest gain across all features
-/// for both of the left and right child at the same time,
-/// if a valid one exists. A valid split will not exist if the split conditions
-/// are violated for all potential splits. By looping over the features once,
-/// we increase the cache efficiency.
+/// Find the split with the highest gain across all features for both of the left and right child at the same time, if a valid one exists. A valid split will not exist if the split conditions are violated for all potential splits. By looping over the features once, we increase the cache efficiency.
 #[allow(clippy::too_many_arguments)]
 pub fn find_split_both(
 	left_bin_stats: &BinStats,
@@ -152,8 +146,7 @@ pub fn find_split_both(
 	(left, right)
 }
 
-/// Find the best split for this feature by iterating over the bins in sorted order,
-/// adding bins to the left tree and removing them from the right.
+/// Find the best split for this feature by iterating over the bins in sorted order, adding bins to the left tree and removing them from the right.
 pub fn find_best_continuous_split_for_feature_left_to_right(
 	feature_index: usize,
 	bin_info: &BinInfo,
@@ -283,13 +276,13 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 	best_split_so_far
 }
 
-/// Find the best split for this discrete (categorical) feature.
-/// A discrete split is a partition of the categories into two subsets where one subset goes to the
-/// left subtree and one goes to the right.
-/// To find the subsets:
-///   1. Sort the bins by sum_gradients / (sum_hessians + categorical_smoothing_factor).
-///   2. Perform the same algorithm to find the best split as the continuous setting, but iterate
-///      bins in the sorted order defined in step 1.
+/** Find the best split for this discrete (categorical) feature. A discrete split is a partition of the categories into two subsets where one subset goes to the left subtree and one goes to the right.
+
+To find the subsets:
+1. Sort the bins by sum_gradients / (sum_hessians + categorical_smoothing_factor).
+2. Perform the same algorithm to find the best split as the continuous setting, but iterate bins in the sorted order defined in step 1.
+
+*/
 pub fn find_best_discrete_split_for_feature_left_to_right(
 	feature_index: usize,
 	bin_info: &BinInfo,

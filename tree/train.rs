@@ -214,11 +214,11 @@ pub fn train(
 				mut ordered_hessians,
 				bin_stats_pool,
 			)| {
-				// reset the examples_index to sorted order
+				// Reset the examples_index to sorted order.
 				for (index, value) in examples_index.iter_mut().enumerate() {
 					*value = index;
 				}
-				// train the tree
+				// Train the tree.
 				let (tree, leaf_values) = single::train(
 					features_train.view(),
 					gradients.as_slice().unwrap(),
@@ -232,7 +232,7 @@ pub fn train(
 					has_constant_hessians,
 					&options,
 				);
-				// update the predictions with the most recently trained tree
+				// Update the predictions with the most recently trained tree.
 				if round_index < options.max_rounds - 1 {
 					let predictions_cell = SuperUnsafe::new(predictions.as_slice_mut().unwrap());
 					leaf_values.iter().for_each(|(range, value)| {
@@ -286,22 +286,22 @@ pub fn train(
 			);
 			let should_stop = train_stop_monitor.update(value);
 			if should_stop {
-				// add the trees for this round to the list of trees.
+				// Add the trees for this round to the list of trees.
 				trees.extend(trees_for_round);
 				n_rounds_trained += 1;
 				break;
 			}
 		}
 
-		// add the trees for this round to the list of trees.
+		// Add the trees for this round to the list of trees.
 		trees.extend(trees_for_round);
 		n_rounds_trained += 1;
 	}
 
-	// compute feature importances
+	// Compute feature importances.
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
 
-	// assemble the model
+	// Assemble the model.
 	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
 	match task {
 		Task::Regression => Model::Regressor(Regressor {
@@ -365,7 +365,7 @@ fn train_early_stopping_split<'features, 'labels>(
 }
 
 #[derive(Clone)]
-pub struct EarlyStoppingMonitor {
+struct EarlyStoppingMonitor {
 	tolerance: f32,
 	max_rounds_no_improve: usize,
 	previous_stopping_metric: Option<f32>,
@@ -373,7 +373,7 @@ pub struct EarlyStoppingMonitor {
 }
 
 impl EarlyStoppingMonitor {
-	/// Create a train stop monitor
+	/// Create a train stop monitor,
 	pub fn new(tolerance: f32, max_rounds_no_improve: usize) -> Self {
 		EarlyStoppingMonitor {
 			tolerance,
@@ -383,7 +383,7 @@ impl EarlyStoppingMonitor {
 		}
 	}
 
-	/// Update with the next epoch's task metrics. Returns true if training should stop
+	/// Update with the next epoch's task metrics. Returns true if training should stop.
 	pub fn update(&mut self, value: f32) -> bool {
 		let stopping_metric = value;
 		let result = if let Some(previous_stopping_metric) = self.previous_stopping_metric {
@@ -404,7 +404,7 @@ impl EarlyStoppingMonitor {
 	}
 }
 
-/// Compute the metric
+/// Compute the metric. Currently, loss is the only supported early stopping metric.
 fn compute_early_stopping_metric(
 	task: &Task,
 	trees: &[single::TrainTree],

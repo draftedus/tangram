@@ -196,10 +196,13 @@ impl TrainNode {
 }
 
 impl Tree {
+	/// Make a prediction for a given example on a trained `Tree`.
 	pub fn predict(&self, row: &[tangram_dataframe::Value]) -> f32 {
+		// Start at the root node.
 		let mut node_index = 0;
 		loop {
 			match &self.nodes[node_index] {
+				// We are at a branch node with a continuous split.
 				Node::Branch(BranchNode {
 					left_child_index,
 					right_child_index,
@@ -212,10 +215,12 @@ impl Tree {
 						}),
 					..
 				}) => {
+					// only number features are split using continuous splits
 					let feature_value = match row[*feature_index] {
 						tangram_dataframe::Value::Number(value) => value,
 						_ => unreachable!(),
 					};
+					// If the feature value is NaN, use the invalid values direction stored at this node to determine whether to go left or right.
 					node_index = if feature_value.is_nan() {
 						match invalid_values_direction {
 							SplitDirection::Left => *left_child_index,
@@ -227,6 +232,7 @@ impl Tree {
 						*right_child_index
 					};
 				}
+				// We are at a branch node with a discrete split.
 				Node::Branch(BranchNode {
 					left_child_index,
 					right_child_index,
@@ -238,6 +244,7 @@ impl Tree {
 						}),
 					..
 				}) => {
+					// only enum features are split using discrete splits
 					let feature_value = match row[*feature_index] {
 						tangram_dataframe::Value::Enum(value) => value.to_u8().unwrap(),
 						_ => unreachable!(),
@@ -248,6 +255,7 @@ impl Tree {
 						*right_child_index
 					};
 				}
+				// We made it to a leaf node! The prediction is just the value at this leaf.
 				Node::Leaf(LeafNode { value, .. }) => return *value,
 			}
 		}
@@ -255,7 +263,9 @@ impl Tree {
 }
 
 impl TrainTree {
+	/// Make a prediction for a given example on a `TrainTree`. This function is used by early stopping.
 	pub fn predict(&self, features: ArrayView1<u8>) -> f32 {
+		// Start at the root node.
 		let mut node_index = 0;
 		loop {
 			match &self.nodes[node_index] {
@@ -265,6 +275,7 @@ impl TrainTree {
 					split,
 					..
 				}) => match split {
+					// We are at a branch node with a continuous split.
 					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
 						feature_index,
 						bin_index,
@@ -276,6 +287,7 @@ impl TrainTree {
 							right_child_index.unwrap()
 						};
 					}
+					// We are at a branch node with a discrete split.
 					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 						feature_index,
 						directions,
@@ -289,6 +301,7 @@ impl TrainTree {
 						};
 					}
 				},
+				// We made it to a leaf node! The prediction is just the value at this leaf.
 				TrainNode::Leaf(TrainLeafNode { value, .. }) => return *value,
 			}
 		}
@@ -363,9 +376,7 @@ pub fn train(
 		&options,
 	);
 
-	// if we were able to find a split for the root node,
-	// add it to the queue and proceed to the loop.
-	// Otherwise, return a tree with a single node.
+	// If we were able to find a split for the root node, add it to the queue and proceed to the loop. Otherwise, return a tree with a single node.
 	if let Some(find_split_output) = find_split_output {
 		queue.push(QueueItem {
 			depth: 0,
@@ -393,7 +404,7 @@ pub fn train(
 			examples_fraction: examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap(),
 		});
 		tree.nodes.push(node);
-		// return the bin stats to the pool
+		// Return the bin stats to the pool.
 		bin_stats_pool.items.push(root_bin_stats);
 		return (tree, leaf_values);
 	}
@@ -418,9 +429,7 @@ pub fn train(
 			}
 		}
 
-		// Determine the current number of leaf nodes if training were to stop now.
-		// If the max leaf nodes is reached, add the current node as a leaf and continue
-		// until all items are removed from the queue and added to the tree as leaves
+		// Determine the current number of leaf nodes if training were to stop now. If the max leaf nodes is reached, add the current node as a leaf and continue until all items are removed from the queue and added to the tree as leaves
 		let n_leaf_nodes = leaf_values.len() + queue.len() + 1;
 		let max_leaf_nodes_reached = n_leaf_nodes == options.max_leaf_nodes;
 		if max_leaf_nodes_reached {
@@ -437,10 +446,7 @@ pub fn train(
 			continue;
 		}
 
-		// Add the current node to the tree
-		// The missing values direction is the direction with more training examples
-		// TODO: this is the naiive implementation that does not take into account
-		// the split with the highest gain of missing values going left/right during training
+		// Add the current node to the tree. The missing values direction is the direction with more training examples. TODO: This is the naive implementation that does not compute whether sending missing values to the left subtree or right subtree results in a higher gain. Instead, we simply send missing values in the direction where the majority of training examples go.
 		let missing_values_direction = if queue_item.left_n_examples > queue_item.right_n_examples {
 			SplitDirection::Left
 		} else {
@@ -456,7 +462,7 @@ pub fn train(
 				/ n_examples.to_f32().unwrap(),
 		}));
 
-		// rearrange the examples index
+		// Rearrange the examples index.
 		let (left, right) = rearrange_examples_index(
 			binned_features,
 			&queue_item.split,
@@ -470,15 +476,12 @@ pub fn train(
 				.get_mut(queue_item.examples_index_range.clone())
 				.unwrap(),
 		);
-		// The left and right ranges are local to the node,
-		// so add the node's start to make them global.
+		// The left and right ranges are local to the node, so add the node's start to make them global.
 		let start = queue_item.examples_index_range.start;
 		let left_examples_index_range = start + left.start..start + left.end;
 		let right_examples_index_range = start + right.start..start + right.end;
 
-		// Determine if we should split left and/or right
-		// based on the number of examples in the node
-		// and the node's depth in the tree
+		// Determine if we should split left and/or right based on the number of examples in the node and the node's depth in the tree.
 		let max_depth_reached = queue_item.depth + 1 == options.max_depth;
 		let should_split_left =
 			!max_depth_reached && left_examples_index_range.len() >= options.min_examples_leaf * 2;
@@ -500,7 +503,7 @@ pub fn train(
 			});
 			leaf_values.push((left_examples_index_range.clone(), value));
 			tree.nodes.push(node);
-			// set the parent's child index to the new node's index
+			// Set the parent's child index to the new node's index.
 			let parent = tree
 				.nodes
 				.get_mut(node_index)
@@ -525,7 +528,7 @@ pub fn train(
 			});
 			leaf_values.push((right_examples_index_range.clone(), value));
 			tree.nodes.push(node);
-			// set the parent's child index to the new node's index
+			// Set the parent's child index to the new node's index.
 			let parent = tree
 				.nodes
 				.get_mut(node_index)
@@ -535,17 +538,14 @@ pub fn train(
 			parent.right_child_index = Some(right_child_index);
 		}
 
-		// If we should not split either left or right,
-		// then there is nothing left to do, so we can
-		// go to the next item on the queue.
+		// If we should not split either left or right, then there is nothing left to do, so we can go to the next item on the queue.
 		if !should_split_left && !should_split_right {
-			// return the bin stats to the pool
+			// Return the bin stats to the pool.
 			bin_stats_pool.items.push(queue_item.bin_stats);
 			continue;
 		}
 
-		// Next, we compute the bin stats for the two children.
-		// smaller_direction is the direction of the child with fewer examples.
+		// Next, we compute the bin stats for the two children. `smaller_direction` is the direction of the child with fewer examples.
 		let smaller_direction =
 			if left_examples_index_range.len() < right_examples_index_range.len() {
 				SplitDirection::Left
@@ -570,9 +570,7 @@ pub fn train(
 			smaller_child_examples_index,
 		);
 
-		// Compute the bin stats for the child with more examples
-		// by subtracting the bin stats of the child with fewer
-		// examples from the parent's bin stats.
+		// Compute the bin stats for the child with more examples by subtracting the bin stats of the child with fewer examples from the parent's bin stats.
 		let mut larger_child_bin_stats = queue_item.bin_stats;
 		compute_bin_stats_subtraction(&mut larger_child_bin_stats, &smaller_child_bin_stats);
 		let (left_bin_stats, right_bin_stats) = match smaller_direction {
@@ -581,7 +579,7 @@ pub fn train(
 		};
 
 		// If both left and right should split, find the splits for both at the same
-		// time. Allows for a slight speedup because of cache.
+		// time. Allows for a slight speedup because of cache. TODO: this speedup is probably not there.
 		let (left_find_split_output, right_find_split_output) =
 			if should_split_left && should_split_right {
 				// based on the node stats and bin stats, find a split, if any.
@@ -598,7 +596,7 @@ pub fn train(
 				);
 				(left_find_split_output, right_find_split_output)
 			} else if should_split_left {
-				// based on the node stats and bin stats, find a split, if any.
+				// Based on the node stats and bin stats, find a split, if any.
 				let find_split_output = find_split(
 					&left_bin_stats,
 					queue_item.left_sum_gradients,
@@ -608,7 +606,7 @@ pub fn train(
 				);
 				(find_split_output, None)
 			} else if should_split_right {
-				// based on the node stats and bin stats, find a split, if any.
+				// Based on the node stats and bin stats, find a split, if any.
 				let find_split_output = find_split(
 					&right_bin_stats,
 					queue_item.right_sum_gradients,
@@ -621,8 +619,7 @@ pub fn train(
 				(None, None)
 			};
 
-		// if we were able to find a split for the node,
-		// add it to the queue. Otherwise, add a leaf.
+		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
 		if should_split_left {
 			if let Some(find_split_output) = left_find_split_output {
 				queue.push(QueueItem {
@@ -652,7 +649,7 @@ pub fn train(
 						/ n_examples.to_f32().unwrap(),
 				});
 				tree.nodes.push(node);
-				// set the parent's left child index to the new node's index
+				// Set the parent's left child index to the new node's index.
 				let parent = tree
 					.nodes
 					.get_mut(node_index)
@@ -660,15 +657,14 @@ pub fn train(
 					.as_branch_mut()
 					.unwrap();
 				parent.left_child_index = Some(left_child_index);
-				// return the bin stats to the pool
+				// Return the bin stats to the pool.
 				bin_stats_pool.items.push(left_bin_stats);
 			}
 		} else {
 			bin_stats_pool.items.push(left_bin_stats);
 		}
 
-		// If we were able to find a split for the node,
-		// add it to the queue. Otherwise, add a leaf.
+		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
 		if should_split_right {
 			if let Some(find_split_output) = right_find_split_output {
 				queue.push(QueueItem {
@@ -698,7 +694,7 @@ pub fn train(
 						/ n_examples.to_f32().unwrap(),
 				});
 				tree.nodes.push(node);
-				// set the parent's left child index to the new node's index
+				// Set the parent's left child index to the new node's index.
 				let parent = tree
 					.nodes
 					.get_mut(node_index)
@@ -706,7 +702,7 @@ pub fn train(
 					.as_branch_mut()
 					.unwrap();
 				parent.right_child_index = Some(right_child_index);
-				// return the bin stats to the pool
+				// Return the bin stats to the pool.
 				bin_stats_pool.items.push(right_bin_stats);
 			}
 		} else {
