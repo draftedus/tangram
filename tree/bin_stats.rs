@@ -222,9 +222,12 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
 	let len = examples_index.len();
 	for i in 0..len / unroll {
 		for i in i * unroll..i * unroll + unroll {
-			let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
-			let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
-			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+			#[cfg(arch = "x86_64")]
+			{
+				let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
+				let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
+				core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+			}
 			let ordered_gradient = *ordered_gradients.get_unchecked(i);
 			let example_index = *examples_index.get_unchecked(i);
 			let bin_index = *binned_feature_values.get_unchecked(example_index) as usize;
@@ -254,9 +257,12 @@ unsafe fn compute_bin_stats_for_feature_not_root(
 	let len = examples_index.len();
 	for i in 0..len / unroll {
 		for i in i * unroll..i * unroll + unroll {
-			let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
-			let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
-			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+			#[cfg(arch = "x86_64")]
+			{
+				let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
+				let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
+				core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+			}
 			let ordered_gradient = *ordered_gradients.get_unchecked(i);
 			let ordered_hessian = *ordered_hessians.get_unchecked(i);
 			let example_index = *examples_index.get_unchecked(i);
@@ -280,8 +286,7 @@ unsafe fn compute_bin_stats_for_feature_not_root(
 // Subtracts the bin_stats for a sibling from the parent.
 // The subtraction method:
 // 1. Compute the bin_stats for the child node with less examples.
-// 2. Get the bin_stats for the child node with more examples by subtracting
-//    sibling_node_bin_stats from step 1 from the parent_bin_stats.
+// 2. Get the bin_stats for the child node with more examples by subtracting sibling_node_bin_stats from step 1 from the parent_bin_stats.
 pub fn compute_bin_stats_subtraction(
 	// (n_features, n_bins)
 	parent_bin_stats: &mut BinStats,

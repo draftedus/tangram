@@ -28,11 +28,11 @@ features = pd.get_dummies(features)
 
 # train the model
 model = HistGradientBoostingClassifier(
-  learning_rate=0.1,
-  max_depth=8,
-  max_iter=100,
-  max_leaf_nodes=255,
-  min_samples_leaf=100,
+	learning_rate=0.1,
+	max_depth=8,
+	max_iter=100,
+	max_leaf_nodes=255,
+	min_samples_leaf=100,
 )
 start = time.time()
 model.fit(features_train, labels_train)

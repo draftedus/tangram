@@ -7,9 +7,9 @@ typedef void tangram_model;
 // `tangram_model_load` will read a model from the buffer `model_data` with length `model_data_len`
 // and write a handle to it to the pointer `model`.
 int tangram_model_load(
-  const void* model_data,
-  size_t model_data_len,
-  tangram_model** model
+	const void* model_data,
+	size_t model_data_len,
+	tangram_model** model
 );
 
 // Use `tangram_model_predict` to make predictions with your model.
@@ -17,16 +17,16 @@ int tangram_model_load(
 // `options` should be a json object. See `predict.rs` for the schema.
 // `output` will be filled with a json array of objects, equal in length to `input`, where each object contains the prediction information. See `predict.rs` for the schema.
 int tangram_model_predict(
-  tangram_model* model,
-  const char* input,
-  const char* options,
-  char** output
+	tangram_model* model,
+	const char* input,
+	const char* options,
+	char** output
 );
 
 // Get the id of the model. This is used by the tangram language libraries to implement production logging.
 int tangram_model_id(
-  tangram_model* model,
-  char** output
+	tangram_model* model,
+	char** output
 );
 
 // When you are done with a string created by any function in libtangram, call `tangram_string_free` to free it.

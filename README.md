@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="tangram.svg" title="Tangram">
+	<img src="tangram.svg" title="Tangram">
 </p>
 
 [![GitHub Release](https://img.shields.io/github/release/tangram-hq/tangram.svg?style=flat-square)](https://github.com/tangram-hq/tangram/releases)
@@ -21,7 +21,7 @@ Tangram is an all-in-one machine learning toolkit for developers. Here's the TLD
 Watch the video below to learn more.
 
 <p align="center">
-  <img src="tangram.svg" title="Tangram">
+	<img src="tangram.svg" title="Tangram">
 </p>
 
 ## Getting Started

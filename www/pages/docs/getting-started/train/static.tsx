@@ -50,12 +50,12 @@ export default (props: Props) =>
 				<ui.S2>
 					<ui.H2>{'Train'}</ui.H2>
 					<ui.P>
-						{'We can train a model to predict the  '}
+						{'We can train a model to predict the '}
 						<ui.InlineCode>{'diagnosis'}</ui.InlineCode>
 						{' column using the '}
 						<ui.InlineCode>{'tangram train'}</ui.InlineCode>
 						{
-							'  command, passing in the path to the CSV file and the name of the column we want to predict, called the '
+							' command, passing in the path to the CSV file and the name of the column we want to predict, called the '
 						}
 						<ui.InlineCode>{'target'}</ui.InlineCode>
 						{' column.'}
@@ -79,7 +79,7 @@ export default (props: Props) =>
 						{'Values are considered to be '}
 						<ui.InlineCode>{'null'}</ui.InlineCode>
 						{
-							' if they are equal to the empty string, whether or not they are wrapped in quotes. For example, in the following CSV, each value in  '
+							' if they are equal to the empty string, whether or not they are wrapped in quotes. For example, in the following CSV, each value in '
 						}
 						<ui.InlineCode>{'column_b'}</ui.InlineCode>
 						{' is considered to be '}
@@ -106,7 +106,7 @@ export default (props: Props) =>
 					<ui.H2>{'Column Types'}</ui.H2>
 					<ui.P>
 						{
-							'The CLI will assign each column one of three possible column types:  '
+							'The CLI will assign each column one of three possible column types: '
 						}
 						<ui.InlineCode>{'Number'}</ui.InlineCode>
 						{', '}
@@ -148,7 +148,7 @@ export default (props: Props) =>
 							<ui.InlineCode>{'Text'}</ui.InlineCode>
 							{': A column is a '}
 							<ui.InlineCode>{'Text'}</ui.InlineCode>
-							{' column if it is neither a  '}
+							{' column if it is neither a '}
 							<ui.InlineCode>{'Number'}</ui.InlineCode>
 							{' column nor an '}
 							<ui.InlineCode>{'Enum'}</ui.InlineCode>
@@ -168,7 +168,7 @@ export default (props: Props) =>
 						}
 						<ui.InlineCode>{'Number'}</ui.InlineCode>
 						{
-							' and a classification model when the inferred type of the target column is  '
+							' and a classification model when the inferred type of the target column is '
 						}
 						<ui.InlineCode>{'Enum'}</ui.InlineCode>
 						{' or '}

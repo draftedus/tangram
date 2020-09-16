@@ -39,7 +39,7 @@ function MacOS() {
 				}
 			</ui.ListItem>
 			<ui.ListItem>
-				{'Unzip it:  '}
+				{'Unzip it: '}
 				<ui.InlineCode>
 					{'tar -xvf tangram-cli-X.X.X-macos-x86_64.tar.gz'}
 				</ui.InlineCode>
@@ -63,7 +63,7 @@ function Linux() {
 				}
 			</ui.ListItem>
 			<ui.ListItem>
-				{'Unzip it:  '}
+				{'Unzip it: '}
 				<ui.InlineCode>
 					{'tar -xvf tangram-cli-X.X.X-linux-x86_64.tar.gz'}
 				</ui.InlineCode>

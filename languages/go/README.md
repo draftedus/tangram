@@ -18,9 +18,9 @@ model, _ := tangram.LoadModelFromFile("./heart-disease.tangram", nil)
 defer model.Destroy()
 
 input := tangram.Input{
-  "age":    63,
-  "gender": "male",
-  // ...
+	"age":    63,
+	"gender": "male",
+	// ...
 }
 
 output := model.PredictOne(input, nil)

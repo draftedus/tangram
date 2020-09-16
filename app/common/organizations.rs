@@ -71,15 +71,15 @@ pub async fn get_organization(
 	};
 	let user_rows = sqlx::query(
 		"
-        select
-          users.id,
-					users.email,
-					organizations_users.is_admin
-				from users
-				join organizations_users
-					on organizations_users.organization_id = ?1
-					and organizations_users.user_id = users.id
-      ",
+			select
+				users.id,
+				users.email,
+				organizations_users.is_admin
+			from users
+			join organizations_users
+				on organizations_users.organization_id = ?1
+				and organizations_users.user_id = users.id
+		",
 	)
 	.bind(&organization_id.to_string())
 	.fetch_all(&mut *db)

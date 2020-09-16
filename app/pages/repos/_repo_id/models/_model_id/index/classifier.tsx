@@ -38,9 +38,9 @@ export function ClassifierIndexPage(props: Props) {
 					<b>{ui.formatPercent(1 - props.trainingSummary.testFraction)}</b>
 					{' of the rows were used in training and '}
 					<b>{ui.formatPercent(props.trainingSummary.testFraction)}</b>
-					{' were used in testing.  The model with the highest '}
+					{' were used in testing. The model with the highest '}
 					<b>{props.trainingSummary.modelComparisonMetricTypeName}</b>
-					{' was chosen.  The best model is a '}
+					{' was chosen. The best model is a '}
 					<b>{props.trainingSummary.chosenModelTypeName}</b>
 					{'.'}
 				</ui.P>

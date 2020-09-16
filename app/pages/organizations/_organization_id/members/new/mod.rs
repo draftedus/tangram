@@ -84,13 +84,13 @@ async fn add_member(
 	let now = Utc::now().timestamp();
 	sqlx::query(
 		"
-		insert into users (
-			id, created_at, email
-		) values (
-			?1, ?2, ?2
-		)
-		on conflict (email) do update set email = excluded.email
-	",
+			insert into users (
+				id, created_at, email
+			) values (
+				?1, ?2, ?2
+			)
+			on conflict (email) do update set email = excluded.email
+		",
 	)
 	.bind(&user_id.to_string())
 	.bind(&now)
@@ -104,12 +104,12 @@ async fn add_member(
 	};
 	sqlx::query(
 		"
-		insert into organizations_users
-			(organization_id, user_id, is_admin)
-		values
-			(?1, ?2, ?3)
-		on conflict (organization_id, user_id) do nothing
-    ",
+			insert into organizations_users
+				(organization_id, user_id, is_admin)
+			values
+				(?1, ?2, ?3)
+			on conflict (organization_id, user_id) do nothing
+		",
 	)
 	.bind(&organization_id.to_string())
 	.bind(&user_id.to_string())

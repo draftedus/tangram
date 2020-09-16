@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="dataframe.svg" title="Dataframe">
+	<img src="dataframe.svg" title="Dataframe">
 </p>
 
 # `tangram_dataframe`

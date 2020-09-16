@@ -28,11 +28,11 @@ labels = data[target]
 
 # train the model
 model = HistGradientBoostingRegressor(
-  learning_rate=0.1,
-  max_depth=8,
-  max_iter=100,
-  max_leaf_nodes=255,
-  min_samples_leaf=100,
+	learning_rate=0.1,
+	max_depth=8,
+	max_iter=100,
+	max_leaf_nodes=255,
+	min_samples_leaf=100,
 )
 
 start = time.time()

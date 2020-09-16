@@ -29,10 +29,10 @@ export default (props: Props) =>
 				<ui.S2>
 					<ui.H2>{'Report'}</ui.H2>
 					<ui.P>
-						{"Let's learn more about our model by uploading the  "}
+						{"Let's learn more about our model by uploading the "}
 						<ui.InlineCode>{'heart-disease.tangram'}</ui.InlineCode>
 						{
-							'  file to the reporting and monitoring app. The app can be run by us in the cloud or by you on your own servers. To try the cloud hosted version, go to  '
+							' file to the reporting and monitoring app. The app can be run by us in the cloud or by you on your own servers. To try the cloud hosted version, go to '
 						}
 						<ui.Link href="https://app.tangramhq.com/login">
 							{'https://app.tangramhq.com/login'}
@@ -74,15 +74,15 @@ export default (props: Props) =>
 						{'For '}
 						<ui.InlineCode>{'Number'}</ui.InlineCode>
 						{
-							'  columns, we see statistics including min, max, mean, and standard deviation. We can also get a sense of the distribution of values by viewing a box plot showing the quantiles.'
+							' columns, we see statistics including min, max, mean, and standard deviation. We can also get a sense of the distribution of values by viewing a box plot showing the quantiles.'
 						}
 					</ui.P>
 					<ui.Img alt="age column" src={trainingStatsAgeImageURL} />
 					<ui.P>
-						{"Let's select the  "}
+						{"Let's select the "}
 						<ui.InlineCode>{'exercise_max_heart_rate'}</ui.InlineCode>
 						{
-							'  column and look at the histogram. It is a good idea to check the dataset to make sure the distribution of the data matches our expectations.'
+							' column and look at the histogram. It is a good idea to check the dataset to make sure the distribution of the data matches our expectations.'
 						}
 					</ui.P>
 					<ui.Img alt="overview" src={trainingStatsOverviewImageURL} />

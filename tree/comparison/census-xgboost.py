@@ -27,14 +27,14 @@ features = pd.get_dummies(features)
 
 # train the model
 model = xgb.XGBClassifier(
-  eta = 0.1,
-  grow_policy = 'lossguide',
-  max_depth = 8,
-  max_leaves = 255,
-  min_child_weight = 100,
-  nthread = 24,
-  num_round = 100,
-  tree_method = 'hist',
+	eta = 0.1,
+	grow_policy = 'lossguide',
+	max_depth = 8,
+	max_leaves = 255,
+	min_child_weight = 100,
+	nthread = 24,
+	num_round = 100,
+	tree_method = 'hist',
 )
 start = time.time()
 model.fit(features_train, labels_train)
@@ -47,17 +47,16 @@ predictions = model.predict(features_test)
 accuracy = accuracy_score(predictions, labels_test)
 print('accuracy: ', accuracy)
 
-
 # train the model
 model = xgb.XGBClassifier(
-  eta = 0.1,
-  grow_policy = 'lossguide',
-  max_depth = 8,
-  max_leaves = 255,
-  min_child_weight = 100,
-  nthread = 24,
-  num_round = 100,
-  tree_method = 'approx'
+	eta = 0.1,
+	grow_policy = 'lossguide',
+	max_depth = 8,
+	max_leaves = 255,
+	min_child_weight = 100,
+	nthread = 24,
+	num_round = 100,
+	tree_method = 'approx'
 )
 start = time.time()
 model.fit(features_train, labels_train)

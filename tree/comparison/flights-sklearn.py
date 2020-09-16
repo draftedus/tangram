@@ -15,42 +15,42 @@ nrows_train = 10_000_000
 nrows_test = 100_000
 
 data_train = pd.read_csv(
-  path_train,
-  dtype={
-    'Month': 'object' ,
-    'DayofMonth': 'object',
-    'DayOfWeek': 'object',
-    'DepTime': np.int64,
-    'UniqueCarrier': 'object',
-    'Origin': 'object',
-    'Dest': 'object',
-    'Distance': np.int64,
-    'dep_delayed_15min': 'object'
-  }
+	path_train,
+	dtype={
+		'Month': 'object' ,
+		'DayofMonth': 'object',
+		'DayOfWeek': 'object',
+		'DepTime': np.int64,
+		'UniqueCarrier': 'object',
+		'Origin': 'object',
+		'Dest': 'object',
+		'Distance': np.int64,
+		'dep_delayed_15min': 'object'
+	}
 ).replace({
-  'dep_delayed_15min': {
-    'N': 0,
-    'Y': 1
-  }
+	'dep_delayed_15min': {
+		'N': 0,
+		'Y': 1
+	}
 })
 data_test = pd.read_csv(
-  path_test,
-  dtype={
-    'Month': 'object' ,
-    'DayofMonth': 'object',
-    'DayOfWeek': 'object',
-    'DepTime': np.int64,
-    'UniqueCarrier': 'object',
-    'Origin': 'object',
-    'Dest': 'object',
-    'Distance': np.int64,
-    'dep_delayed_15min': 'object'
-  }
+	path_test,
+	dtype={
+		'Month': 'object' ,
+		'DayofMonth': 'object',
+		'DayOfWeek': 'object',
+		'DepTime': np.int64,
+		'UniqueCarrier': 'object',
+		'Origin': 'object',
+		'Dest': 'object',
+		'Distance': np.int64,
+		'dep_delayed_15min': 'object'
+	}
 ).replace({
-  'dep_delayed_15min': {
-    'N': 0,
-    'Y': 1
-  }
+	'dep_delayed_15min': {
+		'N': 0,
+		'Y': 1
+	}
 })
 data = pd.get_dummies(pd.concat([data_train, data_test]))
 
@@ -67,7 +67,7 @@ labels = data[target]
 # train the model
 model = HistGradientBoostingClassifier(
 	learning_rate=0.1,
-  max_iter=100,
+	max_iter=100,
 	max_leaf_nodes=512,
 )
 

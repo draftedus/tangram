@@ -196,8 +196,8 @@ pub struct BranchSplitDiscrete {
 /// Consider an enum feature with three variants: `red`, `green`, and `blue`. We always reserve bin 0 for features with missing values.
 /// ```
 /// BinDirections {
-///   n: 4,
-///   bytes: [2, ..]
+/// 	n: 4,
+/// 	bytes: [2, ..]
 /// }
 /// ```
 /// We only need one byte to represent this feature since there are only 4 bins: 3 enum variants + 1 for the missing bin.

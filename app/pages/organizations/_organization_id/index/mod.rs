@@ -364,13 +364,13 @@ pub async fn start_stripe_checkout(
 	// retrieve the existing stripe customer id for the organization
 	let existing_stripe_customer_id: Option<String> = sqlx::query(
 		"
-        select
-          organizations.stripe_customer_id
-        from organizations
-        where
-					id = ?1
-				and organizations.stripe_customer_id is not null
-			",
+			select
+				organizations.stripe_customer_id
+			from organizations
+			where
+				id = ?1
+			and organizations.stripe_customer_id is not null
+		",
 	)
 	.bind(&organization_id.to_string())
 	.fetch_optional(&mut *db)
@@ -398,11 +398,11 @@ pub async fn start_stripe_checkout(
 			// save the stripe customer id with the tangram user
 			sqlx::query(
 				"
-          update organizations
-            set stripe_customer_id = ?1
-          where
-            id = ?2
-        ",
+					update organizations
+						set stripe_customer_id = ?1
+					where
+						id = ?2
+				",
 			)
 			.bind(&stripe_customer_id)
 			.bind(&organization_id.to_string())
@@ -477,9 +477,9 @@ pub async fn finish_stripe_checkout(
 		"
 			update organizations set
 				stripe_payment_method_id = ?1
-      where
-        id = ?2
-    ",
+			where
+				id = ?2
+		",
 	)
 	.bind(&stripe_payment_method_id)
 	.bind(&organization_id.to_string())

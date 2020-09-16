@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="linear.svg" title="Linear">
+	<img src="linear.svg" title="Linear">
 </p>
 
 # Tangram Linear

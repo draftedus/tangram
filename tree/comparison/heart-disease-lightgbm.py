@@ -14,20 +14,20 @@ target = "diagnosis"
 data = pd.read_csv(
 	path,
 	dtype={
-    'age': np.float64,
-    'gender': 'category',
-    'chest_pain': 'category',
-    'resting_blood_pressure': np.float64,
-    'cholesterol': np.float64,
-    'fasting_blood_sugar_greater_than_120': 'category',
-    'resting_ecg_result': 'category',
-    'exercise_max_heart_rate': np.float64,
-    'exercise_induced_angina': 'category',
-    'exercise_st_depression': np.float64,
-    'exercise_st_slope': 'category',
-    'fluoroscopy_vessels_colored': np.float64,
-    'thallium_stress_test': 'category',
-    'diagnosis': 'category'
+		'age': np.float64,
+		'gender': 'category',
+		'chest_pain': 'category',
+		'resting_blood_pressure': np.float64,
+		'cholesterol': np.float64,
+		'fasting_blood_sugar_greater_than_120': 'category',
+		'resting_ecg_result': 'category',
+		'exercise_max_heart_rate': np.float64,
+		'exercise_induced_angina': 'category',
+		'exercise_st_depression': np.float64,
+		'exercise_st_slope': 'category',
+		'fluoroscopy_vessels_colored': np.float64,
+		'thallium_stress_test': 'category',
+		'diagnosis': 'category'
 	}
 )
 features = data.loc[:, data.columns != target]

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="pinwheel.svg" title="Pinwheel">
+	<img src="pinwheel.svg" title="Pinwheel">
 </p>
 
 # pinwheel

@@ -21,7 +21,7 @@ pub struct TrainTree {
 
 /** A TrainNode represents the type of TrainNode in the tree. It has two types:
 1. **Branch**: A `BranchNode` represents internal tree nodes.
-2. **Leaf**:  A `LeafNode` represents terminal nodes.
+2. **Leaf**: A `LeafNode` represents terminal nodes.
 */
 #[derive(Debug)]
 pub enum TrainNode {

@@ -115,7 +115,7 @@ export default (props: Props) =>
 						{'Under '}
 						<b>{'Production Metrics'}</b>
 						{
-							'  we can ensure our model is as accurate in production as it was in training. We can view accuracy, precision, recall and compare each of these metrics with their values in training.'
+							' we can ensure our model is as accurate in production as it was in training. We can view accuracy, precision, recall and compare each of these metrics with their values in training.'
 						}
 					</ui.P>
 					<ui.Img
@@ -124,7 +124,7 @@ export default (props: Props) =>
 					/>
 					<ui.P>
 						{
-							'In this case, it looks like our production accuracy is a bit lower than we expected. This could be due to the mislabeling of  '
+							'In this case, it looks like our production accuracy is a bit lower than we expected. This could be due to the mislabeling of '
 						}
 						<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
 						{' as '}
@@ -139,12 +139,12 @@ export default (props: Props) =>
 						{', we can view feature and column importances. The'}
 						<ui.InlineCode>{'chest_pain=asymptomatic'}</ui.InlineCode>
 						{
-							'  feature is by far the most important to our model, so it makes sense that mislabeling '
+							' feature is by far the most important to our model, so it makes sense that mislabeling '
 						}
 						<ui.InlineCode>{'asymptomatic'}</ui.InlineCode>
 						{' as '}
 						<ui.InlineCode>{'asx'}</ui.InlineCode>
-						{'  would cause a drop in accuracy.'}
+						{' would cause a drop in accuracy.'}
 					</ui.P>
 					<ui.Img alt="feature importances" src={featureImportances} />
 					<ui.P>

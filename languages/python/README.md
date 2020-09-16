@@ -17,9 +17,9 @@ import tangram
 model = tangram.Model.from_file('./heart-disease.tangram')
 
 input = {
-  'age': 63,
-  'gender': 'male',
-  # ...
+	'age': 63,
+	'gender': 'male',
+	# ...
 }
 
 output = model.predict(input)
