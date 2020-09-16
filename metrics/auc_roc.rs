@@ -19,7 +19,7 @@ impl<'a> Metric<'a> for AUCROC {
 		probabilities_labels.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 		probabilities_labels.reverse();
 		// collect the true_positives and false_positives counts for each unique probability
-		let mut true_positives_false_positives: Vec<TpsFpsPoint> = Vec::new();
+		let mut true_positives_false_positives: Vec<TruePositivesFalsePositivesPoint> = Vec::new();
 		for (probability, label) in probabilities_labels.iter() {
 			// labels are 1-indexed
 			let label = label.checked_sub(1).unwrap();
@@ -36,7 +36,7 @@ impl<'a> Metric<'a> for AUCROC {
 					last.false_positives += false_positive;
 				}
 				_ => {
-					true_positives_false_positives.push(TpsFpsPoint {
+					true_positives_false_positives.push(TruePositivesFalsePositivesPoint {
 						probability: *probability,
 						true_positives: true_positive,
 						false_positives: false_positive,
@@ -64,13 +64,15 @@ impl<'a> Metric<'a> for AUCROC {
 			true_positive_rate: 0.0,
 			false_positive_rate: 0.0,
 		}];
-		for tps_fps_point in true_positives_false_positives.iter() {
+		for true_positives_false_positives_point in true_positives_false_positives.iter() {
 			roc_curve.push(ROCCurvePoint {
-				// The true positive rate is the number of true_positives divided by the total number of positives
-				true_positive_rate: tps_fps_point.true_positives as f32 / count_positives as f32,
-				threshold: tps_fps_point.probability,
-				// The false positive rate is the number of false_positives divided by the total number of negatives
-				false_positive_rate: tps_fps_point.false_positives as f32 / count_negatives as f32,
+				// The true positive rate is the number of true positives divided by the total number of positives
+				true_positive_rate: true_positives_false_positives_point.true_positives as f32
+					/ count_positives as f32,
+				threshold: true_positives_false_positives_point.probability,
+				// The false positive rate is the number of false positives divided by the total number of negatives
+				false_positive_rate: true_positives_false_positives_point.false_positives as f32
+					/ count_negatives as f32,
 			})
 		}
 		// compute the riemann sum using the trapezoidal rule
@@ -98,7 +100,7 @@ struct ROCCurvePoint {
 }
 
 #[derive(Debug)]
-struct TpsFpsPoint {
+struct TruePositivesFalsePositivesPoint {
 	/// The prediction probability.
 	probability: f32,
 	/// The true positives for this threshold.

@@ -193,6 +193,7 @@ fn auc_roc(confusion_matrix: ArrayView3<u64>) -> f32 {
 			(false_positive_rate, true_positive_rate)
 		})
 		.collect::<Vec<(f32, f32)>>();
+	println!("{:?}", roc_curve);
 	roc_curve.reverse();
 	roc_curve
 		.iter()
