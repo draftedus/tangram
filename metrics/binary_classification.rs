@@ -4,9 +4,7 @@ use ndarray::prelude::*;
 use ndarray::s;
 use num_traits::ToPrimitive;
 
-/**
-BinaryClassificationMetrics computes common metrics used to evaluate binary classifiers at various classification thresholds. Instead of computing threshold metrics for each prediction probability, we instead compute metrics for a fixed number of threshold values given by `n_thresholds` passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new). This is an approximation but is more memory efficient.
-*/
+/// `BinaryClassificationMetrics` computes common metrics used to evaluate binary classifiers at various classification thresholds. Instead of computing threshold metrics for each prediction probability, we instead compute metrics for a fixed number of threshold values given by `n_thresholds` passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new). This is an approximation but is more memory efficient.
 pub struct BinaryClassificationMetrics {
 	/// The confusion matrices is an array of shape n_thresholds x (n_classes x n_classes).
 	/// The inner `Array2<u64>` is a per-threshold [Confusion Matrix](https://en.wikipedia.org/wiki/Confusion_matrix).
@@ -51,19 +49,16 @@ pub struct BinaryClassificationThresholdMetricsOutput {
 	pub false_negatives: u64,
 	/// The fraction of examples of this class that were correctly classified.
 	pub accuracy: f32,
-	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class.
-	/// true_positives / (true_positives + false_positives). See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
+	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class. true_positives / (true_positives + false_positives). See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
 	pub precision: f32,
 	/// The recall is the fraction of examples whose label is equal to this class that the model predicted as belonging to this class.
 	/// true_positives / (true_positives + false_negatives)
 	pub recall: f32,
 	/// The f1 score is the harmonic mean of the precision and the recall. See [F1 Score](https://en.wikipedia.org/wiki/F1_score).
 	pub f1_score: f32,
-	/// The true positive rate is the fraction of examples whose label is equal to this class that the model predicted as belonging to this class. Also known as the recall.
-	/// See [Sensitivity and Specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity).
+	/// The true positive rate is the fraction of examples whose label is equal to this class that the model predicted as belonging to this class. Also known as the recall. See [Sensitivity and Specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity).
 	pub true_positive_rate: f32,
-	/// The false positive rate is the fraction of examples whose label is not equal to this class that the model falsely predicted as belonging to this class.
-	// false_positives / (false_positives + true_negatives). See [False Positive Rate](https://en.wikipedia.org/wiki/False_positive_rate)
+	/// The false positive rate is the fraction of examples whose label is not equal to this class that the model falsely predicted as belonging to this class. false_positives / (false_positives + true_negatives). See [False Positive Rate](https://en.wikipedia.org/wiki/False_positive_rate)
 	pub false_positive_rate: f32,
 }
 
@@ -97,7 +92,6 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				} else {
 					0
 				};
-				// labels are 1-indexed
 				let actual_label_id = if value.labels[example_index] == 2 {
 					1
 				} else {
@@ -139,8 +133,6 @@ fn compute_class_metrics(
 		.iter()
 		.enumerate()
 		.map(|(threshold_index, &threshold)| {
-			let slice = s![threshold_index, .., ..];
-			let confusion_matrix = confusion_matrices.slice(slice);
 			/*
 			class 0:
 									actual
@@ -154,29 +146,31 @@ fn compute_class_metrics(
 			predicted	0	tn	fn
 								1	fp	tp
 			*/
+			let slice = s![threshold_index, .., ..];
+			let confusion_matrix = confusion_matrices.slice(slice);
 			let n_examples = confusion_matrix.sum();
-			// true positives for a given class are when the predicted == actual which for the negative (0th) class this is in the 0, 0 entry and for the 1st (positive) class, this is in the 1, 1 entry
+			// This is true positives for a given class are when the predicted == actual which for the negative (0th) class this is in the 0, 0 entry and for the 1st (positive) class, this is in the 1, 1 entry.
 			let true_positives = confusion_matrix[(class_index, class_index)];
-			// false positives are computed by taking the total predicted positives and subtracting the true positives
+			// This is false positives are computed by taking the total predicted positives and subtracting the true positives.
 			let false_positives = confusion_matrix.row(class_index).sum() - true_positives;
-			// false negatives are computed by taking the total actual positives and subtracting the true positives
+			// This is false negatives are computed by taking the total actual positives and subtracting the true positives.
 			let false_negatives = confusion_matrix.column(class_index).sum() - true_positives;
-			// true negatives are computed by subtracting false_positives, false_negatives, and true_positives from the total number of examples
+			// This is true negatives are computed by subtracting false_positives, false_negatives, and true_positives from the total number of examples.
 			let true_negatives = n_examples - false_positives - false_negatives - true_positives;
-			// the fraction of the total predictions that are correct
+			// This is the fraction of the total predictions that are correct.
 			let accuracy =
 				(true_positives + true_negatives).to_f32().unwrap() / n_examples.to_f32().unwrap();
-			// the fraction of the total predictive positive examples that are actually positive
+			// This is the fraction of the total predictive positive examples that are actually positive.
 			let precision = true_positives.to_f32().unwrap()
 				/ (true_positives + false_positives).to_f32().unwrap();
-			// the fraction of the total positive examples that are correctly predicted as positive
+			// This is the fraction of the total positive examples that are correctly predicted as positive.
 			let recall = true_positives.to_f32().unwrap()
 				/ (true_positives + false_negatives).to_f32().unwrap();
 			let f1_score = 2.0 * (precision * recall) / (precision + recall);
-			// true_positive_rate = true_positives / positives
+			// This is true_positive_rate = true_positives / positives.
 			let true_positive_rate = (true_positives.to_f32().unwrap())
 				/ (true_positives.to_f32().unwrap() + false_negatives.to_f32().unwrap());
-			// false_positive_rate = false_positives / negatives
+			// This is false_positive_rate = false_positives / negatives.
 			let false_positive_rate = false_positives.to_f32().unwrap()
 				/ (true_negatives.to_f32().unwrap() + false_positives.to_f32().unwrap());
 			BinaryClassificationThresholdMetricsOutput {
@@ -194,35 +188,19 @@ fn compute_class_metrics(
 			}
 		})
 		.collect();
-
-	// compute the area under the receiver operating characteristic curve using a riemann sum
-	let auc_roc = if class_index == 0 {
-		// for the negative class, the thresholds are in the correct order
-		thresholds
-			.iter()
-			.tuple_windows()
-			.map(|(left, right)| {
-				// trapezoidal rule
-				let y_avg = (left.true_positive_rate + right.true_positive_rate) / 2.0;
-				let dx = right.false_positive_rate - left.false_positive_rate;
-				y_avg * dx
-			})
-			.sum::<f32>()
-	} else {
-		// for the positive class, the thresholds are in the reverse order
-		thresholds
-			.iter()
-			.rev()
-			.tuple_windows()
-			.map(|(left, right)| {
-				// trapezoidal rule
-				let y_avg = (left.true_positive_rate + right.true_positive_rate) / 2.0;
-				let dx = right.false_positive_rate - left.false_positive_rate;
-				y_avg * dx
-			})
-			.sum::<f32>()
-	};
-
+	// Compute the area under the receiver operating characteristic curve using a riemann sum.
+	let auc_roc = thresholds
+		.iter()
+		.tuple_windows()
+		.map(|(left, right)| {
+			// Use the trapezoid rule.
+			let y_avg = (left.true_positive_rate + right.true_positive_rate) / 2.0;
+			let dx = right.false_positive_rate - left.false_positive_rate;
+			y_avg * dx
+		})
+		.sum::<f32>();
+	// The AUC needs to be negated for the positive class.
+	let auc_roc = if class_index == 0 { auc_roc } else { -auc_roc };
 	BinaryClassificationClassMetricsOutput {
 		thresholds,
 		auc_roc,
@@ -232,7 +210,6 @@ fn compute_class_metrics(
 #[test]
 fn test() {
 	let mut metrics = BinaryClassificationMetrics::new(4);
-	// labels are 1-indexed
 	let labels = arr1(&[1, 1, 1, 1, 2, 2, 2, 2]);
 	let probabilities = arr2(&[
 		[0.6, 0.4],
@@ -249,7 +226,6 @@ fn test() {
 		labels: labels.view(),
 	});
 	let metrics = metrics.finalize();
-	println!("{:?}", metrics);
 	insta::assert_debug_snapshot!(metrics, @r###"
  BinaryClassificationMetricsOutput {
      class_metrics: [

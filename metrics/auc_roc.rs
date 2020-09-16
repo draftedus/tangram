@@ -1,31 +1,32 @@
 use super::Metric;
 use itertools::Itertools;
 
-/// This function computes the ROC curve. The ROC curve plot the false positive rate on the x axis and the true positive rate on the y axis for various classification thresholds.
+/// This `Metric` computes the area under the receiver operating characteristic curve.
 struct AUCROC;
 
 impl<'a> Metric<'a> for AUCROC {
 	type Input = (&'a [f32], &'a [usize]);
 	type Output = f32;
+
 	fn compute(input: Self::Input) -> Self::Output {
 		let (probabilities, labels) = input;
-		// collect probabilities and labels into a vec of tuples
+		// Collect probabilities and labels into a vec of tuples.
 		let mut probabilities_labels: Vec<(f32, usize)> = probabilities
 			.iter()
 			.zip(labels.iter())
 			.map(|(a, b)| (*a, *b))
 			.collect();
-		// sort by probabilities in descending order
+		// Sort by probabilities in descending order.
 		probabilities_labels.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 		probabilities_labels.reverse();
-		// collect the true_positives and false_positives counts for each unique probability
+		// Collect the true_positives and false_positives counts for each unique probability.
 		let mut true_positives_false_positives: Vec<TruePositivesFalsePositivesPoint> = Vec::new();
 		for (probability, label) in probabilities_labels.iter() {
-			// labels are 1-indexed
+			// Labels are 1-indexed.
 			let label = label.checked_sub(1).unwrap();
-			// if the classification threshold were to be this probability and the label is 1, the prediction is a true_positive. If the label is 0, its not a true_positive.
+			// If the classification threshold were to be this probability and the label is 1, the prediction is a true_positive. If the label is 0, its not a true_positive.
 			let true_positive = label;
-			// if the classification threshold were to be this probability and the label is 0, the prediction is a false_positive. If the label is 1, its not a false_positive.
+			// If the classification threshold were to be this probability and the label is 0, the prediction is a false_positive. If the label is 1, its not a false_positive.
 			let false_positive = 1 - label;
 			match true_positives_false_positives.last() {
 				Some(last_point)
@@ -44,19 +45,19 @@ impl<'a> Metric<'a> for AUCROC {
 				}
 			}
 		}
-		// compute the cumulative sum of true positives and false positives
+		// Compute the cumulative sum of true positives and false positives.
 		for i in 1..true_positives_false_positives.len() {
 			true_positives_false_positives[i].true_positives +=
 				true_positives_false_positives[i - 1].true_positives;
 			true_positives_false_positives[i].false_positives +=
 				true_positives_false_positives[i - 1].false_positives;
 		}
-		// get the total count of positives
+		// Get the total count of positives.
 		let count_positives = labels
 			.iter()
 			.map(|l| l.checked_sub(1).unwrap())
 			.sum::<usize>();
-		// get the total count of negatives
+		// Get the total count of negatives.
 		let count_negatives = labels.len() - count_positives;
 		// The true_positive_rate at threshold x is the percent of the total positives that have a prediction probability >= x. At the maximum probability `x` observed in the dataset, either the true_positive_rate or false_positive_rate will be nonzero depending on whether the label at the this highest probability point is positive or negative respectively. This means that we will not have a point on the ROC curve with a true_positive_rate and false_positive_rate of 0. We create a dummy point with an impossible threshold of 1.1 such that no predictions have probability >= 1.1. At this threshold, both the true_positive_rate and false_positive_rate is 0.
 		let mut roc_curve = vec![ROCCurvePoint {
