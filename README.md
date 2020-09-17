@@ -35,7 +35,15 @@ Watch the video below to learn more.
 3. Run `yarn` to install npm dependencies.
 4. Run `cargo run` to run a debug build of the cli. If you are working on the app, install [watchexec](github.com/watchexec/watchexec) and run `./scripts/dev`, which runs the cli with the `app` subcommand under a file watcher.
 
-Before submitting a pull request, please run `./scripts/fmt` and `./scripts/check` at the root of the repository to confirm that your changes are formatted correctly and do not have any errors. You can use whatever editor setup you prefer, but we use [Visual Studio Code](https://code.visualstudio.com/) with the [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer), [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint), and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions.
+Before submitting a pull request, please run `./scripts/fmt` and `./scripts/check` at the root of the repository to confirm that your changes are formatted correctly and do not have any errors.
+
+### Tips
+
+- To get faster incremental compile times, we use the [lld](https://www.archlinux.org/packages/extra/x86_64/lld/) linker by adding `build.rustflags = ["-C", "link-arg=-fuse-ld=lld"]` to `~/.cargo/config`.
+
+- To save our SSDs from a premature death, we set up RAM disks for Cargo's `target` folder on linux by adding `none /path/to/tangram/target tmpfs rw,relatime 0 0` to `/etc/fstab`.
+
+- You can use whatever editor setup you prefer, but we use [Visual Studio Code](https://code.visualstudio.com/) with the [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer), [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint), and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions.
 
 ## Repository Structure
 
