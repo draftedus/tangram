@@ -1,3 +1,4 @@
+import './confusion_matrix.css'
 import { Token } from './token'
 import { formatPercent } from './util'
 import { cx } from '@tangramhq/pinwheel'

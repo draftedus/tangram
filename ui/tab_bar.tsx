@@ -1,3 +1,4 @@
+import './tab_bar.css'
 import { cx } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 

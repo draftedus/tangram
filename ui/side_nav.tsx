@@ -1,3 +1,4 @@
+import './side_nav.css'
 import { cx } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 

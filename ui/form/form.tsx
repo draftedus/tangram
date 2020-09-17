@@ -1,3 +1,4 @@
+import './form.css'
 import { ComponentChildren, h } from 'preact'
 
 type FormTitleProps = { children?: ComponentChildren }

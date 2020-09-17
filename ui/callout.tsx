@@ -1,4 +1,5 @@
 import { Level } from './alert'
+import './callout.css'
 import { cx } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 

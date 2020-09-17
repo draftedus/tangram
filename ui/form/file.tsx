@@ -1,3 +1,4 @@
+import './file.css'
 import { Label } from './label'
 import { h } from 'preact'
 

@@ -1,3 +1,4 @@
+import './explanations.css'
 import { BarChart, ShapChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'

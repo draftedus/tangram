@@ -1,3 +1,4 @@
+import './button.css'
 import { ComponentChildren, h } from 'preact'
 
 export type ButtonProps = {

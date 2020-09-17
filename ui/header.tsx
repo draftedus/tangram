@@ -1,3 +1,4 @@
+import './header.css'
 import { ComponentChildren, h } from 'preact'
 
 type HeaderProps = { children?: ComponentChildren }

@@ -1,3 +1,4 @@
+import './training_metrics.css'
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'

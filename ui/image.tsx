@@ -1,3 +1,4 @@
+import './image.css'
 import { Fragment, h } from 'preact'
 
 type ImageProps = {

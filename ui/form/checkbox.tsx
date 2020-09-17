@@ -1,3 +1,4 @@
+import './checkbox.css'
 import { Label } from './label'
 import { h } from 'preact'
 

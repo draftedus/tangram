@@ -1,3 +1,4 @@
+import './asciicast.css'
 import { h } from 'preact'
 import { useEffect, useRef } from 'preact/hooks'
 

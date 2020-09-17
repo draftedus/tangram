@@ -1,3 +1,4 @@
+import './tuning.css'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 import { useState } from 'preact/hooks'

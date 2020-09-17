@@ -1,3 +1,4 @@
+import './introspection.css'
 import { BarChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'

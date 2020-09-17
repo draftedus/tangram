@@ -1,4 +1,5 @@
 import { Button } from './button'
+import './topbar.css'
 import { ComponentChildren, h } from 'preact'
 
 type TopbarProps = {

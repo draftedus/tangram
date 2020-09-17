@@ -1,3 +1,4 @@
+import './styles.css'
 import { PricingCards } from './pricing_cards'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'

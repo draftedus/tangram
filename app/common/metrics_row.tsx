@@ -1,3 +1,4 @@
+import './metrics_row.css'
 import { ComponentChildren, h } from 'preact'
 
 type MetricsRowProps = {

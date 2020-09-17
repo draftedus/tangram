@@ -1,3 +1,4 @@
+import './slider.css'
 import { h } from 'preact'
 
 type SliderProps = {

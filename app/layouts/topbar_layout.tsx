@@ -1,4 +1,5 @@
 import { Document, Logo, LogoScheme } from '../../www/layouts/layout'
+import './topbar_layout.css'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { ComponentChildren, h } from 'preact'

@@ -1,3 +1,4 @@
+import './footer.css'
 import { Logo, LogoScheme } from './layout'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'

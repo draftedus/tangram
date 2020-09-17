@@ -1,3 +1,4 @@
+import './production_metrics.css'
 import { LineChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'

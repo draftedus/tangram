@@ -1,3 +1,4 @@
+import './layout.css'
 import { cx } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 

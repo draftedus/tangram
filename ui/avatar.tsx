@@ -1,3 +1,4 @@
+import './avatar.css'
 import { h } from 'preact'
 
 type AvatarProps = {

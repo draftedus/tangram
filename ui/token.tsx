@@ -1,3 +1,4 @@
+import './token.css'
 import { ComponentChildren, h } from 'preact'
 
 export type TokenProps = {

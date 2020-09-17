@@ -1,3 +1,4 @@
+import './alert.css'
 import { ComponentChildren, h } from 'preact'
 
 export enum Level {

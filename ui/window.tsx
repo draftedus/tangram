@@ -1,3 +1,4 @@
+import './window.css'
 import { ComponentChildren, h } from 'preact'
 
 export enum WindowShade {

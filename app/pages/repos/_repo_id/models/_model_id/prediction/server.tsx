@@ -1,3 +1,4 @@
+import './styles.css'
 import { BarChart, BoxChart, ShapChart } from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'

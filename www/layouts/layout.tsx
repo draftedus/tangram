@@ -1,5 +1,6 @@
 import backgroundImage from './background.svg'
 import { Footer } from './footer'
+import './layout.css'
 import { Body, Head, PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { ComponentChildren, h } from 'preact'

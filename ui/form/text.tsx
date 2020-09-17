@@ -1,4 +1,5 @@
 import { Label } from './label'
+import './text.css'
 import { h } from 'preact'
 
 type TextFieldProps = {

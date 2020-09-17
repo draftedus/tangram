@@ -1,4 +1,5 @@
 import { Level } from './alert'
+import './alert_icon.css'
 import { cx } from '@tangramhq/pinwheel'
 import { h } from 'preact'
 

@@ -1,3 +1,4 @@
+import './number_comparison_chart.css'
 import { Token } from './token'
 import { cx } from '@tangramhq/pinwheel'
 import { h } from 'preact'

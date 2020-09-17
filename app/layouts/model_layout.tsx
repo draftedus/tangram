@@ -1,3 +1,4 @@
+import './model_layout.css'
 import { Layout } from './topbar_layout'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'

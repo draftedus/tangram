@@ -1,3 +1,4 @@
+import './label.css'
 import { ComponentChildren, h } from 'preact'
 
 type Props = {

@@ -1,3 +1,4 @@
+import './code.css'
 import { Language, SyntaxColors, grammars, highlight } from './syntax'
 import { times } from './util'
 import { ComponentChildren, Fragment, h } from 'preact'

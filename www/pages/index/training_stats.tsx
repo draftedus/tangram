@@ -1,3 +1,4 @@
+import './training_stats.css'
 import { BoxChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'

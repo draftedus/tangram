@@ -1,3 +1,4 @@
+import './details.css'
 import { h } from 'preact'
 
 export type DetailsSelectProps = {

@@ -1,3 +1,4 @@
+import './production_stats.css'
 import { BarChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'

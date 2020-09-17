@@ -1,5 +1,6 @@
 import { BarChartOptions, createBarChart } from './bar_chart'
 import { BoxChartOptions, createBoxChart } from './box_chart'
+import './charts.css'
 import { chartConfig } from './config'
 import { LineChartOptions, createLineChart } from './line_chart'
 import { ShapChartOptions, createShapChart } from './shap_chart'
