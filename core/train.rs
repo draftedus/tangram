@@ -15,6 +15,7 @@ use tangram_metrics::{self as metrics};
 use tangram_progress::ProgressCounter;
 
 /**
+Train a model.
 */
 pub fn train(
 	model_id: Id,
