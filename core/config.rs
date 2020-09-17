@@ -58,25 +58,25 @@ pub struct TreeGridItem {
 
 #[derive(Debug, Display, Clone, serde::Deserialize)]
 pub enum ComparisonMetric {
-	#[display(fmt = "mae")]
+	#[display(fmt = "Mean Absolute Error")]
 	#[serde(rename = "mae")]
 	MAE,
-	#[display(fmt = "mse")]
+	#[display(fmt = "Mean Squared Error")]
 	#[serde(rename = "mse")]
 	MSE,
-	#[display(fmt = "rmse")]
+	#[display(fmt = "Root Mean Squared Error")]
 	#[serde(rename = "rmse")]
 	RMSE,
-	#[display(fmt = "r2")]
+	#[display(fmt = "R2")]
 	#[serde(rename = "r2")]
 	R2,
-	#[display(fmt = "accuracy")]
+	#[display(fmt = "Accuracy")]
 	#[serde(rename = "accuracy")]
 	Accuracy,
-	#[display(fmt = "auc")]
+	#[display(fmt = "Area Under the Receiver Operating Characteristic Curve")]
 	#[serde(rename = "auc")]
 	AUC,
-	#[display(fmt = "f1")]
+	#[display(fmt = "F1")]
 	#[serde(rename = "f1")]
 	F1,
 }
