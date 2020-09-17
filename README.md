@@ -4,8 +4,6 @@
 
 # Tangram
 
-[![GitHub Release](https://img.shields.io/github/release/tangram-hq/tangram.svg?style=flat-square)](https://github.com/tangram-hq/tangram/releases)
-
 Tangram is an all-in-one machine learning toolkit for developers. Here's the TLDR:
 
 1. Install the `tangram` cli: [Install Instructions](https://www.tangramhq.com/docs/install).
