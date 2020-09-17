@@ -39,11 +39,11 @@ Before submitting a pull request, please run `./scripts/fmt` and `./scripts/chec
 
 ### Tips
 
-- To get faster incremental compile times, we use the [lld](https://www.archlinux.org/packages/extra/x86_64/lld/) linker by adding `build.rustflags = ["-C", "link-arg=-fuse-ld=lld"]` to `~/.cargo/config`.
+- To get faster incremental compile times, install [lld](https://www.archlinux.org/packages/extra/x86_64/lld/) and add `build.rustflags = ["-C", "link-arg=-fuse-ld=lld"]` to `~/.cargo/config`.
 
-- To save our SSDs from a premature death, we set up RAM disks for Cargo's `target` folder on linux by adding `none /path/to/tangram/target tmpfs rw,relatime 0 0` to `/etc/fstab`.
+- To save your SSD from a premature death, set up a RAM disk for Cargo's `target` folder on linux by adding `none /path/to/tangram/target tmpfs rw,relatime 0 0` to `/etc/fstab` and rebooting.
 
-- You can use whatever editor setup you prefer, but we use [Visual Studio Code](https://code.visualstudio.com/) with the [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer), [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint), and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions.
+- For high quality IDE support, use [Visual Studio Code](https://code.visualstudio.com/) with the [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer), [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint), and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions.
 
 ## Repository Structure
 
@@ -67,4 +67,4 @@ This repository is both a Cargo workspace and a Yarn workspace. Almost every fol
 
 ## License
 
-Most of this repository is MIT licensed, except for the `core` and `app` folders, which are presently unlicensed. We plan to make the `core` folder available under a community license that is similar to the MIT license, except it restricts you from using it to make a competing product. We plan to make the `app` folder free to use for an individual, but require a paid license to use as part of a team. Our pricing is simple and public: https://www.tangramhq.com/pricing.
+Most of this repository is MIT licensed, except for the `core` and `app` folders, which are presently unlicensed. We plan to make the `core` folder available under a community license that is similar to the MIT license, except it will restrict you from using it to make a competing product. We plan to make the `app` folder free to use for an individual, but require a paid license to use as part of a team. Our pricing is simple and public: https://www.tangramhq.com/pricing.
