@@ -509,7 +509,6 @@ impl TextColumnStats {
 			.filter_map(|(token, count)| {
 				let document_frequency = per_example_histogram.get(&token).unwrap();
 				if *document_frequency >= settings.min_document_frequency.to_usize().unwrap() {
-					// idf = log ((n + 1) / (1 + document_frequency)) + 1
 					let idf = ((1.0 + n_examples.to_f32().unwrap())
 						/ (1.0 + (document_frequency.to_f32().unwrap())))
 					.ln() + 1.0;

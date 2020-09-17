@@ -302,6 +302,7 @@ impl ColumnStats {
 		}
 	}
 }
+
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct UnknownColumnStats {
 	pub column_name: String,

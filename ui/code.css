@@ -44,28 +44,35 @@
 .code-radio-input[data-lang='go']:checked ~ label[data-lang='go'] {
 	color: var(--accent-color);
 }
+
 .code-radio-input[data-lang='javascript']:checked
 	~ label[data-lang='javascript'] {
 	color: var(--accent-color);
 }
+
 .code-radio-input[data-lang='python']:checked ~ label[data-lang='python'] {
 	color: var(--accent-color);
 }
+
 .code-radio-input[data-lang='ruby']:checked ~ label[data-lang='ruby'] {
 	color: var(--accent-color);
 }
+
 .code-radio-input[data-lang='go']:checked
 	~ .code-inner-wrapper[data-lang='go'] {
 	display: grid;
 }
+
 .code-radio-input[data-lang='javascript']:checked
 	~ .code-inner-wrapper[data-lang='javascript'] {
 	display: grid;
 }
+
 .code-radio-input[data-lang='python']:checked
 	~ .code-inner-wrapper[data-lang='python'] {
 	display: grid;
 }
+
 .code-radio-input[data-lang='ruby']:checked
 	~ .code-inner-wrapper[data-lang='ruby'] {
 	display: grid;

@@ -1,6 +1,5 @@
 /*!
 This module defines feature groups that are used to transform raw data into values used by the [linear](../linear/index.html) and [tree](../tree/index.html) models.
-
 */
 
 use crate::stats;
