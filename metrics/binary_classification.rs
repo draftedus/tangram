@@ -33,26 +33,26 @@ pub struct BinaryClassificationMetricsOutput {
 pub struct BinaryClassificationThresholdMetricsOutput {
 	/// The classification threshold.
 	pub threshold: f32,
-	/// The total number of examples whose label is equal to this class that the model predicted as belonging to this class.
+	/// The total number of examples whose label is equal to the positive class that the model predicted as belonging to the positive class.
 	pub true_positives: u64,
-	/// The total number of examples whose label is *not* equal to this class that the model predicted as belonging to this class.
+	/// The total number of examples whose label is equal to the negative class that the model predicted as belonging to the positive class.
 	pub false_positives: u64,
-	/// The total number of examples whose label is *not* equal to this class that the model predicted as *not* belonging to this class.
+	/// The total number of examples whose label is equal to the negative class that the model predicted as belonging to the negative class.
 	pub true_negatives: u64,
-	/// The total number of examples whose label is equal to this class that the model predicted as *not* belonging to this class.
+	/// The total number of examples whose label is equal to the positive class that the model predicted as belonging to the negative class.
 	pub false_negatives: u64,
-	/// The fraction of examples of this class that were correctly classified.
+	/// The fraction of examples that were correctly classified.
 	pub accuracy: f32,
-	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class. true_positives / (true_positives + false_positives). See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
+	/// The precision is the fraction of examples the model predicted as belonging to the positive class whose label is actually the positive class. true_positives / (true_positives + false_positives). See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
 	pub precision: f32,
-	/// The recall is the fraction of examples whose label is equal to this class that the model predicted as belonging to this class.
+	/// The recall is the fraction of examples whose label is equal to the positive class that the model predicted as belonging to the positive class.
 	/// true_positives / (true_positives + false_negatives)
 	pub recall: f32,
 	/// The f1 score is the harmonic mean of the precision and the recall. See [F1 Score](https://en.wikipedia.org/wiki/F1_score).
 	pub f1_score: f32,
-	/// The true positive rate is the fraction of examples whose label is equal to this class that the model predicted as belonging to this class. Also known as the recall. See [Sensitivity and Specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity).
+	/// The true positive rate is the fraction of examples whose label is equal to the positive class that the model predicted as belonging to the positive class. Also known as the recall. See [Sensitivity and Specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity).
 	pub true_positive_rate: f32,
-	/// The false positive rate is the fraction of examples whose label is not equal to this class that the model falsely predicted as belonging to this class. false_positives / (false_positives + true_negatives). See [False Positive Rate](https://en.wikipedia.org/wiki/False_positive_rate)
+	/// The false positive rate is the fraction of examples whose label is equal to the negative class that the model falsely predicted as belonging to the positive class. false_positives / (false_positives + true_negatives). See [False Positive Rate](https://en.wikipedia.org/wiki/False_positive_rate)
 	pub false_positive_rate: f32,
 }
 
@@ -91,6 +91,13 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				} else {
 					0
 				};
+				/*
+				This is the position to update in the confusion matrix given the prediction and label.
+										actual
+										0		1
+				predicted	0	tn	fn
+									1	fp	tp
+				*/
 				let position = (threshold_index, predicted_label_id, actual_label_id);
 				self.confusion_matrices[position] += 1;
 			}
