@@ -49,15 +49,12 @@ pub fn compute_bin_info(features: &DataFrameView, options: &ComputeBinInfoOption
 	features
 		.columns
 		.iter()
-		.map(|column| compute_bin_info_for_column(column, &options))
+		.map(|column| compute_bin_info_for_column(column.view(), &options))
 		.collect()
 }
 
 /// Computes the bin info given a column.
-pub fn compute_bin_info_for_column(
-	column: &ColumnView,
-	options: &ComputeBinInfoOptions,
-) -> BinInfo {
+pub fn compute_bin_info_for_column(column: ColumnView, options: &ComputeBinInfoOptions) -> BinInfo {
 	match column {
 		ColumnView::Number(column) => compute_bin_info_for_number_column(column, options),
 		ColumnView::Enum(column) => BinInfo::Enum {
@@ -69,7 +66,7 @@ pub fn compute_bin_info_for_column(
 
 /// Computes the quantile thresholds for a numeric column. Returns BinInfo with the numeric thresholds used to map the column values into their respective bins.
 fn compute_bin_info_for_number_column(
-	column: &NumberColumnView,
+	column: NumberColumnView,
 	options: &ComputeBinInfoOptions,
 ) -> BinInfo {
 	// collect the values into a histogram

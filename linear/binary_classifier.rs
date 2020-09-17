@@ -28,7 +28,7 @@ impl BinaryClassifier {
 	/// Train a linear binary classifier.
 	pub fn train(
 		features: ArrayView2<f32>,
-		labels: &EnumColumnView,
+		labels: EnumColumnView,
 		options: &TrainOptions,
 		update_progress: &mut dyn FnMut(Progress),
 	) -> BinaryClassifier {

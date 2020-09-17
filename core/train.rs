@@ -705,7 +705,7 @@ fn train_linear_regressor(
 	};
 	let model = tangram_linear::Regressor::train(
 		features.view(),
-		&labels,
+		labels,
 		&linear_options,
 		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
@@ -803,7 +803,7 @@ fn train_linear_binary_classifier(
 	};
 	let model = tangram_linear::BinaryClassifier::train(
 		features.view(),
-		&labels,
+		labels,
 		&linear_options,
 		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
@@ -905,7 +905,7 @@ fn train_linear_multiclass_classifier(
 	};
 	let model = tangram_linear::MulticlassClassifier::train(
 		features.view(),
-		&labels,
+		labels,
 		&linear_options,
 		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(

@@ -136,12 +136,12 @@ pub fn compute_stats(
 	let train_dataset_stats: Vec<DatasetStats> = dataframe_train
 		.columns
 		.iter()
-		.map(|column| DatasetStats::compute(column, &settings))
+		.map(|column| DatasetStats::compute(column.view(), &settings))
 		.collect();
 	let test_dataset_stats: Vec<DatasetStats> = dataframe_test
 		.columns
 		.iter()
-		.map(|column| DatasetStats::compute(column, &settings))
+		.map(|column| DatasetStats::compute(column.view(), &settings))
 		.collect();
 	// Merge the train and test dataset stats rather than recompute stats over the whole data.
 	let overall_dataset_stats: Vec<DatasetStats> = train_dataset_stats
@@ -422,7 +422,7 @@ pub struct TextDatasetStats {
 
 impl DatasetStats {
 	/// Compute the stats for a given column and settings.
-	pub fn compute(column: &ColumnView, settings: &StatsSettings) -> Self {
+	pub fn compute(column: ColumnView, settings: &StatsSettings) -> Self {
 		match column {
 			ColumnView::Unknown(column) => Self::Unknown(UnknownDatasetStats {
 				column_name: column.name.to_owned(),
@@ -430,7 +430,7 @@ impl DatasetStats {
 				invalid_count: column.len,
 			}),
 			ColumnView::Number(column) => {
-				Self::Number(NumberDatasetStats::compute(column, settings))
+				Self::Number(NumberDatasetStats::compute(column.view(), settings))
 			}
 			ColumnView::Enum(column) => Self::Enum(EnumDatasetStats::compute(column, settings)),
 			ColumnView::Text(column) => Self::Text(TextDatasetStats::compute(column, settings)),
@@ -455,7 +455,7 @@ impl DatasetStats {
 
 impl NumberDatasetStats {
 	/// Compute the stats for a number column.
-	pub fn compute(column: &NumberColumnView, _settings: &StatsSettings) -> Self {
+	pub fn compute(column: NumberColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),
@@ -489,7 +489,7 @@ impl NumberDatasetStats {
 
 impl EnumDatasetStats {
 	/// Compute the stats for an enum column.
-	pub fn compute(column: &EnumColumnView, _settings: &StatsSettings) -> Self {
+	pub fn compute(column: EnumColumnView, _settings: &StatsSettings) -> Self {
 		let mut histogram = vec![0; column.options.len() + 1];
 		for value in column.data {
 			histogram[*value] += 1;
@@ -519,7 +519,7 @@ impl EnumDatasetStats {
 
 impl TextDatasetStats {
 	/// Compute the stats for a text column.
-	pub fn compute(column: &TextColumnView, _settings: &StatsSettings) -> Self {
+	pub fn compute(column: TextColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),

@@ -24,7 +24,7 @@ impl Regressor {
 	/// Train a linear regressor.
 	pub fn train(
 		features: ArrayView2<f32>,
-		labels: &NumberColumnView,
+		labels: NumberColumnView,
 		options: &TrainOptions,
 		update_progress: &mut dyn FnMut(super::Progress),
 	) -> Self {

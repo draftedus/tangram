@@ -359,23 +359,23 @@ impl<'a> ColumnView<'a> {
 		}
 	}
 
-	pub fn as_number(&self) -> Option<&NumberColumnView> {
+	pub fn as_number(&self) -> Option<NumberColumnView> {
 		match self {
-			Self::Number(s) => Some(s),
+			Self::Number(s) => Some(s.clone()),
 			_ => None,
 		}
 	}
 
-	pub fn as_enum(&self) -> Option<&EnumColumnView> {
+	pub fn as_enum(&self) -> Option<EnumColumnView> {
 		match self {
-			Self::Enum(s) => Some(s),
+			Self::Enum(s) => Some(s.clone()),
 			_ => None,
 		}
 	}
 
-	pub fn as_text(&self) -> Option<&TextColumnView> {
+	pub fn as_text(&self) -> Option<TextColumnView> {
 		match self {
-			Self::Text(s) => Some(s),
+			Self::Text(s) => Some(s.clone()),
 			_ => None,
 		}
 	}
