@@ -4,7 +4,7 @@ use std::{
 	thread::{sleep, spawn, JoinHandle},
 	time::Duration,
 };
-use tangram_core::train::Progress;
+use tangram_core::Progress;
 use term_ui::{Screen, Style};
 
 pub struct ProgressView {

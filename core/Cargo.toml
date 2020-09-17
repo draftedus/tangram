@@ -27,5 +27,6 @@ tangram_id = { path = "../id" }
 tangram_linear = { path = "../linear" }
 tangram_metrics = { path = "../metrics" }
 tangram_progress = { path = "../progress" }
+tangram_text = { path = "../text" }
 tangram_tree = { path = "../tree" }
 thiserror = "1"

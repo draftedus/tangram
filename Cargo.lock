@@ -1844,6 +1844,7 @@ dependencies = [
  "tangram_linear 0.0.0",
  "tangram_metrics 0.0.0",
  "tangram_progress 0.0.0",
+ "tangram_text 0.0.0",
  "tangram_tree 0.0.0",
  "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1900,6 +1901,10 @@ dependencies = [
 
 [[package]]
 name = "tangram_progress"
+version = "0.0.0"
+
+[[package]]
+name = "tangram_text"
 version = "0.0.0"
 
 [[package]]

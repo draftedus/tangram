@@ -1,5 +1,4 @@
 use crate::stats;
-use crate::text;
 use num_traits::ToPrimitive;
 use std::{
 	cmp::Ordering,
@@ -72,7 +71,7 @@ pub struct TextColumnStats {
 	/// The total number of values.
 	pub count: usize,
 	/// The tokenizer is used to split text into tokens.
-	pub tokenizer: text::AlphanumericTokenizer,
+	pub tokenizer: tangram_text::AlphanumericTokenizer,
 	/// A map from unigram tokens to the total number of occurrences across all examples.
 	pub unigram_histogram: BTreeMap<String, usize>,
 	/// A map from bigram tokens to the total number of occurrences across all examples.
@@ -427,7 +426,7 @@ impl TextColumnStats {
 		let mut stats = Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),
-			tokenizer: text::AlphanumericTokenizer {},
+			tokenizer: tangram_text::AlphanumericTokenizer {},
 			unigram_histogram: BTreeMap::new(),
 			bigram_histogram: BTreeMap::new(),
 			per_example_histogram: BTreeMap::new(),
@@ -435,7 +434,7 @@ impl TextColumnStats {
 		for value in column.data {
 			let mut token_set = BTreeSet::new();
 			let tokens = stats.tokenizer.tokenize(value);
-			let bigrams = text::bigrams(&tokens);
+			let bigrams = tangram_text::bigrams(&tokens);
 			for token in tokens.into_iter() {
 				token_set.insert(token.clone());
 				*stats.unigram_histogram.entry(token).or_insert(0) += 1;

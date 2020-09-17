@@ -12,6 +12,7 @@ members = [
 	"pinwheel",
 	"progress",
 	"super_unsafe",
+	"text",
 	"tree",
 ]
 

@@ -1,4 +1,8 @@
-/** This splits text into tokens. All non-alphanumeric characters are considered token boundaries. The text is lowercased before splitting. All tokens must be >1 character long.
+/*!
+The `tangram_text` crate provides text processing utilities used by [`tangram_core`](docs.rs/crates/tangram_core).
+*/
+
+/** The `AlphanumericTokenizer` splits text into tokens. All non-alphanumeric characters are considered token boundaries. The text is lowercased before splitting. All tokens must be >1 character long.
 
 # Example
 

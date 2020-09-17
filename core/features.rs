@@ -3,7 +3,7 @@ This module defines feature groups that are used to transform raw data into valu
 
 */
 
-use crate::{stats, text};
+use crate::stats;
 use itertools::izip;
 use ndarray::{prelude::*, s};
 use tangram_dataframe::*;
@@ -422,9 +422,9 @@ fn compute_features_bag_of_words_ndarray(
 	for (mut features, value) in features.genrows_mut().into_iter().zip(data.iter()) {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = crate::text::AlphanumericTokenizer;
+				let tokenizer = tangram_text::AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
-				let bigrams = text::bigrams(&tokens);
+				let bigrams = tangram_text::bigrams(&tokens);
 				let mut total = 0.0;
 				for token in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group
@@ -521,9 +521,9 @@ fn compute_features_bag_of_words_dataframe(
 	for (example_index, value) in data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = crate::text::AlphanumericTokenizer;
+				let tokenizer = tangram_text::AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
-				let bigrams = text::bigrams(&tokens);
+				let bigrams = tangram_text::bigrams(&tokens);
 				let mut total = 0.0;
 				for token in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group
@@ -633,9 +633,9 @@ fn compute_features_bag_of_words_ndarray_value(
 	for (example_index, value) in data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = crate::text::AlphanumericTokenizer;
+				let tokenizer = tangram_text::AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
-				let bigrams = text::bigrams(&tokens);
+				let bigrams = tangram_text::bigrams(&tokens);
 				let mut total = 0.0;
 				for token in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group
