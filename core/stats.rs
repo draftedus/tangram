@@ -1,5 +1,5 @@
+use crate::stats;
 use crate::text;
-use crate::{stats, train::StatsProgress};
 use num_traits::ToPrimitive;
 use std::{
 	cmp::Ordering,
@@ -9,7 +9,77 @@ use std::{
 use tangram_dataframe::*;
 use tangram_finite::Finite;
 use tangram_metrics as metrics;
-use tangram_progress::ProgressCounter;
+
+/// This struct holds column stats.
+#[derive(Clone, Debug)]
+pub struct Stats(pub Vec<ColumnStats>);
+
+/// This is an enum describing the different types of stats where the type matches the type of the source column.
+#[derive(Clone, Debug)]
+pub enum ColumnStats {
+	Unknown(UnknownColumnStats),
+	Number(NumberColumnStats),
+	Enum(EnumColumnStats),
+	Text(TextColumnStats),
+}
+
+/// This struct contains stats for unknown columns.
+#[derive(Clone, Debug)]
+pub struct UnknownColumnStats {
+	/// This is the name of the column.
+	pub column_name: String,
+	pub count: usize,
+	pub invalid_count: usize,
+}
+
+/// This struct contains stats for number columns.
+#[derive(Clone, Debug)]
+pub struct NumberColumnStats {
+	/// This is the name of the column.
+	pub column_name: String,
+	/// The total number of values.
+	pub count: usize,
+	/// The total number of valid values.
+	pub valid_count: usize,
+	/// This is the total number of invalid values. Invalid values are values that fail to parse as finite f32.
+	pub invalid_count: usize,
+	/// This stores counts for each unique value.
+	pub histogram: BTreeMap<Finite<f32>, usize>,
+}
+
+/// This struct contains stats for enum columns.
+#[derive(Clone, Debug)]
+pub struct EnumColumnStats {
+	/// This is the name of the column.
+	pub column_name: String,
+	/// This is the total number of values.
+	pub count: usize,
+	/// The enum variants.
+	pub options: Vec<String>,
+	/// This is the total number of valid values.
+	pub valid_count: usize,
+	/// This is the total number of invalid values.
+	pub invalid_count: usize,
+	/// This is the histogram.
+	pub histogram: Vec<usize>,
+}
+
+/// This struct contains stats for text columns.
+#[derive(Clone, Debug)]
+pub struct TextColumnStats {
+	/// This is the name of the column.
+	pub column_name: String,
+	/// The total number of values.
+	pub count: usize,
+	/// The tokenizer is used to split text into tokens.
+	pub tokenizer: text::AlphanumericTokenizer,
+	/// A map from unigram tokens to the total number of occurrences across all examples.
+	pub unigram_histogram: BTreeMap<String, usize>,
+	/// A map from bigram tokens to the total number of occurrences across all examples.
+	pub bigram_histogram: BTreeMap<String, usize>,
+	/// A map from ngrams to the number of examples with at least one occurrence.
+	pub per_example_histogram: BTreeMap<String, usize>,
+}
 
 /// This struct contains settings used to compute stats.
 #[derive(Clone, Debug, PartialEq)]
@@ -35,17 +105,9 @@ impl Default for StatsSettings {
 	}
 }
 
-/// This struct is the output from `compute_stats`. It contains stats for the overall dataset and also stats for just the train and test portions.
-pub struct ComputeStatsOutput {
-	/// This reports column stats for the whole dataset.
-	pub overall_column_stats: Vec<ColumnStatsOutput>,
-	/// This reports stats for the train portion of the dataset.
-	pub train_column_stats: Vec<ColumnStatsOutput>,
-	/// This reports stats for the test portion of the dataset.
-	pub test_column_stats: Vec<ColumnStatsOutput>,
-}
+pub struct StatsOutput(pub Vec<ColumnStatsOutput>);
 
-/// An enum describing the different types of column stats.
+/// This enum describes the different types of column stats.
 #[derive(Debug)]
 pub enum ColumnStatsOutput {
 	Unknown(UnknownColumnStatsOutput),
@@ -120,327 +182,55 @@ pub struct TextColumnStatsOutput {
 	pub top_tokens: Vec<(String, u64, f32)>,
 }
 
-/// This function computes a range of statistics on the data in the train and test dataframes provided. After some transformations, these become the stats that appear under the "Training Stats" section in the reporting and monitoring web app.
-pub fn compute_stats(
-	dataframe_train: &DataFrameView,
-	dataframe_test: &DataFrameView,
-	settings: &StatsSettings,
-	update_progress: &mut impl FnMut(StatsProgress),
-) -> ComputeStatsOutput {
-	let n_cols = dataframe_train.ncols();
-	let n_rows = dataframe_train.nrows() + dataframe_test.nrows();
-
-	// First we collect the whole dataset into histograms, then we will use these histograms to compute subsequent statistics.
-	let dataset_counter = ProgressCounter::new(n_cols.to_u64().unwrap() * n_rows.to_u64().unwrap());
-	update_progress(StatsProgress::DatasetStats(dataset_counter));
-	let train_dataset_stats: Vec<DatasetStats> = dataframe_train
-		.columns
-		.iter()
-		.map(|column| DatasetStats::compute(column.view(), &settings))
-		.collect();
-	let test_dataset_stats: Vec<DatasetStats> = dataframe_test
-		.columns
-		.iter()
-		.map(|column| DatasetStats::compute(column.view(), &settings))
-		.collect();
-	// Merge the train and test dataset stats rather than recompute stats over the whole data.
-	let overall_dataset_stats: Vec<DatasetStats> = train_dataset_stats
-		.iter()
-		.cloned()
-		.zip(test_dataset_stats.iter().cloned())
-		.map(|(a, b)| a.merge(b))
-		.collect();
-
-	// Compute histogram stats.
-	let n_histogram_entries_train: usize = train_dataset_stats
-		.iter()
-		.map(|stats| match stats {
-			DatasetStats::Unknown(_) => 0,
-			DatasetStats::Number(s) => s.histogram.len(),
-			DatasetStats::Enum(_) => 0,
-			DatasetStats::Text(_) => 0,
-		})
-		.sum();
-	let n_histogram_entries_test: usize = train_dataset_stats
-		.iter()
-		.map(|stats| match stats {
-			DatasetStats::Unknown(_) => 0,
-			DatasetStats::Number(s) => s.histogram.len(),
-			DatasetStats::Enum(_) => 0,
-			DatasetStats::Text(_) => 0,
-		})
-		.sum();
-	let n_histogram_entries_overall: usize = n_histogram_entries_train + n_histogram_entries_test;
-	let n = n_histogram_entries_train + n_histogram_entries_test + n_histogram_entries_overall;
-	let n = n.to_u64().unwrap();
-	let histogram_counter = ProgressCounter::new(n);
-	update_progress(StatsProgress::HistogramStats(histogram_counter.clone()));
-	let train_histogram_stats: Vec<HistogramStats> = train_dataset_stats
-		.iter()
-		.map(|h| compute_histogram_stats(h, || histogram_counter.inc(1)))
-		.collect();
-	let test_histogram_stats: Vec<HistogramStats> = test_dataset_stats
-		.iter()
-		.map(|h| compute_histogram_stats(h, || histogram_counter.inc(1)))
-		.collect();
-	let overall_histogram_stats: Vec<HistogramStats> = overall_dataset_stats
-		.iter()
-		.map(|h| compute_histogram_stats(h, || histogram_counter.inc(1)))
-		.collect();
-
-	// Transform histograms and histogram_stats into column_stats.
-	let train_column_stats =
-		compute_column_stats(train_dataset_stats, train_histogram_stats, &settings);
-	let test_column_stats =
-		compute_column_stats(test_dataset_stats, test_histogram_stats, &settings);
-	let overall_column_stats =
-		compute_column_stats(overall_dataset_stats, overall_histogram_stats, &settings);
-
-	ComputeStatsOutput {
-		overall_column_stats,
-		test_column_stats,
-		train_column_stats,
+impl Stats {
+	pub fn compute(dataframe: &DataFrameView, settings: &StatsSettings) -> Self {
+		let column_stats = dataframe
+			.columns
+			.iter()
+			.map(|column| ColumnStats::compute(column.view(), &settings))
+			.collect();
+		Self(column_stats)
 	}
-}
 
-fn compute_column_stats(
-	dataset_stats: Vec<DatasetStats>,
-	histogram_stats: Vec<HistogramStats>,
-	settings: &StatsSettings,
-) -> Vec<stats::ColumnStatsOutput> {
-	dataset_stats
-		.into_iter()
-		.zip(histogram_stats.into_iter())
-		.map(|(dataset_stats, histogram_stats)| {
-			compute_column_stats_for_column(dataset_stats, histogram_stats, settings)
-		})
-		.collect()
-}
-
-fn compute_column_stats_for_column(
-	dataset_stats: DatasetStats,
-	histogram_stats: HistogramStats,
-	settings: &StatsSettings,
-) -> stats::ColumnStatsOutput {
-	match (dataset_stats, histogram_stats) {
-		(DatasetStats::Unknown(dataset_stats), HistogramStats::Unknown(_)) => {
-			stats::ColumnStatsOutput::Unknown(stats::UnknownColumnStatsOutput {
-				column_name: dataset_stats.column_name,
-				count: dataset_stats.count.to_u64().unwrap(),
-			})
-		}
-		(DatasetStats::Number(dataset_stats), HistogramStats::Number(histogram_stats)) => {
-			compute_number_column_stats(dataset_stats, histogram_stats, settings)
-		}
-		(DatasetStats::Enum(dataset_stats), HistogramStats::Enum(histogram_stats)) => {
-			compute_enum_column_stats(dataset_stats, histogram_stats, settings)
-		}
-		(DatasetStats::Text(dataset_stats), HistogramStats::Text(histogram_stats)) => {
-			compute_column_stats_text(dataset_stats, histogram_stats, settings)
-		}
-		_ => unreachable!(),
-	}
-}
-
-/// Compute [ColumnStats](struct.ColumnStats.html) for a number column by combining stats computed in dataset_stats and histogram_stats.
-fn compute_number_column_stats(
-	dataset_stats: NumberDatasetStats,
-	histogram_stats: NumberHistogramStats,
-	settings: &StatsSettings,
-) -> stats::ColumnStatsOutput {
-	let unique_values_count = dataset_stats.histogram.len().to_u64().unwrap();
-	let invalid_count = dataset_stats.invalid_count.to_u64().unwrap();
-	let histogram = if dataset_stats.histogram.len() <= settings.number_histogram_max_size {
-		Some(
-			dataset_stats
-				.histogram
-				.iter()
-				.map(|(value, count)| (value.get(), count.to_u64().unwrap()))
-				.collect(),
-		)
-	} else {
-		None
-	};
-	stats::ColumnStatsOutput::Number(stats::NumberColumnStatsOutput {
-		column_name: dataset_stats.column_name,
-		count: dataset_stats.count.to_u64().unwrap(),
-		histogram,
-		unique_count: unique_values_count,
-		max: histogram_stats.max,
-		mean: histogram_stats.mean,
-		min: histogram_stats.min,
-		invalid_count,
-		variance: histogram_stats.variance,
-		std: histogram_stats.variance.sqrt(),
-		p25: histogram_stats.p25,
-		p50: histogram_stats.p50,
-		p75: histogram_stats.p75,
-	})
-}
-
-/// Compute [ColumnStats](struct.ColumnStats.html) for an enum column.
-fn compute_enum_column_stats(
-	dataset_stats: EnumDatasetStats,
-	_histogram_stats: EnumHistogramStats,
-	_settings: &StatsSettings,
-) -> stats::ColumnStatsOutput {
-	stats::ColumnStatsOutput::Enum(stats::EnumColumnStatsOutput {
-		column_name: dataset_stats.column_name,
-		count: dataset_stats.count.to_u64().unwrap(),
-		invalid_count: dataset_stats.invalid_count,
-		unique_count: dataset_stats.options.len(),
-		histogram: dataset_stats
-			.options
+	pub fn merge(self, other: Stats) -> Self {
+		let column_stats: Vec<ColumnStats> = self
+			.0
 			.into_iter()
-			.zip(dataset_stats.histogram.into_iter().skip(1))
-			.map(|(value, count)| (value, count))
-			.collect(),
-	})
-}
-
-/// Compute [ColumnStats](struct.ColumnStats.html) for a text column.
-fn compute_column_stats_text(
-	dataset_stats: TextDatasetStats,
-	_histogram_stats: TextHistogramStats,
-	settings: &StatsSettings,
-) -> stats::ColumnStatsOutput {
-	#[derive(Clone, Debug, Eq)]
-	struct TokenEntry(String, u64);
-	impl std::cmp::Ord for TokenEntry {
-		fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-			self.1.cmp(&other.1)
-		}
+			.zip(other.0.into_iter())
+			.map(|(a, b)| a.merge(b))
+			.collect();
+		Self(column_stats)
 	}
-	impl std::cmp::PartialOrd for TokenEntry {
-		fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-			self.1.partial_cmp(&other.1)
-		}
+
+	pub fn finalize(self, settings: &StatsSettings) -> StatsOutput {
+		let column_stats = self
+			.0
+			.into_iter()
+			.map(|column_stats| column_stats.finalize(settings))
+			.collect();
+		StatsOutput(column_stats)
 	}
-	impl std::cmp::PartialEq for TokenEntry {
-		fn eq(&self, other: &Self) -> bool {
-			self.1.eq(&other.1)
-		}
-	}
-	let mut top_tokens = std::collections::BinaryHeap::new();
-	for (token, count) in dataset_stats.unigram_histogram.into_iter() {
-		top_tokens.push(TokenEntry(token, count.to_u64().unwrap()));
-	}
-	for (token, count) in dataset_stats.bigram_histogram.into_iter() {
-		top_tokens.push(TokenEntry(token, count.to_u64().unwrap()));
-	}
-	let n_examples = dataset_stats.count;
-	let per_example_histogram = dataset_stats.per_example_histogram;
-	let top_tokens = (0..settings.top_tokens_count)
-		.map(|_| top_tokens.pop())
-		.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
-		.filter_map(|(token, count)| {
-			let document_frequency = per_example_histogram.get(&token).unwrap();
-			if *document_frequency >= settings.min_document_frequency.to_usize().unwrap() {
-				// idf = log ((n + 1) / (1 + document_frequency)) + 1
-				let idf = ((1.0 + n_examples.to_f32().unwrap())
-					/ (1.0 + (document_frequency.to_f32().unwrap())))
-				.ln() + 1.0;
-				Some((token, count, idf))
-			} else {
-				None
-			}
-		})
-		.collect::<Vec<(String, u64, f32)>>();
-	stats::ColumnStatsOutput::Text(stats::TextColumnStatsOutput {
-		column_name: dataset_stats.column_name,
-		count: dataset_stats.count.to_u64().unwrap(),
-		top_tokens,
-	})
 }
 
-// This is an enum describing the different types of stats where the type matches the type of the source column.
-#[derive(Clone, Debug)]
-pub enum DatasetStats {
-	Unknown(UnknownDatasetStats),
-	Number(NumberDatasetStats),
-	Enum(EnumDatasetStats),
-	Text(TextDatasetStats),
-}
-
-/// This struct contains stats for unknown columns.
-#[derive(Clone, Debug)]
-pub struct UnknownDatasetStats {
-	/// This is the name of the column.
-	pub column_name: String,
-	pub count: usize,
-	pub invalid_count: usize,
-}
-
-/// This struct contains stats for number columns.
-#[derive(Clone, Debug)]
-pub struct NumberDatasetStats {
-	/// This is the name of the column.
-	pub column_name: String,
-	/// The total number of values.
-	pub count: usize,
-	/// The total number of valid values.
-	pub valid_count: usize,
-	/// This is the total number of invalid values. Invalid values are values that fail to parse as finite f32.
-	pub invalid_count: usize,
-	/// This stores counts for each unique value.
-	pub histogram: BTreeMap<Finite<f32>, usize>,
-}
-
-/// This struct contains stats for enum columns.
-#[derive(Clone, Debug)]
-pub struct EnumDatasetStats {
-	/// This is the name of the column.
-	pub column_name: String,
-	/// This is the total number of values.
-	pub count: usize,
-	/// The enum variants.
-	pub options: Vec<String>,
-	/// This is the total number of valid values.
-	pub valid_count: usize,
-	/// This is the total number of invalid values.
-	pub invalid_count: usize,
-	/// This is the histogram.
-	pub histogram: Vec<usize>,
-}
-
-/// This struct contains stats for text columns.
-#[derive(Clone, Debug)]
-pub struct TextDatasetStats {
-	/// This is the name of the column.
-	pub column_name: String,
-	/// The total number of values.
-	pub count: usize,
-	/// The tokenizer is used to split text into tokens.
-	pub tokenizer: text::AlphanumericTokenizer,
-	/// A map from unigram tokens to the total number of occurrences across all examples.
-	pub unigram_histogram: BTreeMap<String, usize>,
-	/// A map from bigram tokens to the total number of occurrences across all examples.
-	pub bigram_histogram: BTreeMap<String, usize>,
-	/// A map from ngrams to the number of examples with at least one occurrence.
-	pub per_example_histogram: BTreeMap<String, usize>,
-}
-
-impl DatasetStats {
-	/// Compute the stats for a given column and settings.
-	pub fn compute(column: ColumnView, settings: &StatsSettings) -> Self {
+impl ColumnStats {
+	fn compute(column: ColumnView, settings: &StatsSettings) -> Self {
 		match column {
-			ColumnView::Unknown(column) => Self::Unknown(UnknownDatasetStats {
+			ColumnView::Unknown(column) => Self::Unknown(UnknownColumnStats {
 				column_name: column.name.to_owned(),
 				count: column.len,
 				invalid_count: column.len,
 			}),
 			ColumnView::Number(column) => {
-				Self::Number(NumberDatasetStats::compute(column.view(), settings))
+				Self::Number(NumberColumnStats::compute(column.view(), settings))
 			}
-			ColumnView::Enum(column) => Self::Enum(EnumDatasetStats::compute(column, settings)),
-			ColumnView::Text(column) => Self::Text(TextDatasetStats::compute(column, settings)),
+			ColumnView::Enum(column) => Self::Enum(EnumColumnStats::compute(column, settings)),
+			ColumnView::Text(column) => Self::Text(TextColumnStats::compute(column, settings)),
 		}
 	}
 
-	/// Merge two stats structs of the same type together.
-	pub fn merge(self, other: Self) -> Self {
+	fn merge(self, other: Self) -> Self {
 		match (self, other) {
-			(Self::Unknown(a), Self::Unknown(b)) => Self::Unknown(UnknownDatasetStats {
+			(Self::Unknown(a), Self::Unknown(b)) => Self::Unknown(UnknownColumnStats {
 				column_name: a.column_name.to_owned(),
 				count: a.count + b.count,
 				invalid_count: a.invalid_count + b.invalid_count,
@@ -451,11 +241,22 @@ impl DatasetStats {
 			_ => unreachable!(),
 		}
 	}
+
+	fn finalize(self, settings: &StatsSettings) -> ColumnStatsOutput {
+		match self {
+			Self::Unknown(s) => ColumnStatsOutput::Unknown(stats::UnknownColumnStatsOutput {
+				column_name: s.column_name,
+				count: s.count.to_u64().unwrap(),
+			}),
+			Self::Number(s) => ColumnStatsOutput::Number(s.finalize(settings)),
+			Self::Enum(s) => ColumnStatsOutput::Enum(s.finalize(settings)),
+			Self::Text(s) => ColumnStatsOutput::Text(s.finalize(settings)),
+		}
+	}
 }
 
-impl NumberDatasetStats {
-	/// Compute the stats for a number column.
-	pub fn compute(column: NumberColumnView, _settings: &StatsSettings) -> Self {
+impl NumberColumnStats {
+	fn compute(column: NumberColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),
@@ -475,8 +276,8 @@ impl NumberDatasetStats {
 		}
 		stats
 	}
-	/// Merge two number stats structs together.
-	pub fn merge(mut self, other: Self) -> Self {
+
+	fn merge(mut self, other: Self) -> Self {
 		for (value, count) in other.histogram.iter() {
 			*self.histogram.entry(*value).or_insert(0) += count;
 		}
@@ -485,11 +286,101 @@ impl NumberDatasetStats {
 		self.valid_count += other.valid_count;
 		self
 	}
+
+	fn finalize(self, settings: &StatsSettings) -> NumberColumnStatsOutput {
+		let unique_values_count = self.histogram.len().to_u64().unwrap();
+		let invalid_count = self.invalid_count.to_u64().unwrap();
+		let histogram = if self.histogram.len() <= settings.number_histogram_max_size {
+			Some(
+				self.histogram
+					.iter()
+					.map(|(value, count)| (value.get(), count.to_u64().unwrap()))
+					.collect(),
+			)
+		} else {
+			None
+		};
+		let min = self.histogram.iter().next().unwrap().0.get();
+		let max = self.histogram.iter().next_back().unwrap().0.get();
+		let total_values_count = self.valid_count.to_f32().unwrap();
+		let quantiles: Vec<f32> = vec![0.25, 0.50, 0.75];
+		// Find the index of each quantile given the total number of values in the dataset.
+		let quantile_indexes: Vec<usize> = quantiles
+			.iter()
+			.map(|q| ((total_values_count - 1.0) * q).trunc().to_usize().unwrap())
+			.collect();
+		// This is the fractiononal part of the index used to interpolate values if the index is not an integer value.
+		let quantile_fracts: Vec<f32> = quantiles
+			.iter()
+			.map(|q| ((total_values_count - 1.0) * q).fract())
+			.collect();
+		let mut quantiles: Vec<Option<f32>> = vec![None; quantiles.len()];
+		let mut current_count: usize = 0;
+		let mut mean = 0.0;
+		let mut m2 = 0.0;
+		let mut iter = self.histogram.iter().peekable();
+		while let Some((value, count)) = iter.next() {
+			let value = value.get();
+			let (new_mean, new_m2) = metrics::merge_mean_m2(
+				current_count.to_u64().unwrap(),
+				mean,
+				m2,
+				count.to_u64().unwrap(),
+				value.to_f64().unwrap(),
+				0.0,
+			);
+			mean = new_mean;
+			m2 = new_m2;
+			current_count += count;
+			let quantiles_iter = quantiles
+				.iter_mut()
+				.zip(quantile_indexes.iter().zip(quantile_fracts.iter()))
+				.filter(|(q, (_, _))| q.is_none());
+			for (quantile, (index, fract)) in quantiles_iter {
+				match (current_count - 1).cmp(index) {
+					Ordering::Equal => {
+						if *fract > 0.0 {
+							// Interpolate between two values.
+							let next_value = iter.peek().unwrap().0.get();
+							*quantile = Some(value * (1.0 - fract) + next_value * fract);
+						} else {
+							*quantile = Some(value);
+						}
+					}
+					Ordering::Greater => *quantile = Some(value),
+					Ordering::Less => {}
+				}
+			}
+		}
+		let quantiles: Vec<f32> = quantiles.into_iter().map(|q| q.unwrap()).collect();
+		let p25 = quantiles[0];
+		let p50 = quantiles[1];
+		let p75 = quantiles[2];
+		let mean = mean.to_f32().unwrap();
+		let variance = metrics::m2_to_variance(
+			m2,
+			NonZeroU64::new(current_count.to_u64().unwrap()).unwrap(),
+		);
+		NumberColumnStatsOutput {
+			column_name: self.column_name,
+			count: self.count.to_u64().unwrap(),
+			histogram,
+			unique_count: unique_values_count,
+			max,
+			mean,
+			min,
+			invalid_count,
+			variance,
+			std: variance.sqrt(),
+			p25,
+			p50,
+			p75,
+		}
+	}
 }
 
-impl EnumDatasetStats {
-	/// Compute the stats for an enum column.
-	pub fn compute(column: EnumColumnView, _settings: &StatsSettings) -> Self {
+impl EnumColumnStats {
+	fn compute(column: EnumColumnView, _settings: &StatsSettings) -> Self {
 		let mut histogram = vec![0; column.options.len() + 1];
 		for value in column.data {
 			histogram[*value] += 1;
@@ -505,8 +396,7 @@ impl EnumDatasetStats {
 		}
 	}
 
-	/// Merge two enum stats structs together.
-	pub fn merge(mut self, other: Self) -> Self {
+	fn merge(mut self, other: Self) -> Self {
 		for (a, b) in self.histogram.iter_mut().zip(other.histogram.iter()) {
 			*a += b;
 		}
@@ -515,11 +405,25 @@ impl EnumDatasetStats {
 		self.valid_count += other.valid_count;
 		self
 	}
+
+	fn finalize(self, _settings: &StatsSettings) -> EnumColumnStatsOutput {
+		stats::EnumColumnStatsOutput {
+			column_name: self.column_name,
+			count: self.count.to_u64().unwrap(),
+			invalid_count: self.invalid_count,
+			unique_count: self.options.len(),
+			histogram: self
+				.options
+				.into_iter()
+				.zip(self.histogram.into_iter().skip(1))
+				.map(|(value, count)| (value, count))
+				.collect(),
+		}
+	}
 }
 
-impl TextDatasetStats {
-	/// Compute the stats for a text column.
-	pub fn compute(column: TextColumnView, _settings: &StatsSettings) -> Self {
+impl TextColumnStats {
+	fn compute(column: TextColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),
@@ -547,8 +451,7 @@ impl TextDatasetStats {
 		stats
 	}
 
-	/// Merge two text stats structs together.
-	pub fn merge(mut self, other: Self) -> Self {
+	fn merge(mut self, other: Self) -> Self {
 		self.count += other.count;
 		for (value, count) in other.unigram_histogram.into_iter() {
 			if let Some(entry) = self.unigram_histogram.get_mut(&value) {
@@ -573,132 +476,55 @@ impl TextDatasetStats {
 		}
 		self
 	}
-}
 
-/// HistogramStats contain statistics computed using aggregated histograms of the original column. We use aggregated histogram statistics for computing quantiles on number columns. Instead of sorting `O(n_examples)`, we only need to sort `O(n_unique_values)`.
-#[derive(Debug, PartialEq)]
-pub enum HistogramStats {
-	Unknown(UnknownHistogramStats),
-	Text(TextHistogramStats),
-	Number(NumberHistogramStats),
-	Enum(EnumHistogramStats),
-}
-
-/// UnknownHistogramStats are empty.
-#[derive(Debug, PartialEq)]
-pub struct UnknownHistogramStats {}
-
-/// TextHistogramStats are empty.
-#[derive(Debug, PartialEq)]
-pub struct TextHistogramStats {}
-
-/// NumberHistogramStats contain statistics computed using aggregated histograms of the original column.
-#[derive(Debug, PartialEq)]
-pub struct NumberHistogramStats {
-	pub mean: f32,
-	pub variance: f32,
-	pub min: f32,
-	pub p25: f32,
-	pub p50: f32,
-	pub p75: f32,
-	pub max: f32,
-}
-
-/// EnumHistogramStats are emtpy.
-#[derive(Debug, PartialEq)]
-pub struct EnumHistogramStats {}
-
-/// Compute stats using the `dataset_stats` which contain histograms of the original data.
-pub fn compute_histogram_stats(
-	dataset_stats: &DatasetStats,
-	progress: impl Fn(),
-) -> HistogramStats {
-	match dataset_stats {
-		DatasetStats::Unknown(_) => HistogramStats::Unknown(UnknownHistogramStats {}),
-		DatasetStats::Number(dataset_stats) => {
-			HistogramStats::Number(compute_number_histogram_stats(
-				&dataset_stats.histogram,
-				dataset_stats.valid_count,
-				progress,
-			))
-		}
-		DatasetStats::Enum(_) => HistogramStats::Enum(EnumHistogramStats {}),
-		DatasetStats::Text(_) => HistogramStats::Text(TextHistogramStats {}),
-	}
-}
-
-/// Compute stats for number columns using the `dataset_stats` which contain histograms of the original data.
-fn compute_number_histogram_stats(
-	histogram: &BTreeMap<Finite<f32>, usize>,
-	total_values_count: usize,
-	progress: impl Fn(),
-) -> NumberHistogramStats {
-	let min = histogram.iter().next().unwrap().0.get();
-	let max = histogram.iter().next_back().unwrap().0.get();
-	let total_values_count = total_values_count.to_f32().unwrap();
-	let quantiles: Vec<f32> = vec![0.25, 0.50, 0.75];
-	// find the index of each quantile given the total number of values in the dataset
-	let quantile_indexes: Vec<usize> = quantiles
-		.iter()
-		.map(|q| ((total_values_count - 1.0) * q).trunc().to_usize().unwrap())
-		.collect();
-	// the fractiononal part of the index
-	// used to interpolate values if the index is not an integer value
-	let quantile_fracts: Vec<f32> = quantiles
-		.iter()
-		.map(|q| ((total_values_count - 1.0) * q).fract())
-		.collect();
-	let mut quantiles: Vec<Option<f32>> = vec![None; quantiles.len()];
-	let mut current_count: usize = 0;
-	let mut mean = 0.0;
-	let mut m2 = 0.0;
-	let mut iter = histogram.iter().peekable();
-	while let Some((value, count)) = iter.next() {
-		let value = value.get();
-		let (new_mean, new_m2) = metrics::merge_mean_m2(
-			current_count.to_u64().unwrap(),
-			mean,
-			m2,
-			count.to_u64().unwrap(),
-			value.to_f64().unwrap(),
-			0.0,
-		);
-		mean = new_mean;
-		m2 = new_m2;
-		current_count += count;
-		let quantiles_iter = quantiles
-			.iter_mut()
-			.zip(quantile_indexes.iter().zip(quantile_fracts.iter()))
-			.filter(|(q, (_, _))| q.is_none());
-		for (quantile, (index, fract)) in quantiles_iter {
-			match (current_count - 1).cmp(index) {
-				Ordering::Equal => {
-					if *fract > 0.0 {
-						// interpolate between two values
-						let next_value = iter.peek().unwrap().0.get();
-						*quantile = Some(value * (1.0 - fract) + next_value * fract);
-					} else {
-						*quantile = Some(value);
-					}
-				}
-				Ordering::Greater => *quantile = Some(value),
-				Ordering::Less => {}
+	fn finalize(self, settings: &StatsSettings) -> TextColumnStatsOutput {
+		#[derive(Clone, Debug, Eq)]
+		struct TokenEntry(String, u64);
+		impl std::cmp::Ord for TokenEntry {
+			fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+				self.1.cmp(&other.1)
 			}
 		}
-		progress();
-	}
-	let quantiles: Vec<f32> = quantiles.into_iter().map(|q| q.unwrap()).collect();
-	NumberHistogramStats {
-		p25: quantiles[0],
-		p50: quantiles[1],
-		p75: quantiles[2],
-		min,
-		max,
-		mean: mean.to_f32().unwrap(),
-		variance: metrics::m2_to_variance(
-			m2,
-			NonZeroU64::new(current_count.to_u64().unwrap()).unwrap(),
-		),
+		impl std::cmp::PartialOrd for TokenEntry {
+			fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+				self.1.partial_cmp(&other.1)
+			}
+		}
+		impl std::cmp::PartialEq for TokenEntry {
+			fn eq(&self, other: &Self) -> bool {
+				self.1.eq(&other.1)
+			}
+		}
+		let mut top_tokens = std::collections::BinaryHeap::new();
+		for (token, count) in self.unigram_histogram.iter() {
+			top_tokens.push(TokenEntry(token.clone(), count.to_u64().unwrap()));
+		}
+		for (token, count) in self.bigram_histogram.iter() {
+			top_tokens.push(TokenEntry(token.clone(), count.to_u64().unwrap()));
+		}
+		let n_examples = self.count;
+		let per_example_histogram = &self.per_example_histogram;
+		let top_tokens = (0..settings.top_tokens_count)
+			.map(|_| top_tokens.pop())
+			.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
+			.filter_map(|(token, count)| {
+				let document_frequency = per_example_histogram.get(&token).unwrap();
+				if *document_frequency >= settings.min_document_frequency.to_usize().unwrap() {
+					// idf = log ((n + 1) / (1 + document_frequency)) + 1
+					let idf = ((1.0 + n_examples.to_f32().unwrap())
+						/ (1.0 + (document_frequency.to_f32().unwrap())))
+					.ln() + 1.0;
+					Some((token, count, idf))
+				} else {
+					None
+				}
+			})
+			.collect::<Vec<(String, u64, f32)>>();
+		TextColumnStatsOutput {
+			column_name: self.column_name,
+			count: self.count.to_u64().unwrap(),
+			top_tokens,
+		}
 	}
 }
 
@@ -712,57 +538,4 @@ impl ColumnStatsOutput {
 			Self::Enum(value) => &value.column_name,
 		}
 	}
-}
-
-#[test]
-fn test_compute_number_histogram_stats_one() {
-	let mut histogram = BTreeMap::new();
-	histogram.insert(Finite::new(1.0).unwrap(), 1);
-	let left = compute_number_histogram_stats(&histogram, 1, || {});
-	let right = NumberHistogramStats {
-		min: 1.0,
-		max: 1.0,
-		p25: 1.0,
-		p50: 1.0,
-		p75: 1.0,
-		mean: 1.0,
-		variance: 0.0,
-	};
-	assert_eq!(left, right);
-}
-
-#[test]
-fn test_compute_number_histogram_stats_two() {
-	let mut histogram = BTreeMap::new();
-	histogram.insert(Finite::new(1.0).unwrap(), 1);
-	histogram.insert(Finite::new(2.0).unwrap(), 1);
-	let left = compute_number_histogram_stats(&histogram, 2, || {});
-	let right = NumberHistogramStats {
-		min: 1.0,
-		max: 2.0,
-		p25: 1.25,
-		p50: 1.5,
-		p75: 1.75,
-		mean: 1.5,
-		variance: 0.25,
-	};
-	assert_eq!(left, right);
-}
-
-#[test]
-fn test_compute_number_histogram_stats_multiple() {
-	let mut histogram = BTreeMap::new();
-	histogram.insert(Finite::new(1.0).unwrap(), 3);
-	histogram.insert(Finite::new(2.0).unwrap(), 1);
-	let left = compute_number_histogram_stats(&histogram, 4, || {});
-	let right = NumberHistogramStats {
-		min: 1.0,
-		max: 2.0,
-		p25: 1.0,
-		p50: 1.0,
-		p75: 1.25,
-		mean: 1.25,
-		variance: 0.1875,
-	};
-	assert_eq!(left, right);
 }

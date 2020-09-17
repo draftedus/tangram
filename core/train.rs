@@ -23,24 +23,24 @@ pub fn train(
 	config_path: Option<&Path>,
 	update_progress: &mut dyn FnMut(Progress),
 ) -> Result<model::Model> {
-	// load the config from the config file, if provided.
+	// Load the config from the config file, if provided.
 	let config: Option<Config> = load_config(config_path)?;
 
-	// load the dataframe from the csv file
+	// Load the dataframe from the csv file.
 	let mut dataframe = load_dataframe(file_path, &config, update_progress)?;
 	let row_count = dataframe.nrows();
 
-	// retrieve the column names
+	// Retrieve the column names.
 	let column_names: Vec<String> = dataframe
 		.columns
 		.iter()
 		.map(|column| column.name().to_owned())
 		.collect();
 
-	// shuffle the dataframe if enabled
+	// Shuffle the dataframe if enabled.
 	shuffle(&mut dataframe, &config, update_progress);
 
-	// train test split
+	// Split the dataframe into train and test dataframes.
 	let test_fraction = config
 		.as_ref()
 		.and_then(|config| config.test_fraction)
@@ -51,22 +51,18 @@ pub fn train(
 	let split_index = n_records_train;
 	let (dataframe_train, dataframe_test) = dataframe.view().split_at_row(split_index);
 
-	// compute stats
+	// Compute stats.
 	let stats_settings = stats::StatsSettings {
 		..Default::default()
 	};
-	let stats::ComputeStatsOutput {
-		mut overall_column_stats,
-		mut test_column_stats,
-		mut train_column_stats,
-	} = stats::compute_stats(
-		&dataframe_train,
-		&dataframe_test,
-		&stats_settings,
-		&mut |stats_progress| update_progress(Progress::Stats(stats_progress)),
-	);
+	let train_column_stats = stats::Stats::compute(&dataframe_train, &stats_settings);
+	let test_column_stats = stats::Stats::compute(&dataframe_test, &stats_settings);
+	let overall_column_stats = train_column_stats.clone().merge(test_column_stats.clone());
+	let mut train_column_stats = train_column_stats.finalize(&stats_settings).0;
+	let mut test_column_stats = test_column_stats.finalize(&stats_settings).0;
+	let mut overall_column_stats = overall_column_stats.finalize(&stats_settings).0;
 
-	// find the target column
+	// Find the target column.
 	let target_column_index = column_names
 		.iter()
 		.position(|column_name| *column_name == target_column_name)
@@ -78,12 +74,12 @@ pub fn train(
 			)
 		})?;
 
-	// pull out the target column from the column stats
-	let overall_target_column_stats = overall_column_stats.remove(target_column_index);
+	// Pull out the target column from the column stats.
 	let train_target_column_stats = train_column_stats.remove(target_column_index);
 	let test_target_column_stats = test_column_stats.remove(target_column_index);
+	let overall_target_column_stats = overall_column_stats.remove(target_column_index);
 
-	// determine the task
+	// Determine the task.
 	let task = match &overall_target_column_stats {
 		stats::ColumnStatsOutput::Number(_) => Task::Regression,
 		stats::ColumnStatsOutput::Enum(target_column) => Task::Classification {
@@ -96,21 +92,21 @@ pub fn train(
 		_ => return Err(format_err!("invalid target column type")),
 	};
 
-	// split the train dataset into train and model comparison datasets
+	// Split the train dataset into train and model comparison datasets.
 	let comparison_fraction = 0.1;
 	let split_index = ((1.0 - comparison_fraction) * dataframe_train.nrows().to_f32().unwrap())
 		.to_usize()
 		.unwrap();
 	let (dataframe_train, dataframe_comparison) = dataframe_train.split_at_row(split_index);
 
-	// choose the comparison metric
+	// Choose the comparison metric.
 	let comparison_metric = choose_comparison_metric(&config, &task)?;
 
-	// create the hyperparameter grid
+	// Create the hyperparameter grid.
 	let grid =
 		compute_hyperparameter_grid(&config, &task, target_column_index, &overall_column_stats);
 
-	// train each model in the grid and compute model comparison metrics
+	// Train each model in the grid and compute model comparison metrics.
 	let num_models = grid.len();
 	let outputs: Vec<(TrainModelOutput, TestMetrics)> = grid
 		.into_iter()
@@ -123,7 +119,6 @@ pub fn train(
 					grid_item_progress: progress,
 				}))
 			});
-
 			let model_comparison_metrics = compute_model_comparison_metrics(
 				&train_model_output,
 				&dataframe_comparison,
@@ -141,14 +136,14 @@ pub fn train(
 		})
 		.collect();
 
-	// choose the best model
+	// Choose the best model.
 	let train_model_output = choose_best_model(outputs, &comparison_metric);
 
-	// test the best model
+	// Test the best model.
 	update_progress(Progress::Testing);
 	let test_metrics = test_model(&train_model_output, &dataframe_test, &mut |_| {});
 
-	// assemble the model
+	// Assemble the model.
 	let model = match task {
 		Task::Regression => {
 			let comparison_metric = match comparison_metric {
@@ -383,8 +378,8 @@ pub enum Progress {
 
 #[derive(Debug)]
 pub enum StatsProgress {
-	DatasetStats(ProgressCounter),
-	HistogramStats(ProgressCounter),
+	ComputingHistograms(ProgressCounter),
+	Finalizing(ProgressCounter),
 }
 
 #[derive(Debug)]
