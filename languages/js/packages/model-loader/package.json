@@ -1,8 +1,0 @@
-{
-	"author": "Tangram",
-	"description": "Webpack loader for Tangram model files.",
-	"license": "MIT",
-	"main": "index.js",
-	"name": "@tangramhq/model-loader",
-	"version": "1.0.0"
-}

@@ -447,8 +447,8 @@ fn compute_features_bag_of_words_ndarray(
 }
 
 /// Compute features given the original data `dataframe` and a slice of [FeatureGroup](enum.FeatureGroup.html) one for each column in the dataframe. The function returns a new DataFrame with the computed features. A `progress` function is passed in and called to track progress of the function. This function is used to compute features for training [tree](../tree/index.html) models.
-pub fn compute_features_dataframe<'a>(
-	dataframe: &DataFrameView<'a>,
+pub fn compute_features_dataframe(
+	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
 	progress: &dyn Fn(),
 ) -> DataFrame {
