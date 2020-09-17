@@ -1,5 +1,3 @@
-declare var Deno: any
-
 declare module '*.gif' {
 	let gif: string
 	export default gif
