@@ -17,9 +17,8 @@ mod regression;
 pub use self::accuracy::Accuracy;
 pub use self::auc_roc::*;
 pub use self::binary_classification::{
-	BinaryClassificationClassMetricsOutput, BinaryClassificationMetrics,
-	BinaryClassificationMetricsInput, BinaryClassificationMetricsOutput,
-	BinaryClassificationThresholdMetricsOutput,
+	BinaryClassificationMetrics, BinaryClassificationMetricsInput,
+	BinaryClassificationMetricsOutput, BinaryClassificationThresholdMetricsOutput,
 };
 pub use self::binary_cross_entropy::{BinaryCrossEntropy, BinaryCrossEntropyInput};
 pub use self::classification::{

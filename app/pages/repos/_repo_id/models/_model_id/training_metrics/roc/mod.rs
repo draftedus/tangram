@@ -35,11 +35,11 @@ pub async fn get(
 #[serde(rename_all = "camelCase")]
 struct Props {
 	id: String,
-	roc_curve_data: Vec<Vec<ROCCurveData>>,
+	roc_curve_data: Vec<ROCCurveData>,
 	classes: Vec<String>,
 	model_layout_info: ModelLayoutInfo,
 	class: String,
-	auc_roc: Vec<f32>,
+	auc_roc: f32,
 }
 
 #[derive(serde::Serialize)]
@@ -72,42 +72,29 @@ async fn props(
 	let model = get_model(&mut db, model_id).await?;
 	match model {
 		tangram_core::model::Model::Classifier(model) => {
-			let class_metrics = match &model.model {
+			let metrics = match &model.model {
 				tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
-					&inner_model.class_metrics
+					&inner_model.metrics
 				}
 				tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
-					&inner_model.class_metrics
+					&inner_model.metrics
 				}
 				_ => return Err(Error::BadRequest.into()),
 			};
-			let roc_curve_data = class_metrics
+			let classes = model.classes().to_owned();
+			let class = class.unwrap_or_else(|| classes[1].to_owned());
+			let roc_curve_data = metrics
+				.thresholds
 				.iter()
-				.map(|class_metrics| {
-					class_metrics
-						.thresholds
-						.iter()
-						.map(|class_metrics| ROCCurveData {
-							false_positive_rate: class_metrics.false_positive_rate,
-							true_positive_rate: class_metrics.true_positive_rate,
-						})
-						.collect()
+				.map(|class_metrics| ROCCurveData {
+					false_positive_rate: class_metrics.false_positive_rate,
+					true_positive_rate: class_metrics.true_positive_rate,
 				})
 				.collect();
-			let auc_roc = class_metrics
-				.iter()
-				.map(|class_metrics| class_metrics.auc_roc)
-				.collect();
+			let auc_roc = metrics.auc_roc;
 			let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-			db.commit().await?;
 
-			let classes = model.classes().to_owned();
-			let class_index = if let Some(class) = &class {
-				classes.iter().position(|c| c == class).unwrap()
-			} else {
-				1
-			};
-			let class = class.unwrap_or_else(|| classes[class_index].to_owned());
+			db.commit().await?;
 
 			Ok(Props {
 				id: model_id.to_string(),

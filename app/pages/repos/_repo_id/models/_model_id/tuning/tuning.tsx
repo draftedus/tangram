@@ -6,29 +6,22 @@ import { useState } from 'preact/hooks'
 
 export type TuningProps = {
 	baselineThreshold: number
-	classes: string[]
-	metrics: Array<
-		Array<{
-			accuracy: number
-			f1Score: number
-			falseNegatives: number
-			falsePositives: number
-			precision: number
-			recall: number
-			threshold: number
-			trueNegatives: number
-			truePositives: number
-		}>
-	>
+	class: string
+	metrics: Array<{
+		accuracy: number
+		f1Score: number
+		falseNegatives: number
+		falsePositives: number
+		precision: number
+		recall: number
+		threshold: number
+		trueNegatives: number
+		truePositives: number
+	}>
 }
 
 export function Tuning(props: TuningProps) {
-	let [selectedClass, setSelectedClass] = useState(props.classes[1])
-	let selectedClassIndex = props.classes.indexOf(selectedClass)
-
-	let selectedClassThresholdMetrics = props.metrics[selectedClassIndex]
-
-	let thresholds = selectedClassThresholdMetrics.map(
+	let thresholds = props.metrics.map(
 		thresholdMetric => thresholdMetric.threshold,
 	)
 
@@ -39,14 +32,8 @@ export function Tuning(props: TuningProps) {
 	)
 	let selectedThreshold = thresholds[selectedThresholdIndex]
 
-	let baselineMetrics = selectedClassThresholdMetrics[baselineIndex]
-	let selectedThresholdMetrics =
-		selectedClassThresholdMetrics[selectedThresholdIndex]
-
-	let onChange = (value: string) => {
-		console.log(value)
-		setSelectedClass(value)
-	}
+	let baselineMetrics = props.metrics[baselineIndex]
+	let selectedThresholdMetrics = props.metrics[selectedThresholdIndex]
 
 	return (
 		<ui.S1>
@@ -65,14 +52,6 @@ export function Tuning(props: TuningProps) {
 					step={1}
 					value={selectedThresholdIndex}
 					valueFormatter={index => ui.formatNumber(thresholds[index], 2)}
-				/>
-			</ui.S2>
-			<ui.S2>
-				<ui.SelectField
-					label="Select Class"
-					onChange={onChange}
-					options={props.classes}
-					value={selectedClass}
 				/>
 			</ui.S2>
 			{selectedThreshold == 0.0 ? (
@@ -158,7 +137,7 @@ export function Tuning(props: TuningProps) {
 			</ui.S2>
 			<ui.S2>
 				<ui.ConfusionMatrixComparison
-					classLabel={props.classes[selectedClassIndex]}
+					classLabel={props.class}
 					colorA={baselineColor}
 					colorB={selectedThresholdColor}
 					valueA={{

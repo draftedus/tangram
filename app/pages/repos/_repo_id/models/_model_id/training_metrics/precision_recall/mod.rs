@@ -36,14 +36,14 @@ pub async fn get(
 struct Props {
 	class: String,
 	classes: Vec<String>,
-	data: Vec<DataPoint>,
+	precision_recall_curve_data: Vec<PrecisionRecallPoint>,
 	id: String,
 	model_layout_info: ModelLayoutInfo,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DataPoint {
+struct PrecisionRecallPoint {
 	precision: f32,
 	recall: f32,
 	threshold: f32,
@@ -74,39 +74,30 @@ async fn props(
 		tangram_core::model::Model::Classifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let classes = model.classes().to_owned();
-	let class_index = if let Some(class) = &class {
-		classes.iter().position(|c| c == class).unwrap()
-	} else {
-		1
-	};
-	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
-	let class_metrics = match &model.model {
-		tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
-			&inner_model.class_metrics
-		}
-		tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
-			&inner_model.class_metrics
-		}
+	let metrics = match &model.model {
+		tangram_core::model::ClassificationModel::LinearBinary(inner_model) => &inner_model.metrics,
+		tangram_core::model::ClassificationModel::TreeBinary(inner_model) => &inner_model.metrics,
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let data = class_metrics
-		.get(class_index)
-		.unwrap()
+	let classes = model.classes().to_owned();
+	let class = class.unwrap_or_else(|| classes[1].to_owned());
+	let precision_recall_curve_data = metrics
 		.thresholds
 		.iter()
-		.map(|class_metrics| DataPoint {
+		.map(|class_metrics| PrecisionRecallPoint {
 			precision: class_metrics.precision,
 			recall: class_metrics.recall,
 			threshold: class_metrics.threshold,
 		})
 		.collect();
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+
 	db.commit().await?;
+
 	Ok(Props {
 		class,
-		classes: model.classes().to_owned(),
-		data,
+		classes,
+		precision_recall_curve_data,
 		id: model_id.to_string(),
 		model_layout_info,
 	})

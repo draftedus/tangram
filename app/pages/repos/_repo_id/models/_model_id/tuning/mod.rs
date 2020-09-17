@@ -38,8 +38,8 @@ struct Props {
 #[serde(rename_all = "camelCase")]
 struct Inner {
 	baseline_threshold: f32,
-	metrics: Vec<Vec<Metrics>>,
-	classes: Vec<String>,
+	metrics: Vec<Metrics>,
+	class: String,
 }
 
 #[derive(serde::Serialize)]
@@ -77,22 +77,20 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			let classes = model.classes().to_owned();
 			match model.model {
 				tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
-					let class_metrics = inner_model.class_metrics;
-					let metrics = build_threshold_class_metrics(class_metrics);
+					let metrics = build_threshold_metrics(inner_model.metrics);
 					Some(Inner {
 						baseline_threshold: 0.5,
 						metrics,
-						classes,
+						class: classes[1].to_owned(),
 					})
 				}
 				tangram_core::model::ClassificationModel::LinearMulticlass(_) => None,
 				tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
-					let class_metrics = inner_model.class_metrics;
-					let metrics = build_threshold_class_metrics(class_metrics);
+					let metrics = build_threshold_metrics(inner_model.metrics);
 					Some(Inner {
 						baseline_threshold: 0.5,
 						metrics,
-						classes,
+						class: classes[1].to_owned(),
 					})
 				}
 				tangram_core::model::ClassificationModel::TreeMulticlass(_) => None,
@@ -108,27 +106,20 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	})
 }
 
-fn build_threshold_class_metrics(
-	class_metrics: Vec<tangram_core::model::BinaryClassifierClassMetrics>,
-) -> Vec<Vec<Metrics>> {
-	class_metrics
+fn build_threshold_metrics(metrics: tangram_core::model::BinaryClassifierMetrics) -> Vec<Metrics> {
+	metrics
+		.thresholds
 		.iter()
-		.map(|class_metrics| {
-			class_metrics
-				.thresholds
-				.iter()
-				.map(|class_metrics| Metrics {
-					threshold: class_metrics.threshold,
-					precision: class_metrics.precision,
-					recall: class_metrics.recall,
-					accuracy: class_metrics.accuracy,
-					f1_score: class_metrics.f1_score,
-					false_negatives: class_metrics.false_negatives,
-					false_positives: class_metrics.false_positives,
-					true_negatives: class_metrics.true_negatives,
-					true_positives: class_metrics.true_positives,
-				})
-				.collect::<Vec<Metrics>>()
+		.map(|class_metrics| Metrics {
+			threshold: class_metrics.threshold,
+			precision: class_metrics.precision,
+			recall: class_metrics.recall,
+			accuracy: class_metrics.accuracy,
+			f1_score: class_metrics.f1_score,
+			false_negatives: class_metrics.false_negatives,
+			false_positives: class_metrics.false_positives,
+			true_negatives: class_metrics.true_negatives,
+			true_positives: class_metrics.true_positives,
 		})
-		.collect()
+		.collect::<Vec<Metrics>>()
 }
