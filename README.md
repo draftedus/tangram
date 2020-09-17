@@ -49,21 +49,21 @@ Before submitting a pull request, please run `./scripts/fmt` and `./scripts/chec
 
 This repository is both a Cargo workspace and a Yarn workspace. Almost every folder in the root of the repository is either a Rust crate or an NPM package. Below is a description of the most important folders:
 
-- [`core`](core): The `core` folder contains the `tangram_core` crate that defines the model file format and automated machine learning functionality. It is used by the `tangram_cli` crate to train a model, and by the `libtangram` crate to expose its functionality as a C api for the language libraries.
+- [`core`](core): This folder contains the `tangram_core` crate that defines the model file format and automated machine learning functionality. It is used by the `tangram_cli` crate to train a model, and by the `libtangram` crate to expose its functionality as a C api for the language libraries.
 
-- [`linear`](linear): The `linear` folder contains the `tangram_linear` crate that implements linear machine learning models.
+- [`linear`](linear): This folder contains the `tangram_linear` crate that implements linear machine learning models.
 
-- [`tree`](tree): The `tree` folder contains the `tangram_tree` crate that implements tree machine learning models.
+- [`tree`](tree): This folder contains the `tangram_tree` crate that implements tree machine learning models.
 
-- [`app`](app): The `app` folder contains the `tangram_app` crate that implementats the reporting and monitoring web app. [Learn more](app/README.md).
+- [`app`](app): This folder contains the `tangram_app` crate that implementats the reporting and monitoring web app.
 
-- [`cli`](cli): The `cli` folder contains the `tangram_cli` crate. It uses the `tangram_core` crate to train a model, and the `tangram_app` crate to run the reporting and monitoring web app. See `main()` in [cli/main.rs](cli/main.rs) for the entrypoint.
+- [`cli`](cli): This folder contains the `tangram_cli` crate. It uses the `tangram_core` crate to train a model, and the `tangram_app` crate to run the reporting and monitoring web app. See `main()` in [cli/main.rs](cli/main.rs) for the entrypoint.
 
-- [`libtangram`](libtangram): The `libtangram` folder contains the `libtangram` crate which produces the static and dynamic C libraries that are used by the language libraries to make predictions.
+- [`libtangram`](libtangram): This folder contains the `libtangram` crate which produces the static and dynamic C libraries that are used by the language libraries to make predictions.
 
-- [`languages`](languages): The `languages` folder contains the libraries for making predictions in each language. Each library has a README with more information.
+- [`languages`](languages): This folder contains the libraries for making predictions in each language. Each library has a README with more information.
 
-- [`www`](www): The `www` folder contains the source for the marketing and documentation website deployed to https://www.tangramhq.com.
+- [`www`](www): This folder contains the source for the marketing and documentation website deployed to https://www.tangramhq.com.
 
 ## License
 
