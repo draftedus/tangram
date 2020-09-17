@@ -1,4 +1,7 @@
 {
+	"dependencies": {
+		"esbuild": "0.6.33"
+	},
 	"main": "mod.ts",
 	"name": "@tangramhq/pinwheel",
 	"version": "0.0.0"
