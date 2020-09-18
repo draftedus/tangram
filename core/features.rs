@@ -658,10 +658,7 @@ fn compute_features_bag_of_words_ndarray_value(
 				if total > 0.0 {
 					let mut feature_row = features.slice_mut(s![example_index, ..]);
 					for f in feature_row.iter_mut() {
-						match f {
-							Value::Number(v) => *v /= total,
-							_ => unreachable!(),
-						}
+						*f.as_number_mut().unwrap() /= total;
 					}
 				}
 			}
