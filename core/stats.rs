@@ -186,6 +186,8 @@ pub struct TokenStats {
 	pub count: u64,
 	/// The total number of examples that contain this token.
 	pub examples_count: u64,
+	/// The inverse document frequency. See	https://en.wikipedia.org/wiki/Tf%E2%80%93idf.
+	pub idf: f32,
 }
 
 impl Stats {
@@ -508,6 +510,7 @@ impl TextColumnStats {
 		for (token, count) in self.bigram_histogram.iter() {
 			top_tokens.push(TokenEntry(token.clone(), count.to_u64().unwrap()));
 		}
+		let n_examples = self.count.to_u64().unwrap();
 		let top_tokens = (0..settings.top_tokens_count)
 			.map(|_| top_tokens.pop())
 			.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
@@ -518,10 +521,12 @@ impl TextColumnStats {
 					.unwrap()
 					.to_u64()
 					.unwrap();
+				let idf = tangram_text::compute_idf(examples_count, n_examples);
 				TokenStats {
 					token,
 					count,
 					examples_count,
+					idf,
 				}
 			})
 			.collect::<Vec<TokenStats>>();

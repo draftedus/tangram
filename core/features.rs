@@ -313,13 +313,9 @@ fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStatsOutput) -
 	let mut tokens = column_stats
 		.top_tokens
 		.iter()
-		.map(|token| {
-			(
-				token.token.to_owned(),
-				tangram_text::compute_idf(token.examples_count, column_stats.count),
-			)
-		})
+		.map(|token| (token.token.to_owned(), token.idf))
 		.collect::<Vec<(String, f32)>>();
+	// tokens must be sorted because we perform a binary search through them later
 	tokens.sort_by(|(a, _), (b, _)| a.cmp(b));
 	FeatureGroup::BagOfWords(BagOfWordsFeatureGroup {
 		source_column_name: column_stats.column_name.to_owned(),
