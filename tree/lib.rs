@@ -1,21 +1,33 @@
 /*!
 This crate is an implementation of machine learning models for regression and classification using ensembles of decision trees. It has many similarities to [LightGBM](github.com/microsoft/lightgbm), [XGBoost](github.com/xgboost/xgboost), and others, but is written in pure Rust.
 
-Here's how to use `tangram_tree` to train a `Regressor`.
+Here's how to use `tangram_tree` to train and make predictions on a `Regressor`.
 
 ```
-// load and split the data
+// load the data
 let n_rows_train = 405;
 let n_rows_test = 101;
-let mut features = tangram_dataframe::DataFrame::from_path("boston.csv", Default::default(), |_| {}).unwrap();
-let labels = features.columns.remove(13);
+let mut features = tangram_dataframe::DataFrame::from_path(
+	"boston.csv",
+	Default::default(),
+	|_| {}
+).unwrap();
+let target_column_index = 13;
+let labels = features.columns.remove(target_column_index);
+
+// split the data into train and test datasets
 let (features_train, features_test) = features.view().split_at_row(n_rows_train);
 let (labels_train, labels_test) = labels.view().split_at_row(n_rows_train);
 let labels_train = labels_train.as_number().unwrap();
 let labels_test = labels_test.as_number().unwrap();
 
 // train the model
-let model = tangram_tree::Regressor::train(features_train, labels_train, Default::default(), &mut |_| {});
+let model = tangram_tree::Regressor::train(
+	features_train,
+	labels_train.clone(),
+	Default::default(),
+	&mut |_| {},
+);
 
 // make predictions
 let mut predictions: Array1<f32> = Array::zeros(n_rows_test);
@@ -30,6 +42,9 @@ metrics.update(tangram_metrics::RegressionMetricsInput {
 let metrics = metrics.finalize();
 println!("{:?}", metrics);
 ```
+
+For binary classification examples, see `benchmarks/census.rs` and `benchmakrs/boston.rs`.
+For a multiclass classification example, see `benchmarks/iris.rs`.
 */
 
 #![allow(clippy::tabs_in_doc_comments)]

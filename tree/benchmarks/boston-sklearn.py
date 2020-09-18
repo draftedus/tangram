@@ -1,6 +1,7 @@
 
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
+from sklearn.dummy import DummyRegressor
 import numpy as np
 import pandas as pd
 import time
@@ -38,3 +39,10 @@ print('duration: {}ms'.format((end-start) * 1000))
 predictions = model.predict(features_test)
 mse = mean_squared_error(predictions, labels_test)
 print('mse: ', mse)
+
+# compute baseline
+baseline_model = DummyRegressor()
+baseline_model.fit(features_train, labels_train)
+baseline_predictions = baseline_model.predict(features_test)
+baseline_mse = mean_squared_error(baseline_predictions, labels_test)
+print('baseline_mse: ', baseline_mse)
