@@ -1,4 +1,3 @@
-use itertools::izip;
 use ndarray::prelude::*;
 use std::path::Path;
 use tangram_dataframe::*;
@@ -7,61 +6,31 @@ use tangram_metrics::StreamingMetric;
 fn main() {
 	// load the data
 	let csv_file_path = Path::new("data/boston.csv");
-	let nrows_train = 405;
-	let _nrows_test = 101;
+	let n_rows_train = 405;
+	let n_rows_test = 101;
 
+	// split into test and train
 	let target_column_index = 13;
-	let options = FromCsvOptions {
-		..Default::default()
-	};
-	let mut features = DataFrame::from_path(csv_file_path, options, |_| {}).unwrap();
+	let mut features = DataFrame::from_path(csv_file_path, Default::default(), |_| {}).unwrap();
 	let labels = features.columns.remove(target_column_index);
-	let (features_train, features_test) = features.view().split_at_row(nrows_train);
-	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
+	let (features_train, features_test) = features.view().split_at_row(n_rows_train);
+	let (labels_train, labels_test) = labels.view().split_at_row(n_rows_train);
 	let labels_train = labels_train.as_number().unwrap();
 	let labels_test = labels_test.as_number().unwrap();
 
 	// train the model
-	let train_options = tangram_tree::TrainOptions {
-		learning_rate: 0.1,
-		max_depth: 8,
-		max_leaf_nodes: 255,
-		max_rounds: 100,
-		min_examples_per_leaf: 100,
-		min_sum_hessians_in_leaf: 0.0,
-		..Default::default()
-	};
 	let model = tangram_tree::Regressor::train(
 		features_train,
 		labels_train.clone(),
-		train_options,
+		Default::default(),
 		&mut |_| {},
 	);
 
 	// make predictions on the test data
-	let n_features = features.ncols();
-	let nrows = features_test.nrows();
-	let columns = features_test.columns;
-	let mut features_ndarray = unsafe { Array2::uninitialized((nrows, n_features)) };
-	izip!(features_ndarray.gencolumns_mut(), columns.as_slice()).for_each(
-		|(mut feature_column, column)| match column {
-			ColumnView::Number(column) => {
-				feature_column
-					.iter_mut()
-					.zip(column.data)
-					.for_each(|(f, d)| *f = Value::Number(*d));
-			}
-			ColumnView::Enum(column) => {
-				feature_column
-					.iter_mut()
-					.zip(column.data)
-					.for_each(|(f, d)| *f = Value::Enum(*d));
-			}
-			_ => panic!(),
-		},
-	);
-	let mut predictions: Array1<f32> = unsafe { Array::uninitialized(nrows) };
-	model.predict(features_ndarray.view(), predictions.view_mut());
+	let features = features_test.to_rows();
+	println!("{:?}", features);
+	let mut predictions: Array1<f32> = unsafe { Array::uninitialized(n_rows_test) };
+	model.predict(features.view(), predictions.view_mut());
 
 	// compute metrics
 	let mut metrics = tangram_metrics::RegressionMetrics::new();

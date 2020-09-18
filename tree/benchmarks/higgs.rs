@@ -1,4 +1,3 @@
-use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use std::path::Path;
@@ -50,7 +49,7 @@ fn main() {
 	};
 	let mut features = DataFrame::from_path(csv_file_path, options, |_| {}).unwrap();
 	let labels = features.columns.remove(target_column_index);
-	let (dataframe_train, dataframe_test) = features.view().split_at_row(nrows_train);
+	let (features_train, features_test) = features.view().split_at_row(nrows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
 	let labels_train = labels_train.as_enum().unwrap();
 	let labels_test = labels_test.as_enum().unwrap();
@@ -66,27 +65,16 @@ fn main() {
 		..Default::default()
 	};
 	let model = tangram_tree::BinaryClassifier::train(
-		dataframe_train,
+		features_train,
 		labels_train.clone(),
 		train_options,
 		&mut |_| {},
 	);
 
 	// make predictions on the test data
-	let n_features = features.ncols();
-	let columns = dataframe_test.columns;
-	let mut features_ndarray = unsafe { Array2::uninitialized((nrows_test, n_features)) };
-	izip!(features_ndarray.gencolumns_mut(), columns.as_slice()).for_each(
-		|(mut feature_column, column)| {
-			let column = column.as_number().unwrap();
-			feature_column
-				.iter_mut()
-				.zip(column.data)
-				.for_each(|(f, d)| *f = Value::Number(*d));
-		},
-	);
+	let features_test = features_test.to_rows();
 	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((nrows_test, 2)) };
-	model.predict(features_ndarray.view(), probabilities.view_mut());
+	model.predict(features_test.view(), probabilities.view_mut());
 
 	// compute metrics
 	let mut metrics = tangram_metrics::ClassificationMetrics::new(2);

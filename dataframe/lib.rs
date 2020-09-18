@@ -1,3 +1,6 @@
+use itertools::izip;
+use ndarray::prelude::*;
+
 pub mod load;
 
 pub use self::load::*;
@@ -160,6 +163,33 @@ impl DataFrame {
 		let columns = self.columns.iter().map(|column| column.view()).collect();
 		DataFrameView { columns }
 	}
+
+	pub fn to_rows(&self) -> Array2<Value> {
+		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
+		for (mut ndarray_column, dataframe_column) in
+			izip!(rows.gencolumns_mut(), self.columns.iter())
+		{
+			match dataframe_column {
+				Column::Unknown(_) => ndarray_column.fill(Value::Unknown),
+				Column::Number(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+						*a = Value::Number(*b);
+					}
+				}
+				Column::Enum(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+						*a = Value::Enum(*b);
+					}
+				}
+				Column::Text(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+						*a = Value::Text(b);
+					}
+				}
+			}
+		}
+		rows
+	}
 }
 
 impl Column {
@@ -317,6 +347,33 @@ impl<'a> DataFrameView<'a> {
 			columns_b.push(column_b);
 		}
 		(Self { columns: columns_a }, Self { columns: columns_b })
+	}
+
+	pub fn to_rows(&self) -> Array2<Value> {
+		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
+		for (mut ndarray_column, dataframe_column) in
+			izip!(rows.gencolumns_mut(), self.columns.iter())
+		{
+			match dataframe_column {
+				ColumnView::Unknown(_) => ndarray_column.fill(Value::Unknown),
+				ColumnView::Number(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+						*a = Value::Number(*b);
+					}
+				}
+				ColumnView::Enum(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+						*a = Value::Enum(*b);
+					}
+				}
+				ColumnView::Text(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+						*a = Value::Text(b);
+					}
+				}
+			}
+		}
+		rows
 	}
 }
 

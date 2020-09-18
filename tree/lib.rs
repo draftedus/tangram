@@ -4,13 +4,31 @@ This crate is an implementation of machine learning models for regression and cl
 Here's how to use `tangram_tree` to train a `Regressor`.
 
 ```
-// TODO
+// load and split the data
+let n_rows_train = 405;
+let n_rows_test = 101;
 let mut features = tangram_dataframe::DataFrame::from_path("boston.csv", Default::default(), |_| {}).unwrap();
 let labels = features.columns.remove(13);
-let model = tangram_tree::Regressor::train(features, labels, Default::default(), &mut |_| {});
-let features =
-let mut predictions: Array1<f32> = Array::zeros(nrows);
-model.predict(&features, &mut predictions);
+let (features_train, features_test) = features.view().split_at_row(n_rows_train);
+let (labels_train, labels_test) = labels.view().split_at_row(n_rows_train);
+let labels_train = labels_train.as_number().unwrap();
+let labels_test = labels_test.as_number().unwrap();
+
+// train the model
+let model = tangram_tree::Regressor::train(features_train, labels_train, Default::default(), &mut |_| {});
+
+// make predictions
+let mut predictions: Array1<f32> = Array::zeros(n_rows_test);
+model.predict(features_test.to_rows();, predictions.view_mut());
+
+// compute metrics
+let mut metrics = tangram_metrics::RegressionMetrics::new();
+metrics.update(tangram_metrics::RegressionMetricsInput {
+	predictions: predictions.as_slice().unwrap(),
+	labels: labels_test.data,
+});
+let metrics = metrics.finalize();
+println!("{:?}", metrics);
 ```
 */
 
@@ -78,7 +96,7 @@ impl Default for TrainOptions {
 			min_sum_hessians_in_leaf: 1e-3,
 			min_gain_to_split: 0.0,
 			discrete_l2_regularization: 10.0,
-			discrete_min_examples_per_branch: 100,
+			discrete_min_examples_per_branch: 20,
 		}
 	}
 }
