@@ -335,7 +335,14 @@ pub struct EnumColumnStats {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TextColumnStats {
 	pub column_name: String,
-	pub top_tokens: Vec<(String, u64)>,
+	pub top_tokens: Vec<TokenStats>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct TokenStats {
+	pub token: String,
+	pub count: u64,
+	pub examples_count: u64,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

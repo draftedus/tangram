@@ -1,6 +1,13 @@
 /*!
 The `tangram_text` crate provides text processing utilities used by [`tangram_core`](docs.rs/crates/tangram_core).
 */
+use num_traits::ToPrimitive;
+
+/// Computes the inverse document frequency given the total number of examples and the number of examples that contain a given term.
+pub fn compute_idf(examples_count: u64, n_examples: u64) -> f32 {
+	// This is the "inverse document frequency smooth" form of the idf, see https://en.wikipedia.org/wiki/Tf%E2%80%93idf. We add 1 to `n_examples_that_contain_token` to avoid division by 0.
+	(n_examples.to_f32().unwrap() / (1.0 + examples_count.to_f32().unwrap())).ln() + 1.0
+}
 
 /** The `AlphanumericTokenizer` splits text into tokens. All non-alphanumeric characters are considered token boundaries. The text is lowercased before splitting. All tokens must be >1 character long.
 
@@ -13,7 +20,6 @@ The `tangram_text` crate provides text processing utilities used by [`tangram_co
 | 50(hello)   | ["50", "hello"] |
 | 50_hello    | ["50", "hello"] |
 | C.E.O.      | []              |
-
 */
 #[derive(Clone, Debug)]
 pub struct AlphanumericTokenizer;
@@ -60,6 +66,7 @@ fn test_basic_alphanumeric_tokenizer() {
 	assert!(tokens.is_empty());
 }
 
+/// Computes bigrams by concatenating adjacent pairs of tokens with a space " ".
 pub fn bigrams(tokens: &[String]) -> Vec<String> {
 	let mut bigrams = Vec::new();
 	let mut iter = tokens.iter().peekable();

@@ -310,11 +310,17 @@ fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStatsOutput) -
 		stats::ColumnStatsOutput::Text(column_stats) => column_stats,
 		_ => unreachable!(),
 	};
-	let mut tokens: Vec<(String, f32)> = column_stats
+	let mut tokens = column_stats
 		.top_tokens
 		.iter()
-		.map(|(token, _, idf)| (token.clone(), *idf))
-		.collect();
+		.map(|token| {
+			(
+				// TODO
+				token.token.to_owned(),
+				tangram_text::compute_idf(token.examples_count, column_stats.count),
+			)
+		})
+		.collect::<Vec<(String, f32)>>();
 	tokens.sort_by(|(a, _), (b, _)| a.cmp(b));
 	FeatureGroup::BagOfWords(BagOfWordsFeatureGroup {
 		source_column_name: column_stats.column_name.to_owned(),
@@ -641,7 +647,6 @@ fn compute_features_bag_of_words_ndarray_value(
 						.tokens
 						.binary_search_by(|(t, _)| t.cmp(&token))
 					{
-						// set the feature at index
 						let value = features.get_mut([example_index, index]).unwrap();
 						let idf = feature_group.tokens[index].1;
 						let feature_value = 1.0 * idf;

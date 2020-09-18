@@ -4,17 +4,23 @@ import { h } from 'preact'
 
 export type Props = {
 	name: string
-	tokens: Array<[string, number]>
+	tokens: TokenStats[]
+}
+
+type TokenStats = {
+	count: number
+	examples_count: number
+	token: string
 }
 
 export function TextColumnDetail(props: Props) {
 	let data = [
 		{
 			color: ui.colors.blue,
-			data: props.tokens.map(([label, count], i) => ({
-				label,
+			data: props.tokens.map((token, i) => ({
+				label: token.token,
 				x: i,
-				y: count,
+				y: token.count,
 			})),
 			title: 'Token Count',
 		},
@@ -38,10 +44,10 @@ export function TextColumnDetail(props: Props) {
 						<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
 					</ui.TableHeader>
 					<ui.TableBody>
-						{props.tokens.map(([token, count], i) => (
+						{props.tokens.map((token, i) => (
 							<ui.TableRow key={i}>
-								<ui.TableCell>{token}</ui.TableCell>
-								<ui.TableCell>{count}</ui.TableCell>
+								<ui.TableCell>{token.token}</ui.TableCell>
+								<ui.TableCell>{token.count}</ui.TableCell>
 							</ui.TableRow>
 						))}
 					</ui.TableBody>

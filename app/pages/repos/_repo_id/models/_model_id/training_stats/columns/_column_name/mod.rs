@@ -55,9 +55,17 @@ struct Enum {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
+struct TokenStats {
+	token: String,
+	count: u64,
+	examples_count: u64,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct Text {
 	name: String,
-	tokens: Vec<(String, u64)>,
+	tokens: Vec<TokenStats>,
 }
 
 pub async fn get(
@@ -148,7 +156,15 @@ async fn props(
 		}),
 		tangram_core::model::ColumnStats::Text(column) => Inner::Text(Text {
 			name: column.column_name.to_owned(),
-			tokens: column.top_tokens,
+			tokens: column
+				.top_tokens
+				.into_iter()
+				.map(|token| TokenStats {
+					token: token.token,
+					count: token.count,
+					examples_count: token.examples_count,
+				})
+				.collect(),
 		}),
 	};
 

@@ -1454,11 +1454,17 @@ impl Into<model::TextColumnStats> for stats::TextColumnStatsOutput {
 	fn into(self) -> model::TextColumnStats {
 		model::TextColumnStats {
 			column_name: self.column_name,
-			top_tokens: self
-				.top_tokens
-				.into_iter()
-				.map(|(token, count, _)| (token, count))
-				.collect(),
+			top_tokens: self.top_tokens.into_iter().map(Into::into).collect(),
+		}
+	}
+}
+
+impl Into<model::TokenStats> for stats::TokenStats {
+	fn into(self) -> model::TokenStats {
+		model::TokenStats {
+			token: self.token,
+			count: self.count,
+			examples_count: self.examples_count,
 		}
 	}
 }

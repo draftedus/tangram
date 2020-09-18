@@ -1906,6 +1906,9 @@ version = "0.0.0"
 [[package]]
 name = "tangram_text"
 version = "0.0.0"
+dependencies = [
+ "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "tangram_tree"

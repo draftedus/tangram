@@ -89,8 +89,6 @@ pub struct StatsSettings {
 	pub number_histogram_max_size: usize,
 	/// This is the maximum number of tokens to track for text columns.
 	pub top_tokens_count: usize,
-	/// This is the minimum number of rows with a token for it to be considered for tracking.
-	pub min_document_frequency: usize,
 }
 
 impl Default for StatsSettings {
@@ -99,7 +97,6 @@ impl Default for StatsSettings {
 			text_histogram_max_size: 100,
 			number_histogram_max_size: 100,
 			top_tokens_count: 20_000,
-			min_document_frequency: 2,
 		}
 	}
 }
@@ -177,8 +174,18 @@ pub struct TextColumnStatsOutput {
 	pub column_name: String,
 	/// This is the total number of examples that these stats were computed on.
 	pub count: u64,
-	/// This is a list of the most frequently occurring tokens, as well as the number of occurrences in the dataset and its IDF score.
-	pub top_tokens: Vec<(String, u64, f32)>,
+	/// This contains stats for the top [`top_tokens_count`](struct.StatsSettings.html#top_tokens_count) tokens in the column.
+	pub top_tokens: Vec<TokenStats>,
+}
+
+/// This struct contains stats for individual tokens
+#[derive(Debug)]
+pub struct TokenStats {
+	pub token: String,
+	/// The total number of occurrences of this token.
+	pub count: u64,
+	/// The total number of examples that contain this token.
+	pub examples_count: u64,
 }
 
 impl Stats {
@@ -501,23 +508,23 @@ impl TextColumnStats {
 		for (token, count) in self.bigram_histogram.iter() {
 			top_tokens.push(TokenEntry(token.clone(), count.to_u64().unwrap()));
 		}
-		let n_examples = self.count;
-		let per_example_histogram = &self.per_example_histogram;
 		let top_tokens = (0..settings.top_tokens_count)
 			.map(|_| top_tokens.pop())
 			.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
-			.filter_map(|(token, count)| {
-				let document_frequency = per_example_histogram.get(&token).unwrap();
-				if *document_frequency >= settings.min_document_frequency.to_usize().unwrap() {
-					let idf = ((1.0 + n_examples.to_f32().unwrap())
-						/ (1.0 + (document_frequency.to_f32().unwrap())))
-					.ln() + 1.0;
-					Some((token, count, idf))
-				} else {
-					None
+			.map(|(token, count)| {
+				let examples_count = self
+					.per_example_histogram
+					.get(&token)
+					.unwrap()
+					.to_u64()
+					.unwrap();
+				TokenStats {
+					token,
+					count,
+					examples_count,
 				}
 			})
-			.collect::<Vec<(String, u64, f32)>>();
+			.collect::<Vec<TokenStats>>();
 		TextColumnStatsOutput {
 			column_name: self.column_name,
 			count: self.count.to_u64().unwrap(),
