@@ -315,7 +315,6 @@ fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStatsOutput) -
 		.iter()
 		.map(|token| {
 			(
-				// TODO
 				token.token.to_owned(),
 				tangram_text::compute_idf(token.examples_count, column_stats.count),
 			)
@@ -647,16 +646,15 @@ fn compute_features_bag_of_words_ndarray_value(
 						.tokens
 						.binary_search_by(|(t, _)| t.cmp(&token))
 					{
-						let value = features.get_mut([example_index, index]).unwrap();
+						let value = features
+							.get_mut([example_index, index])
+							.unwrap()
+							.as_number_mut()
+							.unwrap();
 						let idf = feature_group.tokens[index].1;
 						let feature_value = 1.0 * idf;
 						total += feature_value.powi(2);
-						match value {
-							Value::Number(value) => {
-								*value += 1.0 * idf;
-							}
-							_ => unreachable!(),
-						};
+						*value += 1.0 * idf;
 					}
 				}
 				if total > 0.0 {

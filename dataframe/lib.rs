@@ -469,3 +469,33 @@ impl<'a> TextColumnView<'a> {
 		self.clone()
 	}
 }
+
+impl<'a> Value<'a> {
+	pub fn as_number(&self) -> Option<&f32> {
+		match self {
+			Self::Number(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_number_mut(&mut self) -> Option<&mut f32> {
+		match self {
+			Self::Number(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_enum(&self) -> Option<&usize> {
+		match self {
+			Self::Enum(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_text(&self) -> Option<&'a str> {
+		match self {
+			Self::Text(s) => Some(s),
+			_ => None,
+		}
+	}
+}
