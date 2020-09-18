@@ -1,20 +1,24 @@
 use crate::{
-	bin::{compute_bin_info, compute_binned_features, ComputeBinInfoOptions},
-	bin_stats::BinStatsPool,
 	binary_classifier::BinaryClassifier,
-	feature_importances::compute_feature_importances,
 	multiclass_classifier::MulticlassClassifier,
 	regressor::Regressor,
-	single, Progress, TrainOptions, Tree,
+	single,
+	single::{
+		SingleTree, SingleTreeBranchNode, SingleTreeBranchSplit, SingleTreeBranchSplitContinuous,
+		SingleTreeBranchSplitDiscrete, SingleTreeNode,
+	},
+	TrainOptions, TrainProgress, Tree,
 };
-use itertools::izip;
+use itertools::{izip, Itertools};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use std::{cmp::Ordering, collections::BTreeMap};
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
+use tangram_finite::Finite;
 use tangram_progress::ProgressCounter;
 
-/// These are the different task types. The Regression task is for predicting continuous numeric values. The Binary Classification task is for predicting enum values with two variants. The Multiclass Classification task is for predicting enum values with greater than two variants.
+/// This enum is used by the common `train` function below to customize the training code slightly for each task.
 #[derive(Debug)]
 pub enum Task {
 	Regression,
@@ -30,13 +34,13 @@ pub enum Model {
 	MulticlassClassifier(MulticlassClassifier),
 }
 
-/// To avoid code duplication, this shared `train` method is called by `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
+/// To avoid code duplication, this shared `train` function is called by `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
 pub fn train(
 	task: &Task,
 	features: DataFrameView,
 	labels: ColumnView,
 	options: TrainOptions,
-	update_progress: &mut dyn FnMut(Progress),
+	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
 	#[cfg(feature = "timing")]
 	let timing = super::timing::Timing::new();
@@ -48,13 +52,14 @@ pub fn train(
 	};
 	let bin_info = compute_bin_info(&features, &bin_options);
 
-	// Use the bin instructions from the previous step to compute the binned values.
+	// Use the binning instructions from the previous step to compute the binned features.
 	let n_bins = options.max_non_missing_bins as usize + 1;
 	let progress_counter = ProgressCounter::new(features.nrows().to_u64().unwrap());
-	update_progress(super::Progress::Initializing(progress_counter.clone()));
-	let (features, _) = compute_binned_features(&features, &bin_info, n_bins as usize, &|| {
-		progress_counter.inc(1)
-	});
+	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
+	let (binned_feature, _) =
+		compute_binned_features(&features, &bin_info, n_bins as usize, &|| {
+			progress_counter.inc(1)
+		});
 
 	// If early stopping is enabled, split the features and labels into train and early stopping sets.
 	let early_stopping_enabled = options.early_stopping_options.is_some();
@@ -68,7 +73,7 @@ pub fn train(
 		Some(options) => {
 			let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 				train_early_stopping_split(
-					features.view(),
+					binned_feature.view(),
 					labels,
 					options.early_stopping_fraction,
 				);
@@ -84,7 +89,7 @@ pub fn train(
 				Some(train_stop_monitor),
 			)
 		}
-		None => (features.view(), labels, None, None, None),
+		None => (binned_feature.view(), labels, None, None, None),
 	};
 
 	let n_examples = features_train.nrows();
@@ -145,7 +150,7 @@ pub fn train(
 	// This is the total number of rounds that have been trained thus far.
 	let mut n_rounds_trained = 0;
 	// These are the trees in round-major order. After training this will have shape (n_rounds, n_trees_per_round).
-	let mut trees: Vec<single::TrainTree> = Vec::new();
+	let mut trees: Vec<SingleTree> = Vec::new();
 	// Collect the loss on the training dataset for each round if enabled.
 	let mut losses: Option<Vec<f32>> = if options.compute_loss {
 		Some(Vec::new())
@@ -160,7 +165,7 @@ pub fn train(
 
 	// Train rounds of trees until we hit max_rounds or the EarlyStoppingMonitor indicates we should stop early.
 	let round_counter = ProgressCounter::new(options.max_rounds.to_u64().unwrap());
-	update_progress(super::Progress::Training(round_counter.clone()));
+	update_progress(super::TrainProgress::Training(round_counter.clone()));
 	for round_index in 0..options.max_rounds {
 		round_counter.inc(1);
 		// Before training the next round of trees, we need to determine which value for each example we would like the tree . In gradient boosting, each round of trees
@@ -347,6 +352,238 @@ pub fn train(
 	}
 }
 
+#[derive(Clone, Debug)]
+pub enum BinInfo {
+	Number { thresholds: Vec<f32> },
+	Enum { n_options: u8 },
+}
+
+/*
+Returns the number of valid bins. The total number of bins is the number of valid bins + 1 bin reserved for missing values.
+## Number Bins
+Numeric features have n valid bins equal to the number of thresholds + 1.
+### Example
+Given 3 thresholds: `[0.5, 1.5, 2]`
+There are 4 valid bins:
+* (-infinity, 0.5]
+* (0.5, 1.5]
+* (1.5, 2]
+* (2, infinity)
+### Enum Bins
+Enum features have n valid bins equal to the number of enum variants.
+*/
+
+impl BinInfo {
+	pub fn n_valid_bins(&self) -> u8 {
+		match self {
+			Self::Number { thresholds } => (thresholds.len() + 1).to_u8().unwrap(),
+			Self::Enum { n_options } => *n_options,
+		}
+	}
+}
+
+/// ComputeBinInfoOptions specifies how to compute bins for a given column.
+pub struct ComputeBinInfoOptions {
+	/// The maximum number of bins to use for the column. Used to determine the number of bins for numeric columns because enum columns need n_valid_bins equal to the number of enum variants.
+	pub max_valid_bins: u8,
+	/// The maximum number of samples to use in order to estimate bin thresholds. This setting is used exclusively for numeric columns. In order to find bin thresholds, we need to sort values and find the threshold cutoffs. To speed up the computation, instead of sorting all of the values in the column, we choose to sort a smaller subset to get an estimate of the quantile threshold cutoffs.
+	pub max_number_column_examples_for_bin_info: usize,
+}
+
+/// Figure out how to bin features. Enum columns have one bin per variant. Numeric columns have bins whose endpoints are computed using `max_valid_bins` quantiles such that each bin contains approximately the same number of training examples.
+pub fn compute_bin_info(features: &DataFrameView, options: &ComputeBinInfoOptions) -> Vec<BinInfo> {
+	features
+		.columns
+		.iter()
+		.map(|column| compute_bin_info_for_column(column.view(), &options))
+		.collect()
+}
+
+/// Compute the bin info given a column.
+pub fn compute_bin_info_for_column(column: ColumnView, options: &ComputeBinInfoOptions) -> BinInfo {
+	match column {
+		ColumnView::Number(column) => compute_bin_info_for_number_column(column, options),
+		ColumnView::Enum(column) => BinInfo::Enum {
+			n_options: column.options.len().to_u8().unwrap(),
+		},
+		_ => unreachable!(),
+	}
+}
+
+/// Compute the quantile thresholds for a numeric column. Returns BinInfo with the numeric thresholds used to map the column values into their respective bins.
+fn compute_bin_info_for_number_column(
+	column: NumberColumnView,
+	options: &ComputeBinInfoOptions,
+) -> BinInfo {
+	// Collect the values into a histogram.
+	let mut histogram: BTreeMap<Finite<f32>, usize> = BTreeMap::new();
+	let mut histogram_values_count = 0;
+	for value in &column.data[0..column
+		.data
+		.len()
+		.min(options.max_number_column_examples_for_bin_info)]
+	{
+		if let Ok(value) = Finite::new(*value) {
+			*histogram.entry(value).or_insert(0) += 1;
+			histogram_values_count += 1;
+		}
+	}
+	// If the number of unique values is less than max_valid_bins, then create one bin per unique value value. Otherwise, create bins at quantiles.
+	let thresholds = if histogram.len() < options.max_valid_bins.to_usize().unwrap() {
+		histogram
+			.keys()
+			.tuple_windows()
+			.map(|(a, b)| (a.get() + b.get()) / 2.0)
+			.collect()
+	} else {
+		compute_bin_thresholds_for_histogram(
+			histogram,
+			histogram_values_count,
+			options.max_valid_bins,
+		)
+	};
+	BinInfo::Number { thresholds }
+}
+
+/// Compute the bin thresholds given a histogram of numeric values. Instead of storing and sorting all values as an array, we collect values into a histogram which reduces the memory needed to compute thresholds for columns with many duplicate values.
+fn compute_bin_thresholds_for_histogram(
+	histogram: BTreeMap<Finite<f32>, usize>,
+	histogram_values_count: usize,
+	max_valid_bins: u8,
+) -> Vec<f32> {
+	let total_values_count = histogram_values_count.to_f32().unwrap();
+	let quantiles: Vec<f32> = (1..max_valid_bins.to_usize().unwrap())
+		.map(|i| i.to_f32().unwrap() / max_valid_bins.to_f32().unwrap())
+		.collect();
+	let quantile_indexes: Vec<usize> = quantiles
+		.iter()
+		.map(|q| ((total_values_count - 1.0) * q).trunc().to_usize().unwrap())
+		.collect();
+	let quantile_fracts: Vec<f32> = quantiles
+		.iter()
+		.map(|q| ((total_values_count - 1.0) * q).fract())
+		.collect();
+	let mut quantiles: Vec<Option<f32>> = vec![None; quantiles.len()];
+	let mut current_count: usize = 0;
+	let mut iter = histogram.iter().peekable();
+	while let Some((value, count)) = iter.next() {
+		let value = value.get();
+		current_count += count;
+		let quantiles_iter = quantiles
+			.iter_mut()
+			.zip(quantile_indexes.iter().zip(quantile_fracts.iter()))
+			.filter(|(q, (_, _))| q.is_none());
+		for (quantile, (index, fract)) in quantiles_iter {
+			match (current_count - 1).cmp(index) {
+				Ordering::Equal => {
+					if *fract > 0.0 {
+						let next_value = iter.peek().unwrap().0.get();
+						*quantile = Some(value * (1.0 - fract) + next_value * fract);
+					} else {
+						*quantile = Some(value);
+					}
+				}
+				Ordering::Greater => *quantile = Some(value),
+				Ordering::Less => {}
+			}
+		}
+	}
+	quantiles.into_iter().map(|q| q.unwrap()).collect()
+}
+
+/// Compute the binned features.
+pub fn compute_binned_features(
+	features: &DataFrameView,
+	bin_info: &[BinInfo],
+	max_n_bins: usize,
+	progress: &(dyn Fn() + Sync),
+) -> (Array2<u8>, Array2<usize>) {
+	let n_examples = features.nrows();
+	let n_features = features.ncols();
+	let mut binned_features: Array2<u8> =
+		unsafe { Array::uninitialized((n_examples, n_features).f()) };
+	// this array keeps track of how many examples are in each bin
+	let mut binned_features_examples_counts: Array2<usize> =
+		Array::zeros((max_n_bins, n_features).f());
+	izip!(
+		binned_features.axis_iter_mut(Axis(1)),
+		binned_features_examples_counts.axis_iter_mut(Axis(1)),
+		&features.columns,
+		bin_info,
+	)
+	.for_each(
+		|(mut binned_features_column, mut binned_feature_stats, column, bin_info)| {
+			match (column, bin_info) {
+				(ColumnView::Number(column), BinInfo::Number { thresholds }) => {
+					for (binned_feature_value, feature_value) in
+						binned_features_column.iter_mut().zip(column.data)
+					{
+						*binned_feature_value = if feature_value.is_nan() {
+							0
+						} else {
+							// use binary search to find the bin for the feature value
+							thresholds
+								.binary_search_by(|threshold| {
+									threshold.partial_cmp(feature_value).unwrap()
+								})
+								// reserve bin 0 for invalid
+								.unwrap_or_else(|bin| bin)
+								.to_u8()
+								.unwrap() + 1
+						};
+						binned_feature_stats[*binned_feature_value as usize] += 1;
+						progress();
+					}
+				}
+				(ColumnView::Enum(column), BinInfo::Enum { .. }) => {
+					for (binned_feature_value, feature_value) in
+						binned_features_column.iter_mut().zip(column.data)
+					{
+						*binned_feature_value = feature_value.to_u8().unwrap();
+						binned_feature_stats[binned_feature_value.to_usize().unwrap()] += 1;
+						progress();
+					}
+				}
+				_ => unreachable!(),
+			}
+		},
+	);
+	(binned_features, binned_features_examples_counts)
+}
+
+#[derive(Clone)]
+pub struct BinStats {
+	/// One bin info per feature
+	pub bin_info: Vec<BinInfo>,
+	/// (n_features)
+	pub entries: Vec<[f64; 512]>,
+}
+
+impl BinStats {
+	pub fn new(bin_info: Vec<BinInfo>) -> Self {
+		let entries = vec![[0.0; 512]; bin_info.len()];
+		Self { bin_info, entries }
+	}
+}
+
+#[derive(Clone)]
+pub struct BinStatsPool {
+	pub items: Vec<BinStats>,
+}
+
+impl BinStatsPool {
+	pub fn new(size: usize, bin_info: &[BinInfo]) -> Self {
+		let mut items = Vec::with_capacity(size);
+		for _ in 0..size {
+			items.push(BinStats::new(bin_info.to_owned()));
+		}
+		Self { items }
+	}
+	pub fn get(&mut self) -> BinStats {
+		self.items.pop().unwrap()
+	}
+}
+
 fn train_early_stopping_split<'features, 'labels>(
 	features: ArrayView2<'features, u8>,
 	labels: ColumnView<'labels>,
@@ -368,6 +605,33 @@ fn train_early_stopping_split<'features, 'labels>(
 		features_early_stopping,
 		labels_early_stopping,
 	)
+}
+
+/// Compute the early stopping metric value for the set of trees that have been trained thus far.
+fn compute_early_stopping_metric(
+	task: &Task,
+	trees: &[SingleTree],
+	features: ArrayView2<u8>,
+	labels: ColumnView,
+	mut logits: ArrayViewMut2<f32>,
+) -> f32 {
+	match task {
+		Task::Regression => {
+			let labels = labels.as_number().unwrap().data.into();
+			super::regressor::update_logits(trees, features, logits.view_mut());
+			super::regressor::compute_loss(labels, logits.view())
+		}
+		Task::BinaryClassification => {
+			let labels = labels.as_enum().unwrap().data.into();
+			super::binary_classifier::update_logits(trees, features, logits.view_mut());
+			super::binary_classifier::compute_loss(labels, logits.view())
+		}
+		Task::MulticlassClassification { .. } => {
+			let labels = labels.as_enum().unwrap().data.into();
+			super::multiclass_classifier::update_logits(trees, features, logits.view_mut());
+			super::multiclass_classifier::compute_loss(labels, logits.view())
+		}
+	}
 }
 
 #[derive(Clone)]
@@ -410,29 +674,38 @@ impl EarlyStoppingMonitor {
 	}
 }
 
-/// Compute the early stopping metric value for the set of trees that have been trained thus far.
-fn compute_early_stopping_metric(
-	task: &Task,
-	trees: &[single::TrainTree],
-	features: ArrayView2<u8>,
-	labels: ColumnView,
-	mut logits: ArrayViewMut2<f32>,
-) -> f32 {
-	match task {
-		Task::Regression => {
-			let labels = labels.as_number().unwrap().data.into();
-			super::regressor::update_logits(trees, features, logits.view_mut());
-			super::regressor::compute_loss(labels, logits.view())
-		}
-		Task::BinaryClassification => {
-			let labels = labels.as_enum().unwrap().data.into();
-			super::binary_classifier::update_logits(trees, features, logits.view_mut());
-			super::binary_classifier::compute_loss(labels, logits.view())
-		}
-		Task::MulticlassClassification { .. } => {
-			let labels = labels.as_enum().unwrap().data.into();
-			super::multiclass_classifier::update_logits(trees, features, logits.view_mut());
-			super::multiclass_classifier::compute_loss(labels, logits.view())
+/// This function computes feature importances using the "split" method, where a feature's importance is proportional to the number of nodes that use it to split.
+fn compute_feature_importances(trees: &[SingleTree], n_features: usize) -> Vec<f32> {
+	let mut feature_importances = vec![0.0; n_features];
+	for tree in trees.iter() {
+		for node in tree.nodes.iter() {
+			match node {
+				SingleTreeNode::Branch(SingleTreeBranchNode {
+					split:
+						SingleTreeBranchSplit::Continuous(SingleTreeBranchSplitContinuous {
+							feature_index,
+							..
+						}),
+					..
+				})
+				| SingleTreeNode::Branch(SingleTreeBranchNode {
+					split:
+						SingleTreeBranchSplit::Discrete(SingleTreeBranchSplitDiscrete {
+							feature_index,
+							..
+						}),
+					..
+				}) => {
+					feature_importances[*feature_index] += 1.0;
+				}
+				SingleTreeNode::Leaf(_) => {}
+			}
 		}
 	}
+	// Normalize the feature_importances.
+	let total = feature_importances.iter().sum::<f32>();
+	for feature_importance in feature_importances.iter_mut() {
+		*feature_importance /= total;
+	}
+	feature_importances
 }

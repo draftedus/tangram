@@ -16,16 +16,11 @@ model.predict(&features, &mut predictions);
 
 #![allow(clippy::tabs_in_doc_comments)]
 
-mod bin;
-mod bin_stats;
 mod binary_classifier;
-mod examples_index;
-mod feature_importances;
 mod multiclass_classifier;
 mod regressor;
 mod shap;
 mod single;
-mod split;
 #[cfg(feature = "timing")]
 mod timing;
 mod train;
@@ -67,17 +62,6 @@ pub struct TrainOptions {
 	pub subsample_for_binning: usize,
 }
 
-/// The parameters in this struct control how to determine whether training should stop early after each round.
-#[derive(Debug)]
-pub struct EarlyStoppingOptions {
-	/// This is the fraction of the dataset that is set aside to compute the early stopping metric.
-	pub early_stopping_fraction: f32,
-	/// If this many rounds pass by without a significant improvement in the early stopping metric over the previous round, training will be stopped early.
-	pub early_stopping_rounds: usize,
-	/// This is the minimum descrease in the early stopping metric for a round to be considered a significant improvement over the previous round.
-	pub early_stopping_threshold: f32,
-}
-
 impl Default for TrainOptions {
 	fn default() -> Self {
 		Self {
@@ -99,9 +83,20 @@ impl Default for TrainOptions {
 	}
 }
 
+/// The parameters in this struct control how to determine whether training should stop early after each round.
+#[derive(Debug)]
+pub struct EarlyStoppingOptions {
+	/// This is the fraction of the dataset that is set aside to compute the early stopping metric.
+	pub early_stopping_fraction: f32,
+	/// If this many rounds pass by without a significant improvement in the early stopping metric over the previous round, training will be stopped early.
+	pub early_stopping_rounds: usize,
+	/// This is the minimum descrease in the early stopping metric for a round to be considered a significant improvement over the previous round.
+	pub early_stopping_threshold: f32,
+}
+
 /// This struct reports the training progress.
 #[derive(Debug)]
-pub enum Progress {
+pub enum TrainProgress {
 	Initializing(tangram_progress::ProgressCounter),
 	Training(tangram_progress::ProgressCounter),
 }
@@ -117,6 +112,19 @@ pub struct Tree {
 pub enum Node {
 	Branch(BranchNode),
 	Leaf(LeafNode),
+}
+
+impl Node {
+	pub fn examples_fraction(&self) -> f32 {
+		match self {
+			Self::Leaf(LeafNode {
+				examples_fraction, ..
+			}) => *examples_fraction,
+			Self::Branch(BranchNode {
+				examples_fraction, ..
+			}) => *examples_fraction,
+		}
+	}
 }
 
 /// A `BranchNode` is a branch in a tree.
@@ -165,17 +173,6 @@ pub struct BranchSplitDiscrete {
 	pub directions: BinDirections,
 }
 
-/**
-`BinDirections` specifies which direction, left or right, an example should be sent, based on the value of an `Enum` feature. Just like `Enum` features, bin 0 is reserved for invalid values. Rather than use a Vec<bool>, to avoid heap allocation and minimize the size of the struct, we use a bitset.
-*/
-#[derive(Clone, Debug)]
-pub struct BinDirections {
-	/// The total number of bin directions in the bitset.
-	pub n: u8,
-	/// Bytes representing the direction (0=left and 1=right) for each bin.
-	pub bytes: [u8; 32],
-}
-
 /// The leaves in a tree hold the values to output for examples that get sent to them.
 #[derive(Debug)]
 pub struct LeafNode {
@@ -185,17 +182,15 @@ pub struct LeafNode {
 	pub examples_fraction: f32,
 }
 
-impl Node {
-	pub fn examples_fraction(&self) -> f32 {
-		match self {
-			Self::Leaf(LeafNode {
-				examples_fraction, ..
-			}) => *examples_fraction,
-			Self::Branch(BranchNode {
-				examples_fraction, ..
-			}) => *examples_fraction,
-		}
-	}
+/**
+`BinDirections` specifies which direction, left or right, an example should be sent, based on the value of an `Enum` feature. Just like `Enum` features, bin 0 is reserved for invalid values. Rather than use a Vec<bool>, to avoid heap allocation and minimize the size of the struct, we use a bitset.
+*/
+#[derive(Clone, Debug)]
+pub struct BinDirections {
+	/// The total number of bin directions in the bitset.
+	pub n: u8,
+	/// Bytes representing the direction (0=left and 1=right) for each bin.
+	pub bytes: [u8; 32],
 }
 
 impl BinDirections {

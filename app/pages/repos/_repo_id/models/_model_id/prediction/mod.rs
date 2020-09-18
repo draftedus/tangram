@@ -308,10 +308,16 @@ fn predict(
 			let softmax = |logits: &[f32]| {
 				let mut probabilities = logits.to_owned();
 				let max = probabilities.iter().fold(std::f32::MIN, |a, &b| a.max(b));
-				probabilities.iter_mut().for_each(|p| *p -= max);
-				probabilities.iter_mut().for_each(|l| *l = l.exp());
-				let sum = probabilities.iter().fold(0.0, |a, b| a + b);
-				probabilities.iter_mut().for_each(|p| *p /= sum);
+				for p in probabilities.iter_mut() {
+					*p -= max;
+				}
+				for l in probabilities.iter_mut() {
+					*l = l.exp();
+				}
+				let sum = probabilities.iter().sum::<f32>();
+				for p in probabilities.iter_mut() {
+					*p /= sum;
+				}
 				probabilities
 			};
 			let sigmoid = |logits: &[f32]| {

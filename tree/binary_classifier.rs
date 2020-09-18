@@ -21,12 +21,12 @@ pub struct BinaryClassifier {
 }
 
 impl BinaryClassifier {
-	/// Train a Tree Binary Classifier.
+	/// Train a binary classifier.
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumColumnView,
 		options: TrainOptions,
-		update_progress: &mut dyn FnMut(super::Progress),
+		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {
 		let task = crate::train::Task::BinaryClassification;
 		let model = crate::train::train(
@@ -42,18 +42,16 @@ impl BinaryClassifier {
 		}
 	}
 
-	/// Make predictions on a Tree Binary Classifier.
+	/// Make predictions.
 	pub fn predict(&self, features: ArrayView2<Value>, mut probabilities: ArrayViewMut2<f32>) {
 		let mut logits = probabilities.column_mut(1);
 		logits.fill(self.bias);
 		for (example_index, logit) in logits.iter_mut().enumerate() {
 			for tree in &self.trees {
 				let mut row = vec![Value::Number(0.0); features.ncols()];
-				row.iter_mut()
-					.zip(features.row(example_index))
-					.for_each(|(v, feature)| {
-						*v = *feature;
-					});
+				for (v, feature) in row.iter_mut().zip(features.row(example_index)) {
+					*v = *feature;
+				}
 				*logit += tree.predict(&row);
 			}
 		}
@@ -61,8 +59,9 @@ impl BinaryClassifier {
 			*logit = 1.0 / (logit.neg().exp() + 1.0);
 		}
 		let (mut probabilities_neg, probabilities_pos) = probabilities.split_at(Axis(1), 1);
-		izip!(probabilities_neg.view_mut(), probabilities_pos.view())
-			.for_each(|(neg, pos)| *neg = 1.0 - *pos);
+		for (neg, pos) in izip!(probabilities_neg.view_mut(), probabilities_pos.view()) {
+			*neg = 1.0 - *pos
+		}
 	}
 
 	/// Compute SHAP values.
@@ -72,24 +71,23 @@ impl BinaryClassifier {
 		mut shap_values: ArrayViewMut3<f32>,
 	) {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
-		izip!(
+		for (features, mut shap_values) in izip!(
 			features.axis_iter(Axis(0)),
 			shap_values.axis_iter_mut(Axis(0)),
-		)
-		.for_each(|(features, mut shap_values)| {
+		) {
 			let mut row = vec![Value::Number(0.0); features.len()];
-			row.iter_mut().zip(features).for_each(|(v, feature)| {
+			for (v, feature) in row.iter_mut().zip(features) {
 				*v = *feature;
-			});
+			}
 			let x = shap::compute_shap(row.as_slice(), trees, self.bias);
 			shap_values.row_mut(0).assign(&Array1::from(x));
-		});
+		}
 	}
 }
 
 /// Update the logits with the predictions from a single round of trees.
 pub fn update_logits(
-	trees: &[single::TrainTree],
+	trees: &[single::SingleTree],
 	features: ArrayView2<u8>,
 	mut logits: ArrayViewMut2<f32>,
 ) {

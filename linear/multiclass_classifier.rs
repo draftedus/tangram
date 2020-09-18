@@ -1,6 +1,6 @@
 use super::{
-	compute_shap_values_common, train_early_stopping_split, EarlyStoppingMonitor, Progress,
-	TrainOptions,
+	compute_shap_values_common, train_early_stopping_split, EarlyStoppingMonitor, TrainOptions,
+	TrainProgress,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -29,7 +29,7 @@ impl MulticlassClassifier {
 		features: ArrayView2<f32>,
 		labels: EnumColumnView,
 		options: &TrainOptions,
-		update_progress: &mut dyn FnMut(Progress),
+		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> MulticlassClassifier {
 		let n_classes = labels.options.len();
 		let n_features = features.ncols();
@@ -65,7 +65,7 @@ impl MulticlassClassifier {
 				None
 			};
 		let progress_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
-		update_progress(Progress(progress_counter.clone()));
+		update_progress(TrainProgress(progress_counter.clone()));
 		for _ in 0..options.max_epochs {
 			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);

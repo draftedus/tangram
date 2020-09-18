@@ -741,10 +741,9 @@ fn compute_feature_names(feature_groups: &[features::FeatureGroup]) -> Vec<Strin
 				let name = feature_group.source_column_name.clone();
 				let mut names: Vec<String> = Vec::with_capacity(feature_group.categories.len() + 1);
 				names.push(format!("{} = unknown = '{{}}'", name));
-				feature_group
-					.categories
-					.iter()
-					.for_each(|category| names.push(format!("{} = {} = '{{}}'", name, category)));
+				for category in feature_group.categories.iter() {
+					names.push(format!("{} = {} = '{{}}'", name, category));
+				}
 				names
 			}
 			features::FeatureGroup::Normalized(feature_group) => {
@@ -985,10 +984,9 @@ impl TryInto<tangram_tree::BranchSplit> for model::BranchSplit {
 					value_directions.len().to_u8().unwrap(),
 					false,
 				);
-				value_directions
-					.iter()
-					.enumerate()
-					.for_each(|(i, value)| directions.set(i.to_u8().unwrap(), *value));
+				for (i, value) in value_directions.iter().enumerate() {
+					directions.set(i.to_u8().unwrap(), *value);
+				}
 				Ok(tangram_tree::BranchSplit::Discrete(
 					tangram_tree::BranchSplitDiscrete {
 						feature_index: s.feature_index.to_usize().unwrap(),

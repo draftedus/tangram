@@ -629,11 +629,9 @@ fn compute_features_bag_of_words_ndarray_value(
 		.as_text()
 		.unwrap()
 		.data;
-
 	features
 		.iter_mut()
 		.for_each(|feature| *feature = Value::Number(0.0));
-
 	for (example_index, value) in data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
@@ -659,10 +657,12 @@ fn compute_features_bag_of_words_ndarray_value(
 				}
 				if total > 0.0 {
 					let mut feature_row = features.slice_mut(s![example_index, ..]);
-					feature_row.iter_mut().for_each(|f| match f {
-						Value::Number(v) => *v /= total,
-						_ => unreachable!(),
-					});
+					for f in feature_row.iter_mut() {
+						match f {
+							Value::Number(v) => *v /= total,
+							_ => unreachable!(),
+						}
+					}
 				}
 			}
 		}

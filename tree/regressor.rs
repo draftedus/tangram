@@ -18,12 +18,12 @@ pub struct Regressor {
 }
 
 impl Regressor {
-	/// Train a Regressor.
+	/// Train a regressor.
 	pub fn train(
 		features: DataFrameView,
 		labels: NumberColumnView,
 		options: TrainOptions,
-		update_progress: &mut dyn FnMut(super::Progress),
+		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {
 		let task = crate::train::Task::Regression;
 		let model = crate::train::train(
@@ -45,11 +45,9 @@ impl Regressor {
 		let mut row = vec![Value::Number(0.0); features.ncols()];
 		for (i, prediction) in predictions.iter_mut().enumerate() {
 			for tree in &self.trees {
-				row.iter_mut()
-					.zip(features.row(i))
-					.for_each(|(v, feature)| {
-						*v = *feature;
-					});
+				for (v, feature) in row.iter_mut().zip(features.row(i)) {
+					*v = *feature;
+				}
 				*prediction += tree.predict(&row);
 			}
 		}
@@ -62,23 +60,22 @@ impl Regressor {
 		mut shap_values: ArrayViewMut3<f32>,
 	) {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
-		izip!(
+		for (features, mut shap_values) in izip!(
 			features.axis_iter(Axis(0)),
 			shap_values.axis_iter_mut(Axis(0)),
-		)
-		.for_each(|(features, mut shap_values)| {
+		) {
 			let mut row = vec![Value::Number(0.0); features.len()];
-			row.iter_mut().zip(features).for_each(|(v, feature)| {
+			for (v, feature) in row.iter_mut().zip(features) {
 				*v = *feature;
-			});
+			}
 			let x = shap::compute_shap(row.as_slice(), trees, self.bias);
 			shap_values.row_mut(0).assign(&Array1::from(x));
-		});
+		}
 	}
 }
 
 pub fn update_logits(
-	trees: &[single::TrainTree],
+	trees: &[single::SingleTree],
 	features: ArrayView2<u8>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
@@ -89,7 +86,7 @@ pub fn update_logits(
 	}
 }
 
-/// For `Regressor`s we use the mean squared error loss.
+/// For regression we use the mean squared error loss.
 pub fn compute_loss(labels: ArrayView1<f32>, predictions: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
 	for (label, prediction) in labels.iter().zip(predictions) {

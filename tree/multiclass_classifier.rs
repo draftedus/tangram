@@ -24,12 +24,12 @@ pub struct MulticlassClassifier {
 }
 
 impl MulticlassClassifier {
-	// Train a Tree Multiclass Classifier.
+	// Train a multiclass classifier.
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumColumnView,
 		options: TrainOptions,
-		update_progress: &mut dyn FnMut(super::Progress),
+		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {
 		let task = crate::train::Task::MulticlassClassification {
 			n_trees_per_round: labels.options.len(),
@@ -47,21 +47,20 @@ impl MulticlassClassifier {
 		}
 	}
 
-	// Make predictions with a Tree Multiclass Classifer.
+	// Make predictions.
 	pub fn predict(&self, features: ArrayView2<Value>, mut probabilities: ArrayViewMut2<f32>) {
 		let n_rounds = self.n_rounds;
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
 		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
-		izip!(
+		for (mut logits, features) in izip!(
 			probabilities.axis_iter_mut(Axis(0)),
 			features.axis_iter(Axis(0))
-		)
-		.for_each(|(mut logits, features)| {
+		) {
 			let mut row = vec![Value::Number(0.0); features.len()];
-			row.iter_mut().zip(features).for_each(|(v, feature)| {
+			for (v, feature) in row.iter_mut().zip(features) {
 				*v = *feature;
-			});
+			}
 			logits.assign(&biases);
 			for trees in trees.genrows() {
 				for (logit, tree) in logits.iter_mut().zip(trees.iter()) {
@@ -69,7 +68,7 @@ impl MulticlassClassifier {
 				}
 			}
 			softmax(logits);
-		});
+		}
 	}
 
 	/// Compute SHAP values.
@@ -82,15 +81,14 @@ impl MulticlassClassifier {
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
 		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
-		izip!(
+		for (features, mut shap_values) in izip!(
 			features.axis_iter(Axis(0)),
 			shap_values.axis_iter_mut(Axis(0)),
-		)
-		.for_each(|(features, mut shap_values)| {
+		) {
 			let mut row = vec![Value::Number(0.0); features.len()];
-			row.iter_mut().zip(features).for_each(|(v, feature)| {
+			for (v, feature) in row.iter_mut().zip(features) {
 				*v = *feature;
-			});
+			}
 			for class_index in 0..n_classes {
 				let x = shap::compute_shap(
 					row.as_slice(),
@@ -99,13 +97,13 @@ impl MulticlassClassifier {
 				);
 				shap_values.row_mut(class_index).assign(&Array1::from(x));
 			}
-		});
+		}
 	}
 }
 
 /// Update the logits with the predictions from a single round of trees.
 pub fn update_logits(
-	trees: &[single::TrainTree],
+	trees: &[single::SingleTree],
 	features: ArrayView2<u8>,
 	mut logits: ArrayViewMut2<f32>,
 ) {

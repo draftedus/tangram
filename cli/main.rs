@@ -76,10 +76,9 @@ fn main() {
 	};
 	if let Err(error) = result {
 		eprintln!("{}: {}", "error".red().bold(), error);
-		error
-			.chain()
-			.skip(1)
-			.for_each(|cause| eprintln!("  {} {}", "->".red().bold(), cause));
+		for cause in error.chain().skip(1) {
+			eprintln!("  {} {}", "->".red().bold(), cause);
+		}
 		std::process::exit(1);
 	}
 }

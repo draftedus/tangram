@@ -399,8 +399,8 @@ pub enum TrainProgress {
 
 #[derive(Debug)]
 pub enum ModelTrainProgress {
-	Linear(tangram_linear::Progress),
-	Tree(tangram_tree::Progress),
+	Linear(tangram_linear::TrainProgress),
+	Tree(tangram_tree::TrainProgress),
 }
 
 #[derive(Debug)]

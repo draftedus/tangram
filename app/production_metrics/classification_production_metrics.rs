@@ -177,15 +177,12 @@ fn test_binary() {
 	let predictions = vec![
 		"Cat", "Cat", "Cat", "Cat", "Dog", "Dog", "Dog", "Dog", "Dog", "Dog", "Cat", "Cat",
 	];
-	labels
-		.into_iter()
-		.zip(predictions.into_iter())
-		.for_each(|(label, prediction)| {
-			metrics.update((
-				NumberOrString::String(prediction.to_owned()),
-				NumberOrString::String(label.to_owned()),
-			));
-		});
+	for (label, prediction) in labels.into_iter().zip(predictions.into_iter()) {
+		metrics.update((
+			NumberOrString::String(prediction.to_owned()),
+			NumberOrString::String(label.to_owned()),
+		));
+	}
 	let metrics = metrics.finalize();
 
 	insta::assert_debug_snapshot!(metrics, @r###"
@@ -246,15 +243,12 @@ fn test_multiclass() {
 		"Dog", "Rabbit", "Rabbit", "Rabbit", "Rabbit", "Rabbit", "Rabbit", "Rabbit", "Rabbit",
 		"Rabbit", "Rabbit", "Rabbit", "Rabbit",
 	];
-	labels
-		.into_iter()
-		.zip(predictions.into_iter())
-		.for_each(|(label, prediction)| {
-			metrics.update((
-				NumberOrString::String(prediction.to_owned()),
-				NumberOrString::String(label.to_owned()),
-			));
-		});
+	for (label, prediction) in labels.into_iter().zip(predictions.into_iter()) {
+		metrics.update((
+			NumberOrString::String(prediction.to_owned()),
+			NumberOrString::String(label.to_owned()),
+		));
+	}
 	let metrics = metrics.finalize();
 
 	insta::assert_debug_snapshot!(metrics, @r###"

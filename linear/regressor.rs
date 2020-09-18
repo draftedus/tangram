@@ -26,7 +26,7 @@ impl Regressor {
 		features: ArrayView2<f32>,
 		labels: NumberColumnView,
 		options: &TrainOptions,
-		update_progress: &mut dyn FnMut(super::Progress),
+		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {
 		let n_features = features.ncols();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
@@ -59,7 +59,7 @@ impl Regressor {
 				None
 			};
 		let epoch_counter = ProgressCounter::new(options.max_epochs.to_u64().unwrap());
-		update_progress(super::Progress(epoch_counter.clone()));
+		update_progress(super::TrainProgress(epoch_counter.clone()));
 		for _ in 0..options.max_epochs {
 			epoch_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);

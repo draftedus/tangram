@@ -102,19 +102,19 @@ impl StreamingMetric<'_> for NumberStats {
 		let mut quantiles: Vec<f32> = vec![0.0; quantiles.len()];
 		let mut samples = self.reservoir;
 		samples.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-		quantiles
+		for (quantile, (index, fract)) in quantiles
 			.iter_mut()
 			.zip(quantile_indexes.iter().zip(quantile_fracts))
-			.for_each(|(quantile, (index, fract))| {
-				let value = samples[*index];
-				if fract > 0.0 {
-					let next_value = samples[index + 1];
-					// interpolate between two values
-					*quantile = value * (1.0 - fract) + next_value * fract;
-				} else {
-					*quantile = value;
-				}
-			});
+		{
+			let value = samples[*index];
+			if fract > 0.0 {
+				let next_value = samples[index + 1];
+				// interpolate between two values
+				*quantile = value * (1.0 - fract) + next_value * fract;
+			} else {
+				*quantile = value;
+			}
+		}
 		Self::Output {
 			n: self.n,
 			p25: quantiles[0],

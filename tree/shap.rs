@@ -4,7 +4,7 @@ use super::{
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
-// computes for a single output
+// Compute the SHAP value for a single output.
 pub fn compute_shap(
 	example: &[tangram_dataframe::Value],
 	trees: ArrayView1<Tree>,
@@ -15,17 +15,16 @@ pub fn compute_shap(
 		trees
 			.axis_iter(Axis(0))
 			.fold(vec![0.0; n_features + 1], |mut shap_values, tree| {
-				let t_shap = tree_shap(example, tree.into_scalar());
-				shap_values
-					.iter_mut()
-					.zip(t_shap)
-					.for_each(|(a, b)| *a += b);
+				let tree_shap_values = tree_shap(example, tree.into_scalar());
+				for (shap_value, tree_shap_value) in shap_values.iter_mut().zip(tree_shap_values) {
+					*shap_value += tree_shap_value;
+				}
 				shap_values
 			});
 	shap_values[n_features] += bias;
-	trees.iter().for_each(|tree| {
+	for tree in trees {
 		shap_values[n_features] += compute_expectation(tree, 0);
-	});
+	}
 	shap_values
 }
 
@@ -92,12 +91,14 @@ fn tree_shap_recursive(
 	let mut unique_depth = unique_depth;
 	let node = &tree.nodes[node_index];
 	match node {
-		Node::Leaf(n) => (1..=unique_depth).for_each(|path_index| {
-			let weight = unwound_path_sum(unique_path, unique_depth, path_index);
-			let path_item = &unique_path[path_index];
-			let scale = weight * (path_item.one_fraction - path_item.zero_fraction);
-			phi[path_item.feature_index.unwrap()] += scale * n.value;
-		}),
+		Node::Leaf(n) => {
+			for path_index in 1..=unique_depth {
+				let weight = unwound_path_sum(unique_path, unique_depth, path_index);
+				let path_item = &unique_path[path_index];
+				let scale = weight * (path_item.one_fraction - path_item.zero_fraction);
+				phi[path_item.feature_index.unwrap()] += scale * n.value;
+			}
+		}
 		Node::Branch(n) => {
 			let (hot_child_index, cold_child_index) = compute_hot_cold_child(n, example);
 			let hot_zero_fraction =
@@ -106,7 +107,6 @@ fn tree_shap_recursive(
 				tree.nodes[cold_child_index].examples_fraction() / n.examples_fraction;
 			let mut incoming_zero_fraction = 1.0;
 			let mut incoming_one_fraction = 1.0;
-
 			let current_feature_index = n.split.feature_index();
 			if let Some(path_index) = (1..=unique_depth)
 				.find(|i| unique_path[*i].feature_index.unwrap() == current_feature_index)
@@ -116,7 +116,6 @@ fn tree_shap_recursive(
 				unwind_path(unique_path, unique_depth, path_index);
 				unique_depth -= 1;
 			};
-
 			let feature_index = n.split.feature_index();
 			let (parent_path, child_path) = unique_path.split_at_mut(unique_depth + 1);
 			child_path[0..parent_path.len()].clone_from_slice(parent_path);
@@ -160,26 +159,24 @@ fn extend_path(
 		one_fraction,
 		pweight: if unique_depth == 0 { 1.0 } else { 0.0 },
 	};
-
 	if unique_depth == 0 {
 		return;
 	}
-	(0..unique_depth).rev().for_each(|i| {
+	for i in (0..unique_depth).rev() {
 		unique_path[i + 1].pweight +=
 			one_fraction * unique_path[i].pweight * (i + 1).to_f32().unwrap()
 				/ (unique_depth + 1).to_f32().unwrap();
 		unique_path[i].pweight =
 			zero_fraction * unique_path[i].pweight * (unique_depth - i).to_f32().unwrap()
 				/ (unique_depth + 1).to_f32().unwrap();
-	});
+	}
 }
 
 fn unwind_path(unique_path: &mut [PathItem], unique_depth: usize, path_index: usize) {
 	let one_fraction = unique_path[path_index].one_fraction;
 	let zero_fraction = unique_path[path_index].zero_fraction;
 	let mut next_one_portion = unique_path[unique_depth].pweight;
-
-	(0..unique_depth).rev().for_each(|i| {
+	for i in (0..unique_depth).rev() {
 		if one_fraction != 0.0 {
 			let tmp = unique_path[i].pweight;
 			unique_path[i].pweight = next_one_portion * (unique_depth + 1).to_f32().unwrap()
@@ -191,13 +188,12 @@ fn unwind_path(unique_path: &mut [PathItem], unique_depth: usize, path_index: us
 			unique_path[i].pweight = unique_path[i].pweight * (unique_depth + 1).to_f32().unwrap()
 				/ (zero_fraction * (unique_depth - i).to_f32().unwrap());
 		}
-	});
-
-	(path_index..unique_depth).for_each(|i| {
+	}
+	for i in path_index..unique_depth {
 		unique_path[i].feature_index = unique_path[i + 1].feature_index;
 		unique_path[i].zero_fraction = unique_path[i + 1].zero_fraction;
 		unique_path[i].one_fraction = unique_path[i + 1].one_fraction;
-	});
+	}
 }
 
 fn unwound_path_sum(unique_path: &[PathItem], unique_depth: usize, path_index: usize) -> f32 {
@@ -205,21 +201,19 @@ fn unwound_path_sum(unique_path: &[PathItem], unique_depth: usize, path_index: u
 	let zero_fraction = unique_path[path_index].zero_fraction;
 	let mut next_one_portion = unique_path[unique_depth].pweight;
 	let mut total = 0.0;
-
 	if one_fraction != 0.0 {
-		(0..unique_depth).rev().for_each(|i| {
+		for i in (0..unique_depth).rev() {
 			let tmp = next_one_portion / ((i + 1).to_f32().unwrap() * one_fraction);
 			total += tmp;
 			next_one_portion =
 				unique_path[i].pweight - tmp * zero_fraction * (unique_depth - i).to_f32().unwrap();
-		})
+		}
 	} else {
-		(0..unique_depth).rev().for_each(|i| {
+		for i in (0..unique_depth).rev() {
 			total +=
 				unique_path[i].pweight / (zero_fraction * (unique_depth - i).to_f32().unwrap());
-		})
+		}
 	}
-
 	total * (unique_depth + 1).to_f32().unwrap()
 }
 
@@ -269,18 +263,14 @@ fn max_depth(tree: &Tree, node_index: usize, depth: usize) -> usize {
 	if let Node::Leaf(_) = current_node {
 		return depth;
 	}
-
 	let current_node = match current_node {
 		Node::Branch(n) => n,
 		_ => unreachable!(),
 	};
-
 	let left_child_index = current_node.left_child_index;
 	let right_child_index = current_node.right_child_index;
-
 	let left_depth = max_depth(tree, left_child_index, depth + 1);
 	let right_depth = max_depth(tree, right_child_index, depth + 1);
-
 	left_depth.max(right_depth) + 1
 }
 
@@ -289,20 +279,16 @@ fn compute_expectation(tree: &Tree, node_index: usize) -> f32 {
 	if let Node::Leaf(n) = current_node {
 		return n.value;
 	}
-
 	let current_node = match current_node {
 		Node::Branch(n) => n,
 		_ => unreachable!(),
 	};
-
 	let left_child_index = current_node.left_child_index;
 	let right_child_index = current_node.right_child_index;
 	let left_child = &tree.nodes[left_child_index];
 	let right_child = &tree.nodes[right_child_index];
-
 	let left_value = compute_expectation(tree, left_child_index);
 	let right_value = compute_expectation(tree, right_child_index);
-
 	(left_child.examples_fraction() / current_node.examples_fraction) * left_value
 		+ (right_child.examples_fraction() / current_node.examples_fraction) * right_value
 }
