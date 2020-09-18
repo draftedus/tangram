@@ -75,36 +75,30 @@ pub struct QueueItem {
 	pub gain: f32,
 	/// A split describes how the node is split into left and right children.
 	pub split: TrainBranchSplit,
-
 	/// The queue item holds a reference to its parent so that
 	/// it can update the parent's left or right child index
 	/// if the queue item becomes a node added to the tree.
 	pub parent_index: Option<usize>,
 	/// Will this node be a left or right child of its parent?
 	pub split_direction: Option<SplitDirection>,
-
 	/// The depth of the item in the tree.
 	pub depth: usize,
 	/// The bin_stats consisting of aggregate hessian/gradient statistics of the training examples that reach this node.
 	pub bin_stats: BinStats,
-
 	/// The examples_index_range tells you what the range of
 	/// examples indexes in the examples_index specifies
 	/// the examples in this node.
 	pub examples_index_range: std::ops::Range<usize>,
-
 	/// The sum of the gradients of all of the training examples in this node.
 	pub sum_gradients: f64,
 	/// The sum of the hessians of all of the training examples in this node.
 	pub sum_hessians: f64,
-
 	/// The sum of the gradients of all of the training examples that go to the left child.
 	pub left_sum_gradients: f64,
 	/// The sum of the hessians of all of the training examples that go to the left child.
 	pub left_sum_hessians: f64,
 	/// The total number of training examples that go to the left child.
 	pub left_n_examples: usize,
-
 	/// The sum of the gradients of all of the training examples that go to the right child.
 	pub right_sum_gradients: f64,
 	/// The sum of the hessians of all of the training examples that go to the right child.
@@ -344,7 +338,7 @@ pub fn train(
 
 	// If there are too few training examples or the hessians are too small,
 	// just return a tree with a single leaf.
-	if n_examples < 2 * options.min_examples_leaf
+	if n_examples < 2 * options.min_examples_per_leaf
 		|| sum_hessians < 2.0 * options.min_sum_hessians_in_leaf.to_f64().unwrap()
 	{
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
@@ -483,10 +477,10 @@ pub fn train(
 
 		// Determine if we should split left and/or right based on the number of examples in the node and the node's depth in the tree.
 		let max_depth_reached = queue_item.depth + 1 == options.max_depth;
-		let should_split_left =
-			!max_depth_reached && left_examples_index_range.len() >= options.min_examples_leaf * 2;
-		let should_split_right =
-			!max_depth_reached && right_examples_index_range.len() >= options.min_examples_leaf * 2;
+		let should_split_left = !max_depth_reached
+			&& left_examples_index_range.len() >= options.min_examples_per_leaf * 2;
+		let should_split_right = !max_depth_reached
+			&& right_examples_index_range.len() >= options.min_examples_per_leaf * 2;
 
 		// If we should not split left, add a leaf.
 		if !should_split_left {

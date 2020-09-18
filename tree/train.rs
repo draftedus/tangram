@@ -38,6 +38,9 @@ pub fn train(
 	options: TrainOptions,
 	update_progress: &mut dyn FnMut(Progress),
 ) -> Model {
+	#[cfg(feature = "timing")]
+	let timing = super::timing::Timing::new();
+
 	// Determine how to bin each feature.
 	let bin_options = ComputeBinInfoOptions {
 		max_valid_bins: options.max_non_missing_bins,
@@ -301,6 +304,9 @@ pub fn train(
 	// Compute feature importances.
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
 
+	#[cfg(feature = "timing")]
+	eprintln!("{}", timing);
+
 	// Assemble the model.
 	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
 	match task {
@@ -404,7 +410,7 @@ impl EarlyStoppingMonitor {
 	}
 }
 
-/// Compute the metric. Currently, loss is the only supported early stopping metric.
+/// Compute the early stopping metric value for the set of trees that have been trained thus far.
 fn compute_early_stopping_metric(
 	task: &Task,
 	trees: &[single::TrainTree],

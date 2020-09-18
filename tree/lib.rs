@@ -1,13 +1,10 @@
 /*!
-This crate is an implementation of machine learning models for regression and classification using ensembles of decision trees. The implementation has many similarities to [LightGBM](github.com/microsoft/lightgbm), [XGBoost](github.com/xgboost/xgboost), and many others, but written in pure Rust.
-
-Through extensive optimization, `tangram_tree` is the fastest such implementation in our benchmarks, while achieving indistinguishable accuracy. All benchmarks are biased, and it is especially difficult to produce apples-to-apples comparisons because the algorithms to train decision trees are so complex and there are so ways to tweak them. However, we have done our best to choose widely accepted example datasets and set as few parameters away from defaults as possible.
-
-## Benchmark results
+This crate is an implementation of machine learning models for regression and classification using ensembles of decision trees. It has many similarities to [LightGBM](github.com/microsoft/lightgbm), [XGBoost](github.com/xgboost/xgboost), and others, but is written in pure Rust.
 
 Here's how to use `tangram_tree` to train a `Regressor`.
 
 ```
+// TODO
 let mut features = tangram_dataframe::DataFrame::from_path("boston.csv", Default::default(), |_| {}).unwrap();
 let labels = features.columns.remove(13);
 let model = tangram_tree::Regressor::train(features, labels, Default::default(), &mut |_| {});
@@ -15,22 +12,6 @@ let features =
 let mut predictions: Array1<f32> = Array::zeros(nrows);
 model.predict(&features, &mut predictions);
 ```
-
-There are three model types:
-
-1. [`Regressor`](struct.Regressor.html)
-2. [`BinaryClassifier`](struct.BinaryClassifier.html)
-3. [`MulticlassClassifier`](struct.MulticlassClassifier.html)
-
-The type of model you are going to train depends on the type of the column you want to predict and in the case of an enum column, the number of unique values.
-
-| Label Type                                      | Number of Enum Options | Model Type                                                 |
-|-------------------------------------------------|------------------------|------------------------------------------------------------|
-| [Number](../dataframe/struct.NumberColumn.html) | *N/A*                  | [`Regressor`](struct.Regressor.html)                       |
-| [Enum](../dataframe/struct.EnumColumn.html)     | 2                      | [`BinaryClassifier`](struct.BinaryClassifier.html)         |
-| [Enum](../dataframe/struct.EnumColumn.html)     | > 2                    | [`MulticlassClassifier`](struct.MulticlassClassifier.html) |
-
-Under the hood, tangram trees are Gradient Boosted Decision Trees.
 */
 
 #![allow(clippy::tabs_in_doc_comments)]
@@ -45,7 +26,8 @@ mod regressor;
 mod shap;
 mod single;
 mod split;
-// mod timing;
+#[cfg(feature = "timing")]
+mod timing;
 mod train;
 
 pub use binary_classifier::BinaryClassifier;
@@ -57,42 +39,42 @@ pub use regressor::Regressor;
 pub struct TrainOptions {
 	/// If true, the model will include the loss on the training data at each round.
 	pub compute_loss: bool,
-	/// l2 regularization value to use for discrete splits.
+	/// This is the L2 regularization value to use for discrete splits.
 	pub discrete_l2_regularization: f32,
-	/// The minumum number of training examples that pass through this node for it to be considered for splitting.
+	/// This is the minumum number of training examples that pass through this node for it to be considered for splitting.
 	pub discrete_min_examples_per_branch: usize,
 	/// Specify options for early stopping. If the value is `Some`, early stopping will be enabled. If it is `None`, early stopping will be disabled.
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 	/// L2 regularization helps avoid overfitting.
 	pub l2_regularization: f32,
-	/// The learning rate to use when computing the targets for the next tree.
+	/// This is the learning rate to use when computing the targets for the next tree.
 	pub learning_rate: f32,
-	/// The maximum depth we will grow a tree. Related to max_leaf_nodes. A fully dense tree will have a maximum of 2^depth leaf nodes.
+	/// This is the maximum depth we will grow a tree. Related to max_leaf_nodes. A fully dense tree will have a maximum of 2^depth leaf nodes.
 	pub max_depth: usize,
-	/// maximum number of leaf nodes before stopping to train an individual tree.
+	/// This is the maximum number of leaf nodes before stopping to train an individual tree.
 	pub max_leaf_nodes: usize,
-	/// maximum number of bins to use when mapping our feature values into binned features. The default value is 255 because we want to store binned indexes as u8. Follows the convention in sklearn, lightgbm and xgboost. The final bin (256) is reserved for missing values.
+	/// This is the maximum number of bins to use when mapping our feature values into binned features. The default value is 255 because we want to store binned indexes as u8. Follows the convention in sklearn, lightgbm and xgboost. The final bin (256) is reserved for missing values.
 	pub max_non_missing_bins: u8,
-	/// maximum number of rounds of boosting, could be less if we are using early stopping.  The number of trees is related to the the max_rounds. In regression and binary classification, the maximum number of trees is equal to max rounds. In multiclass classification, the maximum number of trees is num_classes * max_rounds. >= 0. If max_rounds = 0, the baseline classifier is returned, (just the bias).
+	/// This is the maximum number of rounds of boosting, could be less if we are using early stopping.  The number of trees is related to the the max_rounds. In regression and binary classification, the maximum number of trees is equal to max rounds. In multiclass classification, the maximum number of trees is num_classes * max_rounds. >= 0. If max_rounds = 0, the baseline classifier is returned, (just the bias).
 	pub max_rounds: usize,
-	/// the minimum number of examples that must be present in a leaf node during training in order to add the node to the tree.
-	pub min_examples_leaf: usize,
-	/// min_gain_to_split
+	/// This is the minimum number of examples that must be present in a leaf node during training in order to add the node to the tree.
+	pub min_examples_per_leaf: usize,
+	/// This is the minimum gain for a node to become a branch instead of a leaf.
 	pub min_gain_to_split: f32,
-	/// The minimum value of the sum of hessians to still be considered to split.
+	/// The minimum value of the sum of hessians for a node to become a branch instead of a leaf.
 	pub min_sum_hessians_in_leaf: f32,
 	/// The maximum number of examples to consider for determining the bin thresholds for number columns.
 	pub subsample_for_binning: usize,
 }
 
-/// This struct specifies the early stopping parameters that control what percentage of the dataset should be held out for early stopping, the number of early stopping rounds, and the threshold to determine when to stop training.
+/// The parameters in this struct control how to determine whether training should stop early after each round.
 #[derive(Debug)]
 pub struct EarlyStoppingOptions {
-	/// the fraction of the dataset that we should set aside for use in early stopping
+	/// This is the fraction of the dataset that is set aside to compute the early stopping metric.
 	pub early_stopping_fraction: f32,
-	/// the maximum number of rounds of boosting that we will do if we don't see an improvement by at least `early_stopping_threshold` in the loss
+	/// If this many rounds pass by without a significant improvement in the early stopping metric over the previous round, training will be stopped early.
 	pub early_stopping_rounds: usize,
-	/// This is the minimum amount a subsequent round of boosting must decrease the loss by. Early stopping can be thought of as a simple state machine: If we have a round that doesn't decrease the loss by at least tol, we increment our counter. If we decrease the loss by at least tol, the counter is reset to 0. If the counter hits early_stopping_rounds rounds, we stop training the tree.
+	/// This is the minimum descrease in the early stopping metric for a round to be considered a significant improvement over the previous round.
 	pub early_stopping_threshold: f32,
 }
 
@@ -108,7 +90,7 @@ impl Default for TrainOptions {
 			max_non_missing_bins: 255,
 			subsample_for_binning: 200_000,
 			max_rounds: 100,
-			min_examples_leaf: 20,
+			min_examples_per_leaf: 20,
 			min_sum_hessians_in_leaf: 1e-3,
 			min_gain_to_split: 0.0,
 			discrete_l2_regularization: 10.0,
@@ -124,87 +106,68 @@ pub enum Progress {
 	Training(tangram_progress::ProgressCounter),
 }
 
-/// A tree is described by a single vector of nodes.
+/// Trees are stored as a `Vec` of `Node`s. Each branch in the tree has two indexes into the `Vec`, one for each of its children.
 #[derive(Debug)]
 pub struct Tree {
-	/// nodes in the tree
 	pub nodes: Vec<Node>,
 }
 
-/** A Node represents the type of Node in the trained tree. It has two types:
-1. **Branch**: A `BranchNode` represents internal tree nodes.
-2. **Leaf**:  A `LeafNode` represents terminal nodes.
-*/
+/// A node is either a branch or a leaf.
 #[derive(Debug)]
 pub enum Node {
 	Branch(BranchNode),
 	Leaf(LeafNode),
 }
 
-/// A BranchNode describes an internal node in a trained tree.
-///
+/// A `BranchNode` is a branch in a tree.
 #[derive(Debug)]
 pub struct BranchNode {
-	/// The index in the tree's node vector for this node's left child.
+	/// This is the index in the tree's node vector for this node's left child.
 	pub left_child_index: usize,
-	/// The index in the tree's node vector for this node's right child.
+	/// This is the index in the tree's node vector for this node's right child.
 	pub right_child_index: usize,
-	/// Used to determine how examples reaching this node should be routed, either to the left subtree or to the right.
+	/// In prediction, an example will be sent either to the right or left child. The `split` contains the information necessary to determine which way it will go.
 	pub split: BranchSplit,
-	/// The fraction of training examples that reach this node, used to compute SHAP values.
+	/// Branch nodes store the fraction of training examples that passed through them during training. This is used to compute SHAP values.
 	pub examples_fraction: f32,
 }
 
-/// A BranchSplit describes how examples are routed to the left or right subtrees given their feature values. A BranchSplit is `Continous` if the best split for the node is for a numeric feature and `Discrete` if the best split of the node is for an enum feature.
+/// A `BranchSplit` describes how examples are sent to the left or right child given their feature values. A `Continous` split is used for `Number` features, and `Discrete` is used for `Enum` features.
 #[derive(Debug)]
 pub enum BranchSplit {
 	Continuous(BranchSplitContinuous),
 	Discrete(BranchSplitDiscrete),
 }
 
-/// This struct describes a continuous split used to determine how continuous numeric features are split into left/right subtrees.
+/// A continuous branch split takes the value of a single `Number` feature, compares it with a `split_value`, and if the value is <= `split_value`, the example is sent left, and if it is > `split_value`, it is sent right.
 #[derive(Debug)]
 pub struct BranchSplitContinuous {
-	/// The index of the feature used to split the node.
+	/// This is the index of the feature to get the value for.
 	pub feature_index: usize,
-	/// The threshold value of the split.
-	/// All features <= split_value go to the left subtree and all features  > split_value go to the right.
+	/// This is the threshold value of the split.
 	pub split_value: f32,
-	/// The subtree (left or right) that invalid values for this feature should go to.
+	/// Which direction should invalid values go?
 	pub invalid_values_direction: SplitDirection,
 }
 
-/// An enum describing the split direction, either `Left` or `Right`.
 #[derive(Clone, Debug)]
 pub enum SplitDirection {
 	Left,
 	Right,
 }
 
-/// This struct describes a discrete split used to determine how enum features are split into left/right subtrees.
+/// A discrete branch split takes the value of a single `Enum` feature and looks up in a bit set which way the example should be sent.
 #[derive(Debug)]
 pub struct BranchSplitDiscrete {
-	/// The index of the feature used to split the node.
+	/// This is the index of the feature to get the value for.
 	pub feature_index: usize,
-	/// The child node direction each enum variant belongs to, 0 for the left child and 1 for the right.
+	/// `directions` specifies which direction, left or right, an example should be sent, based on the value of the chosen feature.
 	pub directions: BinDirections,
 }
 
-/// This struct describes which subtree (left or right) a binned feature value should go to. It is a bitset where the bit value at index i represent which child the i-th enum variant should go: 0 for the left child and 1 for the right.
-///
-/// A feature whose value is the i-th enum variant should go to the left subtree if the i-th bit in the bitset is 0 and to the right subtree if the i-th bit is 1.
-///
-/// # Example
-/// Consider an enum feature with three variants: `red`, `green`, and `blue`. We always reserve bin 0 for features with missing values.
-/// ```
-/// // BinDirections {
-/// // 	n: 4,
-/// // 	bytes: [2, ..]
-/// // }
-/// ```
-/// We only need one byte to represent this feature since there are only 4 bins: 3 enum variants + 1 for the missing bin.
-/// The first byte, represented as bits is `00000010`.
-/// The enum variant 1, corresponding to `red` goes to the right subtree and `missing`, `blue` and `green` go to the left.
+/**
+`BinDirections` specifies which direction, left or right, an example should be sent, based on the value of an `Enum` feature. Just like `Enum` features, bin 0 is reserved for invalid values. Rather than use a Vec<bool>, to avoid heap allocation and minimize the size of the struct, we use a bitset.
+*/
 #[derive(Clone, Debug)]
 pub struct BinDirections {
 	/// The total number of bin directions in the bitset.
@@ -213,12 +176,12 @@ pub struct BinDirections {
 	pub bytes: [u8; 32],
 }
 
-/// This struct describes a leaf node in a trained tree.
+/// The leaves in a tree hold the values to output for examples that get sent to them.
 #[derive(Debug)]
 pub struct LeafNode {
-	/// The output of the leaf node... TODO
+	/// This is the value to output.
 	pub value: f32,
-	/// The fraction of the training examples that ended up in this leaf node, used to compute SHAP values.
+	/// Leaf nodes store the fraction of training examples that were sent to them during training. This is used to compute SHAP values.
 	pub examples_fraction: f32,
 }
 
@@ -235,17 +198,13 @@ impl Node {
 	}
 }
 
-/// Categorical splits are represented as a space-efficient bit vector.
-/// If the entry at index i is 0, then the i-th enum variant goes to the left subtree
-/// and if the value is 1, the i-th enum variant goes to the right subtree.
 impl BinDirections {
 	pub fn new(n: u8, value: bool) -> Self {
 		let bytes = if !value { [0x00; 32] } else { [0xFF; 32] };
 		Self { n, bytes }
 	}
 
-	/// Retrieves the bin direction for the enum variant given by `index`.
-	/// Returns `None` if the index is greater than the total number of enum variants (n).
+	/// Retrieve the bin direction for the enum variant given by `index`. This will return `None` if the index is greater than the total number of enum variants (n).
 	pub fn get(&self, index: u8) -> Option<bool> {
 		if index >= self.n {
 			None
@@ -258,7 +217,7 @@ impl BinDirections {
 		}
 	}
 
-	/// Sets the bin direction for the given enum variant at `index` to the value passed, 0 if this enum variant should go the the left subtree and 1 if it should go to the right.
+	/// Set the bin direction for the given enum variant at `index` to the value passed, 0 if this enum variant should go the the left subtree and 1 if it should go to the right.
 	pub fn set(&mut self, index: u8, value: bool) {
 		let byte_index = (index / 8) as usize;
 		let bit_index = index % 8;

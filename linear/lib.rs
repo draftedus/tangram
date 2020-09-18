@@ -47,7 +47,7 @@ impl Default for TrainOptions {
 	}
 }
 
-/// The parameters in this struct control whether training should stop early after each epoch.
+/// The parameters in this struct control how to determine whether training should stop early after each epoch.
 #[derive(Debug)]
 pub struct EarlyStoppingOptions {
 	/// This is the fraction of the dataset that is set aside to compute the early stopping metric.

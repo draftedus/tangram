@@ -39,18 +39,18 @@ pub enum GridItem {
 }
 
 pub struct LinearModelTrainOptions {
-	pub max_epochs: u64,
-	pub n_examples_per_batch: u64,
-	pub learning_rate: f32,
-	pub l2_regularization: f32,
+	pub l2_regularization: Option<f32>,
+	pub learning_rate: Option<f32>,
+	pub max_epochs: Option<u64>,
+	pub n_examples_per_batch: Option<u64>,
 }
 
 pub struct TreeModelTrainOptions {
-	pub max_depth: u64,
-	pub learning_rate: f32,
-	pub l2_regularization: f32,
-	pub min_examples_per_leaf: u64,
-	pub max_rounds: u64,
+	pub l2_regularization: Option<f32>,
+	pub learning_rate: Option<f32>,
+	pub max_depth: Option<u64>,
+	pub max_rounds: Option<u64>,
+	pub min_examples_per_leaf: Option<u64>,
 }
 
 pub fn compute_regression_hyperparameter_grid(
@@ -185,10 +185,10 @@ pub fn default_regression_hyperparameter_grid(
 			target_column_index,
 			feature_groups: features::compute_feature_groups_linear(column_stats),
 			options: LinearModelTrainOptions {
-				l2_regularization,
-				learning_rate,
-				max_epochs,
-				n_examples_per_batch,
+				l2_regularization: Some(l2_regularization),
+				learning_rate: Some(learning_rate),
+				max_epochs: Some(max_epochs),
+				n_examples_per_batch: Some(n_examples_per_batch),
 			},
 		});
 	}
@@ -203,11 +203,11 @@ pub fn default_regression_hyperparameter_grid(
 			target_column_index,
 			feature_groups: features::compute_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
-				max_depth,
-				learning_rate,
-				min_examples_per_leaf,
-				max_rounds,
-				l2_regularization,
+				max_depth: Some(max_depth),
+				learning_rate: Some(learning_rate),
+				min_examples_per_leaf: Some(min_examples_per_leaf),
+				max_rounds: Some(max_rounds),
+				l2_regularization: Some(l2_regularization),
 			},
 		});
 	}
@@ -230,10 +230,10 @@ pub fn default_binary_classification_hyperparameter_grid(
 			target_column_index,
 			feature_groups: features::compute_feature_groups_linear(column_stats),
 			options: LinearModelTrainOptions {
-				l2_regularization,
-				learning_rate,
-				max_epochs,
-				n_examples_per_batch,
+				l2_regularization: Some(l2_regularization),
+				learning_rate: Some(learning_rate),
+				max_epochs: Some(max_epochs),
+				n_examples_per_batch: Some(n_examples_per_batch),
 			},
 		});
 	}
@@ -248,11 +248,11 @@ pub fn default_binary_classification_hyperparameter_grid(
 			target_column_index,
 			feature_groups: features::compute_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
-				max_depth,
-				learning_rate,
-				min_examples_per_leaf,
-				max_rounds,
-				l2_regularization,
+				max_depth: Some(max_depth),
+				learning_rate: Some(learning_rate),
+				min_examples_per_leaf: Some(min_examples_per_leaf),
+				max_rounds: Some(max_rounds),
+				l2_regularization: Some(l2_regularization),
 			},
 		});
 	}
@@ -275,10 +275,10 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 			target_column_index,
 			feature_groups: features::compute_feature_groups_linear(column_stats),
 			options: LinearModelTrainOptions {
-				l2_regularization,
-				learning_rate,
-				max_epochs,
-				n_examples_per_batch,
+				l2_regularization: Some(l2_regularization),
+				learning_rate: Some(learning_rate),
+				max_epochs: Some(max_epochs),
+				n_examples_per_batch: Some(n_examples_per_batch),
 			},
 		});
 	}
@@ -293,11 +293,11 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 			target_column_index,
 			feature_groups: features::compute_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
-				max_depth,
-				learning_rate,
-				min_examples_per_leaf,
-				max_rounds,
-				l2_regularization,
+				max_depth: Some(max_depth),
+				learning_rate: Some(learning_rate),
+				min_examples_per_leaf: Some(min_examples_per_leaf),
+				max_rounds: Some(max_rounds),
+				l2_regularization: Some(l2_regularization),
 			},
 		});
 	}

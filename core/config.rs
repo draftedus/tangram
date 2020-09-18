@@ -41,19 +41,19 @@ pub enum GridItem {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct LinearGridItem {
-	pub l2_regularization: f32,
-	pub learning_rate: f32,
-	pub max_epochs: u64,
-	pub n_examples_per_batch: u64,
+	pub l2_regularization: Option<f32>,
+	pub learning_rate: Option<f32>,
+	pub max_epochs: Option<u64>,
+	pub n_examples_per_batch: Option<u64>,
 }
 
 #[derive(Debug, serde::Deserialize)]
 pub struct TreeGridItem {
-	pub l2_regularization: f32,
-	pub learning_rate: f32,
-	pub max_depth: u64,
-	pub max_rounds: u64,
-	pub min_examples_per_leaf: u64,
+	pub l2_regularization: Option<f32>,
+	pub learning_rate: Option<f32>,
+	pub max_depth: Option<u64>,
+	pub max_rounds: Option<u64>,
+	pub min_examples_per_leaf: Option<u64>,
 }
 
 #[derive(Debug, Display, Clone, serde::Deserialize)]

@@ -191,10 +191,10 @@ pub fn find_best_continuous_split_for_feature_left_to_right(
 		};
 
 		// check if we have violated the min samples leaf constraint
-		if left_n_examples < options.min_examples_leaf {
+		if left_n_examples < options.min_examples_per_leaf {
 			continue;
 		}
-		if right_n_examples < options.min_examples_leaf {
+		if right_n_examples < options.min_examples_per_leaf {
 			// since we are in left to right mode, we will only get less examples if we continue so break instead
 			break;
 		}
@@ -342,7 +342,7 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 		};
 
 		// check if we have violated the min samples leaf constraint
-		if left_n_examples < options.min_examples_leaf {
+		if left_n_examples < options.min_examples_per_leaf {
 			continue;
 		}
 		// check if we have violated the min examples per categorical branch constraint
@@ -350,7 +350,7 @@ pub fn find_best_discrete_split_for_feature_left_to_right(
 			continue;
 		}
 
-		if right_n_examples < options.min_examples_leaf {
+		if right_n_examples < options.min_examples_per_leaf {
 			// since we are in left to right mode, we will only get less examples if we continue so break instead
 			break;
 		}

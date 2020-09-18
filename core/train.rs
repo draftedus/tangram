@@ -692,13 +692,19 @@ fn train_linear_regressor(
 		.unwrap()
 		.as_number()
 		.unwrap();
-	let linear_options = tangram_linear::TrainOptions {
-		l2_regularization: options.l2_regularization,
-		learning_rate: options.learning_rate,
-		max_epochs: options.max_epochs.to_usize().unwrap(),
-		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
-		..Default::default()
-	};
+	let mut linear_options = tangram_linear::TrainOptions::default();
+	if let Some(l2_regularization) = options.l2_regularization {
+		linear_options.l2_regularization = l2_regularization;
+	}
+	if let Some(learning_rate) = options.learning_rate {
+		linear_options.learning_rate = learning_rate;
+	}
+	if let Some(max_epochs) = options.max_epochs {
+		linear_options.max_epochs = max_epochs.to_usize().unwrap();
+	}
+	if let Some(n_examples_per_batch) = options.n_examples_per_batch {
+		linear_options.n_examples_per_batch = n_examples_per_batch.to_usize().unwrap();
+	}
 	let model = tangram_linear::Regressor::train(
 		features.view(),
 		labels,
@@ -736,23 +742,19 @@ fn train_tree_regressor(
 		.as_number()
 		.unwrap()
 		.clone();
-	let base: usize = 2;
-	let tree_options = tangram_tree::TrainOptions {
-		compute_loss: true,
-		early_stopping_options: None,
-		l2_regularization: 0.0,
-		learning_rate: options.learning_rate,
-		max_depth: options.max_depth.to_usize().unwrap(),
-		max_leaf_nodes: base.pow(options.max_depth.to_u32().unwrap()),
-		max_non_missing_bins: 255,
-		subsample_for_binning: 200_000,
-		max_rounds: options.max_rounds.to_usize().unwrap(),
-		min_examples_leaf: 20,
-		min_sum_hessians_in_leaf: 1e-3,
-		min_gain_to_split: 0.0,
-		discrete_l2_regularization: 10.0,
-		discrete_min_examples_per_branch: 100,
-	};
+	let mut tree_options = tangram_tree::TrainOptions::default();
+	if let Some(learning_rate) = options.learning_rate {
+		tree_options.learning_rate = learning_rate;
+	}
+	if let Some(max_depth) = options.max_depth {
+		tree_options.max_depth = max_depth.to_usize().unwrap();
+	}
+	if let Some(max_depth) = options.max_depth {
+		tree_options.max_leaf_nodes = 2usize.pow(max_depth.to_u32().unwrap());
+	}
+	if let Some(max_rounds) = options.max_rounds {
+		tree_options.max_rounds = max_rounds.to_usize().unwrap();
+	}
 	let model =
 		tangram_tree::Regressor::train(features.view(), labels, tree_options, &mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
@@ -790,13 +792,19 @@ fn train_linear_binary_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let linear_options = tangram_linear::TrainOptions {
-		l2_regularization: options.l2_regularization,
-		learning_rate: options.learning_rate,
-		max_epochs: options.max_epochs.to_usize().unwrap(),
-		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
-		..Default::default()
-	};
+	let mut linear_options = tangram_linear::TrainOptions::default();
+	if let Some(l2_regularization) = options.l2_regularization {
+		linear_options.l2_regularization = l2_regularization;
+	}
+	if let Some(learning_rate) = options.learning_rate {
+		linear_options.learning_rate = learning_rate;
+	}
+	if let Some(max_epochs) = options.max_epochs {
+		linear_options.max_epochs = max_epochs.to_usize().unwrap();
+	}
+	if let Some(n_examples_per_batch) = options.n_examples_per_batch {
+		linear_options.n_examples_per_batch = n_examples_per_batch.to_usize().unwrap();
+	}
 	let model = tangram_linear::BinaryClassifier::train(
 		features.view(),
 		labels,
@@ -834,23 +842,19 @@ fn train_tree_binary_classifier(
 		.as_enum()
 		.unwrap()
 		.clone();
-	let base: usize = 2;
-	let tree_options = tangram_tree::TrainOptions {
-		compute_loss: true,
-		discrete_l2_regularization: 10.0,
-		discrete_min_examples_per_branch: 100,
-		early_stopping_options: None,
-		l2_regularization: 0.0,
-		learning_rate: options.learning_rate,
-		max_depth: options.max_depth.to_usize().unwrap(),
-		max_leaf_nodes: base.pow(options.max_depth.to_u32().unwrap()),
-		max_non_missing_bins: 255,
-		max_rounds: options.max_rounds.to_usize().unwrap(),
-		min_examples_leaf: options.min_examples_per_leaf.to_usize().unwrap(),
-		min_gain_to_split: 0.0,
-		min_sum_hessians_in_leaf: 1e-3,
-		subsample_for_binning: 200_000,
-	};
+	let mut tree_options = tangram_tree::TrainOptions::default();
+	if let Some(learning_rate) = options.learning_rate {
+		tree_options.learning_rate = learning_rate;
+	}
+	if let Some(max_depth) = options.max_depth {
+		tree_options.max_depth = max_depth.to_usize().unwrap();
+	}
+	if let Some(max_depth) = options.max_depth {
+		tree_options.max_leaf_nodes = 2usize.pow(max_depth.to_u32().unwrap());
+	}
+	if let Some(max_rounds) = options.max_rounds {
+		tree_options.max_rounds = max_rounds.to_usize().unwrap();
+	}
 	let model = tangram_tree::BinaryClassifier::train(
 		features.view(),
 		labels,
@@ -892,13 +896,19 @@ fn train_linear_multiclass_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let linear_options = tangram_linear::TrainOptions {
-		l2_regularization: options.l2_regularization,
-		learning_rate: options.learning_rate,
-		max_epochs: options.max_epochs.to_usize().unwrap(),
-		n_examples_per_batch: options.n_examples_per_batch.to_usize().unwrap(),
-		..Default::default()
-	};
+	let mut linear_options = tangram_linear::TrainOptions::default();
+	if let Some(l2_regularization) = options.l2_regularization {
+		linear_options.l2_regularization = l2_regularization;
+	}
+	if let Some(learning_rate) = options.learning_rate {
+		linear_options.learning_rate = learning_rate;
+	}
+	if let Some(max_epochs) = options.max_epochs {
+		linear_options.max_epochs = max_epochs.to_usize().unwrap();
+	}
+	if let Some(n_examples_per_batch) = options.n_examples_per_batch {
+		linear_options.n_examples_per_batch = n_examples_per_batch.to_usize().unwrap();
+	}
 	let model = tangram_linear::MulticlassClassifier::train(
 		features.view(),
 		labels,
@@ -936,23 +946,20 @@ fn train_tree_multiclass_classifier(
 		.as_enum()
 		.unwrap()
 		.clone();
-	let base: usize = 2;
-	let tree_options = tangram_tree::TrainOptions {
-		compute_loss: true,
-		early_stopping_options: None,
-		l2_regularization: 0.0,
-		learning_rate: options.learning_rate,
-		max_depth: options.max_depth.to_usize().unwrap(),
-		max_leaf_nodes: base.pow(options.max_depth.to_u32().unwrap()),
-		max_non_missing_bins: 255,
-		subsample_for_binning: 200_000,
-		max_rounds: options.max_rounds.to_usize().unwrap(),
-		min_examples_leaf: options.min_examples_per_leaf.to_usize().unwrap(),
-		min_sum_hessians_in_leaf: 1e-3,
-		min_gain_to_split: 0.0,
-		discrete_l2_regularization: 10.0,
-		discrete_min_examples_per_branch: 100,
-	};
+	let mut tree_options = tangram_tree::TrainOptions::default();
+	if let Some(learning_rate) = options.learning_rate {
+		tree_options.learning_rate = learning_rate;
+	}
+	if let Some(max_depth) = options.max_depth {
+		tree_options.max_depth = max_depth.to_usize().unwrap();
+		tree_options.max_leaf_nodes = 2usize.pow(max_depth.to_u32().unwrap());
+	}
+	if let Some(max_rounds) = options.max_rounds {
+		tree_options.max_rounds = max_rounds.to_usize().unwrap();
+	}
+	if let Some(min_examples_per_leaf) = options.min_examples_per_leaf {
+		tree_options.min_examples_per_leaf = min_examples_per_leaf.to_usize().unwrap();
+	}
 	let model = tangram_tree::MulticlassClassifier::train(
 		features.view(),
 		labels,
@@ -1598,23 +1605,25 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
 
 impl Into<model::LinearModelTrainOptions> for grid::LinearModelTrainOptions {
 	fn into(self) -> model::LinearModelTrainOptions {
-		model::LinearModelTrainOptions {
-			l2_regularization: self.l2_regularization,
-			learning_rate: self.learning_rate,
-			max_epochs: self.max_epochs,
-			n_examples_per_batch: self.n_examples_per_batch,
-		}
+		todo!()
+		// model::LinearModelTrainOptions {
+		// 	l2_regularization: self.l2_regularization,
+		// 	learning_rate: self.learning_rate,
+		// 	max_epochs: self.max_epochs,
+		// 	n_examples_per_batch: self.n_examples_per_batch,
+		// }
 	}
 }
 
 impl Into<model::TreeModelTrainOptions> for grid::TreeModelTrainOptions {
 	fn into(self) -> model::TreeModelTrainOptions {
-		model::TreeModelTrainOptions {
-			depth: self.max_depth,
-			learning_rate: self.learning_rate,
-			min_examples_per_leaf: self.min_examples_per_leaf,
-			max_rounds: self.max_rounds,
-		}
+		todo!()
+		// model::TreeModelTrainOptions {
+		// 	depth: self.max_depth,
+		// 	learning_rate: self.learning_rate,
+		// 	min_examples_per_leaf: self.min_examples_per_leaf,
+		// 	max_rounds: self.max_rounds,
+		// }
 	}
 }
 
