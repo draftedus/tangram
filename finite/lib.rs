@@ -1,3 +1,17 @@
+/*!
+The crate provides the `Finite` type, which is used to indicate that a floating point number is not infinite and not NaN. It is similar to the standard library's NonZero{U8, I8, etc.} types.
+
+# Example
+
+```
+use tangram_finite::Finite;
+
+let n = Finite::<f32>::new(1.0).unwrap();
+assert!(Finite::new(n.get() / 0.0).is_err());
+```
+
+*/
+
 use num_traits::Float;
 use std::{
 	cmp::{Ord, Ordering},
@@ -119,16 +133,6 @@ where
 	}
 }
 
-impl<T> Add<T> for Finite<T>
-where
-	T: Float,
-{
-	type Output = Self;
-	fn add(self, other: T) -> Self::Output {
-		Self::new(self.0.add(other)).unwrap()
-	}
-}
-
 impl<T> Sub for Finite<T>
 where
 	T: Float,
@@ -139,16 +143,6 @@ where
 	}
 }
 
-impl<T> Sub<T> for Finite<T>
-where
-	T: Float,
-{
-	type Output = Self;
-	fn sub(self, other: T) -> Self::Output {
-		Self::new(self.0.sub(other)).unwrap()
-	}
-}
-
 impl<T> Mul for Finite<T>
 where
 	T: Float,
@@ -156,16 +150,6 @@ where
 	type Output = Self;
 	fn mul(self, other: Self) -> Self::Output {
 		Self::new(self.0.mul(other.0)).unwrap()
-	}
-}
-
-impl<T> Mul<T> for Finite<T>
-where
-	T: Float,
-{
-	type Output = Self;
-	fn mul(self, other: T) -> Self::Output {
-		Self::new(self.0.mul(other)).unwrap()
 	}
 }
 

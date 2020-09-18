@@ -2,6 +2,7 @@ use super::{shap, single, train::Model, TrainOptions, Tree};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
+use std::num::NonZeroUsize;
 use std::ops::Neg;
 use tangram_dataframe::*;
 
@@ -88,21 +89,21 @@ impl BinaryClassifier {
 /// Update the logits with the predictions from a single round of trees.
 pub fn update_logits(
 	trees: &[single::SingleTree],
-	features: ArrayView2<u8>,
+	binned_features: ArrayView2<u8>,
 	mut logits: ArrayViewMut2<f32>,
 ) {
 	for tree in trees {
-		for (logit, features) in logits.iter_mut().zip(features.genrows()) {
+		for (logit, features) in logits.iter_mut().zip(binned_features.genrows()) {
 			*logit += tree.predict(features);
 		}
 	}
 }
 
 /// Compute the binary cross entropy loss.
-pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
+pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
 	let mut total = 0.0;
 	for (label, logit) in labels.iter().zip(logits) {
-		let label = (*label - 1).to_f32().unwrap();
+		let label = (label.unwrap().get() - 1).to_f32().unwrap();
 		let probability = 1.0 / (logit.neg().exp() + 1.0);
 		let probability_clamped = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
 		total += -1.0 * label * probability_clamped.ln()
@@ -112,10 +113,11 @@ pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
 }
 
 /// Compute the biases.
-pub fn compute_biases(labels: ArrayView1<usize>) -> Array1<f32> {
-	// positive label = 2
-	// negative label = 1
-	let pos_count = labels.sum() - labels.len();
+pub fn compute_biases(labels: ArrayView1<Option<NonZeroUsize>>) -> Array1<f32> {
+	let pos_count = labels
+		.iter()
+		.map(|l| if l.unwrap().get() == 2 { 1 } else { 0 })
+		.sum::<usize>();
 	let neg_count = labels.len() - pos_count;
 	let log_odds = (pos_count.to_f32().unwrap() / neg_count.to_f32().unwrap()).ln();
 	arr1(&[log_odds])
@@ -128,7 +130,7 @@ pub fn update_gradients_and_hessians(
 	// (n_trees_per_round, n_examples)
 	mut hessians: ArrayViewMut2<f32>,
 	// (n_examples)
-	labels: ArrayView1<usize>,
+	labels: ArrayView1<Option<NonZeroUsize>>,
 	// (n_trees_per_rounds, n_examples)
 	predictions: ArrayView2<f32>,
 ) {
@@ -144,7 +146,7 @@ pub fn update_gradients_and_hessians(
 			std::f32::EPSILON,
 			1.0 - std::f32::EPSILON,
 		);
-		*gradient = probability - (label - 1).to_f32().unwrap();
+		*gradient = probability - (label.unwrap().get() - 1).to_f32().unwrap();
 		*hessian = probability * (1.0 - probability);
 	});
 }

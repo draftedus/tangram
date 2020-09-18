@@ -1,3 +1,4 @@
+import './pricing_cards.css'
 import { cx } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { JSX, h } from 'preact'

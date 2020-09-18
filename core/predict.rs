@@ -2,8 +2,11 @@ use crate::{features, model};
 use anyhow::Result;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use std::collections::BTreeMap;
-use std::convert::{TryFrom, TryInto};
+use std::{
+	collections::BTreeMap,
+	convert::{TryFrom, TryInto},
+	num::NonZeroUsize,
+};
 
 #[derive(serde::Deserialize, Debug)]
 pub struct PredictOptions {
@@ -190,15 +193,13 @@ pub fn predict(
 				}
 				tangram_dataframe::Column::Enum(column) => {
 					let value = input.get(&column.name).and_then(|value| value.as_str());
-					let value = value
-						.and_then(|value| {
-							column
-								.options
-								.iter()
-								.position(|option| option == value)
-								.map(|position| position + 1)
-						})
-						.unwrap_or(0);
+					let value = value.and_then(|value| {
+						column
+							.options
+							.iter()
+							.position(|option| option == value)
+							.map(|position| NonZeroUsize::new(position + 1).unwrap())
+					});
 					column.data.push(value);
 				}
 				tangram_dataframe::Column::Text(column) => {
@@ -701,13 +702,13 @@ fn compute_shap_values_tree(
 					tangram_dataframe::Value::Number(value) => value.to_string(),
 					tangram_dataframe::Value::Enum(value) => {
 						// get the name of the category
-						if *value == 0 {
+						if value.is_none() {
 							"oov".to_owned()
 						} else {
 							let column = &dataframe.columns[*feature_group_index];
 							match &column {
 								tangram_dataframe::ColumnView::Enum(column) => {
-									column.options[*value - 1].clone()
+									column.options[value.unwrap().get() - 1].clone()
 								}
 								_ => unreachable!(),
 							}

@@ -5,7 +5,7 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use std::ops::Neg;
+use std::{num::NonZeroUsize, ops::Neg};
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_metrics::{BinaryCrossEntropy, BinaryCrossEntropyInput, StreamingMetric};
@@ -97,16 +97,16 @@ impl BinaryClassifier {
 	fn train_batch(
 		&mut self,
 		features: ArrayView2<f32>,
-		labels: ArrayView1<usize>,
+		labels: ArrayView1<Option<NonZeroUsize>>,
 		options: &TrainOptions,
 	) {
 		let learning_rate = options.learning_rate;
 		let logits = features.dot(&self.weights) + self.bias;
 		let mut predictions = logits.mapv_into(|logit| 1.0 / (logit.neg().exp() + 1.0));
 		for (prediction, label) in izip!(predictions.view_mut(), labels) {
-			let label = match label {
-				1 => 0.0,
-				2 => 1.0,
+			let label = match label.map(|l| l.get()) {
+				Some(1) => 0.0,
+				Some(2) => 1.0,
 				_ => unreachable!(),
 			};
 			*prediction -= label
@@ -123,7 +123,7 @@ impl BinaryClassifier {
 	fn compute_early_stopping_metric_value(
 		&self,
 		features: ArrayView2<f32>,
-		labels: ArrayView1<usize>,
+		labels: ArrayView1<Option<NonZeroUsize>>,
 		options: &TrainOptions,
 	) -> f32 {
 		izip!(

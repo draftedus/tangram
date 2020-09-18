@@ -1,6 +1,7 @@
 use super::StreamingMetric;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use std::num::NonZeroUsize;
 
 /// ClassificationMetrics computes common metrics used to evaluate classifiers.
 pub struct ClassificationMetrics {
@@ -13,7 +14,7 @@ pub struct ClassificationMetricsInput<'a> {
 	// (n_classes, n_examples)
 	pub probabilities: ArrayView2<'a, f32>,
 	// (n_examples), 1-indexed
-	pub labels: ArrayView1<'a, usize>,
+	pub labels: ArrayView1<'a, Option<NonZeroUsize>>,
 }
 
 /// The output from [ClassificationMetrics](struct.ClassificationMetrics.html).
@@ -80,8 +81,8 @@ impl<'a> StreamingMetric<'a> for ClassificationMetrics {
 				.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
 				.unwrap()
 				.0;
-			// labels are 1-indexed, convert to 0-indexed
-			let label = label.checked_sub(1).unwrap();
+			// get index in confusion matrix for label
+			let label = label.unwrap().get() - 1;
 			self.confusion_matrix[(prediction, label)] += 1;
 		}
 	}
@@ -170,7 +171,21 @@ impl<'a> StreamingMetric<'a> for ClassificationMetrics {
 fn test_binary() {
 	let classes = vec![String::from("Cat"), String::from("Dog")];
 	let mut metrics = ClassificationMetrics::new(classes.len());
-	let labels = arr1(&[1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2]);
+	let labels = arr1(&[
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+	]);
 	let probabilities = arr2(&[
 		[1.0, 0.0], // correct
 		[1.0, 0.0], // correct
@@ -235,7 +250,33 @@ fn test_multiclass() {
 	];
 	let mut metrics = ClassificationMetrics::new(classes.len());
 	let labels = arr1(&[
-		1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 2, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
+		Some(NonZeroUsize::new(3).unwrap()),
 	]);
 	let probabilities = arr2(&[
 		[1.0, 0.0, 0.0], // correct

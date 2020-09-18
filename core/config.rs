@@ -1,3 +1,7 @@
+/*!
+This module defines the `Config` struct, which is the configuration for training a model with `tangram_core::train`.
+*/
+
 use derive_more::Display;
 use std::collections::BTreeMap;
 

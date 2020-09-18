@@ -1,5 +1,10 @@
+/*!
+This crate provides a basic implementation of dataframes, which are tables of heterogeneous data. It is similar to Python's Pandas library, but at present is far more limited, because it only implements what is needed to support the Tangram family of machine learning libraries.
+*/
+
 use itertools::izip;
 use ndarray::prelude::*;
+use std::num::NonZeroUsize;
 
 pub mod load;
 
@@ -44,7 +49,7 @@ pub struct NumberColumn {
 pub struct EnumColumn {
 	pub name: String,
 	pub options: Vec<String>,
-	pub data: Vec<usize>,
+	pub data: Vec<Option<NonZeroUsize>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -77,7 +82,7 @@ pub struct NumberColumnView<'a> {
 pub struct EnumColumnView<'a> {
 	pub name: &'a str,
 	pub options: &'a [String],
-	pub data: &'a [usize],
+	pub data: &'a [Option<NonZeroUsize>],
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -132,7 +137,7 @@ pub enum ColumnTypeView<'a> {
 pub enum Value<'a> {
 	Unknown,
 	Number(f32),
-	Enum(usize),
+	Enum(Option<NonZeroUsize>),
 	Text(&'a str),
 }
 
@@ -542,14 +547,28 @@ impl<'a> Value<'a> {
 		}
 	}
 
-	pub fn as_enum(&self) -> Option<&usize> {
+	pub fn as_enum(&self) -> Option<&Option<NonZeroUsize>> {
 		match self {
 			Self::Enum(s) => Some(s),
 			_ => None,
 		}
 	}
 
-	pub fn as_text(&self) -> Option<&'a str> {
+	pub fn as_enum_mut(&mut self) -> Option<&mut Option<NonZeroUsize>> {
+		match self {
+			Self::Enum(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_text(&self) -> Option<&str> {
+		match self {
+			Self::Text(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_text_mut(&mut self) -> Option<&mut &'a str> {
 		match self {
 			Self::Text(s) => Some(s),
 			_ => None,

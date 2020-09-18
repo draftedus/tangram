@@ -3,6 +3,7 @@ use itertools::Itertools;
 use ndarray::prelude::*;
 use ndarray::s;
 use num_traits::ToPrimitive;
+use std::num::NonZeroUsize;
 
 /// `BinaryClassificationMetrics` computes common metrics used to evaluate binary classifiers at various classification thresholds. Instead of computing threshold metrics for each prediction probability, we instead compute metrics for a fixed number of threshold values given by `n_thresholds` passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new). This is an approximation but is more memory efficient.
 pub struct BinaryClassificationMetrics {
@@ -16,7 +17,7 @@ pub struct BinaryClassificationMetrics {
 /// The input to [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
 pub struct BinaryClassificationMetricsInput<'a> {
 	pub probabilities: ArrayView2<'a, f32>,
-	pub labels: ArrayView1<'a, usize>,
+	pub labels: ArrayView1<'a, Option<NonZeroUsize>>,
 }
 
 /// BinaryClassificationMetrics contains common metrics used to evaluate binary classifiers.
@@ -86,7 +87,7 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				} else {
 					0
 				};
-				let actual_label_id = if value.labels[example_index] == 2 {
+				let actual_label_id = if value.labels[example_index].unwrap().get() == 2 {
 					1
 				} else {
 					0
@@ -186,7 +187,13 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 #[test]
 fn test() {
 	let mut metrics = BinaryClassificationMetrics::new(8);
-	let labels = arr1(&[1, 1, 2, 1, 2]);
+	let labels = arr1(&[
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+		Some(NonZeroUsize::new(1).unwrap()),
+		Some(NonZeroUsize::new(2).unwrap()),
+	]);
 	let probabilities = arr2(&[[0.9, 0.1], [0.2, 0.2], [0.7, 0.3], [0.2, 0.8], [0.1, 0.9]]);
 	metrics.update(BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),

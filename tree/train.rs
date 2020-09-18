@@ -310,7 +310,7 @@ pub fn train(
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
 
 	#[cfg(feature = "timing")]
-	eprintln!("{}", timing);
+	eprintln!("{:?}", timing);
 
 	// Assemble the model.
 	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
@@ -539,7 +539,8 @@ pub fn compute_binned_features(
 					for (binned_feature_value, feature_value) in
 						binned_features_column.iter_mut().zip(column.data)
 					{
-						*binned_feature_value = feature_value.to_u8().unwrap();
+						*binned_feature_value =
+							feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap();
 						binned_feature_stats[binned_feature_value.to_usize().unwrap()] += 1;
 						progress();
 					}
@@ -611,24 +612,24 @@ fn train_early_stopping_split<'features, 'labels>(
 fn compute_early_stopping_metric(
 	task: &Task,
 	trees: &[SingleTree],
-	features: ArrayView2<u8>,
+	binned_features: ArrayView2<u8>,
 	labels: ColumnView,
 	mut logits: ArrayViewMut2<f32>,
 ) -> f32 {
 	match task {
 		Task::Regression => {
 			let labels = labels.as_number().unwrap().data.into();
-			super::regressor::update_logits(trees, features, logits.view_mut());
+			super::regressor::update_logits(trees, binned_features, logits.view_mut());
 			super::regressor::compute_loss(labels, logits.view())
 		}
 		Task::BinaryClassification => {
 			let labels = labels.as_enum().unwrap().data.into();
-			super::binary_classifier::update_logits(trees, features, logits.view_mut());
+			super::binary_classifier::update_logits(trees, binned_features, logits.view_mut());
 			super::binary_classifier::compute_loss(labels, logits.view())
 		}
 		Task::MulticlassClassification { .. } => {
 			let labels = labels.as_enum().unwrap().data.into();
-			super::multiclass_classifier::update_logits(trees, features, logits.view_mut());
+			super::multiclass_classifier::update_logits(trees, binned_features, logits.view_mut());
 			super::multiclass_classifier::compute_loss(labels, logits.view())
 		}
 	}

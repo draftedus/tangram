@@ -1598,7 +1598,6 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
 	fn into(self) -> model::LinearBinaryClassifier {
 		model::LinearBinaryClassifier {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			options: self.options.into(),
 			metrics: self.metrics.into(),
 			means: self.model.means,
 			weights: self.model.weights.into_raw_vec(),
@@ -1606,30 +1605,6 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
 			losses: self.model.losses,
 			classes: self.model.classes,
 		}
-	}
-}
-
-impl Into<model::LinearModelTrainOptions> for grid::LinearModelTrainOptions {
-	fn into(self) -> model::LinearModelTrainOptions {
-		todo!()
-		// model::LinearModelTrainOptions {
-		// 	l2_regularization: self.l2_regularization,
-		// 	learning_rate: self.learning_rate,
-		// 	max_epochs: self.max_epochs,
-		// 	n_examples_per_batch: self.n_examples_per_batch,
-		// }
-	}
-}
-
-impl Into<model::TreeModelTrainOptions> for grid::TreeModelTrainOptions {
-	fn into(self) -> model::TreeModelTrainOptions {
-		todo!()
-		// model::TreeModelTrainOptions {
-		// 	depth: self.max_depth,
-		// 	learning_rate: self.learning_rate,
-		// 	min_examples_per_leaf: self.min_examples_per_leaf,
-		// 	max_rounds: self.max_rounds,
-		// }
 	}
 }
 
@@ -1642,7 +1617,6 @@ impl Into<model::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 			weights: self.model.weights.into_raw_vec(),
 			biases: self.model.biases.into_raw_vec(),
 			losses: self.model.losses,
-			options: self.options.into(),
 			classes: self.model.classes,
 			means: self.model.means,
 		}
@@ -1655,7 +1629,6 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 		let trees = self.model.trees.into_iter().map(Into::into).collect();
 		let metrics = self.metrics.into();
 		let feature_importances = self.model.feature_importances.unwrap();
-		let options = self.options.into();
 		model::TreeBinaryClassifier {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
 			trees,
@@ -1664,7 +1637,6 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 			losses,
 			classes: self.model.classes,
 			feature_importances,
-			options,
 		}
 	}
 }
@@ -1675,7 +1647,6 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 			n_rounds: self.model.n_rounds.to_u64().unwrap(),
 			n_classes: self.model.n_classes.to_u64().unwrap(),
 			biases: self.model.biases,
-			options: self.options.into(),
 			trees: self.model.trees.into_iter().map(|t| t.into()).collect(),
 			feature_groups: self.feature_groups.into_iter().map(|t| t.into()).collect(),
 			losses: self.model.losses.unwrap(),
@@ -1739,7 +1710,6 @@ impl Into<model::LinearRegressor> for LinearRegressor {
 			bias: self.model.bias,
 			losses: self.model.losses,
 			means: self.model.means,
-			options: self.options.into(),
 		}
 	}
 }
@@ -1753,7 +1723,6 @@ impl Into<model::TreeRegressor> for TreeRegressor {
 			trees,
 			bias: self.model.bias,
 			losses,
-			options: self.options.into(),
 			feature_importances: self.model.feature_importances.unwrap(),
 		}
 	}

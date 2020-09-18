@@ -5,6 +5,7 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use std::num::NonZeroUsize;
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_metrics::{CrossEntropy, CrossEntropyInput, StreamingMetric};
@@ -97,7 +98,7 @@ impl MulticlassClassifier {
 	fn train_batch(
 		&mut self,
 		features: ArrayView2<f32>,
-		labels: ArrayView1<usize>,
+		labels: ArrayView1<Option<NonZeroUsize>>,
 		options: &TrainOptions,
 	) {
 		let learning_rate = options.learning_rate;
@@ -107,7 +108,11 @@ impl MulticlassClassifier {
 		let mut predictions = logits;
 		for (mut predictions, label) in izip!(predictions.genrows_mut(), labels) {
 			for (class_index, prediction) in predictions.iter_mut().enumerate() {
-				*prediction -= if class_index == label - 1 { 1.0 } else { 0.0 }
+				*prediction -= if class_index == label.unwrap().get() - 1 {
+					1.0
+				} else {
+					0.0
+				}
 			}
 		}
 		let py = predictions;
@@ -133,7 +138,7 @@ impl MulticlassClassifier {
 	fn compute_early_stopping_metric_value(
 		&self,
 		features: ArrayView2<f32>,
-		labels: ArrayView1<usize>,
+		labels: ArrayView1<Option<NonZeroUsize>>,
 		options: &TrainOptions,
 	) -> f32 {
 		let n_classes = self.biases.len();

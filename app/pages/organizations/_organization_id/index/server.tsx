@@ -1,5 +1,4 @@
 import { PricingCards } from '../../../../../www/pages/pricing/pricing_cards'
-import './styles.css'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'

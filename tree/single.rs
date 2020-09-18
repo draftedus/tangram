@@ -230,7 +230,9 @@ impl Tree {
 				}) => {
 					// only enum features are split using discrete splits
 					let feature_value = match row[*feature_index] {
-						tangram_dataframe::Value::Enum(value) => value.to_u8().unwrap(),
+						tangram_dataframe::Value::Enum(value) => {
+							value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
+						}
 						_ => unreachable!(),
 					};
 					node_index = if !directions.get(feature_value).unwrap() {

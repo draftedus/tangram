@@ -1,5 +1,5 @@
 /*!
-This module defines feature groups that are used to transform raw data into values used by the [linear](../linear/index.html) and [tree](../tree/index.html) models.
+This module defines `FeatureGroups` that map columns to features and implements the logic to determine which `FeatureGroups` to use based on the stats of the dataframe.
 */
 
 use crate::stats;
@@ -8,7 +8,7 @@ use ndarray::{prelude::*, s};
 use tangram_dataframe::*;
 
 /**
-A FeatureGroup is an enum describing the type of feature.
+A `FeatureGroup` describes how to transform one or more columns from the input dataframe to one or more features.
 
 The following table shows which combinations or dataframe columns, feature groups, and models are used.
 
@@ -398,7 +398,8 @@ fn compute_features_one_hot_encoded_ndarray(
 		.data;
 	features.fill(0.0);
 	for (mut features, value) in features.genrows_mut().into_iter().zip(data.iter()) {
-		features[*value] = 1.0;
+		let index = value.map(|v| v.get()).unwrap_or(0);
+		features[index] = 1.0;
 		progress();
 	}
 }
@@ -580,7 +581,7 @@ pub fn compute_features_ndarray_value(
 	}
 }
 
-/// Compute identity features given a IdentityFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
+/// Compute identity features given a IdentityFeatureGroup and `dataframe` with the original data. The result is placed into the provided `features`.
 fn compute_features_identity_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
@@ -610,7 +611,7 @@ fn compute_features_identity_ndarray_value(
 	}
 }
 
-/// Compute bag of words encoded features given a BagOfWordsFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
+/// Compute bag of words encoded features given a BagOfWordsFeatureGroup and `dataframe` with the original data. The result is placed into the provided `features`.
 fn compute_features_bag_of_words_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,

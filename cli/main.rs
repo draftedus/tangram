@@ -1,6 +1,7 @@
 //! This module contains the main entrypoint to the tangram cli.
 
 use anyhow::{format_err, Context, Result};
+use backtrace::Backtrace;
 use clap::Clap;
 use colored::*;
 use once_cell::sync::Lazy;
@@ -85,10 +86,12 @@ fn main() {
 
 fn cli_train(options: TrainOptions) -> Result<()> {
 	// Start the progress view if enabled and train the model. However, we need to do some extra work to make panic messages display properly. The problem is that the progress view enables the terminal's alternative screen and returns to the default screen when it is dropped. However, if a panic occurs during training, it will be printed by the default panic hook while the alternative screen is active, and then the progress view will be dropped, causing the panic message to be immediately erased. To work around this, we create a custom panic hook that stores the panic message, wrap the progress view and training with `catch_unwind`, and then print the panic message if `catch_unwind` returns an `Err`. This ensure the progress view will be dropped before the panic message is displayed.
-	pub static PANIC_INFO: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
+	pub static PANIC_INFO: Lazy<Mutex<Option<(String, Backtrace)>>> =
+		Lazy::new(|| Mutex::new(None));
 	let hook = std::panic::take_hook();
 	std::panic::set_hook(Box::new(|panic_info| {
-		PANIC_INFO.lock().unwrap().replace(panic_info.to_string());
+		let value = (panic_info.to_string(), Backtrace::new());
+		PANIC_INFO.lock().unwrap().replace(value);
 	}));
 	let result = std::panic::catch_unwind(|| {
 		let mut progress_view = if options.progress {
@@ -111,10 +114,11 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 	std::panic::set_hook(hook);
 	let model = match result {
 		Ok(result) => result,
-		Err(_) => Err(format_err!(
-			"{}",
-			PANIC_INFO.lock().unwrap().as_ref().unwrap()
-		)),
+		Err(_) => {
+			let panic_info = PANIC_INFO.lock().unwrap();
+			let (message, backtrace) = panic_info.as_ref().unwrap();
+			Err(format_err!("{}\n\n{:?}", message, backtrace))
+		}
 	}?;
 
 	// Retrieve the output path from the command line arguments or generate a default.

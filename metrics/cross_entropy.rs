@@ -1,6 +1,7 @@
 use super::{mean::Mean, StreamingMetric};
 use ndarray::prelude::*;
 use num_traits::clamp;
+use std::num::NonZeroUsize;
 
 /// CrossEntropy is the loss function used in multiclass classification. [Learn more](https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_loss_function_and_logistic_regression).
 #[derive(Default)]
@@ -10,7 +11,7 @@ pub struct CrossEntropy(Mean);
 pub struct CrossEntropyInput<'a> {
 	/// (n_classes)
 	pub probabilities: ArrayView1<'a, f32>,
-	pub label: usize,
+	pub label: Option<NonZeroUsize>,
 }
 
 /// The output from [CrossEntropy](struct.CrossEntropy.html).
@@ -21,7 +22,7 @@ impl<'a> StreamingMetric<'a> for CrossEntropy {
 	type Output = CrossEntropyOutput;
 
 	fn update(&mut self, value: CrossEntropyInput) {
-		let label = value.label.checked_sub(1).unwrap();
+		let label = value.label.unwrap().get() - 1;
 		let mut total = 0.0;
 		for (index, &probability) in value.probabilities.indexed_iter() {
 			if index == label {

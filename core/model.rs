@@ -93,7 +93,6 @@ pub enum RegressionModel {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearRegressor {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: LinearModelTrainOptions,
 	pub bias: f32,
 	pub weights: Vec<f32>,
 	pub losses: Vec<f32>,
@@ -103,7 +102,6 @@ pub struct LinearRegressor {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeRegressor {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: TreeModelTrainOptions,
 	pub bias: f32,
 	pub trees: Vec<Tree>,
 	pub losses: Vec<f32>,
@@ -182,7 +180,6 @@ pub enum ClassificationModel {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearBinaryClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: LinearModelTrainOptions,
 	pub weights: Vec<f32>,
 	pub bias: f32,
 	pub classes: Vec<String>,
@@ -194,7 +191,6 @@ pub struct LinearBinaryClassifier {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearMulticlassClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: LinearModelTrainOptions,
 	pub n_features: u64,
 	pub n_classes: u64,
 	pub biases: Vec<f32>,
@@ -207,7 +203,6 @@ pub struct LinearMulticlassClassifier {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeBinaryClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: TreeModelTrainOptions,
 	pub bias: f32,
 	pub trees: Vec<Tree>,
 	pub classes: Vec<String>,
@@ -219,7 +214,6 @@ pub struct TreeBinaryClassifier {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeMulticlassClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub options: TreeModelTrainOptions,
 	pub n_classes: u64,
 	pub n_rounds: u64,
 	pub biases: Vec<f32>,
@@ -381,22 +375,6 @@ pub struct BagOfWordsFeatureGroup {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Tokenizer {
 	Alphanumeric,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct LinearModelTrainOptions {
-	pub max_epochs: u64,
-	pub n_examples_per_batch: u64,
-	pub learning_rate: f32,
-	pub l2_regularization: f32,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct TreeModelTrainOptions {
-	pub depth: u64,
-	pub learning_rate: f32,
-	pub min_examples_per_leaf: u64,
-	pub max_rounds: u64,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

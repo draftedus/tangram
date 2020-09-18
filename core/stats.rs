@@ -391,7 +391,8 @@ impl EnumColumnStats {
 	fn compute(column: EnumColumnView, _settings: &StatsSettings) -> Self {
 		let mut histogram = vec![0; column.options.len() + 1];
 		for value in column.data {
-			histogram[*value] += 1;
+			let index = value.map(|v| v.get()).unwrap_or(0);
+			histogram[index] += 1;
 		}
 		let invalid_count = histogram[0];
 		Self {

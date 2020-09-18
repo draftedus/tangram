@@ -2,6 +2,7 @@ use super::{shap, single, train::Model, TrainOptions, Tree};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
+use std::num::NonZeroUsize;
 use tangram_dataframe::*;
 
 /// This struct represents a tree multiclass classifier model. Multiclass classifier models are used to predict multiclass target values, for example which of several species a flower is.
@@ -104,10 +105,10 @@ impl MulticlassClassifier {
 /// Update the logits with the predictions from a single round of trees.
 pub fn update_logits(
 	trees: &[single::SingleTree],
-	features: ArrayView2<u8>,
+	binned_features: ArrayView2<u8>,
 	mut logits: ArrayViewMut2<f32>,
 ) {
-	let features_rows = features.genrows().into_iter();
+	let features_rows = binned_features.genrows().into_iter();
 	let logits_rows = logits.gencolumns_mut().into_iter();
 	for (features, mut logits) in features_rows.zip(logits_rows) {
 		for (logit, tree) in logits.iter_mut().zip(trees.iter()) {
@@ -117,14 +118,14 @@ pub fn update_logits(
 }
 
 /// Compute the cross entropy loss.
-pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
+pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
 	for (label, logits) in labels.into_iter().zip(logits.gencolumns()) {
 		let mut probabilities = logits.to_owned();
 		softmax(probabilities.view_mut());
 		for (index, &probability) in probabilities.indexed_iter() {
 			let probability = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
-			if index == (*label - 1) {
+			if index == (label.unwrap().get() - 1) {
 				loss += -probability.ln();
 			}
 		}
@@ -133,10 +134,13 @@ pub fn compute_loss(labels: ArrayView1<usize>, logits: ArrayView2<f32>) -> f32 {
 }
 
 /// Compute the biases.
-pub fn compute_biases(labels: ArrayView1<usize>, n_trees_per_round: usize) -> Array1<f32> {
+pub fn compute_biases(
+	labels: ArrayView1<Option<NonZeroUsize>>,
+	n_trees_per_round: usize,
+) -> Array1<f32> {
 	let mut baseline: Array1<f32> = Array::zeros(n_trees_per_round);
 	for label in labels {
-		let label = *label - 1;
+		let label = label.unwrap().get() - 1;
 		baseline[label] += 1.0;
 	}
 	let n_examples = labels.len().to_f32().unwrap();
@@ -155,7 +159,7 @@ pub fn update_gradients_and_hessians(
 	// (n_trees_per_round, n_examples)
 	mut hessians: ArrayViewMut2<f32>,
 	// (n_examples)
-	labels: ArrayView1<usize>,
+	labels: ArrayView1<Option<NonZeroUsize>>,
 	// (n_trees_per_round, n_examples)
 	predictions: ArrayView2<f32>,
 ) {
@@ -174,7 +178,11 @@ pub fn update_gradients_and_hessians(
 			hessians.iter_mut()
 		)
 		.for_each(|((class_index, prediction), gradient, hessian)| {
-			let label = if (label - 1) == class_index { 1.0 } else { 0.0 };
+			let label = if (label.unwrap().get() - 1) == class_index {
+				1.0
+			} else {
+				0.0
+			};
 			*gradient = *prediction - label;
 			*hessian = *prediction * (1.0 - *prediction);
 		});

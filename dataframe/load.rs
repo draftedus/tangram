@@ -185,8 +185,8 @@ impl DataFrame {
 							.options
 							.iter()
 							.position(|option| option.as_bytes() == value)
-							.map(|position| position + 1)
-							.unwrap_or(0);
+							.map(|position| Some(NonZeroUsize::new(position + 1).unwrap()))
+							.unwrap_or(None);
 						column.data.push(value);
 					}
 					Column::Text(column) => {
