@@ -1,4 +1,5 @@
 use ndarray::prelude::*;
+use num_traits::ToPrimitive;
 use std::path::Path;
 use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;
@@ -28,7 +29,6 @@ fn main() {
 
 	// make predictions on the test data
 	let features = features_test.to_rows();
-	println!("{:?}", features);
 	let mut predictions: Array1<f32> = unsafe { Array::uninitialized(n_rows_test) };
 	model.predict(features.view(), predictions.view_mut());
 

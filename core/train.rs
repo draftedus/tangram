@@ -1738,3 +1738,11 @@ impl Into<model::RegressionComparisonMetric> for RegressionComparisonMetric {
 		}
 	}
 }
+
+// pub fn classification_baseline(labels: &[usize]) -> usize {
+// 	todo!()
+// }
+
+// pub fn regression_baseline(labels: &[f32]) -> Option<f32> {
+// 	todo!()
+// }

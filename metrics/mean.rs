@@ -6,6 +6,12 @@ use std::num::NonZeroU64;
 #[derive(Debug, Clone, Default)]
 pub struct Mean(Option<(NonZeroU64, f64)>);
 
+impl Mean {
+	pub fn new() -> Self {
+		Self::default()
+	}
+}
+
 impl StreamingMetric<'_> for Mean {
 	type Input = f32;
 	type Output = Option<f32>;
