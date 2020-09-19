@@ -4,6 +4,7 @@ This crate provides a basic implementation of dataframes, which are tables of he
 
 use itertools::izip;
 use ndarray::prelude::*;
+use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
 
 pub mod load;
@@ -167,6 +168,28 @@ impl DataFrame {
 	pub fn view(&self) -> DataFrameView {
 		let columns = self.columns.iter().map(|column| column.view()).collect();
 		DataFrameView { columns }
+	}
+
+	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
+		let mut features_train = unsafe { Array::uninitialized((self.nrows(), self.ncols())) };
+		for (mut ndarray_column, dataframe_column) in
+			izip!(features_train.gencolumns_mut(), self.columns.iter())
+		{
+			match dataframe_column {
+				Column::Number(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+						*a = *b;
+					}
+				}
+				Column::Enum(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+						*a = b.unwrap().get().to_f32().unwrap();
+					}
+				}
+				_ => return None,
+			}
+		}
+		Some(features_train)
 	}
 
 	pub fn to_rows(&self) -> Array2<Value> {
@@ -352,6 +375,28 @@ impl<'a> DataFrameView<'a> {
 			columns_b.push(column_b);
 		}
 		(Self { columns: columns_a }, Self { columns: columns_b })
+	}
+
+	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
+		let mut features_train = unsafe { Array::uninitialized((self.nrows(), self.ncols())) };
+		for (mut ndarray_column, dataframe_column) in
+			izip!(features_train.gencolumns_mut(), self.columns.iter())
+		{
+			match dataframe_column {
+				ColumnView::Number(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+						*a = *b;
+					}
+				}
+				ColumnView::Enum(column) => {
+					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+						*a = b.unwrap().get().to_f32().unwrap();
+					}
+				}
+				_ => return None,
+			}
+		}
+		Some(features_train)
 	}
 
 	pub fn to_rows(&self) -> Array2<Value> {

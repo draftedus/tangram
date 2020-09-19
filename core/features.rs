@@ -69,7 +69,6 @@ EnumColumn {
 */
 #[derive(Debug)]
 pub struct IdentityFeatureGroup {
-	/// The name of the column in the source dataset.
 	pub source_column_name: String,
 }
 
@@ -100,7 +99,6 @@ NumberColumn {
 */
 #[derive(Debug)]
 pub struct NormalizedFeatureGroup {
-	/// The name of the column in the source dataset.
 	pub source_column_name: String,
 	pub mean: f32,
 	pub variance: f32,
@@ -119,7 +117,7 @@ use std::num::NonZeroUsize;
 EnumColumn {
   name: "color".to_string(),
   options: vec!["red".to_string(), "green".to_string(), "blue".to_string()],
-  data: vec![NonZeroUsize::new(3), NonZeroUsize::new(2), None,NonZeroUsize::new(1)]
+  data: vec![NonZeroUsize::new(3), NonZeroUsize::new(2), None, NonZeroUsize::new(1)]
 };
 ```
 
@@ -137,8 +135,8 @@ Unlike in the dataframe case, we don't need a special feature for "missing", bec
 */
 #[derive(Debug)]
 pub struct OneHotEncodedFeatureGroup {
-	/// The name of the column in the source dataset.
 	pub source_column_name: String,
+	/// These are the names for each one-hot feature.
 	pub categories: Vec<String>,
 }
 
@@ -189,12 +187,10 @@ The idf was computed during stats and is a score that downweights frequently occ
 */
 #[derive(Debug)]
 pub struct BagOfWordsFeatureGroup {
-	/// The name of the column in the source dataset.
 	pub source_column_name: String,
-	/// The tokenizer used to split the text into individual tokens.
+	/// This is the tokenizer used to split the text into individual tokens.
 	pub tokenizer: Tokenizer,
-	/// The tokens produced by splitting the text using the tokenizer.
-	/// The second value in the tuple is the [inverse document frequency](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
+	/// The first value is the token and the second value is the [inverse document frequency](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 	pub tokens: Vec<(String, f32)>,
 }
 

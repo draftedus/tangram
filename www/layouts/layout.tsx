@@ -23,6 +23,7 @@ export function Document(props: DocumentProps) {
 					type="font/woff2"
 				/>
 				<link href="/ui.css" rel="stylesheet" />
+				<link href="/charts.css" rel="stylesheet" />
 				<link href="/www.css" rel="stylesheet" />
 				<link href="/app.css" rel="stylesheet" />
 				<title>{'Tangram'}</title>

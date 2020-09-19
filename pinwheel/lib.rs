@@ -636,6 +636,12 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 		.unwrap();
 	std::fs::write(dst_dir.join("ui.css"), output.stdout).unwrap();
 	let output = std::process::Command::new("fd")
+		.args(&["-e", "css", ".", "../charts", "-x", "cat"])
+		.current_dir(src_dir)
+		.output()
+		.unwrap();
+	std::fs::write(dst_dir.join("charts.css"), output.stdout).unwrap();
+	let output = std::process::Command::new("fd")
 		.args(&["-e", "css", ".", "../www", "-x", "cat"])
 		.current_dir(src_dir)
 		.output()

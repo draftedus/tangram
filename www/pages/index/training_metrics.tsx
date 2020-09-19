@@ -68,8 +68,10 @@ export function TrainingMetrics() {
 							data={rocData}
 							hideLegend={true}
 							title="ROC Curve"
+							xAxisTitle="FPR"
 							xMax={1}
 							xMin={0}
+							yAxisTitle="TPR"
 							yMax={1}
 							yMin={0}
 						/>
