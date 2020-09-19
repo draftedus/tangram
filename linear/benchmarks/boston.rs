@@ -19,7 +19,6 @@ fn main() {
 	let labels_test = labels_test.as_number().unwrap();
 
 	let features_train = dataframe_train.to_rows_f32().unwrap();
-	println!("{:?}", features_train);
 
 	// train the model
 	let model = tangram_linear::Regressor::train(
