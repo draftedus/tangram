@@ -523,7 +523,7 @@ pub fn compute_binned_features(
 	bin_info: &[BinInfo],
 	_max_n_bins: usize,
 	progress: &(dyn Fn() + Sync),
-) -> Vec<Vec<u8>> {
+) -> Vec<crate::single::BinnedFeaturesColumn> {
 	izip!(&features.columns, bin_info)
 		.map(|(column, bin_info)| {
 			match bin_info {
@@ -547,7 +547,7 @@ pub fn compute_binned_features(
 						})
 						.collect::<Vec<u8>>();
 					progress();
-					binned_feature
+					single::BinnedFeaturesColumn::U8(binned_feature)
 				}
 				BinInfo::Enum { .. } => {
 					let feature_values = column.as_enum().unwrap().data;
@@ -558,7 +558,7 @@ pub fn compute_binned_features(
 						})
 						.collect::<Vec<u8>>();
 					progress();
-					binned_feature
+					single::BinnedFeaturesColumn::U8(binned_feature)
 				}
 			}
 		})

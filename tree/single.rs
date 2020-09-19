@@ -304,7 +304,7 @@ impl SingleTree {
 /// Trains a single tree.
 #[allow(clippy::too_many_arguments)]
 pub fn train(
-	binned_features: &[Vec<u8>],
+	binned_features: &[BinnedFeaturesColumn],
 	gradients: &[f32],
 	hessians: &[f32],
 	ordered_gradients: &mut [f32],
@@ -759,10 +759,15 @@ static ROOT_UNROLL: usize = 16;
 /// This static control how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
 static NOT_ROOT_UNROLL: usize = 4;
 
+pub enum BinnedFeaturesColumn {
+	U8(Vec<u8>),
+	U16(Vec<u16>),
+}
+
 pub fn compute_bin_stats_for_root_node(
 	node_bin_stats: &mut BinStats,
 	// (n_examples, n_features) column major
-	binned_features: &[Vec<u8>],
+	binned_features: &[BinnedFeaturesColumn],
 	// (n_examples)
 	gradients: &[f32],
 	// (n_examples)
@@ -784,20 +789,43 @@ pub fn compute_bin_stats_for_root_node(
 			}
 			if hessians_are_constant {
 				unsafe {
-					compute_bin_stats_for_feature_root_no_hessian(
-						gradients,
-						binned_feature_values,
-						bin_stats_for_feature,
-					)
+					match binned_feature_values {
+						BinnedFeaturesColumn::U8(binned_feature_values) => {
+							compute_bin_stats_for_feature_root_no_hessian(
+								gradients,
+								binned_feature_values,
+								bin_stats_for_feature,
+							)
+						}
+						BinnedFeaturesColumn::U16(binned_feature_values) => {
+							compute_bin_stats_for_feature_root_no_hessian(
+								gradients,
+								binned_feature_values,
+								bin_stats_for_feature,
+							)
+						}
+					}
 				}
 			} else {
 				unsafe {
-					compute_bin_stats_for_feature_root(
-						gradients,
-						hessians,
-						binned_feature_values,
-						bin_stats_for_feature,
-					)
+					match binned_feature_values {
+						BinnedFeaturesColumn::U8(binned_feature_values) => {
+							compute_bin_stats_for_feature_root(
+								gradients,
+								hessians,
+								binned_feature_values,
+								bin_stats_for_feature,
+							)
+						}
+						BinnedFeaturesColumn::U16(binned_feature_values) => {
+							compute_bin_stats_for_feature_root(
+								gradients,
+								hessians,
+								binned_feature_values,
+								bin_stats_for_feature,
+							)
+						}
+					}
 				};
 			}
 		},
@@ -813,7 +841,7 @@ pub fn compute_bin_stats_for_non_root_node(
 	// (n_examples)
 	ordered_hessians: &mut [f32],
 	// (n_examples, n_features) column major
-	binned_features: &[Vec<u8>],
+	binned_features: &[BinnedFeaturesColumn],
 	// (n_examples)
 	gradients: &[f32],
 	// (n_examples)
@@ -848,39 +876,66 @@ pub fn compute_bin_stats_for_non_root_node(
 			}
 			if hessians_are_constant {
 				unsafe {
-					compute_bin_stats_for_feature_not_root_no_hessians(
-						ordered_gradients,
-						binned_feature_values.as_slice(),
-						bin_stats_for_feature,
-						examples_index_for_node,
-					)
+					match binned_feature_values {
+						BinnedFeaturesColumn::U8(binned_feature_values) => {
+							compute_bin_stats_for_feature_not_root_no_hessians(
+								ordered_gradients,
+								binned_feature_values.as_slice(),
+								bin_stats_for_feature,
+								examples_index_for_node,
+							)
+						}
+						BinnedFeaturesColumn::U16(binned_feature_values) => {
+							compute_bin_stats_for_feature_not_root_no_hessians(
+								ordered_gradients,
+								binned_feature_values.as_slice(),
+								bin_stats_for_feature,
+								examples_index_for_node,
+							)
+						}
+					}
 				}
 			} else {
 				unsafe {
-					compute_bin_stats_for_feature_not_root(
-						ordered_gradients,
-						ordered_hessians,
-						binned_feature_values.as_slice(),
-						bin_stats_for_feature,
-						examples_index_for_node,
-					)
+					match binned_feature_values {
+						BinnedFeaturesColumn::U8(binned_feature_values) => {
+							compute_bin_stats_for_feature_not_root(
+								ordered_gradients,
+								ordered_hessians,
+								binned_feature_values.as_slice(),
+								bin_stats_for_feature,
+								examples_index_for_node,
+							)
+						}
+						BinnedFeaturesColumn::U16(binned_feature_values) => {
+							compute_bin_stats_for_feature_not_root(
+								ordered_gradients,
+								ordered_hessians,
+								binned_feature_values.as_slice(),
+								bin_stats_for_feature,
+								examples_index_for_node,
+							)
+						}
+					}
 				}
 			}
 		},
 	);
 }
 
-unsafe fn compute_bin_stats_for_feature_root_no_hessian(
+unsafe fn compute_bin_stats_for_feature_root_no_hessian<T>(
 	gradients: &[f32],
-	binned_feature_values: &[u8],
+	binned_feature_values: &[T],
 	bin_stats_for_feature: &mut [f64],
-) {
+) where
+	T: num_traits::cast::ToPrimitive,
+{
 	let unroll = ROOT_UNROLL;
 	let len = gradients.len();
 	for i in 0..len / unroll {
 		for i in i * unroll..i * unroll + unroll {
 			let ordered_gradient = *gradients.get_unchecked(i);
-			let bin_index = *binned_feature_values.get_unchecked(i) as usize;
+			let bin_index = binned_feature_values.get_unchecked(i).to_usize().unwrap();
 			let bin_index = bin_index << 1;
 			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
 			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
@@ -888,26 +943,28 @@ unsafe fn compute_bin_stats_for_feature_root_no_hessian(
 	}
 	for i in (len / unroll) * unroll..len {
 		let ordered_gradient = *gradients.get_unchecked(i);
-		let bin_index = *binned_feature_values.get_unchecked(i) as usize;
+		let bin_index = binned_feature_values.get_unchecked(i).to_usize().unwrap();
 		let bin_index = bin_index << 1;
 		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
 		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
 	}
 }
 
-pub unsafe fn compute_bin_stats_for_feature_root(
+pub unsafe fn compute_bin_stats_for_feature_root<T>(
 	gradients: &[f32],
 	hessians: &[f32],
-	binned_feature_values: &[u8],
+	binned_feature_values: &[T],
 	bin_stats_for_feature: &mut [f64],
-) {
+) where
+	T: ToPrimitive,
+{
 	let unroll = ROOT_UNROLL;
 	let len = gradients.len();
 	for i in 0..len / unroll {
 		for i in i * unroll..i * unroll + unroll {
 			let ordered_gradient = *gradients.get_unchecked(i);
 			let ordered_hessian = *hessians.get_unchecked(i);
-			let bin_index = *binned_feature_values.get_unchecked(i) as usize;
+			let bin_index = binned_feature_values.get_unchecked(i).to_usize().unwrap();
 			let bin_index = bin_index << 1;
 			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
 			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += ordered_hessian as f64;
@@ -916,19 +973,21 @@ pub unsafe fn compute_bin_stats_for_feature_root(
 	for i in (len / unroll) * unroll..len {
 		let ordered_gradient = *gradients.get_unchecked(i);
 		let ordered_hessian = *hessians.get_unchecked(i);
-		let bin_index = *binned_feature_values.get_unchecked(i) as usize;
+		let bin_index = binned_feature_values.get_unchecked(i).to_usize().unwrap();
 		let bin_index = bin_index << 1;
 		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
 		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += ordered_hessian as f64;
 	}
 }
 
-unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
+unsafe fn compute_bin_stats_for_feature_not_root_no_hessians<T>(
 	ordered_gradients: &[f32],
-	binned_feature_values: &[u8],
+	binned_feature_values: &[T],
 	bin_stats_for_feature: &mut [f64],
 	examples_index: &[usize],
-) {
+) where
+	T: num_traits::cast::ToPrimitive,
+{
 	let unroll = NOT_ROOT_UNROLL;
 	let len = examples_index.len();
 	for i in 0..len / unroll {
@@ -941,7 +1000,10 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
 			}
 			let ordered_gradient = *ordered_gradients.get_unchecked(i);
 			let example_index = *examples_index.get_unchecked(i);
-			let bin_index = *binned_feature_values.get_unchecked(example_index) as usize;
+			let bin_index = binned_feature_values
+				.get_unchecked(example_index)
+				.to_usize()
+				.unwrap();
 			let bin_index = bin_index << 1;
 			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
 			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
@@ -950,20 +1012,25 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians(
 	for i in (len / unroll) * unroll..len {
 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
 		let example_index = *examples_index.get_unchecked(i);
-		let bin_index = *binned_feature_values.get_unchecked(example_index) as usize;
+		let bin_index = binned_feature_values
+			.get_unchecked(example_index)
+			.to_usize()
+			.unwrap();
 		let bin_index = bin_index << 1;
 		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
 		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
 	}
 }
 
-unsafe fn compute_bin_stats_for_feature_not_root(
+unsafe fn compute_bin_stats_for_feature_not_root<T>(
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
-	binned_feature_values: &[u8],
+	binned_feature_values: &[T],
 	bin_stats_for_feature: &mut [f64],
 	examples_index: &[usize],
-) {
+) where
+	T: num_traits::cast::ToPrimitive,
+{
 	let unroll = NOT_ROOT_UNROLL;
 	let len = examples_index.len();
 	for i in 0..len / unroll {
@@ -977,7 +1044,10 @@ unsafe fn compute_bin_stats_for_feature_not_root(
 			let ordered_gradient = *ordered_gradients.get_unchecked(i);
 			let ordered_hessian = *ordered_hessians.get_unchecked(i);
 			let example_index = *examples_index.get_unchecked(i);
-			let bin_index = *binned_feature_values.get_unchecked(example_index) as usize;
+			let bin_index = binned_feature_values
+				.get_unchecked(example_index)
+				.to_usize()
+				.unwrap();
 			let bin_index = bin_index << 1;
 			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
 			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += ordered_hessian as f64;
@@ -987,7 +1057,10 @@ unsafe fn compute_bin_stats_for_feature_not_root(
 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
 		let ordered_hessian = *ordered_hessians.get_unchecked(i);
 		let example_index = *examples_index.get_unchecked(i);
-		let bin_index = *binned_feature_values.get_unchecked(example_index) as usize;
+		let bin_index = binned_feature_values
+			.get_unchecked(example_index)
+			.to_usize()
+			.unwrap();
 		let bin_index = bin_index << 1;
 		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
 		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += ordered_hessian as f64;
@@ -1040,7 +1113,7 @@ and the example indexes in the second returned range
 are contained by the right node.
 */
 fn rearrange_examples_index(
-	binned_features: &[Vec<u8>],
+	binned_features: &[BinnedFeaturesColumn],
 	split: &SingleTreeBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left: &mut [usize],
@@ -1061,7 +1134,7 @@ fn rearrange_examples_index(
 
 /// Rearrange examples index serially.
 fn rearrange_examples_index_serial(
-	binned_features: &[Vec<u8>],
+	binned_features: &[BinnedFeaturesColumn],
 	split: &SingleTreeBranchSplit,
 	examples_index: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
@@ -1078,7 +1151,15 @@ fn rearrange_examples_index_serial(
 					bin_index,
 					..
 				}) => {
-					let feature_bin = binned_features[*feature_index][examples_index[left]];
+					let binned_feature = &binned_features[*feature_index];
+					let feature_bin = match binned_feature {
+						BinnedFeaturesColumn::U8(binned_feature) => {
+							binned_feature[examples_index[left]].to_u8().unwrap()
+						}
+						BinnedFeaturesColumn::U16(binned_feature) => {
+							binned_feature[examples_index[left]].to_u8().unwrap()
+						}
+					};
 					if feature_bin <= *bin_index {
 						SplitDirection::Left
 					} else {
@@ -1090,7 +1171,15 @@ fn rearrange_examples_index_serial(
 					directions,
 					..
 				}) => {
-					let feature_bin = binned_features[*feature_index][examples_index[left]];
+					let binned_feature = &binned_features[*feature_index];
+					let feature_bin = match binned_feature {
+						BinnedFeaturesColumn::U8(binned_feature) => {
+							binned_feature[examples_index[left]].to_u8().unwrap()
+						}
+						BinnedFeaturesColumn::U16(binned_feature) => {
+							binned_feature[examples_index[left]].to_u8().unwrap()
+						}
+					};
 					if !directions.get(feature_bin).unwrap() {
 						SplitDirection::Left
 					} else {
@@ -1115,7 +1204,7 @@ fn rearrange_examples_index_serial(
 
 /// Rearrange examples index in parallel.
 fn rearrange_examples_index_parallel(
-	binned_features: &[Vec<u8>],
+	binned_features: &[BinnedFeaturesColumn],
 	split: &SingleTreeBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left: &mut [usize],
@@ -1141,7 +1230,15 @@ fn rearrange_examples_index_parallel(
 							bin_index,
 							..
 						}) => {
-							let feature_bin = binned_features[*feature_index][*example_index];
+							let binned_features = &binned_features[*feature_index];
+							let feature_bin = match binned_features {
+								BinnedFeaturesColumn::U8(binned_features) => {
+									binned_features[*example_index].to_u8().unwrap()
+								}
+								BinnedFeaturesColumn::U16(binned_features) => {
+									binned_features[*example_index].to_u8().unwrap()
+								}
+							};
 							if feature_bin <= *bin_index {
 								SplitDirection::Left
 							} else {
@@ -1153,7 +1250,15 @@ fn rearrange_examples_index_parallel(
 							directions,
 							..
 						}) => {
-							let feature_bin = binned_features[*feature_index][*example_index];
+							let binned_features = &binned_features[*feature_index];
+							let feature_bin = match binned_features {
+								BinnedFeaturesColumn::U8(binned_features) => {
+									binned_features[*example_index].to_u8().unwrap()
+								}
+								BinnedFeaturesColumn::U16(binned_features) => {
+									binned_features[*example_index].to_u8().unwrap()
+								}
+							};
 							if !directions.get(feature_bin).unwrap() {
 								SplitDirection::Left
 							} else {
