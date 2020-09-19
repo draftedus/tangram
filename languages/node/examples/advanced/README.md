@@ -1,4 +1,4 @@
-# Tangram + Node.js
+# Tangram for Node.js
 
 This example shows how to make predictions with your Tangram machine learning model in an app built with [Node.js](https://nodejs.org).
 

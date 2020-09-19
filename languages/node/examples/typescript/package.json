@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"typescript": "3.8.3"
+		"typescript": "4.0.3"
 	},
 	"name": "@tangramhq/tangram-node-example-typescript",
 	"private": true,

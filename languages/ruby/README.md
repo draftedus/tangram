@@ -1,4 +1,4 @@
-# Tangram + Ruby
+# Tangram for Ruby
 
 - [Watch the Video](https://www.tangramhq.com)
 - [Read the Docs](https://www.tangramhq.com/docs)
@@ -31,7 +31,7 @@ For more information, [read the docs](https://www.tangramhq.com/docs).
 
 ## Platform Support
 
-`tangram-ruby` is currently supported for Linux, macOS, and Windows on x86-64/amd64/x64 CPUs. Are you interested in another platform? Get in touch via email at help@tangramhq.com.
+Tangram for Ruby is currently supported for Linux, macOS, and Windows on x86-64/amd64/x64 CPUs. Are you interested in another platform? Get in touch via email at help@tangramhq.com.
 
 ## Examples
 

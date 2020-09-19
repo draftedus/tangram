@@ -1,5 +1,5 @@
 /*!
-The crate provides the `Finite` type, which is used to indicate that a floating point number is not infinite and not NaN. It is similar to the standard library's NonZero{U8, I8, etc.} types.
+The crate provides the `Finite` type, which is used to indicate that a floating point number is not infinite and not `NaN`. It is similar to the standard library's NonZero{U8, I8, etc.} types.
 
 # Example
 

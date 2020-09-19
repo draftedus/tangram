@@ -1,4 +1,4 @@
-# Tangram + Go
+# Tangram for Go
 
 - [Watch the Video](https://www.tangramhq.com)
 - [Read the Docs](https://www.tangramhq.com/docs)
@@ -33,13 +33,13 @@ For more information, [read the docs](https://www.tangramhq.com/docs).
 
 ## Platform Support
 
-`tangram-go` is currently supported for `$GOOS` values of `darwin`, `linux`, and `windows` and `$GOARCH` values of `amd64`. Are you interested in another platform? Get in touch via email at help@tangramhq.com.
+Tangram for Go is currently supported for `$GOOS` values of `darwin`, `linux`, and `windows` and `$GOARCH` values of `amd64` and `arm64`. Are you interested in another platform? Get in touch via email at help@tangramhq.com.
 
-`tangram-go` links to the [libtangram](https://github.com/tangram-hq/libtangram) C library, so cgo is required. libtangram will be linked statically into your executable, so when you run `go build` you will still get a statically linked executable you can move around without having to worry about dynamic linking errors.
+Tangram for Go links to the [libtangram](https://github.com/tangram-hq/libtangram) C library, so cgo is required. libtangram will be linked statically into your executable, so when you run `go build` you will still get a statically linked executable you can move around without having to worry about dynamic linking errors.
 
 ## Examples
 
-This repo contains two examples, [examples/predict]([examples/predict]) and [examples/monitor](examples/monitor).
+This repo contains two examples, [examples/predict](examples/predict) and [examples/monitor](examples/monitor).
 
 ### Basic
 
