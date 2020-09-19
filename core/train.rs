@@ -1740,10 +1740,10 @@ impl Into<model::RegressionComparisonMetric> for RegressionComparisonMetric {
 	}
 }
 
-pub fn classification_baseline(labels: &[usize]) -> Option<usize> {
-	tangram_metrics::Mode::compute(labels)
-}
+// pub fn classification_baseline(labels: &[usize]) -> Option<usize> {
+// 	tangram_metrics::Mode::compute(labels)
+// }
 
-pub fn regression_baseline(labels: &[f32]) -> Option<f32> {
-	tangram_metrics::Mean::compute(labels)
-}
+// pub fn regression_baseline(labels: &[f32]) -> Option<f32> {
+// 	tangram_metrics::Mean::compute(labels)
+// }
