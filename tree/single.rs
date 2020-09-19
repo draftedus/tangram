@@ -309,6 +309,7 @@ pub fn train(
 	bin_stats_pool: &mut BinStatsPool,
 	hessians_are_constant: bool,
 	options: &TrainOptions,
+	#[cfg(feature = "timing")] timing: &crate::timing::Timing,
 ) -> (SingleTree, Vec<(Range<usize>, f32)>) {
 	// This is the tree returned by this function
 	let mut tree = SingleTree { nodes: Vec::new() };
@@ -322,12 +323,16 @@ pub fn train(
 	// Compute the sums of gradients and hessians for the root node.
 	let n_examples = gradients.len();
 	let examples_index_range = 0..n_examples;
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
 	let sum_gradients = gradients.iter().map(|v| v.to_f64().unwrap()).sum();
 	let sum_hessians = if hessians_are_constant {
 		n_examples.to_f64().unwrap()
 	} else {
 		hessians.iter().map(|v| v.to_f64().unwrap()).sum()
 	};
+	#[cfg(feature = "timing")]
+	timing.sum_gradients_hessians.inc(start.elapsed());
 
 	// If there are too few training examples or the hessians are too small,
 	// just return a tree with a single leaf.
@@ -345,6 +350,8 @@ pub fn train(
 	}
 
 	// compute the bin stats for the root node
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
 	let mut root_bin_stats = bin_stats_pool.get();
 	compute_bin_stats_for_root_node(
 		&mut root_bin_stats,
@@ -353,8 +360,12 @@ pub fn train(
 		hessians,
 		hessians_are_constant,
 	);
+	#[cfg(feature = "timing")]
+	timing.bin_stats.compute_bin_stats_root.inc(start.elapsed());
 
 	// based on the node stats and bin stats, find a split, if any.
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
 	let find_split_output = find_split(
 		&root_bin_stats,
 		sum_gradients,
@@ -362,6 +373,8 @@ pub fn train(
 		examples_index_range.clone(),
 		&options,
 	);
+	#[cfg(feature = "timing")]
+	timing.find_split.inc(start.elapsed());
 
 	// If we were able to find a split for the root node, add it to the queue and proceed to the loop. Otherwise, return a tree with a single node.
 	if let Some(find_split_output) = find_split_output {
@@ -451,6 +464,8 @@ pub fn train(
 			}));
 
 		// Rearrange the examples index.
+		#[cfg(feature = "timing")]
+		let start = std::time::Instant::now();
 		let (left, right) = rearrange_examples_index(
 			binned_features,
 			&queue_item.split,
@@ -464,6 +479,9 @@ pub fn train(
 				.get_mut(queue_item.examples_index_range.clone())
 				.unwrap(),
 		);
+		#[cfg(feature = "timing")]
+		timing.rearrange_examples_index.inc(start.elapsed());
+
 		// The left and right ranges are local to the node, so add the node's start to make them global.
 		let start = queue_item.examples_index_range.start;
 		let left_examples_index_range = start + left.start..start + left.end;
@@ -547,6 +565,8 @@ pub fn train(
 		let mut smaller_child_bin_stats = bin_stats_pool.get();
 
 		// Compute the bin stats for the child with fewer examples.
+		#[cfg(feature = "timing")]
+		let start = std::time::Instant::now();
 		compute_bin_stats_for_non_root_node(
 			&mut smaller_child_bin_stats,
 			ordered_gradients,
@@ -557,10 +577,19 @@ pub fn train(
 			hessians_are_constant,
 			smaller_child_examples_index,
 		);
+		#[cfg(feature = "timing")]
+		timing.bin_stats.compute_bin_stats.inc(start.elapsed());
 
 		// Compute the bin stats for the child with more examples by subtracting the bin stats of the child with fewer examples from the parent's bin stats.
+		#[cfg(feature = "timing")]
+		let start = std::time::Instant::now();
 		let mut larger_child_bin_stats = queue_item.bin_stats;
 		compute_bin_stats_subtraction(&mut larger_child_bin_stats, &smaller_child_bin_stats);
+		#[cfg(feature = "timing")]
+		timing
+			.bin_stats
+			.compute_bin_stats_subtraction
+			.inc(start.elapsed());
 		let (left_bin_stats, right_bin_stats) = match smaller_direction {
 			SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
 			SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
@@ -568,6 +597,8 @@ pub fn train(
 
 		// If both left and right should split, find the splits for both at the same
 		// time. Allows for a slight speedup because of cache. TODO: this speedup is probably not there.
+		#[cfg(feature = "timing")]
+		let start = std::time::Instant::now();
 		let (left_find_split_output, right_find_split_output) =
 			if should_split_left && should_split_right {
 				// based on the node stats and bin stats, find a split, if any.
@@ -606,6 +637,8 @@ pub fn train(
 			} else {
 				(None, None)
 			};
+		#[cfg(feature = "timing")]
+		timing.find_split.inc(start.elapsed());
 
 		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
 		if should_split_left {

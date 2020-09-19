@@ -43,6 +43,8 @@ pub fn train(
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
 	#[cfg(feature = "timing")]
+	let training_start = std::time::Instant::now();
+	#[cfg(feature = "timing")]
 	let timing = super::timing::Timing::new();
 
 	// Determine how to bin each feature.
@@ -50,16 +52,24 @@ pub fn train(
 		max_valid_bins: options.max_non_missing_bins,
 		max_number_column_examples_for_bin_info: options.subsample_for_binning,
 	};
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
 	let bin_info = compute_bin_info(&features, &bin_options);
+	#[cfg(feature = "timing")]
+	timing.binning.compute_bin_info.inc(start.elapsed());
 
 	// Use the binning instructions from the previous step to compute the binned features.
 	let n_bins = options.max_non_missing_bins as usize + 1;
 	let progress_counter = ProgressCounter::new(features.nrows().to_u64().unwrap());
 	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
 	let (binned_feature, _) =
 		compute_binned_features(&features, &bin_info, n_bins as usize, &|| {
 			progress_counter.inc(1)
 		});
+	#[cfg(feature = "timing")]
+	timing.binning.compute_binned_features.inc(start.elapsed());
 
 	// If early stopping is enabled, split the features and labels into train and early stopping sets.
 	let early_stopping_enabled = options.early_stopping_options.is_some();
@@ -128,6 +138,8 @@ pub fn train(
 		}
 	};
 
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
 	// Pre-allocate memory to be used in training.
 	let mut predictions = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
 	let mut gradients = unsafe { Array::uninitialized((n_trees_per_round, n_examples)) };
@@ -146,6 +158,8 @@ pub fn train(
 	} else {
 		None
 	};
+	#[cfg(feature = "timing")]
+	timing.allocations.inc(start.elapsed());
 
 	// This is the total number of rounds that have been trained thus far.
 	let mut n_rounds_trained = 0;
@@ -239,9 +253,13 @@ pub fn train(
 					bin_stats_pool,
 					has_constant_hessians,
 					&options,
+					#[cfg(feature = "timing")]
+					&timing,
 				);
 				// Update the predictions with the most recently trained tree.
 				if round_index < options.max_rounds - 1 {
+					#[cfg(feature = "timing")]
+					let start = std::time::Instant::now();
 					let predictions_cell = SuperUnsafe::new(predictions.as_slice_mut().unwrap());
 					leaf_values.iter().for_each(|(range, value)| {
 						examples_index.as_slice().unwrap()[range.clone()]
@@ -251,6 +269,8 @@ pub fn train(
 								predictions[example_index] += value;
 							});
 					});
+					#[cfg(feature = "timing")]
+					timing.predict.inc(start.elapsed());
 				}
 				tree
 			},
@@ -307,7 +327,14 @@ pub fn train(
 	}
 
 	// Compute feature importances.
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
+	#[cfg(feature = "timing")]
+	timing.compute_feature_importances.inc(start.elapsed());
+
+	#[cfg(feature = "timing")]
+	timing.training.inc(training_start.elapsed());
 
 	#[cfg(feature = "timing")]
 	eprintln!("{:?}", timing);

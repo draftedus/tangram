@@ -12,6 +12,7 @@ pub struct Timing {
 	pub compute_feature_importances: TimingDuration,
 	pub sum_gradients_hessians: TimingDuration,
 	pub allocations: TimingDuration,
+	pub training: TimingDuration,
 }
 
 pub struct TimingDuration(AtomicU64);
@@ -43,6 +44,7 @@ impl Timing {
 			},
 			sum_gradients_hessians: TimingDuration::new(),
 			find_split: TimingDuration::new(),
+			training: TimingDuration::new(),
 			rearrange_examples_index: TimingDuration::new(),
 			predict: TimingDuration::new(),
 			compute_feature_importances: TimingDuration::new(),
