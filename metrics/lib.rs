@@ -12,6 +12,7 @@ mod classification;
 mod cross_entropy;
 mod mean;
 mod mean_squared_error;
+mod mode;
 mod regression;
 
 pub use self::accuracy::Accuracy;
@@ -27,6 +28,7 @@ pub use self::classification::{
 pub use self::cross_entropy::{CrossEntropy, CrossEntropyInput, CrossEntropyOutput};
 pub use self::mean::Mean;
 pub use self::mean_squared_error::MeanSquaredError;
+pub use self::mode::Mode;
 pub use self::regression::{
 	m2_to_variance, merge_mean_m2, RegressionMetrics, RegressionMetricsInput,
 	RegressionMetricsOutput,
@@ -37,7 +39,7 @@ The `Metric` trait defines a common interface to metrics that can be computed wh
 
 The seeminly unused generic lifetime `'a` exists here to allow `Input`s and `Output`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
 */
-trait Metric<'a> {
+pub trait Metric<'a> {
 	type Input;
 	type Output;
 	fn compute(input: Self::Input) -> Self::Output;

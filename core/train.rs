@@ -11,6 +11,7 @@ use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::BTreeMap, path::Path};
 use tangram_dataframe::*;
 use tangram_id::Id;
+use tangram_metrics::Metric;
 use tangram_metrics::{self as metrics};
 use tangram_progress::ProgressCounter;
 
@@ -1739,10 +1740,10 @@ impl Into<model::RegressionComparisonMetric> for RegressionComparisonMetric {
 	}
 }
 
-// pub fn classification_baseline(labels: &[usize]) -> usize {
-// 	todo!()
-// }
+pub fn classification_baseline(labels: &[usize]) -> Option<usize> {
+	tangram_metrics::Mode::compute(labels)
+}
 
-// pub fn regression_baseline(labels: &[f32]) -> Option<f32> {
-// 	todo!()
-// }
+pub fn regression_baseline(labels: &[f32]) -> Option<f32> {
+	tangram_metrics::Mean::compute(labels)
+}

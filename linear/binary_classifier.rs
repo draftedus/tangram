@@ -134,7 +134,7 @@ impl BinaryClassifier {
 			{
 				let predictions =
 					unsafe { <Array2<f32>>::uninitialized((options.n_examples_per_batch, 2)) };
-				let metric = BinaryCrossEntropy::default();
+				let metric = BinaryCrossEntropy::new();
 				(predictions, metric)
 			},
 			|mut state, (features, labels)| {

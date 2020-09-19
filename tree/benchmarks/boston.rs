@@ -1,5 +1,4 @@
 use ndarray::prelude::*;
-use num_traits::ToPrimitive;
 use std::path::Path;
 use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;

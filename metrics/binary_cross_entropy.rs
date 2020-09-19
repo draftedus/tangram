@@ -7,6 +7,12 @@ use std::num::NonZeroUsize;
 #[derive(Debug, Default)]
 pub struct BinaryCrossEntropy(Mean);
 
+impl BinaryCrossEntropy {
+	pub fn new() -> Self {
+		Self::default()
+	}
+}
+
 /// The input to [BinaryCrossEntropy](struct.BinaryCrossEntropy.html).
 pub struct BinaryCrossEntropyInput {
 	pub probability: f32,

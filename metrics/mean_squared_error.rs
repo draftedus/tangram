@@ -4,6 +4,12 @@ use super::{mean::Mean, StreamingMetric};
 #[derive(Default)]
 pub struct MeanSquaredError(Mean);
 
+impl MeanSquaredError {
+	pub fn new() -> Self {
+		Self::default()
+	}
+}
+
 impl StreamingMetric<'_> for MeanSquaredError {
 	type Input = (f32, f32);
 	type Output = Option<f32>;

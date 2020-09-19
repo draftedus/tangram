@@ -7,6 +7,12 @@ use std::num::NonZeroUsize;
 #[derive(Default)]
 pub struct CrossEntropy(Mean);
 
+impl CrossEntropy {
+	pub fn new() -> Self {
+		Self::default()
+	}
+}
+
 /// The input to [CrossEntropy](struct.CrossEntropy.html).
 pub struct CrossEntropyInput<'a> {
 	/// (n_classes)

@@ -119,7 +119,7 @@ impl Regressor {
 			{
 				let predictions =
 					unsafe { <Array1<f32>>::uninitialized(options.n_examples_per_batch) };
-				let metric = MeanSquaredError::default();
+				let metric = MeanSquaredError::new();
 				(predictions, metric)
 			},
 			|mut state, (features, labels)| {

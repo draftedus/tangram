@@ -4,6 +4,12 @@ use super::{mean::Mean, StreamingMetric};
 #[derive(Default)]
 pub struct Accuracy(Mean);
 
+impl Accuracy {
+	pub fn new() -> Self {
+		Self::default()
+	}
+}
+
 impl StreamingMetric<'_> for Accuracy {
 	type Input = (usize, usize);
 	type Output = Option<f32>;
