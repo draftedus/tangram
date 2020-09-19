@@ -11,7 +11,6 @@ use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::BTreeMap, path::Path};
 use tangram_dataframe::*;
 use tangram_id::Id;
-use tangram_metrics::Metric;
 use tangram_metrics::{self as metrics};
 use tangram_progress::ProgressCounter;
 
