@@ -1,4 +1,3 @@
-pub mod health;
 pub mod index;
 pub mod login;
 pub mod organizations;

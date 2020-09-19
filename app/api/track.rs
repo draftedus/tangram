@@ -1,9 +1,11 @@
 use crate::{
-	common::model::get_model,
-	error::Error,
-	monitor_event::{
-		ClassificationOutput, MonitorEvent, NumberOrString, Output, PredictionMonitorEvent,
-		RegressionOutput, TrueValueMonitorEvent,
+	common::{
+		error::Error,
+		model::get_model,
+		monitor_event::{
+			ClassificationOutput, MonitorEvent, NumberOrString, Output, PredictionMonitorEvent,
+			RegressionOutput, TrueValueMonitorEvent,
+		},
 	},
 	production_metrics::ProductionMetrics,
 	production_stats::ProductionStats,

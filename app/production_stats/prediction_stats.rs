@@ -1,5 +1,5 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
-use crate::monitor_event::Output;
+use crate::common::monitor_event::Output;
 use std::collections::BTreeMap;
 use tangram_metrics::StreamingMetric;
 

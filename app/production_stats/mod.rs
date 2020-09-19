@@ -1,4 +1,4 @@
-use crate::monitor_event::PredictionMonitorEvent;
+use crate::common::monitor_event::PredictionMonitorEvent;
 use chrono::prelude::*;
 use tangram_metrics::StreamingMetric;
 

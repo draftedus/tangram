@@ -1,4 +1,4 @@
-use crate::{monitor_event::NumberOrString, production_stats::NumberStats};
+use crate::{common::monitor_event::NumberOrString, production_stats::NumberStats};
 use num_traits::ToPrimitive;
 use tangram_metrics::StreamingMetric;
 

@@ -1,6 +1,8 @@
 use crate::{
-	common::user::{authorize_user, authorize_user_for_repo},
-	error::Error,
+	common::{
+		error::Error,
+		user::{authorize_user, authorize_user_for_repo},
+	},
 	Context,
 };
 use anyhow::Result;

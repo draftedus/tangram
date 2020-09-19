@@ -1,9 +1,9 @@
 use crate::{
 	common::{
+		error::Error,
 		organizations::{get_organizations, Organization},
 		user::{authorize_user, User},
 	},
-	error::Error,
 	Context,
 };
 use anyhow::Result;

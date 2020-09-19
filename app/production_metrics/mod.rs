@@ -6,7 +6,7 @@ use self::{
 		RegressionProductionPredictionMetrics, RegressionProductionPredictionMetricsOutput,
 	},
 };
-use crate::monitor_event::NumberOrString;
+use crate::common::monitor_event::NumberOrString;
 use chrono::prelude::*;
 use tangram_metrics::StreamingMetric;
 

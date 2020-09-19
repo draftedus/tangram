@@ -1,4 +1,4 @@
-use crate::monitor_event::NumberOrString;
+use crate::common::monitor_event::NumberOrString;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_metrics::StreamingMetric;

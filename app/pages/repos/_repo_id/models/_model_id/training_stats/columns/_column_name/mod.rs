@@ -1,10 +1,10 @@
 use crate::{
 	common::{
+		error::Error,
 		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		user::{authorize_user, authorize_user_for_model},
 	},
-	error::Error,
 	Context,
 };
 use anyhow::Result;

@@ -1,4 +1,4 @@
-use self::error::Error;
+use self::common::error::Error;
 use anyhow::{format_err, Result};
 use futures::FutureExt;
 use hyper::{
@@ -14,14 +14,12 @@ use std::{
 use tangram_id::Id;
 use url::Url;
 
+mod api;
 mod common;
-mod error;
 mod migrations;
-mod monitor_event;
 mod pages;
 mod production_metrics;
 mod production_stats;
-mod track;
 
 pub struct AppOptions {
 	pub auth_enabled: bool,
@@ -56,8 +54,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 				.collect()
 		});
 	let result = match (&method, path_components.as_slice()) {
-		(&Method::GET, &["health"]) => pages::health::get(request, &context).await,
-		(&Method::POST, &["track"]) => track::track(request, context).await,
+		(&Method::GET, &["health"]) => api::health::get(request, &context).await,
+		(&Method::POST, &["track"]) => api::track::track(request, context).await,
 		(&Method::GET, &["login"]) => pages::login::get(request, context, search_params).await,
 		(&Method::POST, &["login"]) => pages::login::post(request, &context).await,
 		(&Method::GET, &[""]) => pages::index::get(request, &context).await,
