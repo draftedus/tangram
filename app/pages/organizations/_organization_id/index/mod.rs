@@ -210,6 +210,7 @@ enum Action {
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename = "camelCase")]
 struct ChangePlanAction {
 	plan: organizations::Plan,
 }

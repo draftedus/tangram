@@ -30,18 +30,17 @@ pub enum PredictOutput {
 }
 
 #[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct RegressionPredictOutput {
 	pub value: f32,
-	#[serde(rename = "shapValues")]
 	pub shap_values: Option<ShapValues>,
 }
 
 #[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ClassificationPredictOutput {
-	#[serde(rename = "className")]
 	pub class_name: String,
 	pub probabilities: BTreeMap<String, f32>,
-	#[serde(rename = "shapValues")]
 	pub shap_values: Option<BTreeMap<String, ShapValues>>,
 }
 

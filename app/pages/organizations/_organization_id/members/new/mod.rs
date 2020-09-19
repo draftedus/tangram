@@ -34,9 +34,9 @@ pub async fn get(
 struct Props {}
 
 #[derive(serde::Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Action {
 	pub email: String,
-	#[serde(rename = "isAdmin")]
 	pub is_admin: Option<String>,
 }
 

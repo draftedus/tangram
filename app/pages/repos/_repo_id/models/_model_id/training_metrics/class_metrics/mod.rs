@@ -48,8 +48,8 @@ enum Inner {
 }
 
 #[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct BinaryClassifier {
-	#[serde(rename = "classMetrics")]
 	class_metrics: ClassMetrics,
 	class: String,
 	classes: Vec<String>,
@@ -69,8 +69,8 @@ struct ClassMetrics {
 }
 
 #[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct MulticlassClassifier {
-	#[serde(rename = "classMetrics")]
 	class_metrics: ClassMetrics,
 	classes: Vec<String>,
 	id: String,

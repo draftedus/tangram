@@ -14,7 +14,6 @@ mod classification_production_metrics;
 mod regression_production_metrics;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct ProductionMetrics {
 	pub start_date: DateTime<Utc>,
 	pub end_date: DateTime<Utc>,
@@ -23,7 +22,6 @@ pub struct ProductionMetrics {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase", tag = "type", content = "value")]
 pub enum ProductionPredictionMetrics {
 	Classification(ClassificationProductionPredictionMetrics),
 	Regression(RegressionProductionPredictionMetrics),
