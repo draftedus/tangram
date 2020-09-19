@@ -4,11 +4,14 @@ This crate implements machine learning models for regression and classification 
 Here's how to use `tangram_tree` to train and make predictions on a `Regressor`.
 
 ```
+use std::path::Path;
+use tangram_metrics::StreamingMetric;
+use ndarray::prelude::*;
 // load the data
 let n_rows_train = 405;
 let n_rows_test = 101;
 let mut features = tangram_dataframe::DataFrame::from_path(
-	"boston.csv",
+	Path::new("../data/boston.csv"),
 	Default::default(),
 	|_| {}
 ).unwrap();
@@ -31,7 +34,7 @@ let model = tangram_tree::Regressor::train(
 
 // make predictions
 let mut predictions: Array1<f32> = Array::zeros(n_rows_test);
-model.predict(features_test.to_rows();, predictions.view_mut());
+model.predict(features_test.to_rows().view(), predictions.view_mut());
 
 // compute metrics
 let mut metrics = tangram_metrics::RegressionMetrics::new();

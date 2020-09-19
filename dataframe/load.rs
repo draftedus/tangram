@@ -320,8 +320,12 @@ fn test_infer() {
                      "test",
                  ],
                  data: [
-                     1,
-                     1,
+                     Some(
+                         1,
+                     ),
+                     Some(
+                         1,
+                     ),
                  ],
              },
          ),
@@ -394,8 +398,12 @@ fn test_column_types() {
                      "world",
                  ],
                  data: [
-                     1,
-                     2,
+                     Some(
+                         1,
+                     ),
+                     Some(
+                         2,
+                     ),
                  ],
              },
          ),

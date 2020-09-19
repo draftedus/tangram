@@ -44,26 +44,28 @@ An IdentityFeatureGroup describes an *identity* mapped feature. The IdentityFeat
 
 The source column:
 ```
+use std::num::NonZeroUsize;
+use tangram_dataframe::EnumColumn;
 EnumColumn {
-  name: "color",
-  options: ["red", "green", "blue"],
-  data: [1, 0, 1, 3],
-}
+  name: "color".to_string(),
+  options: vec!["red".to_string(), "green".to_string(), "blue".to_string()],
+  data: vec![NonZeroUsize::new(1), None, NonZeroUsize::new(1), NonZeroUsize::new(3)],
+};
 ```
 
 | value       | encoding |
 |-------------|----------|
-| \<MISSING\> | 0        |
-| red         | 1        |
-| green       | 2        |
-| blue        | 3        |
+| \<MISSING\> | None     |
+| red         | Some(1)  |
+| green       | Some(2)  |
+| blue        | Some(3)  |
 
 | original data in csv                  | dataframe [data](../dataframe/struct.EnumColumn.html#structfield.data) | feature values |
 |---------------------------------------|------------------------------------------------------------------------|----------------|
-| "red"                                 | 1                                                                      | 1              |
-|\<MISSING\>                            | 0                                                                      | 0              |
-| "red"                                 | 1                                                                      | 1              |
-| "blue"                                | 3                                                                      | 3              |
+| "red"                                 | Some(1)                                                                | 1              |
+|\<MISSING\>                            | None                                                                   | 0              |
+| "red"                                 | Some(1)                                                                | 1              |
+| "blue"                                | Some(3)                                                                | 3              |
 */
 #[derive(Debug)]
 pub struct IdentityFeatureGroup {
@@ -76,9 +78,12 @@ pub struct IdentityFeatureGroup {
 Raw values will be normalized by the mean and standard deviation of the column. See [Z-score Normalization](https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization)).
 
 # Example
-```
-values: [0.0, 5.2, 1.3, 10.0]
-```
+use tangram_dataframe::NumberColumn;
+NumberColumn {
+	name: "values".to_string(),
+	data: vec![0.0, 5.2, 1.3, 10.0],
+};
+
 **mean**: 2.16667
 
 **std**: 2.70617
@@ -109,27 +114,23 @@ OneHotEncodedFeatureGroups are used for transforming EnumColumns into features f
 
 # Example
 ```
+use tangram_dataframe::EnumColumn;
+use std::num::NonZeroUsize;
 EnumColumn {
-  name: "color",
-  options: ["red", "green", "blue"]
-  data: [3, 2, 0, 1]
-}
+  name: "color".to_string(),
+  options: vec!["red".to_string(), "green".to_string(), "blue".to_string()],
+  data: vec![NonZeroUsize::new(3), NonZeroUsize::new(2), None,NonZeroUsize::new(1)]
+};
 ```
 
 We generate a total of 3 features, one for each of the enum options.
 
-| value  | index |
-|--------|-------|
-| red    | 0     |
-| green  | 1     |
-| blue   | 2     |
-
 | original data in csv                  | dataframe [data](../dataframe/struct.EnumColumn.html#structfield.data) | features (3)  |
 |---------------------------------------|------------------------------------------------------------------------|---------------|
-| "blue"                                | 3                                                                      | [0, 0, 1]     |
-| "green"                               | 2                                                                      | [0, 1, 0]     |
-| \<MISSING\>                           | 0                                                                      | [0, 0, 0]     |
-| "red"                                 | 1                                                                      | [1, 0, 0]     |
+| "blue"                                | Some(3)                                                                | [0, 0, 1]     |
+| "green"                               | Some(2)                                                                | [0, 1, 0]     |
+| \<MISSING\>                           | None                                                                   | [0, 0, 0]     |
+| "red"                                 | Some(1)                                                                | [1, 0, 0]     |
 
 Unlike in the dataframe case, we don't need a special feature for "missing", because the all 0's vector encodes this.
 
@@ -149,10 +150,11 @@ A feature will have a value of _count_*_idf_ if it appears in the raw text and 0
 # Example
 **Source Column Type**: [TextColumn](../dataframe/struct.TextColumn.html).
 ```
+use tangram_dataframe::TextColumn;
 TextColumn {
-  name: "book_titles",
-  data: ["The Little Prince", "Stuart Little", "The Cat in the Hat"]
-}
+  name: "book_titles".to_string(),
+  data: vec!["The Little Prince".to_string(), "Stuart Little".to_string(), "The Cat in the Hat".to_string()]
+};
 ```
 
 In computing stats, we computed the [idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Inverse_document_frequency) score for each token and assigned it a unique index:
