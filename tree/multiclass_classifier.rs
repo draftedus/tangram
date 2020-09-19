@@ -105,7 +105,7 @@ impl MulticlassClassifier {
 /// Update the logits with the predictions from a single round of trees.
 pub fn update_logits(
 	trees: &[single::SingleTree],
-	binned_features: ArrayView2<u8>,
+	binned_features: ArrayView2<Value>,
 	mut logits: ArrayViewMut2<f32>,
 ) {
 	let features_rows = binned_features.genrows().into_iter();

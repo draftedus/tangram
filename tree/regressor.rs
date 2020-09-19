@@ -76,7 +76,7 @@ impl Regressor {
 
 pub fn update_logits(
 	trees: &[single::SingleTree],
-	features: ArrayView2<u8>,
+	features: ArrayView2<Value>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
 	for (prediction, features) in izip!(predictions.row_mut(0), features.genrows()) {

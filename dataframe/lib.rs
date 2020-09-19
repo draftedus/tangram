@@ -399,7 +399,7 @@ impl<'a> DataFrameView<'a> {
 		Some(features_train)
 	}
 
-	pub fn to_rows(&self) -> Array2<Value> {
+	pub fn to_rows(&self) -> Array2<Value<'a>> {
 		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
 		for (mut ndarray_column, dataframe_column) in
 			izip!(rows.gencolumns_mut(), self.columns.iter())

@@ -58,19 +58,6 @@ pub fn train(
 	#[cfg(feature = "timing")]
 	timing.binning.compute_bin_info.inc(start.elapsed());
 
-	// Use the binning instructions from the previous step to compute the binned features.
-	let n_bins = options.max_non_missing_bins as usize + 1;
-	let progress_counter = ProgressCounter::new(features.nrows().to_u64().unwrap());
-	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
-	#[cfg(feature = "timing")]
-	let start = std::time::Instant::now();
-	let (binned_feature, _) =
-		compute_binned_features(&features, &bin_info, n_bins as usize, &|| {
-			progress_counter.inc(1)
-		});
-	#[cfg(feature = "timing")]
-	timing.binning.compute_binned_features.inc(start.elapsed());
-
 	// If early stopping is enabled, split the features and labels into train and early stopping sets.
 	let early_stopping_enabled = options.early_stopping_options.is_some();
 	let (
@@ -82,11 +69,7 @@ pub fn train(
 	) = match &options.early_stopping_options {
 		Some(options) => {
 			let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
-				train_early_stopping_split(
-					binned_feature.view(),
-					labels,
-					options.early_stopping_fraction,
-				);
+				train_early_stopping_split(features, labels, options.early_stopping_fraction);
 			let train_stop_monitor = EarlyStoppingMonitor::new(
 				options.early_stopping_threshold,
 				options.early_stopping_rounds,
@@ -94,16 +77,29 @@ pub fn train(
 			(
 				features_train,
 				labels_train,
-				Some(features_early_stopping),
+				Some(features_early_stopping.to_rows()),
 				Some(labels_early_stopping),
 				Some(train_stop_monitor),
 			)
 		}
-		None => (binned_feature.view(), labels, None, None, None),
+		None => (features, labels, None, None, None),
 	};
 
-	let n_examples = features_train.nrows();
-	let n_features = features_train.ncols();
+	// Use the binning instructions from the previous step to compute the binned features.
+	let n_bins = options.max_non_missing_bins as usize + 1;
+	let progress_counter = ProgressCounter::new(features_train.nrows().to_u64().unwrap());
+	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
+	let binned_features =
+		compute_binned_features(&features_train, &bin_info, n_bins as usize, &|| {
+			progress_counter.inc(1)
+		});
+	#[cfg(feature = "timing")]
+	timing.binning.compute_binned_features.inc(start.elapsed());
+
+	let n_features = &binned_features.len();
+	let n_examples = labels_train.len();
 
 	// Regression and binary classification have one tree for each round. Multiclass classification has one tree per class for each round.
 	let n_trees_per_round = match task {
@@ -153,7 +149,10 @@ pub fn train(
 		vec![BinStatsPool::new(options.max_leaf_nodes, &bin_info); n_trees_per_round];
 	let mut logits_early_stopping = if early_stopping_enabled {
 		Some(unsafe {
-			Array::uninitialized((n_trees_per_round, features_early_stopping.unwrap().nrows()))
+			Array::uninitialized((
+				n_trees_per_round,
+				labels_early_stopping.as_ref().unwrap().len(),
+			))
 		})
 	} else {
 		None
@@ -242,7 +241,7 @@ pub fn train(
 				}
 				// Train the tree.
 				let (tree, leaf_values) = single::train(
-					features_train.view(),
+					binned_features.as_slice(),
 					gradients.as_slice().unwrap(),
 					hessians.as_slice().unwrap(),
 					ordered_gradients.as_slice_mut().unwrap(),
@@ -298,7 +297,7 @@ pub fn train(
 
 		// If early stopping is enabled, compute the early stopping metrics and update the train stop monitor to see if we should stop training at this round.
 		if early_stopping_enabled {
-			let features_early_stopping = features_early_stopping.unwrap();
+			let features_early_stopping = features_early_stopping.as_ref().unwrap();
 			let labels_early_stopping = labels_early_stopping.as_ref().unwrap();
 			let logits_early_stopping = logits_early_stopping.as_mut().unwrap();
 			let train_stop_monitor = train_stop_monitor.as_mut().unwrap();
@@ -308,7 +307,7 @@ pub fn train(
 			let value = compute_early_stopping_metric(
 				&task,
 				trees_for_round.as_slice(),
-				features_early_stopping,
+				features_early_stopping.view(),
 				labels_early_stopping.view(),
 				logits_early_stopping.view_mut(),
 			);
@@ -329,7 +328,7 @@ pub fn train(
 	// Compute feature importances.
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
-	let feature_importances = Some(compute_feature_importances(&trees, n_features));
+	let feature_importances = Some(compute_feature_importances(&trees, *n_features));
 	#[cfg(feature = "timing")]
 	timing.compute_feature_importances.inc(start.elapsed());
 
@@ -522,32 +521,20 @@ fn compute_bin_thresholds_for_histogram(
 pub fn compute_binned_features(
 	features: &DataFrameView,
 	bin_info: &[BinInfo],
-	max_n_bins: usize,
+	_max_n_bins: usize,
 	progress: &(dyn Fn() + Sync),
-) -> (Array2<u8>, Array2<usize>) {
-	let n_examples = features.nrows();
-	let n_features = features.ncols();
-	let mut binned_features: Array2<u8> =
-		unsafe { Array::uninitialized((n_examples, n_features).f()) };
-	// this array keeps track of how many examples are in each bin
-	let mut binned_features_examples_counts: Array2<usize> =
-		Array::zeros((max_n_bins, n_features).f());
-	izip!(
-		binned_features.axis_iter_mut(Axis(1)),
-		binned_features_examples_counts.axis_iter_mut(Axis(1)),
-		&features.columns,
-		bin_info,
-	)
-	.for_each(
-		|(mut binned_features_column, mut binned_feature_stats, column, bin_info)| {
-			match (column, bin_info) {
-				(ColumnView::Number(column), BinInfo::Number { thresholds }) => {
-					for (binned_feature_value, feature_value) in
-						binned_features_column.iter_mut().zip(column.data)
-					{
-						*binned_feature_value = if feature_value.is_nan() {
-							0
-						} else {
+) -> Vec<Vec<u8>> {
+	izip!(&features.columns, bin_info)
+		.map(|(column, bin_info)| {
+			match bin_info {
+				BinInfo::Number { thresholds } => {
+					let feature_values = column.as_number().unwrap().data;
+					let binned_feature = feature_values
+						.iter()
+						.map(|feature_value| {
+							if feature_value.is_nan() {
+								return 0;
+							}
 							// use binary search to find the bin for the feature value
 							thresholds
 								.binary_search_by(|threshold| {
@@ -557,26 +544,25 @@ pub fn compute_binned_features(
 								.unwrap_or_else(|bin| bin)
 								.to_u8()
 								.unwrap() + 1
-						};
-						binned_feature_stats[*binned_feature_value as usize] += 1;
-						progress();
-					}
+						})
+						.collect::<Vec<u8>>();
+					progress();
+					binned_feature
 				}
-				(ColumnView::Enum(column), BinInfo::Enum { .. }) => {
-					for (binned_feature_value, feature_value) in
-						binned_features_column.iter_mut().zip(column.data)
-					{
-						*binned_feature_value =
-							feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap();
-						binned_feature_stats[binned_feature_value.to_usize().unwrap()] += 1;
-						progress();
-					}
+				BinInfo::Enum { .. } => {
+					let feature_values = column.as_enum().unwrap().data;
+					let binned_feature = feature_values
+						.iter()
+						.map(|feature_value| {
+							feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
+						})
+						.collect::<Vec<u8>>();
+					progress();
+					binned_feature
 				}
-				_ => unreachable!(),
 			}
-		},
-	);
-	(binned_features, binned_features_examples_counts)
+		})
+		.collect()
 }
 
 #[derive(Clone)]
@@ -613,19 +599,19 @@ impl BinStatsPool {
 }
 
 fn train_early_stopping_split<'features, 'labels>(
-	features: ArrayView2<'features, u8>,
+	features: DataFrameView<'features>,
 	labels: ColumnView<'labels>,
 	early_stopping_fraction: f32,
 ) -> (
-	ArrayView2<'features, u8>,
+	DataFrameView<'features>,
 	ColumnView<'labels>,
-	ArrayView2<'features, u8>,
+	DataFrameView<'features>,
 	ColumnView<'labels>,
 ) {
-	let split_index = (early_stopping_fraction * features.nrows().to_f32().unwrap())
+	let split_index = (early_stopping_fraction * labels.len().to_f32().unwrap())
 		.to_usize()
 		.unwrap();
-	let (features_early_stopping, features_train) = features.split_at(Axis(0), split_index);
+	let (features_early_stopping, features_train) = features.split_at_row(split_index);
 	let (labels_early_stopping, labels_train) = labels.split_at_row(split_index);
 	(
 		features_train,
@@ -639,24 +625,24 @@ fn train_early_stopping_split<'features, 'labels>(
 fn compute_early_stopping_metric(
 	task: &Task,
 	trees: &[SingleTree],
-	binned_features: ArrayView2<u8>,
+	features: ArrayView2<Value>,
 	labels: ColumnView,
 	mut logits: ArrayViewMut2<f32>,
 ) -> f32 {
 	match task {
 		Task::Regression => {
 			let labels = labels.as_number().unwrap().data.into();
-			super::regressor::update_logits(trees, binned_features, logits.view_mut());
+			super::regressor::update_logits(trees, features.view(), logits.view_mut());
 			super::regressor::compute_loss(labels, logits.view())
 		}
 		Task::BinaryClassification => {
 			let labels = labels.as_enum().unwrap().data.into();
-			super::binary_classifier::update_logits(trees, binned_features, logits.view_mut());
+			super::binary_classifier::update_logits(trees, features.view(), logits.view_mut());
 			super::binary_classifier::compute_loss(labels, logits.view())
 		}
 		Task::MulticlassClassification { .. } => {
 			let labels = labels.as_enum().unwrap().data.into();
-			super::multiclass_classifier::update_logits(trees, binned_features, logits.view_mut());
+			super::multiclass_classifier::update_logits(trees, features.view(), logits.view_mut());
 			super::multiclass_classifier::compute_loss(labels, logits.view())
 		}
 	}

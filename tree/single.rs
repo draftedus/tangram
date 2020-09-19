@@ -250,7 +250,7 @@ impl Tree {
 
 impl SingleTree {
 	/// Make a prediction for a given example.
-	pub fn predict(&self, features: ArrayView1<u8>) -> f32 {
+	pub fn predict(&self, features: ArrayView1<tangram_dataframe::Value>) -> f32 {
 		// Start at the root node.
 		let mut node_index = 0;
 		loop {
@@ -265,10 +265,11 @@ impl SingleTree {
 					// This branch uses a continuous split.
 					SingleTreeBranchSplit::Continuous(SingleTreeBranchSplitContinuous {
 						feature_index,
-						bin_index,
+						split_value,
 						..
 					}) => {
-						node_index = if features[*feature_index] <= *bin_index {
+						node_index = if features[*feature_index].as_number().unwrap() <= split_value
+						{
 							left_child_index.unwrap()
 						} else {
 							right_child_index.unwrap()
@@ -280,7 +281,12 @@ impl SingleTree {
 						directions,
 						..
 					}) => {
-						let bin_index = features[*feature_index];
+						let bin_index =
+							if let Some(bin_index) = features[*feature_index].as_enum().unwrap() {
+								bin_index.get().to_u8().unwrap()
+							} else {
+								0
+							};
 						node_index = if !directions.get(bin_index).unwrap() {
 							left_child_index.unwrap()
 						} else {
@@ -298,7 +304,7 @@ impl SingleTree {
 /// Trains a single tree.
 #[allow(clippy::too_many_arguments)]
 pub fn train(
-	binned_features: ArrayView2<u8>,
+	binned_features: &[Vec<u8>],
 	gradients: &[f32],
 	hessians: &[f32],
 	ordered_gradients: &mut [f32],
@@ -756,7 +762,7 @@ static NOT_ROOT_UNROLL: usize = 4;
 pub fn compute_bin_stats_for_root_node(
 	node_bin_stats: &mut BinStats,
 	// (n_examples, n_features) column major
-	binned_features: ArrayView2<u8>,
+	binned_features: &[Vec<u8>],
 	// (n_examples)
 	gradients: &[f32],
 	// (n_examples)
@@ -767,7 +773,7 @@ pub fn compute_bin_stats_for_root_node(
 	izip!(
 		&mut node_bin_stats.bin_info,
 		&mut node_bin_stats.entries,
-		binned_features.gencolumns(),
+		binned_features.iter(),
 	)
 	.for_each(
 		|(bin_info_for_feature, bin_stats_for_feature, binned_feature_values)| {
@@ -780,7 +786,7 @@ pub fn compute_bin_stats_for_root_node(
 				unsafe {
 					compute_bin_stats_for_feature_root_no_hessian(
 						gradients,
-						binned_feature_values.as_slice().unwrap(),
+						binned_feature_values,
 						bin_stats_for_feature,
 					)
 				}
@@ -789,7 +795,7 @@ pub fn compute_bin_stats_for_root_node(
 					compute_bin_stats_for_feature_root(
 						gradients,
 						hessians,
-						binned_feature_values.as_slice().unwrap(),
+						binned_feature_values,
 						bin_stats_for_feature,
 					)
 				};
@@ -807,7 +813,7 @@ pub fn compute_bin_stats_for_non_root_node(
 	// (n_examples)
 	ordered_hessians: &mut [f32],
 	// (n_examples, n_features) column major
-	binned_features: ArrayView2<u8>,
+	binned_features: &[Vec<u8>],
 	// (n_examples)
 	gradients: &[f32],
 	// (n_examples)
@@ -831,7 +837,7 @@ pub fn compute_bin_stats_for_non_root_node(
 	izip!(
 		&mut node_bin_stats.bin_info,
 		&mut node_bin_stats.entries,
-		binned_features.gencolumns(),
+		binned_features.iter(),
 	)
 	.for_each(
 		|(bin_info_for_feature, bin_stats_for_feature, binned_feature_values)| {
@@ -844,7 +850,7 @@ pub fn compute_bin_stats_for_non_root_node(
 				unsafe {
 					compute_bin_stats_for_feature_not_root_no_hessians(
 						ordered_gradients,
-						binned_feature_values.as_slice().unwrap(),
+						binned_feature_values.as_slice(),
 						bin_stats_for_feature,
 						examples_index_for_node,
 					)
@@ -854,7 +860,7 @@ pub fn compute_bin_stats_for_non_root_node(
 					compute_bin_stats_for_feature_not_root(
 						ordered_gradients,
 						ordered_hessians,
-						binned_feature_values.as_slice().unwrap(),
+						binned_feature_values.as_slice(),
 						bin_stats_for_feature,
 						examples_index_for_node,
 					)
@@ -1034,7 +1040,7 @@ and the example indexes in the second returned range
 are contained by the right node.
 */
 fn rearrange_examples_index(
-	binned_features: ArrayView2<u8>,
+	binned_features: &[Vec<u8>],
 	split: &SingleTreeBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left: &mut [usize],
@@ -1055,7 +1061,7 @@ fn rearrange_examples_index(
 
 /// Rearrange examples index serially.
 fn rearrange_examples_index_serial(
-	binned_features: ArrayView2<u8>,
+	binned_features: &[Vec<u8>],
 	split: &SingleTreeBranchSplit,
 	examples_index: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
@@ -1072,7 +1078,7 @@ fn rearrange_examples_index_serial(
 					bin_index,
 					..
 				}) => {
-					let feature_bin = binned_features[(examples_index[left], *feature_index)];
+					let feature_bin = binned_features[*feature_index][examples_index[left]];
 					if feature_bin <= *bin_index {
 						SplitDirection::Left
 					} else {
@@ -1084,7 +1090,7 @@ fn rearrange_examples_index_serial(
 					directions,
 					..
 				}) => {
-					let feature_bin = binned_features[(examples_index[left], *feature_index)];
+					let feature_bin = binned_features[*feature_index][examples_index[left]];
 					if !directions.get(feature_bin).unwrap() {
 						SplitDirection::Left
 					} else {
@@ -1109,7 +1115,7 @@ fn rearrange_examples_index_serial(
 
 /// Rearrange examples index in parallel.
 fn rearrange_examples_index_parallel(
-	binned_features: ArrayView2<u8>,
+	binned_features: &[Vec<u8>],
 	split: &SingleTreeBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left: &mut [usize],
@@ -1135,8 +1141,7 @@ fn rearrange_examples_index_parallel(
 							bin_index,
 							..
 						}) => {
-							let feature_bin =
-								unsafe { *binned_features.uget((*example_index, *feature_index)) };
+							let feature_bin = binned_features[*feature_index][*example_index];
 							if feature_bin <= *bin_index {
 								SplitDirection::Left
 							} else {
@@ -1148,8 +1153,7 @@ fn rearrange_examples_index_parallel(
 							directions,
 							..
 						}) => {
-							let feature_bin =
-								unsafe { *binned_features.uget((*example_index, *feature_index)) };
+							let feature_bin = binned_features[*feature_index][*example_index];
 							if !directions.get(feature_bin).unwrap() {
 								SplitDirection::Left
 							} else {
