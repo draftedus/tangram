@@ -5,7 +5,7 @@ use num_traits::{clamp, ToPrimitive};
 use std::num::NonZeroUsize;
 use tangram_dataframe::*;
 
-/// This struct represents a tree multiclass classifier model. Multiclass classifier models are used to predict multiclass target values, for example which of several species a flower is.
+/// `MulticlasClassifier`s predict multiclass target values, for example which of several species a flower is.
 #[derive(Debug)]
 pub struct MulticlassClassifier {
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
@@ -102,7 +102,7 @@ impl MulticlassClassifier {
 	}
 }
 
-/// Update the logits with the predictions from a single round of trees.
+/// This function is used by the common train function to update the logits after each tree is trained for multiclass classification.
 pub fn update_logits(
 	trees: &[single::SingleTree],
 	binned_features: ArrayView2<Value>,
@@ -117,7 +117,7 @@ pub fn update_logits(
 	}
 }
 
-/// Compute the cross entropy loss.
+/// This function is used by the common train function to compute the loss after each tree is trained for multiclass classification.
 pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
 	for (label, logits) in labels.into_iter().zip(logits.gencolumns()) {
@@ -133,7 +133,7 @@ pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2
 	loss / labels.len().to_f32().unwrap()
 }
 
-/// Compute the biases.
+/// This function is used by the common train function to compute the biases for multiclass classification.
 pub fn compute_biases(
 	labels: ArrayView1<Option<NonZeroUsize>>,
 	n_trees_per_round: usize,
@@ -152,8 +152,8 @@ pub fn compute_biases(
 	baseline
 }
 
-/// Compute the gradients and hessians for each example given the labels and predictions.
-pub fn update_gradients_and_hessians(
+/// This function is used by the common train function to compute the gradients and hessian after each round.
+pub fn compute_gradients_and_hessians(
 	// (n_trees_per_round, n_examples)
 	mut gradients: ArrayViewMut2<f32>,
 	// (n_trees_per_round, n_examples)

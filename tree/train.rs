@@ -48,13 +48,9 @@ pub fn train(
 	let timing = super::timing::Timing::new();
 
 	// Determine how to bin each feature.
-	let bin_options = ComputeBinInfoOptions {
-		max_valid_bins: options.max_non_missing_bins,
-		max_number_column_examples_for_bin_info: options.subsample_for_binning,
-	};
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
-	let bin_info = compute_bin_info(&features, &bin_options);
+	let bin_info = compute_bin_info(&features, &options);
 	#[cfg(feature = "timing")]
 	timing.binning.compute_bin_info.inc(start.elapsed());
 
@@ -86,15 +82,12 @@ pub fn train(
 	};
 
 	// Use the binning instructions from the previous step to compute the binned features.
-	let n_bins = options.max_non_missing_bins as usize + 1;
 	let progress_counter = ProgressCounter::new(features_train.nrows().to_u64().unwrap());
 	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
 	let binned_features =
-		compute_binned_features(&features_train, &bin_info, n_bins as usize, &|| {
-			progress_counter.inc(1)
-		});
+		compute_binned_features(&features_train, &bin_info, &|| progress_counter.inc(1));
 	#[cfg(feature = "timing")]
 	timing.binning.compute_binned_features.inc(start.elapsed());
 
@@ -185,7 +178,7 @@ pub fn train(
 		match task {
 			Task::Regression => {
 				let labels_train = labels_train.as_number().unwrap();
-				super::regressor::update_gradients_and_hessians(
+				super::regressor::compute_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
 					labels_train.data.into(),
@@ -194,7 +187,7 @@ pub fn train(
 			}
 			Task::BinaryClassification => {
 				let labels_train = labels_train.as_enum().unwrap();
-				super::binary_classifier::update_gradients_and_hessians(
+				super::binary_classifier::compute_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
 					labels_train.data.into(),
@@ -203,7 +196,7 @@ pub fn train(
 			}
 			Task::MulticlassClassification { .. } => {
 				let labels_train = labels_train.as_enum().unwrap();
-				super::multiclass_classifier::update_gradients_and_hessians(
+				super::multiclass_classifier::compute_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
 					labels_train.data.into(),
@@ -408,16 +401,8 @@ impl BinInfo {
 	}
 }
 
-/// ComputeBinInfoOptions specifies how to compute bins for a given column.
-pub struct ComputeBinInfoOptions {
-	/// The maximum number of bins to use for the column. Used to determine the number of bins for numeric columns because enum columns need n_valid_bins equal to the number of enum variants.
-	pub max_valid_bins: u8,
-	/// The maximum number of samples to use in order to estimate bin thresholds. This setting is used exclusively for numeric columns. In order to find bin thresholds, we need to sort values and find the threshold cutoffs. To speed up the computation, instead of sorting all of the values in the column, we choose to sort a smaller subset to get an estimate of the quantile threshold cutoffs.
-	pub max_number_column_examples_for_bin_info: usize,
-}
-
 /// Figure out how to bin features. Enum columns have one bin per variant. Numeric columns have bins whose endpoints are computed using `max_valid_bins` quantiles such that each bin contains approximately the same number of training examples.
-pub fn compute_bin_info(features: &DataFrameView, options: &ComputeBinInfoOptions) -> Vec<BinInfo> {
+pub fn compute_bin_info(features: &DataFrameView, options: &TrainOptions) -> Vec<BinInfo> {
 	features
 		.columns
 		.iter()
@@ -426,9 +411,9 @@ pub fn compute_bin_info(features: &DataFrameView, options: &ComputeBinInfoOption
 }
 
 /// Compute the bin info given a column.
-pub fn compute_bin_info_for_column(column: ColumnView, options: &ComputeBinInfoOptions) -> BinInfo {
+pub fn compute_bin_info_for_column(column: ColumnView, options: &TrainOptions) -> BinInfo {
 	match column {
-		ColumnView::Number(column) => compute_bin_info_for_number_column(column, options),
+		ColumnView::Number(column) => compute_bin_info_for_number_feature(column, options),
 		ColumnView::Enum(column) => BinInfo::Enum {
 			n_options: column.options.len().to_u8().unwrap(),
 		},
@@ -437,9 +422,9 @@ pub fn compute_bin_info_for_column(column: ColumnView, options: &ComputeBinInfoO
 }
 
 /// Compute the quantile thresholds for a numeric column. Returns BinInfo with the numeric thresholds used to map the column values into their respective bins.
-fn compute_bin_info_for_number_column(
+fn compute_bin_info_for_number_feature(
 	column: NumberColumnView,
-	options: &ComputeBinInfoOptions,
+	options: &TrainOptions,
 ) -> BinInfo {
 	// Collect the values into a histogram.
 	let mut histogram: BTreeMap<Finite<f32>, usize> = BTreeMap::new();
@@ -447,26 +432,27 @@ fn compute_bin_info_for_number_column(
 	for value in &column.data[0..column
 		.data
 		.len()
-		.min(options.max_number_column_examples_for_bin_info)]
+		.min(options.max_examples_for_computing_bin_thresholds)]
 	{
 		if let Ok(value) = Finite::new(*value) {
 			*histogram.entry(value).or_insert(0) += 1;
 			histogram_values_count += 1;
 		}
 	}
-	// If the number of unique values is less than max_valid_bins, then create one bin per unique value value. Otherwise, create bins at quantiles.
-	let thresholds = if histogram.len() < options.max_valid_bins.to_usize().unwrap() {
+	// If the number of unique values is less than max_valid_bins_for_number_features, then create one bin per unique value. Otherwise, create bins at quantiles.
+	let thresholds = if histogram.len()
+		< options
+			.max_valid_bins_for_number_features
+			.to_usize()
+			.unwrap()
+	{
 		histogram
 			.keys()
 			.tuple_windows()
 			.map(|(a, b)| (a.get() + b.get()) / 2.0)
 			.collect()
 	} else {
-		compute_bin_thresholds_for_histogram(
-			histogram,
-			histogram_values_count,
-			options.max_valid_bins,
-		)
+		compute_bin_thresholds_for_histogram(histogram, histogram_values_count, options)
 	};
 	BinInfo::Number { thresholds }
 }
@@ -475,11 +461,14 @@ fn compute_bin_info_for_number_column(
 fn compute_bin_thresholds_for_histogram(
 	histogram: BTreeMap<Finite<f32>, usize>,
 	histogram_values_count: usize,
-	max_valid_bins: u8,
+	options: &TrainOptions,
 ) -> Vec<f32> {
 	let total_values_count = histogram_values_count.to_f32().unwrap();
-	let quantiles: Vec<f32> = (1..max_valid_bins.to_usize().unwrap())
-		.map(|i| i.to_f32().unwrap() / max_valid_bins.to_f32().unwrap())
+	let quantiles: Vec<f32> = (1..options
+		.max_valid_bins_for_number_features
+		.to_usize()
+		.unwrap())
+		.map(|i| i.to_f32().unwrap() / options.max_valid_bins_for_number_features.to_f32().unwrap())
 		.collect();
 	let quantile_indexes: Vec<usize> = quantiles
 		.iter()
@@ -521,7 +510,6 @@ fn compute_bin_thresholds_for_histogram(
 pub fn compute_binned_features(
 	features: &DataFrameView,
 	bin_info: &[BinInfo],
-	_max_n_bins: usize,
 	progress: &(dyn Fn() + Sync),
 ) -> Vec<crate::single::BinnedFeaturesColumn> {
 	izip!(&features.columns, bin_info)

@@ -4,7 +4,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_dataframe::*;
 
-/// This struct represents a tree regressor model. Regressor models are used to predict continuous target values, for example the selling price of a home.
+/// `Regressor`s predict continuous target values, for example the selling price of a home.
 #[derive(Debug)]
 pub struct Regressor {
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
@@ -57,6 +57,7 @@ impl Regressor {
 	pub fn compute_shap_values(
 		&self,
 		features: ArrayView2<Value>,
+		// TODO change this type?
 		mut shap_values: ArrayViewMut3<f32>,
 	) {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
@@ -74,6 +75,7 @@ impl Regressor {
 	}
 }
 
+/// This function is used by the common train function to implement the update of logits after each round is trained for regression.
 pub fn update_logits(
 	trees: &[single::SingleTree],
 	features: ArrayView2<Value>,
@@ -86,7 +88,7 @@ pub fn update_logits(
 	}
 }
 
-/// For regression we use the mean squared error loss.
+/// This function is used by the common train function to compute the loss after each tree is trained for regression.
 pub fn compute_loss(labels: ArrayView1<f32>, predictions: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
 	for (label, prediction) in labels.iter().zip(predictions) {
@@ -95,11 +97,13 @@ pub fn compute_loss(labels: ArrayView1<f32>, predictions: ArrayView2<f32>) -> f3
 	loss / labels.len().to_f32().unwrap()
 }
 
+/// This function is used by the common train function to compute the biases for regression.
 pub fn compute_biases(labels: ArrayView1<f32>) -> Array1<f32> {
 	arr1(&[labels.mean().unwrap()])
 }
 
-pub fn update_gradients_and_hessians(
+/// This function is used by the common train function to compute the gradients and hessian after each round.
+pub fn compute_gradients_and_hessians(
 	// (n_trees_per_round, n_examples)
 	mut gradients: ArrayViewMut2<f32>,
 	// (n_trees_per_round, n_examples)

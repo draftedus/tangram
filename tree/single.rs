@@ -342,8 +342,8 @@ pub fn train(
 
 	// If there are too few training examples or the hessians are too small,
 	// just return a tree with a single leaf.
-	if n_examples < 2 * options.min_examples_per_leaf
-		|| sum_hessians < 2.0 * options.min_sum_hessians_in_leaf.to_f64().unwrap()
+	if n_examples < 2 * options.min_examples_per_child
+		|| sum_hessians < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap()
 	{
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 		let node = SingleTreeNode::Leaf(SingleTreeLeafNode {
@@ -496,9 +496,9 @@ pub fn train(
 		// Determine if we should split left and/or right based on the number of examples in the node and the node's depth in the tree.
 		let max_depth_reached = queue_item.depth + 1 == options.max_depth;
 		let should_split_left = !max_depth_reached
-			&& left_examples_index_range.len() >= options.min_examples_per_leaf * 2;
+			&& left_examples_index_range.len() >= options.min_examples_per_child * 2;
 		let should_split_right = !max_depth_reached
-			&& right_examples_index_range.len() >= options.min_examples_per_leaf * 2;
+			&& right_examples_index_range.len() >= options.min_examples_per_child * 2;
 
 		// If we should not split left, add a leaf.
 		if !should_split_left {
@@ -1519,19 +1519,19 @@ fn find_best_continuous_split_for_feature_left_to_right(
 			None => break,
 		};
 		// check if we have violated the min samples leaf constraint
-		if left_n_examples < options.min_examples_per_leaf {
+		if left_n_examples < options.min_examples_per_child {
 			continue;
 		}
-		if right_n_examples < options.min_examples_per_leaf {
+		if right_n_examples < options.min_examples_per_child {
 			// since we are in left to right mode, we will only get less examples if we continue so break instead
 			break;
 		}
-		if left_sum_hessians < options.min_sum_hessians_in_leaf.to_f64().unwrap() {
+		if left_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
 			// Hessians are positive so the left sum hessians will continue to increase,
 			// we can continue.
 			continue;
 		}
-		if right_sum_hessians < options.min_sum_hessians_in_leaf.to_f64().unwrap() {
+		if right_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
 			// Hessians are positive so we will continue to violate the min_hessian_to_split
 			// condition for the right node, break.
 			break;
@@ -1615,17 +1615,15 @@ fn find_best_discrete_split_for_feature_left_to_right(
 	options: &TrainOptions,
 ) -> Option<FindSplitOutput> {
 	let mut best_split_so_far: Option<FindSplitOutput> = None;
-	let l2_regularization = options.l2_regularization + options.discrete_l2_regularization;
+	let l2_regularization =
+		options.l2_regularization + options.supplemental_l2_regularization_for_discrete_splits;
 	let negative_loss_parent_node =
 		compute_negative_loss(sum_gradients_parent, sum_hessians_parent, l2_regularization);
 	let count_multiplier = examples_index_range.len() as f64 / sum_hessians_parent;
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
-	// reduces noise in sorting categorical features for categories with few examples
-	let discrete_smoothing_factor = 10.0;
-	let categorical_bin_score =
-		|bin: &[f64]| bin[0] / (bin[1] + discrete_smoothing_factor.to_f64().unwrap());
+	let categorical_bin_score = |bin: &[f64]| bin[0] / bin[1];
 	let mut sorted_bin_stats: Vec<(usize, &[f64])> = bin_stats_for_feature
 		[0..bin_info.n_valid_bins() as usize * 2]
 		.chunks(2)
@@ -1654,27 +1652,19 @@ fn find_best_discrete_split_for_feature_left_to_right(
 			None => break,
 		};
 		// check if we have violated the min samples leaf constraint
-		if left_n_examples < options.min_examples_per_leaf {
+		if left_n_examples < options.min_examples_per_child {
 			continue;
 		}
-		// check if we have violated the min examples per categorical branch constraint
-		if left_n_examples < options.discrete_min_examples_per_branch {
-			continue;
-		}
-		if right_n_examples < options.min_examples_per_leaf {
+		if right_n_examples < options.min_examples_per_child {
 			// since we are in left to right mode, we will only get less examples if we continue so break instead
 			break;
 		}
-		if right_n_examples < options.discrete_min_examples_per_branch {
-			// since we are in left to right mode, we will only get less examples if we continue so break instead
-			break;
-		}
-		if left_sum_hessians < options.min_sum_hessians_in_leaf.to_f64().unwrap() {
+		if left_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
 			// Hessians are positive so the left sum hessians will continue to increase,
 			// we can continue.
 			continue;
 		}
-		if right_sum_hessians < options.min_sum_hessians_in_leaf.to_f64().unwrap() {
+		if right_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
 			// Hessians are positive so we will continue to violate the min_hessian_to_split
 			// condition for the right node, break.
 			break;

@@ -60,8 +60,8 @@ fn main() {
 		max_depth: 8,
 		max_leaf_nodes: 255,
 		max_rounds: 100,
-		min_examples_per_leaf: 100,
-		min_sum_hessians_in_leaf: 0.0,
+		min_examples_per_child: 100,
+		min_sum_hessians_per_child: 0.0,
 		..Default::default()
 	};
 	let model = tangram_tree::BinaryClassifier::train(

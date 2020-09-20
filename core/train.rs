@@ -958,7 +958,7 @@ fn train_tree_multiclass_classifier(
 		tree_options.max_rounds = max_rounds.to_usize().unwrap();
 	}
 	if let Some(min_examples_per_leaf) = options.min_examples_per_leaf {
-		tree_options.min_examples_per_leaf = min_examples_per_leaf.to_usize().unwrap();
+		tree_options.min_examples_per_child = min_examples_per_leaf.to_usize().unwrap();
 	}
 	let model = tangram_tree::MulticlassClassifier::train(
 		features.view(),

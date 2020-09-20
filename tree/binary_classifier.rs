@@ -6,7 +6,7 @@ use std::num::NonZeroUsize;
 use std::ops::Neg;
 use tangram_dataframe::*;
 
-/// A Binary classifier model is trained to predict binary target values, for example whether a patient has heart disease or not.
+/// `BinaryClassifier`s predict binary target values, for example whether a patient has heart disease or not.
 #[derive(Debug)]
 pub struct BinaryClassifier {
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
@@ -86,7 +86,7 @@ impl BinaryClassifier {
 	}
 }
 
-/// Update the logits with the predictions from a single round of trees.
+/// This function is used by the common train function to update the logits after each tree is trained for binary classification.
 pub fn update_logits(
 	trees: &[single::SingleTree],
 	binned_features: ArrayView2<Value>,
@@ -99,7 +99,7 @@ pub fn update_logits(
 	}
 }
 
-/// Compute the binary cross entropy loss.
+/// This function is used by the common train function to compute the loss after each tree is trained for binary classification.
 pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
 	let mut total = 0.0;
 	for (label, logit) in labels.iter().zip(logits) {
@@ -112,7 +112,7 @@ pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2
 	total / labels.len().to_f32().unwrap()
 }
 
-/// Compute the biases.
+/// This function is used by the common train function to compute the biases for binary classification.
 pub fn compute_biases(labels: ArrayView1<Option<NonZeroUsize>>) -> Array1<f32> {
 	let pos_count = labels
 		.iter()
@@ -123,8 +123,8 @@ pub fn compute_biases(labels: ArrayView1<Option<NonZeroUsize>>) -> Array1<f32> {
 	arr1(&[log_odds])
 }
 
-/// Compute the gradients and hessians for each example given the labels and predictions.
-pub fn update_gradients_and_hessians(
+/// This function is used by the common train function to compute the gradients and hessian after each round.
+pub fn compute_gradients_and_hessians(
 	// (n_trees_per_round, n_examples)
 	mut gradients: ArrayViewMut2<f32>,
 	// (n_trees_per_round, n_examples)
