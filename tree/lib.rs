@@ -46,7 +46,7 @@ pub struct TrainOptions {
 	pub min_gain_to_split: f32,
 	/// A split will only be considered valid if the sum of hessians in each of the resulting children is at least this value.
 	pub min_sum_hessians_per_child: f32,
-	/// This is the maximum number of examples to consider when determining the bin thresholds for `Number` features.
+	/// This is the maximum number of examples to consider when determining the bin thresholds for `Number` features. If the number of examples exceeds this value, randomly sample `max_examples_for_computing_bin_thresholds` examples.
 	pub max_examples_for_computing_bin_thresholds: usize,
 }
 
