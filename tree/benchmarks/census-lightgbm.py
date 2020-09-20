@@ -2,7 +2,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
-import time
 
 import lightgbm as lgb
 
@@ -40,6 +39,8 @@ labels = data[target]
 	train_size=nrows_train,
 	shuffle=False
 )
+categorical_feature = ['workclass', 'education', 'marital_status', 'occupation', 'relationship', 'sex', 'native_country']
+categorical_feature=categorical_feature
 
 # train the model
 model = lgb.LGBMClassifier(
@@ -52,12 +53,7 @@ model = lgb.LGBMClassifier(
 	enable_bundle=False,
 	enable_sparse=False,
 )
-start = time.time()
-categorical_feature = ['workclass', 'education', 'marital_status', 'occupation', 'relationship', 'sex', 'native_country']
-categorical_feature=categorical_feature
 model.fit(features_train, labels_train, categorical_feature=categorical_feature)
-end = time.time()
-print('duration: {}ms'.format((end-start) * 1000))
 
 # compute accuracy
 predictions = model.predict(features_test)

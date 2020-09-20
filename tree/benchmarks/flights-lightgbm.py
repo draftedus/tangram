@@ -3,7 +3,6 @@ from sklearn.model_selection import train_test_split
 from pandas.api.types import CategoricalDtype
 import numpy as np
 import pandas as pd
-import time
 
 import lightgbm as lgb
 
@@ -47,15 +46,11 @@ origin_options = [
 path_train = 'data/flights-1m.csv'
 path_test = 'data/flights-test.csv'
 nrows_train = 1_000_000
-
 # path_train = 'data/flights-100k.csv'
 # path_test = 'data/flights-test.csv'
 # nrows_train = 100_000
-
 nrows_test = 100_000
-
 target = "dep_delayed_15min"
-
 data_train = pd.read_csv(
 	path_train,
 	dtype={
@@ -94,7 +89,6 @@ data_test = pd.read_csv(
 		'Y': 1
 	}
 })
-
 data = pd.get_dummies(pd.concat([data_train, data_test]))
 # data = pd.concat([data_train, data_test])
 
@@ -117,15 +111,12 @@ model = lgb.LGBMClassifier(
 	# enable_sparse=False,
 	# enable_bundle=False,
 )
-
 categorical_features = ["Month", "DayofMonth", "DayOfWeek", "UniqueCarrier", "Origin", "Dest"]
-start = time.time()
 model.fit(
 	features_train,
 	labels_train,
-	categorical_feature=categorical_features)
-end = time.time()
-print('duration: {}ms'.format((end-start) * 1000))
+	categorical_feature=categorical_features
+)
 
 # compute accuracy
 predictions = model.predict(features_test)
@@ -133,6 +124,6 @@ accuracy = accuracy_score(labels_test, predictions)
 print('accuracy: ', accuracy)
 
 # compute auc
-predictions_proba = model.predict_proba(features_test)[:, 1]
-auc = roc_auc_score(labels_test, predictions_proba)
-print('auc: ', auc)
+# predictions_proba = model.predict_proba(features_test)[:, 1]
+# auc = roc_auc_score(labels_test, predictions_proba)
+# print('auc: ', auc)

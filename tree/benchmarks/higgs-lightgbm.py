@@ -2,11 +2,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
-import time
 
 import lightgbm as lgb
-
-start = time.time()
 
 # load the data
 # path = 'data/higgs.csv'
@@ -78,6 +75,4 @@ model.fit(features_train, labels_train)
 predictions = model.predict(features_test)
 accuracy = accuracy_score(predictions, labels_test)
 
-end = time.time()
-print('duration: {}ms'.format((end - start)*1000))
 print('accuracy: ', accuracy)

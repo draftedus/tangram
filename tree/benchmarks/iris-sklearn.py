@@ -2,7 +2,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
-import time
 
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -33,10 +32,7 @@ model = HistGradientBoostingClassifier(
 	max_leaf_nodes=255,
 	min_samples_leaf=1,
 )
-start = time.time()
 model.fit(features_train, labels_train)
-end = time.time()
-print('duration: {}ms'.format((end - start)*1000))
 
 # compute accuracy
 predictions = model.predict(features_test)

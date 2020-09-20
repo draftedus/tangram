@@ -1,10 +1,8 @@
-
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.dummy import DummyRegressor
 import numpy as np
 import pandas as pd
-import time
 
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
@@ -29,20 +27,9 @@ labels = data[target]
 
 # train the model
 model = HistGradientBoostingRegressor()
-
-start = time.time()
 model.fit(features_train, labels_train)
-end = time.time()
-print('duration: {}ms'.format((end-start) * 1000))
 
 # compute mse
 predictions = model.predict(features_test)
 mse = mean_squared_error(predictions, labels_test)
 print('mse: ', mse)
-
-# compute baseline
-baseline_model = DummyRegressor()
-baseline_model.fit(features_train, labels_train)
-baseline_predictions = baseline_model.predict(features_test)
-baseline_mse = mean_squared_error(baseline_predictions, labels_test)
-print('baseline_mse: ', baseline_mse)

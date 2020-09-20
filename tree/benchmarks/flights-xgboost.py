@@ -2,7 +2,6 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
-import time
 
 import xgboost as xgb
 
@@ -69,14 +68,9 @@ model = xgb.XGBClassifier(
 	max_depth = 10,
 	n_estimators = 100,
 	tree_method = 'hist',
-	# grow_policy = 'lossguide',
+	grow_policy = 'lossguide',
 )
-
-start = time.time()
 model.fit(features_train, labels_train)
-end = time.time()
-print('xgboost hist')
-print('duration: {}ms'.format((end - start)*1000))
 
 # compute accuracy
 predictions = model.predict(features_test)
@@ -84,30 +78,6 @@ accuracy = accuracy_score(predictions, labels_test)
 print('accuracy: ', accuracy)
 
 # compute auc
-predictions_proba = model.predict_proba(features_test)[:, 1]
-auc = roc_auc_score(labels_test, predictions_proba)
-print('auc: ', auc)
-
-# # train the model
-# model = xgb.XGBClassifier(
-#   eta = 0.1,
-#   max_depth = 10,
-#   nround = 100,
-#   tree_method = 'approx'
-#   # grow_policy = 'lossguide',
-# )
-# start = time.time()
-# model.fit(features_train, labels_train)
-# end = time.time()
-# print('xgboost non-hist')
-# print('duration: {}ms'.format((end - start)*1000))
-
-# # compute accuracy
-# predictions = model.predict(features_test)
-# accuracy = accuracy_score(predictions, labels_test)
-# print('accuracy: ', accuracy)
-
-# # compute auc
 # predictions_proba = model.predict_proba(features_test)[:, 1]
 # auc = roc_auc_score(labels_test, predictions_proba)
 # print('auc: ', auc)
