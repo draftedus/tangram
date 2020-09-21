@@ -1,6 +1,6 @@
 use super::{
-	BinnedFeaturesColumn, SingleTreeBranchSplit, SingleTreeBranchSplitContinuous,
-	SingleTreeBranchSplitDiscrete,
+	BinnedFeaturesColumn, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
+	TrainTreeBranchSplitDiscrete,
 };
 use crate::SplitDirection;
 use itertools::izip;
@@ -16,7 +16,7 @@ are contained by the right node.
 */
 pub fn rearrange_examples_index(
 	binned_features: &[BinnedFeaturesColumn],
-	split: &SingleTreeBranchSplit,
+	split: &TrainTreeBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left: &mut [usize],
 	examples_index_right: &mut [usize],
@@ -34,10 +34,10 @@ pub fn rearrange_examples_index(
 	}
 }
 
-/// Rearrange examples index serially.
+/// Rearrange the examples index on a single thread.
 fn rearrange_examples_index_serial(
 	binned_features: &[BinnedFeaturesColumn],
-	split: &SingleTreeBranchSplit,
+	split: &TrainTreeBranchSplit,
 	examples_index: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let start = 0;
@@ -48,7 +48,7 @@ fn rearrange_examples_index_serial(
 	while left < right {
 		let direction = {
 			match &split {
-				SingleTreeBranchSplit::Continuous(SingleTreeBranchSplitContinuous {
+				TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
 					feature_index,
 					bin_index,
 					..
@@ -68,7 +68,7 @@ fn rearrange_examples_index_serial(
 						SplitDirection::Right
 					}
 				}
-				SingleTreeBranchSplit::Discrete(SingleTreeBranchSplitDiscrete {
+				TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
 					feature_index,
 					directions,
 					..
@@ -104,10 +104,10 @@ fn rearrange_examples_index_serial(
 	(start..n_left, n_left..end)
 }
 
-/// Rearrange examples index in parallel.
+/// Rearrange the examples index with multiple threads.
 fn rearrange_examples_index_parallel(
 	binned_features: &[BinnedFeaturesColumn],
-	split: &SingleTreeBranchSplit,
+	split: &TrainTreeBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left: &mut [usize],
 	examples_index_right: &mut [usize],
@@ -127,7 +127,7 @@ fn rearrange_examples_index_parallel(
 			for example_index in examples_index {
 				let direction = {
 					match &split {
-						SingleTreeBranchSplit::Continuous(SingleTreeBranchSplitContinuous {
+						TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
 							feature_index,
 							bin_index,
 							..
@@ -147,7 +147,7 @@ fn rearrange_examples_index_parallel(
 								SplitDirection::Right
 							}
 						}
-						SingleTreeBranchSplit::Discrete(SingleTreeBranchSplitDiscrete {
+						TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
 							feature_index,
 							directions,
 							..

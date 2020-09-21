@@ -1,6 +1,6 @@
 use super::{
-	BinStats, BinningInstructions, SingleTreeBranchSplit, SingleTreeBranchSplitContinuous,
-	SingleTreeBranchSplitDiscrete,
+	BinStats, BinningInstructions, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
+	TrainTreeBranchSplitDiscrete,
 };
 use crate::{SplitDirection, TrainOptions};
 use itertools::izip;
@@ -10,7 +10,7 @@ use std::ops::Range;
 pub struct FindSplitOutput {
 	pub gain: f32,
 	pub feature_index: usize,
-	pub split: SingleTreeBranchSplit,
+	pub split: TrainTreeBranchSplit,
 	pub left_sum_gradients: f64,
 	pub left_sum_hessians: f64,
 	pub left_n_examples: usize,
@@ -226,7 +226,7 @@ fn find_best_continuous_split_for_feature_left_to_right(
 				SplitDirection::Right
 			}
 		};
-		let split = SingleTreeBranchSplit::Continuous(SingleTreeBranchSplitContinuous {
+		let split = TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
 			feature_index,
 			bin_index: bin_index.to_u8().unwrap(),
 			split_value: match binning_instructions {
@@ -359,7 +359,7 @@ fn find_best_discrete_split_for_feature_left_to_right(
 				SplitDirection::Right
 			}
 		};
-		let split = SingleTreeBranchSplit::Discrete(SingleTreeBranchSplitDiscrete {
+		let split = TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
 			feature_index,
 			directions: directions.clone(),
 		});

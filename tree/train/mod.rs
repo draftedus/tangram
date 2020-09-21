@@ -170,7 +170,7 @@ pub fn train(
 	// This is the total number of rounds that have been trained thus far.
 	let mut n_rounds_trained = 0;
 	// These are the trees in round-major order. After training this will be converted to an array of shape (n_rounds, n_trees_per_round).
-	let mut trees: Vec<SingleTree> = Vec::new();
+	let mut trees: Vec<TrainTree> = Vec::new();
 	// Collect the loss on the training dataset for each round if enabled.
 	let mut losses: Option<Vec<f32>> = if options.compute_loss {
 		Some(Vec::new())
@@ -338,7 +338,7 @@ pub fn train(
 	eprintln!("{:?}", timing);
 
 	// Assemble the model.
-	let trees: Vec<Tree> = trees.into_iter().map(tree_from_single_tree).collect();
+	let trees: Vec<Tree> = trees.into_iter().map(tree_from_train_tree).collect();
 	match task {
 		Task::Regression => Model::Regressor(Regressor {
 			bias: biases[0],
@@ -633,7 +633,7 @@ fn train_early_stopping_split<'features, 'labels>(
 /// Compute the early stopping metric value for the set of trees that have been trained thus far.
 fn compute_early_stopping_metric(
 	task: &Task,
-	trees: &[SingleTree],
+	trees: &[TrainTree],
 	features: ArrayView2<Value>,
 	labels: ColumnView,
 	mut logits: ArrayViewMut2<f32>,
@@ -698,22 +698,22 @@ impl EarlyStoppingMonitor {
 }
 
 /// This function computes feature importances using the "split" method, where a feature's importance is proportional to the number of nodes that use it to split.
-fn compute_feature_importances(trees: &[SingleTree], n_features: usize) -> Vec<f32> {
+fn compute_feature_importances(trees: &[TrainTree], n_features: usize) -> Vec<f32> {
 	let mut feature_importances = vec![0.0; n_features];
 	for tree in trees.iter() {
 		for node in tree.nodes.iter() {
 			match node {
-				SingleTreeNode::Branch(SingleTreeBranchNode {
+				TrainTreeNode::Branch(TrainTreeBranchNode {
 					split:
-						SingleTreeBranchSplit::Continuous(SingleTreeBranchSplitContinuous {
+						TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
 							feature_index,
 							..
 						}),
 					..
 				})
-				| SingleTreeNode::Branch(SingleTreeBranchNode {
+				| TrainTreeNode::Branch(TrainTreeBranchNode {
 					split:
-						SingleTreeBranchSplit::Discrete(SingleTreeBranchSplitDiscrete {
+						TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
 							feature_index,
 							..
 						}),
@@ -721,7 +721,7 @@ fn compute_feature_importances(trees: &[SingleTree], n_features: usize) -> Vec<f
 				}) => {
 					feature_importances[*feature_index] += 1.0;
 				}
-				SingleTreeNode::Leaf(_) => {}
+				TrainTreeNode::Leaf(_) => {}
 			}
 		}
 	}
@@ -733,12 +733,12 @@ fn compute_feature_importances(trees: &[SingleTree], n_features: usize) -> Vec<f
 	feature_importances
 }
 
-fn tree_from_single_tree(tree: SingleTree) -> Tree {
+fn tree_from_train_tree(tree: TrainTree) -> Tree {
 	let nodes = tree
 		.nodes
 		.into_iter()
 		.map(|node| match node {
-			SingleTreeNode::Branch(SingleTreeBranchNode {
+			TrainTreeNode::Branch(TrainTreeBranchNode {
 				left_child_index,
 				right_child_index,
 				split,
@@ -748,7 +748,7 @@ fn tree_from_single_tree(tree: SingleTree) -> Tree {
 				left_child_index: left_child_index.unwrap(),
 				right_child_index: right_child_index.unwrap(),
 				split: match split {
-					SingleTreeBranchSplit::Continuous(SingleTreeBranchSplitContinuous {
+					TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
 						feature_index,
 						invalid_values_direction,
 						split_value,
@@ -758,7 +758,7 @@ fn tree_from_single_tree(tree: SingleTree) -> Tree {
 						split_value,
 						invalid_values_direction,
 					}),
-					SingleTreeBranchSplit::Discrete(SingleTreeBranchSplitDiscrete {
+					TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
 						feature_index,
 						directions,
 						..
@@ -769,7 +769,7 @@ fn tree_from_single_tree(tree: SingleTree) -> Tree {
 				},
 				examples_fraction,
 			}),
-			SingleTreeNode::Leaf(SingleTreeLeafNode {
+			TrainTreeNode::Leaf(TrainTreeLeafNode {
 				value,
 				examples_fraction,
 			}) => Node::Leaf(LeafNode {
@@ -782,41 +782,41 @@ fn tree_from_single_tree(tree: SingleTree) -> Tree {
 }
 
 #[derive(Debug)]
-pub struct SingleTree {
-	pub nodes: Vec<SingleTreeNode>,
+pub struct TrainTree {
+	pub nodes: Vec<TrainTreeNode>,
 }
 
 #[derive(Debug)]
-pub enum SingleTreeNode {
-	Branch(SingleTreeBranchNode),
-	Leaf(SingleTreeLeafNode),
+pub enum TrainTreeNode {
+	Branch(TrainTreeBranchNode),
+	Leaf(TrainTreeLeafNode),
 }
 
-impl SingleTreeNode {
-	pub fn as_branch_mut(&mut self) -> Option<&mut SingleTreeBranchNode> {
+impl TrainTreeNode {
+	pub fn as_branch_mut(&mut self) -> Option<&mut TrainTreeBranchNode> {
 		match self {
-			SingleTreeNode::Branch(s) => Some(s),
+			TrainTreeNode::Branch(s) => Some(s),
 			_ => None,
 		}
 	}
 }
 
 #[derive(Debug)]
-pub struct SingleTreeBranchNode {
+pub struct TrainTreeBranchNode {
 	pub left_child_index: Option<usize>,
 	pub right_child_index: Option<usize>,
-	pub split: SingleTreeBranchSplit,
+	pub split: TrainTreeBranchSplit,
 	pub examples_fraction: f32,
 }
 
 #[derive(Clone, Debug)]
-pub enum SingleTreeBranchSplit {
-	Continuous(SingleTreeBranchSplitContinuous),
-	Discrete(SingleTreeBranchSplitDiscrete),
+pub enum TrainTreeBranchSplit {
+	Continuous(TrainTreeBranchSplitContinuous),
+	Discrete(TrainTreeBranchSplitDiscrete),
 }
 
 #[derive(Clone, Debug)]
-pub struct SingleTreeBranchSplitContinuous {
+pub struct TrainTreeBranchSplitContinuous {
 	pub feature_index: usize,
 	pub split_value: f32,
 	pub bin_index: u8,
@@ -824,13 +824,13 @@ pub struct SingleTreeBranchSplitContinuous {
 }
 
 #[derive(Clone, Debug)]
-pub struct SingleTreeBranchSplitDiscrete {
+pub struct TrainTreeBranchSplitDiscrete {
 	pub feature_index: usize,
 	pub directions: Vec<bool>,
 }
 
 #[derive(Debug)]
-pub struct SingleTreeLeafNode {
+pub struct TrainTreeLeafNode {
 	pub value: f32,
 	pub examples_fraction: f32,
 }
@@ -839,7 +839,7 @@ struct QueueItem {
 	/// Items in the priority queue will be sorted by the gain of the split.
 	pub gain: f32,
 	/// A split describes how the node is split into left and right children.
-	pub split: SingleTreeBranchSplit,
+	pub split: TrainTreeBranchSplit,
 	/// The queue item holds a reference to its parent so that
 	/// it can update the parent's left or right child index
 	/// if the queue item becomes a node added to the tree.
@@ -892,7 +892,7 @@ impl std::cmp::Ord for QueueItem {
 	}
 }
 
-impl SingleTree {
+impl TrainTree {
 	/// Make a prediction for a given example.
 	pub fn predict(&self, features: ArrayView1<tangram_dataframe::Value>) -> f32 {
 		// Start at the root node.
@@ -900,14 +900,14 @@ impl SingleTree {
 		loop {
 			match &self.nodes[node_index] {
 				// We are at a branch, decide whether to send this example to the left or right child.
-				SingleTreeNode::Branch(SingleTreeBranchNode {
+				TrainTreeNode::Branch(TrainTreeBranchNode {
 					left_child_index,
 					right_child_index,
 					split,
 					..
 				}) => match split {
 					// This branch uses a continuous split.
-					SingleTreeBranchSplit::Continuous(SingleTreeBranchSplitContinuous {
+					TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
 						feature_index,
 						split_value,
 						..
@@ -920,7 +920,7 @@ impl SingleTree {
 						};
 					}
 					// This branch uses a discrete split.
-					SingleTreeBranchSplit::Discrete(SingleTreeBranchSplitDiscrete {
+					TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
 						feature_index,
 						directions,
 						..
@@ -939,7 +939,7 @@ impl SingleTree {
 					}
 				},
 				// We made it to a leaf! The prediction is the leaf's value.
-				SingleTreeNode::Leaf(SingleTreeLeafNode { value, .. }) => return *value,
+				TrainTreeNode::Leaf(TrainTreeLeafNode { value, .. }) => return *value,
 			}
 		}
 	}
@@ -984,7 +984,7 @@ impl BinStatsPool {
 	}
 }
 
-/// Trains a single tree.
+/// Train a tree.
 #[allow(clippy::too_many_arguments)]
 pub fn train_tree(
 	binned_features: &[BinnedFeaturesColumn],
@@ -999,9 +999,9 @@ pub fn train_tree(
 	hessians_are_constant: bool,
 	options: &TrainOptions,
 	#[cfg(feature = "timing")] timing: &crate::timing::Timing,
-) -> (SingleTree, Vec<(Range<usize>, f32)>) {
+) -> (TrainTree, Vec<(Range<usize>, f32)>) {
 	// This is the tree returned by this function
-	let mut tree = SingleTree { nodes: Vec::new() };
+	let mut tree = TrainTree { nodes: Vec::new() };
 	// This priority queue stores the potential nodes to split ordered by their gain.
 	let mut queue: BinaryHeap<QueueItem> = BinaryHeap::new();
 	// To update the gradients and hessians we need to make predictions.
@@ -1029,7 +1029,7 @@ pub fn train_tree(
 		|| sum_hessians < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap()
 	{
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
-		let node = SingleTreeNode::Leaf(SingleTreeLeafNode {
+		let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
 			value,
 			examples_fraction: 1.0,
 		});
@@ -1088,7 +1088,7 @@ pub fn train_tree(
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 		let examples_count = examples_index_range.len();
 		leaf_values.push((examples_index_range, value));
-		let node = SingleTreeNode::Leaf(SingleTreeLeafNode {
+		let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
 			value,
 			examples_fraction: examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap(),
 		});
@@ -1125,7 +1125,7 @@ pub fn train_tree(
 			let value =
 				compute_leaf_value(queue_item.sum_gradients, queue_item.sum_hessians, options);
 			let examples_count = queue_item.examples_index_range.len();
-			let node = SingleTreeNode::Leaf(SingleTreeLeafNode {
+			let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
 				value,
 				examples_fraction: examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap(),
 			});
@@ -1143,14 +1143,13 @@ pub fn train_tree(
 			SplitDirection::Right
 		};
 
-		tree.nodes
-			.push(SingleTreeNode::Branch(SingleTreeBranchNode {
-				split: queue_item.split.clone(),
-				left_child_index: None,
-				right_child_index: None,
-				examples_fraction: queue_item.examples_index_range.len().to_f32().unwrap()
-					/ n_examples.to_f32().unwrap(),
-			}));
+		tree.nodes.push(TrainTreeNode::Branch(TrainTreeBranchNode {
+			split: queue_item.split.clone(),
+			left_child_index: None,
+			right_child_index: None,
+			examples_fraction: queue_item.examples_index_range.len().to_f32().unwrap()
+				/ n_examples.to_f32().unwrap(),
+		}));
 
 		// Rearrange the examples index.
 		#[cfg(feature = "timing")]
@@ -1191,7 +1190,7 @@ pub fn train_tree(
 				queue_item.left_sum_hessians,
 				options,
 			);
-			let node = SingleTreeNode::Leaf(SingleTreeLeafNode {
+			let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
 				value,
 				examples_fraction: queue_item.left_n_examples.to_f32().unwrap()
 					/ n_examples.to_f32().unwrap(),
@@ -1216,7 +1215,7 @@ pub fn train_tree(
 				queue_item.right_sum_hessians,
 				options,
 			);
-			let node = SingleTreeNode::Leaf(SingleTreeLeafNode {
+			let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
 				value,
 				examples_fraction: queue_item.right_n_examples.to_f32().unwrap()
 					/ n_examples.to_f32().unwrap(),
@@ -1353,7 +1352,7 @@ pub fn train_tree(
 				let left_child_index = tree.nodes.len();
 				let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 				leaf_values.push((left_examples_index_range, value));
-				let node = SingleTreeNode::Leaf(SingleTreeLeafNode {
+				let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
 					value,
 					examples_fraction: queue_item.left_n_examples.to_f32().unwrap()
 						/ n_examples.to_f32().unwrap(),
@@ -1398,7 +1397,7 @@ pub fn train_tree(
 				let right_child_index = tree.nodes.len();
 				let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 				leaf_values.push((right_examples_index_range, value));
-				let node = SingleTreeNode::Leaf(SingleTreeLeafNode {
+				let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
 					value,
 					examples_fraction: queue_item.right_n_examples.to_f32().unwrap()
 						/ n_examples.to_f32().unwrap(),
@@ -1420,7 +1419,7 @@ pub fn train_tree(
 		}
 	}
 
-	(SingleTree { nodes: tree.nodes }, leaf_values)
+	(TrainTree { nodes: tree.nodes }, leaf_values)
 }
 
 /// Compute the value for a leaf node.

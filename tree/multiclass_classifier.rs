@@ -1,6 +1,6 @@
 use super::{
 	shap,
-	train::{Model, SingleTree},
+	train::{Model, TrainTree},
 	TrainOptions, Tree,
 };
 use itertools::izip;
@@ -108,7 +108,7 @@ impl MulticlassClassifier {
 
 /// This function is used by the common train function to update the logits after each round of trees is trained for multiclass classification.
 pub fn update_logits(
-	trees: &[SingleTree],
+	trees: &[TrainTree],
 	binned_features: ArrayView2<Value>,
 	mut logits: ArrayViewMut2<f32>,
 ) {

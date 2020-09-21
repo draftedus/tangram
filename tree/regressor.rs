@@ -1,6 +1,6 @@
 use super::{
 	shap,
-	train::{Model, SingleTree},
+	train::{Model, TrainTree},
 	TrainOptions, Tree,
 };
 use itertools::izip;
@@ -85,7 +85,7 @@ impl Regressor {
 
 /// This function is used by the common train function to update the logits after each round of trees is trained for regression.
 pub fn update_logits(
-	trees: &[SingleTree],
+	trees: &[TrainTree],
 	features: ArrayView2<Value>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
