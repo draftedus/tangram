@@ -4,30 +4,27 @@ use super::{
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
-// Compute the SHAP value for a single output.
+// Compute the SHAP value for a single example.
 pub fn compute_shap(
 	example: &[tangram_dataframe::Value],
 	trees: ArrayView1<Tree>,
 	bias: f32,
-) -> Vec<f32> {
+	shap_values: &mut [f32],
+) {
 	let n_features = example.len();
-	let mut shap_values =
-		trees
-			.axis_iter(Axis(0))
-			.fold(vec![0.0; n_features + 1], |mut shap_values, tree| {
-				let tree_shap_values = tree_shap(example, tree.into_scalar());
-				for (shap_value, tree_shap_value) in shap_values.iter_mut().zip(tree_shap_values) {
-					*shap_value += tree_shap_value;
-				}
-				shap_values
-			});
+	for tree in trees {
+		let shap_values_for_tree = tree_shap(example, tree);
+		for (shap_value, tree_shap_value) in shap_values.iter_mut().zip(shap_values_for_tree) {
+			*shap_value += tree_shap_value;
+		}
+	}
 	shap_values[n_features] += bias;
 	for tree in trees {
 		shap_values[n_features] += compute_expectation(tree, 0);
 	}
-	shap_values
 }
 
+/// This function, and the helper functions below it, are a direct port from https://github.com/slundberg/shap.
 fn tree_shap(example: &[tangram_dataframe::Value], tree: &Tree) -> Vec<f32> {
 	let n_features = example.len();
 	let mut phi = vec![0.0; n_features + 1];
@@ -49,12 +46,9 @@ fn tree_shap(example: &[tangram_dataframe::Value], tree: &Tree) -> Vec<f32> {
 
 #[derive(Debug, Clone)]
 struct PathItem {
-	// The index of the feature.
 	feature_index: Option<usize>,
 	zero_fraction: f32,
-	/// One fraction is always either 1 or 0 depending on whether this item is on the "hot" path for the example.
 	one_fraction: f32,
-	/// pweight of i-th path element is the permutation weight of the paths with i-1 ones
 	pweight: f32,
 }
 

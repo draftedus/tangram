@@ -1,4 +1,8 @@
-use super::{shap, single, train::Model, TrainOptions, Tree};
+use super::{
+	shap,
+	train::{Model, SingleTree},
+	TrainOptions, Tree,
+};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
@@ -91,12 +95,12 @@ impl MulticlassClassifier {
 				*v = *feature;
 			}
 			for class_index in 0..n_classes {
-				let x = shap::compute_shap(
+				shap::compute_shap(
 					row.as_slice(),
 					trees.column(class_index),
 					biases[class_index],
+					shap_values.row_mut(class_index).as_slice_mut().unwrap(),
 				);
-				shap_values.row_mut(class_index).assign(&Array1::from(x));
 			}
 		}
 	}
@@ -104,7 +108,7 @@ impl MulticlassClassifier {
 
 /// This function is used by the common train function to update the logits after each round of trees is trained for multiclass classification.
 pub fn update_logits(
-	trees: &[single::SingleTree],
+	trees: &[SingleTree],
 	binned_features: ArrayView2<Value>,
 	mut logits: ArrayViewMut2<f32>,
 ) {

@@ -1,4 +1,8 @@
-use super::{shap, single, train::Model, TrainOptions, Tree};
+use super::{
+	shap,
+	train::{Model, SingleTree},
+	TrainOptions, Tree,
+};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -69,15 +73,19 @@ impl Regressor {
 			for (v, feature) in row.iter_mut().zip(features) {
 				*v = *feature;
 			}
-			let x = shap::compute_shap(row.as_slice(), trees, self.bias);
-			shap_values.row_mut(0).assign(&Array1::from(x));
+			shap::compute_shap(
+				row.as_slice(),
+				trees,
+				self.bias,
+				shap_values.row_mut(0).as_slice_mut().unwrap(),
+			);
 		}
 	}
 }
 
 /// This function is used by the common train function to update the logits after each round of trees is trained for regression.
 pub fn update_logits(
-	trees: &[single::SingleTree],
+	trees: &[SingleTree],
 	features: ArrayView2<Value>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {

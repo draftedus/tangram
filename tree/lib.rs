@@ -10,7 +10,6 @@ mod binary_classifier;
 mod multiclass_classifier;
 mod regressor;
 mod shap;
-mod single;
 #[cfg(feature = "timing")]
 mod timing;
 mod train;
@@ -95,7 +94,7 @@ pub struct Tree {
 }
 
 impl Tree {
-	/// Make a prediction for a given example on a trained `Tree`.
+	/// Make a prediction for a single example.
 	pub fn predict(&self, row: &[tangram_dataframe::Value]) -> f32 {
 		// Start at the root node.
 		let mut node_index = 0;
