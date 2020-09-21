@@ -1564,12 +1564,9 @@ impl Into<model::BranchSplitContinuous> for tangram_tree::BranchSplitContinuous 
 
 impl Into<model::BranchSplitDiscrete> for tangram_tree::BranchSplitDiscrete {
 	fn into(self) -> model::BranchSplitDiscrete {
-		let directions: Vec<bool> = (0..self.directions.n)
-			.map(|i| self.directions.get(i).unwrap())
-			.collect();
 		model::BranchSplitDiscrete {
 			feature_index: self.feature_index.to_u64().unwrap(),
-			directions,
+			directions: self.directions,
 		}
 	}
 }
@@ -1738,11 +1735,3 @@ impl Into<model::RegressionComparisonMetric> for RegressionComparisonMetric {
 		}
 	}
 }
-
-// pub fn classification_baseline(labels: &[usize]) -> Option<usize> {
-// 	tangram_metrics::Mode::compute(labels)
-// }
-
-// pub fn regression_baseline(labels: &[f32]) -> Option<f32> {
-// 	tangram_metrics::Mean::compute(labels)
-// }

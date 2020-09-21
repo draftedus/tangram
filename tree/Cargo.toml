@@ -19,6 +19,10 @@ name = "census-tree"
 path = "benchmarks/census.rs"
 
 [[bin]]
+name = "flights-tree"
+path = "benchmarks/flights.rs"
+
+[[bin]]
 name = "heart-disease-tree"
 path = "benchmarks/heart-disease.rs"
 

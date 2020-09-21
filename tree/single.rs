@@ -1,8 +1,6 @@
 use crate::{
-	single,
-	train::{BinInfo, BinStats, BinStatsPool},
-	BinDirections, BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete, LeafNode,
-	Node, SplitDirection, TrainOptions, Tree,
+	single, train::BinningInstructions, BranchNode, BranchSplit, BranchSplitContinuous,
+	BranchSplitDiscrete, LeafNode, Node, SplitDirection, TrainOptions, Tree,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -104,7 +102,7 @@ pub struct SingleTreeBranchSplitContinuous {
 #[derive(Clone, Debug)]
 pub struct SingleTreeBranchSplitDiscrete {
 	pub feature_index: usize,
-	pub directions: BinDirections,
+	pub directions: Vec<bool>,
 	pub invalid_values_direction: SplitDirection,
 }
 
@@ -179,75 +177,6 @@ impl From<SingleTree> for Tree {
 	}
 }
 
-impl Tree {
-	/// Make a prediction for a given example on a trained `Tree`.
-	pub fn predict(&self, row: &[tangram_dataframe::Value]) -> f32 {
-		// Start at the root node.
-		let mut node_index = 0;
-		loop {
-			match &self.nodes[node_index] {
-				// We are at a branch node with a continuous split.
-				Node::Branch(BranchNode {
-					left_child_index,
-					right_child_index,
-					split:
-						BranchSplit::Continuous(BranchSplitContinuous {
-							feature_index,
-							split_value,
-							invalid_values_direction,
-							..
-						}),
-					..
-				}) => {
-					// only number features are split using continuous splits
-					let feature_value = match row[*feature_index] {
-						tangram_dataframe::Value::Number(value) => value,
-						_ => unreachable!(),
-					};
-					// If the feature value is NaN, use the invalid values direction stored at this node to determine whether to go left or right.
-					node_index = if feature_value.is_nan() {
-						match invalid_values_direction {
-							SplitDirection::Left => *left_child_index,
-							SplitDirection::Right => *right_child_index,
-						}
-					} else if feature_value <= *split_value {
-						*left_child_index
-					} else {
-						*right_child_index
-					};
-				}
-				// We are at a branch node with a discrete split.
-				Node::Branch(BranchNode {
-					left_child_index,
-					right_child_index,
-					split:
-						BranchSplit::Discrete(BranchSplitDiscrete {
-							feature_index,
-							directions,
-							..
-						}),
-					..
-				}) => {
-					// only enum features are split using discrete splits
-					let feature_value = match row[*feature_index] {
-						tangram_dataframe::Value::Enum(value) => {
-							value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
-						}
-						_ => unreachable!(),
-					};
-					node_index = if !directions.get(feature_value).unwrap() {
-						*left_child_index
-					} else {
-						*right_child_index
-					};
-				}
-				// We made it to a leaf node! The prediction is just the value at this leaf.
-				Node::Leaf(LeafNode { value, .. }) => return *value,
-			}
-		}
-	}
-}
-
 impl SingleTree {
 	/// Make a prediction for a given example.
 	pub fn predict(&self, features: ArrayView1<tangram_dataframe::Value>) -> f32 {
@@ -283,7 +212,7 @@ impl SingleTree {
 					}) => {
 						let bin_index =
 							if let Some(bin_index) = features[*feature_index].as_enum().unwrap() {
-								bin_index.get().to_u8().unwrap()
+								bin_index.get()
 							} else {
 								0
 							};
@@ -298,6 +227,45 @@ impl SingleTree {
 				SingleTreeNode::Leaf(SingleTreeLeafNode { value, .. }) => return *value,
 			}
 		}
+	}
+}
+
+#[derive(Clone)]
+pub struct BinStats {
+	/// One bin info per feature
+	pub binning_instructions: Vec<BinningInstructions>,
+	/// (n_features)
+	pub entries: Vec<Vec<f64>>,
+}
+
+impl BinStats {
+	pub fn new(binning_instructions: Vec<BinningInstructions>) -> Self {
+		let entries = binning_instructions
+			.iter()
+			.map(|b| vec![0.0; 2 * (b.n_valid_bins() + 1)])
+			.collect();
+		Self {
+			binning_instructions,
+			entries,
+		}
+	}
+}
+
+#[derive(Clone)]
+pub struct BinStatsPool {
+	pub items: Vec<BinStats>,
+}
+
+impl BinStatsPool {
+	pub fn new(size: usize, binning_instructions: &[BinningInstructions]) -> Self {
+		let mut items = Vec::with_capacity(size);
+		for _ in 0..size {
+			items.push(BinStats::new(binning_instructions.to_owned()));
+		}
+		Self { items }
+	}
+	pub fn get(&mut self) -> BinStats {
+		self.items.pop().unwrap()
 	}
 }
 
@@ -775,16 +743,9 @@ pub fn compute_bin_stats_for_root_node(
 	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
 ) {
-	izip!(
-		&mut node_bin_stats.bin_info,
-		&mut node_bin_stats.entries,
-		binned_features.iter(),
-	)
-	.for_each(
-		|(bin_info_for_feature, bin_stats_for_feature, binned_feature_values)| {
-			for entry in
-				&mut bin_stats_for_feature[0..bin_info_for_feature.n_valid_bins() as usize * 2]
-			{
+	izip!(&mut node_bin_stats.entries, binned_features.iter(),).for_each(
+		|(bin_stats_for_feature, binned_feature_values)| {
+			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = 0.0;
 			}
 			if hessians_are_constant {
@@ -862,16 +823,9 @@ pub fn compute_bin_stats_for_non_root_node(
 			ordered_gradients[i] = gradients[examples_index_for_node[i]];
 		}
 	}
-	izip!(
-		&mut node_bin_stats.bin_info,
-		&mut node_bin_stats.entries,
-		binned_features.iter(),
-	)
-	.for_each(
-		|(bin_info_for_feature, bin_stats_for_feature, binned_feature_values)| {
-			for entry in
-				&mut bin_stats_for_feature[0..bin_info_for_feature.n_valid_bins() as usize * 2]
-			{
+	izip!(&mut node_bin_stats.entries, binned_features.iter(),).for_each(
+		|(bin_stats_for_feature, binned_feature_values)| {
+			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = 0.0;
 			}
 			if hessians_are_constant {
@@ -1174,10 +1128,10 @@ fn rearrange_examples_index_serial(
 					let binned_feature = &binned_features[*feature_index];
 					let feature_bin = match binned_feature {
 						BinnedFeaturesColumn::U8(binned_feature) => {
-							binned_feature[examples_index[left]].to_u8().unwrap()
+							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
 						BinnedFeaturesColumn::U16(binned_feature) => {
-							binned_feature[examples_index[left]].to_u8().unwrap()
+							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
 					};
 					if !directions.get(feature_bin).unwrap() {
@@ -1253,10 +1207,10 @@ fn rearrange_examples_index_parallel(
 							let binned_features = &binned_features[*feature_index];
 							let feature_bin = match binned_features {
 								BinnedFeaturesColumn::U8(binned_features) => {
-									binned_features[*example_index].to_u8().unwrap()
+									binned_features[*example_index].to_usize().unwrap()
 								}
 								BinnedFeaturesColumn::U16(binned_features) => {
-									binned_features[*example_index].to_u8().unwrap()
+									binned_features[*example_index].to_usize().unwrap()
 								}
 							};
 							if !directions.get(feature_bin).unwrap() {
@@ -1359,19 +1313,21 @@ fn find_split(
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
 ) -> Option<FindSplitOutput> {
-	izip!(&bin_stats.entries, &bin_stats.bin_info)
+	izip!(&bin_stats.entries, &bin_stats.binning_instructions)
 		.enumerate()
 		.filter_map(|(feature_index, (bin_stats, bin_info))| match bin_info {
-			BinInfo::Number { .. } => find_best_continuous_split_for_feature_left_to_right(
-				feature_index,
-				&bin_info,
-				bin_stats,
-				sum_gradients,
-				sum_hessians,
-				examples_index_range.clone(),
-				options,
-			),
-			BinInfo::Enum { .. } => find_best_discrete_split_for_feature_left_to_right(
+			BinningInstructions::Number { .. } => {
+				find_best_continuous_split_for_feature_left_to_right(
+					feature_index,
+					&bin_info,
+					bin_stats,
+					sum_gradients,
+					sum_hessians,
+					examples_index_range.clone(),
+					options,
+				)
+			}
+			BinningInstructions::Enum { .. } => find_best_discrete_split_for_feature_left_to_right(
 				feature_index,
 				&bin_info,
 				bin_stats,
@@ -1400,9 +1356,9 @@ fn find_split_both(
 	let best: Vec<(Option<FindSplitOutput>, Option<FindSplitOutput>)> =
 		(0..left_bin_stats.entries.len())
 			.map(|feature_index| {
-				let bin_info = &left_bin_stats.bin_info[feature_index];
+				let bin_info = &left_bin_stats.binning_instructions[feature_index];
 				match bin_info {
-					BinInfo::Number { .. } => (
+					BinningInstructions::Number { .. } => (
 						find_best_continuous_split_for_feature_left_to_right(
 							feature_index,
 							bin_info,
@@ -1422,7 +1378,7 @@ fn find_split_both(
 							options,
 						),
 					),
-					BinInfo::Enum { .. } => (
+					BinningInstructions::Enum { .. } => (
 						find_best_discrete_split_for_feature_left_to_right(
 							feature_index,
 							&bin_info,
@@ -1482,7 +1438,7 @@ fn find_split_both(
 /// Find the best split for this feature by iterating over the bins in sorted order, adding bins to the left tree and removing them from the right.
 fn find_best_continuous_split_for_feature_left_to_right(
 	feature_index: usize,
-	bin_info: &BinInfo,
+	bin_info: &BinningInstructions,
 	bin_stats_for_feature: &[f64],
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
@@ -1499,11 +1455,7 @@ fn find_best_continuous_split_for_feature_left_to_right(
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
-	for (bin_index, bin_stats_entry) in bin_stats_for_feature
-		[0..bin_info.n_valid_bins() as usize * 2]
-		.chunks(2)
-		.enumerate()
-	{
+	for (bin_index, bin_stats_entry) in bin_stats_for_feature.chunks(2).enumerate() {
 		let sum_gradients = bin_stats_entry[0];
 		let sum_hessians = bin_stats_entry[1];
 		left_n_examples += (sum_hessians * count_multiplier)
@@ -1561,7 +1513,7 @@ fn find_best_continuous_split_for_feature_left_to_right(
 				feature_index,
 				bin_index: bin_index.to_u8().unwrap(),
 				split_value: match bin_info {
-					BinInfo::Number { thresholds } => {
+					BinningInstructions::Number { thresholds } => {
 						match bin_index.checked_sub(1) {
 							Some(i) => thresholds[i],
 							// its the null bucket
@@ -1607,7 +1559,7 @@ To find the subsets:
 */
 fn find_best_discrete_split_for_feature_left_to_right(
 	feature_index: usize,
-	bin_info: &BinInfo,
+	bin_info: &BinningInstructions,
 	bin_stats_for_feature: &[f64],
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
@@ -1623,20 +1575,21 @@ fn find_best_discrete_split_for_feature_left_to_right(
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
-	let categorical_bin_score = |bin: &[f64]| bin[0] / bin[1];
-	let mut sorted_bin_stats: Vec<(usize, &[f64])> = bin_stats_for_feature
-		[0..bin_info.n_valid_bins() as usize * 2]
-		.chunks(2)
-		.enumerate()
-		.collect();
+	let smoothing_factor = options
+		.smoothing_factor_for_discrete_bin_sorting
+		.to_f64()
+		.unwrap();
+	let categorical_bin_score = |bin: &[f64]| bin[0] / (bin[1] + smoothing_factor);
+	let mut sorted_bin_stats: Vec<(usize, &[f64])> =
+		bin_stats_for_feature.chunks(2).enumerate().collect();
 	sorted_bin_stats.sort_by(|(_, a), (_, b)| {
 		categorical_bin_score(a)
 			.partial_cmp(&categorical_bin_score(b))
 			.unwrap()
 	});
-	let mut directions = BinDirections::new(bin_info.n_valid_bins() + 1, true);
+	let mut directions = vec![true; bin_info.n_valid_bins() + 1];
 	for (bin_index, bin_stats_entry) in sorted_bin_stats.iter() {
-		directions.set(bin_index.to_u8().unwrap(), false);
+		directions[*bin_index] = false;
 		let sum_gradients = bin_stats_entry[0];
 		let sum_hessians = bin_stats_entry[1];
 		left_n_examples += (sum_hessians * count_multiplier)

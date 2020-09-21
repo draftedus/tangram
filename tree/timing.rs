@@ -12,14 +12,13 @@ pub struct Timing {
 	pub compute_feature_importances: TimingDuration,
 	pub sum_gradients_hessians: TimingDuration,
 	pub allocations: TimingDuration,
-	pub training: TimingDuration,
 }
 
 pub struct TimingDuration(AtomicU64);
 
 #[derive(Debug)]
 pub struct BinningTiming {
-	pub compute_bin_info: TimingDuration,
+	pub compute_binning_instructions: TimingDuration,
 	pub compute_binned_features: TimingDuration,
 }
 
@@ -34,7 +33,7 @@ impl Timing {
 	pub fn new() -> Self {
 		Self {
 			binning: BinningTiming {
-				compute_bin_info: TimingDuration::new(),
+				compute_binning_instructions: TimingDuration::new(),
 				compute_binned_features: TimingDuration::new(),
 			},
 			bin_stats: BinStatsTiming {
@@ -44,7 +43,6 @@ impl Timing {
 			},
 			sum_gradients_hessians: TimingDuration::new(),
 			find_split: TimingDuration::new(),
-			training: TimingDuration::new(),
 			rearrange_examples_index: TimingDuration::new(),
 			predict: TimingDuration::new(),
 			compute_feature_importances: TimingDuration::new(),

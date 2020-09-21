@@ -13,7 +13,7 @@ columns: # Specify the subset of columns to train with, excluding the target col
   - name: exercise_st_slope
   - name: fluoroscopy_vessels_colored
   - name: thallium_stress_test
-task: classification # The task can be either regression or classification. If omitted, the task is inferred from the type of the target column: regression for `Number` columns and classification for `Enum` columns.
+task: classification # The task can be either regression or classification. If omitted, the task is inferred from the type of the target column: regression for number columns and classification for enum columns.
 model_comparison_metric: auc # Specify the metric with which to choose the best model. The options are, for regression: `rmse`, for binary classification: `accuracy`, `auc`, or `f1score`, for multiclass classification: `accuracy`.
 train_test_split:
   train: 0.8 # The percent of the dataset that will be used to train each model.

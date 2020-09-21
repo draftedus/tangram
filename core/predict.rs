@@ -980,12 +980,9 @@ impl TryInto<tangram_tree::BranchSplit> for model::BranchSplit {
 			)),
 			Self::Discrete(s) => {
 				let value_directions = s.directions;
-				let mut directions = tangram_tree::BinDirections::new(
-					value_directions.len().to_u8().unwrap(),
-					false,
-				);
+				let mut directions = vec![false; value_directions.len()];
 				for (i, value) in value_directions.iter().enumerate() {
-					directions.set(i.to_u8().unwrap(), *value);
+					directions[i] = *value;
 				}
 				Ok(tangram_tree::BranchSplit::Discrete(
 					tangram_tree::BranchSplitDiscrete {

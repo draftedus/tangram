@@ -75,7 +75,7 @@ impl Regressor {
 	}
 }
 
-/// This function is used by the common train function to implement the update of logits after each round is trained for regression.
+/// This function is used by the common train function to update the logits after each round of trees is trained for regression.
 pub fn update_logits(
 	trees: &[single::SingleTree],
 	features: ArrayView2<Value>,

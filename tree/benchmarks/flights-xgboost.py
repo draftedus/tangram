@@ -9,9 +9,6 @@ import xgboost as xgb
 path_train = 'data/flights-1m.csv'
 path_test = 'data/flights-test.csv'
 target = "dep_delayed_15min"
-nrows_train = 1_000_000
-nrows_test = 100_000
-
 data_train = pd.read_csv(
 	path_train,
 	dtype={
@@ -51,7 +48,6 @@ data_test = pd.read_csv(
 	}
 })
 data = pd.get_dummies(pd.concat([data_train, data_test]))
-
 features = data.loc[:, data.columns != target]
 labels = data[target]
 (features_train, features_test, labels_train, labels_test) = train_test_split(

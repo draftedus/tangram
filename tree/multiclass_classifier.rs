@@ -102,7 +102,7 @@ impl MulticlassClassifier {
 	}
 }
 
-/// This function is used by the common train function to update the logits after each tree is trained for multiclass classification.
+/// This function is used by the common train function to update the logits after each round of trees is trained for multiclass classification.
 pub fn update_logits(
 	trees: &[single::SingleTree],
 	binned_features: ArrayView2<Value>,
