@@ -116,7 +116,7 @@ pub fn update_logits(
 	let logits_rows = logits.gencolumns_mut().into_iter();
 	for (features, mut logits) in features_rows.zip(logits_rows) {
 		for (logit, tree) in logits.iter_mut().zip(trees.iter()) {
-			*logit += tree.predict(features);
+			*logit += tree.predict(features.as_slice().unwrap());
 		}
 	}
 }

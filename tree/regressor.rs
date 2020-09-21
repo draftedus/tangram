@@ -91,7 +91,7 @@ pub fn update_logits(
 ) {
 	for (prediction, features) in izip!(predictions.row_mut(0), features.genrows()) {
 		for tree in trees {
-			*prediction += tree.predict(features);
+			*prediction += tree.predict(features.as_slice().unwrap());
 		}
 	}
 }

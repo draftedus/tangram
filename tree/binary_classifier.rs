@@ -102,7 +102,7 @@ pub fn update_logits(
 ) {
 	for tree in trees {
 		for (logit, features) in logits.iter_mut().zip(binned_features.genrows()) {
-			*logit += tree.predict(features);
+			*logit += tree.predict(features.as_slice().unwrap());
 		}
 	}
 }

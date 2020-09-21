@@ -1,4 +1,4 @@
-use super::{train_tree::TrainTree, Task};
+use super::{tree::TrainTree, Task};
 use ndarray::prelude::*;
 use tangram_dataframe::*;
 

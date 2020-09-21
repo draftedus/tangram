@@ -213,7 +213,7 @@ pub struct BranchSplitContinuous {
 	pub invalid_values_direction: SplitDirection,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SplitDirection {
 	Left,
 	Right,

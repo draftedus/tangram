@@ -3,8 +3,8 @@ use self::{
 	bin_stats::BinStatsPool,
 	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
 	feature_importances::compute_feature_importances,
-	train_tree::{
-		train_tree, TrainTreeBranchNode, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
+	tree::{
+		TrainTreeBranchNode, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
 		TrainTreeBranchSplitDiscrete, TrainTreeLeafNode, TrainTreeNode,
 	},
 };
@@ -26,9 +26,9 @@ mod early_stopping;
 mod examples_index;
 mod feature_importances;
 mod split;
-mod train_tree;
+mod tree;
 
-pub use self::train_tree::TrainTree;
+pub use self::tree::TrainTree;
 
 /// This enum is used by the common `train` function below to customize the training code slightly for each task.
 #[derive(Debug)]
@@ -258,7 +258,7 @@ pub fn train(
 					*value = index;
 				}
 				// Train the tree.
-				let (tree, leaf_values) = train_tree(
+				let (tree, leaf_values) = self::tree::train(
 					binned_features.0.as_slice(),
 					gradients.as_slice().unwrap(),
 					hessians.as_slice().unwrap(),

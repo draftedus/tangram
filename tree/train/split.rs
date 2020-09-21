@@ -359,6 +359,7 @@ fn find_best_discrete_split_for_feature_left_to_right(
 				SplitDirection::Right
 			}
 		};
+		directions[0] = invalid_values_direction != SplitDirection::Left;
 		let split = TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
 			feature_index,
 			directions: directions.clone(),

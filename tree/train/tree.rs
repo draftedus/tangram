@@ -8,7 +8,6 @@ use super::{
 	split::{choose_best_split, choose_best_split_both},
 };
 use crate::{SplitDirection, TrainOptions};
-use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
 
@@ -19,7 +18,7 @@ pub struct TrainTree {
 
 impl TrainTree {
 	/// Make a prediction for a given example.
-	pub fn predict(&self, features: ArrayView1<tangram_dataframe::Value>) -> f32 {
+	pub fn predict(&self, features: &[tangram_dataframe::Value]) -> f32 {
 		// Start at the root node.
 		let mut node_index = 0;
 		loop {
@@ -178,7 +177,7 @@ impl std::cmp::Ord for QueueItem {
 
 /// Train a tree.
 #[allow(clippy::too_many_arguments)]
-pub fn train_tree(
+pub fn train(
 	binned_features: &[BinnedFeaturesColumn],
 	gradients: &[f32],
 	hessians: &[f32],
@@ -326,14 +325,6 @@ pub fn train_tree(
 			bin_stats_pool.items.push(queue_item.bin_stats);
 			continue;
 		}
-
-		// TODO
-		// Add the current node to the tree. The missing values direction is the direction with more training examples. TODO: This is the naive implementation that does not compute whether sending missing values to the left subtree or right subtree results in a higher gain. Instead, we simply send missing values in the direction where the majority of training examples go.
-		let missing_values_direction = if queue_item.left_n_examples > queue_item.right_n_examples {
-			SplitDirection::Left
-		} else {
-			SplitDirection::Right
-		};
 
 		tree.nodes.push(TrainTreeNode::Branch(TrainTreeBranchNode {
 			split: queue_item.split.clone(),
