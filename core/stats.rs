@@ -549,32 +549,4 @@ impl ColumnStatsOutput {
 			Self::Text(value) => &value.column_name,
 		}
 	}
-
-	pub fn as_unknown(&self) -> Option<&UnknownColumnStatsOutput> {
-		match self {
-			Self::Unknown(value) => Some(value),
-			_ => None,
-		}
-	}
-
-	pub fn as_number(&self) -> Option<&NumberColumnStatsOutput> {
-		match self {
-			Self::Number(value) => Some(value),
-			_ => None,
-		}
-	}
-
-	pub fn as_enum(&self) -> Option<&EnumColumnStatsOutput> {
-		match self {
-			Self::Enum(value) => Some(value),
-			_ => None,
-		}
-	}
-
-	pub fn as_text(&self) -> Option<&TextColumnStatsOutput> {
-		match self {
-			Self::Text(value) => Some(value),
-			_ => None,
-		}
-	}
 }
