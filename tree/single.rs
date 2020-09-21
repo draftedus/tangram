@@ -1315,28 +1315,32 @@ fn find_split(
 ) -> Option<FindSplitOutput> {
 	izip!(&bin_stats.entries, &bin_stats.binning_instructions)
 		.enumerate()
-		.filter_map(|(feature_index, (bin_stats, bin_info))| match bin_info {
-			BinningInstructions::Number { .. } => {
-				find_best_continuous_split_for_feature_left_to_right(
-					feature_index,
-					&bin_info,
-					bin_stats,
-					sum_gradients,
-					sum_hessians,
-					examples_index_range.clone(),
-					options,
-				)
-			}
-			BinningInstructions::Enum { .. } => find_best_discrete_split_for_feature_left_to_right(
-				feature_index,
-				&bin_info,
-				bin_stats,
-				sum_gradients,
-				sum_hessians,
-				examples_index_range.clone(),
-				options,
-			),
-		})
+		.filter_map(
+			|(feature_index, (bin_stats, binning_instructions))| match binning_instructions {
+				BinningInstructions::Number { .. } => {
+					find_best_continuous_split_for_feature_left_to_right(
+						feature_index,
+						&binning_instructions,
+						bin_stats,
+						sum_gradients,
+						sum_hessians,
+						examples_index_range.clone(),
+						options,
+					)
+				}
+				BinningInstructions::Enum { .. } => {
+					find_best_discrete_split_for_feature_left_to_right(
+						feature_index,
+						&binning_instructions,
+						bin_stats,
+						sum_gradients,
+						sum_hessians,
+						examples_index_range.clone(),
+						options,
+					)
+				}
+			},
+		)
 		.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 }
 
@@ -1356,12 +1360,12 @@ fn find_split_both(
 	let best: Vec<(Option<FindSplitOutput>, Option<FindSplitOutput>)> =
 		(0..left_bin_stats.entries.len())
 			.map(|feature_index| {
-				let bin_info = &left_bin_stats.binning_instructions[feature_index];
-				match bin_info {
+				let binning_instructions = &left_bin_stats.binning_instructions[feature_index];
+				match binning_instructions {
 					BinningInstructions::Number { .. } => (
 						find_best_continuous_split_for_feature_left_to_right(
 							feature_index,
-							bin_info,
+							binning_instructions,
 							&left_bin_stats.entries[feature_index],
 							left_sum_gradients,
 							left_sum_hessians,
@@ -1370,7 +1374,7 @@ fn find_split_both(
 						),
 						find_best_continuous_split_for_feature_left_to_right(
 							feature_index,
-							bin_info,
+							binning_instructions,
 							&right_bin_stats.entries[feature_index],
 							right_sum_gradients,
 							right_sum_hessians,
@@ -1381,7 +1385,7 @@ fn find_split_both(
 					BinningInstructions::Enum { .. } => (
 						find_best_discrete_split_for_feature_left_to_right(
 							feature_index,
-							&bin_info,
+							&binning_instructions,
 							&left_bin_stats.entries[feature_index],
 							left_sum_gradients,
 							left_sum_hessians,
@@ -1390,7 +1394,7 @@ fn find_split_both(
 						),
 						find_best_discrete_split_for_feature_left_to_right(
 							feature_index,
-							&bin_info,
+							&binning_instructions,
 							&right_bin_stats.entries[feature_index],
 							right_sum_gradients,
 							right_sum_hessians,
@@ -1438,7 +1442,7 @@ fn find_split_both(
 /// Find the best split for this feature by iterating over the bins in sorted order, adding bins to the left tree and removing them from the right.
 fn find_best_continuous_split_for_feature_left_to_right(
 	feature_index: usize,
-	bin_info: &BinningInstructions,
+	binning_instructions: &BinningInstructions,
 	bin_stats_for_feature: &[f64],
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
@@ -1512,7 +1516,7 @@ fn find_best_continuous_split_for_feature_left_to_right(
 			single::SingleTreeBranchSplit::Continuous(single::SingleTreeBranchSplitContinuous {
 				feature_index,
 				bin_index: bin_index.to_u8().unwrap(),
-				split_value: match bin_info {
+				split_value: match binning_instructions {
 					BinningInstructions::Number { thresholds } => {
 						match bin_index.checked_sub(1) {
 							Some(i) => thresholds[i],
@@ -1559,7 +1563,7 @@ To find the subsets:
 */
 fn find_best_discrete_split_for_feature_left_to_right(
 	feature_index: usize,
-	bin_info: &BinningInstructions,
+	binning_instructions: &BinningInstructions,
 	bin_stats_for_feature: &[f64],
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
@@ -1587,7 +1591,7 @@ fn find_best_discrete_split_for_feature_left_to_right(
 			.partial_cmp(&categorical_bin_score(b))
 			.unwrap()
 	});
-	let mut directions = vec![true; bin_info.n_valid_bins() + 1];
+	let mut directions = vec![true; binning_instructions.n_valid_bins() + 1];
 	for (bin_index, bin_stats_entry) in sorted_bin_stats.iter() {
 		directions[*bin_index] = false;
 		let sum_gradients = bin_stats_entry[0];
