@@ -4,8 +4,8 @@ use self::{
 	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
 	feature_importances::compute_feature_importances,
 	tree::{
-		TrainTreeBranchNode, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
-		TrainTreeBranchSplitDiscrete, TrainTreeLeafNode, TrainTreeNode,
+		TrainBranchNode, TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
+		TrainLeafNode, TrainNode,
 	},
 };
 use crate::{
@@ -417,7 +417,7 @@ fn tree_from_train_tree(tree: TrainTree) -> Tree {
 		.nodes
 		.into_iter()
 		.map(|node| match node {
-			TrainTreeNode::Branch(TrainTreeBranchNode {
+			TrainNode::Branch(TrainBranchNode {
 				left_child_index,
 				right_child_index,
 				split,
@@ -427,7 +427,7 @@ fn tree_from_train_tree(tree: TrainTree) -> Tree {
 				left_child_index: left_child_index.unwrap(),
 				right_child_index: right_child_index.unwrap(),
 				split: match split {
-					TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
+					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
 						feature_index,
 						invalid_values_direction,
 						split_value,
@@ -437,7 +437,7 @@ fn tree_from_train_tree(tree: TrainTree) -> Tree {
 						split_value,
 						invalid_values_direction,
 					}),
-					TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
+					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 						feature_index,
 						directions,
 						..
@@ -448,7 +448,7 @@ fn tree_from_train_tree(tree: TrainTree) -> Tree {
 				},
 				examples_fraction,
 			}),
-			TrainTreeNode::Leaf(TrainTreeLeafNode {
+			TrainNode::Leaf(TrainLeafNode {
 				value,
 				examples_fraction,
 			}) => Node::Leaf(LeafNode {

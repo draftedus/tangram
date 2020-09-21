@@ -6,25 +6,21 @@ pub fn compute_feature_importances(trees: &[TrainTree], n_features: usize) -> Ve
 	for tree in trees.iter() {
 		for node in tree.nodes.iter() {
 			match node {
-				TrainTreeNode::Branch(TrainTreeBranchNode {
+				TrainNode::Branch(TrainBranchNode {
 					split:
-						TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
-							feature_index,
-							..
+						TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+							feature_index, ..
 						}),
 					..
 				})
-				| TrainTreeNode::Branch(TrainTreeBranchNode {
+				| TrainNode::Branch(TrainBranchNode {
 					split:
-						TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
-							feature_index,
-							..
-						}),
+						TrainBranchSplit::Discrete(TrainBranchSplitDiscrete { feature_index, .. }),
 					..
 				}) => {
 					feature_importances[*feature_index] += 1.0;
 				}
-				TrainTreeNode::Leaf(_) => {}
+				TrainNode::Leaf(_) => {}
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 use super::{
-	bin::BinnedFeaturesColumn, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
-	TrainTreeBranchSplitDiscrete,
+	bin::BinnedFeaturesColumn, TrainBranchSplit, TrainBranchSplitContinuous,
+	TrainBranchSplitDiscrete,
 };
 use crate::SplitDirection;
 use itertools::izip;
@@ -16,7 +16,7 @@ are contained by the right node.
 */
 pub fn rearrange_examples_index(
 	binned_features: &[BinnedFeaturesColumn],
-	split: &TrainTreeBranchSplit,
+	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left: &mut [usize],
 	examples_index_right: &mut [usize],
@@ -37,7 +37,7 @@ pub fn rearrange_examples_index(
 /// Rearrange the examples index on a single thread.
 fn rearrange_examples_index_serial(
 	binned_features: &[BinnedFeaturesColumn],
-	split: &TrainTreeBranchSplit,
+	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let start = 0;
@@ -48,7 +48,7 @@ fn rearrange_examples_index_serial(
 	while left < right {
 		let direction = {
 			match &split {
-				TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
+				TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
 					feature_index,
 					bin_index,
 					..
@@ -68,7 +68,7 @@ fn rearrange_examples_index_serial(
 						SplitDirection::Right
 					}
 				}
-				TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
+				TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 					feature_index,
 					directions,
 					..
@@ -107,7 +107,7 @@ fn rearrange_examples_index_serial(
 /// Rearrange the examples index with multiple threads.
 fn rearrange_examples_index_parallel(
 	binned_features: &[BinnedFeaturesColumn],
-	split: &TrainTreeBranchSplit,
+	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left: &mut [usize],
 	examples_index_right: &mut [usize],
@@ -127,7 +127,7 @@ fn rearrange_examples_index_parallel(
 			for example_index in examples_index {
 				let direction = {
 					match &split {
-						TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
+						TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
 							feature_index,
 							bin_index,
 							..
@@ -147,7 +147,7 @@ fn rearrange_examples_index_parallel(
 								SplitDirection::Right
 							}
 						}
-						TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
+						TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 							feature_index,
 							directions,
 							..

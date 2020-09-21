@@ -13,7 +13,7 @@ use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
 
 #[derive(Debug)]
 pub struct TrainTree {
-	pub nodes: Vec<TrainTreeNode>,
+	pub nodes: Vec<TrainNode>,
 }
 
 impl TrainTree {
@@ -24,14 +24,14 @@ impl TrainTree {
 		loop {
 			match &self.nodes[node_index] {
 				// We are at a branch, decide whether to send this example to the left or right child.
-				TrainTreeNode::Branch(TrainTreeBranchNode {
+				TrainNode::Branch(TrainBranchNode {
 					left_child_index,
 					right_child_index,
 					split,
 					..
 				}) => match split {
 					// This branch uses a continuous split.
-					TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
+					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
 						feature_index,
 						split_value,
 						..
@@ -44,7 +44,7 @@ impl TrainTree {
 						};
 					}
 					// This branch uses a discrete split.
-					TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
+					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 						feature_index,
 						directions,
 						..
@@ -63,43 +63,43 @@ impl TrainTree {
 					}
 				},
 				// We made it to a leaf! The prediction is the leaf's value.
-				TrainTreeNode::Leaf(TrainTreeLeafNode { value, .. }) => return *value,
+				TrainNode::Leaf(TrainLeafNode { value, .. }) => return *value,
 			}
 		}
 	}
 }
 
 #[derive(Debug)]
-pub enum TrainTreeNode {
-	Branch(TrainTreeBranchNode),
-	Leaf(TrainTreeLeafNode),
+pub enum TrainNode {
+	Branch(TrainBranchNode),
+	Leaf(TrainLeafNode),
 }
 
-impl TrainTreeNode {
-	pub fn as_branch_mut(&mut self) -> Option<&mut TrainTreeBranchNode> {
+impl TrainNode {
+	pub fn as_branch_mut(&mut self) -> Option<&mut TrainBranchNode> {
 		match self {
-			TrainTreeNode::Branch(s) => Some(s),
+			TrainNode::Branch(s) => Some(s),
 			_ => None,
 		}
 	}
 }
 
 #[derive(Debug)]
-pub struct TrainTreeBranchNode {
+pub struct TrainBranchNode {
 	pub left_child_index: Option<usize>,
 	pub right_child_index: Option<usize>,
-	pub split: TrainTreeBranchSplit,
+	pub split: TrainBranchSplit,
 	pub examples_fraction: f32,
 }
 
 #[derive(Clone, Debug)]
-pub enum TrainTreeBranchSplit {
-	Continuous(TrainTreeBranchSplitContinuous),
-	Discrete(TrainTreeBranchSplitDiscrete),
+pub enum TrainBranchSplit {
+	Continuous(TrainBranchSplitContinuous),
+	Discrete(TrainBranchSplitDiscrete),
 }
 
 #[derive(Clone, Debug)]
-pub struct TrainTreeBranchSplitContinuous {
+pub struct TrainBranchSplitContinuous {
 	pub feature_index: usize,
 	pub split_value: f32,
 	pub bin_index: u8,
@@ -107,13 +107,13 @@ pub struct TrainTreeBranchSplitContinuous {
 }
 
 #[derive(Clone, Debug)]
-pub struct TrainTreeBranchSplitDiscrete {
+pub struct TrainBranchSplitDiscrete {
 	pub feature_index: usize,
 	pub directions: Vec<bool>,
 }
 
 #[derive(Debug)]
-pub struct TrainTreeLeafNode {
+pub struct TrainLeafNode {
 	pub value: f32,
 	pub examples_fraction: f32,
 }
@@ -122,7 +122,7 @@ struct QueueItem {
 	/// Items in the priority queue will be sorted by the gain of the split.
 	pub gain: f32,
 	/// A split describes how the node is split into left and right children.
-	pub split: TrainTreeBranchSplit,
+	pub split: TrainBranchSplit,
 	/// The queue item holds a reference to its parent so that
 	/// it can update the parent's left or right child index
 	/// if the queue item becomes a node added to the tree.
@@ -220,7 +220,7 @@ pub fn train(
 		|| sum_hessians < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap()
 	{
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
-		let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
+		let node = TrainNode::Leaf(TrainLeafNode {
 			value,
 			examples_fraction: 1.0,
 		});
@@ -279,7 +279,7 @@ pub fn train(
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 		let examples_count = examples_index_range.len();
 		leaf_values.push((examples_index_range, value));
-		let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
+		let node = TrainNode::Leaf(TrainLeafNode {
 			value,
 			examples_fraction: examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap(),
 		});
@@ -316,7 +316,7 @@ pub fn train(
 			let value =
 				compute_leaf_value(queue_item.sum_gradients, queue_item.sum_hessians, options);
 			let examples_count = queue_item.examples_index_range.len();
-			let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
+			let node = TrainNode::Leaf(TrainLeafNode {
 				value,
 				examples_fraction: examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap(),
 			});
@@ -326,7 +326,7 @@ pub fn train(
 			continue;
 		}
 
-		tree.nodes.push(TrainTreeNode::Branch(TrainTreeBranchNode {
+		tree.nodes.push(TrainNode::Branch(TrainBranchNode {
 			split: queue_item.split.clone(),
 			left_child_index: None,
 			right_child_index: None,
@@ -373,7 +373,7 @@ pub fn train(
 				queue_item.left_sum_hessians,
 				options,
 			);
-			let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
+			let node = TrainNode::Leaf(TrainLeafNode {
 				value,
 				examples_fraction: queue_item.left_n_examples.to_f32().unwrap()
 					/ n_examples.to_f32().unwrap(),
@@ -398,7 +398,7 @@ pub fn train(
 				queue_item.right_sum_hessians,
 				options,
 			);
-			let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
+			let node = TrainNode::Leaf(TrainLeafNode {
 				value,
 				examples_fraction: queue_item.right_n_examples.to_f32().unwrap()
 					/ n_examples.to_f32().unwrap(),
@@ -535,7 +535,7 @@ pub fn train(
 				let left_child_index = tree.nodes.len();
 				let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 				leaf_values.push((left_examples_index_range, value));
-				let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
+				let node = TrainNode::Leaf(TrainLeafNode {
 					value,
 					examples_fraction: queue_item.left_n_examples.to_f32().unwrap()
 						/ n_examples.to_f32().unwrap(),
@@ -580,7 +580,7 @@ pub fn train(
 				let right_child_index = tree.nodes.len();
 				let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 				leaf_values.push((right_examples_index_range, value));
-				let node = TrainTreeNode::Leaf(TrainTreeLeafNode {
+				let node = TrainNode::Leaf(TrainLeafNode {
 					value,
 					examples_fraction: queue_item.right_n_examples.to_f32().unwrap()
 						/ n_examples.to_f32().unwrap(),
