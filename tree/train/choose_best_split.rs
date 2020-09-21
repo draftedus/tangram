@@ -1,5 +1,5 @@
 use super::{
-	BinStats, BinningInstructions, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
+	bin_stats::BinStats, BinningInstructions, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
 	TrainTreeBranchSplitDiscrete,
 };
 use crate::{SplitDirection, TrainOptions};
