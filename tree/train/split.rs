@@ -346,19 +346,6 @@ fn find_best_discrete_split_for_feature_left_to_right(
 			negative_loss_parent_node,
 			l2_regularization,
 		);
-		// Figure out whether invalid values should go to the left subtree or to the right when predicting depending on whether the training dataset contains missing values or not.
-		// let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
-		// 	// there are missing values in the training dataset and they have been added to the left subtree
-		// 	SplitDirection::Left
-		// } else {
-		// 	// there are no missing values in the training dataset. missing values should go to the branch with more examples
-		// 	if left_n_examples >= right_n_examples {
-		// 		SplitDirection::Left
-		// 	} else {
-		// 		SplitDirection::Right
-		// 	}
-		// };
-		// directions[0] = invalid_values_direction;
 		let split = TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 			feature_index,
 			directions: directions.clone(),
