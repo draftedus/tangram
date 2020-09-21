@@ -1,4 +1,4 @@
-use super::{BinnedFeaturesColumn, BinningInstructions};
+use super::bin::{BinnedFeaturesColumn, BinningInstructions};
 use itertools::izip;
 use num_traits::ToPrimitive;
 

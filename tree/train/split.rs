@@ -1,6 +1,6 @@
 use super::{
-	bin_stats::BinStats, BinningInstructions, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
-	TrainTreeBranchSplitDiscrete,
+	bin::BinningInstructions, bin_stats::BinStats, TrainTreeBranchSplit,
+	TrainTreeBranchSplitContinuous, TrainTreeBranchSplitDiscrete,
 };
 use crate::{SplitDirection, TrainOptions};
 use itertools::izip;

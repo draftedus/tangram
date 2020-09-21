@@ -1,5 +1,8 @@
 use self::{
+	bin::{compute_binned_features, compute_binning_instructions},
 	bin_stats::BinStatsPool,
+	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
+	feature_importances::compute_feature_importances,
 	train_tree::{
 		train_tree, TrainTreeBranchNode, TrainTreeBranchSplit, TrainTreeBranchSplitContinuous,
 		TrainTreeBranchSplitDiscrete, TrainTreeLeafNode, TrainTreeNode,
@@ -10,18 +13,19 @@ use crate::{
 	regressor::Regressor, BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete,
 	LeafNode, Node, TrainOptions, TrainProgress, Tree,
 };
-use itertools::{izip, Itertools};
+use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use std::{cmp::Ordering, collections::BTreeMap};
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
-use tangram_finite::Finite;
 use tangram_progress::ProgressCounter;
 
+mod bin;
 mod bin_stats;
-mod choose_best_split;
-mod rearrange_examples_index;
+mod early_stopping;
+mod examples_index;
+mod feature_importances;
+mod split;
 mod train_tree;
 
 pub use self::train_tree::TrainTree;
@@ -255,7 +259,7 @@ pub fn train(
 				}
 				// Train the tree.
 				let (tree, leaf_values) = train_tree(
-					binned_features.as_slice(),
+					binned_features.0.as_slice(),
 					gradients.as_slice().unwrap(),
 					hessians.as_slice().unwrap(),
 					ordered_gradients.as_slice_mut().unwrap(),
@@ -384,235 +388,6 @@ pub fn train(
 	}
 }
 
-/*
-This struct specifies how to bin a feature.
-
-## Number
-Number features have the first bin reserved for invalid values, and after that feature values are binned by comparing them with a set of thresholds. For example, given the thresholds `[0.5, 1.5, 2]`, the bins will be:
-0. invalid values
-1. (-infinity, 0.5]
-2. (0.5, 1.5]
-3. (1.5, 2]
-4. (2, infinity)
-
-## Enum
-Enum features have one bin for each enum option. For example, gives the options `["A", "B", "C"]`, the bins will be:
-0. invalid values
-1. "A"
-2. "B"
-3. "C"
-*/
-#[derive(Clone, Debug)]
-pub enum BinningInstructions {
-	Number { thresholds: Vec<f32> },
-	Enum { n_options: usize },
-}
-
-impl BinningInstructions {
-	pub fn n_valid_bins(&self) -> usize {
-		match self {
-			Self::Number { thresholds } => thresholds.len() + 1,
-			Self::Enum { n_options } => *n_options,
-		}
-	}
-}
-
-/// Compute the binning instructions for each column in `features`.
-pub fn compute_binning_instructions(
-	features: &DataFrameView,
-	options: &TrainOptions,
-) -> Vec<BinningInstructions> {
-	features
-		.columns
-		.iter()
-		.map(|column| match column.view() {
-			ColumnView::Number(column) => {
-				compute_binning_instructions_for_number_feature(column, &options)
-			}
-			ColumnView::Enum(column) => BinningInstructions::Enum {
-				n_options: column.options.len(),
-			},
-			_ => unreachable!(),
-		})
-		.collect()
-}
-
-/// Compute the binning instructions for a number feature.
-fn compute_binning_instructions_for_number_feature(
-	column: NumberColumnView,
-	options: &TrainOptions,
-) -> BinningInstructions {
-	// Create a histogram of values in the number feature.
-	let mut histogram: BTreeMap<Finite<f32>, usize> = BTreeMap::new();
-	let mut histogram_values_count = 0;
-	for value in &column.data[0..column
-		.data
-		.len()
-		.min(options.max_examples_for_computing_bin_thresholds)]
-	{
-		if let Ok(value) = Finite::new(*value) {
-			*histogram.entry(value).or_insert(0) += 1;
-			histogram_values_count += 1;
-		}
-	}
-	// If the number of unique values is less than `max_valid_bins_for_number_features`, then create one bin per unique value. Otherwise, create bins at quantiles.
-	let thresholds = if histogram.len()
-		< options
-			.max_valid_bins_for_number_features
-			.to_usize()
-			.unwrap()
-	{
-		histogram
-			.keys()
-			.tuple_windows()
-			.map(|(a, b)| (a.get() + b.get()) / 2.0)
-			.collect()
-	} else {
-		compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_histogram(
-			histogram,
-			histogram_values_count,
-			options,
-		)
-	};
-	BinningInstructions::Number { thresholds }
-}
-
-/// Compute the binning instruction thresholds for a number feature as quantiles from the histogram of its values.
-fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_histogram(
-	histogram: BTreeMap<Finite<f32>, usize>,
-	histogram_values_count: usize,
-	options: &TrainOptions,
-) -> Vec<f32> {
-	let total_values_count = histogram_values_count.to_f32().unwrap();
-	let quantiles: Vec<f32> = (1..options
-		.max_valid_bins_for_number_features
-		.to_usize()
-		.unwrap())
-		.map(|i| i.to_f32().unwrap() / options.max_valid_bins_for_number_features.to_f32().unwrap())
-		.collect();
-	let quantile_indexes: Vec<usize> = quantiles
-		.iter()
-		.map(|q| ((total_values_count - 1.0) * q).trunc().to_usize().unwrap())
-		.collect();
-	let quantile_fracts: Vec<f32> = quantiles
-		.iter()
-		.map(|q| ((total_values_count - 1.0) * q).fract())
-		.collect();
-	let mut quantiles: Vec<Option<f32>> = vec![None; quantiles.len()];
-	let mut current_count: usize = 0;
-	let mut iter = histogram.iter().peekable();
-	while let Some((value, count)) = iter.next() {
-		let value = value.get();
-		current_count += count;
-		let quantiles_iter = quantiles
-			.iter_mut()
-			.zip(quantile_indexes.iter().zip(quantile_fracts.iter()))
-			.filter(|(q, (_, _))| q.is_none());
-		for (quantile, (index, fract)) in quantiles_iter {
-			match (current_count - 1).cmp(index) {
-				Ordering::Equal => {
-					if *fract > 0.0 {
-						let next_value = iter.peek().unwrap().0.get();
-						*quantile = Some(value * (1.0 - fract) + next_value * fract);
-					} else {
-						*quantile = Some(value);
-					}
-				}
-				Ordering::Greater => *quantile = Some(value),
-				Ordering::Less => {}
-			}
-		}
-	}
-	quantiles.into_iter().map(|q| q.unwrap()).collect()
-}
-
-pub enum BinnedFeaturesColumn {
-	U8(Vec<u8>),
-	U16(Vec<u16>),
-}
-
-/// Compute the binned features based on the binning instructions.
-pub fn compute_binned_features(
-	features: &DataFrameView,
-	binning_instructions: &[BinningInstructions],
-	progress: &(dyn Fn() + Sync),
-) -> Vec<BinnedFeaturesColumn> {
-	izip!(&features.columns, binning_instructions)
-		.map(|(feature, binning_instructions)| {
-			match binning_instructions {
-				BinningInstructions::Number { thresholds } => {
-					let binned_feature = feature
-						.as_number()
-						.unwrap()
-						.data
-						.iter()
-						.map(|feature_value| {
-							// Invalid values go to the first bin.
-							if !feature_value.is_finite() {
-								return 0;
-							}
-							// Use binary search on the thresholds to find the bin for the feature value.
-							thresholds
-								.binary_search_by(|threshold| {
-									threshold.partial_cmp(feature_value).unwrap()
-								})
-								.unwrap_or_else(|bin| bin)
-								.to_u8()
-								.unwrap() + 1
-						})
-						.collect::<Vec<u8>>();
-					progress();
-					BinnedFeaturesColumn::U8(binned_feature)
-				}
-				BinningInstructions::Enum { n_options } => {
-					// TODO
-					if *n_options <= 15 {
-						let binned_feature = feature
-							.as_enum()
-							.unwrap()
-							.data
-							.iter()
-							.map(|feature_value| {
-								feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
-							})
-							.collect::<Vec<u8>>();
-						progress();
-						BinnedFeaturesColumn::U8(binned_feature)
-					} else if *n_options <= 255 {
-						let binned_feature = feature
-							.as_enum()
-							.unwrap()
-							.data
-							.iter()
-							.map(|feature_value| {
-								feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
-							})
-							.collect::<Vec<u8>>();
-						progress();
-						BinnedFeaturesColumn::U8(binned_feature)
-					} else {
-						let binned_feature = feature
-							.as_enum()
-							.unwrap()
-							.data
-							.iter()
-							.map(|feature_value| {
-								feature_value
-									.map(|v| v.get())
-									.unwrap_or(0)
-									.to_u16()
-									.unwrap()
-							})
-							.collect::<Vec<u16>>();
-						progress();
-						BinnedFeaturesColumn::U16(binned_feature)
-					}
-				}
-			}
-		})
-		.collect()
-}
-
 /// Split the feature and labels into train and early stopping datasets, where the early stopping dataset with have `early_stopping_fraction * features.nrows()` rows.
 fn train_early_stopping_split<'features, 'labels>(
 	features: DataFrameView<'features>,
@@ -635,109 +410,6 @@ fn train_early_stopping_split<'features, 'labels>(
 		features_early_stopping,
 		labels_early_stopping,
 	)
-}
-
-/// Compute the early stopping metric value for the set of trees that have been trained thus far.
-fn compute_early_stopping_metric(
-	task: &Task,
-	trees: &[TrainTree],
-	features: ArrayView2<Value>,
-	labels: ColumnView,
-	mut logits: ArrayViewMut2<f32>,
-) -> f32 {
-	match task {
-		Task::Regression => {
-			let labels = labels.as_number().unwrap().data.into();
-			super::regressor::update_logits(trees, features.view(), logits.view_mut());
-			super::regressor::compute_loss(labels, logits.view())
-		}
-		Task::BinaryClassification => {
-			let labels = labels.as_enum().unwrap().data.into();
-			super::binary_classifier::update_logits(trees, features.view(), logits.view_mut());
-			super::binary_classifier::compute_loss(labels, logits.view())
-		}
-		Task::MulticlassClassification { .. } => {
-			let labels = labels.as_enum().unwrap().data.into();
-			super::multiclass_classifier::update_logits(trees, features.view(), logits.view_mut());
-			super::multiclass_classifier::compute_loss(labels, logits.view())
-		}
-	}
-}
-
-#[derive(Clone)]
-struct EarlyStoppingMonitor {
-	tolerance: f32,
-	max_rounds_no_improve: usize,
-	previous_stopping_metric: Option<f32>,
-	num_rounds_no_improve: usize,
-}
-
-impl EarlyStoppingMonitor {
-	/// Create a train stop monitor,
-	pub fn new(tolerance: f32, max_rounds_no_improve: usize) -> Self {
-		EarlyStoppingMonitor {
-			tolerance,
-			max_rounds_no_improve,
-			previous_stopping_metric: None,
-			num_rounds_no_improve: 0,
-		}
-	}
-
-	/// Update with the next epoch's task metrics. Returns true if training should stop.
-	pub fn update(&mut self, value: f32) -> bool {
-		let stopping_metric = value;
-		let result = if let Some(previous_stopping_metric) = self.previous_stopping_metric {
-			if stopping_metric > previous_stopping_metric
-				|| f32::abs(stopping_metric - previous_stopping_metric) < self.tolerance
-			{
-				self.num_rounds_no_improve += 1;
-				self.num_rounds_no_improve >= self.max_rounds_no_improve
-			} else {
-				self.num_rounds_no_improve = 0;
-				false
-			}
-		} else {
-			false
-		};
-		self.previous_stopping_metric = Some(stopping_metric);
-		result
-	}
-}
-
-/// This function computes feature importances using the "split" method, where a feature's importance is proportional to the number of nodes that use it to split.
-fn compute_feature_importances(trees: &[TrainTree], n_features: usize) -> Vec<f32> {
-	let mut feature_importances = vec![0.0; n_features];
-	for tree in trees.iter() {
-		for node in tree.nodes.iter() {
-			match node {
-				TrainTreeNode::Branch(TrainTreeBranchNode {
-					split:
-						TrainTreeBranchSplit::Continuous(TrainTreeBranchSplitContinuous {
-							feature_index,
-							..
-						}),
-					..
-				})
-				| TrainTreeNode::Branch(TrainTreeBranchNode {
-					split:
-						TrainTreeBranchSplit::Discrete(TrainTreeBranchSplitDiscrete {
-							feature_index,
-							..
-						}),
-					..
-				}) => {
-					feature_importances[*feature_index] += 1.0;
-				}
-				TrainTreeNode::Leaf(_) => {}
-			}
-		}
-	}
-	// Normalize the feature_importances.
-	let total = feature_importances.iter().sum::<f32>();
-	for feature_importance in feature_importances.iter_mut() {
-		*feature_importance /= total;
-	}
-	feature_importances
 }
 
 fn tree_from_train_tree(tree: TrainTree) -> Tree {

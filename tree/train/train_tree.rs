@@ -1,11 +1,11 @@
 use super::{
+	bin::BinnedFeaturesColumn,
 	bin_stats::{
 		compute_bin_stats_for_non_root_node, compute_bin_stats_for_root_node,
 		compute_bin_stats_subtraction, BinStats, BinStatsPool,
 	},
-	choose_best_split::{choose_best_split, choose_best_split_both},
-	rearrange_examples_index::rearrange_examples_index,
-	BinnedFeaturesColumn,
+	examples_index::rearrange_examples_index,
+	split::{choose_best_split, choose_best_split_both},
 };
 use crate::{SplitDirection, TrainOptions};
 use ndarray::prelude::*;
