@@ -1566,7 +1566,16 @@ impl Into<model::BranchSplitDiscrete> for tangram_tree::BranchSplitDiscrete {
 	fn into(self) -> model::BranchSplitDiscrete {
 		model::BranchSplitDiscrete {
 			feature_index: self.feature_index.to_u64().unwrap(),
-			directions: self.directions,
+			directions: self.directions.into_iter().map(Into::into).collect(),
+		}
+	}
+}
+
+impl Into<model::SplitDirection> for tangram_tree::SplitDirection {
+	fn into(self) -> model::SplitDirection {
+		match self {
+			Self::Left => model::SplitDirection::Left,
+			Self::Right => model::SplitDirection::Right,
 		}
 	}
 }

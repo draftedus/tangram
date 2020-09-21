@@ -7,7 +7,7 @@ use itertools::izip;
 use num_traits::ToPrimitive;
 use std::ops::Range;
 
-pub struct FindSplitOutput {
+pub struct ChooseBestSplitOutput {
 	pub gain: f32,
 	pub feature_index: usize,
 	pub split: TrainBranchSplit,
@@ -26,7 +26,7 @@ pub fn choose_best_split(
 	sum_hessians: f64,
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
-) -> Option<FindSplitOutput> {
+) -> Option<ChooseBestSplitOutput> {
 	izip!(&bin_stats.entries, &bin_stats.binning_instructions)
 		.enumerate()
 		.filter_map(
@@ -70,59 +70,59 @@ pub fn choose_best_split_both(
 	right_sum_hessians: f64,
 	right_examples_index_range: Range<usize>,
 	options: &TrainOptions,
-) -> (Option<FindSplitOutput>, Option<FindSplitOutput>) {
-	let best: Vec<(Option<FindSplitOutput>, Option<FindSplitOutput>)> =
-		(0..left_bin_stats.entries.len())
-			.map(|feature_index| {
-				let binning_instructions = &left_bin_stats.binning_instructions[feature_index];
-				match binning_instructions {
-					BinningInstructions::Number { .. } => (
-						find_best_continuous_split_for_feature_left_to_right(
-							feature_index,
-							binning_instructions,
-							&left_bin_stats.entries[feature_index],
-							left_sum_gradients,
-							left_sum_hessians,
-							left_examples_index_range.clone(),
-							options,
-						),
-						find_best_continuous_split_for_feature_left_to_right(
-							feature_index,
-							binning_instructions,
-							&right_bin_stats.entries[feature_index],
-							right_sum_gradients,
-							right_sum_hessians,
-							right_examples_index_range.clone(),
-							options,
-						),
+) -> (Option<ChooseBestSplitOutput>, Option<ChooseBestSplitOutput>) {
+	let best: Vec<(Option<ChooseBestSplitOutput>, Option<ChooseBestSplitOutput>)> = (0
+		..left_bin_stats.entries.len())
+		.map(|feature_index| {
+			let binning_instructions = &left_bin_stats.binning_instructions[feature_index];
+			match binning_instructions {
+				BinningInstructions::Number { .. } => (
+					find_best_continuous_split_for_feature_left_to_right(
+						feature_index,
+						binning_instructions,
+						&left_bin_stats.entries[feature_index],
+						left_sum_gradients,
+						left_sum_hessians,
+						left_examples_index_range.clone(),
+						options,
 					),
-					BinningInstructions::Enum { .. } => (
-						find_best_discrete_split_for_feature_left_to_right(
-							feature_index,
-							&binning_instructions,
-							&left_bin_stats.entries[feature_index],
-							left_sum_gradients,
-							left_sum_hessians,
-							left_examples_index_range.clone(),
-							options,
-						),
-						find_best_discrete_split_for_feature_left_to_right(
-							feature_index,
-							&binning_instructions,
-							&right_bin_stats.entries[feature_index],
-							right_sum_gradients,
-							right_sum_hessians,
-							right_examples_index_range.clone(),
-							options,
-						),
+					find_best_continuous_split_for_feature_left_to_right(
+						feature_index,
+						binning_instructions,
+						&right_bin_stats.entries[feature_index],
+						right_sum_gradients,
+						right_sum_hessians,
+						right_examples_index_range.clone(),
+						options,
 					),
-				}
-			})
-			.collect();
+				),
+				BinningInstructions::Enum { .. } => (
+					find_best_discrete_split_for_feature_left_to_right(
+						feature_index,
+						&binning_instructions,
+						&left_bin_stats.entries[feature_index],
+						left_sum_gradients,
+						left_sum_hessians,
+						left_examples_index_range.clone(),
+						options,
+					),
+					find_best_discrete_split_for_feature_left_to_right(
+						feature_index,
+						&binning_instructions,
+						&right_bin_stats.entries[feature_index],
+						right_sum_gradients,
+						right_sum_hessians,
+						right_examples_index_range.clone(),
+						options,
+					),
+				),
+			}
+		})
+		.collect();
 	let (left, right) = best.into_iter().fold(
 		(None, None),
-		|a: (Option<FindSplitOutput>, Option<FindSplitOutput>),
-		 b: (Option<FindSplitOutput>, Option<FindSplitOutput>)| {
+		|a: (Option<ChooseBestSplitOutput>, Option<ChooseBestSplitOutput>),
+		 b: (Option<ChooseBestSplitOutput>, Option<ChooseBestSplitOutput>)| {
 			let left = match (a.0, b.0) {
 				(Some(a), Some(b)) => {
 					if a.gain > b.gain {
@@ -162,18 +162,21 @@ fn find_best_continuous_split_for_feature_left_to_right(
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
-) -> Option<FindSplitOutput> {
+) -> Option<ChooseBestSplitOutput> {
 	let negative_loss_parent_node = compute_negative_loss(
 		sum_gradients_parent,
 		sum_hessians_parent,
 		options.l2_regularization,
 	);
-	let mut best_split_so_far: Option<FindSplitOutput> = None;
+	let mut best_split_so_far: Option<ChooseBestSplitOutput> = None;
 	let count_multiplier = examples_index_range.len() as f64 / sum_hessians_parent;
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
-	for (bin_index, bin_stats_entry) in bin_stats_for_feature.chunks(2).enumerate() {
+	for (bin_index, bin_stats_entry) in bin_stats_for_feature[0..bin_stats_for_feature.len() - 2]
+		.chunks(2)
+		.enumerate()
+	{
 		let sum_gradients = bin_stats_entry[0];
 		let sum_hessians = bin_stats_entry[1];
 		left_n_examples += (sum_hessians * count_multiplier)
@@ -192,18 +195,16 @@ fn find_best_continuous_split_for_feature_left_to_right(
 		if left_n_examples < options.min_examples_per_child {
 			continue;
 		}
+		// Since we are in left to right mode, we will only get less examples if we continue so break instead.
 		if right_n_examples < options.min_examples_per_child {
-			// since we are in left to right mode, we will only get less examples if we continue so break instead
 			break;
 		}
+		// If hessians are positive so the left sum hessians will continue to increase, so we can continue.
 		if left_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
-			// Hessians are positive so the left sum hessians will continue to increase,
-			// we can continue.
 			continue;
 		}
+		// If hessians are positive so we will continue to violate the min_hessian_to_split condition for the right node, break.
 		if right_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
-			// Hessians are positive so we will continue to violate the min_hessian_to_split
-			// condition for the right node, break.
 			break;
 		}
 		let current_split_gain = compute_gain(
@@ -230,18 +231,15 @@ fn find_best_continuous_split_for_feature_left_to_right(
 			feature_index,
 			bin_index: bin_index.to_u8().unwrap(),
 			split_value: match binning_instructions {
-				BinningInstructions::Number { thresholds } => {
-					match bin_index.checked_sub(1) {
-						Some(i) => thresholds[i],
-						// its the null bucket
-						None => f32::MIN,
-					}
-				}
+				BinningInstructions::Number { thresholds } => match bin_index.checked_sub(1) {
+					Some(i) => thresholds[i],
+					None => f32::MIN,
+				},
 				_ => unreachable!(),
 			},
 			invalid_values_direction,
 		});
-		let current_split = FindSplitOutput {
+		let current_split = ChooseBestSplitOutput {
 			feature_index,
 			gain: current_split_gain,
 			left_n_examples,
@@ -282,8 +280,8 @@ fn find_best_discrete_split_for_feature_left_to_right(
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
-) -> Option<FindSplitOutput> {
-	let mut best_split_so_far: Option<FindSplitOutput> = None;
+) -> Option<ChooseBestSplitOutput> {
+	let mut best_split_so_far: Option<ChooseBestSplitOutput> = None;
 	let l2_regularization =
 		options.l2_regularization + options.supplemental_l2_regularization_for_discrete_splits;
 	let negative_loss_parent_node =
@@ -304,9 +302,10 @@ fn find_best_discrete_split_for_feature_left_to_right(
 			.partial_cmp(&categorical_bin_score(b))
 			.unwrap()
 	});
-	let mut directions = vec![true; binning_instructions.n_valid_bins() + 1];
-	for (bin_index, bin_stats_entry) in sorted_bin_stats.iter() {
-		directions[*bin_index] = false;
+	let mut directions = vec![SplitDirection::Right; binning_instructions.n_valid_bins() + 1];
+	let iter = sorted_bin_stats[0..sorted_bin_stats.len() - 1].iter();
+	for (bin_index, bin_stats_entry) in iter {
+		directions[*bin_index] = SplitDirection::Left;
 		let sum_gradients = bin_stats_entry[0];
 		let sum_hessians = bin_stats_entry[1];
 		left_n_examples += (sum_hessians * count_multiplier)
@@ -359,12 +358,12 @@ fn find_best_discrete_split_for_feature_left_to_right(
 				SplitDirection::Right
 			}
 		};
-		directions[0] = invalid_values_direction != SplitDirection::Left;
+		directions[0] = invalid_values_direction;
 		let split = TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 			feature_index,
 			directions: directions.clone(),
 		});
-		let current_split = FindSplitOutput {
+		let current_split = ChooseBestSplitOutput {
 			feature_index,
 			gain: current_split_gain,
 			left_n_examples,

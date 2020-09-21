@@ -38,5 +38,5 @@ fn main() {
 		labels: labels_test.data,
 	});
 	let metrics = metrics.finalize();
-	println!("{:?}", metrics);
+	println!("{}", metrics.mse);
 }

@@ -141,24 +141,14 @@ fn main() {
 
 	// compute metrics
 	let labels = labels_test.view().data.into();
-	let mut metrics = tangram_metrics::ClassificationMetrics::new(2);
-	metrics.update(tangram_metrics::ClassificationMetricsInput {
-		probabilities: probabilities.view(),
-		labels,
-	});
-	let metrics = metrics.finalize();
-	println!("{:?}", metrics);
-
-	// compute metrics
-	let labels = labels_test.view().data.into();
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(200);
+	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
 	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels,
 	});
 	let metrics = metrics.finalize();
+	println!("{:?}", metrics.thresholds[1].accuracy);
 	println!("auc_roc: {:?}", metrics.auc_roc);
-
 	let auc_input = probabilities
 		.column(1)
 		.into_iter()

@@ -30,11 +30,11 @@ fn main() {
 	model.predict(features_test.view(), probabilities.view_mut());
 
 	// compute metrics
-	let mut metrics = tangram_metrics::ClassificationMetrics::new(100);
-	metrics.update(tangram_metrics::ClassificationMetricsInput {
+	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
+	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels_test.data.into(),
 	});
 	let metrics = metrics.finalize();
-	println!("{:?}", metrics.class_metrics[1]);
+	println!("{:?}", metrics.thresholds[1].accuracy);
 }

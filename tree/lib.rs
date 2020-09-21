@@ -94,13 +94,14 @@ pub struct Tree {
 }
 
 impl Tree {
-	/// Make a prediction for a single example.
-	pub fn predict(&self, row: &[tangram_dataframe::Value]) -> f32 {
+	/// Make a prediction for a given example.
+	pub fn predict(&self, features: &[tangram_dataframe::Value]) -> f32 {
 		// Start at the root node.
 		let mut node_index = 0;
+		// Traverse the tree until we get to a leaf.
 		loop {
 			match &self.nodes[node_index] {
-				// We are at a branch node with a continuous split.
+				// This branch uses a continuous split.
 				Node::Branch(BranchNode {
 					left_child_index,
 					right_child_index,
@@ -108,29 +109,17 @@ impl Tree {
 						BranchSplit::Continuous(BranchSplitContinuous {
 							feature_index,
 							split_value,
-							invalid_values_direction,
 							..
 						}),
 					..
 				}) => {
-					// only number features are split using continuous splits
-					let feature_value = match row[*feature_index] {
-						tangram_dataframe::Value::Number(value) => value,
-						_ => unreachable!(),
-					};
-					// If the feature value is NaN, use the invalid values direction stored at this node to determine whether to go left or right.
-					node_index = if feature_value.is_nan() {
-						match invalid_values_direction {
-							SplitDirection::Left => *left_child_index,
-							SplitDirection::Right => *right_child_index,
-						}
-					} else if feature_value <= *split_value {
+					node_index = if features[*feature_index].as_number().unwrap() <= split_value {
 						*left_child_index
 					} else {
 						*right_child_index
 					};
 				}
-				// We are at a branch node with a discrete split.
+				// This branch uses a discrete split.
 				Node::Branch(BranchNode {
 					left_child_index,
 					right_child_index,
@@ -142,20 +131,19 @@ impl Tree {
 						}),
 					..
 				}) => {
-					// only enum features are split using discrete splits
-					let feature_value = match row[*feature_index] {
-						tangram_dataframe::Value::Enum(value) => {
-							value.map(|v| v.get()).unwrap_or(0)
-						}
-						_ => unreachable!(),
-					};
-					node_index = if !directions.get(feature_value).unwrap() {
+					let bin_index =
+						if let Some(bin_index) = features[*feature_index].as_enum().unwrap() {
+							bin_index.get()
+						} else {
+							0
+						};
+					node_index = if *directions.get(bin_index).unwrap() == SplitDirection::Left {
 						*left_child_index
 					} else {
 						*right_child_index
 					};
 				}
-				// We made it to a leaf node! The prediction is just the value at this leaf.
+				// We made it to a leaf! The prediction is the leaf's value.
 				Node::Leaf(LeafNode { value, .. }) => return *value,
 			}
 		}
@@ -213,7 +201,7 @@ pub struct BranchSplitContinuous {
 	pub invalid_values_direction: SplitDirection,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SplitDirection {
 	Left,
 	Right,
@@ -225,7 +213,7 @@ pub struct BranchSplitDiscrete {
 	/// This is the index of the feature to get the value for.
 	pub feature_index: usize,
 	/// This specifies which direction, left or right, an example should be sent, based on the value of the chosen feature.
-	pub directions: Vec<bool>,
+	pub directions: Vec<SplitDirection>,
 }
 
 /// The leaves in a tree hold the values to output for examples that get sent to them.

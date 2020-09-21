@@ -82,11 +82,7 @@ fn rearrange_examples_index_serial(
 							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
 					};
-					if !directions.get(feature_bin).unwrap() {
-						SplitDirection::Left
-					} else {
-						SplitDirection::Right
-					}
+					*directions.get(feature_bin).unwrap()
 				}
 			}
 		};
@@ -161,11 +157,7 @@ fn rearrange_examples_index_parallel(
 									binned_features[*example_index].to_usize().unwrap()
 								}
 							};
-							if !directions.get(feature_bin).unwrap() {
-								SplitDirection::Left
-							} else {
-								SplitDirection::Right
-							}
+							*directions.get(feature_bin).unwrap()
 						}
 					}
 				};

@@ -412,7 +412,13 @@ pub struct BranchSplitContinuous {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BranchSplitDiscrete {
 	pub feature_index: u64,
-	pub directions: Vec<bool>,
+	pub directions: Vec<SplitDirection>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub enum SplitDirection {
+	Left,
+	Right,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

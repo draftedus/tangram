@@ -21,47 +21,51 @@ impl TrainTree {
 	pub fn predict(&self, features: &[tangram_dataframe::Value]) -> f32 {
 		// Start at the root node.
 		let mut node_index = 0;
+		// Traverse the tree until we get to a leaf.
 		loop {
 			match &self.nodes[node_index] {
-				// We are at a branch, decide whether to send this example to the left or right child.
+				// This branch uses a continuous split.
 				TrainNode::Branch(TrainBranchNode {
 					left_child_index,
 					right_child_index,
-					split,
+					split:
+						TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+							feature_index,
+							split_value,
+							..
+						}),
 					..
-				}) => match split {
-					// This branch uses a continuous split.
-					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-						feature_index,
-						split_value,
-						..
-					}) => {
-						node_index = if features[*feature_index].as_number().unwrap() <= split_value
-						{
-							left_child_index.unwrap()
+				}) => {
+					node_index = if features[*feature_index].as_number().unwrap() <= split_value {
+						left_child_index.unwrap()
+					} else {
+						right_child_index.unwrap()
+					};
+				}
+				// This branch uses a discrete split.
+				TrainNode::Branch(TrainBranchNode {
+					left_child_index,
+					right_child_index,
+					split:
+						TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+							feature_index,
+							directions,
+							..
+						}),
+					..
+				}) => {
+					let bin_index =
+						if let Some(bin_index) = features[*feature_index].as_enum().unwrap() {
+							bin_index.get()
 						} else {
-							right_child_index.unwrap()
+							0
 						};
-					}
-					// This branch uses a discrete split.
-					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-						feature_index,
-						directions,
-						..
-					}) => {
-						let bin_index =
-							if let Some(bin_index) = features[*feature_index].as_enum().unwrap() {
-								bin_index.get()
-							} else {
-								0
-							};
-						node_index = if !directions.get(bin_index).unwrap() {
-							left_child_index.unwrap()
-						} else {
-							right_child_index.unwrap()
-						};
-					}
-				},
+					node_index = if *directions.get(bin_index).unwrap() == SplitDirection::Left {
+						left_child_index.unwrap()
+					} else {
+						right_child_index.unwrap()
+					};
+				}
 				// We made it to a leaf! The prediction is the leaf's value.
 				TrainNode::Leaf(TrainLeafNode { value, .. }) => return *value,
 			}
@@ -109,7 +113,7 @@ pub struct TrainBranchSplitContinuous {
 #[derive(Clone, Debug)]
 pub struct TrainBranchSplitDiscrete {
 	pub feature_index: usize,
-	pub directions: Vec<bool>,
+	pub directions: Vec<SplitDirection>,
 }
 
 #[derive(Debug)]

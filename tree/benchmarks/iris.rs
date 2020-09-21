@@ -9,6 +9,7 @@ fn main() {
 	let n_rows_train = 120;
 	let n_rows_test = 30;
 	let target_column_index = 4;
+	let n_classes = 3;
 	let mut features = DataFrame::from_path(csv_file_path, Default::default(), |_| {}).unwrap();
 	let labels = features.columns.remove(target_column_index);
 	let (features_train, features_test) = features.view().split_at_row(n_rows_train);
@@ -30,11 +31,11 @@ fn main() {
 	model.predict(features_test.view(), probabilities.view_mut());
 
 	// compute metrics
-	let mut metrics = tangram_metrics::ClassificationMetrics::new(100);
+	let mut metrics = tangram_metrics::ClassificationMetrics::new(n_classes);
 	metrics.update(tangram_metrics::ClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels_test.data.into(),
 	});
 	let metrics = metrics.finalize();
-	println!("{:?}", metrics);
+	println!("{}", metrics.accuracy);
 }

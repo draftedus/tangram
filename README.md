@@ -41,19 +41,19 @@ Before submitting a pull request, please run `./scripts/fmt` and `./scripts/chec
 
 - To save your SSD from a premature death, set up a RAM disk for Cargo's `target` folder on linux by adding `none /path/to/tangram/target tmpfs rw,relatime 0 0` to `/etc/fstab` and rebooting.
 
-- For high quality IDE support, use [Visual Studio Code](https://code.visualstudio.com/) with the [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer), [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint), and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions.
+- For good IDE support, use [Visual Studio Code](https://code.visualstudio.com/) with the [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer), [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint), and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions.
 
 ## Repository Structure
 
 This repository is both a Cargo workspace and a Yarn workspace. Almost every folder in the root of the repository is either a Rust crate or an NPM package. Below is a description of the most important folders:
 
-- [`core`](core): This folder contains the `tangram_core` crate that defines the model file format and automated machine learning functionality. It is used by the `tangram_cli` crate to train a model, and by the `libtangram` crate to expose its functionality as a C api for the language libraries.
+- [`core`](core): This folder contains the `tangram_core` crate that defines the model file format and automated machine learning functionality. It is used by the `tangram_cli` crate to train a model, and by the `libtangram` crate to expose its functionality as a C api to the language libraries.
 
 - [`linear`](linear): This folder contains the `tangram_linear` crate that implements linear machine learning models.
 
 - [`tree`](tree): This folder contains the `tangram_tree` crate that implements tree machine learning models.
 
-- [`app`](app): This folder contains the `tangram_app` crate that implementats the reporting and monitoring web app.
+- [`app`](app): This folder contains the `tangram_app` crate that implementats the reporting and monitoring web app. See `run()` in [app/lib.rs](app/lib.rs) for the entrypoint.
 
 - [`cli`](cli): This folder contains the `tangram_cli` crate. It uses the `tangram_core` crate to train a model, and the `tangram_app` crate to run the reporting and monitoring web app. See `main()` in [cli/main.rs](cli/main.rs) for the entrypoint.
 
@@ -65,4 +65,4 @@ This repository is both a Cargo workspace and a Yarn workspace. Almost every fol
 
 ## License
 
-Most of this repository is MIT licensed, except for the `core` and `app` folders, which are presently unlicensed. We plan to make the `core` folder available under a community license that is similar to the MIT license, except it will restrict you from using it to make a competing product. We plan to make the `app` folder free to use for an individual, but require a paid license to use as part of a team. Our pricing is simple and public: https://www.tangramhq.com/pricing.
+Most of this repository is MIT licensed, except for the `core` and `app` folders, which are presently unlicensed. We plan to make the `core` folder available under a community license that is similar to the MIT license, except that it will restrict you from using it to make a competing product. We plan to make the `app` folder free to use for an individual, but require a paid license to use as part of a team. Our pricing is simple and public: https://www.tangramhq.com/pricing.

@@ -978,20 +978,27 @@ impl TryInto<tangram_tree::BranchSplit> for model::BranchSplit {
 					},
 				},
 			)),
-			Self::Discrete(s) => {
-				let value_directions = s.directions;
-				let mut directions = vec![false; value_directions.len()];
-				for (i, value) in value_directions.iter().enumerate() {
-					directions[i] = *value;
-				}
-				Ok(tangram_tree::BranchSplit::Discrete(
-					tangram_tree::BranchSplitDiscrete {
-						feature_index: s.feature_index.to_usize().unwrap(),
-						directions,
-					},
-				))
-			}
+			Self::Discrete(s) => Ok(tangram_tree::BranchSplit::Discrete(
+				tangram_tree::BranchSplitDiscrete {
+					feature_index: s.feature_index.to_usize().unwrap(),
+					directions: s
+						.directions
+						.into_iter()
+						.map(TryInto::try_into)
+						.collect::<Result<_, _>>()?,
+				},
+			)),
 		}
+	}
+}
+
+impl TryInto<tangram_tree::SplitDirection> for model::SplitDirection {
+	type Error = anyhow::Error;
+	fn try_into(self) -> Result<tangram_tree::SplitDirection> {
+		Ok(match self {
+			Self::Left => tangram_tree::SplitDirection::Left,
+			Self::Right => tangram_tree::SplitDirection::Right,
+		})
 	}
 }
 

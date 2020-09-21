@@ -241,7 +241,7 @@ fn compute_hot_cold_child(
 			directions,
 		}) => match example[*feature_index] {
 			tangram_dataframe::Value::Enum(value) => {
-				if !directions.get(value.unwrap().get()).unwrap() {
+				if *directions.get(value.unwrap().get()).unwrap() == SplitDirection::Left {
 					(node.left_child_index, node.right_child_index)
 				} else {
 					(node.right_child_index, node.left_child_index)

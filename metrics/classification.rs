@@ -11,7 +11,7 @@ pub struct ClassificationMetrics {
 
 /// The input to [ClassificationMetrics](struct.ClassificationMetrics.html).
 pub struct ClassificationMetricsInput<'a> {
-	/// (n_classes, n_examples)
+	/// (n_examples, n_classes)
 	pub probabilities: ArrayView2<'a, f32>,
 	// (n_examples), 1-indexed
 	pub labels: ArrayView1<'a, Option<NonZeroUsize>>,
