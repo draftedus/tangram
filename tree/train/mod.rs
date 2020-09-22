@@ -199,7 +199,7 @@ pub fn train(
 	update_progress(super::TrainProgress::Training(round_counter.clone()));
 	for round_index in 0..options.max_rounds {
 		round_counter.inc(1);
-		// Before training the next round of trees, we need to determine which value for each example we would like the tree to learn.
+		// Before training the next round of trees, we need to determine what value for each example we would like the tree to learn.
 		match task {
 			Task::Regression => {
 				let labels_train = labels_train.as_number().unwrap();
@@ -253,7 +253,7 @@ pub fn train(
 				mut ordered_hessians,
 				bin_stats_pool,
 			)| {
-				// Reset the examples_index.
+				// Reset the examples_index for this tree.
 				for (index, value) in examples_index.iter_mut().enumerate() {
 					*value = index;
 				}
@@ -273,7 +273,7 @@ pub fn train(
 					#[cfg(feature = "timing")]
 					&timing,
 				);
-				// Update the predictions with the most recently trained tree.
+				// Update the predictions using the most recently trained tree.
 				if round_index < options.max_rounds - 1 {
 					#[cfg(feature = "timing")]
 					let start = std::time::Instant::now();
@@ -349,7 +349,7 @@ pub fn train(
 	eprintln!("{:?}", timing);
 
 	// Assemble the model.
-	let trees: Vec<Tree> = trees.into_iter().map(tree_from_train_tree).collect();
+	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
 	match task {
 		Task::Regression => Model::Regressor(Regressor {
 			bias: biases[0],
@@ -412,50 +412,52 @@ fn train_early_stopping_split<'features, 'labels>(
 	)
 }
 
-fn tree_from_train_tree(tree: TrainTree) -> Tree {
-	let nodes = tree
-		.nodes
-		.into_iter()
-		.map(|node| match node {
-			TrainNode::Branch(TrainBranchNode {
-				left_child_index,
-				right_child_index,
-				split,
-				examples_fraction,
-				..
-			}) => Node::Branch(BranchNode {
-				left_child_index: left_child_index.unwrap(),
-				right_child_index: right_child_index.unwrap(),
-				split: match split {
-					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-						feature_index,
-						invalid_values_direction,
-						split_value,
-						..
-					}) => BranchSplit::Continuous(BranchSplitContinuous {
-						feature_index,
-						split_value,
-						invalid_values_direction,
-					}),
-					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-						feature_index,
-						directions,
-						..
-					}) => BranchSplit::Discrete(BranchSplitDiscrete {
-						feature_index,
-						directions,
-					}),
-				},
-				examples_fraction,
-			}),
-			TrainNode::Leaf(TrainLeafNode {
-				value,
-				examples_fraction,
-			}) => Node::Leaf(LeafNode {
-				value,
-				examples_fraction,
-			}),
-		})
-		.collect();
-	Tree { nodes }
+impl From<TrainTree> for Tree {
+	fn from(value: TrainTree) -> Self {
+		let nodes = value
+			.nodes
+			.into_iter()
+			.map(|node| match node {
+				TrainNode::Branch(TrainBranchNode {
+					left_child_index,
+					right_child_index,
+					split,
+					examples_fraction,
+					..
+				}) => Node::Branch(BranchNode {
+					left_child_index: left_child_index.unwrap(),
+					right_child_index: right_child_index.unwrap(),
+					split: match split {
+						TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+							feature_index,
+							invalid_values_direction,
+							split_value,
+							..
+						}) => BranchSplit::Continuous(BranchSplitContinuous {
+							feature_index,
+							split_value,
+							invalid_values_direction,
+						}),
+						TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+							feature_index,
+							directions,
+							..
+						}) => BranchSplit::Discrete(BranchSplitDiscrete {
+							feature_index,
+							directions,
+						}),
+					},
+					examples_fraction,
+				}),
+				TrainNode::Leaf(TrainLeafNode {
+					value,
+					examples_fraction,
+				}) => Node::Leaf(LeafNode {
+					value,
+					examples_fraction,
+				}),
+			})
+			.collect();
+		Tree { nodes }
+	}
 }

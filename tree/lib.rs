@@ -94,8 +94,8 @@ pub struct Tree {
 }
 
 impl Tree {
-	/// Make a prediction for a given example.
-	pub fn predict(&self, features: &[tangram_dataframe::Value]) -> f32 {
+	/// Make a prediction.
+	pub fn predict(&self, example: &[tangram_dataframe::Value]) -> f32 {
 		// Start at the root node.
 		let mut node_index = 0;
 		// Traverse the tree until we get to a leaf.
@@ -113,7 +113,7 @@ impl Tree {
 						}),
 					..
 				}) => {
-					node_index = if features[*feature_index].as_number().unwrap() <= split_value {
+					node_index = if example[*feature_index].as_number().unwrap() <= split_value {
 						*left_child_index
 					} else {
 						*right_child_index
@@ -132,7 +132,7 @@ impl Tree {
 					..
 				}) => {
 					let bin_index =
-						if let Some(bin_index) = features[*feature_index].as_enum().unwrap() {
+						if let Some(bin_index) = example[*feature_index].as_enum().unwrap() {
 							bin_index.get()
 						} else {
 							0

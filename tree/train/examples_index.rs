@@ -8,11 +8,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
 /**
-Returns the examples_index_ranges for the left and right nodes
-and rearranges the examples_index so that the example indexes
-in the first returned range are contained by the left node
-and the example indexes in the second returned range
-are contained by the right node.
+This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
 */
 pub fn rearrange_examples_index(
 	binned_features: &[BinnedFeaturesColumn],
@@ -117,7 +113,6 @@ fn rearrange_examples_index_parallel(
 	)
 	.map(
 		|(examples_index, mut examples_index_left, mut examples_index_right)| {
-			// update left and right examples indexes and return n_left and n_right
 			let mut n_left = 0;
 			let mut n_right = 0;
 			for example_index in examples_index {
