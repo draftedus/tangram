@@ -229,7 +229,7 @@ fn find_best_continuous_split_for_feature_left_to_right(
 		};
 		let split = TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
 			feature_index,
-			bin_index: bin_index.to_u8().unwrap(),
+			bin_index,
 			split_value: match binning_instructions {
 				BinningInstructions::Number { thresholds } => match bin_index.checked_sub(1) {
 					Some(i) => thresholds[i],

@@ -51,10 +51,10 @@ fn rearrange_examples_index_serial(
 					let binned_feature = &binned_features[*feature_index];
 					let feature_bin = match binned_feature {
 						BinnedFeaturesColumn::U8(binned_feature) => {
-							binned_feature[examples_index[left]].to_u8().unwrap()
+							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
 						BinnedFeaturesColumn::U16(binned_feature) => {
-							binned_feature[examples_index[left]].to_u8().unwrap()
+							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
 					};
 					if feature_bin <= *bin_index {
@@ -124,10 +124,10 @@ fn rearrange_examples_index_parallel(
 							let binned_features = &binned_features[*feature_index];
 							let feature_bin = match binned_features {
 								BinnedFeaturesColumn::U8(binned_features) => {
-									binned_features[*example_index].to_u8().unwrap()
+									binned_features[*example_index].to_usize().unwrap()
 								}
 								BinnedFeaturesColumn::U16(binned_features) => {
-									binned_features[*example_index].to_u8().unwrap()
+									binned_features[*example_index].to_usize().unwrap()
 								}
 							};
 							if feature_bin <= *bin_index {

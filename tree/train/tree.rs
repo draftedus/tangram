@@ -106,7 +106,7 @@ pub enum TrainBranchSplit {
 pub struct TrainBranchSplitContinuous {
 	pub feature_index: usize,
 	pub split_value: f32,
-	pub bin_index: u8,
+	pub bin_index: usize,
 	pub invalid_values_direction: SplitDirection,
 }
 
@@ -131,13 +131,11 @@ struct QueueItem {
 	pub parent_index: Option<usize>,
 	/// Will this node be a left or right child of its parent?
 	pub split_direction: Option<SplitDirection>,
-	/// The depth of the item in the tree.
+	/// This is the depth of the item in the tree.
 	pub depth: usize,
 	/// The bin_stats consisting of aggregate hessian/gradient statistics of the training examples that reach this node.
 	pub bin_stats: BinStats,
-	/// The examples_index_range tells you what the range of
-	/// examples indexes in the examples_index specifies
-	/// the examples in this node.
+	/// The examples_index_range tells you what the range of indexes in the examples_index specify the examples in this node.
 	pub examples_index_range: std::ops::Range<usize>,
 	/// The sum of the gradients of all of the training examples in this node.
 	pub sum_gradients: f64,
