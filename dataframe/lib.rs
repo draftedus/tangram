@@ -1,5 +1,5 @@
 /*!
-This crate provides a basic implementation of dataframes, which are tables of heterogeneous data. It is similar to Python's Pandas library, but at present is far more limited, because it only implements what is needed to support the Tangram family of machine learning libraries.
+This crate provides a basic implementation of dataframes, which are tables of heterogeneous data. It is similar to Python's Pandas library, but at present is incredibly limited, because it only implements the features needed to support the Tangram family of machine learning libraries.
 */
 
 use itertools::izip;

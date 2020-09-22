@@ -123,13 +123,11 @@ pub struct TrainLeafNode {
 }
 
 struct QueueItem {
-	/// Items in the priority queue will be sorted by the gain of the split.
+	/// The priority queue will be sorted by the gain of the split.
 	pub gain: f32,
 	/// A split describes how the node is split into left and right children.
 	pub split: TrainBranchSplit,
-	/// The queue item holds a reference to its parent so that
-	/// it can update the parent's left or right child index
-	/// if the queue item becomes a node added to the tree.
+	/// The queue item holds a reference to its parent so that it can update the parent's left or right child index if the queue item becomes a node added to the tree.
 	pub parent_index: Option<usize>,
 	/// Will this node be a left or right child of its parent?
 	pub split_direction: Option<SplitDirection>,

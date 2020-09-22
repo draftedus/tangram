@@ -41,15 +41,15 @@ impl BinStatsPool {
 	}
 }
 
-/// This static control how far ahead in the `examples_index` the `compute_bin_stats_*` functions should prefetch binned_features to be used in subsequent iterations.
+/// This value controls how far ahead in the `examples_index` the `compute_bin_stats_*` functions should prefetch binned_features to be used in subsequent iterations.
 #[cfg(target_arch = "x86_64")]
-static PREFETCH_OFFSET: usize = 64;
+const PREFETCH_OFFSET: usize = 64;
 
-/// This static control how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
-static ROOT_UNROLL: usize = 16;
+/// This value controls how many times to unroll the loop in `compute_bin_stats_for_feature_root`.
+const ROOT_UNROLL: usize = 16;
 
-/// This static control how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
-static NOT_ROOT_UNROLL: usize = 4;
+/// This value controls how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
+const NOT_ROOT_UNROLL: usize = 4;
 
 pub fn compute_bin_stats_for_root_node(
 	node_bin_stats: &mut BinStats,

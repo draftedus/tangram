@@ -4,7 +4,6 @@ use super::{
 };
 use crate::SplitDirection;
 use itertools::izip;
-use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
 /**
@@ -106,13 +105,12 @@ fn rearrange_examples_index_parallel(
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let chunk_size = usize::max(examples_index.len() / 16, 1024);
 	let counts: Vec<(usize, usize)> = izip!(
-		ArrayViewMut1::from(&mut examples_index[..]).axis_chunks_iter(Axis(0), chunk_size),
-		ArrayViewMut1::from(&mut examples_index_left[..]).axis_chunks_iter_mut(Axis(0), chunk_size),
-		ArrayViewMut1::from(&mut examples_index_right[..])
-			.axis_chunks_iter_mut(Axis(0), chunk_size),
+		examples_index.chunks_mut(chunk_size),
+		examples_index_left.chunks_mut(chunk_size),
+		examples_index_right.chunks_mut(chunk_size),
 	)
 	.map(
-		|(examples_index, mut examples_index_left, mut examples_index_right)| {
+		|(examples_index, examples_index_left, examples_index_right)| {
 			let mut n_left = 0;
 			let mut n_right = 0;
 			for example_index in examples_index {
@@ -186,8 +184,8 @@ fn rearrange_examples_index_parallel(
 	izip!(
 		left_starting_indexes,
 		right_starting_indexes,
-		ArrayViewMut1::from(&mut examples_index_left[..]).axis_chunks_iter(Axis(0), chunk_size),
-		ArrayViewMut1::from(&mut examples_index_right[..]).axis_chunks_iter(Axis(0), chunk_size),
+		examples_index_left.chunks_mut(chunk_size),
+		examples_index_right.chunks_mut(chunk_size),
 	)
 	.for_each(
 		|(
@@ -204,8 +202,7 @@ fn rearrange_examples_index_parallel(
 					examples_index_slice.len(),
 				)
 			};
-			examples_index_slice
-				.copy_from_slice(examples_index_left.slice(s![0..n_left]).to_slice().unwrap());
+			examples_index_slice.copy_from_slice(&examples_index_left[0..n_left]);
 			let examples_index_slice =
 				&examples_index[right_starting_index..right_starting_index + n_right];
 			let examples_index_slice = unsafe {
@@ -214,12 +211,7 @@ fn rearrange_examples_index_parallel(
 					examples_index_slice.len(),
 				)
 			};
-			examples_index_slice.copy_from_slice(
-				examples_index_right
-					.slice(s![0..n_right])
-					.to_slice()
-					.unwrap(),
-			);
+			examples_index_slice.copy_from_slice(&examples_index_right[0..n_right]);
 		},
 	);
 	(
