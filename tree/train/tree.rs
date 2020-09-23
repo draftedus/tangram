@@ -217,13 +217,16 @@ pub fn train(
 	let should_not_split_root = n_examples_root < 2 * options.min_examples_per_child
 		|| sum_hessians_root < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
 	if should_not_split_root {
-		let value = compute_leaf_value(sum_gradients_root, sum_hessians_root, options);
-		let node = TrainNode::Leaf(TrainLeafNode {
-			value,
-			examples_fraction: 1.0,
-		});
-		nodes.push(node);
-		leaf_values.push((examples_index_range_root, value));
+		add_leaf(
+			&mut nodes,
+			&mut leaf_values,
+			sum_gradients_root,
+			sum_hessians_root,
+			n_examples_root,
+			examples_index_range_root,
+			None,
+			options,
+		);
 		return TrainTree { nodes, leaf_values };
 	}
 
