@@ -258,7 +258,7 @@ pub fn train(
 					*value = index;
 				}
 				// Train the tree.
-				let (tree, leaf_values) = self::tree::train(
+				let tree = self::tree::train(
 					&binned_features,
 					gradients.as_slice().unwrap(),
 					hessians.as_slice().unwrap(),
@@ -278,7 +278,7 @@ pub fn train(
 					#[cfg(feature = "timing")]
 					let start = std::time::Instant::now();
 					let predictions_cell = SuperUnsafe::new(predictions.as_slice_mut().unwrap());
-					leaf_values.iter().for_each(|(range, value)| {
+					tree.leaf_values.iter().for_each(|(range, value)| {
 						examples_index.as_slice().unwrap()[range.clone()]
 							.iter()
 							.for_each(|&example_index| {
