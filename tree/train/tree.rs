@@ -353,13 +353,13 @@ pub fn train(
 
 		// Determine if we should split the left and/or right children of this branch based on the number of examples that pass through them and their depth in the tree.
 		let max_depth_reached = queue_item.depth + 1 == options.max_depth;
-		let should_split_left_child = !max_depth_reached
+		let should_try_to_split_left_child = !max_depth_reached
 			&& left_examples_index_range.len() >= options.min_examples_per_child * 2;
-		let should_split_right_child = !max_depth_reached
+		let should_try_to_split_right_child = !max_depth_reached
 			&& right_examples_index_range.len() >= options.min_examples_per_child * 2;
 
 		// If we should not split the left, add a leaf.
-		if !should_split_left_child {
+		if !should_try_to_split_left_child {
 			let left_child_index = nodes.len();
 			let value = compute_leaf_value(
 				queue_item.left_sum_gradients,
@@ -379,7 +379,7 @@ pub fn train(
 		}
 
 		// If we should not split right, add a leaf.
-		if !should_split_right_child {
+		if !should_try_to_split_right_child {
 			let right_child_index = nodes.len();
 			let value = compute_leaf_value(
 				queue_item.right_sum_gradients,
@@ -399,7 +399,7 @@ pub fn train(
 		}
 
 		// If we should not split either left or right, then there is nothing left to do, so we can go to the next item on the queue.
-		if !should_split_left_child && !should_split_right_child {
+		if !should_try_to_split_left_child && !should_try_to_split_right_child {
 			bin_stats_pool.items.push(queue_item.bin_stats);
 			continue;
 		}
@@ -438,19 +438,22 @@ pub fn train(
 		let start = std::time::Instant::now();
 		let mut larger_child_bin_stats = queue_item.bin_stats;
 		compute_bin_stats_subtraction(&mut larger_child_bin_stats, &smaller_child_bin_stats);
-		let (left_bin_stats, right_bin_stats) = match smaller_direction {
-			SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
-			SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
-		};
 		#[cfg(feature = "timing")]
 		timing
 			.bin_stats
 			.compute_bin_stats_subtraction
 			.inc(start.elapsed());
 
+		// Assign the smaller and larger bin stats to the left and right depending on which direction was smaller.
+		let (left_bin_stats, right_bin_stats) = match smaller_direction {
+			SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
+			SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
+		};
+
+		// In order to do "best first" tree building, we need to choose the best split for each of the children of this branch.
 		#[cfg(feature = "timing")]
 		let start = std::time::Instant::now();
-		let left_find_split_output = if should_split_left_child {
+		let left_find_split_output = if should_try_to_split_left_child {
 			choose_best_split(
 				&left_bin_stats,
 				queue_item.left_sum_gradients,
@@ -461,7 +464,7 @@ pub fn train(
 		} else {
 			None
 		};
-		let right_find_split_output = if should_split_right_child {
+		let right_find_split_output = if should_try_to_split_right_child {
 			choose_best_split(
 				&right_bin_stats,
 				queue_item.right_sum_gradients,
@@ -476,7 +479,7 @@ pub fn train(
 		timing.find_split.inc(start.elapsed());
 
 		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
-		if should_split_left_child {
+		if should_try_to_split_left_child {
 			if let Some(find_split_output) = left_find_split_output {
 				queue.push(QueueItem {
 					depth: queue_item.depth + 1,
@@ -497,7 +500,11 @@ pub fn train(
 				});
 			} else {
 				let left_child_index = nodes.len();
-				let value = compute_leaf_value(sum_gradients, sum_hessians, options);
+				let value = compute_leaf_value(
+					queue_item.left_sum_gradients,
+					queue_item.left_sum_hessians,
+					options,
+				);
 				leaf_values.push((left_examples_index_range, value));
 				let examples_fraction =
 					queue_item.left_n_examples.to_f32().unwrap() / n_examples.to_f32().unwrap();
@@ -515,7 +522,7 @@ pub fn train(
 		}
 
 		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
-		if should_split_right_child {
+		if should_try_to_split_right_child {
 			if let Some(find_split_output) = right_find_split_output {
 				queue.push(QueueItem {
 					depth: queue_item.depth + 1,
@@ -536,7 +543,11 @@ pub fn train(
 				});
 			} else {
 				let right_child_index = nodes.len();
-				let value = compute_leaf_value(sum_gradients, sum_hessians, options);
+				let value = compute_leaf_value(
+					queue_item.right_sum_gradients,
+					queue_item.right_sum_hessians,
+					options,
+				);
 				leaf_values.push((right_examples_index_range, value));
 				let examples_fraction =
 					queue_item.right_n_examples.to_f32().unwrap() / n_examples.to_f32().unwrap();
@@ -584,9 +595,13 @@ pub fn train(
 	TrainTree { nodes, leaf_values }
 }
 
-// fn add_leaf(nodes: &mut Vec<TrainNode>, leaf_values: queue_item: QueueItem, ) {
-
-// }
+fn add_leaf(
+	nodes: &mut Vec<TrainNode>,
+	leaf_values: &mut Vec<(Range<usize>, f32)>,
+	n_examples: usize,
+	options: &TrainOptions,
+) {
+}
 
 /// Compute the value for a leaf node.
 fn compute_leaf_value(sum_gradients: f64, sum_hessians: f64, options: &TrainOptions) -> f32 {
