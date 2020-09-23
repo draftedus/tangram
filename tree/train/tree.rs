@@ -274,7 +274,6 @@ pub fn train(
 			sum_hessians,
 		});
 	} else {
-		// Construct the root node.
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 		let examples_count = examples_index_range.len();
 		leaf_values.push((examples_index_range, value));
@@ -584,6 +583,10 @@ pub fn train(
 
 	TrainTree { nodes, leaf_values }
 }
+
+// fn add_leaf(nodes: &mut Vec<TrainNode>, leaf_values: queue_item: QueueItem, ) {
+
+// }
 
 /// Compute the value for a leaf node.
 fn compute_leaf_value(sum_gradients: f64, sum_hessians: f64, options: &TrainOptions) -> f32 {

@@ -161,17 +161,17 @@ pub fn train(
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
 	let mut bin_stats_pools: Vec<BinStatsPool> =
 		vec![BinStatsPool::new(options.max_leaf_nodes, &binning_instructions); n_trees_per_round];
-	let mut logits_early_stopping = if early_stopping_enabled {
-		let mut logits_early_stopping = unsafe {
+	let mut predictions_early_stopping = if early_stopping_enabled {
+		let mut predictions_early_stopping = unsafe {
 			Array::uninitialized((
 				n_trees_per_round,
 				labels_early_stopping.as_ref().unwrap().len(),
 			))
 		};
-		for mut logits in logits_early_stopping.gencolumns_mut() {
-			logits.assign(&biases);
+		for mut predictions in predictions_early_stopping.gencolumns_mut() {
+			predictions.assign(&biases);
 		}
-		Some(logits_early_stopping)
+		Some(predictions_early_stopping)
 	} else {
 		None
 	};
@@ -197,7 +197,7 @@ pub fn train(
 	// Train rounds of trees until we hit max_rounds or the early stopping monitor indicates we should stop early.
 	let round_counter = ProgressCounter::new(options.max_rounds.to_u64().unwrap());
 	update_progress(super::TrainProgress::Training(round_counter.clone()));
-	for round_index in 0..options.max_rounds {
+	for _ in 0..options.max_rounds {
 		round_counter.inc(1);
 		// Before training the next round of trees, we need to determine what value for each example we would like the tree to learn.
 		match task {
@@ -229,8 +229,19 @@ pub fn train(
 				);
 			}
 		};
-		// Train n_trees_per_round trees in parallel.
-		let trees_for_round = izip!(
+		// Train n_trees_per_round trees.
+		let mut trees_for_round = Vec::with_capacity(n_trees_per_round);
+		for (
+			mut predictions,
+			mut examples_index,
+			mut examples_index_left_buffer,
+			mut examples_index_right_buffer,
+			gradients,
+			hessians,
+			mut ordered_gradients,
+			mut ordered_hessians,
+			bin_stats_pool,
+		) in izip!(
 			predictions.axis_iter_mut(Axis(0)),
 			examples_index.axis_iter_mut(Axis(0)),
 			examples_index_left_buffer.axis_iter_mut(Axis(0)),
@@ -240,59 +251,43 @@ pub fn train(
 			ordered_gradients.axis_iter_mut(Axis(0)),
 			ordered_hessians.axis_iter_mut(Axis(0)),
 			bin_stats_pools.iter_mut(),
-		)
-		.map(
-			|(
-				mut predictions,
-				mut examples_index,
-				mut examples_index_left_buffer,
-				mut examples_index_right_buffer,
-				gradients,
-				hessians,
-				mut ordered_gradients,
-				mut ordered_hessians,
+		) {
+			// Reset the examples_index for this tree.
+			for (index, value) in examples_index.iter_mut().enumerate() {
+				*value = index;
+			}
+			// Train the tree.
+			let tree = self::tree::train(
+				&binned_features,
+				gradients.as_slice().unwrap(),
+				hessians.as_slice().unwrap(),
+				ordered_gradients.as_slice_mut().unwrap(),
+				ordered_hessians.as_slice_mut().unwrap(),
+				examples_index.as_slice_mut().unwrap(),
+				examples_index_left_buffer.as_slice_mut().unwrap(),
+				examples_index_right_buffer.as_slice_mut().unwrap(),
 				bin_stats_pool,
-			)| {
-				// Reset the examples_index for this tree.
-				for (index, value) in examples_index.iter_mut().enumerate() {
-					*value = index;
-				}
-				// Train the tree.
-				let tree = self::tree::train(
-					&binned_features,
-					gradients.as_slice().unwrap(),
-					hessians.as_slice().unwrap(),
-					ordered_gradients.as_slice_mut().unwrap(),
-					ordered_hessians.as_slice_mut().unwrap(),
-					examples_index.as_slice_mut().unwrap(),
-					examples_index_left_buffer.as_slice_mut().unwrap(),
-					examples_index_right_buffer.as_slice_mut().unwrap(),
-					bin_stats_pool,
-					has_constant_hessians,
-					&options,
-					#[cfg(feature = "timing")]
-					&timing,
-				);
-				// Update the predictions using the most recently trained tree.
-				if round_index < options.max_rounds - 1 {
-					#[cfg(feature = "timing")]
-					let start = std::time::Instant::now();
-					let predictions_cell = SuperUnsafe::new(predictions.as_slice_mut().unwrap());
-					tree.leaf_values.iter().for_each(|(range, value)| {
-						examples_index.as_slice().unwrap()[range.clone()]
-							.iter()
-							.for_each(|&example_index| {
-								let predictions = unsafe { predictions_cell.get() };
-								predictions[example_index] += value;
-							});
+				has_constant_hessians,
+				&options,
+				#[cfg(feature = "timing")]
+				&timing,
+			);
+			// Update the predictions using the leaf values from the most recently trained tree.
+			#[cfg(feature = "timing")]
+			let start = std::time::Instant::now();
+			let predictions_cell = SuperUnsafe::new(predictions.as_slice_mut().unwrap());
+			tree.leaf_values.iter().for_each(|(range, value)| {
+				examples_index.as_slice().unwrap()[range.clone()]
+					.iter()
+					.for_each(|&example_index| {
+						let predictions = unsafe { predictions_cell.get() };
+						predictions[example_index] += value;
 					});
-					#[cfg(feature = "timing")]
-					timing.predict.inc(start.elapsed());
-				}
-				tree
-			},
-		)
-		.collect::<Vec<_>>();
+			});
+			#[cfg(feature = "timing")]
+			timing.predict.inc(start.elapsed());
+			trees_for_round.push(tree);
+		}
 		// If loss computation is enabled, compute the loss for this round.
 		if let Some(losses) = losses.as_mut() {
 			let loss = match task {
@@ -315,7 +310,7 @@ pub fn train(
 		let should_stop = if early_stopping_enabled {
 			let features_early_stopping = features_early_stopping.as_ref().unwrap();
 			let labels_early_stopping = labels_early_stopping.as_ref().unwrap();
-			let logits_early_stopping = logits_early_stopping.as_mut().unwrap();
+			let logits_early_stopping = predictions_early_stopping.as_mut().unwrap();
 			let early_stopping_monitor = early_stopping_monitor.as_mut().unwrap();
 			let value = compute_early_stopping_metric(
 				&task,
