@@ -6,25 +6,25 @@ use crate::SplitDirection;
 use itertools::izip;
 use num_traits::ToPrimitive;
 
-/**
-This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
-*/
+const MIN_EXAMPLES_TO_PARALLELIZE: usize = 1024;
+
+/// This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
 pub fn rearrange_examples_index(
 	binned_features: &[BinnedFeaturesColumn],
 	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
-	examples_index_left: &mut [usize],
-	examples_index_right: &mut [usize],
+	examples_index_left_buffer: &mut [usize],
+	examples_index_right_buffer: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
-	if examples_index.len() <= 1024 {
+	if examples_index.len() <= MIN_EXAMPLES_TO_PARALLELIZE {
 		rearrange_examples_index_serial(binned_features, split, examples_index)
 	} else {
 		rearrange_examples_index_parallel(
 			binned_features,
 			split,
 			examples_index,
-			examples_index_left,
-			examples_index_right,
+			examples_index_left_buffer,
+			examples_index_right_buffer,
 		)
 	}
 }
@@ -95,19 +95,21 @@ fn rearrange_examples_index_serial(
 	(start..n_left, n_left..end)
 }
 
-/// Rearrange the examples index with multiple threads.
+const MIN_CHUNK_SIZE: usize = 1024;
+
+/// Rearrange the examples index with multiple threads. This is done by segmenting the `examples_index` into chunks and writing the indexes of the examples that will be sent left and right by the split to chunks of the temporary buffers `examples_index_left_buffer` and `examples_index_right_buffer`. Then, the parts of each chunk that were written to are copied serially to the real examples index.
 fn rearrange_examples_index_parallel(
 	binned_features: &[BinnedFeaturesColumn],
 	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
-	examples_index_left: &mut [usize],
-	examples_index_right: &mut [usize],
+	examples_index_left_buffer: &mut [usize],
+	examples_index_right_buffer: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
-	let chunk_size = usize::max(examples_index.len() / 16, 1024);
+	let chunk_size = usize::max(examples_index.len() / num_cpus::get(), MIN_CHUNK_SIZE);
 	let counts: Vec<(usize, usize)> = izip!(
 		examples_index.chunks_mut(chunk_size),
-		examples_index_left.chunks_mut(chunk_size),
-		examples_index_right.chunks_mut(chunk_size),
+		examples_index_left_buffer.chunks_mut(chunk_size),
+		examples_index_right_buffer.chunks_mut(chunk_size),
 	)
 	.map(
 		|(examples_index, examples_index_left, examples_index_right)| {
@@ -184,8 +186,8 @@ fn rearrange_examples_index_parallel(
 	izip!(
 		left_starting_indexes,
 		right_starting_indexes,
-		examples_index_left.chunks_mut(chunk_size),
-		examples_index_right.chunks_mut(chunk_size),
+		examples_index_left_buffer.chunks_mut(chunk_size),
+		examples_index_right_buffer.chunks_mut(chunk_size),
 	)
 	.for_each(
 		|(

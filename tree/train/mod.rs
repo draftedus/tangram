@@ -155,9 +155,9 @@ pub fn train(
 	let mut ordered_hessians =
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
 	let mut examples_index = unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut examples_index_left =
+	let mut examples_index_left_buffer =
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut examples_index_right =
+	let mut examples_index_right_buffer =
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
 	let mut bin_stats_pools: Vec<BinStatsPool> =
 		vec![BinStatsPool::new(options.max_leaf_nodes, &binning_instructions); n_trees_per_round];
@@ -233,8 +233,8 @@ pub fn train(
 		let trees_for_round = izip!(
 			predictions.axis_iter_mut(Axis(0)),
 			examples_index.axis_iter_mut(Axis(0)),
-			examples_index_left.axis_iter_mut(Axis(0)),
-			examples_index_right.axis_iter_mut(Axis(0)),
+			examples_index_left_buffer.axis_iter_mut(Axis(0)),
+			examples_index_right_buffer.axis_iter_mut(Axis(0)),
 			gradients.axis_iter(Axis(0)),
 			hessians.axis_iter(Axis(0)),
 			ordered_gradients.axis_iter_mut(Axis(0)),
@@ -245,8 +245,8 @@ pub fn train(
 			|(
 				mut predictions,
 				mut examples_index,
-				mut examples_index_left,
-				mut examples_index_right,
+				mut examples_index_left_buffer,
+				mut examples_index_right_buffer,
 				gradients,
 				hessians,
 				mut ordered_gradients,
@@ -265,8 +265,8 @@ pub fn train(
 					ordered_gradients.as_slice_mut().unwrap(),
 					ordered_hessians.as_slice_mut().unwrap(),
 					examples_index.as_slice_mut().unwrap(),
-					examples_index_left.as_slice_mut().unwrap(),
-					examples_index_right.as_slice_mut().unwrap(),
+					examples_index_left_buffer.as_slice_mut().unwrap(),
+					examples_index_right_buffer.as_slice_mut().unwrap(),
 					bin_stats_pool,
 					has_constant_hessians,
 					&options,

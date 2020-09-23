@@ -184,8 +184,8 @@ pub fn train(
 	ordered_gradients: &mut [f32],
 	ordered_hessians: &mut [f32],
 	examples_index: &mut [usize],
-	examples_index_left: &mut [usize],
-	examples_index_right: &mut [usize],
+	examples_index_left_buffer: &mut [usize],
+	examples_index_right_buffer: &mut [usize],
 	bin_stats_pool: &mut BinStatsPool,
 	hessians_are_constant: bool,
 	options: &TrainOptions,
@@ -343,10 +343,10 @@ pub fn train(
 			examples_index
 				.get_mut(queue_item.examples_index_range.clone())
 				.unwrap(),
-			examples_index_left
+			examples_index_left_buffer
 				.get_mut(queue_item.examples_index_range.clone())
 				.unwrap(),
-			examples_index_right
+			examples_index_right_buffer
 				.get_mut(queue_item.examples_index_range.clone())
 				.unwrap(),
 		);

@@ -7,7 +7,7 @@ version = "0.0.0"
 path = "lib.rs"
 
 [features]
-default = []
+default = ["timing"]
 timing = []
 
 [[bin]]
@@ -38,6 +38,7 @@ path = "benchmarks/iris.rs"
 itertools = "0.9"
 maplit = "1"
 ndarray = "0.13"
+num_cpus = "1"
 num-traits = "0.2"
 super_unsafe = { path = "../super_unsafe" }
 tangram_dataframe = { path = "../dataframe" }
