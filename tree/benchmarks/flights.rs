@@ -122,7 +122,7 @@ fn main() {
 		learning_rate: 0.1,
 		max_rounds: 100,
 		max_leaf_nodes: 512,
-		max_depth: 10,
+		max_depth: 10000,
 		..Default::default()
 	};
 	let model = tangram_tree::BinaryClassifier::train(
@@ -141,14 +141,14 @@ fn main() {
 
 	// compute metrics
 	let labels = labels_test.view().data.into();
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
+	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
 	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels,
 	});
 	let metrics = metrics.finalize();
-	println!("{:?}", metrics.thresholds[1].accuracy);
-	println!("auc_roc: {:?}", metrics.auc_roc);
+	println!("{}", metrics.thresholds[50].accuracy);
+	println!("auc_roc: {}", metrics.auc_roc);
 	let auc_input = probabilities
 		.column(1)
 		.into_iter()
@@ -156,5 +156,5 @@ fn main() {
 		.map(|(p, l)| (*p, l.unwrap()))
 		.collect();
 	let auc = tangram_metrics::AUCROC::compute(auc_input);
-	println!("auc_roc: {:?}", auc);
+	println!("auc_roc: {}", auc);
 }

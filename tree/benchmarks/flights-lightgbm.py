@@ -113,25 +113,17 @@ data_test = pd.read_csv(
 		'Y': 1
 	}
 })
-data = pd.concat([data_train, data_test])
-features = data.loc[:, data.columns != target]
-labels = data[target]
-(features_train, features_test, labels_train, labels_test) = train_test_split(
-	features,
-	labels,
-	test_size=nrows_test,
-	train_size=nrows_train,
-	shuffle=False
-)
+features_train = data_train.loc[:, data_train.columns != target]
+features_test = data_test.loc[:, data_test.columns != target]
+labels_train = data_train[target]
+labels_test = data_test[target]
 
 # train the model
 model = lgb.LGBMClassifier(
 	learning_rate=0.1,
 	n_estimators=100,
 	num_leaves=512,
-	# force_col_wise=True,
-	# enable_sparse=False,
-	# enable_bundle=False,
+	max_depth=10000,
 )
 categorical_features = ["Month", "DayofMonth", "DayOfWeek", "UniqueCarrier", "Origin", "Dest"]
 model.fit(

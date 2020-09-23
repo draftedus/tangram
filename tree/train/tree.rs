@@ -214,21 +214,21 @@ pub fn train(
 	timing.sum_gradients_hessians.inc(start.elapsed());
 
 	// If splitting the root node would violate any of the relevant constraints, short-circuit and return a tree with just one node.
-	let should_not_split_root = n_examples_root < 2 * options.min_examples_per_child
-		|| sum_hessians_root < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
-	if should_not_split_root {
-		add_leaf(
-			&mut nodes,
-			&mut leaf_values,
-			sum_gradients_root,
-			sum_hessians_root,
-			n_examples_root,
-			examples_index_range_root,
-			None,
-			options,
-		);
-		return TrainTree { nodes, leaf_values };
-	}
+	// let should_not_split_root = n_examples_root < 2 * options.min_examples_per_child
+	// 	|| sum_hessians_root < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
+	// if should_not_split_root {
+	// 	add_leaf(
+	// 		&mut nodes,
+	// 		&mut leaf_values,
+	// 		sum_gradients_root,
+	// 		sum_hessians_root,
+	// 		n_examples_root,
+	// 		examples_index_range_root,
+	// 		None,
+	// 		options,
+	// 	);
+	// 	return TrainTree { nodes, leaf_values };
+	// }
 
 	// Compute bin stats for the root node.
 	#[cfg(feature = "timing")]
@@ -260,21 +260,21 @@ pub fn train(
 	// If we were able to find a split for the root node, add it to the queue and proceed to the loop. Otherwise, return a tree with a single node.
 	if let Some(find_split_output) = find_split_output {
 		queue.push(QueueItem {
-			depth: 0,
-			examples_index_range: examples_index_range_root,
 			gain: find_split_output.gain,
+			parent_index: None,
+			split_direction: None,
+			depth: 0,
+			bin_stats: root_bin_stats,
+			examples_index_range: examples_index_range_root,
+			sum_gradients: sum_gradients_root,
+			sum_hessians: sum_hessians_root,
+			split: find_split_output.split,
 			left_n_examples: find_split_output.left_n_examples,
 			left_sum_gradients: find_split_output.left_sum_gradients,
 			left_sum_hessians: find_split_output.left_sum_hessians,
-			bin_stats: root_bin_stats,
-			parent_index: None,
 			right_n_examples: find_split_output.right_n_examples,
 			right_sum_gradients: find_split_output.right_sum_gradients,
 			right_sum_hessians: find_split_output.right_sum_hessians,
-			split_direction: None,
-			split: find_split_output.split,
-			sum_gradients: sum_gradients_root,
-			sum_hessians: sum_hessians_root,
 		});
 	} else {
 		add_leaf(
@@ -440,9 +440,9 @@ pub fn train(
 		};
 
 		// In order to do "best first" tree building, we need to choose the best split for each of the children of this branch.
-		#[cfg(feature = "timing")]
-		let start = std::time::Instant::now();
 		if should_try_to_split_left_child {
+			#[cfg(feature = "timing")]
+			let start = std::time::Instant::now();
 			let left_find_split_output = choose_best_split(
 				&left_bin_stats,
 				queue_item.left_sum_gradients,
@@ -450,23 +450,25 @@ pub fn train(
 				left_examples_index_range.clone(),
 				&options,
 			);
+			#[cfg(feature = "timing")]
+			timing.find_split.inc(start.elapsed());
 			if let Some(find_split_output) = left_find_split_output {
 				queue.push(QueueItem {
-					depth: queue_item.depth + 1,
-					examples_index_range: left_examples_index_range.clone(),
 					gain: find_split_output.gain,
+					parent_index: Some(node_index),
+					split_direction: Some(SplitDirection::Left),
+					depth: queue_item.depth + 1,
+					bin_stats: left_bin_stats,
+					examples_index_range: left_examples_index_range.clone(),
+					sum_gradients: queue_item.left_sum_gradients,
+					sum_hessians: queue_item.left_sum_hessians,
+					split: find_split_output.split,
 					left_n_examples: find_split_output.left_n_examples,
 					left_sum_gradients: find_split_output.left_sum_gradients,
 					left_sum_hessians: find_split_output.left_sum_hessians,
-					bin_stats: left_bin_stats,
-					parent_index: Some(node_index),
 					right_n_examples: find_split_output.right_n_examples,
 					right_sum_gradients: find_split_output.right_sum_gradients,
 					right_sum_hessians: find_split_output.right_sum_hessians,
-					split_direction: Some(SplitDirection::Left),
-					split: find_split_output.split,
-					sum_gradients: queue_item.left_sum_gradients,
-					sum_hessians: queue_item.left_sum_hessians,
 				});
 			} else {
 				add_leaf(
@@ -486,6 +488,8 @@ pub fn train(
 		};
 
 		if should_try_to_split_right_child {
+			#[cfg(feature = "timing")]
+			let start = std::time::Instant::now();
 			let right_find_split_output = choose_best_split(
 				&right_bin_stats,
 				queue_item.right_sum_gradients,
@@ -493,23 +497,25 @@ pub fn train(
 				right_examples_index_range.clone(),
 				&options,
 			);
+			#[cfg(feature = "timing")]
+			timing.find_split.inc(start.elapsed());
 			if let Some(find_split_output) = right_find_split_output {
 				queue.push(QueueItem {
-					depth: queue_item.depth + 1,
-					examples_index_range: right_examples_index_range.clone(),
 					gain: find_split_output.gain,
+					parent_index: Some(node_index),
+					split_direction: Some(SplitDirection::Right),
+					depth: queue_item.depth + 1,
+					bin_stats: right_bin_stats,
+					examples_index_range: right_examples_index_range.clone(),
+					sum_gradients: queue_item.right_sum_gradients,
+					sum_hessians: queue_item.right_sum_hessians,
+					split: find_split_output.split,
 					left_n_examples: find_split_output.left_n_examples,
 					left_sum_gradients: find_split_output.left_sum_gradients,
 					left_sum_hessians: find_split_output.left_sum_hessians,
-					bin_stats: right_bin_stats,
-					parent_index: Some(node_index),
 					right_n_examples: find_split_output.right_n_examples,
 					right_sum_gradients: find_split_output.right_sum_gradients,
 					right_sum_hessians: find_split_output.right_sum_hessians,
-					split_direction: Some(SplitDirection::Right),
-					split: find_split_output.split,
-					sum_gradients: queue_item.right_sum_gradients,
-					sum_hessians: queue_item.right_sum_hessians,
 				});
 			} else {
 				add_leaf(
@@ -527,8 +533,6 @@ pub fn train(
 		} else {
 			bin_stats_pool.items.push(right_bin_stats)
 		};
-		#[cfg(feature = "timing")]
-		timing.find_split.inc(start.elapsed());
 	}
 
 	// The remaining items on the queue should all be made into leaves.
@@ -561,12 +565,16 @@ fn add_leaf(
 	sum_hessians: f64,
 	n_examples_root: usize,
 	examples_index_range: Range<usize>,
-	parent: Option<(usize, SplitDirection)>,
+	parent_node_index_and_direction: Option<(usize, SplitDirection)>,
 	options: &TrainOptions,
 ) {
 	// This is the index this leaf will have in the `nodes` array.
 	let leaf_index = nodes.len();
-	let value = compute_leaf_value(sum_gradients, sum_hessians, options);
+	// Compute the leaf's value.
+	let value = (-options.learning_rate.to_f64().unwrap() * sum_gradients
+		/ (sum_hessians + options.l2_regularization.to_f64().unwrap() + std::f64::EPSILON))
+		.to_f32()
+		.unwrap();
 	let examples_fraction =
 		examples_index_range.len().to_f32().unwrap() / n_examples_root.to_f32().unwrap();
 	let node = TrainNode::Leaf(TrainLeafNode {
@@ -576,23 +584,15 @@ fn add_leaf(
 	leaf_values.push((examples_index_range, value));
 	nodes.push(node);
 	// Update the parent's left or right child index to refer to this leaf's index.
-	if let Some((parent_node_index, split_direction)) = parent {
+	if let Some((parent_node_index, parent_direction)) = parent_node_index_and_direction {
 		let parent = nodes
 			.get_mut(parent_node_index)
 			.unwrap()
 			.as_branch_mut()
 			.unwrap();
-		match split_direction {
+		match parent_direction {
 			SplitDirection::Left => parent.left_child_index = Some(leaf_index),
 			SplitDirection::Right => parent.right_child_index = Some(leaf_index),
 		}
 	}
-}
-
-/// Compute the value for a leaf node.
-fn compute_leaf_value(sum_gradients: f64, sum_hessians: f64, options: &TrainOptions) -> f32 {
-	(-options.learning_rate.to_f64().unwrap() * sum_gradients
-		/ (sum_hessians + options.l2_regularization.to_f64().unwrap() + std::f64::EPSILON))
-		.to_f32()
-		.unwrap()
 }
