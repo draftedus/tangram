@@ -213,22 +213,22 @@ pub fn train(
 	#[cfg(feature = "timing")]
 	timing.sum_gradients_hessians.inc(start.elapsed());
 
-	// If splitting the root node would violate any of the relevant constraints, short-circuit and return a tree with just one node.
-	// let should_not_split_root = n_examples_root < 2 * options.min_examples_per_child
-	// 	|| sum_hessians_root < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
-	// if should_not_split_root {
-	// 	add_leaf(
-	// 		&mut nodes,
-	// 		&mut leaf_values,
-	// 		sum_gradients_root,
-	// 		sum_hessians_root,
-	// 		n_examples_root,
-	// 		examples_index_range_root,
-	// 		None,
-	// 		options,
-	// 	);
-	// 	return TrainTree { nodes, leaf_values };
-	// }
+	// Determine if we should try to split the root.
+	let should_try_to_split_root = n_examples_root >= 2 * options.min_examples_per_child
+		&& sum_hessians_root >= 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
+	if !should_try_to_split_root {
+		add_leaf(
+			&mut nodes,
+			&mut leaf_values,
+			sum_gradients_root,
+			sum_hessians_root,
+			n_examples_root,
+			examples_index_range_root,
+			None,
+			options,
+		);
+		return TrainTree { nodes, leaf_values };
+	}
 
 	// Compute bin stats for the root node.
 	#[cfg(feature = "timing")]
@@ -355,7 +355,7 @@ pub fn train(
 		#[cfg(feature = "timing")]
 		timing.rearrange_examples_index.inc(start.elapsed());
 
-		// Determine if we should split the left and/or right children of this branch based on the number of examples that pass through them and their depth in the tree.
+		// Determine if we should try to split the left and/or right children of this branch.
 		let max_depth_reached = queue_item.depth + 1 == options.max_depth;
 		let should_try_to_split_left_child = !max_depth_reached
 			&& left_examples_index_range.len() >= options.min_examples_per_child * 2;
@@ -396,7 +396,7 @@ pub fn train(
 			continue;
 		}
 
-		// Next, we compute the bin stats for the two children. `smaller_direction` is the direction of the child to which fewer examples are sent.
+		// Compute the bin stats for the two children. `smaller_direction` is the direction of the child to which fewer examples are sent.
 		let smaller_direction =
 			if left_examples_index_range.len() < right_examples_index_range.len() {
 				SplitDirection::Left
