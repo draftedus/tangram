@@ -136,24 +136,24 @@ struct QueueItem {
 	pub bin_stats: BinStats,
 	/// The examples_index_range tells you what the range of indexes in the examples_index specify the examples in this node.
 	pub examples_index_range: std::ops::Range<usize>,
-	/// The sum of the gradients of all of the training examples in this node.
+	/// This is the sum of the gradients for the training examples that pass through this node.
 	pub sum_gradients: f64,
-	/// The sum of the hessians of all of the training examples in this node.
+	/// This is the sum of the hessians for the training examples that pass through this node.
 	pub sum_hessians: f64,
-	/// A split describes how the node is split into left and right children.
+	/// This is the best split that was chosen for this node.
 	pub split: TrainBranchSplit,
-	/// The sum of the gradients of all of the training examples that go to the left child.
-	pub left_sum_gradients: f64,
-	/// The sum of the hessians of all of the training examples that go to the left child.
-	pub left_sum_hessians: f64,
-	/// The total number of training examples that go to the left child.
+	/// This is the number of training examples that were sent to the left child.
 	pub left_n_examples: usize,
-	/// The sum of the gradients of all of the training examples that go to the right child.
-	pub right_sum_gradients: f64,
-	/// The sum of the hessians of all of the training examples that go to the right child.
-	pub right_sum_hessians: f64,
-	/// The total number of training examples that go to the right child.
+	/// This is the sum of the gradients for the training examples that were sent to the left child.
+	pub left_sum_gradients: f64,
+	/// This is the sum of the hessians for the training examples that were sent to the left child.
+	pub left_sum_hessians: f64,
+	/// This is the number of training examples that were sent to the right child.
 	pub right_n_examples: usize,
+	/// This is the sum of the gradients for the training examples that were sent to the right child.
+	pub right_sum_gradients: f64,
+	/// This is the sum of the hessians for the training examples that were sent to the right child.
+	pub right_sum_hessians: f64,
 }
 
 impl PartialEq for QueueItem {
@@ -239,7 +239,7 @@ pub fn train(
 		hessians_are_constant,
 	);
 	#[cfg(feature = "timing")]
-	timing.bin_stats.compute_bin_stats_root.inc(start.elapsed());
+	timing.compute_bin_stats_root.inc(start.elapsed());
 
 	// Choose the best split for the root node.
 	#[cfg(feature = "timing")]
@@ -360,42 +360,32 @@ pub fn train(
 
 		// If we should not split the left, add a leaf.
 		if !should_try_to_split_left_child {
-			let left_child_index = nodes.len();
-			let value = compute_leaf_value(
+			add_leaf(
+				&mut nodes,
+				&mut leaf_values,
 				queue_item.left_sum_gradients,
 				queue_item.left_sum_hessians,
+				queue_item.left_n_examples,
+				left_examples_index_range.clone(),
+				node_index,
+				SplitDirection::Left,
 				options,
 			);
-			let examples_fraction =
-				queue_item.left_n_examples.to_f32().unwrap() / n_examples.to_f32().unwrap();
-			let node = TrainNode::Leaf(TrainLeafNode {
-				value,
-				examples_fraction,
-			});
-			leaf_values.push((left_examples_index_range.clone(), value));
-			nodes.push(node);
-			let parent = nodes.get_mut(node_index).unwrap().as_branch_mut().unwrap();
-			parent.left_child_index = Some(left_child_index);
 		}
 
 		// If we should not split right, add a leaf.
 		if !should_try_to_split_right_child {
-			let right_child_index = nodes.len();
-			let value = compute_leaf_value(
+			add_leaf(
+				&mut nodes,
+				&mut leaf_values,
 				queue_item.right_sum_gradients,
 				queue_item.right_sum_hessians,
+				queue_item.right_n_examples,
+				right_examples_index_range.clone(),
+				node_index,
+				SplitDirection::Right,
 				options,
 			);
-			let examples_fraction =
-				queue_item.right_n_examples.to_f32().unwrap() / n_examples.to_f32().unwrap();
-			let node = TrainNode::Leaf(TrainLeafNode {
-				value,
-				examples_fraction,
-			});
-			leaf_values.push((right_examples_index_range.clone(), value));
-			nodes.push(node);
-			let parent = nodes.get_mut(node_index).unwrap().as_branch_mut().unwrap();
-			parent.right_child_index = Some(right_child_index);
 		}
 
 		// If we should not split either left or right, then there is nothing left to do, so we can go to the next item on the queue.
@@ -431,7 +421,7 @@ pub fn train(
 			smaller_child_examples_index,
 		);
 		#[cfg(feature = "timing")]
-		timing.bin_stats.compute_bin_stats.inc(start.elapsed());
+		timing.compute_bin_stats.inc(start.elapsed());
 
 		// Compute the bin stats for the child with more examples by subtracting the bin stats of the child with fewer examples from the parent's bin stats.
 		#[cfg(feature = "timing")]
@@ -439,10 +429,7 @@ pub fn train(
 		let mut larger_child_bin_stats = queue_item.bin_stats;
 		compute_bin_stats_subtraction(&mut larger_child_bin_stats, &smaller_child_bin_stats);
 		#[cfg(feature = "timing")]
-		timing
-			.bin_stats
-			.compute_bin_stats_subtraction
-			.inc(start.elapsed());
+		timing.compute_bin_stats_subtraction.inc(start.elapsed());
 
 		// Assign the smaller and larger bin stats to the left and right depending on which direction was smaller.
 		let (left_bin_stats, right_bin_stats) = match smaller_direction {
@@ -453,33 +440,14 @@ pub fn train(
 		// In order to do "best first" tree building, we need to choose the best split for each of the children of this branch.
 		#[cfg(feature = "timing")]
 		let start = std::time::Instant::now();
-		let left_find_split_output = if should_try_to_split_left_child {
-			choose_best_split(
+		if should_try_to_split_left_child {
+			let left_find_split_output = choose_best_split(
 				&left_bin_stats,
 				queue_item.left_sum_gradients,
 				queue_item.left_sum_hessians,
 				left_examples_index_range.clone(),
 				&options,
-			)
-		} else {
-			None
-		};
-		let right_find_split_output = if should_try_to_split_right_child {
-			choose_best_split(
-				&right_bin_stats,
-				queue_item.right_sum_gradients,
-				queue_item.right_sum_hessians,
-				right_examples_index_range.clone(),
-				&options,
-			)
-		} else {
-			None
-		};
-		#[cfg(feature = "timing")]
-		timing.find_split.inc(start.elapsed());
-
-		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
-		if should_try_to_split_left_child {
+			);
 			if let Some(find_split_output) = left_find_split_output {
 				queue.push(QueueItem {
 					depth: queue_item.depth + 1,
@@ -499,30 +467,32 @@ pub fn train(
 					sum_hessians: queue_item.left_sum_hessians,
 				});
 			} else {
-				let left_child_index = nodes.len();
-				let value = compute_leaf_value(
+				add_leaf(
+					&mut nodes,
+					&mut leaf_values,
 					queue_item.left_sum_gradients,
 					queue_item.left_sum_hessians,
+					queue_item.left_n_examples,
+					left_examples_index_range.clone(),
+					node_index,
+					SplitDirection::Left,
 					options,
 				);
-				leaf_values.push((left_examples_index_range, value));
-				let examples_fraction =
-					queue_item.left_n_examples.to_f32().unwrap() / n_examples.to_f32().unwrap();
-				let node = TrainNode::Leaf(TrainLeafNode {
-					value,
-					examples_fraction,
-				});
-				nodes.push(node);
-				let parent = nodes.get_mut(node_index).unwrap().as_branch_mut().unwrap();
-				parent.left_child_index = Some(left_child_index);
 				bin_stats_pool.items.push(left_bin_stats);
 			}
 		} else {
 			bin_stats_pool.items.push(left_bin_stats);
-		}
+		};
 
-		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
 		if should_try_to_split_right_child {
+			let right_find_split_output = choose_best_split(
+				&right_bin_stats,
+				queue_item.right_sum_gradients,
+				queue_item.right_sum_hessians,
+				right_examples_index_range.clone(),
+				&options,
+			);
+
 			if let Some(find_split_output) = right_find_split_output {
 				queue.push(QueueItem {
 					depth: queue_item.depth + 1,
@@ -542,27 +512,24 @@ pub fn train(
 					sum_hessians: queue_item.right_sum_hessians,
 				});
 			} else {
-				let right_child_index = nodes.len();
-				let value = compute_leaf_value(
+				add_leaf(
+					&mut nodes,
+					&mut leaf_values,
 					queue_item.right_sum_gradients,
 					queue_item.right_sum_hessians,
+					queue_item.right_n_examples,
+					right_examples_index_range.clone(),
+					node_index,
+					SplitDirection::Right,
 					options,
 				);
-				leaf_values.push((right_examples_index_range, value));
-				let examples_fraction =
-					queue_item.right_n_examples.to_f32().unwrap() / n_examples.to_f32().unwrap();
-				let node = TrainNode::Leaf(TrainLeafNode {
-					value,
-					examples_fraction,
-				});
-				nodes.push(node);
-				let parent = nodes.get_mut(node_index).unwrap().as_branch_mut().unwrap();
-				parent.right_child_index = Some(right_child_index);
 				bin_stats_pool.items.push(right_bin_stats);
 			}
 		} else {
 			bin_stats_pool.items.push(right_bin_stats)
-		}
+		};
+		#[cfg(feature = "timing")]
+		timing.find_split.inc(start.elapsed());
 	}
 
 	// The remaining items on the queue should all be made into leaves.
@@ -595,12 +562,38 @@ pub fn train(
 	TrainTree { nodes, leaf_values }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_leaf(
 	nodes: &mut Vec<TrainNode>,
 	leaf_values: &mut Vec<(Range<usize>, f32)>,
+	sum_gradients: f64,
+	sum_hessians: f64,
 	n_examples: usize,
+	examples_index_range: Range<usize>,
+	parent_node_index: usize,
+	split_direction: SplitDirection,
 	options: &TrainOptions,
 ) {
+	// This is the index this leaf will have in the `nodes` array.
+	let leaf_index = nodes.len();
+	let value = compute_leaf_value(sum_gradients, sum_hessians, options);
+	let examples_fraction = n_examples.to_f32().unwrap() / n_examples.to_f32().unwrap();
+	let node = TrainNode::Leaf(TrainLeafNode {
+		value,
+		examples_fraction,
+	});
+	leaf_values.push((examples_index_range, value));
+	nodes.push(node);
+	// Update the parent's left or right child index to point to this leaf's index.
+	let parent = nodes
+		.get_mut(parent_node_index)
+		.unwrap()
+		.as_branch_mut()
+		.unwrap();
+	match split_direction {
+		SplitDirection::Left => parent.left_child_index = Some(leaf_index),
+		SplitDirection::Right => parent.right_child_index = Some(leaf_index),
+	}
 }
 
 /// Compute the value for a leaf node.

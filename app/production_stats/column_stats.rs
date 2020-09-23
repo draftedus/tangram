@@ -445,7 +445,7 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 				self.invalid_count += 1;
 			}
 		};
-		// TODO
+		// TODO collect production token stats
 		// if let Some(serde_json::Value::String(value)) = value {
 		// match self.tokenizer {
 		// 	Tokenizer::Alphanumeric => {

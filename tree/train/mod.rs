@@ -95,10 +95,7 @@ pub fn train(
 	let start = std::time::Instant::now();
 	let binning_instructions = compute_binning_instructions(&features_train, &options);
 	#[cfg(feature = "timing")]
-	timing
-		.binning
-		.compute_binning_instructions
-		.inc(start.elapsed());
+	timing.compute_binning_instructions.inc(start.elapsed());
 
 	// Use the binning instructions from the previous step to compute the binned features.
 	let progress_counter = ProgressCounter::new(features_train.nrows().to_u64().unwrap());
@@ -109,7 +106,7 @@ pub fn train(
 		progress_counter.inc(1)
 	});
 	#[cfg(feature = "timing")]
-	timing.binning.compute_binned_features.inc(start.elapsed());
+	timing.compute_binned_features.inc(start.elapsed());
 
 	// Regression and binary classification train one tree per round. Multiclass classification trains one tree per class per round.
 	let n_trees_per_round = match task {

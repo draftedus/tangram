@@ -191,7 +191,7 @@ pub fn compute_binned_features(
 					BinnedFeaturesColumn::U8(binned_feature)
 				}
 				BinningInstructions::Enum { n_options } => {
-					// TODO
+					// TODO 4 bit binned feature column
 					if *n_options <= 15 {
 						let binned_feature = feature
 							.as_enum()

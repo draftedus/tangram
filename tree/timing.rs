@@ -4,49 +4,35 @@ use std::time::Duration;
 
 #[derive(Debug)]
 pub struct Timing {
-	pub binning: BinningTiming,
-	pub bin_stats: BinStatsTiming,
-	pub find_split: TimingDuration,
-	pub rearrange_examples_index: TimingDuration,
-	pub predict: TimingDuration,
-	pub compute_feature_importances: TimingDuration,
-	pub sum_gradients_hessians: TimingDuration,
 	pub allocations: TimingDuration,
+	pub compute_bin_stats_root: TimingDuration,
+	pub compute_bin_stats_subtraction: TimingDuration,
+	pub compute_bin_stats: TimingDuration,
+	pub compute_binned_features: TimingDuration,
+	pub compute_binning_instructions: TimingDuration,
+	pub compute_feature_importances: TimingDuration,
+	pub find_split: TimingDuration,
+	pub predict: TimingDuration,
+	pub rearrange_examples_index: TimingDuration,
+	pub sum_gradients_hessians: TimingDuration,
 }
 
 pub struct TimingDuration(AtomicU64);
 
-#[derive(Debug)]
-pub struct BinningTiming {
-	pub compute_binning_instructions: TimingDuration,
-	pub compute_binned_features: TimingDuration,
-}
-
-#[derive(Debug)]
-pub struct BinStatsTiming {
-	pub compute_bin_stats: TimingDuration,
-	pub compute_bin_stats_subtraction: TimingDuration,
-	pub compute_bin_stats_root: TimingDuration,
-}
-
 impl Timing {
 	pub fn new() -> Self {
 		Self {
-			binning: BinningTiming {
-				compute_binning_instructions: TimingDuration::new(),
-				compute_binned_features: TimingDuration::new(),
-			},
-			bin_stats: BinStatsTiming {
-				compute_bin_stats: TimingDuration::new(),
-				compute_bin_stats_subtraction: TimingDuration::new(),
-				compute_bin_stats_root: TimingDuration::new(),
-			},
-			sum_gradients_hessians: TimingDuration::new(),
-			find_split: TimingDuration::new(),
-			rearrange_examples_index: TimingDuration::new(),
-			predict: TimingDuration::new(),
-			compute_feature_importances: TimingDuration::new(),
 			allocations: TimingDuration::new(),
+			compute_bin_stats_root: TimingDuration::new(),
+			compute_bin_stats_subtraction: TimingDuration::new(),
+			compute_bin_stats: TimingDuration::new(),
+			compute_binned_features: TimingDuration::new(),
+			compute_binning_instructions: TimingDuration::new(),
+			compute_feature_importances: TimingDuration::new(),
+			find_split: TimingDuration::new(),
+			predict: TimingDuration::new(),
+			rearrange_examples_index: TimingDuration::new(),
+			sum_gradients_hessians: TimingDuration::new(),
 		}
 	}
 }
