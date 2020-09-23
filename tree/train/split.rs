@@ -9,7 +9,6 @@ use std::ops::Range;
 
 pub struct ChooseBestSplitOutput {
 	pub gain: f32,
-	pub feature_index: usize,
 	pub split: TrainBranchSplit,
 	pub left_sum_gradients: f64,
 	pub left_sum_hessians: f64,
@@ -19,7 +18,7 @@ pub struct ChooseBestSplitOutput {
 	pub right_n_examples: usize,
 }
 
-/// Find the split with the highest gain across all features, if a valid one exists.
+/// Choose the split with the highest gain, if a valid one exists.
 pub fn choose_best_split(
 	bin_stats: &BinStats,
 	sum_gradients: f64,
@@ -141,7 +140,6 @@ fn choose_best_split_continuous(
 			invalid_values_direction,
 		});
 		let current_split = ChooseBestSplitOutput {
-			feature_index,
 			gain: current_split_gain,
 			left_n_examples,
 			left_sum_gradients,
@@ -252,7 +250,6 @@ fn choose_best_split_discrete(
 			directions: directions.clone(),
 		});
 		let current_split = ChooseBestSplitOutput {
-			feature_index,
 			gain: current_split_gain,
 			left_n_examples,
 			left_sum_gradients,

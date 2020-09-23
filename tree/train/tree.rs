@@ -134,7 +134,7 @@ struct QueueItem {
 	pub depth: usize,
 	/// The bin_stats consisting of aggregate hessian/gradient statistics of the training examples that reach this node.
 	pub bin_stats: BinStats,
-	/// The examples_index_range tells you what the range of indexes in the examples_index specify the examples in this node.
+	/// The examples_index_range tells you what range of entries in the examples index correspond to this node.
 	pub examples_index_range: std::ops::Range<usize>,
 	/// This is the sum of the gradients for the training examples that pass through this node.
 	pub sum_gradients: f64,
@@ -202,11 +202,11 @@ pub fn train(
 	// Compute the sums of gradients and hessians for the root node.
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
-	let n_examples = gradients.len();
-	let examples_index_range = 0..n_examples;
-	let sum_gradients = gradients.iter().map(|v| v.to_f64().unwrap()).sum();
-	let sum_hessians = if hessians_are_constant {
-		n_examples.to_f64().unwrap()
+	let n_examples_root = examples_index.len();
+	let examples_index_range_root = 0..n_examples_root;
+	let sum_gradients_root = gradients.iter().map(|v| v.to_f64().unwrap()).sum();
+	let sum_hessians_root = if hessians_are_constant {
+		n_examples_root.to_f64().unwrap()
 	} else {
 		hessians.iter().map(|v| v.to_f64().unwrap()).sum()
 	};
@@ -214,16 +214,16 @@ pub fn train(
 	timing.sum_gradients_hessians.inc(start.elapsed());
 
 	// If splitting the root node would violate any of the relevant constraints, short-circuit and return a tree with just one node.
-	let should_not_split_root = n_examples < 2 * options.min_examples_per_child
-		|| sum_hessians < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
+	let should_not_split_root = n_examples_root < 2 * options.min_examples_per_child
+		|| sum_hessians_root < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
 	if should_not_split_root {
-		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
+		let value = compute_leaf_value(sum_gradients_root, sum_hessians_root, options);
 		let node = TrainNode::Leaf(TrainLeafNode {
 			value,
 			examples_fraction: 1.0,
 		});
 		nodes.push(node);
-		leaf_values.push((examples_index_range, value));
+		leaf_values.push((examples_index_range_root, value));
 		return TrainTree { nodes, leaf_values };
 	}
 
@@ -246,9 +246,9 @@ pub fn train(
 	let start = std::time::Instant::now();
 	let find_split_output = choose_best_split(
 		&root_bin_stats,
-		sum_gradients,
-		sum_hessians,
-		examples_index_range.clone(),
+		sum_gradients_root,
+		sum_hessians_root,
+		examples_index_range_root.clone(),
 		&options,
 	);
 	#[cfg(feature = "timing")]
@@ -258,7 +258,7 @@ pub fn train(
 	if let Some(find_split_output) = find_split_output {
 		queue.push(QueueItem {
 			depth: 0,
-			examples_index_range,
+			examples_index_range: examples_index_range_root,
 			gain: find_split_output.gain,
 			left_n_examples: find_split_output.left_n_examples,
 			left_sum_gradients: find_split_output.left_sum_gradients,
@@ -270,19 +270,20 @@ pub fn train(
 			right_sum_hessians: find_split_output.right_sum_hessians,
 			split_direction: None,
 			split: find_split_output.split,
-			sum_gradients,
-			sum_hessians,
+			sum_gradients: sum_gradients_root,
+			sum_hessians: sum_hessians_root,
 		});
 	} else {
-		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
-		let examples_count = examples_index_range.len();
-		leaf_values.push((examples_index_range, value));
-		let examples_fraction = examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap();
-		let node = TrainNode::Leaf(TrainLeafNode {
-			value,
-			examples_fraction,
-		});
-		nodes.push(node);
+		add_leaf(
+			&mut nodes,
+			&mut leaf_values,
+			sum_gradients_root,
+			sum_hessians_root,
+			n_examples_root,
+			examples_index_range_root,
+			None,
+			options,
+		);
 		bin_stats_pool.items.push(root_bin_stats);
 		return TrainTree { nodes, leaf_values };
 	}
@@ -305,8 +306,8 @@ pub fn train(
 		};
 
 		// Create the new branch node.
-		let examples_fraction =
-			queue_item.examples_index_range.len().to_f32().unwrap() / n_examples.to_f32().unwrap();
+		let examples_fraction = queue_item.examples_index_range.len().to_f32().unwrap()
+			/ n_examples_root.to_f32().unwrap();
 		nodes.push(TrainNode::Branch(TrainBranchNode {
 			split: queue_item.split.clone(),
 			left_child_index: None,
@@ -367,8 +368,7 @@ pub fn train(
 				queue_item.left_sum_hessians,
 				queue_item.left_n_examples,
 				left_examples_index_range.clone(),
-				node_index,
-				SplitDirection::Left,
+				Some((node_index, SplitDirection::Left)),
 				options,
 			);
 		}
@@ -382,8 +382,7 @@ pub fn train(
 				queue_item.right_sum_hessians,
 				queue_item.right_n_examples,
 				right_examples_index_range.clone(),
-				node_index,
-				SplitDirection::Right,
+				Some((node_index, SplitDirection::Right)),
 				options,
 			);
 		}
@@ -474,8 +473,7 @@ pub fn train(
 					queue_item.left_sum_hessians,
 					queue_item.left_n_examples,
 					left_examples_index_range.clone(),
-					node_index,
-					SplitDirection::Left,
+					Some((node_index, SplitDirection::Left)),
 					options,
 				);
 				bin_stats_pool.items.push(left_bin_stats);
@@ -492,7 +490,6 @@ pub fn train(
 				right_examples_index_range.clone(),
 				&options,
 			);
-
 			if let Some(find_split_output) = right_find_split_output {
 				queue.push(QueueItem {
 					depth: queue_item.depth + 1,
@@ -519,8 +516,7 @@ pub fn train(
 					queue_item.right_sum_hessians,
 					queue_item.right_n_examples,
 					right_examples_index_range.clone(),
-					node_index,
-					SplitDirection::Right,
+					Some((node_index, SplitDirection::Right)),
 					options,
 				);
 				bin_stats_pool.items.push(right_bin_stats);
@@ -534,65 +530,59 @@ pub fn train(
 
 	// The remaining items on the queue should all be made into leaves.
 	while let Some(queue_item) = queue.pop() {
-		let node_index = nodes.len();
-		let value = compute_leaf_value(queue_item.sum_gradients, queue_item.sum_hessians, options);
-		let examples_count = queue_item.examples_index_range.len();
-		let examples_fraction = examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap();
-		let node = TrainNode::Leaf(TrainLeafNode {
-			value,
-			examples_fraction,
-		});
-		leaf_values.push((queue_item.examples_index_range.clone(), value));
-		nodes.push(node);
-		if let Some(parent_index) = queue_item.parent_index {
-			let parent = nodes
-				.get_mut(parent_index)
-				.unwrap()
-				.as_branch_mut()
-				.unwrap();
-			let split_direction = queue_item.split_direction.unwrap();
-			match split_direction {
-				SplitDirection::Left => parent.left_child_index = Some(node_index),
-				SplitDirection::Right => parent.right_child_index = Some(node_index),
-			}
-		}
+		add_leaf(
+			&mut nodes,
+			&mut leaf_values,
+			queue_item.sum_gradients,
+			queue_item.sum_hessians,
+			queue_item.examples_index_range.len(),
+			queue_item.examples_index_range,
+			Some((
+				queue_item.parent_index.unwrap(),
+				queue_item.split_direction.unwrap(),
+			)),
+			options,
+		);
 		bin_stats_pool.items.push(queue_item.bin_stats);
 	}
 
 	TrainTree { nodes, leaf_values }
 }
 
+/// Add a leaf to the list of nodes and update the parent to refer to it.
 #[allow(clippy::too_many_arguments)]
 fn add_leaf(
 	nodes: &mut Vec<TrainNode>,
 	leaf_values: &mut Vec<(Range<usize>, f32)>,
 	sum_gradients: f64,
 	sum_hessians: f64,
-	n_examples: usize,
+	n_examples_root: usize,
 	examples_index_range: Range<usize>,
-	parent_node_index: usize,
-	split_direction: SplitDirection,
+	parent: Option<(usize, SplitDirection)>,
 	options: &TrainOptions,
 ) {
 	// This is the index this leaf will have in the `nodes` array.
 	let leaf_index = nodes.len();
 	let value = compute_leaf_value(sum_gradients, sum_hessians, options);
-	let examples_fraction = n_examples.to_f32().unwrap() / n_examples.to_f32().unwrap();
+	let examples_fraction =
+		examples_index_range.len().to_f32().unwrap() / n_examples_root.to_f32().unwrap();
 	let node = TrainNode::Leaf(TrainLeafNode {
 		value,
 		examples_fraction,
 	});
 	leaf_values.push((examples_index_range, value));
 	nodes.push(node);
-	// Update the parent's left or right child index to point to this leaf's index.
-	let parent = nodes
-		.get_mut(parent_node_index)
-		.unwrap()
-		.as_branch_mut()
-		.unwrap();
-	match split_direction {
-		SplitDirection::Left => parent.left_child_index = Some(leaf_index),
-		SplitDirection::Right => parent.right_child_index = Some(leaf_index),
+	// Update the parent's left or right child index to refer to this leaf's index.
+	if let Some((parent_node_index, split_direction)) = parent {
+		let parent = nodes
+			.get_mut(parent_node_index)
+			.unwrap()
+			.as_branch_mut()
+			.unwrap();
+		match split_direction {
+			SplitDirection::Left => parent.left_child_index = Some(leaf_index),
+			SplitDirection::Right => parent.right_child_index = Some(leaf_index),
+		}
 	}
 }
 
