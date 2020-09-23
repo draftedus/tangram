@@ -9,8 +9,12 @@ import lightgbm as lgb
 # load the data
 path_train = 'data/flights-1m.csv'
 path_test = 'data/flights-test.csv'
+nrows_train=1_000_000
+nrows_test=100_000
 # path_train = 'data/flights-100k.csv'
 # path_test = 'data/flights-test.csv'
+# nrows_train=100_000
+# nrows_test=100_000
 month_options = [
 	"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 ]

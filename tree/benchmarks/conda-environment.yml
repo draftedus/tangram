@@ -1,0 +1,13 @@
+name: benchmarks
+channels:
+  - conda-forge
+  - h2oai
+dependencies:
+  - h2o
+  - lightgbm
+  - numpy
+  - openjdk
+  - pandas
+  - scikit-learn
+  - xgboost
+  - openjdk

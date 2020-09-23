@@ -140,4 +140,5 @@ model.train(
 )
 
 perf = model.model_performance(data_test)
-print(perf)
+print('accuracy: ', perf.accuracy()[0][1])
+print('auc: ', perf.auc())
