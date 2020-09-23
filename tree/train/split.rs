@@ -31,130 +31,31 @@ pub fn choose_best_split(
 		.enumerate()
 		.filter_map(
 			|(feature_index, (bin_stats, binning_instructions))| match binning_instructions {
-				BinningInstructions::Number { .. } => {
-					find_best_continuous_split_for_feature_left_to_right(
-						feature_index,
-						&binning_instructions,
-						bin_stats,
-						sum_gradients,
-						sum_hessians,
-						examples_index_range.clone(),
-						options,
-					)
-				}
-				BinningInstructions::Enum { .. } => {
-					find_best_discrete_split_for_feature_left_to_right(
-						feature_index,
-						&binning_instructions,
-						bin_stats,
-						sum_gradients,
-						sum_hessians,
-						examples_index_range.clone(),
-						options,
-					)
-				}
+				BinningInstructions::Number { .. } => choose_best_split_continuous(
+					feature_index,
+					&binning_instructions,
+					bin_stats,
+					sum_gradients,
+					sum_hessians,
+					examples_index_range.clone(),
+					options,
+				),
+				BinningInstructions::Enum { .. } => choose_best_split_discrete(
+					feature_index,
+					&binning_instructions,
+					bin_stats,
+					sum_gradients,
+					sum_hessians,
+					examples_index_range.clone(),
+					options,
+				),
 			},
 		)
 		.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 }
 
-/// Find the split with the highest gain across all features for both of the left and right child at the same time, if a valid one exists. A valid split will not exist if the split conditions are violated for all potential splits. By looping over the features once, we increase the cache efficiency.
-#[allow(clippy::too_many_arguments)]
-pub fn choose_best_split_both(
-	left_bin_stats: &BinStats,
-	left_sum_gradients: f64,
-	left_sum_hessians: f64,
-	left_examples_index_range: Range<usize>,
-	right_bin_stats: &BinStats,
-	right_sum_gradients: f64,
-	right_sum_hessians: f64,
-	right_examples_index_range: Range<usize>,
-	options: &TrainOptions,
-) -> (Option<ChooseBestSplitOutput>, Option<ChooseBestSplitOutput>) {
-	let best: Vec<(Option<ChooseBestSplitOutput>, Option<ChooseBestSplitOutput>)> = (0
-		..left_bin_stats.entries.len())
-		.map(|feature_index| {
-			let binning_instructions = &left_bin_stats.binning_instructions[feature_index];
-			match binning_instructions {
-				BinningInstructions::Number { .. } => (
-					find_best_continuous_split_for_feature_left_to_right(
-						feature_index,
-						binning_instructions,
-						&left_bin_stats.entries[feature_index],
-						left_sum_gradients,
-						left_sum_hessians,
-						left_examples_index_range.clone(),
-						options,
-					),
-					find_best_continuous_split_for_feature_left_to_right(
-						feature_index,
-						binning_instructions,
-						&right_bin_stats.entries[feature_index],
-						right_sum_gradients,
-						right_sum_hessians,
-						right_examples_index_range.clone(),
-						options,
-					),
-				),
-				BinningInstructions::Enum { .. } => (
-					find_best_discrete_split_for_feature_left_to_right(
-						feature_index,
-						&binning_instructions,
-						&left_bin_stats.entries[feature_index],
-						left_sum_gradients,
-						left_sum_hessians,
-						left_examples_index_range.clone(),
-						options,
-					),
-					find_best_discrete_split_for_feature_left_to_right(
-						feature_index,
-						&binning_instructions,
-						&right_bin_stats.entries[feature_index],
-						right_sum_gradients,
-						right_sum_hessians,
-						right_examples_index_range.clone(),
-						options,
-					),
-				),
-			}
-		})
-		.collect();
-	let (left, right) = best.into_iter().fold(
-		(None, None),
-		|a: (Option<ChooseBestSplitOutput>, Option<ChooseBestSplitOutput>),
-		 b: (Option<ChooseBestSplitOutput>, Option<ChooseBestSplitOutput>)| {
-			let left = match (a.0, b.0) {
-				(Some(a), Some(b)) => {
-					if a.gain > b.gain {
-						Some(a)
-					} else {
-						Some(b)
-					}
-				}
-				(Some(a), None) => Some(a),
-				(None, Some(b)) => Some(b),
-				(None, None) => None,
-			};
-			let right = match (a.1, b.1) {
-				(Some(a), Some(b)) => {
-					if a.gain > b.gain {
-						Some(a)
-					} else {
-						Some(b)
-					}
-				}
-				(Some(a), None) => Some(a),
-				(None, Some(b)) => Some(b),
-				(None, None) => None,
-			};
-			(left, right)
-		},
-	);
-	(left, right)
-}
-
 /// Find the best split for this feature by iterating over the bins in sorted order, adding bins to the left tree and removing them from the right.
-fn find_best_continuous_split_for_feature_left_to_right(
+fn choose_best_split_continuous(
 	feature_index: usize,
 	binning_instructions: &BinningInstructions,
 	bin_stats_for_feature: &[f64],
@@ -272,7 +173,7 @@ To find the subsets:
 1. Sort the bins by sum_gradients / (sum_hessians + categorical_smoothing_factor).
 2. Perform the same algorithm to find the best split as the continuous setting, but iterate bins in the sorted order defined in step 1.
 */
-fn find_best_discrete_split_for_feature_left_to_right(
+fn choose_best_split_discrete(
 	feature_index: usize,
 	binning_instructions: &BinningInstructions,
 	bin_stats_for_feature: &[f64],
@@ -378,7 +279,6 @@ fn find_best_discrete_split_for_feature_left_to_right(
 }
 
 /// The gain is a value that is used to measure how good a given split is.
-#[inline(always)]
 fn compute_gain(
 	sum_gradients_left: f64,
 	sum_hessians_left: f64,
@@ -393,7 +293,6 @@ fn compute_gain(
 }
 
 /// The negative loss is used to compute the gain of a given split.
-#[inline(always)]
 fn compute_negative_loss(sum_gradients: f64, sum_hessians: f64, l2_regularization: f32) -> f32 {
 	((sum_gradients * sum_gradients) / (sum_hessians + l2_regularization.to_f64().unwrap()))
 		.to_f32()

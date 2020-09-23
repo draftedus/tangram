@@ -148,7 +148,9 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 }
 
 /// A dataframe of features is binned into BinnedFeatures
-pub struct BinnedFeatures(pub Vec<BinnedFeaturesColumn>);
+pub struct BinnedFeatures {
+	pub columns: Vec<BinnedFeaturesColumn>,
+}
 
 pub enum BinnedFeaturesColumn {
 	U8(Vec<u8>),
@@ -161,80 +163,79 @@ pub fn compute_binned_features(
 	binning_instructions: &[BinningInstructions],
 	progress: &(dyn Fn() + Sync),
 ) -> BinnedFeatures {
-	BinnedFeatures(
-		izip!(&features.columns, binning_instructions)
-			.map(|(feature, binning_instructions)| {
-				match binning_instructions {
-					BinningInstructions::Number { thresholds } => {
+	let columns = izip!(&features.columns, binning_instructions)
+		.map(|(feature, binning_instructions)| {
+			match binning_instructions {
+				BinningInstructions::Number { thresholds } => {
+					let binned_feature = feature
+						.as_number()
+						.unwrap()
+						.data
+						.iter()
+						.map(|feature_value| {
+							// Invalid values go to the first bin.
+							if !feature_value.is_finite() {
+								return 0;
+							}
+							// Use binary search on the thresholds to find the bin for the feature value.
+							thresholds
+								.binary_search_by(|threshold| {
+									threshold.partial_cmp(feature_value).unwrap()
+								})
+								.unwrap_or_else(|bin| bin)
+								.to_u8()
+								.unwrap() + 1
+						})
+						.collect::<Vec<u8>>();
+					progress();
+					BinnedFeaturesColumn::U8(binned_feature)
+				}
+				BinningInstructions::Enum { n_options } => {
+					// TODO
+					if *n_options <= 15 {
 						let binned_feature = feature
-							.as_number()
+							.as_enum()
 							.unwrap()
 							.data
 							.iter()
 							.map(|feature_value| {
-								// Invalid values go to the first bin.
-								if !feature_value.is_finite() {
-									return 0;
-								}
-								// Use binary search on the thresholds to find the bin for the feature value.
-								thresholds
-									.binary_search_by(|threshold| {
-										threshold.partial_cmp(feature_value).unwrap()
-									})
-									.unwrap_or_else(|bin| bin)
-									.to_u8()
-									.unwrap() + 1
+								feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
 							})
 							.collect::<Vec<u8>>();
 						progress();
 						BinnedFeaturesColumn::U8(binned_feature)
-					}
-					BinningInstructions::Enum { n_options } => {
-						// TODO
-						if *n_options <= 15 {
-							let binned_feature = feature
-								.as_enum()
-								.unwrap()
-								.data
-								.iter()
-								.map(|feature_value| {
-									feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
-								})
-								.collect::<Vec<u8>>();
-							progress();
-							BinnedFeaturesColumn::U8(binned_feature)
-						} else if *n_options <= 255 {
-							let binned_feature = feature
-								.as_enum()
-								.unwrap()
-								.data
-								.iter()
-								.map(|feature_value| {
-									feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
-								})
-								.collect::<Vec<u8>>();
-							progress();
-							BinnedFeaturesColumn::U8(binned_feature)
-						} else {
-							let binned_feature = feature
-								.as_enum()
-								.unwrap()
-								.data
-								.iter()
-								.map(|feature_value| {
-									feature_value
-										.map(|v| v.get())
-										.unwrap_or(0)
-										.to_u16()
-										.unwrap()
-								})
-								.collect::<Vec<u16>>();
-							progress();
-							BinnedFeaturesColumn::U16(binned_feature)
-						}
+					} else if *n_options <= 255 {
+						let binned_feature = feature
+							.as_enum()
+							.unwrap()
+							.data
+							.iter()
+							.map(|feature_value| {
+								feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
+							})
+							.collect::<Vec<u8>>();
+						progress();
+						BinnedFeaturesColumn::U8(binned_feature)
+					} else {
+						let binned_feature = feature
+							.as_enum()
+							.unwrap()
+							.data
+							.iter()
+							.map(|feature_value| {
+								feature_value
+									.map(|v| v.get())
+									.unwrap_or(0)
+									.to_u16()
+									.unwrap()
+							})
+							.collect::<Vec<u16>>();
+						progress();
+						BinnedFeaturesColumn::U16(binned_feature)
 					}
 				}
-			})
-			.collect(),
-	)
+			}
+		})
+		.collect();
+	BinnedFeatures { columns }
 }

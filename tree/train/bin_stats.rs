@@ -1,12 +1,10 @@
-use super::bin::{BinnedFeaturesColumn, BinningInstructions};
+use super::bin::{BinnedFeatures, BinnedFeaturesColumn, BinningInstructions};
 use itertools::izip;
 use num_traits::ToPrimitive;
 
 #[derive(Clone)]
 pub struct BinStats {
-	/// One bin info per feature
 	pub binning_instructions: Vec<BinningInstructions>,
-	/// (n_features)
 	pub entries: Vec<Vec<f64>>,
 }
 
@@ -53,8 +51,7 @@ const NOT_ROOT_UNROLL: usize = 4;
 
 pub fn compute_bin_stats_for_root_node(
 	node_bin_stats: &mut BinStats,
-	// (n_examples, n_features) column major
-	binned_features: &[BinnedFeaturesColumn],
+	binned_features: &BinnedFeatures,
 	// (n_examples)
 	gradients: &[f32],
 	// (n_examples)
@@ -62,7 +59,7 @@ pub fn compute_bin_stats_for_root_node(
 	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
 ) {
-	izip!(&mut node_bin_stats.entries, binned_features.iter(),).for_each(
+	izip!(&mut node_bin_stats.entries, binned_features.columns.iter(),).for_each(
 		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = 0.0;
@@ -116,19 +113,12 @@ pub fn compute_bin_stats_for_root_node(
 #[allow(clippy::too_many_arguments)]
 pub fn compute_bin_stats_for_non_root_node(
 	node_bin_stats: &mut BinStats,
-	// (n_examples)
 	ordered_gradients: &mut [f32],
-	// (n_examples)
 	ordered_hessians: &mut [f32],
-	// (n_examples, n_features) column major
-	binned_features: &[BinnedFeaturesColumn],
-	// (n_examples)
+	binned_features: &BinnedFeatures,
 	gradients: &[f32],
-	// (n_examples)
 	hessians: &[f32],
-	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
-	// these are the indexes of the examples at this node, length only equal to n_examples at the root node
 	examples_index_for_node: &[usize],
 ) {
 	let n_examples_in_node = examples_index_for_node.len();
@@ -142,7 +132,7 @@ pub fn compute_bin_stats_for_non_root_node(
 			ordered_gradients[i] = gradients[examples_index_for_node[i]];
 		}
 	}
-	izip!(&mut node_bin_stats.entries, binned_features.iter(),).for_each(
+	izip!(&mut node_bin_stats.entries, binned_features.columns.iter(),).for_each(
 		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = 0.0;

@@ -259,7 +259,7 @@ pub fn train(
 				}
 				// Train the tree.
 				let (tree, leaf_values) = self::tree::train(
-					binned_features.0.as_slice(),
+					&binned_features,
 					gradients.as_slice().unwrap(),
 					hessians.as_slice().unwrap(),
 					ordered_gradients.as_slice_mut().unwrap(),

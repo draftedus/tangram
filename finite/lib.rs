@@ -83,7 +83,6 @@ impl<T> PartialEq for Finite<T>
 where
 	T: Float,
 {
-	#[inline]
 	fn eq(&self, other: &Self) -> bool {
 		self.0.eq(&other.0)
 	}
@@ -110,14 +109,12 @@ where
 }
 
 impl Hash for Finite<f32> {
-	#[inline]
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		self.0.to_bits().hash(state);
 	}
 }
 
 impl Hash for Finite<f64> {
-	#[inline]
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		self.0.to_bits().hash(state);
 	}

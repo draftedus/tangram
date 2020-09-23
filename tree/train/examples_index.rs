@@ -1,16 +1,16 @@
 use super::{
-	bin::BinnedFeaturesColumn, TrainBranchSplit, TrainBranchSplitContinuous,
-	TrainBranchSplitDiscrete,
+	bin::{BinnedFeatures, BinnedFeaturesColumn},
+	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 use crate::SplitDirection;
-use itertools::izip;
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 
 const MIN_EXAMPLES_TO_PARALLELIZE: usize = 1024;
 
 /// This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
 pub fn rearrange_examples_index(
-	binned_features: &[BinnedFeaturesColumn],
+	binned_features: &BinnedFeatures,
 	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left_buffer: &mut [usize],
@@ -31,7 +31,7 @@ pub fn rearrange_examples_index(
 
 /// Rearrange the examples index on a single thread.
 fn rearrange_examples_index_serial(
-	binned_features: &[BinnedFeaturesColumn],
+	binned_features: &BinnedFeatures,
 	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
@@ -48,7 +48,7 @@ fn rearrange_examples_index_serial(
 					bin_index,
 					..
 				}) => {
-					let binned_feature = &binned_features[*feature_index];
+					let binned_feature = &binned_features.columns[*feature_index];
 					let feature_bin = match binned_feature {
 						BinnedFeaturesColumn::U8(binned_feature) => {
 							binned_feature[examples_index[left]].to_usize().unwrap()
@@ -68,7 +68,7 @@ fn rearrange_examples_index_serial(
 					directions,
 					..
 				}) => {
-					let binned_feature = &binned_features[*feature_index];
+					let binned_feature = &binned_features.columns[*feature_index];
 					let feature_bin = match binned_feature {
 						BinnedFeaturesColumn::U8(binned_feature) => {
 							binned_feature[examples_index[left]].to_usize().unwrap()
@@ -97,80 +97,81 @@ fn rearrange_examples_index_serial(
 
 const MIN_CHUNK_SIZE: usize = 1024;
 
-/// Rearrange the examples index with multiple threads. This is done by segmenting the `examples_index` into chunks and writing the indexes of the examples that will be sent left and right by the split to chunks of the temporary buffers `examples_index_left_buffer` and `examples_index_right_buffer`. Then, the parts of each chunk that were written to are copied serially to the real examples index.
+/// Rearrange the examples index with multiple threads. This is done by segmenting the `examples_index` into chunks and writing the indexes of the examples that will be sent left and right by the split to chunks of the temporary buffers `examples_index_left_buffer` and `examples_index_right_buffer`. Then, the parts of each chunk that were written to are copied to the real examples index.
 fn rearrange_examples_index_parallel(
-	binned_features: &[BinnedFeaturesColumn],
+	binned_features: &BinnedFeatures,
 	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
 	examples_index_left_buffer: &mut [usize],
 	examples_index_right_buffer: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let chunk_size = usize::max(examples_index.len() / num_cpus::get(), MIN_CHUNK_SIZE);
-	let counts: Vec<(usize, usize)> = izip!(
-		examples_index.chunks_mut(chunk_size),
-		examples_index_left_buffer.chunks_mut(chunk_size),
-		examples_index_right_buffer.chunks_mut(chunk_size),
+	let counts: Vec<(usize, usize)> = (
+		examples_index.par_chunks_mut(chunk_size),
+		examples_index_left_buffer.par_chunks_mut(chunk_size),
+		examples_index_right_buffer.par_chunks_mut(chunk_size),
 	)
-	.map(
-		|(examples_index, examples_index_left, examples_index_right)| {
-			let mut n_left = 0;
-			let mut n_right = 0;
-			for example_index in examples_index {
-				let direction = {
-					match &split {
-						TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-							feature_index,
-							bin_index,
-							..
-						}) => {
-							let binned_features = &binned_features[*feature_index];
-							let feature_bin = match binned_features {
-								BinnedFeaturesColumn::U8(binned_features) => {
-									binned_features[*example_index].to_usize().unwrap()
+		.into_par_iter()
+		.map(
+			|(examples_index, examples_index_left, examples_index_right)| {
+				let mut n_left = 0;
+				let mut n_right = 0;
+				for example_index in examples_index {
+					let direction = {
+						match &split {
+							TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+								feature_index,
+								bin_index,
+								..
+							}) => {
+								let binned_features = &binned_features.columns[*feature_index];
+								let feature_bin = match binned_features {
+									BinnedFeaturesColumn::U8(binned_features) => {
+										binned_features[*example_index].to_usize().unwrap()
+									}
+									BinnedFeaturesColumn::U16(binned_features) => {
+										binned_features[*example_index].to_usize().unwrap()
+									}
+								};
+								if feature_bin <= *bin_index {
+									SplitDirection::Left
+								} else {
+									SplitDirection::Right
 								}
-								BinnedFeaturesColumn::U16(binned_features) => {
-									binned_features[*example_index].to_usize().unwrap()
-								}
-							};
-							if feature_bin <= *bin_index {
-								SplitDirection::Left
-							} else {
-								SplitDirection::Right
+							}
+							TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+								feature_index,
+								directions,
+								..
+							}) => {
+								let binned_features = &binned_features.columns[*feature_index];
+								let feature_bin = match binned_features {
+									BinnedFeaturesColumn::U8(binned_features) => {
+										binned_features[*example_index].to_usize().unwrap()
+									}
+									BinnedFeaturesColumn::U16(binned_features) => {
+										binned_features[*example_index].to_usize().unwrap()
+									}
+								};
+								*directions.get(feature_bin).unwrap()
 							}
 						}
-						TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-							feature_index,
-							directions,
-							..
-						}) => {
-							let binned_features = &binned_features[*feature_index];
-							let feature_bin = match binned_features {
-								BinnedFeaturesColumn::U8(binned_features) => {
-									binned_features[*example_index].to_usize().unwrap()
-								}
-								BinnedFeaturesColumn::U16(binned_features) => {
-									binned_features[*example_index].to_usize().unwrap()
-								}
-							};
-							*directions.get(feature_bin).unwrap()
+					};
+					match direction {
+						SplitDirection::Left => {
+							examples_index_left[n_left] = *example_index;
+							n_left += 1;
+						}
+						SplitDirection::Right => {
+							examples_index_right[n_right] = *example_index;
+							n_right += 1;
 						}
 					}
-				};
-				match direction {
-					SplitDirection::Left => {
-						examples_index_left[n_left] = *example_index;
-						n_left += 1;
-					}
-					SplitDirection::Right => {
-						examples_index_right[n_right] = *example_index;
-						n_right += 1;
-					}
 				}
-			}
-			(n_left, n_right)
-		},
-	)
-	.collect();
+				(n_left, n_right)
+			},
+		)
+		.collect();
 	let mut left_starting_indexes: Vec<(usize, usize)> = Vec::with_capacity(counts.len());
 	let mut left_starting_index = 0;
 	for (n_left, _) in counts.iter() {
@@ -183,39 +184,40 @@ fn rearrange_examples_index_parallel(
 		right_starting_indexes.push((right_starting_index, *n_right));
 		right_starting_index += n_right;
 	}
-	izip!(
+	(
 		left_starting_indexes,
 		right_starting_indexes,
-		examples_index_left_buffer.chunks_mut(chunk_size),
-		examples_index_right_buffer.chunks_mut(chunk_size),
+		examples_index_left_buffer.par_chunks_mut(chunk_size),
+		examples_index_right_buffer.par_chunks_mut(chunk_size),
 	)
-	.for_each(
-		|(
-			(left_starting_index, n_left),
-			(right_starting_index, n_right),
-			examples_index_left,
-			examples_index_right,
-		)| {
-			let examples_index_slice =
-				&examples_index[left_starting_index..left_starting_index + n_left];
-			let examples_index_slice = unsafe {
-				std::slice::from_raw_parts_mut(
-					examples_index_slice.as_ptr() as *mut usize,
-					examples_index_slice.len(),
-				)
-			};
-			examples_index_slice.copy_from_slice(&examples_index_left[0..n_left]);
-			let examples_index_slice =
-				&examples_index[right_starting_index..right_starting_index + n_right];
-			let examples_index_slice = unsafe {
-				std::slice::from_raw_parts_mut(
-					examples_index_slice.as_ptr() as *mut usize,
-					examples_index_slice.len(),
-				)
-			};
-			examples_index_slice.copy_from_slice(&examples_index_right[0..n_right]);
-		},
-	);
+		.into_par_iter()
+		.for_each(
+			|(
+				(left_starting_index, n_left),
+				(right_starting_index, n_right),
+				examples_index_left,
+				examples_index_right,
+			)| {
+				let examples_index_slice =
+					&examples_index[left_starting_index..left_starting_index + n_left];
+				let examples_index_slice = unsafe {
+					std::slice::from_raw_parts_mut(
+						examples_index_slice.as_ptr() as *mut usize,
+						examples_index_slice.len(),
+					)
+				};
+				examples_index_slice.copy_from_slice(&examples_index_left[0..n_left]);
+				let examples_index_slice =
+					&examples_index[right_starting_index..right_starting_index + n_right];
+				let examples_index_slice = unsafe {
+					std::slice::from_raw_parts_mut(
+						examples_index_slice.as_ptr() as *mut usize,
+						examples_index_slice.len(),
+					)
+				};
+				examples_index_slice.copy_from_slice(&examples_index_right[0..n_right]);
+			},
+		);
 	(
 		0..left_starting_index,
 		left_starting_index..examples_index.len(),

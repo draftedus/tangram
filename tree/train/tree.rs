@@ -1,11 +1,11 @@
 use super::{
-	bin::BinnedFeaturesColumn,
+	bin::BinnedFeatures,
 	bin_stats::{
 		compute_bin_stats_for_non_root_node, compute_bin_stats_for_root_node,
 		compute_bin_stats_subtraction, BinStats, BinStatsPool,
 	},
 	examples_index::rearrange_examples_index,
-	split::{choose_best_split, choose_best_split_both},
+	split::choose_best_split,
 };
 use crate::{SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
@@ -178,7 +178,7 @@ impl std::cmp::Ord for QueueItem {
 /// Train a tree.
 #[allow(clippy::too_many_arguments)]
 pub fn train(
-	binned_features: &[BinnedFeaturesColumn],
+	binned_features: &BinnedFeatures,
 	gradients: &[f32],
 	hessians: &[f32],
 	ordered_gradients: &mut [f32],
@@ -213,9 +213,9 @@ pub fn train(
 	timing.sum_gradients_hessians.inc(start.elapsed());
 
 	// If splitting the root node would violate any of the relevant constraints, short-circuit and return a tree with just one node.
-	if n_examples < 2 * options.min_examples_per_child
-		|| sum_hessians < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap()
-	{
+	let should_not_split_root = n_examples < 2 * options.min_examples_per_child
+		|| sum_hessians < 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
+	if should_not_split_root {
 		let value = compute_leaf_value(sum_gradients, sum_hessians, options);
 		let node = TrainNode::Leaf(TrainLeafNode {
 			value,
@@ -226,7 +226,7 @@ pub fn train(
 		return (tree, leaf_values);
 	}
 
-	// compute the bin stats for the root node
+	// Compute bin stats for the root node.
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
 	let mut root_bin_stats = bin_stats_pool.get();
@@ -240,7 +240,7 @@ pub fn train(
 	#[cfg(feature = "timing")]
 	timing.bin_stats.compute_bin_stats_root.inc(start.elapsed());
 
-	// based on the node stats and bin stats, find a split, if any.
+	// Choose the best split for the root node.
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
 	let find_split_output = choose_best_split(
@@ -283,15 +283,36 @@ pub fn train(
 			examples_fraction,
 		});
 		tree.nodes.push(node);
-		// Return the bin stats to the pool.
 		bin_stats_pool.items.push(root_bin_stats);
 		return (tree, leaf_values);
 	}
 
 	// This is the training loop for a tree.
-	while let Some(queue_item) = queue.pop() {
-		// Each time we pop an item off the queue, we need to update this new node's parent to point to this node's index.
+	loop {
+		// If we will hit the maximum number of leaf nodes by adding the remaining queue items as leaves then exit the loop.
+		let n_leaf_nodes = leaf_values.len() + queue.len();
+		let max_leaf_nodes_reached = n_leaf_nodes == options.max_leaf_nodes;
+		if max_leaf_nodes_reached {
+			break;
+		}
+
+		// Pop an item off the queue.
 		let node_index = tree.nodes.len();
+		let queue_item = if let Some(queue_item) = queue.pop() {
+			queue_item
+		} else {
+			break;
+		};
+
+		// Create the new branch node.
+		let examples_fraction =
+			queue_item.examples_index_range.len().to_f32().unwrap() / n_examples.to_f32().unwrap();
+		tree.nodes.push(TrainNode::Branch(TrainBranchNode {
+			split: queue_item.split.clone(),
+			left_child_index: None,
+			right_child_index: None,
+			examples_fraction,
+		}));
 		if let Some(parent_index) = queue_item.parent_index {
 			let parent = tree
 				.nodes
@@ -305,34 +326,6 @@ pub fn train(
 				SplitDirection::Right => parent.right_child_index = Some(node_index),
 			}
 		}
-
-		// Determine the current number of leaf nodes if training were to stop now. If the max leaf nodes is reached, add the current node as a leaf and continue until all items are removed from the queue and added to the tree as leaves.
-		let n_leaf_nodes = leaf_values.len() + queue.len() + 1;
-		let max_leaf_nodes_reached = n_leaf_nodes == options.max_leaf_nodes;
-		if max_leaf_nodes_reached {
-			let value =
-				compute_leaf_value(queue_item.sum_gradients, queue_item.sum_hessians, options);
-			let examples_count = queue_item.examples_index_range.len();
-			let examples_fraction = examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap();
-			let node = TrainNode::Leaf(TrainLeafNode {
-				value,
-				examples_fraction,
-			});
-			leaf_values.push((queue_item.examples_index_range.clone(), value));
-			tree.nodes.push(node);
-			bin_stats_pool.items.push(queue_item.bin_stats);
-			continue;
-		}
-
-		// Add this node as a branch to the tree.
-		let examples_fraction =
-			queue_item.examples_index_range.len().to_f32().unwrap() / n_examples.to_f32().unwrap();
-		tree.nodes.push(TrainNode::Branch(TrainBranchNode {
-			split: queue_item.split.clone(),
-			left_child_index: None,
-			right_child_index: None,
-			examples_fraction,
-		}));
 
 		// Rearrange the examples index.
 		#[cfg(feature = "timing")]
@@ -350,23 +343,24 @@ pub fn train(
 				.get_mut(queue_item.examples_index_range.clone())
 				.unwrap(),
 		);
+		// The left and right ranges are local to the node, so add the node's start to make them global.
+		let examples_index_range_start = queue_item.examples_index_range.start;
+		let left_examples_index_range =
+			examples_index_range_start + left.start..examples_index_range_start + left.end;
+		let right_examples_index_range =
+			examples_index_range_start + right.start..examples_index_range_start + right.end;
 		#[cfg(feature = "timing")]
 		timing.rearrange_examples_index.inc(start.elapsed());
 
-		// The left and right ranges are local to the node, so add the node's start to make them global.
-		let start = queue_item.examples_index_range.start;
-		let left_examples_index_range = start + left.start..start + left.end;
-		let right_examples_index_range = start + right.start..start + right.end;
-
-		// Determine if we should split left and/or right based on the number of examples in the node and the node's depth in the tree.
+		// Determine if we should split the left and/or right children of this branch based on the number of examples that pass through them and their depth in the tree.
 		let max_depth_reached = queue_item.depth + 1 == options.max_depth;
-		let should_split_left = !max_depth_reached
+		let should_split_left_child = !max_depth_reached
 			&& left_examples_index_range.len() >= options.min_examples_per_child * 2;
-		let should_split_right = !max_depth_reached
+		let should_split_right_child = !max_depth_reached
 			&& right_examples_index_range.len() >= options.min_examples_per_child * 2;
 
-		// If we should not split left, add a leaf.
-		if !should_split_left {
+		// If we should not split the left, add a leaf.
+		if !should_split_left_child {
 			let left_child_index = tree.nodes.len();
 			let value = compute_leaf_value(
 				queue_item.left_sum_gradients,
@@ -381,7 +375,6 @@ pub fn train(
 			});
 			leaf_values.push((left_examples_index_range.clone(), value));
 			tree.nodes.push(node);
-			// Set the parent's child index to the new node's index.
 			let parent = tree
 				.nodes
 				.get_mut(node_index)
@@ -392,7 +385,7 @@ pub fn train(
 		}
 
 		// If we should not split right, add a leaf.
-		if !should_split_right {
+		if !should_split_right_child {
 			let right_child_index = tree.nodes.len();
 			let value = compute_leaf_value(
 				queue_item.right_sum_gradients,
@@ -407,7 +400,6 @@ pub fn train(
 			});
 			leaf_values.push((right_examples_index_range.clone(), value));
 			tree.nodes.push(node);
-			// Set the parent's child index to the new node's index.
 			let parent = tree
 				.nodes
 				.get_mut(node_index)
@@ -418,13 +410,12 @@ pub fn train(
 		}
 
 		// If we should not split either left or right, then there is nothing left to do, so we can go to the next item on the queue.
-		if !should_split_left && !should_split_right {
-			// Return the bin stats to the pool.
+		if !should_split_left_child && !should_split_right_child {
 			bin_stats_pool.items.push(queue_item.bin_stats);
 			continue;
 		}
 
-		// Next, we compute the bin stats for the two children. `smaller_direction` is the direction of the child with fewer examples.
+		// Next, we compute the bin stats for the two children. `smaller_direction` is the direction of the child to which fewer examples are sent.
 		let smaller_direction =
 			if left_examples_index_range.len() < right_examples_index_range.len() {
 				SplitDirection::Left
@@ -468,53 +459,35 @@ pub fn train(
 			.compute_bin_stats_subtraction
 			.inc(start.elapsed());
 
-		// If both left and right should split, find the splits for both at the same
-		// time. Allows for a slight speedup because of cache. TODO: this speedup is probably not there.
 		#[cfg(feature = "timing")]
 		let start = std::time::Instant::now();
-		let (left_find_split_output, right_find_split_output) =
-			if should_split_left && should_split_right {
-				// based on the node stats and bin stats, find a split, if any.
-				let (left_find_split_output, right_find_split_output) = choose_best_split_both(
-					&left_bin_stats,
-					queue_item.left_sum_gradients,
-					queue_item.left_sum_hessians,
-					left_examples_index_range.clone(),
-					&right_bin_stats,
-					queue_item.right_sum_gradients,
-					queue_item.right_sum_hessians,
-					right_examples_index_range.clone(),
-					&options,
-				);
-				(left_find_split_output, right_find_split_output)
-			} else if should_split_left {
-				// Based on the node stats and bin stats, find a split, if any.
-				let find_split_output = choose_best_split(
-					&left_bin_stats,
-					queue_item.left_sum_gradients,
-					queue_item.left_sum_hessians,
-					left_examples_index_range.clone(),
-					&options,
-				);
-				(find_split_output, None)
-			} else if should_split_right {
-				// Based on the node stats and bin stats, find a split, if any.
-				let find_split_output = choose_best_split(
-					&right_bin_stats,
-					queue_item.right_sum_gradients,
-					queue_item.right_sum_hessians,
-					right_examples_index_range.clone(),
-					&options,
-				);
-				(None, find_split_output)
-			} else {
-				(None, None)
-			};
+		let left_find_split_output = if should_split_left_child {
+			choose_best_split(
+				&left_bin_stats,
+				queue_item.left_sum_gradients,
+				queue_item.left_sum_hessians,
+				left_examples_index_range.clone(),
+				&options,
+			)
+		} else {
+			None
+		};
+		let right_find_split_output = if should_split_right_child {
+			choose_best_split(
+				&right_bin_stats,
+				queue_item.right_sum_gradients,
+				queue_item.right_sum_hessians,
+				right_examples_index_range.clone(),
+				&options,
+			)
+		} else {
+			None
+		};
 		#[cfg(feature = "timing")]
 		timing.find_split.inc(start.elapsed());
 
 		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
-		if should_split_left {
+		if should_split_left_child {
 			if let Some(find_split_output) = left_find_split_output {
 				queue.push(QueueItem {
 					depth: queue_item.depth + 1,
@@ -544,7 +517,6 @@ pub fn train(
 					examples_fraction,
 				});
 				tree.nodes.push(node);
-				// Set the parent's left child index to the new node's index.
 				let parent = tree
 					.nodes
 					.get_mut(node_index)
@@ -552,16 +524,14 @@ pub fn train(
 					.as_branch_mut()
 					.unwrap();
 				parent.left_child_index = Some(left_child_index);
-				// Return the bin stats to the pool.
 				bin_stats_pool.items.push(left_bin_stats);
 			}
 		} else {
-			// Return the bin stats to the pool.
 			bin_stats_pool.items.push(left_bin_stats);
 		}
 
 		// If we were able to find a split for the node, add it to the queue. Otherwise, add a leaf.
-		if should_split_right {
+		if should_split_right_child {
 			if let Some(find_split_output) = right_find_split_output {
 				queue.push(QueueItem {
 					depth: queue_item.depth + 1,
@@ -591,7 +561,6 @@ pub fn train(
 					examples_fraction,
 				});
 				tree.nodes.push(node);
-				// Set the parent's right child index to the new node's index.
 				let parent = tree
 					.nodes
 					.get_mut(node_index)
@@ -599,20 +568,45 @@ pub fn train(
 					.as_branch_mut()
 					.unwrap();
 				parent.right_child_index = Some(right_child_index);
-				// Return the bin stats to the pool.
 				bin_stats_pool.items.push(right_bin_stats);
 			}
 		} else {
-			// Return the bin stats to the pool.
 			bin_stats_pool.items.push(right_bin_stats)
 		}
+	}
+
+	// The remaining items on the queue should all be made into leaves.
+	while let Some(queue_item) = queue.pop() {
+		let node_index = tree.nodes.len();
+		let value = compute_leaf_value(queue_item.sum_gradients, queue_item.sum_hessians, options);
+		let examples_count = queue_item.examples_index_range.len();
+		let examples_fraction = examples_count.to_f32().unwrap() / n_examples.to_f32().unwrap();
+		let node = TrainNode::Leaf(TrainLeafNode {
+			value,
+			examples_fraction,
+		});
+		leaf_values.push((queue_item.examples_index_range.clone(), value));
+		tree.nodes.push(node);
+		if let Some(parent_index) = queue_item.parent_index {
+			let parent = tree
+				.nodes
+				.get_mut(parent_index)
+				.unwrap()
+				.as_branch_mut()
+				.unwrap();
+			let split_direction = queue_item.split_direction.unwrap();
+			match split_direction {
+				SplitDirection::Left => parent.left_child_index = Some(node_index),
+				SplitDirection::Right => parent.right_child_index = Some(node_index),
+			}
+		}
+		bin_stats_pool.items.push(queue_item.bin_stats);
 	}
 
 	(TrainTree { nodes: tree.nodes }, leaf_values)
 }
 
 /// Compute the value for a leaf node.
-#[inline(always)]
 fn compute_leaf_value(sum_gradients: f64, sum_hessians: f64, options: &TrainOptions) -> f32 {
 	(-options.learning_rate.to_f64().unwrap() * sum_gradients
 		/ (sum_hessians + options.l2_regularization.to_f64().unwrap() + std::f64::EPSILON))
