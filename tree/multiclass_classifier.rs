@@ -37,10 +37,10 @@ impl MulticlassClassifier {
 		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {
 		let task = crate::train::Task::MulticlassClassification {
-			n_trees_per_round: labels.options.len(),
+			n_classes: labels.options.len(),
 		};
 		let model = crate::train::train(
-			&task,
+			task,
 			features,
 			ColumnView::Enum(labels),
 			options,

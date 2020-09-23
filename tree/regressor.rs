@@ -31,7 +31,7 @@ impl Regressor {
 	) -> Self {
 		let task = crate::train::Task::Regression;
 		let model = crate::train::train(
-			&task,
+			task,
 			features,
 			ColumnView::Number(labels),
 			options,

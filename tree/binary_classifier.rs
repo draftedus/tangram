@@ -35,7 +35,7 @@ impl BinaryClassifier {
 	) -> Self {
 		let task = crate::train::Task::BinaryClassification;
 		let model = crate::train::train(
-			&task,
+			task,
 			features,
 			ColumnView::Enum(labels),
 			options,

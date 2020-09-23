@@ -31,11 +31,11 @@ mod tree;
 pub use self::tree::TrainTree;
 
 /// This enum is used by the common `train` function below to customize the training code slightly for each task.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Task {
 	Regression,
 	BinaryClassification,
-	MulticlassClassification { n_trees_per_round: usize },
+	MulticlassClassification { n_classes: usize },
 }
 
 /// This is the return type of the common `train` function.
@@ -48,7 +48,7 @@ pub enum Model {
 
 /// To avoid code duplication, this shared `train` function is called by `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
 pub fn train(
-	task: &Task,
+	task: Task,
 	features: DataFrameView,
 	labels: ColumnView,
 	options: TrainOptions,
@@ -115,7 +115,7 @@ pub fn train(
 	let n_trees_per_round = match task {
 		Task::Regression => 1,
 		Task::BinaryClassification => 1,
-		Task::MulticlassClassification { n_trees_per_round } => *n_trees_per_round,
+		Task::MulticlassClassification { n_classes } => n_classes,
 	};
 
 	// The mean square error loss used in regression has a constant second derivative, so there is no need to use hessians for regression tasks.
@@ -408,51 +408,53 @@ fn train_early_stopping_split<'features, 'labels>(
 }
 
 impl From<TrainTree> for Tree {
-	fn from(value: TrainTree) -> Self {
-		let nodes = value
-			.nodes
-			.into_iter()
-			.map(|node| match node {
-				TrainNode::Branch(TrainBranchNode {
-					left_child_index,
-					right_child_index,
-					split,
-					examples_fraction,
-					..
-				}) => Node::Branch(BranchNode {
-					left_child_index: left_child_index.unwrap(),
-					right_child_index: right_child_index.unwrap(),
-					split: match split {
-						TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-							feature_index,
-							invalid_values_direction,
-							split_value,
-							..
-						}) => BranchSplit::Continuous(BranchSplitContinuous {
-							feature_index,
-							split_value,
-							invalid_values_direction,
-						}),
-						TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-							feature_index,
-							directions,
-							..
-						}) => BranchSplit::Discrete(BranchSplitDiscrete {
-							feature_index,
-							directions,
-						}),
-					},
-					examples_fraction,
-				}),
-				TrainNode::Leaf(TrainLeafNode {
-					value,
-					examples_fraction,
-				}) => Node::Leaf(LeafNode {
-					value,
-					examples_fraction,
-				}),
-			})
-			.collect();
+	fn from(value: TrainTree) -> Tree {
+		let nodes = value.nodes.into_iter().map(Into::into).collect();
 		Tree { nodes }
+	}
+}
+
+impl From<TrainNode> for Node {
+	fn from(value: TrainNode) -> Node {
+		match value {
+			TrainNode::Branch(TrainBranchNode {
+				left_child_index,
+				right_child_index,
+				split,
+				examples_fraction,
+				..
+			}) => Node::Branch(BranchNode {
+				left_child_index: left_child_index.unwrap(),
+				right_child_index: right_child_index.unwrap(),
+				split: match split {
+					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+						feature_index,
+						invalid_values_direction,
+						split_value,
+						..
+					}) => BranchSplit::Continuous(BranchSplitContinuous {
+						feature_index,
+						split_value,
+						invalid_values_direction,
+					}),
+					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+						feature_index,
+						directions,
+						..
+					}) => BranchSplit::Discrete(BranchSplitDiscrete {
+						feature_index,
+						directions,
+					}),
+				},
+				examples_fraction,
+			}),
+			TrainNode::Leaf(TrainLeafNode {
+				value,
+				examples_fraction,
+			}) => Node::Leaf(LeafNode {
+				value,
+				examples_fraction,
+			}),
+		}
 	}
 }
