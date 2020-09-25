@@ -156,8 +156,13 @@ pub fn train(
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
 	let mut examples_index_right_buffer =
 		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut bin_stats_pools: Vec<BinStatsPool> =
-		vec![BinStatsPool::new(options.max_leaf_nodes, &binning_instructions); n_trees_per_round];
+	let mut bin_stats_pools: Vec<BinStatsPool> = Vec::with_capacity(n_trees_per_round);
+	for _ in 0..n_trees_per_round {
+		bin_stats_pools.push(BinStatsPool::new(
+			options.max_leaf_nodes,
+			&binning_instructions,
+		));
+	}
 	let mut predictions_early_stopping = if early_stopping_enabled {
 		let mut predictions_early_stopping = unsafe {
 			Array::uninitialized((

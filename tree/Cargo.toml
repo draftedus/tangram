@@ -45,4 +45,5 @@ super_unsafe = { path = "../super_unsafe" }
 tangram_dataframe = { path = "../dataframe" }
 tangram_finite = { path = "../finite" }
 tangram_metrics = { path = "../metrics" }
+tangram_pool = { path = "../pool" }
 tangram_progress = { path = "../progress" }

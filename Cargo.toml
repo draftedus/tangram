@@ -10,6 +10,7 @@ members = [
 	"linear",
 	"metrics",
 	"pinwheel",
+	"pool",
 	"progress",
 	"super_unsafe",
 	"text",

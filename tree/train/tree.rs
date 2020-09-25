@@ -10,6 +10,7 @@ use super::{
 use crate::{SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
+use tangram_pool::PoolGuard;
 
 #[derive(Debug)]
 pub struct TrainTree {
@@ -133,7 +134,7 @@ struct QueueItem {
 	/// This is the depth of the item in the tree.
 	pub depth: usize,
 	/// The bin_stats consisting of aggregate hessian/gradient statistics of the training examples that reach this node.
-	pub bin_stats: BinStats,
+	pub bin_stats: PoolGuard<BinStats>,
 	/// The examples_index_range tells you what range of entries in the examples index correspond to this node.
 	pub examples_index_range: std::ops::Range<usize>,
 	/// This is the sum of the gradients for the training examples that pass through this node.
@@ -287,7 +288,6 @@ pub fn train(
 			None,
 			options,
 		);
-		bin_stats_pool.items.push(root_bin_stats);
 		return TrainTree { nodes, leaf_values };
 	}
 
@@ -392,7 +392,6 @@ pub fn train(
 
 		// If we should not split either left or right, then there is nothing left to do, so we can go to the next item on the queue.
 		if !should_try_to_split_left_child && !should_try_to_split_right_child {
-			bin_stats_pool.items.push(queue_item.bin_stats);
 			continue;
 		}
 
@@ -481,11 +480,8 @@ pub fn train(
 					Some((node_index, SplitDirection::Left)),
 					options,
 				);
-				bin_stats_pool.items.push(left_bin_stats);
 			}
-		} else {
-			bin_stats_pool.items.push(left_bin_stats);
-		};
+		}
 
 		if should_try_to_split_right_child {
 			#[cfg(feature = "timing")]
@@ -528,11 +524,8 @@ pub fn train(
 					Some((node_index, SplitDirection::Right)),
 					options,
 				);
-				bin_stats_pool.items.push(right_bin_stats);
 			}
-		} else {
-			bin_stats_pool.items.push(right_bin_stats)
-		};
+		}
 	}
 
 	// The remaining items on the queue should all be made into leaves.
@@ -550,7 +543,6 @@ pub fn train(
 			)),
 			options,
 		);
-		bin_stats_pool.items.push(queue_item.bin_stats);
 	}
 
 	TrainTree { nodes, leaf_values }

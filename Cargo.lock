@@ -2006,6 +2006,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "tangram_pool"
+version = "1.0.0"
+
+[[package]]
 name = "tangram_progress"
 version = "0.0.0"
 
@@ -2030,6 +2034,7 @@ dependencies = [
  "tangram_dataframe 1.0.0",
  "tangram_finite 1.0.0",
  "tangram_metrics 0.0.0",
+ "tangram_pool 1.0.0",
  "tangram_progress 0.0.0",
 ]
 

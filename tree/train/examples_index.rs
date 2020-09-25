@@ -113,7 +113,7 @@ fn rearrange_examples_index_parallel(
 	)
 		.into_par_iter()
 		.map(
-			|(examples_index, examples_index_left, examples_index_right)| {
+			|(examples_index, examples_index_left_buffer, examples_index_right_buffer)| {
 				let mut n_left = 0;
 				let mut n_right = 0;
 				for example_index in examples_index {
@@ -159,11 +159,11 @@ fn rearrange_examples_index_parallel(
 					};
 					match direction {
 						SplitDirection::Left => {
-							examples_index_left[n_left] = *example_index;
+							examples_index_left_buffer[n_left] = *example_index;
 							n_left += 1;
 						}
 						SplitDirection::Right => {
-							examples_index_right[n_right] = *example_index;
+							examples_index_right_buffer[n_right] = *example_index;
 							n_right += 1;
 						}
 					}
@@ -195,8 +195,8 @@ fn rearrange_examples_index_parallel(
 			|(
 				(left_starting_index, n_left),
 				(right_starting_index, n_right),
-				examples_index_left,
-				examples_index_right,
+				examples_index_left_buffer,
+				examples_index_right_buffer,
 			)| {
 				let examples_index_slice =
 					&examples_index[left_starting_index..left_starting_index + n_left];
@@ -206,7 +206,7 @@ fn rearrange_examples_index_parallel(
 						examples_index_slice.len(),
 					)
 				};
-				examples_index_slice.copy_from_slice(&examples_index_left[0..n_left]);
+				examples_index_slice.copy_from_slice(&examples_index_left_buffer[0..n_left]);
 				let examples_index_slice =
 					&examples_index[right_starting_index..right_starting_index + n_right];
 				let examples_index_slice = unsafe {
@@ -215,7 +215,7 @@ fn rearrange_examples_index_parallel(
 						examples_index_slice.len(),
 					)
 				};
-				examples_index_slice.copy_from_slice(&examples_index_right[0..n_right]);
+				examples_index_slice.copy_from_slice(&examples_index_right_buffer[0..n_right]);
 			},
 		);
 	(

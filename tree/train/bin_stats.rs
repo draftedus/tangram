@@ -1,6 +1,7 @@
 use super::bin::{BinnedFeatures, BinnedFeaturesColumn, BinningInstructions};
 use itertools::izip;
 use num_traits::ToPrimitive;
+use tangram_pool::{Pool, PoolGuard};
 
 #[derive(Clone)]
 pub struct BinStats {
@@ -21,21 +22,21 @@ impl BinStats {
 	}
 }
 
-#[derive(Clone)]
 pub struct BinStatsPool {
-	pub items: Vec<BinStats>,
+	pool: Pool<BinStats>,
 }
 
 impl BinStatsPool {
-	pub fn new(size: usize, binning_instructions: &[BinningInstructions]) -> Self {
-		let mut items = Vec::with_capacity(size);
-		for _ in 0..size {
-			items.push(BinStats::new(binning_instructions.to_owned()));
-		}
-		Self { items }
+	pub fn new(max_size: usize, binning_instructions: &[BinningInstructions]) -> Self {
+		let binning_instructions = binning_instructions.to_owned();
+		let pool = Pool::new(
+			max_size,
+			Box::new(move || BinStats::new(binning_instructions.clone())),
+		);
+		Self { pool }
 	}
-	pub fn get(&mut self) -> BinStats {
-		self.items.pop().unwrap()
+	pub fn get(&mut self) -> PoolGuard<BinStats> {
+		self.pool.get().unwrap()
 	}
 }
 
