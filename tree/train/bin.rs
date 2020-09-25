@@ -30,6 +30,9 @@ pub enum BinningInstructions {
 }
 
 impl BinningInstructions {
+	pub fn n_bins(&self) -> usize {
+		1 + self.n_valid_bins()
+	}
 	pub fn n_valid_bins(&self) -> usize {
 		match self {
 			Self::Number { thresholds } => thresholds.len() + 1,

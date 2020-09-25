@@ -16,17 +16,17 @@ pub fn rearrange_examples_index(
 	examples_index_left_buffer: &mut [usize],
 	examples_index_right_buffer: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
-	if examples_index.len() <= MIN_EXAMPLES_TO_PARALLELIZE {
-		rearrange_examples_index_serial(binned_features, split, examples_index)
-	} else {
-		rearrange_examples_index_parallel(
-			binned_features,
-			split,
-			examples_index,
-			examples_index_left_buffer,
-			examples_index_right_buffer,
-		)
-	}
+	// if examples_index.len() <= MIN_EXAMPLES_TO_PARALLELIZE {
+	rearrange_examples_index_serial(binned_features, split, examples_index)
+	// } else {
+	// 	rearrange_examples_index_parallel(
+	// 		binned_features,
+	// 		split,
+	// 		examples_index,
+	// 		examples_index_left_buffer,
+	// 		examples_index_right_buffer,
+	// 	)
+	// }
 }
 
 /// Rearrange the examples index on a single thread.

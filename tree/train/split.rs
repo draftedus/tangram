@@ -1,6 +1,7 @@
 use super::{
-	bin::BinningInstructions, bin_stats::BinStats, TrainBranchSplit, TrainBranchSplitContinuous,
-	TrainBranchSplitDiscrete,
+	bin::BinningInstructions,
+	bin_stats::{BinStats, BinStatsEntry},
+	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 use crate::{SplitDirection, TrainOptions};
 use itertools::izip;
@@ -57,7 +58,7 @@ pub fn choose_best_split(
 fn choose_best_split_continuous(
 	feature_index: usize,
 	binning_instructions: &BinningInstructions,
-	bin_stats_for_feature: &[f64],
+	bin_stats_for_feature: &[BinStatsEntry],
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
@@ -73,12 +74,12 @@ fn choose_best_split_continuous(
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
-	for (bin_index, bin_stats_entry) in bin_stats_for_feature[0..bin_stats_for_feature.len() - 2]
-		.chunks(2)
+	for (bin_index, bin_stats_entry) in bin_stats_for_feature[0..bin_stats_for_feature.len() - 1]
+		.iter()
 		.enumerate()
 	{
-		let sum_gradients = bin_stats_entry[0];
-		let sum_hessians = bin_stats_entry[1];
+		let sum_gradients = bin_stats_entry.sum_gradients;
+		let sum_hessians = bin_stats_entry.sum_hessians;
 		left_n_examples += (sum_hessians * count_multiplier)
 			.round()
 			.to_usize()
@@ -116,7 +117,7 @@ fn choose_best_split_continuous(
 			options.l2_regularization,
 		);
 		// Figure out whether invalid values should go to the left subtree or to the right when predicting depending on whether the training dataset contains missing values or not.
-		let invalid_values_direction = if bin_stats_for_feature[1] > 0.0 {
+		let invalid_values_direction = if bin_stats_for_feature[0].sum_hessians > 0.0 {
 			// there are missing values in the training dataset and they have been added to the left subtree
 			SplitDirection::Left
 		} else {
@@ -174,7 +175,7 @@ To find the subsets:
 fn choose_best_split_discrete(
 	feature_index: usize,
 	binning_instructions: &BinningInstructions,
-	bin_stats_for_feature: &[f64],
+	bin_stats_for_feature: &[BinStatsEntry],
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
@@ -193,20 +194,21 @@ fn choose_best_split_discrete(
 		.smoothing_factor_for_discrete_bin_sorting
 		.to_f64()
 		.unwrap();
-	let categorical_bin_score = |bin: &[f64]| bin[0] / (bin[1] + smoothing_factor);
-	let mut sorted_bin_stats: Vec<(usize, &[f64])> =
-		bin_stats_for_feature.chunks(2).enumerate().collect();
+	let categorical_bin_score =
+		|bin: &BinStatsEntry| bin.sum_gradients / (bin.sum_hessians + smoothing_factor);
+	let mut sorted_bin_stats: Vec<(usize, &BinStatsEntry)> =
+		bin_stats_for_feature.iter().enumerate().collect();
 	sorted_bin_stats.sort_by(|(_, a), (_, b)| {
 		categorical_bin_score(a)
 			.partial_cmp(&categorical_bin_score(b))
 			.unwrap()
 	});
-	let mut directions = vec![SplitDirection::Right; binning_instructions.n_valid_bins() + 1];
+	let mut directions = vec![SplitDirection::Right; binning_instructions.n_bins()];
 	let iter = sorted_bin_stats[0..sorted_bin_stats.len() - 1].iter();
 	for (bin_index, bin_stats_entry) in iter {
 		directions[*bin_index] = SplitDirection::Left;
-		let sum_gradients = bin_stats_entry[0];
-		let sum_hessians = bin_stats_entry[1];
+		let sum_gradients = bin_stats_entry.sum_gradients;
+		let sum_hessians = bin_stats_entry.sum_hessians;
 		left_n_examples += (sum_hessians * count_multiplier)
 			.round()
 			.to_usize()

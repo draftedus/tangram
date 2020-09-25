@@ -6,14 +6,28 @@ use tangram_pool::{Pool, PoolGuard};
 #[derive(Clone)]
 pub struct BinStats {
 	pub binning_instructions: Vec<BinningInstructions>,
-	pub entries: Vec<Vec<f64>>,
+	pub entries: Vec<Vec<BinStatsEntry>>,
+}
+
+#[derive(Clone)]
+pub struct BinStatsEntry {
+	pub sum_gradients: f64,
+	pub sum_hessians: f64,
 }
 
 impl BinStats {
 	pub fn new(binning_instructions: Vec<BinningInstructions>) -> Self {
 		let entries = binning_instructions
 			.iter()
-			.map(|b| vec![0.0; 2 * (b.n_valid_bins() + 1)])
+			.map(|b| {
+				vec![
+					BinStatsEntry {
+						sum_gradients: 0.0,
+						sum_hessians: 0.0
+					};
+					b.n_bins()
+				]
+			})
 			.collect();
 		Self {
 			binning_instructions,
@@ -63,7 +77,10 @@ pub fn compute_bin_stats_for_root_node(
 	izip!(&mut node_bin_stats.entries, binned_features.columns.iter(),).for_each(
 		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
-				*entry = 0.0;
+				*entry = BinStatsEntry {
+					sum_gradients: 0.0,
+					sum_hessians: 0.0,
+				};
 			}
 			if hessians_are_constant {
 				unsafe {
@@ -136,7 +153,10 @@ pub fn compute_bin_stats_for_non_root_node(
 	izip!(&mut node_bin_stats.entries, binned_features.columns.iter(),).for_each(
 		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
-				*entry = 0.0;
+				*entry = BinStatsEntry {
+					sum_gradients: 0.0,
+					sum_hessians: 0.0,
+				};
 			}
 			if hessians_are_constant {
 				unsafe {
@@ -190,7 +210,7 @@ pub fn compute_bin_stats_for_non_root_node(
 unsafe fn compute_bin_stats_for_feature_root_no_hessian<T>(
 	gradients: &[f32],
 	binned_feature_values: &[T],
-	bin_stats_for_feature: &mut [f64],
+	bin_stats_for_feature: &mut [BinStatsEntry],
 ) where
 	T: num_traits::cast::ToPrimitive,
 {
@@ -200,17 +220,17 @@ unsafe fn compute_bin_stats_for_feature_root_no_hessian<T>(
 		for i in i * unroll..i * unroll + unroll {
 			let ordered_gradient = *gradients.get_unchecked(i);
 			let bin_index = binned_feature_values.get_unchecked(i).to_usize().unwrap();
-			let bin_index = bin_index << 1;
-			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
-			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
+			let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
+			bin_stats.sum_gradients += ordered_gradient as f64;
+			bin_stats.sum_hessians += 1.0;
 		}
 	}
 	for i in (len / unroll) * unroll..len {
 		let ordered_gradient = *gradients.get_unchecked(i);
 		let bin_index = binned_feature_values.get_unchecked(i).to_usize().unwrap();
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
+		let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
+		bin_stats.sum_gradients += ordered_gradient as f64;
+		bin_stats.sum_hessians += 1.0;
 	}
 }
 
@@ -218,7 +238,7 @@ pub unsafe fn compute_bin_stats_for_feature_root<T>(
 	gradients: &[f32],
 	hessians: &[f32],
 	binned_feature_values: &[T],
-	bin_stats_for_feature: &mut [f64],
+	bin_stats_for_feature: &mut [BinStatsEntry],
 ) where
 	T: ToPrimitive,
 {
@@ -229,25 +249,25 @@ pub unsafe fn compute_bin_stats_for_feature_root<T>(
 			let ordered_gradient = *gradients.get_unchecked(i);
 			let ordered_hessian = *hessians.get_unchecked(i);
 			let bin_index = binned_feature_values.get_unchecked(i).to_usize().unwrap();
-			let bin_index = bin_index << 1;
-			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
-			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += ordered_hessian as f64;
+			let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
+			bin_stats.sum_gradients += ordered_gradient as f64;
+			bin_stats.sum_hessians += ordered_hessian as f64;
 		}
 	}
 	for i in (len / unroll) * unroll..len {
 		let ordered_gradient = *gradients.get_unchecked(i);
 		let ordered_hessian = *hessians.get_unchecked(i);
 		let bin_index = binned_feature_values.get_unchecked(i).to_usize().unwrap();
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += ordered_hessian as f64;
+		let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
+		bin_stats.sum_gradients += ordered_gradient as f64;
+		bin_stats.sum_hessians += ordered_hessian as f64;
 	}
 }
 
 unsafe fn compute_bin_stats_for_feature_not_root_no_hessians<T>(
 	ordered_gradients: &[f32],
 	binned_feature_values: &[T],
-	bin_stats_for_feature: &mut [f64],
+	bin_stats_for_feature: &mut [BinStatsEntry],
 	examples_index: &[usize],
 ) where
 	T: num_traits::cast::ToPrimitive,
@@ -268,9 +288,9 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians<T>(
 				.get_unchecked(example_index)
 				.to_usize()
 				.unwrap();
-			let bin_index = bin_index << 1;
-			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
-			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
+			let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
+			bin_stats.sum_gradients += ordered_gradient as f64;
+			bin_stats.sum_hessians += 1.0;
 		}
 	}
 	for i in (len / unroll) * unroll..len {
@@ -280,9 +300,9 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians<T>(
 			.get_unchecked(example_index)
 			.to_usize()
 			.unwrap();
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += 1.0;
+		let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
+		bin_stats.sum_gradients += ordered_gradient as f64;
+		bin_stats.sum_hessians += 1.0;
 	}
 }
 
@@ -290,7 +310,7 @@ unsafe fn compute_bin_stats_for_feature_not_root<T>(
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
 	binned_feature_values: &[T],
-	bin_stats_for_feature: &mut [f64],
+	bin_stats_for_feature: &mut [BinStatsEntry],
 	examples_index: &[usize],
 ) where
 	T: num_traits::cast::ToPrimitive,
@@ -312,9 +332,9 @@ unsafe fn compute_bin_stats_for_feature_not_root<T>(
 				.get_unchecked(example_index)
 				.to_usize()
 				.unwrap();
-			let bin_index = bin_index << 1;
-			*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
-			*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += ordered_hessian as f64;
+			let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
+			bin_stats.sum_gradients += ordered_gradient as f64;
+			bin_stats.sum_hessians += ordered_hessian as f64;
 		}
 	}
 	for i in (len / unroll) * unroll..len {
@@ -325,9 +345,9 @@ unsafe fn compute_bin_stats_for_feature_not_root<T>(
 			.get_unchecked(example_index)
 			.to_usize()
 			.unwrap();
-		let bin_index = bin_index << 1;
-		*bin_stats_for_feature.get_unchecked_mut(bin_index) += ordered_gradient as f64;
-		*bin_stats_for_feature.get_unchecked_mut(bin_index + 1) += ordered_hessian as f64;
+		let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
+		bin_stats.sum_gradients += ordered_gradient as f64;
+		bin_stats.sum_hessians += ordered_hessian as f64;
 	}
 }
 
@@ -357,14 +377,15 @@ pub fn compute_bin_stats_subtraction(
 // for a single feature.
 fn compute_bin_stats_subtraction_for_feature(
 	// (n_bins)
-	parent_bin_stats_for_feature: &mut [f64],
+	parent_bin_stats_for_feature: &mut [BinStatsEntry],
 	// (n_bins)
-	sibling_bin_stats_for_feature: &[f64],
+	sibling_bin_stats_for_feature: &[BinStatsEntry],
 ) {
 	let iter = parent_bin_stats_for_feature
 		.iter_mut()
 		.zip(sibling_bin_stats_for_feature);
 	for (parent_bin_stats, sibling_bin_stats) in iter {
-		*parent_bin_stats -= sibling_bin_stats;
+		parent_bin_stats.sum_gradients -= sibling_bin_stats.sum_gradients;
+		parent_bin_stats.sum_hessians -= sibling_bin_stats.sum_hessians;
 	}
 }
