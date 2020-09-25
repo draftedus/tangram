@@ -2028,7 +2028,6 @@ dependencies = [
  "maplit 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ndarray 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "num_cpus 1.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "super_unsafe 1.0.0",
  "tangram_dataframe 1.0.0",

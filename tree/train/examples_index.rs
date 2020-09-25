@@ -49,7 +49,7 @@ fn rearrange_examples_index_serial(
 					..
 				}) => {
 					let binned_feature = &binned_features.columns[*feature_index];
-					let feature_bin = match binned_feature {
+					let binned_feature_value = match binned_feature {
 						BinnedFeaturesColumn::U8(binned_feature) => {
 							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
@@ -57,7 +57,7 @@ fn rearrange_examples_index_serial(
 							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
 					};
-					if feature_bin <= *bin_index {
+					if binned_feature_value <= *bin_index {
 						SplitDirection::Left
 					} else {
 						SplitDirection::Right
@@ -69,7 +69,7 @@ fn rearrange_examples_index_serial(
 					..
 				}) => {
 					let binned_feature = &binned_features.columns[*feature_index];
-					let feature_bin = match binned_feature {
+					let binned_feature_value = match binned_feature {
 						BinnedFeaturesColumn::U8(binned_feature) => {
 							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
@@ -77,7 +77,7 @@ fn rearrange_examples_index_serial(
 							binned_feature[examples_index[left]].to_usize().unwrap()
 						}
 					};
-					*directions.get(feature_bin).unwrap()
+					*directions.get(binned_feature_value).unwrap()
 				}
 			}
 		};
@@ -105,7 +105,10 @@ fn rearrange_examples_index_parallel(
 	examples_index_left_buffer: &mut [usize],
 	examples_index_right_buffer: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
-	let chunk_size = usize::max(examples_index.len() / num_cpus::get(), MIN_CHUNK_SIZE);
+	let chunk_size = usize::max(
+		examples_index.len() / rayon::current_num_threads(),
+		MIN_CHUNK_SIZE,
+	);
 	let counts: Vec<(usize, usize)> = (
 		examples_index.par_chunks_mut(chunk_size),
 		examples_index_left_buffer.par_chunks_mut(chunk_size),
@@ -124,8 +127,8 @@ fn rearrange_examples_index_parallel(
 								bin_index,
 								..
 							}) => {
-								let binned_features = &binned_features.columns[*feature_index];
-								let feature_bin = match binned_features {
+								let binned_feature = &binned_features.columns[*feature_index];
+								let binned_feature_value = match binned_feature {
 									BinnedFeaturesColumn::U8(binned_features) => {
 										binned_features[*example_index].to_usize().unwrap()
 									}
@@ -133,7 +136,7 @@ fn rearrange_examples_index_parallel(
 										binned_features[*example_index].to_usize().unwrap()
 									}
 								};
-								if feature_bin <= *bin_index {
+								if binned_feature_value <= *bin_index {
 									SplitDirection::Left
 								} else {
 									SplitDirection::Right
@@ -144,8 +147,8 @@ fn rearrange_examples_index_parallel(
 								directions,
 								..
 							}) => {
-								let binned_features = &binned_features.columns[*feature_index];
-								let feature_bin = match binned_features {
+								let binned_feature = &binned_features.columns[*feature_index];
+								let binned_feature_value = match binned_feature {
 									BinnedFeaturesColumn::U8(binned_features) => {
 										binned_features[*example_index].to_usize().unwrap()
 									}
@@ -153,7 +156,7 @@ fn rearrange_examples_index_parallel(
 										binned_features[*example_index].to_usize().unwrap()
 									}
 								};
-								*directions.get(feature_bin).unwrap()
+								*directions.get(binned_feature_value).unwrap()
 							}
 						}
 					};
