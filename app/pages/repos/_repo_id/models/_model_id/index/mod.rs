@@ -9,7 +9,7 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use num_traits::cast::ToPrimitive;
+use num_traits::ToPrimitive;
 use tangram_id::Id;
 
 pub async fn get(

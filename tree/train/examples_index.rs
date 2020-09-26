@@ -35,64 +35,121 @@ fn rearrange_examples_index_serial(
 	split: &TrainBranchSplit,
 	examples_index: &mut [usize],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
-	let start = 0;
-	let end = examples_index.len();
-	let mut left = start;
-	let mut right = end;
-	let mut n_left = 0;
-	while left < right {
-		let direction = {
-			match &split {
-				TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-					feature_index,
-					bin_index,
-					..
-				}) => {
-					let binned_feature = &binned_features.columns[*feature_index];
-					let binned_feature_value = match binned_feature {
-						BinnedFeaturesColumn::U8(binned_feature) => {
-							binned_feature[examples_index[left]].to_usize().unwrap()
-						}
-						BinnedFeaturesColumn::U16(binned_feature) => {
-							binned_feature[examples_index[left]].to_usize().unwrap()
-						}
-					};
-					if binned_feature_value <= *bin_index {
-						SplitDirection::Left
-					} else {
-						SplitDirection::Right
-					}
-				}
-				TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-					feature_index,
-					directions,
-					..
-				}) => {
-					let binned_feature = &binned_features.columns[*feature_index];
-					let binned_feature_value = match binned_feature {
-						BinnedFeaturesColumn::U8(binned_feature) => {
-							binned_feature[examples_index[left]].to_usize().unwrap()
-						}
-						BinnedFeaturesColumn::U16(binned_feature) => {
-							binned_feature[examples_index[left]].to_usize().unwrap()
-						}
-					};
-					*directions.get(binned_feature_value).unwrap()
-				}
+	let mut left = 0;
+	let mut right = examples_index.len();
+	match &split {
+		TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+			feature_index,
+			bin_index,
+			..
+		}) => {
+			let binned_feature = &binned_features.columns[*feature_index];
+			match binned_feature {
+				BinnedFeaturesColumn::U8(binned_feature) => unsafe {
+					rearrange_examples_index_serial_continuous(
+						&mut left,
+						&mut right,
+						*bin_index,
+						examples_index,
+						&binned_feature,
+					)
+				},
+				BinnedFeaturesColumn::U16(binned_feature) => unsafe {
+					rearrange_examples_index_serial_continuous(
+						&mut left,
+						&mut right,
+						*bin_index,
+						examples_index,
+						&binned_feature,
+					)
+				},
 			}
-		};
-		match direction {
-			SplitDirection::Left => {
-				left += 1;
-				n_left += 1;
+		}
+		TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+			feature_index,
+			directions,
+			..
+		}) => {
+			let binned_feature = &binned_features.columns[*feature_index];
+			match binned_feature {
+				BinnedFeaturesColumn::U8(binned_feature) => unsafe {
+					rearrange_examples_index_serial_discrete(
+						&mut left,
+						&mut right,
+						directions,
+						examples_index,
+						&binned_feature,
+					)
+				},
+				BinnedFeaturesColumn::U16(binned_feature) => unsafe {
+					rearrange_examples_index_serial_discrete(
+						&mut left,
+						&mut right,
+						directions,
+						examples_index,
+						&binned_feature,
+					)
+				},
 			}
-			SplitDirection::Right => {
-				right -= 1;
-				examples_index.swap(left, right);
-			}
-		};
+		}
 	}
-	(start..n_left, n_left..end)
+	(0..left, left..examples_index.len())
+}
+
+unsafe fn rearrange_examples_index_serial_continuous<T>(
+	left: &mut usize,
+	right: &mut usize,
+	bin_index: usize,
+	examples_index: &mut [usize],
+	binned_feature: &[T],
+) where
+	T: ToPrimitive,
+{
+	while left < right {
+		let example_index = *examples_index.get_unchecked(*left);
+		let binned_feature_value = binned_feature
+			.get_unchecked(example_index)
+			.to_usize()
+			.unwrap();
+		if binned_feature_value <= bin_index {
+			*left += 1;
+		} else {
+			*right -= 1;
+			std::ptr::swap_nonoverlapping(
+				examples_index.as_mut_ptr().add(*left),
+				examples_index.as_mut_ptr().add(*right),
+				1,
+			);
+		}
+	}
+}
+
+unsafe fn rearrange_examples_index_serial_discrete<T>(
+	left: &mut usize,
+	right: &mut usize,
+	directions: &[SplitDirection],
+	examples_index: &mut [usize],
+	binned_feature: &[T],
+) where
+	T: ToPrimitive,
+{
+	while left < right {
+		let example_index = *examples_index.get_unchecked(*left);
+		let binned_feature_value = binned_feature
+			.get_unchecked(example_index)
+			.to_usize()
+			.unwrap();
+		if *directions.get_unchecked(binned_feature_value) == SplitDirection::Left {
+			*left += 1;
+		} else {
+			*right -= 1;
+			std::ptr::swap_nonoverlapping(
+				examples_index.as_mut_ptr().add(*left),
+				examples_index.as_mut_ptr().add(*right),
+				1,
+			);
+		}
+	}
 }
 
 const MIN_CHUNK_SIZE: usize = 1024;
