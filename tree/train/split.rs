@@ -11,12 +11,12 @@ use std::ops::Range;
 pub struct ChooseBestSplitOutput {
 	pub gain: f32,
 	pub split: TrainBranchSplit,
+	pub left_n_examples: usize,
 	pub left_sum_gradients: f64,
 	pub left_sum_hessians: f64,
-	pub left_n_examples: usize,
+	pub right_n_examples: usize,
 	pub right_sum_gradients: f64,
 	pub right_sum_hessians: f64,
-	pub right_n_examples: usize,
 }
 
 /// Choose the split with the highest gain, if a valid one exists.
@@ -54,7 +54,7 @@ pub fn choose_best_split(
 		.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 }
 
-/// Find the best split for this feature by iterating over the bins in sorted order, adding bins to the left tree and removing them from the right.
+/// Choose the best continuous split for this feature.
 fn choose_best_split_continuous(
 	feature_index: usize,
 	binning_instructions: &BinningInstructions,
@@ -64,12 +64,12 @@ fn choose_best_split_continuous(
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
 ) -> Option<ChooseBestSplitOutput> {
+	let mut best_split: Option<ChooseBestSplitOutput> = None;
 	let negative_loss_parent_node = compute_negative_loss(
 		sum_gradients_parent,
 		sum_hessians_parent,
 		options.l2_regularization,
 	);
-	let mut best_split_so_far: Option<ChooseBestSplitOutput> = None;
 	let count_multiplier = examples_index_range.len() as f64 / sum_hessians_parent;
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
@@ -78,20 +78,19 @@ fn choose_best_split_continuous(
 		.iter()
 		.enumerate()
 	{
-		let sum_gradients = bin_stats_entry.sum_gradients;
-		let sum_hessians = bin_stats_entry.sum_hessians;
-		left_n_examples += (sum_hessians * count_multiplier)
+		// Approximate the number of examples that go left by assuming it is proporational to the sum of the hessians.
+		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
 			.round()
 			.to_usize()
 			.unwrap();
-		left_sum_hessians += sum_hessians;
-		left_sum_gradients += sum_gradients;
-		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
-		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
+		left_sum_gradients += bin_stats_entry.sum_gradients;
+		left_sum_hessians += bin_stats_entry.sum_hessians;
 		let right_n_examples = match examples_index_range.len().checked_sub(left_n_examples) {
 			Some(right_n_examples) => right_n_examples,
 			None => break,
 		};
+		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
+		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
 		// check if we have violated the min samples leaf constraint
 		if left_n_examples < options.min_examples_per_child {
 			continue;
@@ -142,28 +141,28 @@ fn choose_best_split_continuous(
 		});
 		let current_split = ChooseBestSplitOutput {
 			gain: current_split_gain,
+			split,
 			left_n_examples,
 			left_sum_gradients,
 			left_sum_hessians,
 			right_n_examples,
 			right_sum_gradients,
 			right_sum_hessians,
-			split,
 		};
-		match &best_split_so_far {
+		match &best_split {
 			Some(current_best_split) => {
 				if current_split.gain > current_best_split.gain {
-					best_split_so_far = Some(current_split);
+					best_split = Some(current_split);
 				}
 			}
 			None => {
 				if current_split.gain > options.min_gain_to_split {
-					best_split_so_far = Some(current_split);
+					best_split = Some(current_split);
 				}
 			}
 		}
 	}
-	best_split_so_far
+	best_split
 }
 
 /**
@@ -207,14 +206,13 @@ fn choose_best_split_discrete(
 	let iter = sorted_bin_stats[0..sorted_bin_stats.len() - 1].iter();
 	for (bin_index, bin_stats_entry) in iter {
 		directions[*bin_index] = SplitDirection::Left;
-		let sum_gradients = bin_stats_entry.sum_gradients;
-		let sum_hessians = bin_stats_entry.sum_hessians;
-		left_n_examples += (sum_hessians * count_multiplier)
+		// Approximate the number of examples that go left by assuming it is proporational to the sum of the hessians.
+		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
 			.round()
 			.to_usize()
 			.unwrap();
-		left_sum_hessians += sum_hessians;
-		left_sum_gradients += sum_gradients;
+		left_sum_gradients += bin_stats_entry.sum_gradients;
+		left_sum_hessians += bin_stats_entry.sum_hessians;
 		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
 		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
 		let right_n_examples = match examples_index_range.len().checked_sub(left_n_examples) {

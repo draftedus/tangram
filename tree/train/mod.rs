@@ -312,14 +312,14 @@ pub fn train(
 		let should_stop = if early_stopping_enabled {
 			let features_early_stopping = features_early_stopping.as_ref().unwrap();
 			let labels_early_stopping = labels_early_stopping.as_ref().unwrap();
-			let logits_early_stopping = predictions_early_stopping.as_mut().unwrap();
+			let predictions_early_stopping = predictions_early_stopping.as_mut().unwrap();
 			let early_stopping_monitor = early_stopping_monitor.as_mut().unwrap();
 			let value = compute_early_stopping_metric(
 				&task,
 				trees_for_round.as_slice(),
 				features_early_stopping.view(),
 				labels_early_stopping.view(),
-				logits_early_stopping.view_mut(),
+				predictions_early_stopping.view_mut(),
 			);
 			early_stopping_monitor.update(value)
 		} else {

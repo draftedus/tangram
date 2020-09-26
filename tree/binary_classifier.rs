@@ -49,9 +49,9 @@ impl BinaryClassifier {
 
 	/// Make predictions.
 	pub fn predict(&self, features: ArrayView2<Value>, mut probabilities: ArrayViewMut2<f32>) {
-		let mut logits = probabilities.column_mut(1);
-		logits.fill(self.bias);
-		for (example_index, logit) in logits.iter_mut().enumerate() {
+		let mut predictions = probabilities.column_mut(1);
+		predictions.fill(self.bias);
+		for (example_index, logit) in predictions.iter_mut().enumerate() {
 			for tree in &self.trees {
 				let mut row = vec![Value::Number(0.0); features.ncols()];
 				for (v, feature) in row.iter_mut().zip(features.row(example_index)) {
@@ -60,8 +60,8 @@ impl BinaryClassifier {
 				*logit += tree.predict(&row);
 			}
 		}
-		for logit in logits {
-			*logit = 1.0 / (logit.neg().exp() + 1.0);
+		for prediction in predictions {
+			*prediction = 1.0 / (prediction.neg().exp() + 1.0);
 		}
 		let (mut probabilities_neg, probabilities_pos) = probabilities.split_at(Axis(1), 1);
 		for (neg, pos) in izip!(probabilities_neg.view_mut(), probabilities_pos.view()) {
@@ -96,13 +96,13 @@ impl BinaryClassifier {
 
 /// This function is used by the common train function to update the logits after each tree is trained for binary classification.
 pub fn update_logits(
-	trees: &[TrainTree],
+	trees_for_round: &[TrainTree],
 	binned_features: ArrayView2<Value>,
-	mut logits: ArrayViewMut2<f32>,
+	mut predictions: ArrayViewMut2<f32>,
 ) {
-	for tree in trees {
-		for (logit, features) in logits.iter_mut().zip(binned_features.genrows()) {
-			*logit += tree.predict(features.as_slice().unwrap());
+	for tree in trees_for_round {
+		for (prediction, features) in predictions.iter_mut().zip(binned_features.genrows()) {
+			*prediction += tree.predict(features.as_slice().unwrap());
 		}
 	}
 }

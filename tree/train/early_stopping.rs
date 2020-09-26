@@ -5,26 +5,38 @@ use tangram_dataframe::*;
 /// Compute the early stopping metric value for the set of trees that have been trained thus far.
 pub fn compute_early_stopping_metric(
 	task: &Task,
-	trees: &[TrainTree],
+	trees_for_round: &[TrainTree],
 	features: ArrayView2<Value>,
 	labels: ColumnView,
-	mut logits: ArrayViewMut2<f32>,
+	mut predictions: ArrayViewMut2<f32>,
 ) -> f32 {
 	match task {
 		Task::Regression => {
 			let labels = labels.as_number().unwrap().data.into();
-			crate::regressor::update_logits(trees, features.view(), logits.view_mut());
-			crate::regressor::compute_loss(labels, logits.view())
+			crate::regressor::update_logits(
+				trees_for_round,
+				features.view(),
+				predictions.view_mut(),
+			);
+			crate::regressor::compute_loss(labels, predictions.view())
 		}
 		Task::BinaryClassification => {
 			let labels = labels.as_enum().unwrap().data.into();
-			crate::binary_classifier::update_logits(trees, features.view(), logits.view_mut());
-			crate::binary_classifier::compute_loss(labels, logits.view())
+			crate::binary_classifier::update_logits(
+				trees_for_round,
+				features.view(),
+				predictions.view_mut(),
+			);
+			crate::binary_classifier::compute_loss(labels, predictions.view())
 		}
 		Task::MulticlassClassification { .. } => {
 			let labels = labels.as_enum().unwrap().data.into();
-			crate::multiclass_classifier::update_logits(trees, features.view(), logits.view_mut());
-			crate::multiclass_classifier::compute_loss(labels, logits.view())
+			crate::multiclass_classifier::update_logits(
+				trees_for_round,
+				features.view(),
+				predictions.view_mut(),
+			);
+			crate::multiclass_classifier::compute_loss(labels, predictions.view())
 		}
 	}
 }

@@ -101,12 +101,13 @@ impl BinaryClassifier {
 		options: &TrainOptions,
 	) {
 		let learning_rate = options.learning_rate;
-		let logits = features.dot(&self.weights) + self.bias;
-		let mut predictions = logits.mapv_into(|logit| 1.0 / (logit.neg().exp() + 1.0));
+		let predictions = features.dot(&self.weights) + self.bias;
+		let mut predictions =
+			predictions.mapv_into(|prediction| 1.0 / (prediction.neg().exp() + 1.0));
 		for (prediction, label) in izip!(predictions.view_mut(), labels) {
-			let label = match label.map(|l| l.get()) {
-				Some(1) => 0.0,
-				Some(2) => 1.0,
+			let label = match label.map(|l| l.get()).unwrap_or(0) {
+				1 => 0.0,
+				2 => 1.0,
 				_ => unreachable!(),
 			};
 			*prediction -= label

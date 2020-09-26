@@ -108,14 +108,14 @@ impl MulticlassClassifier {
 
 /// This function is used by the common train function to update the logits after each round of trees is trained for multiclass classification.
 pub fn update_logits(
-	trees: &[TrainTree],
+	trees_for_round: &[TrainTree],
 	binned_features: ArrayView2<Value>,
-	mut logits: ArrayViewMut2<f32>,
+	mut predictions: ArrayViewMut2<f32>,
 ) {
 	let features_rows = binned_features.genrows().into_iter();
-	let logits_rows = logits.gencolumns_mut().into_iter();
+	let logits_rows = predictions.gencolumns_mut().into_iter();
 	for (features, mut logits) in features_rows.zip(logits_rows) {
-		for (logit, tree) in logits.iter_mut().zip(trees.iter()) {
+		for (logit, tree) in logits.iter_mut().zip(trees_for_round.iter()) {
 			*logit += tree.predict(features.as_slice().unwrap());
 		}
 	}

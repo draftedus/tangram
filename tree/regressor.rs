@@ -85,12 +85,12 @@ impl Regressor {
 
 /// This function is used by the common train function to update the logits after each round of trees is trained for regression.
 pub fn update_logits(
-	trees: &[TrainTree],
+	trees_for_round: &[TrainTree],
 	features: ArrayView2<Value>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
 	for (prediction, features) in izip!(predictions.row_mut(0), features.genrows()) {
-		for tree in trees {
+		for tree in trees_for_round {
 			*prediction += tree.predict(features.as_slice().unwrap());
 		}
 	}

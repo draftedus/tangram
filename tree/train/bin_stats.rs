@@ -373,8 +373,7 @@ pub fn compute_bin_stats_subtraction(
 	}
 }
 
-// Subtracts the sibling_bin_stats from the parent_bin_stats
-// for a single feature.
+/// Subtracts the sibling_bin_stats from the parent_bin_stats for a single feature.
 fn compute_bin_stats_subtraction_for_feature(
 	// (n_bins)
 	parent_bin_stats_for_feature: &mut [BinStatsEntry],
