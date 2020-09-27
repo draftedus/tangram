@@ -595,7 +595,6 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 		"--bundle".to_owned(),
 		"--splitting".to_owned(),
 		"--resolve-extensions=.js,.jsx,.ts,.tsx,.css,.git,.jpg,.png,.svg".to_owned(),
-		"--loader:.css=dataurl".to_owned(),
 		"--loader:.gif=file".to_owned(),
 		"--loader:.jpg=file".to_owned(),
 		"--loader:.png=file".to_owned(),

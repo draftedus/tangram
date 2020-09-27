@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"preact": "10.4.8"
+		"preact": "10.5.2"
 	},
 	"main": "mod.ts",
 	"name": "@tangramhq/charts",
