@@ -71,93 +71,108 @@ fn choose_best_split_continuous(
 		options.l2_regularization,
 	);
 	let count_multiplier = examples_index_range.len() as f64 / sum_hessians_parent;
-	let mut left_sum_gradients = 0.0;
-	let mut left_sum_hessians = 0.0;
-	let mut left_n_examples = 0;
-	for (bin_index, bin_stats_entry) in bin_stats_for_feature[0..bin_stats_for_feature.len() - 1]
-		.iter()
-		.enumerate()
-	{
-		// Approximate the number of examples that go left by assuming it is proporational to the sum of the hessians.
-		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
-			.round()
-			.to_usize()
-			.unwrap();
-		left_sum_gradients += bin_stats_entry.sum_gradients;
-		left_sum_hessians += bin_stats_entry.sum_hessians;
-		let right_n_examples = match examples_index_range.len().checked_sub(left_n_examples) {
-			Some(right_n_examples) => right_n_examples,
-			None => break,
-		};
-		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
-		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
-		// check if we have violated the min samples leaf constraint
-		if left_n_examples < options.min_examples_per_child {
-			continue;
-		}
-		// Since we are in left to right mode, we will only get less examples if we continue so break instead.
-		if right_n_examples < options.min_examples_per_child {
-			break;
-		}
-		// If hessians are positive so the left sum hessians will continue to increase, so we can continue.
-		if left_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
-			continue;
-		}
-		// If hessians are positive so we will continue to violate the min_hessian_to_split condition for the right node, break.
-		if right_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
-			break;
-		}
-		let current_split_gain = compute_gain(
-			left_sum_gradients,
-			left_sum_hessians,
-			right_sum_gradients,
-			right_sum_hessians,
-			negative_loss_parent_node,
-			options.l2_regularization,
-		);
-		// Figure out whether invalid values should go to the left subtree or to the right when predicting depending on whether the training dataset contains missing values or not.
-		let invalid_values_direction = if bin_stats_for_feature[0].sum_hessians > 0.0 {
-			// there are missing values in the training dataset and they have been added to the left subtree
-			SplitDirection::Left
-		} else {
-			// there are no missing values in the training dataset. missing values should go to the branch with more examples
-			if left_n_examples >= right_n_examples {
-				SplitDirection::Left
-			} else {
-				SplitDirection::Right
-			}
-		};
-		let split = TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-			feature_index,
-			bin_index,
-			split_value: match binning_instructions {
-				BinningInstructions::Number { thresholds } => match bin_index.checked_sub(1) {
-					Some(i) => thresholds[i],
-					None => f32::MIN,
-				},
-				_ => unreachable!(),
-			},
-			invalid_values_direction,
-		});
-		let current_split = ChooseBestSplitOutput {
-			gain: current_split_gain,
-			split,
-			left_n_examples,
-			left_sum_gradients,
-			left_sum_hessians,
-			right_n_examples,
-			right_sum_gradients,
-			right_sum_hessians,
-		};
-		match &best_split {
-			Some(current_best_split) => {
-				if current_split.gain > current_best_split.gain {
-					best_split = Some(current_split);
+	let training_data_contains_invalid_values = bin_stats_for_feature[0].sum_hessians > 0.0;
+	let choose_best_direction_for_invalid_values = training_data_contains_invalid_values;
+	let invalid_values_directions = if choose_best_direction_for_invalid_values {
+		vec![SplitDirection::Left, SplitDirection::Right]
+	} else {
+		vec![SplitDirection::Left]
+	};
+	for invalid_direction in invalid_values_directions {
+		let mut left_sum_gradients = 0.0;
+		let mut left_sum_hessians = 0.0;
+		let mut left_n_examples = 0;
+		let bin_stats_for_feature =
+			match (choose_best_direction_for_invalid_values, invalid_direction) {
+				(true, SplitDirection::Left) => {
+					&bin_stats_for_feature[0..bin_stats_for_feature.len() - 1]
 				}
+				(true, SplitDirection::Right) => {
+					&bin_stats_for_feature[1..bin_stats_for_feature.len()]
+				}
+				(false, _) => &bin_stats_for_feature[0..bin_stats_for_feature.len() - 1],
+			};
+		for (bin_index, bin_stats_entry) in bin_stats_for_feature.iter().enumerate() {
+			// Approximate the number of examples that go left by assuming it is proporational to the sum of the hessians.
+			left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
+				.round()
+				.to_usize()
+				.unwrap();
+			left_sum_gradients += bin_stats_entry.sum_gradients;
+			left_sum_hessians += bin_stats_entry.sum_hessians;
+			let right_n_examples = match examples_index_range.len().checked_sub(left_n_examples) {
+				Some(right_n_examples) => right_n_examples,
+				None => break,
+			};
+			let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
+			let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
+			// check if we have violated the min samples leaf constraint
+			if left_n_examples < options.min_examples_per_child {
+				continue;
 			}
-			None => {
-				if current_split.gain > options.min_gain_to_split {
-					best_split = Some(current_split);
+			// Since we are in left to right mode, we will only get less examples if we continue so break instead.
+			if right_n_examples < options.min_examples_per_child {
+				break;
+			}
+			// If hessians are positive so the left sum hessians will continue to increase, so we can continue.
+			if left_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
+				continue;
+			}
+			// If hessians are positive so we will continue to violate the min_hessian_to_split condition for the right node, break.
+			if right_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
+				break;
+			}
+			let current_split_gain = compute_gain(
+				left_sum_gradients,
+				left_sum_hessians,
+				right_sum_gradients,
+				right_sum_hessians,
+				negative_loss_parent_node,
+				options.l2_regularization,
+			);
+			// This is the direction invalid values should be sent.
+			let invalid_values_direction = if choose_best_direction_for_invalid_values {
+				invalid_direction
+			} else {
+				// Send invalid values to the child node where more training examples are sent.
+				if left_n_examples >= right_n_examples {
+					SplitDirection::Left
+				} else {
+					SplitDirection::Right
+				}
+			};
+			let split = TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+				feature_index,
+				bin_index,
+				split_value: match binning_instructions {
+					BinningInstructions::Number { thresholds } => match bin_index.checked_sub(1) {
+						Some(i) => thresholds[i],
+						None => f32::MIN,
+					},
+					_ => unreachable!(),
+				},
+				invalid_values_direction,
+			});
+			let current_split = ChooseBestSplitOutput {
+				gain: current_split_gain,
+				split,
+				left_n_examples,
+				left_sum_gradients,
+				left_sum_hessians,
+				right_n_examples,
+				right_sum_gradients,
+				right_sum_hessians,
+			};
+			match &best_split {
+				Some(current_best_split) => {
+					if current_split.gain > current_best_split.gain {
+						best_split = Some(current_split);
+					}
+				}
+				None => {
+					if current_split.gain > options.min_gain_to_split {
+						best_split = Some(current_split);
+					}
 				}
 			}
 		}
@@ -181,6 +196,7 @@ fn choose_best_split_discrete(
 	options: &TrainOptions,
 ) -> Option<ChooseBestSplitOutput> {
 	let mut best_split_so_far: Option<ChooseBestSplitOutput> = None;
+	let training_data_contains_invalid_values = bin_stats_for_feature[0].sum_hessians > 0.0;
 	let l2_regularization =
 		options.l2_regularization + options.supplemental_l2_regularization_for_discrete_splits;
 	let negative_loss_parent_node =
@@ -245,6 +261,14 @@ fn choose_best_split_discrete(
 			negative_loss_parent_node,
 			l2_regularization,
 		);
+		if !training_data_contains_invalid_values {
+			// no invalid values, send invalid values to the child with more examples
+			if left_n_examples > right_n_examples {
+				directions[0] = SplitDirection::Left;
+			} else {
+				directions[0] = SplitDirection::Right;
+			}
+		}
 		let split = TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 			feature_index,
 			directions: directions.clone(),
