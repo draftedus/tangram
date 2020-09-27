@@ -21,7 +21,7 @@ pub fn compute_feature_importances(trees: &[TrainTree], n_features: usize) -> Ve
 				}) => {
 					feature_importances[*feature_index] += 1.0;
 				}
-				TrainNode::Leaf(_) => {}
+				_ => {}
 			}
 		}
 	}
