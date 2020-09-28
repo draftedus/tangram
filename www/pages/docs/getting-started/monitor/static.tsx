@@ -37,7 +37,7 @@ export default (props: Props) =>
 					</ui.P>
 					<ui.P>
 						{
-							'First, we need to get an API token from the reporting and monitoring app. In the topbar, click '
+							'First, we need to get an API token from the reporting and monitoring web app. In the topbar, click '
 						}
 						<b>{'Tokens'}</b>
 						{'.'}
@@ -149,7 +149,7 @@ export default (props: Props) =>
 					<ui.Img alt="feature importances" src={featureImportances} />
 					<ui.P>
 						{
-							"We're done! We just trained and deployed a custom machine learning model using the tangram cli and language libraries. Then, we learned more about our model and debugged an issue in production using the reporting and monitoring app."
+							"We're done! We just trained and deployed a custom machine learning model using the tangram cli and language libraries. Then, we learned more about our model and debugged an issue in production using the reporting and monitoring web app."
 						}
 					</ui.P>
 					<ui.P>

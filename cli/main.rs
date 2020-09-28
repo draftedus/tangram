@@ -45,7 +45,7 @@ struct TrainOptions {
 
 #[derive(Clap)]
 #[clap(about = "run the app")]
-#[clap(long_about = "run the reporting and monitoring app")]
+#[clap(long_about = "run the reporting and monitoring web app")]
 struct AppOptions {
 	#[clap(long, env = "AUTH_ENABLED")]
 	auth_enabled: bool,

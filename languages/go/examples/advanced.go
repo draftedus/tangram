@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	// If you are running the Tangram reporting and monitoring app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
+	// If you are running the Tangram reporting and monitoring web app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
 	tangramURL, present := os.LookupEnv("TANGRAM_URL")
 	if !present {
 		tangramURL = "https://app.tangramhq.com"
@@ -42,7 +42,7 @@ func main() {
 		"thallium_stress_test":                 "fixed defect",
 	}
 
-	// Make the prediction using a custom threshold chosen on the "Tuning" page of the Tangram reporting and monitoring app.
+	// Make the prediction using a custom threshold chosen on the "Tuning" page of the Tangram reporting and monitoring web app.
 	predictOptions := tangram.PredictOptions{
 		Threshold: 0.25,
 	}
@@ -52,7 +52,7 @@ func main() {
 	fmt.Println("Input:", input)
 	fmt.Println("Output:", output.ClassName)
 
-	// Log the prediction. This will allow us to view production stats in the Tangram reporting and monitoring app.
+	// Log the prediction. This will allow us to view production stats in the Tangram reporting and monitoring web app.
 	predictionEvent := tangram.LogPredictionOptions{
 		Identifier: "John Doe",
 		Options:    predictOptions,

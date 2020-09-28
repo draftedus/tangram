@@ -68,7 +68,7 @@ function FAQs() {
 			<ui.H2>{'Is my data sent to Tangram?'}</ui.H2>
 			<ui.P>
 				{
-					'All training happens on the computer you run the CLI on and prediction happens in the same process as your code without any network calls. If you opt-in to logging, your production data will be sent to Tangram. If you are on the Enterprise plan and run the reporting and monitoring app on your own servers, Tangram will never receive any of your production data.'
+					'All training happens on the computer you run the CLI on and prediction happens in the same process as your code without any network calls. If you opt-in to logging, your production data will be sent to Tangram. If you are on the Enterprise plan and run the reporting and monitoring web app on your own servers, Tangram will never receive any of your production data.'
 				}
 			</ui.P>
 		</ui.S2>

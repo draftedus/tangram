@@ -23,7 +23,7 @@ type Model struct {
 	logQueue []event
 }
 
-// ModelOptions is the second argument to the load functions, used to configure the url where the tangram reporting and monitoring app is running.
+// ModelOptions is the second argument to the load functions, used to configure the url where the tangram reporting and monitoring web app is running.
 type ModelOptions struct {
 	TangramURL string
 }

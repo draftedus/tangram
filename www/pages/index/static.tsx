@@ -152,7 +152,7 @@ function Features() {
 				<ui.S2>
 					<ui.P>
 						{
-							'Want to learn more about your model? Upload it to the Tangram reporting and monitoring app.'
+							'Want to learn more about your model? Upload it to the Tangram reporting and monitoring web app.'
 						}
 					</ui.P>
 					<ui.P>
@@ -168,7 +168,7 @@ function Features() {
 					<ui.P>
 						<b>
 							{
-								'The reporting and monitoring app can be run by us in the cloud or by you on your own servers.'
+								'The reporting and monitoring web app can be run by us in the cloud or by you on your own servers.'
 							}
 						</b>
 					</ui.P>

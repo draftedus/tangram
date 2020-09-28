@@ -1,7 +1,7 @@
 import os
 import tangram
 
-# If you are running the Tangram reporting and monitoring app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
+# If you are running the Tangram reporting and monitoring web app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
 tangram_url = os.getenv('TANGRAM_URL', default='https://app.tangramhq.com.com')
 
 # Get the path to the `.tangram` file.
@@ -26,7 +26,7 @@ input = {
 	'thallium_stress_test': 'fixed defect',
 }
 
-# Make the prediction using a custom threshold chosen on the "Tuning" page of the Tangram reporting and monitoring app.
+# Make the prediction using a custom threshold chosen on the "Tuning" page of the Tangram reporting and monitoring web app.
 options = { 'threshold': 0.25 }
 output = model.predict(input, options)
 
@@ -34,7 +34,7 @@ output = model.predict(input, options)
 print('Input:', input)
 print('Output:', output)
 
-# Log the prediction. This will allow us to view production stats in the Tangram reporting and monitoring app.
+# Log the prediction. This will allow us to view production stats in the Tangram reporting and monitoring web app.
 model.log_prediction(
 	identifier='John Doe',
 	options=options,

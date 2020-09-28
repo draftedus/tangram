@@ -2,7 +2,7 @@ let fs = require('fs')
 let path = require('path')
 let tangram = require('@tangramhq/tangram-node')
 
-// If you are running the Tangram reporting and monitoring app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
+// If you are running the Tangram reporting and monitoring web app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
 let baseUrl = process.env.TANGRAM_URL || 'https://app.tangramhq.com.com'
 
 // Get the path to the .tangram file.
@@ -30,7 +30,7 @@ let input = {
 	thallium_stress_test: 'fixed defect',
 }
 
-// Make the prediction using a custom threshold chosen on the "Tuning" page of the Tangram reporting and monitoring app.
+// Make the prediction using a custom threshold chosen on the "Tuning" page of the Tangram reporting and monitoring web app.
 options = { threshold: 0.5 }
 let output = model.predictSync(input, options)
 
@@ -38,7 +38,7 @@ let output = model.predictSync(input, options)
 console.log('Input:', input)
 console.log('Output:', output)
 
-// Log the prediction. This will allow us to view production stats in the Tangram reporting and monitoring app.
+// Log the prediction. This will allow us to view production stats in the Tangram reporting and monitoring web app.
 model.logPrediction({
 	identifier: '6c955d4f-be61-4ca7-bba9-8fe32d03f801',
 	input,

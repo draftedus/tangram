@@ -49,7 +49,7 @@ $ ruby examples/basic.rb
 
 ### Advanced
 
-This example demonstrates logging predictions and true values to the Tangram reporting and monitoring app. Before running the example, upload the file `examples/heart-disease.tangram` to either https://app.tangramhq.com or your on-prem deployment.
+This example demonstrates logging predictions and true values to the Tangram reporting and monitoring web app. Before running the example, run `tangram app` to start the app running locally, open `http://localhost:8080` in your browser, and upload the file `examples/heart-disease.tangram` to it.
 
 Then you can run the example:
 

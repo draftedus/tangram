@@ -40,7 +40,7 @@ type Input = {
 // define the type for the output of the model.
 type Output = tangram.ClassificationOutput<'Positive' | 'Negative'>
 
-// If you are running the Tangram reporting and monitoring app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
+// If you are running the Tangram reporting and monitoring web app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
 let tangramUrl = process.env.TANGRAM_URL || 'https://app.tangramhq.com.com'
 
 // Get the path to the .tangram file.
@@ -68,7 +68,7 @@ let input: Input = {
 	thallium_stress_test: 'fixed defect',
 }
 
-// Make the prediction using a custom threshold chosen on the "Tuning" page of the Tangram reporting and monitoring app.
+// Make the prediction using a custom threshold chosen on the "Tuning" page of the Tangram reporting and monitoring web app.
 let options = { threshold: 0.25 }
 let output = model.predictSync(input, options)
 
@@ -76,7 +76,7 @@ let output = model.predictSync(input, options)
 console.log('Input', input)
 console.log('Output', output)
 
-// Log the prediction. This will allow us to view production stats in the Tangram reporting and monitoring app.
+// Log the prediction. This will allow us to view production stats in the Tangram reporting and monitoring web app.
 model.logPrediction({
 	identifier: 'John Doe',
 	input,
