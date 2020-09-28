@@ -35,7 +35,7 @@ Tangram for Ruby is currently supported for Linux, macOS, and Windows on x86-64/
 
 ## Examples
 
-This repo contains two examples, [examples/predict]([examples/predict]) and [examples/monitor](examples/monitor).
+This folder contains two examples, [examples/predict]([examples/predict]) and [examples/monitor](examples/monitor).
 
 ### Basic
 

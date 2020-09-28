@@ -34,11 +34,11 @@ For more information, [read the docs](https://www.tangramhq.com/docs).
 
 ## Platform Support
 
-Tangram for Node is currently supported for Linux, macOS, and Windows on x86-64/amd64/x64 CPUs. Are you interested in another platform? Get in touch via email at help@tangramhq.com.
+Tangram for Node is currently supported for Linux, macOS, and Windows on AMD64 CPUs. Are you interested in another platform? Get in touch via email at help@tangramhq.com.
 
 ## Examples
 
-This repo contains two examples, [examples/basic.py]([examples/basic.py]) and [examples/advanced.py](examples/advanced.py).
+This folder contains three examples, [examples/basic]([examples/basic]), [examples/advanced](examples/advanced), and [examples/typescript](examples/typescript).
 
 ### Basic
 
@@ -47,7 +47,9 @@ This example demonstrates loading a model from a `.tangram` file and making a pr
 To run the example:
 
 ```
-$ python3 examples/basic.py
+$ cd examples/basic
+$ yarn install
+$ yarn start
 ```
 
 ### Advanced
@@ -63,3 +65,15 @@ $ python3 examples/advanced.py
 Now if you refresh the production stats or production metrics tabs for the model you uploaded, you should see predictions and true values being reported.
 
 For more information on reporting and monitoring, [read the docs](https://www.tangramhq.com/docs).
+
+### Typescript
+
+This example shows how to make predictions with your Tangram machine learning model in an app built with [Node.js](https://nodejs.org) and [TypeScript](https://www.typescriptlang.org). It demonstrates how to provide types for the input and output of a model.
+
+To build and run the example:
+
+```
+$ yarn install
+$ yarn build
+$ yarn start
+```

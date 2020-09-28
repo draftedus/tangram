@@ -31,11 +31,11 @@ For more information, [read the docs](https://www.tangramhq.com/docs).
 
 ## Platform Support
 
-Tangram for Python is currently supported for Linux, macOS, and Windows on x86-64/amd64/x64 CPUs. Are you interested in another platform? Get in touch via email at help@tangramhq.com.
+Tangram for Python is currently supported for Linux, macOS, and Windows on AMD64 CPUs. Are you interested in another platform? Get in touch via email at help@tangramhq.com.
 
 ## Examples
 
-This repo contains two examples, [examples/basic.py]([examples/basic.py]) and [examples/advanced.py](examples/advanced.py).
+This folder contains two examples, [examples/basic.py]([examples/basic.py]) and [examples/advanced.py](examples/advanced.py).
 
 ### Basic
 

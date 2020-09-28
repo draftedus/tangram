@@ -39,7 +39,7 @@ Tangram for Go links to the [libtangram](https://github.com/tangram-hq/libtangra
 
 ## Examples
 
-This repo contains two examples, [examples/predict](examples/predict) and [examples/monitor](examples/monitor).
+This folder contains two examples, [examples/predict](examples/predict) and [examples/monitor](examples/monitor).
 
 ### Basic
 
