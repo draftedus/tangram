@@ -147,7 +147,7 @@ fn choose_best_split_continuous(
 				bin_index,
 				split_value: match binning_instructions {
 					BinningInstructions::Number { thresholds } => match bin_index.checked_sub(1) {
-						Some(i) => thresholds.get(i).unwrap(),
+						Some(i) => *thresholds.get(i).unwrap(),
 						None => f32::MIN,
 					},
 					_ => unreachable!(),
