@@ -11,7 +11,7 @@ A `ProgressCounter` is used to efficiently track the progress of a task occurrin
 Imagine you have the following code to ship order in parallel:
 
 ```ignore
-orders.into_par_iter().for_each(|order| { order.ship() });
+orders.par_iter_mut().for_each(|order| { order.ship() });
 ```
 
 Now you want to track the progress of this loop. You can use `Arc<Mutex<T>>` like so:
@@ -20,7 +20,7 @@ Now you want to track the progress of this loop. You can use `Arc<Mutex<T>>` lik
 use std::sync::{Arc, Mutex};
 
 let progress_counter = Arc::new(Mutex::new(0));
-orders.into_par_iter().for_each(|order| {
+orders.par_iter_mut().for_each(|order| {
 	order.ship();
 	*progress_counter.lock().unwrap() += 1;
 });
@@ -32,7 +32,7 @@ However, if `ship_order` is sufficiently fast, a large portion of each thread's 
 use tangram_progress::ProgressCounter;
 
 let progress_counter = ProgressCounter::new(orders.len() as u64);
-orders.into_par_iter().for_each(|i| {
+orders.par_iter_mut().for_each(|i| {
 	ship_order(i);
 	progress_counter.inc();
 });

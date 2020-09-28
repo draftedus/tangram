@@ -1,6 +1,7 @@
 use crate::TrainOptions;
 use itertools::{izip, Itertools};
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BTreeMap};
 use tangram_dataframe::{ColumnView, DataFrameView, NumberColumnView};
 use tangram_finite::Finite;
@@ -48,7 +49,7 @@ pub fn compute_binning_instructions(
 ) -> Vec<BinningInstructions> {
 	features
 		.columns
-		.iter()
+		.par_iter()
 		.map(|column| match column.view() {
 			ColumnView::Number(column) => {
 				compute_binning_instructions_for_number_feature(column, &options)
@@ -174,7 +175,7 @@ pub fn compute_binned_features(
 						.as_number()
 						.unwrap()
 						.data
-						.iter()
+						.par_iter()
 						.map(|feature_value| {
 							// Invalid values go to the first bin.
 							if !feature_value.is_finite() {
@@ -194,25 +195,12 @@ pub fn compute_binned_features(
 					BinnedFeaturesColumn::U8(binned_feature)
 				}
 				BinningInstructions::Enum { n_options } => {
-					// TODO 4 bit binned feature column
-					if *n_options <= 15 {
+					if *n_options <= 255 {
 						let binned_feature = feature
 							.as_enum()
 							.unwrap()
 							.data
-							.iter()
-							.map(|feature_value| {
-								feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
-							})
-							.collect::<Vec<u8>>();
-						progress();
-						BinnedFeaturesColumn::U8(binned_feature)
-					} else if *n_options <= 255 {
-						let binned_feature = feature
-							.as_enum()
-							.unwrap()
-							.data
-							.iter()
+							.par_iter()
 							.map(|feature_value| {
 								feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
 							})
@@ -224,7 +212,7 @@ pub fn compute_binned_features(
 							.as_enum()
 							.unwrap()
 							.data
-							.iter()
+							.par_iter()
 							.map(|feature_value| {
 								feature_value
 									.map(|v| v.get())

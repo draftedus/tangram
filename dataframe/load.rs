@@ -69,7 +69,7 @@ impl DataFrame {
 			InferStats(InferStats<'a>),
 		}
 
-		// retrieve any column types present in the options
+		// Retrieve any column types present in the options.
 		let mut column_types: Vec<ColumnTypeOrInferStats> = if let Some(column_types) =
 			options.column_types
 		{
@@ -91,8 +91,7 @@ impl DataFrame {
 			]
 		};
 
-		// Doing a pass over the csv to infer column types is only necessary
-		// if one or more columns did not have its type specified.
+		// Passing over the csv to infer column types is only necessary if one or more columns did not have its type specified.
 		let needs_infer =
 			column_types.iter().any(
 				|column_type_or_infer_stats| match column_type_or_infer_stats {
@@ -101,8 +100,7 @@ impl DataFrame {
 				},
 			);
 
-		// If the infer pass is necessary, pass over the dataset and infer
-		// the types for those columns whose types were not specified.
+		// If the infer pass is necessary, pass over the dataset and infer the types for those columns whose types were not specified.
 		let column_types: Vec<ColumnType> = if needs_infer {
 			let mut infer_stats: Vec<(usize, &mut InferStats)> = column_types
 				.iter_mut()
@@ -116,8 +114,7 @@ impl DataFrame {
 					},
 				)
 				.collect();
-			// Iterate over each record in the csv file and update
-			// the infer stats for the columns that need to be inferred.
+			// Iterate over each record in the csv file and update the infer stats for the columns that need to be inferred.
 			let mut record = csv::StringRecord::new();
 			let mut n_rows_computed = 0;
 			while reader.read_record(&mut record)? {
@@ -128,9 +125,7 @@ impl DataFrame {
 				}
 			}
 			n_rows = Some(n_rows_computed);
-			// After inference, return back to the beginning of the csv to load the values.
-			reader.seek(start_position)?;
-			column_types
+			let column_types = column_types
 				.into_iter()
 				.map(
 					|column_type_or_infer_stats| match column_type_or_infer_stats {
@@ -138,7 +133,10 @@ impl DataFrame {
 						ColumnTypeOrInferStats::InferStats(infer_stats) => infer_stats.finalize(),
 					},
 				)
-				.collect()
+				.collect();
+			// After inference, return back to the beginning of the csv to load the values.
+			reader.seek(start_position)?;
+			column_types
 		} else {
 			column_types
 				.into_iter()
@@ -151,7 +149,7 @@ impl DataFrame {
 				.collect()
 		};
 
-		// create the dataframe
+		// Create the dataframe.
 		let mut dataframe = Self::new(column_names, column_types);
 		// If an inference pass was done, reserve storage for the values because we know how many rows are in the csv.
 		if let Some(n_rows) = n_rows {
@@ -164,7 +162,7 @@ impl DataFrame {
 				}
 			}
 		}
-		// read each csv record and insert the values into the columns of the dataframe
+		// Read each csv record and insert the values into the columns of the dataframe.
 		let mut record = csv::ByteRecord::new();
 		while reader.read_byte_record(&mut record)? {
 			progress(record.position().unwrap().byte());

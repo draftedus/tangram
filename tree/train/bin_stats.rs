@@ -74,7 +74,7 @@ pub fn compute_bin_stats_for_root_node(
 	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
 ) {
-	izip!(&mut node_bin_stats.entries, binned_features.columns.iter(),).for_each(
+	izip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
 		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = BinStatsEntry {
@@ -146,7 +146,7 @@ pub fn compute_bin_stats_for_non_root_node(
 			ordered_gradients[i] = gradients[examples_index_for_node[i]];
 		}
 	}
-	izip!(&mut node_bin_stats.entries, binned_features.columns.iter(),).for_each(
+	izip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
 		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = BinStatsEntry {

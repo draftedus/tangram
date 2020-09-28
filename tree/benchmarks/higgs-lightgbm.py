@@ -59,15 +59,10 @@ labels = data[target]
 
 # train the model
 model = lgb.LGBMClassifier(
-	force_col_wise=True,
 	learning_rate=0.1,
 	max_depth=8,
-	min_data_in_leaf=100,
-	min_sum_hessian_in_leaf=0,
 	n_estimators=100,
 	num_leaves=255,
-	enable_bundle=False,
-	enable_sparse=False,
 )
 model.fit(features_train, labels_train)
 

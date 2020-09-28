@@ -29,9 +29,9 @@ pub struct TrainOptions {
 	pub l2_regularization: f32,
 	/// The learning rate scales the leaf values to control the effect each tree has on the output.
 	pub learning_rate: f32,
-	/// The depth of a single tree will never exceed this value.
+	/// This is the maximum depth of a single tree.
 	pub max_depth: usize,
-	/// The number of leaf nodes in a single tree will never exceed this value.
+	/// This is the maximum number of leaf nodes in a single tree.
 	pub max_leaf_nodes: usize,
 	/// When computing the bin thresholds for number features, this is the maximum number of bins for valid values to create. If the number of unique values in the number feature is less than this value, the thresholds will be equal to the unique values, which can improve accuracy when number features have a small set of possible values.
 	pub max_valid_bins_for_number_features: u8,
