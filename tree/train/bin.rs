@@ -168,65 +168,83 @@ pub fn compute_binned_features(
 	progress: &(dyn Fn() + Sync),
 ) -> BinnedFeatures {
 	let columns = izip!(&features.columns, binning_instructions)
-		.map(|(feature, binning_instructions)| {
-			match binning_instructions {
+		.map(
+			|(feature, binning_instructions)| match binning_instructions {
 				BinningInstructions::Number { thresholds } => {
-					let binned_feature = feature
-						.as_number()
-						.unwrap()
-						.data
-						.par_iter()
-						.map(|feature_value| {
-							// Invalid values go to the first bin.
-							if !feature_value.is_finite() {
-								return 0;
-							}
-							// Use binary search on the thresholds to find the bin for the feature value.
-							thresholds
-								.binary_search_by(|threshold| {
-									threshold.partial_cmp(feature_value).unwrap()
-								})
-								.unwrap_or_else(|bin| bin)
-								.to_u8()
-								.unwrap() + 1
-						})
-						.collect::<Vec<u8>>();
-					progress();
-					BinnedFeaturesColumn::U8(binned_feature)
+					compute_binned_features_for_number_feature(feature, thresholds, progress)
 				}
 				BinningInstructions::Enum { n_options } => {
 					if *n_options <= 255 {
-						let binned_feature = feature
-							.as_enum()
-							.unwrap()
-							.data
-							.par_iter()
-							.map(|feature_value| {
-								feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap()
-							})
-							.collect::<Vec<u8>>();
-						progress();
-						BinnedFeaturesColumn::U8(binned_feature)
+						compute_binned_features_for_enum_feature_u8(feature, progress)
 					} else {
-						let binned_feature = feature
-							.as_enum()
-							.unwrap()
-							.data
-							.par_iter()
-							.map(|feature_value| {
-								feature_value
-									.map(|v| v.get())
-									.unwrap_or(0)
-									.to_u16()
-									.unwrap()
-							})
-							.collect::<Vec<u16>>();
-						progress();
-						BinnedFeaturesColumn::U16(binned_feature)
+						compute_binned_features_for_enum_feature_u16(feature, progress)
 					}
 				}
-			}
-		})
+			},
+		)
 		.collect();
 	BinnedFeatures { columns }
+}
+
+fn compute_binned_features_for_number_feature(
+	feature: &ColumnView,
+	thresholds: &[f32],
+	progress: &(dyn Fn() + Sync),
+) -> BinnedFeaturesColumn {
+	let binned_feature = feature
+		.as_number()
+		.unwrap()
+		.data
+		.par_iter()
+		.map(|feature_value| {
+			// Invalid values go to the first bin.
+			if !feature_value.is_finite() {
+				return 0;
+			}
+			// Use binary search on the thresholds to find the bin for the feature value.
+			thresholds
+				.binary_search_by(|threshold| threshold.partial_cmp(feature_value).unwrap())
+				.unwrap_or_else(|bin| bin)
+				.to_u8()
+				.unwrap() + 1
+		})
+		.collect::<Vec<u8>>();
+	progress();
+	BinnedFeaturesColumn::U8(binned_feature)
+}
+
+fn compute_binned_features_for_enum_feature_u8(
+	feature: &ColumnView,
+	progress: &(dyn Fn() + Sync),
+) -> BinnedFeaturesColumn {
+	let binned_feature = feature
+		.as_enum()
+		.unwrap()
+		.data
+		.par_iter()
+		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
+		.collect::<Vec<u8>>();
+	progress();
+	BinnedFeaturesColumn::U8(binned_feature)
+}
+
+fn compute_binned_features_for_enum_feature_u16(
+	feature: &ColumnView,
+	progress: &(dyn Fn() + Sync),
+) -> BinnedFeaturesColumn {
+	let binned_feature = feature
+		.as_enum()
+		.unwrap()
+		.data
+		.par_iter()
+		.map(|feature_value| {
+			feature_value
+				.map(|v| v.get())
+				.unwrap_or(0)
+				.to_u16()
+				.unwrap()
+		})
+		.collect::<Vec<u16>>();
+	progress();
+	BinnedFeaturesColumn::U16(binned_feature)
 }

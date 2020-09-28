@@ -55,9 +55,10 @@ fn main() {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// train the model
+	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
-		max_depth: 8,
+		max_depth: 9,
 		max_leaf_nodes: 255,
 		max_rounds: 100,
 		..Default::default()
@@ -68,6 +69,7 @@ fn main() {
 		train_options,
 		&mut |_| {},
 	);
+	println!("{:?}", start.elapsed());
 
 	// make predictions on the test data
 	let features_test = features_test.to_rows();
