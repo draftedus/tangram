@@ -1,14 +1,22 @@
-from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
+import sys
 import numpy as np
 import pandas as pd
+import json
 
-import xgboost as xgb
+# requires that you have java
+import h2o
+from h2o.estimators import H2OGradientBoostingEstimator
+h2o.init()
+h2o.no_progress()
 
 # load the data
-path = 'data/higgs.csv'
-nrows_train = 10_500_000
-nrows_test = 500_000
+# path = 'data/higgs.csv'
+# nrows_train = 10_500_000
+# nrows_test = 500_000
+path = 'data/higgs-small.csv'
+nrows_train = 450_000
+nrows_test = 50_000
 target = "signal"
 data = pd.read_csv(
 	path,
@@ -44,33 +52,33 @@ data = pd.read_csv(
 		'm_wwbb': np.float64,
 	}
 )
-features = data.loc[:, data.columns != target]
-labels = data[target]
-(features_train, features_test, labels_train, labels_test) = train_test_split(
-	features,
-	labels,
+(data_train, data_test) = train_test_split(
+	data,
 	test_size=nrows_test,
+	train_size=nrows_train,
 	shuffle=False
 )
+data_train = h2o.H2OFrame(python_obj=data_train)
+data_test = h2o.H2OFrame(python_obj=data_test)
+x = [column for column in data_train.columns if column != target]
 
 # train the model
-model = xgb.XGBClassifier(
-	eta = 0.1,
-	grow_policy = 'lossguide',
-	max_depth = 9,
-	max_leaves = 255,
-	min_child_weight = 100,
-	num_round = 100,
-	tree_method = 'hist',
+model = H2OGradientBoostingEstimator(
+  distribution="bernoulli",
+  ntrees = 100,
+  max_depth = 9,
+  learn_rate = 0.1,
+  nbins = 255
 )
-model.fit(features_train, labels_train)
+model.train(
+  training_frame=data_train,
+  y=target,
+  x=x,
+)
 
 # compute accuracy
-predictions = model.predict(features_test)
-accuracy = accuracy_score(labels_test, predictions)
-print('accuracy: ', accuracy)
+perf = model.model_performance(data_test)
+print('accuracy: ', perf.accuracy()[0][1])
 
 # compute auc
-predictions_proba = model.predict_proba(features_test)[:, 1]
-auc = roc_auc_score(labels_test, predictions_proba)
-print('auc: ', auc)
+print('auc: ', perf.auc())

@@ -75,6 +75,6 @@ accuracy = accuracy_score(labels_test, predictions)
 print('accuracy: ', accuracy)
 
 # compute auc
-# predictions_proba = model.predict_proba(features_test)[:, 1]
-# auc = roc_auc_score(labels_test, predictions_proba)
-# print('auc: ', auc)
+predictions_proba = model.predict_proba(features_test)[:, 1]
+auc = roc_auc_score(labels_test, predictions_proba)
+print('auc: ', auc)

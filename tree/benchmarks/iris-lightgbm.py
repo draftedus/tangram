@@ -26,7 +26,7 @@ labels = data[target]
 # train the model
 model = lgb.LGBMClassifier(
 	learning_rate=0.1,
-	max_depth=8,
+	max_depth=9,
 	min_child_samples=1,
 	min_sum_hessian_in_leaf=0,
 	n_estimators=100,

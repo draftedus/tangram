@@ -1,4 +1,4 @@
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
@@ -38,5 +38,10 @@ model.fit(features_train, labels_train)
 
 # compute accuracy
 predictions = model.predict(features_test)
-accuracy = accuracy_score(predictions, labels_test)
+accuracy = accuracy_score(labels_test, predictions)
 print('accuracy: ', accuracy)
+
+# compute auc
+predictions_proba = model.predict_proba(features_test)[:, 1]
+auc = roc_auc_score(labels_test, predictions_proba)
+print('auc: ', auc)
