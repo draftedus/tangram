@@ -122,7 +122,7 @@ fn main() {
 		learning_rate: 0.1,
 		max_rounds: 100,
 		max_leaf_nodes: 512,
-		max_depth: 10000,
+		max_depth: 10,
 		..Default::default()
 	};
 	let model = tangram_tree::BinaryClassifier::train(

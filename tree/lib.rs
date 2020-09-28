@@ -10,7 +10,7 @@ mod binary_classifier;
 mod multiclass_classifier;
 mod regressor;
 mod shap;
-#[cfg(feature = "timing")]
+#[cfg(feature = "debug")]
 mod timing;
 mod train;
 

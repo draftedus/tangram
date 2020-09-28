@@ -54,7 +54,7 @@ pub fn train(
 	options: TrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	let timing = super::timing::Timing::new();
 
 	// If early stopping is enabled, split the features and labels into train and early stopping sets.
@@ -91,21 +91,21 @@ pub fn train(
 	let n_examples_train = features_train.nrows();
 
 	// Determine how to bin each feature.
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
 	let binning_instructions = compute_binning_instructions(&features_train, &options);
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	timing.compute_binning_instructions.inc(start.elapsed());
 
 	// Use the binning instructions from the previous step to compute the binned features.
 	let progress_counter = ProgressCounter::new(features_train.nrows().to_u64().unwrap());
 	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
 	let binned_features = compute_binned_features(&features_train, &binning_instructions, &|| {
 		progress_counter.inc(1)
 	});
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	timing.compute_binned_features.inc(start.elapsed());
 
 	// Regression and binary classification train one tree per round. Multiclass classification trains one tree per class per round.
@@ -142,7 +142,7 @@ pub fn train(
 	};
 
 	// Pre-allocate memory to be used in training.
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
 	let mut predictions = unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
 	let mut gradients = unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
@@ -177,7 +177,7 @@ pub fn train(
 	} else {
 		None
 	};
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	timing.allocations.inc(start.elapsed());
 
 	// This is the total number of rounds that have been trained thus far.
@@ -271,11 +271,11 @@ pub fn train(
 				bin_stats_pool,
 				has_constant_hessians,
 				&options,
-				#[cfg(feature = "timing")]
+				#[cfg(feature = "debug")]
 				&timing,
 			);
 			// Update the predictions using the leaf values from the most recently trained tree.
-			#[cfg(feature = "timing")]
+			#[cfg(feature = "debug")]
 			let start = std::time::Instant::now();
 			let predictions_cell = SuperUnsafe::new(predictions.as_slice_mut().unwrap());
 			tree.leaf_values.iter().for_each(|(range, value)| {
@@ -286,7 +286,7 @@ pub fn train(
 						predictions[example_index] += value;
 					});
 			});
-			#[cfg(feature = "timing")]
+			#[cfg(feature = "debug")]
 			timing.predict.inc(start.elapsed());
 			trees_for_round.push(tree);
 		}
@@ -335,15 +335,46 @@ pub fn train(
 	}
 
 	// Compute feature importances.
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
-	#[cfg(feature = "timing")]
+	#[cfg(feature = "debug")]
 	timing.compute_feature_importances.inc(start.elapsed());
 
-	// Print out timing information if the timing feature is enabled.
-	#[cfg(feature = "timing")]
-	eprintln!("{:?}", timing);
+	// Print out timing information and tree information if the debug feature is enabled.
+	#[cfg(feature = "debug")]
+	{
+		eprintln!("{:?}", timing);
+		print_tree_info(trees.as_slice());
+	}
+
+	#[cfg(feature = "debug")]
+	fn print_tree_info(trees: &[TrainTree]) {
+		trees.iter().for_each(|tree| {
+			let leaves = tree
+				.nodes
+				.iter()
+				.filter_map(|node| {
+					if let TrainNode::Leaf(node) = node {
+						Some(node)
+					} else {
+						None
+					}
+				})
+				.collect::<Vec<_>>();
+			let num_leaves = leaves.len();
+			let max_depth = leaves
+				.iter()
+				.max_by(|nodea, nodeb| nodea.depth.cmp(&nodeb.depth))
+				.unwrap()
+				.depth;
+			let num_nodes = tree.nodes.len();
+			eprintln!(
+				"depth: {:?}, num_leaves:{:?} num_nodes: {:?}",
+				max_depth, num_leaves, num_nodes
+			);
+		})
+	}
 
 	// Assemble the model.
 	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
@@ -453,6 +484,7 @@ impl From<TrainNode> for Node {
 			TrainNode::Leaf(TrainLeafNode {
 				value,
 				examples_fraction,
+				..
 			}) => Node::Leaf(LeafNode {
 				value,
 				examples_fraction,
