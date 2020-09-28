@@ -1,6 +1,7 @@
 use super::bin::{BinnedFeatures, BinnedFeaturesColumn, BinningInstructions};
 use itertools::izip;
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use tangram_pool::{Pool, PoolGuard};
 
 #[derive(Clone)]
@@ -74,8 +75,9 @@ pub fn compute_bin_stats_for_root_node(
 	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
 ) {
-	izip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
-		|(bin_stats_for_feature, binned_feature_values)| {
+	(&mut node_bin_stats.entries, &binned_features.columns)
+		.into_par_iter()
+		.for_each(|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = BinStatsEntry {
 					sum_gradients: 0.0,
@@ -119,8 +121,7 @@ pub fn compute_bin_stats_for_root_node(
 					},
 				}
 			}
-		},
-	);
+		});
 }
 
 #[allow(clippy::collapsible_if)]
@@ -138,16 +139,23 @@ pub fn compute_bin_stats_for_non_root_node(
 	let n_examples_in_node = examples_index_for_node.len();
 	if !hessians_are_constant {
 		for i in 0..n_examples_in_node {
-			ordered_gradients[i] = gradients[examples_index_for_node[i]];
-			ordered_hessians[i] = hessians[examples_index_for_node[i]]
+			unsafe {
+				let example_index = *examples_index_for_node.get_unchecked(i);
+				*ordered_gradients.get_unchecked_mut(i) = *gradients.get_unchecked(example_index);
+				*ordered_hessians.get_unchecked_mut(i) = *hessians.get_unchecked(example_index);
+			}
 		}
 	} else {
 		for i in 0..n_examples_in_node {
-			ordered_gradients[i] = gradients[examples_index_for_node[i]];
+			unsafe {
+				let example_index = *examples_index_for_node.get_unchecked(i);
+				*ordered_gradients.get_unchecked_mut(i) = *gradients.get_unchecked(example_index);
+			}
 		}
 	}
-	izip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
-		|(bin_stats_for_feature, binned_feature_values)| {
+	(&mut node_bin_stats.entries, &binned_features.columns)
+		.into_par_iter()
+		.for_each(|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = BinStatsEntry {
 					sum_gradients: 0.0,
@@ -195,8 +203,7 @@ pub fn compute_bin_stats_for_non_root_node(
 					},
 				}
 			}
-		},
-	);
+		});
 }
 
 unsafe fn compute_bin_stats_for_feature_root_no_hessian<T>(
@@ -353,16 +360,16 @@ pub fn compute_bin_stats_subtraction(
 	// (n_features, n_bins)
 	sibling_bin_stats: &BinStats,
 ) {
-	let iter = parent_bin_stats
-		.entries
-		.iter_mut()
-		.zip(sibling_bin_stats.entries.iter());
-	for (parent_bin_stats_for_feature, sibling_bin_stats_for_feature) in iter {
-		compute_bin_stats_subtraction_for_feature(
-			parent_bin_stats_for_feature,
-			sibling_bin_stats_for_feature,
-		);
-	}
+	(&mut parent_bin_stats.entries, &sibling_bin_stats.entries)
+		.into_par_iter()
+		.for_each(
+			|(parent_bin_stats_for_feature, sibling_bin_stats_for_feature)| {
+				compute_bin_stats_subtraction_for_feature(
+					parent_bin_stats_for_feature,
+					sibling_bin_stats_for_feature,
+				);
+			},
+		)
 }
 
 /// Subtracts the sibling_bin_stats from the parent_bin_stats for a single feature.
@@ -372,11 +379,10 @@ fn compute_bin_stats_subtraction_for_feature(
 	// (n_bins)
 	sibling_bin_stats_for_feature: &[BinStatsEntry],
 ) {
-	let iter = parent_bin_stats_for_feature
-		.iter_mut()
-		.zip(sibling_bin_stats_for_feature);
-	for (parent_bin_stats, sibling_bin_stats) in iter {
-		parent_bin_stats.sum_gradients -= sibling_bin_stats.sum_gradients;
-		parent_bin_stats.sum_hessians -= sibling_bin_stats.sum_hessians;
-	}
+	izip!(parent_bin_stats_for_feature, sibling_bin_stats_for_feature).for_each(
+		|(parent_bin_stats, sibling_bin_stats)| {
+			parent_bin_stats.sum_gradients -= sibling_bin_stats.sum_gradients;
+			parent_bin_stats.sum_hessians -= sibling_bin_stats.sum_hessians;
+		},
+	)
 }

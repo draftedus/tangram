@@ -6,6 +6,7 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use tangram_dataframe::*;
 
 /// `Regressor`s predict continuous target values, for example the selling price of a home.
@@ -112,20 +113,20 @@ pub fn compute_biases(labels: ArrayView1<f32>) -> Array1<f32> {
 
 /// This function is used by the common train function to compute the gradients and hessian after each round.
 pub fn compute_gradients_and_hessians(
-	// (n_trees_per_round, n_examples)
-	mut gradients: ArrayViewMut2<f32>,
-	// (n_trees_per_round, n_examples)
-	_hessians: ArrayViewMut2<f32>,
 	// (n_examples)
-	labels: ArrayView1<f32>,
-	// (n_trees_per_round, n_examples)
-	predictions: ArrayView2<f32>,
+	gradients: &mut [f32],
+	// (n_examples)
+	_hessians: &mut [f32],
+	// (n_examples)
+	labels: &[f32],
+	// (n_examples)
+	predictions: &[f32],
 ) {
 	// gradients are y_pred - y_true
 	// d / dy_pred (0.5 ( y_pred - y_true) **2 ) = 2 * (0.5) * (y_pred - y_pred) = y_pred - y_true
-	izip!(gradients.row_mut(0), labels, predictions.row(0)).for_each(
-		|(gradient, label, prediction)| {
+	(gradients, labels, predictions)
+		.into_par_iter()
+		.for_each(|(gradient, label, prediction)| {
 			*gradient = prediction - label;
-		},
-	);
+		});
 }

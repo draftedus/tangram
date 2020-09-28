@@ -1,5 +1,6 @@
 use maplit::btreemap;
 use ndarray::prelude::*;
+use rayon::prelude::*;
 use std::path::Path;
 use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;
@@ -55,7 +56,6 @@ fn main() {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// train the model
-	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: 9,
@@ -69,12 +69,19 @@ fn main() {
 		train_options,
 		&mut |_| {},
 	);
-	println!("{:?}", start.elapsed());
 
 	// make predictions on the test data
 	let features_test = features_test.to_rows();
 	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((nrows_test, 2)) };
-	model.predict(features_test.view(), probabilities.view_mut());
+	let chunk_size = features_test.nrows() / rayon::current_num_threads();
+	(
+		features_test.axis_chunks_iter(Axis(0), chunk_size),
+		probabilities.axis_chunks_iter_mut(Axis(0), chunk_size),
+	)
+		.into_par_iter()
+		.for_each(|(features_test, probabilities)| {
+			model.predict(features_test, probabilities);
+		});
 
 	// compute metrics
 	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);

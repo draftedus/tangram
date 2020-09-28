@@ -6,6 +6,7 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
+use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use std::ops::Neg;
 use tangram_dataframe::*;
@@ -133,30 +134,26 @@ pub fn compute_biases(labels: ArrayView1<Option<NonZeroUsize>>) -> Array1<f32> {
 
 /// This function is used by the common train function to compute the gradients and hessian after each round.
 pub fn compute_gradients_and_hessians(
-	// (n_trees_per_round, n_examples)
-	mut gradients: ArrayViewMut2<f32>,
-	// (n_trees_per_round, n_examples)
-	mut hessians: ArrayViewMut2<f32>,
 	// (n_examples)
-	labels: ArrayView1<Option<NonZeroUsize>>,
-	// (n_trees_per_rounds, n_examples)
-	predictions: ArrayView2<f32>,
+	gradients: &mut [f32],
+	// (n_examples)
+	hessians: &mut [f32],
+	// (n_examples)
+	labels: &[Option<NonZeroUsize>],
+	// (n_examples)
+	predictions: &[f32],
 ) {
-	izip!(
-		gradients.row_mut(0),
-		hessians.row_mut(0),
-		labels,
-		predictions.row(0)
-	)
-	.for_each(|(gradient, hessian, label, prediction)| {
-		let probability = clamp(
-			sigmoid(*prediction),
-			std::f32::EPSILON,
-			1.0 - std::f32::EPSILON,
-		);
-		*gradient = probability - (label.unwrap().get() - 1).to_f32().unwrap();
-		*hessian = probability * (1.0 - probability);
-	});
+	(gradients, hessians, labels, predictions)
+		.into_par_iter()
+		.for_each(|(gradient, hessian, label, prediction)| {
+			let probability = clamp(
+				sigmoid(*prediction),
+				std::f32::EPSILON,
+				1.0 - std::f32::EPSILON,
+			);
+			*gradient = probability - (label.unwrap().get() - 1).to_f32().unwrap();
+			*hessian = probability * (1.0 - probability);
+		});
 }
 
 fn sigmoid(value: f32) -> f32 {

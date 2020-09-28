@@ -43,7 +43,7 @@ fn rearrange_examples_index_serial(
 			bin_index,
 			..
 		}) => {
-			let binned_feature = &binned_features.columns[*feature_index];
+			let binned_feature = &binned_features.columns.get(*feature_index).unwrap();
 			match binned_feature {
 				BinnedFeaturesColumn::U8(binned_feature) => unsafe {
 					rearrange_examples_index_serial_continuous(
@@ -70,7 +70,7 @@ fn rearrange_examples_index_serial(
 			directions,
 			..
 		}) => {
-			let binned_feature = &binned_features.columns[*feature_index];
+			let binned_feature = &binned_features.columns.get(*feature_index).unwrap();
 			match binned_feature {
 				BinnedFeaturesColumn::U8(binned_feature) => unsafe {
 					rearrange_examples_index_serial_discrete(
@@ -177,7 +177,7 @@ fn rearrange_examples_index_parallel(
 						bin_index,
 						..
 					}) => {
-						let binned_feature = &binned_features.columns[*feature_index];
+						let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 						match binned_feature {
 							BinnedFeaturesColumn::U8(binned_feature) => unsafe {
 								rearrange_examples_index_parallel_step_one_continuous(
@@ -208,7 +208,7 @@ fn rearrange_examples_index_parallel(
 						directions,
 						..
 					}) => {
-						let binned_feature = &binned_features.columns[*feature_index];
+						let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 						match binned_feature {
 							BinnedFeaturesColumn::U8(binned_feature) => unsafe {
 								rearrange_examples_index_parallel_step_one_discrete(

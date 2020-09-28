@@ -1,5 +1,5 @@
 use crate::TrainOptions;
-use itertools::{izip, Itertools};
+use itertools::Itertools;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BTreeMap};
@@ -167,7 +167,8 @@ pub fn compute_binned_features(
 	binning_instructions: &[BinningInstructions],
 	progress: &(dyn Fn() + Sync),
 ) -> BinnedFeatures {
-	let columns = izip!(&features.columns, binning_instructions)
+	let columns = (&features.columns, binning_instructions)
+		.into_par_iter()
 		.map(
 			|(feature, binning_instructions)| match binning_instructions {
 				BinningInstructions::Number { thresholds } => {
@@ -189,13 +190,13 @@ pub fn compute_binned_features(
 fn compute_binned_features_for_number_feature(
 	feature: &ColumnView,
 	thresholds: &[f32],
-	progress: &(dyn Fn() + Sync),
+	_progress: &(dyn Fn() + Sync),
 ) -> BinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_number()
 		.unwrap()
 		.data
-		.par_iter()
+		.iter()
 		.map(|feature_value| {
 			// Invalid values go to the first bin.
 			if !feature_value.is_finite() {
@@ -209,34 +210,32 @@ fn compute_binned_features_for_number_feature(
 				.unwrap() + 1
 		})
 		.collect::<Vec<u8>>();
-	progress();
 	BinnedFeaturesColumn::U8(binned_feature)
 }
 
 fn compute_binned_features_for_enum_feature_u8(
 	feature: &ColumnView,
-	progress: &(dyn Fn() + Sync),
+	_progress: &(dyn Fn() + Sync),
 ) -> BinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_enum()
 		.unwrap()
 		.data
-		.par_iter()
+		.iter()
 		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
 		.collect::<Vec<u8>>();
-	progress();
 	BinnedFeaturesColumn::U8(binned_feature)
 }
 
 fn compute_binned_features_for_enum_feature_u16(
 	feature: &ColumnView,
-	progress: &(dyn Fn() + Sync),
+	_progress: &(dyn Fn() + Sync),
 ) -> BinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_enum()
 		.unwrap()
 		.data
-		.par_iter()
+		.iter()
 		.map(|feature_value| {
 			feature_value
 				.map(|v| v.get())
@@ -245,6 +244,5 @@ fn compute_binned_features_for_enum_feature_u16(
 				.unwrap()
 		})
 		.collect::<Vec<u16>>();
-	progress();
 	BinnedFeaturesColumn::U16(binned_feature)
 }

@@ -25,7 +25,7 @@ impl TrainTree {
 		let mut node_index = 0;
 		// Traverse the tree until we get to a leaf.
 		loop {
-			match &self.nodes[node_index] {
+			match &self.nodes.get(node_index).unwrap() {
 				// This branch uses a continuous split.
 				TrainNode::Branch(TrainBranchNode {
 					left_child_index,

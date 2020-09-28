@@ -4,8 +4,8 @@ use super::{
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 use crate::{SplitDirection, TrainOptions};
-use itertools::izip;
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use std::ops::Range;
 
 pub struct ChooseBestSplitOutput {
@@ -27,7 +27,8 @@ pub fn choose_best_split(
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
 ) -> Option<ChooseBestSplitOutput> {
-	izip!(&bin_stats.entries, &bin_stats.binning_instructions)
+	(&bin_stats.entries, &bin_stats.binning_instructions)
+		.into_par_iter()
 		.enumerate()
 		.filter_map(
 			|(feature_index, (bin_stats, binning_instructions))| match binning_instructions {
@@ -146,7 +147,7 @@ fn choose_best_split_continuous(
 				bin_index,
 				split_value: match binning_instructions {
 					BinningInstructions::Number { thresholds } => match bin_index.checked_sub(1) {
-						Some(i) => thresholds[i],
+						Some(i) => thresholds.get(i).unwrap(),
 						None => f32::MIN,
 					},
 					_ => unreachable!(),
@@ -221,7 +222,7 @@ fn choose_best_split_discrete(
 	let mut directions = vec![SplitDirection::Right; binning_instructions.n_bins()];
 	let iter = sorted_bin_stats[0..sorted_bin_stats.len() - 1].iter();
 	for (bin_index, bin_stats_entry) in iter {
-		directions[*bin_index] = SplitDirection::Left;
+		*directions.get_mut(*bin_index).unwrap() = SplitDirection::Left;
 		// Approximate the number of examples that go left by assuming it is proporational to the sum of the hessians.
 		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
 			.round()
@@ -264,9 +265,9 @@ fn choose_best_split_discrete(
 		if !training_data_contains_invalid_values {
 			// no invalid values, send invalid values to the child with more examples
 			if left_n_examples > right_n_examples {
-				directions[0] = SplitDirection::Left;
+				*directions.get_mut(0).unwrap() = SplitDirection::Left;
 			} else {
-				directions[0] = SplitDirection::Right;
+				*directions.get_mut(0).unwrap() = SplitDirection::Right;
 			}
 		}
 		let split = TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {

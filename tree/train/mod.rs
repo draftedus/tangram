@@ -16,6 +16,7 @@ use crate::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_progress::ProgressCounter;
@@ -206,19 +207,19 @@ pub fn train(
 			Task::Regression => {
 				let labels_train = labels_train.as_number().unwrap();
 				super::regressor::compute_gradients_and_hessians(
-					gradients.view_mut(),
-					hessians.view_mut(),
-					labels_train.data.into(),
-					predictions.view(),
+					gradients.row_mut(0).as_slice_mut().unwrap(),
+					hessians.row_mut(0).as_slice_mut().unwrap(),
+					labels_train.data,
+					predictions.row(0).as_slice().unwrap(),
 				);
 			}
 			Task::BinaryClassification => {
 				let labels_train = labels_train.as_enum().unwrap();
 				super::binary_classifier::compute_gradients_and_hessians(
-					gradients.view_mut(),
-					hessians.view_mut(),
-					labels_train.data.into(),
-					predictions.view(),
+					gradients.row_mut(0).as_slice_mut().unwrap(),
+					hessians.row_mut(0).as_slice_mut().unwrap(),
+					labels_train.data,
+					predictions.row(0).as_slice().unwrap(),
 				);
 			}
 			Task::MulticlassClassification { .. } => {
@@ -226,7 +227,7 @@ pub fn train(
 				super::multiclass_classifier::compute_gradients_and_hessians(
 					gradients.view_mut(),
 					hessians.view_mut(),
-					labels_train.data.into(),
+					labels_train.data,
 					predictions.view(),
 				);
 			}
@@ -254,10 +255,15 @@ pub fn train(
 			ordered_hessians.axis_iter_mut(Axis(0)),
 			bin_stats_pools.iter_mut(),
 		) {
-			// Reset the examples_index for this tree.
-			for (index, value) in examples_index.iter_mut().enumerate() {
-				*value = index;
-			}
+			// Reset the examples_index.
+			examples_index
+				.as_slice_mut()
+				.unwrap()
+				.par_iter_mut()
+				.enumerate()
+				.for_each(|(index, value)| {
+					*value = index;
+				});
 			// Train the tree.
 			let tree = self::tree::train(
 				&binned_features,
@@ -275,19 +281,11 @@ pub fn train(
 				&timing,
 			);
 			// Update the predictions using the leaf values from the most recently trained tree.
-			#[cfg(feature = "debug")]
-			let start = std::time::Instant::now();
-			let predictions_cell = SuperUnsafe::new(predictions.as_slice_mut().unwrap());
-			tree.leaf_values.iter().for_each(|(range, value)| {
-				examples_index.as_slice().unwrap()[range.clone()]
-					.iter()
-					.for_each(|&example_index| {
-						let predictions = unsafe { predictions_cell.get() };
-						predictions[example_index] += value;
-					});
-			});
-			#[cfg(feature = "debug")]
-			timing.predict.inc(start.elapsed());
+			update_predictions_with_tree(
+				predictions.as_slice_mut().unwrap(),
+				examples_index.as_slice().unwrap(),
+				&tree,
+			);
 			trees_for_round.push(tree);
 		}
 		// If loss computation is enabled, compute the loss for this round.
@@ -380,7 +378,7 @@ pub fn train(
 	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
 	match task {
 		Task::Regression => Model::Regressor(Regressor {
-			bias: biases[0],
+			bias: *biases.get(0).unwrap(),
 			trees,
 			feature_importances,
 			losses,
@@ -391,7 +389,7 @@ pub fn train(
 				_ => unreachable!(),
 			};
 			Model::BinaryClassifier(BinaryClassifier {
-				bias: biases[0],
+				bias: *biases.get(0).unwrap(),
 				trees,
 				feature_importances,
 				losses,
@@ -438,6 +436,25 @@ fn train_early_stopping_split<'features, 'labels>(
 		features_early_stopping,
 		labels_early_stopping,
 	)
+}
+
+fn update_predictions_with_tree(
+	predictions: &mut [f32],
+	examples_index: &[usize],
+	tree: &TrainTree,
+) {
+	#[cfg(feature = "debug")]
+	let start = std::time::Instant::now();
+	let predictions_cell = SuperUnsafe::new(predictions);
+	tree.leaf_values.par_iter().for_each(|(range, value)| {
+		examples_index[range.clone()]
+			.iter()
+			.for_each(|&example_index| unsafe {
+				*predictions_cell.get().get_unchecked_mut(example_index) += value;
+			});
+	});
+	#[cfg(feature = "debug")]
+	timing.predict.inc(start.elapsed());
 }
 
 impl From<TrainTree> for Tree {
