@@ -8,7 +8,6 @@ import json
 import h2o
 from h2o.estimators import H2OGradientBoostingEstimator
 h2o.init()
-h2o.no_progress()
 
 # load the data
 # path = 'data/higgs.csv'

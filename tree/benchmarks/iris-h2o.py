@@ -6,7 +6,6 @@ import pandas as pd
 import h2o
 from h2o.estimators import H2OGradientBoostingEstimator
 h2o.init()
-h2o.no_progress()
 
 # load the data
 path = 'data/iris.csv'
@@ -41,4 +40,4 @@ model.train(
 
 # compute accuracy
 perf = model.model_performance(data_test)
-print('accuracy: ', perf.accuracy()[0][1])
+print('accuracy: ', 1 - perf.confusion_matrix()[3][3])
