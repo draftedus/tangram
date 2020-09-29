@@ -1,6 +1,6 @@
 use self::{
-	bin::{compute_binned_features, compute_binning_instructions},
 	bin_stats::BinStatsPool,
+	binning::{compute_binned_features, compute_binning_instructions},
 	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
 	feature_importances::compute_feature_importances,
 	tree::{
@@ -8,6 +8,8 @@ use self::{
 		TrainLeafNode, TrainNode,
 	},
 };
+#[cfg(feature = "debug")]
+use crate::timing::Timing;
 use crate::{
 	binary_classifier::BinaryClassifier, multiclass_classifier::MulticlassClassifier,
 	regressor::Regressor, BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete,
@@ -21,8 +23,8 @@ use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_progress::ProgressCounter;
 
-mod bin;
 mod bin_stats;
+mod binning;
 mod early_stopping;
 mod examples_index;
 mod feature_importances;
@@ -56,7 +58,7 @@ pub fn train(
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
 	#[cfg(feature = "debug")]
-	let timing = super::timing::Timing::new();
+	let timing = Timing::new();
 
 	// If early stopping is enabled, split the features and labels into train and early stopping sets.
 	let early_stopping_enabled = options.early_stopping_options.is_some();
@@ -285,6 +287,8 @@ pub fn train(
 				predictions.as_slice_mut().unwrap(),
 				examples_index.as_slice().unwrap(),
 				&tree,
+				#[cfg(feature = "debug")]
+				&timing,
 			);
 			trees_for_round.push(tree);
 		}
@@ -442,6 +446,7 @@ fn update_predictions_with_tree(
 	predictions: &mut [f32],
 	examples_index: &[usize],
 	tree: &TrainTree,
+	#[cfg(feature = "debug")] timing: &Timing,
 ) {
 	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();

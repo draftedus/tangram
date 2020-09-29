@@ -1,4 +1,4 @@
-use super::bin::{BinnedFeatures, BinnedFeaturesColumn, BinningInstructions};
+use super::binning::{BinnedFeatures, BinnedFeaturesColumn, BinningInstructions};
 use itertools::izip;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;

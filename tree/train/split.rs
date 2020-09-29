@@ -1,6 +1,6 @@
 use super::{
-	bin::BinningInstructions,
 	bin_stats::{BinStats, BinStatsEntry},
+	binning::BinningInstructions,
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 use crate::{SplitDirection, TrainOptions};

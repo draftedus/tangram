@@ -1,9 +1,9 @@
 use super::{
-	bin::BinnedFeatures,
 	bin_stats::{
 		compute_bin_stats_for_non_root_node, compute_bin_stats_for_root_node,
 		compute_bin_stats_subtraction, BinStats, BinStatsPool,
 	},
+	binning::BinnedFeatures,
 	examples_index::rearrange_examples_index,
 	split::choose_best_split,
 };
