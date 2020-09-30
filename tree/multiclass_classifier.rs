@@ -175,9 +175,12 @@ pub fn compute_gradients_and_hessians(
 		labels.iter(),
 	)
 	.for_each(|(gradient, hessian, logits, label)| {
-		let mut logits = logits.to_owned();
-		softmax(logits.view_mut());
-		let prediction = logits[class_index];
+		let max = logits.iter().fold(std::f32::MIN, |a, &b| a.max(b));
+		let mut sum = 0.0;
+		for logit in logits.iter() {
+			sum += (*logit - max).exp();
+		}
+		let prediction = (logits[class_index] - max).exp() / sum;
 		let label = label.unwrap().get() - 1;
 		let label = if label == class_index { 1.0 } else { 0.0 };
 		*gradient = prediction - label;
