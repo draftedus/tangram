@@ -33,6 +33,7 @@ impl<T> Pool<T> {
 				state: self.state.clone(),
 			})
 		} else if state.n_items_outstanding < self.max_items {
+			state.n_items_outstanding += 1;
 			let item = (self.create_item)();
 			Some(PoolGuard {
 				item: Some(item),

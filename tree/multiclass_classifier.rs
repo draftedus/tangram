@@ -6,7 +6,6 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
-use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use tangram_dataframe::*;
 
@@ -125,7 +124,7 @@ pub fn update_logits(
 /// This function is used by the common train function to compute the loss after each tree is trained for multiclass classification.
 pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
-	for (label, logits) in labels.into_iter().zip(logits.gencolumns()) {
+	for (label, logits) in labels.into_iter().zip(logits.genrows()) {
 		let mut probabilities = logits.to_owned();
 		softmax(probabilities.view_mut());
 		for (index, &probability) in probabilities.indexed_iter() {
@@ -157,43 +156,33 @@ pub fn compute_biases(
 	baseline
 }
 
-// TODO take another look at parallelizing this function.
 /// This function is used by the common train function to compute the gradients and hessian after each round.
 pub fn compute_gradients_and_hessians(
-	// (n_trees_per_round, n_examples)
-	mut gradients: ArrayViewMut2<f32>,
-	// (n_trees_per_round, n_examples)
-	mut hessians: ArrayViewMut2<f32>,
+	class_index: usize,
+	// (n_examples)
+	mut gradients: ArrayViewMut1<f32>,
+	// (n_examples)
+	mut hessians: ArrayViewMut1<f32>,
 	// (n_examples)
 	labels: &[Option<NonZeroUsize>],
 	// (n_trees_per_round, n_examples)
-	predictions: ArrayView2<f32>,
+	logits: ArrayView2<f32>,
 ) {
-	let mut predictions = predictions.to_owned();
-	(
-		gradients.axis_iter_mut(Axis(1)),
-		hessians.axis_iter_mut(Axis(1)),
-		predictions.axis_iter_mut(Axis(1)),
-		labels,
+	izip!(
+		gradients.iter_mut(),
+		hessians.iter_mut(),
+		logits.genrows(),
+		labels.iter(),
 	)
-		.into_par_iter()
-		.for_each(|(mut gradients, mut hessians, mut predictions, label)| {
-			softmax(predictions.view_mut());
-			izip!(
-				predictions.iter().enumerate(),
-				gradients.iter_mut(),
-				hessians.iter_mut()
-			)
-			.for_each(|((class_index, prediction), gradient, hessian)| {
-				let label = if (label.unwrap().get() - 1) == class_index {
-					1.0
-				} else {
-					0.0
-				};
-				*gradient = *prediction - label;
-				*hessian = *prediction * (1.0 - *prediction);
-			});
-		});
+	.for_each(|(gradient, hessian, logits, label)| {
+		let mut logits = logits.to_owned();
+		softmax(logits.view_mut());
+		let prediction = logits[class_index];
+		let label = label.unwrap().get() - 1;
+		let label = if label == class_index { 1.0 } else { 0.0 };
+		*gradient = prediction - label;
+		*hessian = prediction * (1.0 - prediction);
+	});
 }
 
 fn softmax(mut logits: ArrayViewMut1<f32>) {

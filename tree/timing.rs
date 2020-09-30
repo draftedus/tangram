@@ -11,10 +11,12 @@ pub struct Timing {
 	pub compute_binned_features: TimingDuration,
 	pub compute_binning_instructions: TimingDuration,
 	pub compute_feature_importances: TimingDuration,
+	pub compute_gradients_and_hessians: TimingDuration,
 	pub find_split: TimingDuration,
 	pub predict: TimingDuration,
 	pub rearrange_examples_index: TimingDuration,
 	pub sum_gradients_hessians: TimingDuration,
+	pub train: TimingDuration,
 }
 
 pub struct TimingDuration(AtomicU64);
@@ -29,10 +31,12 @@ impl Timing {
 			compute_binned_features: TimingDuration::new(),
 			compute_binning_instructions: TimingDuration::new(),
 			compute_feature_importances: TimingDuration::new(),
+			compute_gradients_and_hessians: TimingDuration::new(),
 			find_split: TimingDuration::new(),
 			predict: TimingDuration::new(),
 			rearrange_examples_index: TimingDuration::new(),
 			sum_gradients_hessians: TimingDuration::new(),
+			train: TimingDuration::new(),
 		}
 	}
 }

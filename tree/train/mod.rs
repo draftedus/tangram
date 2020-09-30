@@ -15,7 +15,6 @@ use crate::{
 	regressor::Regressor, BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete,
 	LeafNode, Node, TrainOptions, TrainProgress, Tree,
 };
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
@@ -147,25 +146,15 @@ pub fn train(
 	// Pre-allocate memory to be used in training.
 	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
-	let mut predictions = unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut gradients = unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut hessians = unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut ordered_gradients =
-		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut ordered_hessians =
-		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut examples_index = unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut examples_index_left_buffer =
-		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut examples_index_right_buffer =
-		unsafe { Array::uninitialized((n_trees_per_round, n_examples_train)) };
-	let mut bin_stats_pools: Vec<BinStatsPool> = Vec::with_capacity(n_trees_per_round);
-	for _ in 0..n_trees_per_round {
-		bin_stats_pools.push(BinStatsPool::new(
-			options.max_leaf_nodes,
-			&binning_instructions,
-		));
-	}
+	let mut predictions =
+		unsafe { Array::uninitialized((n_examples_train, n_trees_per_round).f()) };
+	let mut gradients = unsafe { Array::uninitialized(n_examples_train) };
+	let mut hessians = unsafe { Array::uninitialized(n_examples_train) };
+	let mut ordered_gradients = unsafe { Array::uninitialized(n_examples_train) };
+	let mut ordered_hessians = unsafe { Array::uninitialized(n_examples_train) };
+	let mut examples_index = unsafe { Array::uninitialized(n_examples_train) };
+	let mut examples_index_left_buffer = unsafe { Array::uninitialized(n_examples_train) };
+	let mut examples_index_right_buffer = unsafe { Array::uninitialized(n_examples_train) };
 	let mut predictions_early_stopping = if early_stopping_enabled {
 		let mut predictions_early_stopping = unsafe {
 			Array::uninitialized((
@@ -180,6 +169,7 @@ pub fn train(
 	} else {
 		None
 	};
+	let mut bin_stats_pool = BinStatsPool::new(options.max_leaf_nodes, &binning_instructions);
 	#[cfg(feature = "debug")]
 	timing.allocations.inc(start.elapsed());
 
@@ -195,8 +185,8 @@ pub fn train(
 	};
 
 	// Before the first round, fill the predictions with the biases, which are the baseline predictions.
-	for mut predictions_column in predictions.gencolumns_mut() {
-		predictions_column.assign(&biases)
+	for mut predictions in predictions.genrows_mut() {
+		predictions.assign(&biases)
 	}
 
 	// Train rounds of trees until we hit max_rounds or the early stopping monitor indicates we should stop early.
@@ -204,59 +194,44 @@ pub fn train(
 	update_progress(super::TrainProgress::Training(round_counter.clone()));
 	for _ in 0..options.max_rounds {
 		round_counter.inc(1);
-		// Before training the next round of trees, we need to determine what value for each example we would like the tree to learn.
-		match task {
-			Task::Regression => {
-				let labels_train = labels_train.as_number().unwrap();
-				super::regressor::compute_gradients_and_hessians(
-					gradients.row_mut(0).as_slice_mut().unwrap(),
-					hessians.row_mut(0).as_slice_mut().unwrap(),
-					labels_train.data,
-					predictions.row(0).as_slice().unwrap(),
-				);
-			}
-			Task::BinaryClassification => {
-				let labels_train = labels_train.as_enum().unwrap();
-				super::binary_classifier::compute_gradients_and_hessians(
-					gradients.row_mut(0).as_slice_mut().unwrap(),
-					hessians.row_mut(0).as_slice_mut().unwrap(),
-					labels_train.data,
-					predictions.row(0).as_slice().unwrap(),
-				);
-			}
-			Task::MulticlassClassification { .. } => {
-				let labels_train = labels_train.as_enum().unwrap();
-				super::multiclass_classifier::compute_gradients_and_hessians(
-					gradients.view_mut(),
-					hessians.view_mut(),
-					labels_train.data,
-					predictions.view(),
-				);
-			}
-		};
 		// Train n_trees_per_round trees.
 		let mut trees_for_round = Vec::with_capacity(n_trees_per_round);
-		for (
-			mut predictions,
-			mut examples_index,
-			mut examples_index_left_buffer,
-			mut examples_index_right_buffer,
-			gradients,
-			hessians,
-			mut ordered_gradients,
-			mut ordered_hessians,
-			bin_stats_pool,
-		) in izip!(
-			predictions.axis_iter_mut(Axis(0)),
-			examples_index.axis_iter_mut(Axis(0)),
-			examples_index_left_buffer.axis_iter_mut(Axis(0)),
-			examples_index_right_buffer.axis_iter_mut(Axis(0)),
-			gradients.axis_iter(Axis(0)),
-			hessians.axis_iter(Axis(0)),
-			ordered_gradients.axis_iter_mut(Axis(0)),
-			ordered_hessians.axis_iter_mut(Axis(0)),
-			bin_stats_pools.iter_mut(),
-		) {
+		for tree_per_round_index in 0..n_trees_per_round {
+			// Before training the next round of trees, we need to determine what value for each example we would like the tree to learn.
+			#[cfg(feature = "debug")]
+			let start = std::time::Instant::now();
+			match task {
+				Task::Regression => {
+					let labels_train = labels_train.as_number().unwrap();
+					super::regressor::compute_gradients_and_hessians(
+						gradients.as_slice_mut().unwrap(),
+						hessians.as_slice_mut().unwrap(),
+						labels_train.data,
+						predictions.column(0).as_slice().unwrap(),
+					);
+				}
+				Task::BinaryClassification => {
+					let labels_train = labels_train.as_enum().unwrap();
+					super::binary_classifier::compute_gradients_and_hessians(
+						gradients.as_slice_mut().unwrap(),
+						hessians.as_slice_mut().unwrap(),
+						labels_train.data,
+						predictions.column(0).as_slice().unwrap(),
+					);
+				}
+				Task::MulticlassClassification { .. } => {
+					let labels_train = labels_train.as_enum().unwrap();
+					super::multiclass_classifier::compute_gradients_and_hessians(
+						tree_per_round_index,
+						gradients.view_mut(),
+						hessians.view_mut(),
+						labels_train.data,
+						predictions.view(),
+					);
+				}
+			};
+			#[cfg(feature = "debug")]
+			timing.compute_gradients_and_hessians.inc(start.elapsed());
 			// Reset the examples_index.
 			examples_index
 				.as_slice_mut()
@@ -267,6 +242,8 @@ pub fn train(
 					*value = index;
 				});
 			// Train the tree.
+			#[cfg(feature = "debug")]
+			let start = std::time::Instant::now();
 			let tree = self::tree::train(
 				&binned_features,
 				gradients.as_slice().unwrap(),
@@ -276,15 +253,20 @@ pub fn train(
 				examples_index.as_slice_mut().unwrap(),
 				examples_index_left_buffer.as_slice_mut().unwrap(),
 				examples_index_right_buffer.as_slice_mut().unwrap(),
-				bin_stats_pool,
+				&mut bin_stats_pool,
 				has_constant_hessians,
 				&options,
 				#[cfg(feature = "debug")]
 				&timing,
 			);
+			#[cfg(feature = "debug")]
+			timing.train.inc(start.elapsed());
 			// Update the predictions using the leaf values from the most recently trained tree.
 			update_predictions_with_tree(
-				predictions.as_slice_mut().unwrap(),
+				predictions
+					.column_mut(tree_per_round_index)
+					.as_slice_mut()
+					.unwrap(),
 				examples_index.as_slice().unwrap(),
 				&tree,
 				#[cfg(feature = "debug")]
@@ -451,7 +433,7 @@ fn update_predictions_with_tree(
 	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
 	let predictions_cell = SuperUnsafe::new(predictions);
-	tree.leaf_values.par_iter().for_each(|(range, value)| {
+	tree.leaf_values.iter().for_each(|(range, value)| {
 		examples_index[range.clone()]
 			.iter()
 			.for_each(|&example_index| unsafe {
