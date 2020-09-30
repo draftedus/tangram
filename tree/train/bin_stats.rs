@@ -137,17 +137,35 @@ pub fn compute_bin_stats_for_non_root_node(
 	examples_index_for_node: &[usize],
 ) {
 	if !hessians_are_constant {
-		izip!(
-			examples_index_for_node,
-			&mut *ordered_gradients,
-			&mut *ordered_hessians,
-		)
-		.for_each(
-			|(example_index, ordered_gradient, ordered_hessian)| unsafe {
-				*ordered_gradient = *gradients.get_unchecked(*example_index);
-				*ordered_hessian = *hessians.get_unchecked(*example_index);
-			},
-		);
+		if examples_index_for_node.len() < 1024 {
+			izip!(
+				examples_index_for_node,
+				&mut *ordered_gradients,
+				&mut *ordered_hessians,
+			)
+			.for_each(
+				|(example_index, ordered_gradient, ordered_hessian)| unsafe {
+					*ordered_gradient = *gradients.get_unchecked(*example_index);
+					*ordered_hessian = *hessians.get_unchecked(*example_index);
+				},
+			);
+		} else {
+			(
+				examples_index_for_node.par_chunks(512),
+				ordered_gradients.par_chunks_mut(512),
+				ordered_hessians.par_chunks_mut(512),
+			)
+				.into_par_iter()
+				.for_each(
+					|(example_index_for_node, ordered_gradients, ordered_hessians)| unsafe {
+						izip!(example_index_for_node, ordered_gradients, ordered_hessians)
+							.for_each(|(example_index, ordered_gradient, ordered_hessian)| {
+								*ordered_gradient = *gradients.get_unchecked(*example_index);
+								*ordered_hessian = *hessians.get_unchecked(*example_index);
+							});
+					},
+				);
+		}
 	} else {
 		izip!(examples_index_for_node, &mut *ordered_gradients,).for_each(
 			|(example_index, ordered_gradient)| unsafe {
