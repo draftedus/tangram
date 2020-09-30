@@ -136,22 +136,24 @@ pub fn compute_bin_stats_for_non_root_node(
 	hessians_are_constant: bool,
 	examples_index_for_node: &[usize],
 ) {
-	let n_examples_in_node = examples_index_for_node.len();
 	if !hessians_are_constant {
-		for i in 0..n_examples_in_node {
-			unsafe {
-				let example_index = *examples_index_for_node.get_unchecked(i);
-				*ordered_gradients.get_unchecked_mut(i) = *gradients.get_unchecked(example_index);
-				*ordered_hessians.get_unchecked_mut(i) = *hessians.get_unchecked(example_index);
-			}
-		}
+		izip!(
+			examples_index_for_node,
+			&mut *ordered_gradients,
+			&mut *ordered_hessians,
+		)
+		.for_each(
+			|(example_index, ordered_gradient, ordered_hessian)| unsafe {
+				*ordered_gradient = *gradients.get_unchecked(*example_index);
+				*ordered_hessian = *hessians.get_unchecked(*example_index);
+			},
+		);
 	} else {
-		for i in 0..n_examples_in_node {
-			unsafe {
-				let example_index = *examples_index_for_node.get_unchecked(i);
-				*ordered_gradients.get_unchecked_mut(i) = *gradients.get_unchecked(example_index);
-			}
-		}
+		izip!(examples_index_for_node, &mut *ordered_gradients,).for_each(
+			|(example_index, ordered_gradient)| unsafe {
+				*ordered_gradient = *gradients.get_unchecked(*example_index);
+			},
+		);
 	}
 	(&mut node_bin_stats.entries, &binned_features.columns)
 		.into_par_iter()
