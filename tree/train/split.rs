@@ -108,19 +108,19 @@ fn choose_best_split_continuous(
 			let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
 			let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
 			// check if we have violated the min samples leaf constraint
-			if left_n_examples < options.min_examples_per_child {
+			if left_n_examples < options.min_examples_per_node {
 				continue;
 			}
 			// Since we are in left to right mode, we will only get less examples if we continue so break instead.
-			if right_n_examples < options.min_examples_per_child {
+			if right_n_examples < options.min_examples_per_node {
 				break;
 			}
 			// If hessians are positive so the left sum hessians will continue to increase, so we can continue.
-			if left_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
+			if left_sum_hessians < options.min_sum_hessians_per_node.to_f64().unwrap() {
 				continue;
 			}
 			// If hessians are positive so we will continue to violate the min_hessian_to_split condition for the right node, break.
-			if right_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
+			if right_sum_hessians < options.min_sum_hessians_per_node.to_f64().unwrap() {
 				break;
 			}
 			let current_split_gain = compute_gain(
@@ -237,19 +237,19 @@ fn choose_best_split_discrete(
 			None => break,
 		};
 		// check if we have violated the min samples leaf constraint
-		if left_n_examples < options.min_examples_per_child {
+		if left_n_examples < options.min_examples_per_node {
 			continue;
 		}
-		if right_n_examples < options.min_examples_per_child {
+		if right_n_examples < options.min_examples_per_node {
 			// since we are in left to right mode, we will only get less examples if we continue so break instead
 			break;
 		}
-		if left_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
+		if left_sum_hessians < options.min_sum_hessians_per_node.to_f64().unwrap() {
 			// Hessians are positive so the left sum hessians will continue to increase,
 			// we can continue.
 			continue;
 		}
-		if right_sum_hessians < options.min_sum_hessians_per_child.to_f64().unwrap() {
+		if right_sum_hessians < options.min_sum_hessians_per_node.to_f64().unwrap() {
 			// Hessians are positive so we will continue to violate the min_hessian_to_split
 			// condition for the right node, break.
 			break;

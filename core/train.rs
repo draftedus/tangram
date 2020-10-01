@@ -747,7 +747,7 @@ fn train_tree_regressor(
 		tree_options.learning_rate = learning_rate;
 	}
 	if let Some(max_depth) = options.max_depth {
-		tree_options.max_depth = max_depth.to_usize().unwrap();
+		tree_options.max_depth = Some(max_depth.to_usize().unwrap());
 	}
 	if let Some(max_depth) = options.max_depth {
 		tree_options.max_leaf_nodes = 2usize.pow(max_depth.to_u32().unwrap());
@@ -847,7 +847,7 @@ fn train_tree_binary_classifier(
 		tree_options.learning_rate = learning_rate;
 	}
 	if let Some(max_depth) = options.max_depth {
-		tree_options.max_depth = max_depth.to_usize().unwrap();
+		tree_options.max_depth = Some(max_depth.to_usize().unwrap());
 	}
 	if let Some(max_depth) = options.max_depth {
 		tree_options.max_leaf_nodes = 2usize.pow(max_depth.to_u32().unwrap());
@@ -951,14 +951,13 @@ fn train_tree_multiclass_classifier(
 		tree_options.learning_rate = learning_rate;
 	}
 	if let Some(max_depth) = options.max_depth {
-		tree_options.max_depth = max_depth.to_usize().unwrap();
-		tree_options.max_leaf_nodes = 2usize.pow(max_depth.to_u32().unwrap());
+		tree_options.max_depth = Some(max_depth.to_usize().unwrap());
 	}
 	if let Some(max_rounds) = options.max_rounds {
 		tree_options.max_rounds = max_rounds.to_usize().unwrap();
 	}
 	if let Some(min_examples_per_leaf) = options.min_examples_per_leaf {
-		tree_options.min_examples_per_child = min_examples_per_leaf.to_usize().unwrap();
+		tree_options.min_examples_per_node = min_examples_per_leaf.to_usize().unwrap();
 	}
 	let model = tangram_tree::MulticlassClassifier::train(
 		features.view(),

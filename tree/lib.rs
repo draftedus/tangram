@@ -29,8 +29,8 @@ pub struct TrainOptions {
 	pub l2_regularization: f32,
 	/// The learning rate scales the leaf values to control the effect each tree has on the output.
 	pub learning_rate: f32,
-	/// This is the maximum depth of a single tree.
-	pub max_depth: usize,
+	/// This is the maximum depth of a single tree. If this value is `None`, the depth will not be limited.
+	pub max_depth: Option<usize>,
 	/// This is the maximum number of leaf nodes in a single tree.
 	pub max_leaf_nodes: usize,
 	/// When computing the bin thresholds for number features, this is the maximum number of bins for valid values to create. If the number of unique values in the number feature is less than this value, the thresholds will be equal to the unique values, which can improve accuracy when number features have a small set of possible values.
@@ -38,11 +38,11 @@ pub struct TrainOptions {
 	/// This is the maximum number of rounds of training that will occur. Fewer rounds may be trained if early stopping is enabled.
 	pub max_rounds: usize,
 	/// A split will only be considered valid if the number of training examples sent to each of the resulting children is at least this value.
-	pub min_examples_per_child: usize,
+	pub min_examples_per_node: usize,
 	/// A node will only be split if the best split achieves at least this minimum gain.
 	pub min_gain_to_split: f32,
 	/// A split will only be considered valid if the sum of hessians in each of the resulting children is at least this value.
-	pub min_sum_hessians_per_child: f32,
+	pub min_sum_hessians_per_node: f32,
 	/// This is the maximum number of examples to consider when determining the bin thresholds for number features.
 	pub max_examples_for_computing_bin_thresholds: usize,
 	/// When choosing which direction each enum option should be sent in a discrete split, the enum options are sorted by a score computed from the sum of gradients and hessians for examples with that enum option. This smoothing factor is added to the denominator of that score.
@@ -58,13 +58,13 @@ impl Default for TrainOptions {
 			early_stopping_options: None,
 			l2_regularization: 0.0,
 			learning_rate: 0.1,
-			max_depth: 5,
+			max_depth: None,
 			max_leaf_nodes: 31,
 			max_rounds: 100,
 			max_valid_bins_for_number_features: 255,
-			min_examples_per_child: 20,
+			min_examples_per_node: 20,
 			min_gain_to_split: 0.0,
-			min_sum_hessians_per_child: 1e-3,
+			min_sum_hessians_per_node: 1e-3,
 			max_examples_for_computing_bin_thresholds: 200_000,
 			smoothing_factor_for_discrete_bin_sorting: 10.0,
 			supplemental_l2_regularization_for_discrete_splits: 10.0,

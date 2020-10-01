@@ -58,7 +58,7 @@ fn main() {
 	// train the model
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
-		max_depth: 9,
+		max_depth: Some(9),
 		max_leaf_nodes: 255,
 		max_rounds: 100,
 		..Default::default()

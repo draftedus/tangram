@@ -217,8 +217,8 @@ pub fn train(
 	timing.sum_gradients_hessians.inc(start.elapsed());
 
 	// Determine if we should try to split the root.
-	let should_try_to_split_root = n_examples_root >= 2 * options.min_examples_per_child
-		&& sum_hessians_root >= 2.0 * options.min_sum_hessians_per_child.to_f64().unwrap();
+	let should_try_to_split_root = n_examples_root >= 2 * options.min_examples_per_node
+		&& sum_hessians_root >= 2.0 * options.min_sum_hessians_per_node.to_f64().unwrap();
 	if !should_try_to_split_root {
 		add_leaf(
 			&mut nodes,
@@ -362,11 +362,15 @@ pub fn train(
 		timing.rearrange_examples_index.inc(start.elapsed());
 
 		// Determine if we should try to split the left and/or right children of this branch.
-		let max_depth_reached = queue_item.depth == options.max_depth;
-		let should_try_to_split_left_child = !max_depth_reached
-			&& left_examples_index_range.len() >= options.min_examples_per_child * 2;
-		let should_try_to_split_right_child = !max_depth_reached
-			&& right_examples_index_range.len() >= options.min_examples_per_child * 2;
+		let children_will_exceed_max_depth = if let Some(max_depth) = options.max_depth {
+			queue_item.depth + 1 > max_depth - 1
+		} else {
+			false
+		};
+		let should_try_to_split_left_child = !children_will_exceed_max_depth
+			&& left_examples_index_range.len() >= options.min_examples_per_node * 2;
+		let should_try_to_split_right_child = !children_will_exceed_max_depth
+			&& right_examples_index_range.len() >= options.min_examples_per_node * 2;
 
 		// If we should not split the left, add a leaf.
 		if !should_try_to_split_left_child {

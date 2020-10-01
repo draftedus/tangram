@@ -143,25 +143,16 @@ pub fn compute_gradients_and_hessians(
 	// (n_examples)
 	predictions: &[f32],
 ) {
-	(
-		gradients.par_chunks_mut(512),
-		hessians.par_chunks_mut(512),
-		labels.par_chunks(512),
-		predictions.par_chunks(512),
-	)
+	(gradients, hessians, labels, predictions)
 		.into_par_iter()
-		.for_each(|(gradients, hessians, labels, predictions)| {
-			izip!(gradients, hessians, labels, predictions).for_each(
-				|(gradient, hessian, label, prediction)| {
-					let probability = clamp(
-						sigmoid(*prediction),
-						std::f32::EPSILON,
-						1.0 - std::f32::EPSILON,
-					);
-					*gradient = probability - (label.unwrap().get() - 1).to_f32().unwrap();
-					*hessian = probability * (1.0 - probability);
-				},
+		.for_each(|(gradient, hessian, label, prediction)| {
+			let probability = clamp(
+				sigmoid(*prediction),
+				std::f32::EPSILON,
+				1.0 - std::f32::EPSILON,
 			);
+			*gradient = probability - (label.unwrap().get() - 1).to_f32().unwrap();
+			*hessian = probability * (1.0 - probability);
 		});
 }
 

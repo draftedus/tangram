@@ -433,7 +433,7 @@ fn update_predictions_with_tree(
 	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
 	let predictions_cell = SuperUnsafe::new(predictions);
-	tree.leaf_values.iter().for_each(|(range, value)| {
+	tree.leaf_values.par_iter().for_each(|(range, value)| {
 		examples_index[range.clone()]
 			.iter()
 			.for_each(|&example_index| unsafe {
