@@ -1,5 +1,4 @@
 use anyhow::{format_err, Result};
-use derive_more::{Display, Error};
 use hyper::{header, Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use rusty_v8 as v8;
@@ -14,11 +13,25 @@ pub struct Pinwheel {
 	fs: Box<dyn VirtualFileSystem>,
 }
 
-#[derive(Debug, Display, Error)]
+#[derive(Debug)]
 pub struct NotFoundError;
 
-#[derive(Debug, Display)]
+impl std::fmt::Display for NotFoundError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "Not Found")
+	}
+}
+
+impl std::error::Error for NotFoundError {}
+
+#[derive(Debug)]
 pub struct JSError(String);
+
+impl std::fmt::Display for JSError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.0)
+	}
+}
 
 impl std::error::Error for JSError {}
 
@@ -134,8 +147,12 @@ impl Pinwheel {
 			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_literal)
-				.ok_or_else(|| format_err!("failed to get default export from {}", page_js_url))
-				.unwrap();
+				.ok_or_else(|| format_err!("failed to get default export from {}", page_js_url))?;
+			if !page_module_default_export.is_function() {
+				return Err(format_err!(
+					"default export from page module must be a functiuon"
+				));
+			}
 			let page_module_default_export_function: v8::Local<v8::Function> =
 				unsafe { v8::Local::cast(page_module_default_export) };
 

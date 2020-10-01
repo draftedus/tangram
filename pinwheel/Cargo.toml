@@ -13,7 +13,6 @@ path = "main.rs"
 [dependencies]
 anyhow = "1"
 clap = { version = "3.0.0-beta.1", features = ["color"] }
-derive_more = "0.99"
 futures = "0.3"
 hyper = { version = "0.13", features = ["stream"] }
 include_dir = "0.6"

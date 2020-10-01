@@ -9,6 +9,7 @@ members = [
 	"libtangram",
 	"linear",
 	"metrics",
+	"ndarray",
 	"pinwheel",
 	"pool",
 	"progress",

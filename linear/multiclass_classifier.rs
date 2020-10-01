@@ -210,9 +210,12 @@ impl MulticlassClassifier {
 fn softmax(mut logits: ArrayViewMut2<f32>) {
 	for mut logits in logits.genrows_mut() {
 		let max = logits.iter().fold(std::f32::MIN, |a, &b| a.max(b));
-		logits -= max;
-		logits.mapv_inplace(|l| l.exp());
+		for logit in logits.iter_mut() {
+			*logit = (*logit - max).exp();
+		}
 		let sum = logits.iter().fold(0.0, |a, b| a + b);
-		logits /= sum;
+		for logit in logits.iter_mut() {
+			*logit /= sum;
+		}
 	}
 }
