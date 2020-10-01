@@ -7,7 +7,7 @@ version = "0.2.0-dev"
 path = "lib.rs"
 
 [dev-dependencies]
-insta = "0.16"
+insta = "1"
 
 [dependencies]
 anyhow = "1"

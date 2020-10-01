@@ -10,11 +10,11 @@ path = "lib.rs"
 pinwheel = { path = "../pinwheel" }
 
 [dev-dependencies]
-insta = "0.16"
+insta = "1"
 
 [dependencies]
 anyhow = "1"
-base64 = "0.12"
+base64 = "0.13"
 bytes = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.5", features = ["serde"] }
