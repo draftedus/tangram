@@ -239,7 +239,7 @@ pub fn train(
 				.par_iter_mut()
 				.enumerate()
 				.for_each(|(index, value)| {
-					*value = index;
+					*value = index.to_i32().unwrap();
 				});
 			// Train the tree.
 			#[cfg(feature = "debug")]
@@ -329,7 +329,6 @@ pub fn train(
 	#[cfg(feature = "debug")]
 	{
 		eprintln!("{:?}", timing);
-		print_tree_info(trees.as_slice());
 	}
 
 	#[cfg(feature = "debug")]
@@ -426,7 +425,7 @@ fn train_early_stopping_split<'features, 'labels>(
 
 fn update_predictions_with_tree(
 	predictions: &mut [f32],
-	examples_index: &[usize],
+	examples_index: &[i32],
 	tree: &TrainTree,
 	#[cfg(feature = "debug")] timing: &Timing,
 ) {
@@ -437,7 +436,9 @@ fn update_predictions_with_tree(
 		examples_index[range.clone()]
 			.iter()
 			.for_each(|&example_index| unsafe {
-				*predictions_cell.get().get_unchecked_mut(example_index) += value;
+				*predictions_cell
+					.get()
+					.get_unchecked_mut(example_index.to_usize().unwrap()) += value;
 			});
 	});
 	#[cfg(feature = "debug")]

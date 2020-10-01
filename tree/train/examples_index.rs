@@ -6,15 +6,15 @@ use crate::SplitDirection;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 
-const MIN_EXAMPLES_TO_PARALLELIZE: usize = 1024;
+const MIN_EXAMPLES_TO_PARALLELIZE: usize = 10_000;
 
 /// This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
 pub fn rearrange_examples_index(
 	binned_features: &BinnedFeatures,
 	split: &TrainBranchSplit,
-	examples_index: &mut [usize],
-	examples_index_left_buffer: &mut [usize],
-	examples_index_right_buffer: &mut [usize],
+	examples_index: &mut [i32],
+	examples_index_left_buffer: &mut [i32],
+	examples_index_right_buffer: &mut [i32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	if examples_index.len() <= MIN_EXAMPLES_TO_PARALLELIZE {
 		rearrange_examples_index_serial(binned_features, split, examples_index)
@@ -33,7 +33,7 @@ pub fn rearrange_examples_index(
 fn rearrange_examples_index_serial(
 	binned_features: &BinnedFeatures,
 	split: &TrainBranchSplit,
-	examples_index: &mut [usize],
+	examples_index: &mut [i32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let mut left = 0;
 	let mut right = examples_index.len();
@@ -100,13 +100,13 @@ unsafe fn rearrange_examples_index_serial_continuous<T>(
 	left: &mut usize,
 	right: &mut usize,
 	bin_index: usize,
-	examples_index: &mut [usize],
+	examples_index: &mut [i32],
 	binned_feature: &[T],
 ) where
 	T: ToPrimitive,
 {
 	while left < right {
-		let example_index = *examples_index.get_unchecked(*left);
+		let example_index = examples_index.get_unchecked(*left).to_usize().unwrap();
 		let binned_feature_value = binned_feature
 			.get_unchecked(example_index)
 			.to_usize()
@@ -128,13 +128,13 @@ unsafe fn rearrange_examples_index_serial_discrete<T>(
 	left: &mut usize,
 	right: &mut usize,
 	directions: &[SplitDirection],
-	examples_index: &mut [usize],
+	examples_index: &mut [i32],
 	binned_feature: &[T],
 ) where
 	T: ToPrimitive,
 {
 	while left < right {
-		let example_index = *examples_index.get_unchecked(*left);
+		let example_index = examples_index.get_unchecked(*left).to_usize().unwrap();
 		let binned_feature_value = binned_feature
 			.get_unchecked(example_index)
 			.to_usize()
@@ -156,9 +156,9 @@ unsafe fn rearrange_examples_index_serial_discrete<T>(
 fn rearrange_examples_index_parallel(
 	binned_features: &BinnedFeatures,
 	split: &TrainBranchSplit,
-	examples_index: &mut [usize],
-	examples_index_left_buffer: &mut [usize],
-	examples_index_right_buffer: &mut [usize],
+	examples_index: &mut [i32],
+	examples_index_left_buffer: &mut [i32],
+	examples_index_right_buffer: &mut [i32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let chunk_size = examples_index.len() / rayon::current_num_threads();
 	let counts: Vec<(usize, usize)> = (
@@ -269,7 +269,7 @@ fn rearrange_examples_index_parallel(
 					&examples_index[left_starting_index..left_starting_index + n_left];
 				let examples_index_slice = unsafe {
 					std::slice::from_raw_parts_mut(
-						examples_index_slice.as_ptr() as *mut usize,
+						examples_index_slice.as_ptr() as *mut i32,
 						examples_index_slice.len(),
 					)
 				};
@@ -278,7 +278,7 @@ fn rearrange_examples_index_parallel(
 					&examples_index[right_starting_index..right_starting_index + n_right];
 				let examples_index_slice = unsafe {
 					std::slice::from_raw_parts_mut(
-						examples_index_slice.as_ptr() as *mut usize,
+						examples_index_slice.as_ptr() as *mut i32,
 						examples_index_slice.len(),
 					)
 				};
@@ -295,16 +295,16 @@ unsafe fn rearrange_examples_index_parallel_step_one_continuous<T>(
 	n_left: &mut usize,
 	n_right: &mut usize,
 	bin_index: usize,
-	examples_index: &mut [usize],
-	examples_index_left_buffer: &mut [usize],
-	examples_index_right_buffer: &mut [usize],
+	examples_index: &mut [i32],
+	examples_index_left_buffer: &mut [i32],
+	examples_index_right_buffer: &mut [i32],
 	binned_feature: &[T],
 ) where
 	T: ToPrimitive,
 {
 	for example_index in examples_index {
 		let binned_feature_value = binned_feature
-			.get_unchecked(*example_index)
+			.get_unchecked(example_index.to_usize().unwrap())
 			.to_usize()
 			.unwrap();
 		if binned_feature_value <= bin_index {
@@ -321,16 +321,16 @@ unsafe fn rearrange_examples_index_parallel_step_one_discrete<T>(
 	n_left: &mut usize,
 	n_right: &mut usize,
 	directions: &[SplitDirection],
-	examples_index: &mut [usize],
-	examples_index_left_buffer: &mut [usize],
-	examples_index_right_buffer: &mut [usize],
+	examples_index: &mut [i32],
+	examples_index_left_buffer: &mut [i32],
+	examples_index_right_buffer: &mut [i32],
 	binned_feature: &[T],
 ) where
 	T: ToPrimitive,
 {
 	for example_index in examples_index {
 		let binned_feature_value = binned_feature
-			.get_unchecked(*example_index)
+			.get_unchecked(example_index.to_usize().unwrap())
 			.to_usize()
 			.unwrap();
 		if *directions.get_unchecked(binned_feature_value) == SplitDirection::Left {
