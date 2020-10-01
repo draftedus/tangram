@@ -6,7 +6,7 @@ The crate provides the `Finite` type, which is used to indicate that a floating 
 ```
 use tangram_finite::Finite;
 
-let n = Finite::<f32>::new(1.0).unwrap();
+let n = <Finite<f32>>::new(1.0).unwrap();
 assert!(Finite::new(n.get() / 0.0).is_err());
 ```
 
@@ -19,7 +19,6 @@ use std::{
 	hash::{Hash, Hasher},
 	ops::{Add, Mul, Sub},
 };
-use thiserror::Error;
 
 /**
 The `Finite` type is used to indicate that a floating point number is not infinite and not NaN. It is similar in spirit to the standard library's NonZero{U8, I8, etc.} types.
@@ -30,8 +29,7 @@ where
 	T: Float;
 
 /// An error type indicating that the number is not finite.
-#[derive(Debug, Error)]
-#[error("not finite")]
+#[derive(Debug)]
 pub struct NotFiniteError;
 
 impl<T> Finite<T>

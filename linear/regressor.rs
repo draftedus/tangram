@@ -45,7 +45,7 @@ impl Regressor {
 			.collect();
 		let mut model = Self {
 			bias: 0.0,
-			weights: Array1::<f32>::zeros(n_features),
+			weights: <Array1<f32>>::zeros(n_features),
 			means,
 			losses: vec![],
 		};

@@ -36,7 +36,7 @@ pub struct ClassificationProductionPredictionClassMetricsOutput {
 impl ClassificationProductionPredictionMetrics {
 	pub fn new(classes: Vec<String>) -> Self {
 		let n_classes = classes.len();
-		let confusion_matrix = Array2::<u64>::zeros((n_classes, n_classes));
+		let confusion_matrix = <Array2<u64>>::zeros((n_classes, n_classes));
 		Self {
 			classes,
 			confusion_matrix,

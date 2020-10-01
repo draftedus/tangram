@@ -401,7 +401,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	let id = module.get_identity_hash();
 	let state = get_state(scope);
 	let mut state = state.borrow_mut();
-	let global_module = v8::Global::<v8::Module>::new(scope, module);
+	let global_module = <v8::Global<v8::Module>>::new(scope, module);
 	state.module_handles.push(ModuleHandle {
 		id,
 		url,

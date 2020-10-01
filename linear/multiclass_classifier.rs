@@ -50,8 +50,8 @@ impl MulticlassClassifier {
 			.map(|column| column.mean().unwrap())
 			.collect();
 		let mut model = MulticlassClassifier {
-			biases: Array1::<f32>::zeros(n_classes),
-			weights: Array2::<f32>::zeros((n_features, n_classes)),
+			biases: <Array1<f32>>::zeros(n_classes),
+			weights: <Array2<f32>>::zeros((n_features, n_classes)),
 			means,
 			losses: vec![],
 			classes,
