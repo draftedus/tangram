@@ -1,7 +1,7 @@
 use super::{
 	bin_stats::{
-		compute_bin_stats_for_non_root_node, compute_bin_stats_for_root_node,
-		compute_bin_stats_subtraction, BinStats, BinStatsPool,
+		compute_bin_stats_for_not_root, compute_bin_stats_for_root, compute_bin_stats_subtraction,
+		BinStats, BinStatsPool,
 	},
 	binning::BinnedFeatures,
 	examples_index::rearrange_examples_index,
@@ -239,7 +239,7 @@ pub fn train(
 	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
 	let mut root_bin_stats = bin_stats_pool.get();
-	compute_bin_stats_for_root_node(
+	compute_bin_stats_for_root(
 		&mut root_bin_stats,
 		binned_features,
 		gradients,
@@ -409,14 +409,14 @@ pub fn train(
 			continue;
 		}
 
-		// Compute the bin stats for the two children. `smaller_direction` is the direction of the child to which fewer examples are sent.
-		let smaller_direction =
+		// Compute the bin stats for the two children. `smaller_child_direction` is the direction of the child to which fewer examples are sent.
+		let smaller_child_direction =
 			if left_examples_index_range.len() < right_examples_index_range.len() {
 				SplitDirection::Left
 			} else {
 				SplitDirection::Right
 			};
-		let smaller_child_examples_index = match smaller_direction {
+		let smaller_child_examples_index = match smaller_child_direction {
 			SplitDirection::Left => &examples_index[left_examples_index_range.clone()],
 			SplitDirection::Right => &examples_index[right_examples_index_range.clone()],
 		};
@@ -425,7 +425,7 @@ pub fn train(
 		// Compute the bin stats for the child with fewer examples.
 		#[cfg(feature = "debug")]
 		let start = std::time::Instant::now();
-		compute_bin_stats_for_non_root_node(
+		compute_bin_stats_for_not_root(
 			&mut smaller_child_bin_stats,
 			ordered_gradients,
 			ordered_hessians,
@@ -447,7 +447,7 @@ pub fn train(
 		timing.compute_bin_stats_subtraction.inc(start.elapsed());
 
 		// Assign the smaller and larger bin stats to the left and right depending on which direction was smaller.
-		let (left_bin_stats, right_bin_stats) = match smaller_direction {
+		let (left_bin_stats, right_bin_stats) = match smaller_child_direction {
 			SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
 			SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
 		};

@@ -65,7 +65,7 @@ const ROOT_UNROLL: usize = 16;
 /// This value controls how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
 const NOT_ROOT_UNROLL: usize = 4;
 
-pub fn compute_bin_stats_for_root_node(
+pub fn compute_bin_stats_for_root(
 	node_bin_stats: &mut BinStats,
 	binned_features: &BinnedFeatures,
 	// (n_examples)
@@ -126,7 +126,7 @@ pub fn compute_bin_stats_for_root_node(
 
 #[allow(clippy::collapsible_if)]
 #[allow(clippy::too_many_arguments)]
-pub fn compute_bin_stats_for_non_root_node(
+pub fn compute_bin_stats_for_not_root(
 	node_bin_stats: &mut BinStats,
 	ordered_gradients: &mut [f32],
 	ordered_hessians: &mut [f32],
@@ -389,10 +389,7 @@ unsafe fn compute_bin_stats_for_feature_not_root<T>(
 	}
 }
 
-// Subtracts the bin_stats for a sibling from the parent.
-// The subtraction method:
-// 1. Compute the bin_stats for the child node with less examples.
-// 2. Get the bin_stats for the child node with more examples by subtracting sibling_node_bin_stats from step 1 from the parent_bin_stats.
+// Subtract the bin_stats for a sibling from the parent.
 pub fn compute_bin_stats_subtraction(
 	// (n_features, n_bins)
 	parent_bin_stats: &mut BinStats,
@@ -403,25 +400,12 @@ pub fn compute_bin_stats_subtraction(
 		.into_par_iter()
 		.for_each(
 			|(parent_bin_stats_for_feature, sibling_bin_stats_for_feature)| {
-				compute_bin_stats_subtraction_for_feature(
-					parent_bin_stats_for_feature,
-					sibling_bin_stats_for_feature,
-				);
+				izip!(parent_bin_stats_for_feature, sibling_bin_stats_for_feature).for_each(
+					|(parent_bin_stats, sibling_bin_stats)| {
+						parent_bin_stats.sum_gradients -= sibling_bin_stats.sum_gradients;
+						parent_bin_stats.sum_hessians -= sibling_bin_stats.sum_hessians;
+					},
+				)
 			},
 		)
-}
-
-/// Subtracts the sibling_bin_stats from the parent_bin_stats for a single feature.
-fn compute_bin_stats_subtraction_for_feature(
-	// (n_bins)
-	parent_bin_stats_for_feature: &mut [BinStatsEntry],
-	// (n_bins)
-	sibling_bin_stats_for_feature: &[BinStatsEntry],
-) {
-	izip!(parent_bin_stats_for_feature, sibling_bin_stats_for_feature).for_each(
-		|(parent_bin_stats, sibling_bin_stats)| {
-			parent_bin_stats.sum_gradients -= sibling_bin_stats.sum_gradients;
-			parent_bin_stats.sum_hessians -= sibling_bin_stats.sum_hessians;
-		},
-	)
 }

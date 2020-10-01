@@ -6,7 +6,7 @@ use crate::SplitDirection;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 
-const MIN_EXAMPLES_TO_PARALLELIZE: usize = 100_000;
+const MIN_EXAMPLES_TO_PARALLELIZE: usize = 1024;
 
 /// This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
 pub fn rearrange_examples_index(
