@@ -2,7 +2,6 @@ use super::binning::{BinnedFeatures, BinnedFeaturesColumn, BinningInstructions};
 use itertools::izip;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use tangram_pool::{Pool, PoolGuard};
 use tangram_thread_pool::pzip;
 
 #[derive(Clone)]
@@ -11,7 +10,7 @@ pub struct BinStats {
 	pub entries: Vec<Vec<BinStatsEntry>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct BinStatsEntry {
 	pub sum_gradients: f64,
 	pub sum_hessians: f64,
@@ -21,38 +20,12 @@ impl BinStats {
 	pub fn new(binning_instructions: Vec<BinningInstructions>) -> Self {
 		let entries = binning_instructions
 			.iter()
-			.map(|b| {
-				vec![
-					BinStatsEntry {
-						sum_gradients: 0.0,
-						sum_hessians: 0.0
-					};
-					b.n_bins()
-				]
-			})
+			.map(|b| vec![BinStatsEntry::default(); b.n_bins()])
 			.collect();
 		Self {
 			binning_instructions,
 			entries,
 		}
-	}
-}
-
-pub struct BinStatsPool {
-	pool: Pool<BinStats>,
-}
-
-impl BinStatsPool {
-	pub fn new(max_size: usize, binning_instructions: &[BinningInstructions]) -> Self {
-		let binning_instructions = binning_instructions.to_owned();
-		let pool = Pool::new(
-			max_size,
-			Box::new(move || BinStats::new(binning_instructions.clone())),
-		);
-		Self { pool }
-	}
-	pub fn get(&mut self) -> PoolGuard<BinStats> {
-		self.pool.get().unwrap()
 	}
 }
 
@@ -76,7 +49,7 @@ pub fn compute_bin_stats_for_root(
 	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
 ) {
-	pzip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
+	izip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
 		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = BinStatsEntry {

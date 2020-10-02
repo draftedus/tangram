@@ -2,7 +2,6 @@
 This module defines the `Config` struct, which is the configuration for training a model with `tangram_core::train`.
 */
 
-use derive_more::Display;
 use std::collections::BTreeMap;
 
 #[derive(Debug, Default, serde::Deserialize)]
@@ -60,27 +59,35 @@ pub struct TreeGridItem {
 	pub min_examples_per_leaf: Option<u64>,
 }
 
-#[derive(Debug, Display, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub enum ComparisonMetric {
-	#[display(fmt = "Mean Absolute Error")]
 	#[serde(rename = "mae")]
 	MAE,
-	#[display(fmt = "Mean Squared Error")]
 	#[serde(rename = "mse")]
 	MSE,
-	#[display(fmt = "Root Mean Squared Error")]
 	#[serde(rename = "rmse")]
 	RMSE,
-	#[display(fmt = "R2")]
 	#[serde(rename = "r2")]
 	R2,
-	#[display(fmt = "Accuracy")]
 	#[serde(rename = "accuracy")]
 	Accuracy,
-	#[display(fmt = "Area Under the Receiver Operating Characteristic Curve")]
 	#[serde(rename = "auc")]
 	AUC,
-	#[display(fmt = "F1")]
 	#[serde(rename = "f1")]
 	F1,
+}
+
+impl std::fmt::Display for ComparisonMetric {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let s = match self {
+			ComparisonMetric::MAE => "Mean Absolute Error",
+			ComparisonMetric::MSE => "Mean Squared Error",
+			ComparisonMetric::RMSE => "Root Mean Squared Error",
+			ComparisonMetric::R2 => "R2",
+			ComparisonMetric::Accuracy => "Accuracy",
+			ComparisonMetric::AUC => "Area Under the Receiver Operating Characteristic Curve",
+			ComparisonMetric::F1 => "F1",
+		};
+		write!(f, "{}", s)
+	}
 }

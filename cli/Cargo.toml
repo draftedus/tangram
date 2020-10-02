@@ -18,7 +18,6 @@ chrono-tz = { version = "0.5", features = ["serde"] }
 clap = { version = "3.0.0-beta.1", features = ["color"] }
 colored = "2"
 csv = "1"
-derive_more = "0.99"
 dirs = "3"
 futures = "0.3"
 hyper = { version = "0.13", features = ["stream"] }
@@ -43,7 +42,6 @@ tangram_app = { path = "../app" }
 tangram_core = { path = "../core" }
 tangram_id = { path = "../id" }
 term-ui = { git = "https://github.com/tangram-hq/term-ui" }
-thiserror = "1"
 tokio = { version = "0.2", features = ["rt-threaded"] }
 url = "2"
 

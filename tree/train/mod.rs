@@ -1,5 +1,5 @@
 use self::{
-	bin_stats::BinStatsPool,
+	bin_stats::BinStats,
 	binning::{compute_binned_features, compute_binning_instructions},
 	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
 	feature_importances::compute_feature_importances,
@@ -20,6 +20,7 @@ use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
+use tangram_pool::Pool;
 use tangram_progress::ProgressCounter;
 
 mod bin_stats;
@@ -169,7 +170,10 @@ pub fn train(
 	} else {
 		None
 	};
-	let mut bin_stats_pool = BinStatsPool::new(options.max_leaf_nodes, &binning_instructions);
+	let mut bin_stats_pool = Pool::new(
+		options.max_leaf_nodes,
+		Box::new(move || BinStats::new(binning_instructions.clone())),
+	);
 	#[cfg(feature = "debug")]
 	timing.allocations.inc(start.elapsed());
 
@@ -327,37 +331,7 @@ pub fn train(
 
 	// Print out timing information and tree information if the debug feature is enabled.
 	#[cfg(feature = "debug")]
-	{
-		eprintln!("{:?}", timing);
-	}
-
-	#[cfg(feature = "debug")]
-	fn print_tree_info(trees: &[TrainTree]) {
-		trees.iter().for_each(|tree| {
-			let leaves = tree
-				.nodes
-				.iter()
-				.filter_map(|node| {
-					if let TrainNode::Leaf(node) = node {
-						Some(node)
-					} else {
-						None
-					}
-				})
-				.collect::<Vec<_>>();
-			let num_leaves = leaves.len();
-			let max_depth = leaves
-				.iter()
-				.max_by(|nodea, nodeb| nodea.depth.cmp(&nodeb.depth))
-				.unwrap()
-				.depth;
-			let num_nodes = tree.nodes.len();
-			eprintln!(
-				"depth: {:?}, num_leaves:{:?} num_nodes: {:?}",
-				max_depth, num_leaves, num_nodes
-			);
-		})
-	}
+	eprintln!("{:?}", timing);
 
 	// Assemble the model.
 	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();

@@ -2,8 +2,6 @@
 Tangram uses the `Id` type to uniquely identify models, users, and anything that needs a primary key. This type is almost identical to a UUID v4, except there are no bits reserved to specify the version, and the string representation has no dashes. We do not like dashes in our unique identifiers.
 */
 
-use thiserror::Error;
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Id(u128);
 
@@ -19,9 +17,16 @@ impl Default for Id {
 	}
 }
 
-#[derive(Debug, Error)]
-#[error("parse id error")]
+#[derive(Debug)]
 pub struct ParseIdError;
+
+impl std::fmt::Display for ParseIdError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "parse id error")
+	}
+}
+
+impl std::error::Error for ParseIdError {}
 
 impl std::str::FromStr for Id {
 	type Err = ParseIdError;

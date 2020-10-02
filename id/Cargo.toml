@@ -9,4 +9,3 @@ path = "lib.rs"
 [dependencies]
 rand = "0.7"
 serde = "1"
-thiserror = "1"

@@ -11,3 +11,4 @@ insta = "1"
 
 [dependencies]
 num-traits = "0.2"
+itertools = "0.9"

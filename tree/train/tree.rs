@@ -1,7 +1,7 @@
 use super::{
 	bin_stats::{
 		compute_bin_stats_for_not_root, compute_bin_stats_for_root, compute_bin_stats_subtraction,
-		BinStats, BinStatsPool,
+		BinStats,
 	},
 	binning::BinnedFeatures,
 	examples_index::rearrange_examples_index,
@@ -10,7 +10,7 @@ use super::{
 use crate::{SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
-use tangram_pool::PoolGuard;
+use tangram_pool::{Pool, PoolGuard};
 
 #[derive(Debug)]
 pub struct TrainTree {
@@ -190,7 +190,7 @@ pub fn train(
 	examples_index: &mut [i32],
 	examples_index_left_buffer: &mut [i32],
 	examples_index_right_buffer: &mut [i32],
-	bin_stats_pool: &mut BinStatsPool,
+	bin_stats_pool: &mut Pool<BinStats>,
 	hessians_are_constant: bool,
 	options: &TrainOptions,
 	#[cfg(feature = "debug")] timing: &crate::timing::Timing,
@@ -238,7 +238,7 @@ pub fn train(
 	// Compute bin stats for the root node.
 	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
-	let mut root_bin_stats = bin_stats_pool.get();
+	let mut root_bin_stats = bin_stats_pool.get().unwrap();
 	compute_bin_stats_for_root(
 		&mut root_bin_stats,
 		binned_features,
@@ -420,7 +420,7 @@ pub fn train(
 			SplitDirection::Left => &examples_index[left_examples_index_range.clone()],
 			SplitDirection::Right => &examples_index[right_examples_index_range.clone()],
 		};
-		let mut smaller_child_bin_stats = bin_stats_pool.get();
+		let mut smaller_child_bin_stats = bin_stats_pool.get().unwrap();
 
 		// Compute the bin stats for the child with fewer examples.
 		#[cfg(feature = "debug")]
