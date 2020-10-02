@@ -106,13 +106,13 @@ impl MulticlassClassifier {
 		let mut logits = features.dot(&self.weights) + &self.biases;
 		softmax(logits.view_mut());
 		let mut predictions = logits;
-		for (mut predictions, label) in izip!(predictions.genrows_mut(), labels) {
+		for (mut predictions, label) in izip!(predictions.axis_iter_mut(Axis(0)), labels) {
 			for (class_index, prediction) in predictions.iter_mut().enumerate() {
 				*prediction -= if class_index == label.unwrap().get() - 1 {
 					1.0
 				} else {
 					0.0
-				}
+				};
 			}
 		}
 		let py = predictions;
@@ -176,7 +176,7 @@ impl MulticlassClassifier {
 
 	/// Write predicted probabilities into `probabilities` for the input `features`.
 	pub fn predict(&self, features: ArrayView2<f32>, mut probabilities: ArrayViewMut2<f32>) {
-		for mut row in probabilities.genrows_mut() {
+		for mut row in probabilities.axis_iter_mut(Axis(0)) {
 			row.assign(&self.biases.view());
 		}
 		ndarray::linalg::general_mat_mul(1.0, &features, &self.weights, 1.0, &mut probabilities);
@@ -208,7 +208,7 @@ impl MulticlassClassifier {
 }
 
 fn softmax(mut logits: ArrayViewMut2<f32>) {
-	for mut logits in logits.genrows_mut() {
+	for mut logits in logits.axis_iter_mut(Axis(0)) {
 		let max = logits.iter().fold(std::f32::MIN, |a, &b| a.max(b));
 		for logit in logits.iter_mut() {
 			*logit = (*logit - max).exp();

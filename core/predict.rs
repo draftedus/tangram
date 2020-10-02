@@ -306,8 +306,7 @@ pub fn predict(
 				None => 0.5,
 			};
 			let output = probabilities
-				.genrows()
-				.into_iter()
+				.axis_iter(Axis(0))
 				.zip(shap_values.into_iter())
 				.map(|(probabilities, shap_values)| {
 					let class_name = if probabilities[1] >= threshold {
@@ -357,8 +356,7 @@ pub fn predict(
 				None => 0.5,
 			};
 			let output = probabilities
-				.genrows()
-				.into_iter()
+				.axis_iter(Axis(0))
 				.zip(shap_values.into_iter())
 				.map(|(probabilities, shap_values)| {
 					let class_name = if probabilities[1] >= threshold {
@@ -406,8 +404,7 @@ pub fn predict(
 				dataframe.view(),
 			);
 			let output = probabilities
-				.genrows()
-				.into_iter()
+				.axis_iter(Axis(0))
 				.zip(shap_values.into_iter())
 				.map(|(probabilities, shap_values)| {
 					let class_name = probabilities
@@ -457,8 +454,7 @@ pub fn predict(
 				dataframe.view(),
 			);
 			let output = probabilities
-				.genrows()
-				.into_iter()
+				.axis_iter(Axis(0))
 				.zip(shap_values.into_iter())
 				.map(|(probabilities, shap_values)| {
 					let class_index = probabilities

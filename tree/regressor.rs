@@ -63,7 +63,6 @@ impl Regressor {
 	pub fn compute_shap_values(
 		&self,
 		features: ArrayView2<Value>,
-		// TODO change this type?
 		mut shap_values: ArrayViewMut3<f32>,
 	) {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
@@ -91,7 +90,7 @@ pub fn update_logits(
 	features: ArrayView2<Value>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
-	for (prediction, features) in izip!(predictions.row_mut(0), features.genrows()) {
+	for (prediction, features) in izip!(predictions.row_mut(0), features.axis_iter(Axis(0))) {
 		for tree in trees_for_round {
 			*prediction += tree.predict(features.as_slice().unwrap());
 		}

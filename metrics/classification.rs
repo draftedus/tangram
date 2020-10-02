@@ -74,7 +74,11 @@ impl<'a> StreamingMetric<'a> for ClassificationMetrics {
 	type Output = ClassificationMetricsOutput;
 
 	fn update(&mut self, value: ClassificationMetricsInput) {
-		for (label, probabilities) in value.labels.iter().zip(value.probabilities.genrows()) {
+		for (label, probabilities) in value
+			.labels
+			.iter()
+			.zip(value.probabilities.axis_iter(Axis(0)))
+		{
 			let prediction = probabilities
 				.iter()
 				.enumerate()

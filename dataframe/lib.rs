@@ -173,7 +173,7 @@ impl DataFrame {
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
 		let mut features_train = unsafe { Array::uninitialized((self.nrows(), self.ncols())) };
 		for (mut ndarray_column, dataframe_column) in
-			izip!(features_train.gencolumns_mut(), self.columns.iter())
+			izip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
 				Column::Number(column) => {
@@ -195,7 +195,7 @@ impl DataFrame {
 	pub fn to_rows(&self) -> Array2<Value> {
 		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
 		for (mut ndarray_column, dataframe_column) in
-			izip!(rows.gencolumns_mut(), self.columns.iter())
+			izip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
 				Column::Unknown(_) => ndarray_column.fill(Value::Unknown),
@@ -380,7 +380,7 @@ impl<'a> DataFrameView<'a> {
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
 		let mut features_train = unsafe { Array::uninitialized((self.nrows(), self.ncols())) };
 		for (mut ndarray_column, dataframe_column) in
-			izip!(features_train.gencolumns_mut(), self.columns.iter())
+			izip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
 				ColumnView::Number(column) => {
@@ -402,7 +402,7 @@ impl<'a> DataFrameView<'a> {
 	pub fn to_rows(&self) -> Array2<Value<'a>> {
 		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
 		for (mut ndarray_column, dataframe_column) in
-			izip!(rows.gencolumns_mut(), self.columns.iter())
+			izip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
 				ColumnView::Unknown(_) => ndarray_column.fill(Value::Unknown),

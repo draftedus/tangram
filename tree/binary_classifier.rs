@@ -103,7 +103,10 @@ pub fn update_logits(
 	mut predictions: ArrayViewMut2<f32>,
 ) {
 	for tree in trees_for_round {
-		for (prediction, features) in predictions.iter_mut().zip(binned_features.genrows()) {
+		for (prediction, features) in predictions
+			.iter_mut()
+			.zip(binned_features.axis_iter(Axis(0)))
+		{
 			*prediction += tree.predict(features.as_slice().unwrap());
 		}
 	}

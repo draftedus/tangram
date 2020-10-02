@@ -98,7 +98,7 @@ impl Regressor {
 		let predictions = features.dot(&self.weights) + self.bias;
 		let py = (predictions - labels).insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
-		let bias_gradient: f32 = py.mean_axis(Axis(0)).unwrap()[0];
+		let bias_gradient = py.mean_axis(Axis(0)).unwrap()[0];
 		for (weight, weight_gradient) in izip!(self.weights.iter_mut(), weight_gradients.iter()) {
 			*weight += -learning_rate * weight_gradient;
 		}

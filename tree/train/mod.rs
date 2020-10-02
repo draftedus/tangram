@@ -163,7 +163,7 @@ pub fn train(
 				labels_early_stopping.as_ref().unwrap().len(),
 			))
 		};
-		for mut predictions in predictions_early_stopping.gencolumns_mut() {
+		for mut predictions in predictions_early_stopping.axis_iter_mut(Axis(1)) {
 			predictions.assign(&biases);
 		}
 		Some(predictions_early_stopping)
@@ -189,7 +189,7 @@ pub fn train(
 	};
 
 	// Before the first round, fill the predictions with the biases, which are the baseline predictions.
-	for mut predictions in predictions.genrows_mut() {
+	for mut predictions in predictions.axis_iter_mut(Axis(0)) {
 		predictions.assign(&biases)
 	}
 

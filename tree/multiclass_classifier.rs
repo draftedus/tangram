@@ -67,7 +67,7 @@ impl MulticlassClassifier {
 				*v = *feature;
 			}
 			logits.assign(&biases);
-			for trees in trees.genrows() {
+			for trees in trees.axis_iter(Axis(0)) {
 				for (logit, tree) in logits.iter_mut().zip(trees.iter()) {
 					*logit += tree.predict(&row);
 				}
@@ -112,8 +112,8 @@ pub fn update_logits(
 	binned_features: ArrayView2<Value>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
-	let features_rows = binned_features.genrows().into_iter();
-	let logits_rows = predictions.gencolumns_mut().into_iter();
+	let features_rows = binned_features.axis_iter(Axis(0));
+	let logits_rows = predictions.axis_iter_mut(Axis(1));
 	for (features, mut logits) in features_rows.zip(logits_rows) {
 		for (logit, tree) in logits.iter_mut().zip(trees_for_round.iter()) {
 			*logit += tree.predict(features.as_slice().unwrap());
@@ -124,7 +124,7 @@ pub fn update_logits(
 /// This function is used by the common train function to compute the loss after each tree is trained for multiclass classification.
 pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
-	for (label, logits) in labels.into_iter().zip(logits.genrows()) {
+	for (label, logits) in labels.into_iter().zip(logits.axis_iter(Axis(0))) {
 		let mut probabilities = logits.to_owned();
 		softmax(probabilities.view_mut());
 		for (index, &probability) in probabilities.indexed_iter() {
@@ -142,18 +142,18 @@ pub fn compute_biases(
 	labels: ArrayView1<Option<NonZeroUsize>>,
 	n_trees_per_round: usize,
 ) -> Array1<f32> {
-	let mut baseline: Array1<f32> = Array::zeros(n_trees_per_round);
+	let mut biases: Array1<f32> = Array::zeros(n_trees_per_round);
 	for label in labels {
 		let label = label.unwrap().get() - 1;
-		baseline[label] += 1.0;
+		biases[label] += 1.0;
 	}
 	let n_examples = labels.len().to_f32().unwrap();
-	baseline.mapv_inplace(|b| {
-		let proba = b / n_examples;
+	for bias in biases.iter_mut() {
+		let proba = *bias / n_examples;
 		let clamped_proba = clamp(proba, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
-		clamped_proba.ln()
-	});
-	baseline
+		*bias = clamped_proba.ln();
+	}
+	biases
 }
 
 /// This function is used by the common train function to compute the gradients and hessian after each round.
@@ -171,7 +171,7 @@ pub fn compute_gradients_and_hessians(
 	izip!(
 		gradients.iter_mut(),
 		hessians.iter_mut(),
-		logits.genrows(),
+		logits.axis_iter(Axis(0)),
 		labels.iter(),
 	)
 	.for_each(|(gradient, hessian, logits, label)| {

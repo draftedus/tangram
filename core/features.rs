@@ -395,7 +395,7 @@ fn compute_features_one_hot_encoded_ndarray(
 		.unwrap()
 		.data;
 	features.fill(0.0);
-	for (mut features, value) in features.genrows_mut().into_iter().zip(data.iter()) {
+	for (mut features, value) in features.axis_iter_mut(Axis(0)).zip(data.iter()) {
 		let index = value.map(|v| v.get()).unwrap_or(0);
 		features[index] = 1.0;
 		progress();
@@ -418,7 +418,7 @@ fn compute_features_bag_of_words_ndarray(
 		.as_text()
 		.unwrap()
 		.data;
-	for (mut features, value) in features.genrows_mut().into_iter().zip(data.iter()) {
+	for (mut features, value) in features.axis_iter_mut(Axis(0)).zip(data.iter()) {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
 				let tokenizer = tangram_text::AlphanumericTokenizer;
