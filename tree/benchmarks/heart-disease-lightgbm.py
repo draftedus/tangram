@@ -1,3 +1,4 @@
+from time import time
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -40,6 +41,7 @@ labels = data[target]
 )
 
 # train the model
+start = time()
 model = lgb.LGBMClassifier(
 	learning_rate=0.1,
 	max_depth=8,
@@ -53,6 +55,7 @@ model = lgb.LGBMClassifier(
 categorical_feature = ['gender', 'chest_pain', 'fasting_blood_sugar_greater_than_120', 'resting_ecg_result', 'exercise_induced_angina', 'exercise_st_slope', 'thallium_stress_test']
 categorical_feature=categorical_feature
 model.fit(features_train, labels_train, categorical_feature=categorical_feature)
+print(time() - start)
 
 # compute accuracy
 predictions = model.predict(features_test)
