@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BTreeMap};
 use tangram_dataframe::{ColumnView, DataFrameView, NumberColumnView};
 use tangram_finite::Finite;
+use tangram_thread_pool::pzip;
 
 /*
 This struct specifies how to bin a feature.
@@ -167,8 +168,7 @@ pub fn compute_binned_features(
 	binning_instructions: &[BinningInstructions],
 	progress: &(dyn Fn() + Sync),
 ) -> BinnedFeatures {
-	let columns = (&features.columns, binning_instructions)
-		.into_par_iter()
+	let columns = pzip!(&features.columns, binning_instructions)
 		.map(
 			|(feature, binning_instructions)| match binning_instructions {
 				BinningInstructions::Number { thresholds } => {

@@ -8,6 +8,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_dataframe::*;
+use tangram_thread_pool::pzip;
 
 /// `Regressor`s predict continuous target values, for example the selling price of a home.
 #[derive(Debug)]
@@ -124,9 +125,7 @@ pub fn compute_gradients_and_hessians(
 ) {
 	// gradients are y_pred - y_true
 	// d / dy_pred (0.5 ( y_pred - y_true) **2 ) = 2 * (0.5) * (y_pred - y_pred) = y_pred - y_true
-	(gradients, labels, predictions)
-		.into_par_iter()
-		.for_each(|(gradient, label, prediction)| {
-			*gradient = prediction - label;
-		});
+	pzip!(gradients, labels, predictions).for_each(|(gradient, label, prediction)| {
+		*gradient = prediction - label;
+	});
 }

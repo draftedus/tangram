@@ -4,6 +4,7 @@ use rayon::prelude::*;
 use std::path::Path;
 use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;
+use tangram_thread_pool::pzip;
 
 fn main() {
 	// load the data
@@ -74,14 +75,13 @@ fn main() {
 	let features_test = features_test.to_rows();
 	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((nrows_test, 2)) };
 	let chunk_size = features_test.nrows() / rayon::current_num_threads();
-	(
+	pzip!(
 		features_test.axis_chunks_iter(Axis(0), chunk_size),
 		probabilities.axis_chunks_iter_mut(Axis(0), chunk_size),
 	)
-		.into_par_iter()
-		.for_each(|(features_test, probabilities)| {
-			model.predict(features_test, probabilities);
-		});
+	.for_each(|(features_test, probabilities)| {
+		model.predict(features_test, probabilities);
+	});
 
 	// compute metrics
 	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);

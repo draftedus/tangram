@@ -10,6 +10,7 @@ use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use std::ops::Neg;
 use tangram_dataframe::*;
+use tangram_thread_pool::pzip;
 
 /// `BinaryClassifier`s predict binary target values, for example whether a patient has heart disease or not.
 #[derive(Debug)]
@@ -143,9 +144,8 @@ pub fn compute_gradients_and_hessians(
 	// (n_examples)
 	predictions: &[f32],
 ) {
-	(gradients, hessians, labels, predictions)
-		.into_par_iter()
-		.for_each(|(gradient, hessian, label, prediction)| {
+	pzip!(gradients, hessians, labels, predictions).for_each(
+		|(gradient, hessian, label, prediction)| {
 			let probability = clamp(
 				sigmoid(*prediction),
 				std::f32::EPSILON,
@@ -153,7 +153,8 @@ pub fn compute_gradients_and_hessians(
 			);
 			*gradient = probability - (label.unwrap().get() - 1).to_f32().unwrap();
 			*hessian = probability * (1.0 - probability);
-		});
+		},
+	);
 }
 
 fn sigmoid(value: f32) -> f32 {

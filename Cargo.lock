@@ -2016,6 +2016,7 @@ name = "tangram_ndarray"
 version = "0.0.0"
 dependencies = [
  "insta 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.2.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2034,6 +2035,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "tangram_thread_pool"
+version = "0.0.0"
+
+[[package]]
 name = "tangram_tree"
 version = "0.0.0"
 dependencies = [
@@ -2048,6 +2053,7 @@ dependencies = [
  "tangram_metrics 0.0.0",
  "tangram_pool 0.0.0",
  "tangram_progress 0.0.0",
+ "tangram_thread_pool 0.0.0",
 ]
 
 [[package]]

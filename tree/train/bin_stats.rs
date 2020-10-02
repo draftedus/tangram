@@ -3,6 +3,7 @@ use itertools::izip;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_pool::{Pool, PoolGuard};
+use tangram_thread_pool::pzip;
 
 #[derive(Clone)]
 pub struct BinStats {
@@ -75,9 +76,8 @@ pub fn compute_bin_stats_for_root(
 	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
 ) {
-	(&mut node_bin_stats.entries, &binned_features.columns)
-		.into_par_iter()
-		.for_each(|(bin_stats_for_feature, binned_feature_values)| {
+	pzip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
+		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = BinStatsEntry {
 					sum_gradients: 0.0,
@@ -121,7 +121,8 @@ pub fn compute_bin_stats_for_root(
 					},
 				}
 			}
-		});
+		},
+	);
 }
 
 #[allow(clippy::collapsible_if)]
@@ -151,25 +152,23 @@ pub fn compute_bin_stats_for_not_root(
 			);
 		} else {
 			let chunk_size = examples_index_for_node.len() / rayon::current_num_threads();
-			(
+			pzip!(
 				examples_index_for_node.par_chunks(chunk_size),
 				ordered_gradients.par_chunks_mut(chunk_size),
 				ordered_hessians.par_chunks_mut(chunk_size),
 			)
-				.into_par_iter()
-				.for_each(
-					|(example_index_for_node, ordered_gradients, ordered_hessians)| {
-						izip!(example_index_for_node, ordered_gradients, ordered_hessians)
-							.for_each(
-								|(example_index, ordered_gradient, ordered_hessian)| unsafe {
-									*ordered_gradient =
-										*gradients.get_unchecked(example_index.to_usize().unwrap());
-									*ordered_hessian =
-										*hessians.get_unchecked(example_index.to_usize().unwrap());
-								},
-							);
-					},
-				);
+			.for_each(
+				|(example_index_for_node, ordered_gradients, ordered_hessians)| {
+					izip!(example_index_for_node, ordered_gradients, ordered_hessians).for_each(
+						|(example_index, ordered_gradient, ordered_hessian)| unsafe {
+							*ordered_gradient =
+								*gradients.get_unchecked(example_index.to_usize().unwrap());
+							*ordered_hessian =
+								*hessians.get_unchecked(example_index.to_usize().unwrap());
+						},
+					);
+				},
+			);
 		}
 	} else {
 		if examples_index_for_node.len() < 1024 {
@@ -180,24 +179,22 @@ pub fn compute_bin_stats_for_not_root(
 			);
 		} else {
 			let chunk_size = examples_index_for_node.len() / rayon::current_num_threads();
-			(
+			pzip!(
 				examples_index_for_node.par_chunks(chunk_size),
 				ordered_gradients.par_chunks_mut(chunk_size),
 			)
-				.into_par_iter()
-				.for_each(|(example_index_for_node, ordered_gradients)| unsafe {
-					izip!(example_index_for_node, ordered_gradients,).for_each(
-						|(example_index, ordered_gradient)| {
-							*ordered_gradient =
-								*gradients.get_unchecked(example_index.to_usize().unwrap());
-						},
-					);
-				});
+			.for_each(|(example_index_for_node, ordered_gradients)| unsafe {
+				izip!(example_index_for_node, ordered_gradients,).for_each(
+					|(example_index, ordered_gradient)| {
+						*ordered_gradient =
+							*gradients.get_unchecked(example_index.to_usize().unwrap());
+					},
+				);
+			});
 		}
 	}
-	(&mut node_bin_stats.entries, &binned_features.columns)
-		.into_par_iter()
-		.for_each(|(bin_stats_for_feature, binned_feature_values)| {
+	pzip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
+		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = BinStatsEntry {
 					sum_gradients: 0.0,
@@ -245,7 +242,8 @@ pub fn compute_bin_stats_for_not_root(
 					},
 				}
 			}
-		});
+		},
+	);
 }
 
 unsafe fn compute_bin_stats_for_feature_root_no_hessian<T>(

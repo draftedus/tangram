@@ -7,6 +7,7 @@ use crate::{SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::ops::Range;
+use tangram_thread_pool::pzip;
 
 pub struct ChooseBestSplitOutput {
 	pub gain: f32,
@@ -27,8 +28,7 @@ pub fn choose_best_split(
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
 ) -> Option<ChooseBestSplitOutput> {
-	(&bin_stats.entries, &bin_stats.binning_instructions)
-		.into_par_iter()
+	pzip!(&bin_stats.entries, &bin_stats.binning_instructions)
 		.enumerate()
 		.filter_map(
 			|(feature_index, (bin_stats, binning_instructions))| match binning_instructions {

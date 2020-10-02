@@ -5,6 +5,7 @@ use super::{
 use crate::SplitDirection;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
+use tangram_thread_pool::pzip;
 
 const MIN_EXAMPLES_TO_PARALLELIZE: usize = 10_000;
 
@@ -161,84 +162,83 @@ fn rearrange_examples_index_parallel(
 	examples_index_right_buffer: &mut [i32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let chunk_size = examples_index.len() / rayon::current_num_threads();
-	let counts: Vec<(usize, usize)> = (
+	let counts: Vec<(usize, usize)> = pzip!(
 		examples_index.par_chunks_mut(chunk_size),
 		examples_index_left_buffer.par_chunks_mut(chunk_size),
 		examples_index_right_buffer.par_chunks_mut(chunk_size),
 	)
-		.into_par_iter()
-		.map(
-			|(examples_index, examples_index_left_buffer, examples_index_right_buffer)| {
-				let mut n_left = 0;
-				let mut n_right = 0;
-				match &split {
-					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-						feature_index,
-						bin_index,
-						..
-					}) => {
-						let binned_feature = binned_features.columns.get(*feature_index).unwrap();
-						match binned_feature {
-							BinnedFeaturesColumn::U8(binned_feature) => unsafe {
-								rearrange_examples_index_parallel_step_one_continuous(
-									&mut n_left,
-									&mut n_right,
-									*bin_index,
-									examples_index,
-									examples_index_left_buffer,
-									examples_index_right_buffer,
-									&binned_feature,
-								)
-							},
-							BinnedFeaturesColumn::U16(binned_feature) => unsafe {
-								rearrange_examples_index_parallel_step_one_continuous(
-									&mut n_left,
-									&mut n_right,
-									*bin_index,
-									examples_index,
-									examples_index_left_buffer,
-									examples_index_right_buffer,
-									&binned_feature,
-								)
-							},
-						}
-					}
-					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-						feature_index,
-						directions,
-						..
-					}) => {
-						let binned_feature = binned_features.columns.get(*feature_index).unwrap();
-						match binned_feature {
-							BinnedFeaturesColumn::U8(binned_feature) => unsafe {
-								rearrange_examples_index_parallel_step_one_discrete(
-									&mut n_left,
-									&mut n_right,
-									directions,
-									examples_index,
-									examples_index_left_buffer,
-									examples_index_right_buffer,
-									&binned_feature,
-								)
-							},
-							BinnedFeaturesColumn::U16(binned_feature) => unsafe {
-								rearrange_examples_index_parallel_step_one_discrete(
-									&mut n_left,
-									&mut n_right,
-									directions,
-									examples_index,
-									examples_index_left_buffer,
-									examples_index_right_buffer,
-									&binned_feature,
-								)
-							},
-						}
+	.map(
+		|(examples_index, examples_index_left_buffer, examples_index_right_buffer)| {
+			let mut n_left = 0;
+			let mut n_right = 0;
+			match &split {
+				TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+					feature_index,
+					bin_index,
+					..
+				}) => {
+					let binned_feature = binned_features.columns.get(*feature_index).unwrap();
+					match binned_feature {
+						BinnedFeaturesColumn::U8(binned_feature) => unsafe {
+							rearrange_examples_index_parallel_step_one_continuous(
+								&mut n_left,
+								&mut n_right,
+								*bin_index,
+								examples_index,
+								examples_index_left_buffer,
+								examples_index_right_buffer,
+								&binned_feature,
+							)
+						},
+						BinnedFeaturesColumn::U16(binned_feature) => unsafe {
+							rearrange_examples_index_parallel_step_one_continuous(
+								&mut n_left,
+								&mut n_right,
+								*bin_index,
+								examples_index,
+								examples_index_left_buffer,
+								examples_index_right_buffer,
+								&binned_feature,
+							)
+						},
 					}
 				}
-				(n_left, n_right)
-			},
-		)
-		.collect();
+				TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+					feature_index,
+					directions,
+					..
+				}) => {
+					let binned_feature = binned_features.columns.get(*feature_index).unwrap();
+					match binned_feature {
+						BinnedFeaturesColumn::U8(binned_feature) => unsafe {
+							rearrange_examples_index_parallel_step_one_discrete(
+								&mut n_left,
+								&mut n_right,
+								directions,
+								examples_index,
+								examples_index_left_buffer,
+								examples_index_right_buffer,
+								&binned_feature,
+							)
+						},
+						BinnedFeaturesColumn::U16(binned_feature) => unsafe {
+							rearrange_examples_index_parallel_step_one_discrete(
+								&mut n_left,
+								&mut n_right,
+								directions,
+								examples_index,
+								examples_index_left_buffer,
+								examples_index_right_buffer,
+								&binned_feature,
+							)
+						},
+					}
+				}
+			}
+			(n_left, n_right)
+		},
+	)
+	.collect();
 	let mut left_starting_indexes: Vec<(usize, usize)> = Vec::with_capacity(counts.len());
 	let mut left_starting_index = 0;
 	for (n_left, _) in counts.iter() {
@@ -251,40 +251,39 @@ fn rearrange_examples_index_parallel(
 		right_starting_indexes.push((right_starting_index, *n_right));
 		right_starting_index += n_right;
 	}
-	(
+	pzip!(
 		left_starting_indexes,
 		right_starting_indexes,
 		examples_index_left_buffer.par_chunks_mut(chunk_size),
 		examples_index_right_buffer.par_chunks_mut(chunk_size),
 	)
-		.into_par_iter()
-		.for_each(
-			|(
-				(left_starting_index, n_left),
-				(right_starting_index, n_right),
-				examples_index_left_buffer,
-				examples_index_right_buffer,
-			)| {
-				let examples_index_slice =
-					&examples_index[left_starting_index..left_starting_index + n_left];
-				let examples_index_slice = unsafe {
-					std::slice::from_raw_parts_mut(
-						examples_index_slice.as_ptr() as *mut i32,
-						examples_index_slice.len(),
-					)
-				};
-				examples_index_slice.copy_from_slice(&examples_index_left_buffer[0..n_left]);
-				let examples_index_slice =
-					&examples_index[right_starting_index..right_starting_index + n_right];
-				let examples_index_slice = unsafe {
-					std::slice::from_raw_parts_mut(
-						examples_index_slice.as_ptr() as *mut i32,
-						examples_index_slice.len(),
-					)
-				};
-				examples_index_slice.copy_from_slice(&examples_index_right_buffer[0..n_right]);
-			},
-		);
+	.for_each(
+		|(
+			(left_starting_index, n_left),
+			(right_starting_index, n_right),
+			examples_index_left_buffer,
+			examples_index_right_buffer,
+		)| {
+			let examples_index_slice =
+				&examples_index[left_starting_index..left_starting_index + n_left];
+			let examples_index_slice = unsafe {
+				std::slice::from_raw_parts_mut(
+					examples_index_slice.as_ptr() as *mut i32,
+					examples_index_slice.len(),
+				)
+			};
+			examples_index_slice.copy_from_slice(&examples_index_left_buffer[0..n_left]);
+			let examples_index_slice =
+				&examples_index[right_starting_index..right_starting_index + n_right];
+			let examples_index_slice = unsafe {
+				std::slice::from_raw_parts_mut(
+					examples_index_slice.as_ptr() as *mut i32,
+					examples_index_slice.len(),
+				)
+			};
+			examples_index_slice.copy_from_slice(&examples_index_right_buffer[0..n_right]);
+		},
+	);
 	(
 		0..left_starting_index,
 		left_starting_index..examples_index.len(),

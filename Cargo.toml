@@ -15,6 +15,7 @@ members = [
 	"progress",
 	"super_unsafe",
 	"text",
+	"thread_pool",
 	"tree",
 ]
 
