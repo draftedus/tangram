@@ -1,5 +1,5 @@
 /*!
-This module implements the C api for libtangram, the tangram C library, which is used by the libraries for each programming language to make predictions using a model trained with the the tangram cli. While the API for the language libraries are stable, this API is unstable and subject to change. All functions return a status code which will be zero on success or non-zero on error.
+This crate implements the C API for libtangram, the Tangram C library, which is used by the libraries for each programming language to make predictions using a model trained with the Tangram CLI. While the APIs for the language libraries are stable, this API is unstable and subject to change. All functions return a status code which will be zero on success or non-zero on error.
 */
 
 #![allow(clippy::missing_safety_doc)]
@@ -26,16 +26,16 @@ pub extern "C" fn tangram_version(version_ptr: *mut *const u8) -> isize {
 	}
 }
 
-/// Load a model from the bytes pointed to by `model_data_ptr` with length `model_data_len`. On success, a pointer to the loaded model will be written to `model_ptr`. You must call `tangram_model_free` when you are done with it.
+/// Load a model from the bytes pointed to by `model_data` with length `model_data_len`. On success, a pointer to the loaded model will be written to `model_ptr`. You must call `tangram_model_free` when you are done with it.
 #[no_mangle]
 pub extern "C" fn tangram_model_load(
-	model_data_ptr: *const u8,
+	model_data: *const u8,
 	model_data_len: usize,
 	model_ptr: *mut *const PredictModel,
 ) -> isize {
 	let result = catch_unwind(|| unsafe {
 		assert!(!model_ptr.is_null());
-		let bytes = std::slice::from_raw_parts(model_data_ptr, model_data_len);
+		let bytes = std::slice::from_raw_parts(model_data, model_data_len);
 		let model = tangram_core::model::Model::from_slice(bytes).unwrap();
 		let model: PredictModel = model.try_into().unwrap();
 		let model = Box::new(model);
@@ -69,20 +69,20 @@ pub extern "C" fn tangram_model_id(model: *const PredictModel, id_ptr: *mut *con
 	}
 }
 
-/// Make a prediction! `model_ptr` should point to a model loaded with `tangram_model_load`. `input_ptr` should be a C string of a json serialized PredictInput. On success, a pointer to the output as a json serialized C string will be written to `output_ptr`. You must call `tangram_string_free` when you are done with it.
+/// Make a prediction! `model` should point to a model loaded with `tangram_model_load`. `input_ptr` should be a C string of a json serialized PredictInput. On success, a pointer to the output as a json serialized C string will be written to `output_ptr`. You must call `tangram_string_free` when you are done with it.
 #[no_mangle]
 pub extern "C" fn tangram_model_predict(
-	model_ptr: *const PredictModel,
-	input_ptr: *const u8,
-	options_ptr: *const u8,
+	model: *const PredictModel,
+	input: *const u8,
+	options: *const u8,
 	output_ptr: *mut *const u8,
 ) -> isize {
 	let result = catch_unwind(|| unsafe {
-		let model = model_ptr.as_ref().unwrap();
-		let input = CStr::from_ptr(input_ptr as *const i8).to_str().unwrap();
+		let model = model.as_ref().unwrap();
+		let input = CStr::from_ptr(input as *const i8).to_str().unwrap();
 		let input: PredictInput = serde_json::from_str(input).unwrap();
 		let options: Option<tangram_core::predict::PredictOptions> =
-			options_ptr.as_ref().map(|options_ptr| {
+			options.as_ref().map(|options_ptr| {
 				let options = CStr::from_ptr(options_ptr as *const u8 as *const i8)
 					.to_str()
 					.unwrap();
@@ -99,11 +99,11 @@ pub extern "C" fn tangram_model_predict(
 	}
 }
 
-/// Free the C string created by libtangram pointed to by `ptr`.
+/// Free the C string created by libtangram pointed to by `string`.
 #[no_mangle]
-pub extern "C" fn tangram_string_free(ptr: *mut u8) -> isize {
+pub extern "C" fn tangram_string_free(string: *mut u8) -> isize {
 	let result = catch_unwind(|| unsafe {
-		drop(CString::from_raw(ptr as *mut i8));
+		drop(CString::from_raw(string as *mut i8));
 	});
 	match result {
 		Ok(_) => 0,
@@ -111,11 +111,11 @@ pub extern "C" fn tangram_string_free(ptr: *mut u8) -> isize {
 	}
 }
 
-/// Free the model pointed to by `model_ptr`.
+/// Free the model pointed to by `model`.
 #[no_mangle]
-pub extern "C" fn tangram_model_free(model_ptr: *mut PredictModel) -> isize {
+pub extern "C" fn tangram_model_free(model: *mut PredictModel) -> isize {
 	let result = catch_unwind(|| unsafe {
-		drop(Box::from_raw(model_ptr));
+		drop(Box::from_raw(model));
 	});
 	match result {
 		Ok(_) => 0,
@@ -123,14 +123,14 @@ pub extern "C" fn tangram_model_free(model_ptr: *mut PredictModel) -> isize {
 	}
 }
 
-/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because webassembly does not yet include its own allocator.
+/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because WebAssembly does not yet include its own allocator.
 #[no_mangle]
 pub extern "C" fn tangram_alloc(size: usize, align: usize) -> *mut u8 {
 	let layout = Layout::from_size_align(size, align).unwrap();
 	unsafe { alloc(layout) }
 }
 
-/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because webassembly does not yet include its own allocator.
+/// This function exposes the allocator used by libtangram. It is used by the wasm build of libtangram because WebAssembly does not yet include its own allocator.
 #[no_mangle]
 pub unsafe extern "C" fn tangram_dealloc(ptr: *mut u8, size: usize, align: usize) {
 	if size == 0 {

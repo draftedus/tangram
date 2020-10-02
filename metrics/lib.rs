@@ -1,5 +1,5 @@
 /*!
-This module defines the [`Metric`](trait.Metric.html) and [`StreamingMetric`](trait.StreamingMetric.html) traits and and a number of concrete types that implement them such as [`MeanSquaredError`](struct.MeanSquaredError.html) and [`Accuracy`](struct.Accuracy.html).
+This crate defines the [`Metric`](trait.Metric.html) and [`StreamingMetric`](trait.StreamingMetric.html) traits and and a number of concrete types that implement them such as [`MeanSquaredError`](struct.MeanSquaredError.html) and [`Accuracy`](struct.Accuracy.html).
 */
 
 #![allow(clippy::tabs_in_doc_comments)]
@@ -35,9 +35,9 @@ pub use self::regression::{
 };
 
 /**
-The `Metric` trait defines a common interface to metrics that can be computed when all inputs are available at once. All [`StreamingMetric`](trait.StreamingMetric.html)s are `Metric`s, but not all `Metrics` are `StreamingMetrics`.
+The `Metric` trait defines a common interface to metrics that can be computed when the entire input is available at once.
 
-The seeminly unused generic lifetime `'a` exists here to allow `Input`s and `Output`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
+The seemingly unused generic lifetime `'a` exists here to allow `Input`s and `Output`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
 */
 pub trait Metric<'a> {
 	type Input;
@@ -46,13 +46,13 @@ pub trait Metric<'a> {
 }
 
 /**
-The `StreamingMetric` trait defines a common interface to metrics that can be computed in a streaming manner such as mean squared error and accuracy.
+The `StreamingMetric` trait defines a common interface to metrics that can be computed in a streaming manner, where the input is available in chunks, such as mean squared error and accuracy.
 
 After being initialized, a value of type `T` implementing the `StreamingMetric` trait can have `update()` called on it with values of the associated type `Input`. Multiple values of `T` can be merged together by calling `merge()`. This is useful when computing a metric across multiple threads. When finished aggregating, you can call `finalize()` on the metric to produce the associated type `Output`.
 
 # Examples
 
-Here is a basic example implementation of a `Min` metric, which takes `f32`s and produces an `f32` that is the minimum of all the inputs.
+Here is a basic example implementation of a `Min` metric, which takes `f32`s as input and produces an `f32` as output that is the minimum of all the inputs.
 
 ```
 use tangram_metrics::StreamingMetric;
@@ -70,7 +70,7 @@ impl StreamingMetric<'_> for Min {
 }
 ```
 
-The seeminly unused generic lifetime `'a` exists here to allow `Input`s and `Output`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
+The seemingly unused generic lifetime `'a` exists here to allow `Input`s and `Output`s to borrow from their enclosing scope. When Rust stabilizes Generic Associated Types (GATs), the generic lifetime will move to the associated types.
 
 */
 pub trait StreamingMetric<'a> {
