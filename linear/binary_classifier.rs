@@ -194,9 +194,9 @@ impl BinaryClassifier {
 			shap_values.axis_iter_mut(Axis(0)),
 		) {
 			compute_shap_values_common(
-				features,
+				features.as_slice().unwrap(),
 				self.bias,
-				self.weights.view(),
+				self.weights.as_slice().unwrap(),
 				&self.means,
 				shap_values.row_mut(0).as_slice_mut().unwrap(),
 			);

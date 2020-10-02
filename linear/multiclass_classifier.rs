@@ -203,9 +203,9 @@ impl MulticlassClassifier {
 		) {
 			for class_index in 0..n_classes {
 				compute_shap_values_common(
-					features,
+					features.as_slice().unwrap(),
 					self.biases[class_index],
-					self.weights.row(class_index),
+					self.weights.row(class_index).as_slice().unwrap(),
 					&self.means,
 					shap_values.row_mut(class_index).as_slice_mut().unwrap(),
 				)

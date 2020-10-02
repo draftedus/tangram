@@ -130,9 +130,9 @@ impl EarlyStoppingMonitor {
 
 /// This function is common code used by `compute_shap_values` for each model type.
 fn compute_shap_values_common(
-	example: ArrayView1<f32>,
+	example: &[f32],
 	bias: f32,
-	weights: ArrayView1<f32>,
+	weights: &[f32],
 	means: &[f32],
 	shap_values: &mut [f32],
 ) {
