@@ -1,5 +1,5 @@
 /*!
-This module defines `FeatureGroups` that map columns to features and implements the logic to determine which `FeatureGroups` to use based on the stats of the dataframe.
+This module implements Tangram's feature engineering that prepares datasets for machine learning.
 */
 
 use crate::stats;
@@ -7,19 +7,7 @@ use itertools::izip;
 use ndarray::{prelude::*, s};
 use tangram_dataframe::*;
 
-/**
-A `FeatureGroup` describes how to transform one or more columns from the input dataframe to one or more features.
-
-The following table shows which combinations or dataframe columns, feature groups, and models are used.
-
-| Source Column                                         | Feature Group                 | Model Types    |
-|-------------------------------------------------------|-------------------------------|---------------|
-| [NumberColumn](../dataframe/struct.NumberColumn.html) | [NormalizedFeatureGroup](struct.NormalizedFeatureGroup.html) | [linear](../linear/index.html) |
-| [NumberColumn](../dataframe/struct.NumberColumn.html) | [IdentifyFeatureGroup](struct.IdentityFeatureGroup.html) | [tree](../tree/index.html) |
-| [EnumColumn](../dataframe/struct.EnumColumn.html) | [OneHotEncodedFeatureGroup](struct.OneHotEncodedFeatureGroup.html) | [linear](../linear/index.html) |
-| [EnumColumn](../dataframe/struct.EnumColumn.html) | [IdentifyFeatureGroup](struct.IdentityFeatureGroup.html) | [tree](../tree/index.html) |
-| [TextColumn](../dataframe/struct.TextColumn.html) | [BagOfWordsFeatureGroup](struct.BagOfWordsFeatureGroup.html) | [linear](../linear/index.html), [tree](../tree/index.html) |
-*/
+/// This struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
 #[derive(Debug)]
 pub enum FeatureGroup {
 	Identity(IdentityFeatureGroup),
@@ -29,16 +17,16 @@ pub enum FeatureGroup {
 }
 
 /**
-An IdentityFeatureGroup describes an *identity* mapped feature. The IdentityFeatureGroup is only used for `NumberColumn`s and `EnumColumn`s.
+An `IdentityFeatureGroup` describes the simplest possible feature engineering, which passes a single column from the input dataframe to the output features untouched.
 
 # Example
 1. **Source Column Type**: [NumberColumn](../dataframe/struct.NumberColumn.html).
 
-| dataframe data  | feature values  |
-|-----------------|-----------------|
-| 0.2             | 0.2             |
-| 3.0             | 3.0             |
-| 2.1             | 2.1             |
+| input values  | output values  |
+|---------------|----------------|
+| 0.2           | 0.2            |
+| 3.0           | 3.0            |
+| 2.1           | 2.1            |
 
 2. **Source Column Type**: [EnumColumn](../dataframe/struct.EnumColumn.html).
 
@@ -72,9 +60,8 @@ pub struct IdentityFeatureGroup {
 	pub source_column_name: String,
 }
 
-/** A NormalizedFeatureGroup describes a *normalized* feature. The NormalizedFeatureGroup is only used for NumberColumns.
-
-Raw values will be normalized by the mean and standard deviation of the column. See [Z-score Normalization](https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization)).
+/**
+A `NormalizedFeatureGroup` describes a feature column whose values are normalized, i.e. scaled to zero mean and unit variance. [Learn more](https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization).
 
 # Example
 use tangram_dataframe::NumberColumn;
@@ -83,9 +70,9 @@ NumberColumn {
 	data: vec![0.0, 5.2, 1.3, 10.0],
 };
 
-**mean**: 2.16667
+Mean: 2.16667
 
-**std**: 2.70617
+Standard Deviation: 2.70617
 
 `feature_value =  (value - mean) / std`
 
@@ -578,7 +565,7 @@ pub fn compute_features_ndarray_value(
 	}
 }
 
-/// Compute identity features given a IdentityFeatureGroup and `dataframe` with the original data. The result is placed into the provided `features`.
+/// Compute identity features given a IdentityFeatureGroup and `dataframe` with the original data. The result is written to `features`.
 fn compute_features_identity_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
@@ -608,7 +595,7 @@ fn compute_features_identity_ndarray_value(
 	}
 }
 
-/// Compute bag of words encoded features given a BagOfWordsFeatureGroup and `dataframe` with the original data. The result is placed into the provided `features`.
+/// Compute "Bag of Words" encoded features given a `BagOfWordsFeatureGroup` and `dataframe` with the original data. The result is written to `features`.
 fn compute_features_bag_of_words_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,

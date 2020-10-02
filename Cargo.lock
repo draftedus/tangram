@@ -2023,6 +2023,9 @@ version = "0.0.0"
 [[package]]
 name = "tangram_progress"
 version = "0.0.0"
+dependencies = [
+ "rayon 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "tangram_text"
