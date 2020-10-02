@@ -265,7 +265,7 @@ fn max_depth(tree: &Tree, node_index: usize, depth: usize) -> usize {
 	let right_child_index = current_node.right_child_index;
 	let left_depth = max_depth(tree, left_child_index, depth + 1);
 	let right_depth = max_depth(tree, right_child_index, depth + 1);
-	left_depth.max(right_depth) + 1
+	usize::max(left_depth, right_depth) + 1
 }
 
 fn compute_expectation(tree: &Tree, node_index: usize) -> f32 {

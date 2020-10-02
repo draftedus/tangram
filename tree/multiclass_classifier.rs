@@ -175,7 +175,7 @@ pub fn compute_gradients_and_hessians(
 		labels.iter(),
 	)
 	.for_each(|(gradient, hessian, logits, label)| {
-		let max = logits.iter().fold(std::f32::MIN, |a, &b| a.max(b));
+		let max = logits.iter().fold(std::f32::MIN, |a, &b| f32::max(a, b));
 		let mut sum = 0.0;
 		for logit in logits.iter() {
 			sum += (*logit - max).exp();
@@ -189,7 +189,7 @@ pub fn compute_gradients_and_hessians(
 }
 
 fn softmax(mut logits: ArrayViewMut1<f32>) {
-	let max = logits.iter().fold(std::f32::MIN, |a, &b| a.max(b));
+	let max = logits.iter().fold(std::f32::MIN, |a, &b| f32::max(a, b));
 	for logit in logits.iter_mut() {
 		*logit = (*logit - max).exp();
 	}

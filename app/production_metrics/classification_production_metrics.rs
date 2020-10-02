@@ -144,7 +144,7 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 			.map(|n| n.to_f32().unwrap())
 			.fold(None, |a: Option<f32>, b| match a {
 				None => Some(b),
-				Some(a) => Some(a.max(b)),
+				Some(a) => Some(f32::max(a, b)),
 			})
 			.unwrap() / n_examples.to_f32().unwrap();
 		if n_examples == 0 {

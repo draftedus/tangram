@@ -307,7 +307,9 @@ fn predict(
 			// get baseline probabliities
 			let softmax = |logits: &[f32]| {
 				let mut probabilities = logits.to_owned();
-				let max = probabilities.iter().fold(std::f32::MIN, |a, &b| a.max(b));
+				let max = probabilities
+					.iter()
+					.fold(std::f32::MIN, |a, &b| f32::max(a, b));
 				for p in probabilities.iter_mut() {
 					*p -= max;
 				}
