@@ -4,10 +4,12 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_metrics::{MeanSquaredError, StreamingMetric};
 use tangram_progress::ProgressCounter;
+use tangram_thread_pool::pzip;
 
 /// This struct describes a linear regressor model. You can train one by calling `Regressor::train`.
 #[derive(Debug)]
@@ -63,7 +65,7 @@ impl Regressor {
 		for _ in 0..options.max_epochs {
 			epoch_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
-			izip!(
+			pzip!(
 				features_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			)
@@ -111,29 +113,32 @@ impl Regressor {
 		labels: ArrayView1<f32>,
 		options: &TrainOptions,
 	) -> f32 {
-		izip!(
+		pzip!(
 			features.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			labels.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 		)
 		.fold(
-			{
+			|| {
 				let predictions =
 					unsafe { <Array1<f32>>::uninitialized(options.n_examples_per_batch) };
 				let metric = MeanSquaredError::new();
 				(predictions, metric)
 			},
-			|mut state, (features, labels)| {
-				let (predictions, metric) = &mut state;
+			|(mut predictions, mut metric), (features, labels)| {
 				let slice = s![0..features.nrows()];
-				let mut predictions = predictions.slice_mut(slice);
-				self.predict(features, predictions.view_mut());
-				for (prediction, label) in predictions.iter().zip(labels.iter()) {
+				let mut predictions_slice = predictions.slice_mut(slice);
+				self.predict(features, predictions_slice.view_mut());
+				for (prediction, label) in predictions_slice.iter().zip(labels.iter()) {
 					metric.update((*prediction, *label));
 				}
-				state
+				(predictions, metric)
 			},
 		)
-		.1
+		.map(|(_, metric)| metric)
+		.reduce(MeanSquaredError::new, |mut a, b| {
+			a.merge(b);
+			a
+		})
 		.finalize()
 		.unwrap()
 	}

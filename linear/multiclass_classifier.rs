@@ -5,11 +5,13 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_metrics::{CrossEntropy, CrossEntropyInput, StreamingMetric};
 use tangram_progress::ProgressCounter;
+use tangram_thread_pool::pzip;
 
 /// This struct describes a linear multiclass classifier model. You can train one by calling `MulticlassClassifier::train`.
 #[derive(Debug)]
@@ -70,7 +72,7 @@ impl MulticlassClassifier {
 		for _ in 0..options.max_epochs {
 			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
-			izip!(
+			pzip!(
 				features_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			)
@@ -142,33 +144,38 @@ impl MulticlassClassifier {
 		options: &TrainOptions,
 	) -> f32 {
 		let n_classes = self.biases.len();
-		izip!(
+		pzip!(
 			features.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			labels.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 		)
 		.fold(
-			{
+			|| {
 				let predictions = unsafe {
 					<Array2<f32>>::uninitialized((options.n_examples_per_batch, n_classes))
 				};
 				let metric = CrossEntropy::default();
 				(predictions, metric)
 			},
-			|mut state, (features, labels)| {
-				let (predictions, metric) = &mut state;
+			|(mut predictions, mut metric), (features, labels)| {
 				let slice = s![0..features.nrows(), ..];
-				let mut predictions = predictions.slice_mut(slice);
-				self.predict(features, predictions.view_mut());
-				for (prediction, label) in predictions.axis_iter(Axis(0)).zip(labels.iter()) {
+				let mut predictions_slice = predictions.slice_mut(slice);
+				self.predict(features, predictions_slice.view_mut());
+				for (prediction, label) in
+					izip!(predictions_slice.axis_iter(Axis(0)), labels.iter())
+				{
 					metric.update(CrossEntropyInput {
 						probabilities: prediction,
 						label: *label,
 					});
 				}
-				state
+				(predictions, metric)
 			},
 		)
-		.1
+		.map(|(_, metric)| metric)
+		.reduce(CrossEntropy::new, |mut a, b| {
+			a.merge(b);
+			a
+		})
 		.finalize()
 		.0
 		.unwrap()
@@ -213,7 +220,7 @@ fn softmax(mut logits: ArrayViewMut2<f32>) {
 		for logit in logits.iter_mut() {
 			*logit = (*logit - max).exp();
 		}
-		let sum = logits.iter().fold(0.0, |a, b| a + b);
+		let sum = logits.iter().sum::<f32>();
 		for logit in logits.iter_mut() {
 			*logit /= sum;
 		}

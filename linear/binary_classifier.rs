@@ -5,11 +5,13 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use std::{num::NonZeroUsize, ops::Neg};
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_metrics::{BinaryCrossEntropy, BinaryCrossEntropyInput, StreamingMetric};
 use tangram_progress::ProgressCounter;
+use tangram_thread_pool::pzip;
 
 /// This struct describes a linear binary classifier model. You can train one by calling `BinaryClassifier::train`.
 #[derive(Debug)]
@@ -69,7 +71,7 @@ impl BinaryClassifier {
 		for _ in 0..options.max_epochs {
 			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
-			izip!(
+			pzip!(
 				features_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			)
@@ -128,32 +130,35 @@ impl BinaryClassifier {
 		labels: ArrayView1<Option<NonZeroUsize>>,
 		options: &TrainOptions,
 	) -> f32 {
-		izip!(
+		pzip!(
 			features.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			labels.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 		)
 		.fold(
-			{
+			|| {
 				let predictions =
 					unsafe { <Array2<f32>>::uninitialized((options.n_examples_per_batch, 2)) };
 				let metric = BinaryCrossEntropy::new();
 				(predictions, metric)
 			},
-			|mut state, (features, labels)| {
-				let (predictions, metric) = &mut state;
+			|(mut predictions, mut metric), (features, labels)| {
 				let slice = s![0..features.nrows(), ..];
-				let mut predictions = predictions.slice_mut(slice);
-				self.predict(features, predictions.view_mut());
-				for (prediction, label) in predictions.column(1).iter().zip(labels.iter()) {
+				let mut predictions_slice = predictions.slice_mut(slice);
+				self.predict(features, predictions_slice.view_mut());
+				for (prediction, label) in predictions_slice.column(1).iter().zip(labels.iter()) {
 					metric.update(BinaryCrossEntropyInput {
 						probability: *prediction,
 						label: *label,
 					});
 				}
-				state
+				(predictions, metric)
 			},
 		)
-		.1
+		.map(|(_, metric)| metric)
+		.reduce(BinaryCrossEntropy::new, |mut a, b| {
+			a.merge(b);
+			a
+		})
 		.finalize()
 		.unwrap()
 	}

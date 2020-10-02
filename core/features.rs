@@ -508,7 +508,6 @@ fn compute_features_bag_of_words_dataframe(
 		.as_text()
 		.unwrap()
 		.data;
-
 	let mut columns: Vec<NumberColumn> = feature_group
 		.tokens
 		.iter()
