@@ -1,8 +1,5 @@
 use super::{
-	bin_stats::{
-		compute_bin_stats_for_not_root, compute_bin_stats_for_root, compute_bin_stats_subtraction,
-		BinStats,
-	},
+	bin_stats::{compute_bin_stats_for_not_root, compute_bin_stats_for_root, BinStats},
 	binning::BinnedFeatures,
 	examples_index::rearrange_examples_index,
 	split::choose_best_split,
@@ -421,12 +418,14 @@ pub fn train(
 			SplitDirection::Right => &examples_index[right_examples_index_range.clone()],
 		};
 		let mut smaller_child_bin_stats = bin_stats_pool.get().unwrap();
+		let mut larger_child_bin_stats = queue_item.bin_stats;
 
 		// Compute the bin stats for the child with fewer examples.
 		#[cfg(feature = "debug")]
 		let start = std::time::Instant::now();
 		compute_bin_stats_for_not_root(
 			&mut smaller_child_bin_stats,
+			&mut larger_child_bin_stats,
 			ordered_gradients,
 			ordered_hessians,
 			binned_features,
@@ -437,14 +436,6 @@ pub fn train(
 		);
 		#[cfg(feature = "debug")]
 		timing.compute_bin_stats.inc(start.elapsed());
-
-		// Compute the bin stats for the child with more examples by subtracting the bin stats of the child with fewer examples from the parent's bin stats.
-		#[cfg(feature = "debug")]
-		let start = std::time::Instant::now();
-		let mut larger_child_bin_stats = queue_item.bin_stats;
-		compute_bin_stats_subtraction(&mut larger_child_bin_stats, &smaller_child_bin_stats);
-		#[cfg(feature = "debug")]
-		timing.compute_bin_stats_subtraction.inc(start.elapsed());
 
 		// Assign the smaller and larger bin stats to the left and right depending on which direction was smaller.
 		let (left_bin_stats, right_bin_stats) = match smaller_child_direction {

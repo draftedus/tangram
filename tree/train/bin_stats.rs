@@ -2,7 +2,7 @@ use super::binning::{BinnedFeatures, BinnedFeaturesColumn, BinningInstructions};
 use itertools::izip;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use tangram_thread_pool::{pzip, GLOBAL_THREAD_POOL};
+use tangram_thread_pool::pzip;
 
 #[derive(Clone)]
 pub struct BinStats {
@@ -49,7 +49,7 @@ pub fn compute_bin_stats_for_root(
 	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
 ) {
-	izip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
+	pzip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
 		|(bin_stats_for_feature, binned_feature_values)| {
 			for entry in bin_stats_for_feature.iter_mut() {
 				*entry = BinStatsEntry {
@@ -101,7 +101,8 @@ pub fn compute_bin_stats_for_root(
 #[allow(clippy::collapsible_if)]
 #[allow(clippy::too_many_arguments)]
 pub fn compute_bin_stats_for_not_root(
-	node_bin_stats: &mut BinStats,
+	smaller_child_bin_stats: &mut BinStats,
+	larger_child_bin_stats: &mut BinStats,
 	ordered_gradients: &mut [f32],
 	ordered_hessians: &mut [f32],
 	binned_features: &BinnedFeatures,
@@ -166,114 +167,74 @@ pub fn compute_bin_stats_for_not_root(
 			});
 		}
 	}
-	let f = izip!(&mut node_bin_stats.entries, &binned_features.columns)
-		.map(|(bin_stats_for_feature, binned_feature_values)| {
-			let ordered_gradients = &ordered_gradients;
-			let ordered_hessians = &ordered_hessians;
-			move || {
-				for entry in bin_stats_for_feature.iter_mut() {
-					*entry = BinStatsEntry {
-						sum_gradients: 0.0,
-						sum_hessians: 0.0,
-					};
+	pzip!(
+		&mut smaller_child_bin_stats.entries,
+		&mut larger_child_bin_stats.entries,
+		&binned_features.columns
+	)
+	.for_each(
+		|(
+			smaller_child_bin_stats_for_feature,
+			larger_child_bin_stats_for_feature,
+			binned_feature_values,
+		)| {
+			for entry in smaller_child_bin_stats_for_feature.iter_mut() {
+				*entry = BinStatsEntry {
+					sum_gradients: 0.0,
+					sum_hessians: 0.0,
+				};
+			}
+			if hessians_are_constant {
+				match binned_feature_values {
+					BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
+						compute_bin_stats_for_feature_not_root_no_hessians(
+							ordered_gradients,
+							binned_feature_values.as_slice(),
+							smaller_child_bin_stats_for_feature,
+							examples_index_for_node,
+						)
+					},
+					BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
+						compute_bin_stats_for_feature_not_root_no_hessians(
+							ordered_gradients,
+							binned_feature_values.as_slice(),
+							smaller_child_bin_stats_for_feature,
+							examples_index_for_node,
+						)
+					},
 				}
-				if hessians_are_constant {
-					match binned_feature_values {
-						BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-							compute_bin_stats_for_feature_not_root_no_hessians(
-								ordered_gradients,
-								binned_feature_values.as_slice(),
-								bin_stats_for_feature,
-								examples_index_for_node,
-							)
-						},
-						BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-							compute_bin_stats_for_feature_not_root_no_hessians(
-								ordered_gradients,
-								binned_feature_values.as_slice(),
-								bin_stats_for_feature,
-								examples_index_for_node,
-							)
-						},
-					}
-				} else {
-					match binned_feature_values {
-						BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-							compute_bin_stats_for_feature_not_root(
-								ordered_gradients,
-								ordered_hessians,
-								binned_feature_values.as_slice(),
-								bin_stats_for_feature,
-								examples_index_for_node,
-							)
-						},
-						BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-							compute_bin_stats_for_feature_not_root(
-								ordered_gradients,
-								ordered_hessians,
-								binned_feature_values.as_slice(),
-								bin_stats_for_feature,
-								examples_index_for_node,
-							)
-						},
-					}
+			} else {
+				match binned_feature_values {
+					BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
+						compute_bin_stats_for_feature_not_root(
+							ordered_gradients,
+							ordered_hessians,
+							binned_feature_values.as_slice(),
+							smaller_child_bin_stats_for_feature,
+							examples_index_for_node,
+						)
+					},
+					BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
+						compute_bin_stats_for_feature_not_root(
+							ordered_gradients,
+							ordered_hessians,
+							binned_feature_values.as_slice(),
+							smaller_child_bin_stats_for_feature,
+							examples_index_for_node,
+						)
+					},
 				}
 			}
-		})
-		.collect();
-	GLOBAL_THREAD_POOL.execute(f);
-
-	// 	pzip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
-	// 		|(bin_stats_for_feature, binned_feature_values)| {
-	// 			for entry in bin_stats_for_feature.iter_mut() {
-	// 				*entry = BinStatsEntry {
-	// 					sum_gradients: 0.0,
-	// 					sum_hessians: 0.0,
-	// 				};
-	// 			}
-	// 			if hessians_are_constant {
-	// 				match binned_feature_values {
-	// 					BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-	// 						compute_bin_stats_for_feature_not_root_no_hessians(
-	// 							ordered_gradients,
-	// 							binned_feature_values.as_slice(),
-	// 							bin_stats_for_feature,
-	// 							examples_index_for_node,
-	// 						)
-	// 					},
-	// 					BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-	// 						compute_bin_stats_for_feature_not_root_no_hessians(
-	// 							ordered_gradients,
-	// 							binned_feature_values.as_slice(),
-	// 							bin_stats_for_feature,
-	// 							examples_index_for_node,
-	// 						)
-	// 					},
-	// 				}
-	// 			} else {
-	// 				match binned_feature_values {
-	// 					BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-	// 						compute_bin_stats_for_feature_not_root(
-	// 							ordered_gradients,
-	// 							ordered_hessians,
-	// 							binned_feature_values.as_slice(),
-	// 							bin_stats_for_feature,
-	// 							examples_index_for_node,
-	// 						)
-	// 					},
-	// 					BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-	// 						compute_bin_stats_for_feature_not_root(
-	// 							ordered_gradients,
-	// 							ordered_hessians,
-	// 							binned_feature_values.as_slice(),
-	// 							bin_stats_for_feature,
-	// 							examples_index_for_node,
-	// 						)
-	// 					},
-	// 				}
-	// 			}
-	// 		},
-	// 	);
+			izip!(
+				larger_child_bin_stats_for_feature,
+				smaller_child_bin_stats_for_feature
+			)
+			.for_each(|(larger_child_bin_stats, smaller_child_bin_stats)| {
+				larger_child_bin_stats.sum_gradients -= smaller_child_bin_stats.sum_gradients;
+				larger_child_bin_stats.sum_hessians -= smaller_child_bin_stats.sum_hessians;
+			})
+		},
+	);
 }
 
 unsafe fn compute_bin_stats_for_feature_root_no_hessian<T>(
@@ -424,23 +385,4 @@ unsafe fn compute_bin_stats_for_feature_not_root<T>(
 		bin_stats.sum_gradients += ordered_gradient as f64;
 		bin_stats.sum_hessians += ordered_hessian as f64;
 	}
-}
-
-// Subtract the bin_stats for a sibling from the parent.
-pub fn compute_bin_stats_subtraction(
-	// (n_features, n_bins)
-	parent_bin_stats: &mut BinStats,
-	// (n_features, n_bins)
-	sibling_bin_stats: &BinStats,
-) {
-	izip!(&mut parent_bin_stats.entries, &sibling_bin_stats.entries).for_each(
-		|(parent_bin_stats_for_feature, sibling_bin_stats_for_feature)| {
-			izip!(parent_bin_stats_for_feature, sibling_bin_stats_for_feature).for_each(
-				|(parent_bin_stats, sibling_bin_stats)| {
-					parent_bin_stats.sum_gradients -= sibling_bin_stats.sum_gradients;
-					parent_bin_stats.sum_hessians -= sibling_bin_stats.sum_hessians;
-				},
-			)
-		},
-	)
 }
