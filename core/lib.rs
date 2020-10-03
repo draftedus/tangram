@@ -1,5 +1,4 @@
 /*!
-Tangram .
 */
 
 #![allow(clippy::tabs_in_doc_comments)]

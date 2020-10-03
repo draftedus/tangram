@@ -1,5 +1,5 @@
 /*!
-This module defines the `Config` struct, which is the configuration for training a model with `tangram_core::train`.
+This module defines the `Config` struct, which is used to configure training a model with [`train`](../train.fn.html).
 */
 
 use std::collections::BTreeMap;

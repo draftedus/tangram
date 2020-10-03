@@ -26,7 +26,10 @@ enum MonitorEventSet {
 	Multiple(Vec<MonitorEvent>),
 }
 
-pub async fn track(mut request: Request<Body>, context: Arc<Context>) -> Result<Response<Body>> {
+pub(crate) async fn track(
+	mut request: Request<Body>,
+	context: Arc<Context>,
+) -> Result<Response<Body>> {
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;

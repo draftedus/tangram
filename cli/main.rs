@@ -158,7 +158,7 @@ fn cli_app(options: AppOptions) -> Result<()> {
 		.enable_all()
 		.build()?;
 	let database_url = options.database_url.unwrap_or_else(default_database_url);
-	runtime.block_on(tangram_app::run(tangram_app::AppOptions {
+	runtime.block_on(tangram_app::run(tangram_app::Options {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
 		database_url,
