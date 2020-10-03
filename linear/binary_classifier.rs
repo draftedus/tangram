@@ -71,7 +71,7 @@ impl BinaryClassifier {
 		for _ in 0..options.max_epochs {
 			progress_counter.inc(1);
 			let model_cell = SuperUnsafe::new(model);
-			pzip!(
+			izip!(
 				features_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), options.n_examples_per_batch),
 			)

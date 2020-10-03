@@ -17,11 +17,13 @@ use crate::{
 };
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_pool::Pool;
 use tangram_progress::ProgressCounter;
+pub use tangram_thread_pool::GLOBAL_THREAD_POOL;
 
 mod bin_stats;
 mod binning;
@@ -57,6 +59,9 @@ pub fn train(
 	options: TrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
+	// init thread pool
+	Lazy::force(&tangram_thread_pool::GLOBAL_THREAD_POOL);
+
 	#[cfg(feature = "debug")]
 	let timing = Timing::new();
 

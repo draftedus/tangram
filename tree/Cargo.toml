@@ -39,6 +39,7 @@ itertools = "0.9"
 maplit = "1"
 ndarray = { version = "0.13", features = ["rayon"] }
 num-traits = "0.2"
+once_cell = "1"
 rayon = "1.4"
 super_unsafe = { path = "../super_unsafe" }
 tangram_dataframe = { path = "../dataframe" }

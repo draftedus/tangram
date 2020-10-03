@@ -19,7 +19,7 @@ members = [
 	"tree",
 ]
 
-# [profile.release]
-# debug = true
+[profile.release]
+debug = true
 # codegen-units = 1
 # lto = true
