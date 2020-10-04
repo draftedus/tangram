@@ -6,6 +6,7 @@ use super::{
 };
 use crate::{SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
+use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
 use tangram_pool::{Pool, PoolGuard};
 
@@ -199,19 +200,26 @@ pub fn train(
 	// To update the gradients and hessians we need to make predictions. Rather than running each example through the tree, we can reuse the mapping from example index to leaf value previously computed.
 	let mut leaf_values: Vec<(Range<usize>, f32)> = Vec::new();
 
+	let n_examples_root = examples_index.len();
+	let examples_index_range_root = 0..n_examples_root;
+
 	// Compute the sums of gradients and hessians for the root node.
 	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
-	let n_examples_root = examples_index.len();
-	let examples_index_range_root = 0..n_examples_root;
-	let sum_gradients_root = gradients.iter().map(|v| v.to_f64().unwrap()).sum();
+	let sum_gradients_root = gradients
+		.par_iter()
+		.map(|gradient| gradient.to_f64().unwrap())
+		.sum();
 	let sum_hessians_root = if hessians_are_constant {
 		n_examples_root.to_f64().unwrap()
 	} else {
-		hessians.iter().map(|v| v.to_f64().unwrap()).sum()
+		hessians
+			.par_iter()
+			.map(|hessian| hessian.to_f64().unwrap())
+			.sum()
 	};
 	#[cfg(feature = "debug")]
-	timing.sum_gradients_hessians.inc(start.elapsed());
+	timing.sum_gradients_and_hessians_root.inc(start.elapsed());
 
 	// Determine if we should try to split the root.
 	let should_try_to_split_root = n_examples_root >= 2 * options.min_examples_per_node
@@ -249,7 +257,7 @@ pub fn train(
 	// Choose the best split for the root node.
 	#[cfg(feature = "debug")]
 	let start = std::time::Instant::now();
-	let find_split_output = choose_best_split(
+	let choose_best_split_output_root = choose_best_split(
 		&root_bin_stats,
 		sum_gradients_root,
 		sum_hessians_root,
@@ -257,10 +265,10 @@ pub fn train(
 		&options,
 	);
 	#[cfg(feature = "debug")]
-	timing.find_split.inc(start.elapsed());
+	timing.choose_best_split.inc(start.elapsed());
 
 	// If we were able to find a split for the root node, add it to the queue and proceed to the loop. Otherwise, return a tree with a single node.
-	if let Some(find_split_output) = find_split_output {
+	if let Some(find_split_output) = choose_best_split_output_root {
 		queue.push(QueueItem {
 			gain: find_split_output.gain,
 			parent_index: None,
@@ -435,7 +443,7 @@ pub fn train(
 			smaller_child_examples_index,
 		);
 		#[cfg(feature = "debug")]
-		timing.compute_bin_stats.inc(start.elapsed());
+		timing.compute_bin_stats_not_root.inc(start.elapsed());
 
 		// Assign the smaller and larger bin stats to the left and right depending on which direction was smaller.
 		let (left_bin_stats, right_bin_stats) = match smaller_child_direction {
@@ -455,7 +463,7 @@ pub fn train(
 				&options,
 			);
 			#[cfg(feature = "debug")]
-			timing.find_split.inc(start.elapsed());
+			timing.choose_best_split.inc(start.elapsed());
 			if let Some(find_split_output) = left_find_split_output {
 				queue.push(QueueItem {
 					gain: find_split_output.gain,
@@ -501,7 +509,7 @@ pub fn train(
 				&options,
 			);
 			#[cfg(feature = "debug")]
-			timing.find_split.inc(start.elapsed());
+			timing.choose_best_split.inc(start.elapsed());
 			if let Some(find_split_output) = right_find_split_output {
 				queue.push(QueueItem {
 					gain: find_split_output.gain,

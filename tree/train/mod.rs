@@ -145,8 +145,6 @@ pub fn train(
 	};
 
 	// Pre-allocate memory to be used in training.
-	#[cfg(feature = "debug")]
-	let start = std::time::Instant::now();
 	let mut predictions =
 		unsafe { Array::uninitialized((n_examples_train, n_trees_per_round).f()) };
 	let mut gradients = unsafe { Array::uninitialized(n_examples_train) };
@@ -174,8 +172,6 @@ pub fn train(
 		options.max_leaf_nodes,
 		Box::new(move || BinStats::new(binning_instructions.clone())),
 	);
-	#[cfg(feature = "debug")]
-	timing.allocations.inc(start.elapsed());
 
 	// This is the total number of rounds that have been trained thus far.
 	let mut n_rounds_trained = 0;
@@ -264,7 +260,7 @@ pub fn train(
 				&timing,
 			);
 			#[cfg(feature = "debug")]
-			timing.train.inc(start.elapsed());
+			timing.total.inc(start.elapsed());
 			// Update the predictions using the leaf values from the most recently trained tree.
 			update_predictions_with_tree(
 				predictions
@@ -323,11 +319,7 @@ pub fn train(
 	}
 
 	// Compute feature importances.
-	#[cfg(feature = "debug")]
-	let start = std::time::Instant::now();
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
-	#[cfg(feature = "debug")]
-	timing.compute_feature_importances.inc(start.elapsed());
 
 	// Print out timing information and tree information if the debug feature is enabled.
 	#[cfg(feature = "debug")]
@@ -416,7 +408,7 @@ fn update_predictions_with_tree(
 			});
 	});
 	#[cfg(feature = "debug")]
-	timing.predict.inc(start.elapsed());
+	timing.update_predictions.inc(start.elapsed());
 }
 
 impl From<TrainTree> for Tree {
