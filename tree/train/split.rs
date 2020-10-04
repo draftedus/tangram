@@ -1,9 +1,13 @@
 use super::{
-	bin_stats::{compute_bin_stats_for_feature_root, BinStats, BinStatsEntry},
+	bin_stats::{
+		compute_bin_stats_for_feature_not_root, compute_bin_stats_for_feature_not_root_subtraction,
+		compute_bin_stats_for_feature_root, BinStats, BinStatsEntry,
+	},
 	binning::{BinnedFeatures, BinningInstructions},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 use crate::{timing::Timing, SplitDirection, TrainOptions};
+use itertools::izip;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::ops::Range;
@@ -59,11 +63,11 @@ pub fn choose_best_split_root(
 	// Compute the sums of gradients and hessians.
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
-	let sum_gradients_root = gradients
+	let sum_gradients = gradients
 		.par_iter()
 		.map(|gradient| gradient.to_f64().unwrap())
 		.sum::<f64>();
-	let sum_hessians_root = if hessians_are_constant {
+	let sum_hessians = if hessians_are_constant {
 		gradients.len().to_f64().unwrap()
 	} else {
 		hessians
@@ -98,8 +102,8 @@ pub fn choose_best_split_root(
 					feature_index,
 					&binning_instructions,
 					bin_stats_for_feature,
-					sum_gradients_root,
-					sum_hessians_root,
+					sum_gradients,
+					sum_hessians,
 					0..gradients.len(),
 					options,
 				),
@@ -107,8 +111,8 @@ pub fn choose_best_split_root(
 					feature_index,
 					&binning_instructions,
 					bin_stats_for_feature,
-					sum_gradients_root,
-					sum_hessians_root,
+					sum_gradients,
+					sum_hessians,
 					0..gradients.len(),
 					options,
 				),
@@ -117,12 +121,14 @@ pub fn choose_best_split_root(
 	)
 	.filter_map(|split| split)
 	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap());
+
+	// Assemble the output.
 	match best_split {
 		Some(best_split) => ChooseBestSplitOutput::Success(ChooseBestSplitSuccess {
 			gain: best_split.gain,
 			split: best_split.split,
-			sum_gradients: sum_gradients_root,
-			sum_hessians: sum_hessians_root,
+			sum_gradients,
+			sum_hessians,
 			left_n_examples: best_split.left_n_examples,
 			left_sum_gradients: best_split.left_sum_gradients,
 			left_sum_hessians: best_split.left_sum_hessians,
@@ -132,8 +138,8 @@ pub fn choose_best_split_root(
 			bin_stats,
 		}),
 		None => ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
-			sum_gradients: sum_gradients_root,
-			sum_hessians: sum_hessians_root,
+			sum_gradients,
+			sum_hessians,
 		}),
 	}
 }
@@ -142,8 +148,13 @@ pub fn choose_best_split_root(
 pub fn choose_best_splits_not_root(
 	bin_stats_pool: &mut Pool<BinStats>,
 	binned_features: &BinnedFeatures,
+	parent_depth: usize,
 	gradients: &[f32],
 	hessians: &[f32],
+	left_child_sum_gradients: f64,
+	left_child_sum_hessians: f64,
+	right_child_sum_gradients: f64,
+	right_child_sum_hessians: f64,
 	left_child_examples_index: &[i32],
 	right_child_examples_index: &[i32],
 	gradients_ordered_buffer: &mut [f32],
@@ -153,63 +164,99 @@ pub fn choose_best_splits_not_root(
 	options: &TrainOptions,
 	#[cfg(feature = "timing")] timing: &Timing,
 ) -> (ChooseBestSplitOutput, ChooseBestSplitOutput) {
-	// if !hessians_are_constant {
-	// 		if examples_index_for_node.len() < 1024 {
-	// 			izip!(
-	// 				examples_index_for_node,
-	// 				&mut *ordered_gradients,
-	// 				&mut *ordered_hessians,
-	// 			)
-	// 			.for_each(
-	// 				|(example_index, ordered_gradient, ordered_hessian)| unsafe {
-	// 					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
-	// 					*ordered_hessian = *hessians.get_unchecked(example_index.to_usize().unwrap());
-	// 				},
-	// 			);
-	// 		} else {
-	// 			let chunk_size = examples_index_for_node.len() / rayon::current_num_threads();
-	// 			pzip!(
-	// 				examples_index_for_node.par_chunks(chunk_size),
-	// 				ordered_gradients.par_chunks_mut(chunk_size),
-	// 				ordered_hessians.par_chunks_mut(chunk_size),
-	// 			)
-	// 			.for_each(
-	// 				|(example_index_for_node, ordered_gradients, ordered_hessians)| {
-	// 					izip!(example_index_for_node, ordered_gradients, ordered_hessians).for_each(
-	// 						|(example_index, ordered_gradient, ordered_hessian)| unsafe {
-	// 							*ordered_gradient =
-	// 								*gradients.get_unchecked(example_index.to_usize().unwrap());
-	// 							*ordered_hessian =
-	// 								*hessians.get_unchecked(example_index.to_usize().unwrap());
-	// 						},
-	// 					);
-	// 				},
-	// 			);
-	// 		}
-	// 	} else {
-	// 		if examples_index_for_node.len() < 1024 {
-	// 			izip!(examples_index_for_node, &mut *ordered_gradients,).for_each(
-	// 				|(example_index, ordered_gradient)| unsafe {
-	// 					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
-	// 				},
-	// 			);
-	// 		} else {
-	// 			let chunk_size = examples_index_for_node.len() / rayon::current_num_threads();
-	// 			pzip!(
-	// 				examples_index_for_node.par_chunks(chunk_size),
-	// 				ordered_gradients.par_chunks_mut(chunk_size),
-	// 			)
-	// 			.for_each(|(example_index_for_node, ordered_gradients)| unsafe {
-	// 				izip!(example_index_for_node, ordered_gradients,).for_each(
-	// 					|(example_index, ordered_gradient)| {
-	// 						*ordered_gradient =
-	// 							*gradients.get_unchecked(example_index.to_usize().unwrap());
-	// 					},
-	// 				);
-	// 			});
-	// 		}
-	// 	}
-	todo!()
+	let mut left_child_output = ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
+		sum_gradients: left_child_sum_gradients,
+		sum_hessians: left_child_sum_hessians,
+	});
+	let mut right_child_output = ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
+		sum_gradients: right_child_sum_gradients,
+		sum_hessians: right_child_sum_hessians,
+	});
+
+	// Determine if we should try to split the left and/or right children of this branch.
+	let children_will_exceed_max_depth = if let Some(max_depth) = options.max_depth {
+		parent_depth + 1 > max_depth - 1
+	} else {
+		false
+	};
+	let should_try_to_split_left_child = !children_will_exceed_max_depth
+		&& left_child_examples_index.len() >= options.min_examples_per_node * 2;
+	let should_try_to_split_right_child = !children_will_exceed_max_depth
+		&& right_child_examples_index.len() >= options.min_examples_per_node * 2;
+
+	// If we should not split either left or right, then there is nothing left to do, so we can go to the next item on the queue.
+	if !should_try_to_split_left_child && !should_try_to_split_right_child {
+		return (left_child_output, right_child_output);
+	}
+
+	// Determine which of the left and right children have fewer examples sent to them.
+	let smaller_child_direction =
+		if left_child_examples_index.len() < right_child_examples_index.len() {
+			SplitDirection::Left
+		} else {
+			SplitDirection::Right
+		};
+	let smaller_child_examples_index = match smaller_child_direction {
+		SplitDirection::Left => left_child_examples_index,
+		SplitDirection::Right => right_child_examples_index,
+	};
+	let mut smaller_child_bin_stats = bin_stats_pool.get().unwrap();
+	let mut larger_child_bin_stats = parent_bin_stats;
+
+	// Fill the gradients and hessians ordered buffers. The buffers contain the gradients and hessians for each example as ordered by the examples index. This makes the access of the gradients and hessians sequential in the next step.
+	fill_gradients_and_hessians_ordered_buffers(
+		smaller_child_examples_index,
+		gradients,
+		hessians,
+		gradients_ordered_buffer,
+		hessians_ordered_buffer,
+		hessians_are_constant,
+	);
+
+	let smaller_child_bin_stats_for_features = smaller_child_bin_stats.0.as_slice();
+	let larger_child_bin_stats_for_features = larger_child_bin_stats.0.as_slice();
+	pzip!(
+		&binned_features.columns,
+		smaller_child_bin_stats_for_features,
+		larger_child_bin_stats_for_features,
+	)
+	.map(
+		|(
+			binned_features_column,
+			smaller_child_bin_stats_for_feature,
+			larger_child_bin_stats_for_feature,
+		)| {
+			// Compute the bin stats for the child with fewer examples.
+			#[cfg(feature = "timing")]
+			let start = std::time::Instant::now();
+			compute_bin_stats_for_feature_not_root(
+				smaller_child_bin_stats_for_feature,
+				smaller_child_examples_index,
+				binned_features_column,
+				gradients_ordered_buffer,
+				hessians_ordered_buffer,
+				hessians_are_constant,
+			);
+			#[cfg(feature = "timing")]
+			timing.compute_bin_stats_not_root.inc(start.elapsed());
+
+			// Compute larger bin stats by subtraction.
+			compute_bin_stats_for_feature_not_root_subtraction(
+				&smaller_child_bin_stats_for_feature,
+				&mut larger_child_bin_stats_for_feature,
+			);
+
+			// Assign the smaller and larger bin stats to the left and right depending on which direction was smaller.
+			let (left_bin_stats, right_bin_stats) = match smaller_child_direction {
+				SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
+				SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
+			};
+
+			// Choose the best splits for the left and right children.
+		},
+	);
+
+	(left_child_output, right_child_output)
 }
 
 /// Choose the best continuous split for this feature.
@@ -476,4 +523,71 @@ fn compute_negative_loss(sum_gradients: f64, sum_hessians: f64, l2_regularizatio
 	((sum_gradients * sum_gradients) / (sum_hessians + l2_regularization.to_f64().unwrap()))
 		.to_f32()
 		.unwrap()
+}
+
+fn fill_gradients_and_hessians_ordered_buffers(
+	smaller_child_examples_index: &[i32],
+	gradients: &[f32],
+	hessians: &[f32],
+	gradients_ordered_buffer: &mut [f32],
+	hessians_ordered_buffer: &mut [f32],
+	hessians_are_constant: bool,
+) {
+	#[allow(clippy::collapsible_if)]
+	if !hessians_are_constant {
+		if smaller_child_examples_index.len() < 1024 {
+			izip!(
+				smaller_child_examples_index,
+				&mut *gradients_ordered_buffer,
+				&mut *hessians_ordered_buffer,
+			)
+			.for_each(
+				|(example_index, ordered_gradient, ordered_hessian)| unsafe {
+					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
+					*ordered_hessian = *hessians.get_unchecked(example_index.to_usize().unwrap());
+				},
+			);
+		} else {
+			let chunk_size = smaller_child_examples_index.len() / rayon::current_num_threads();
+			pzip!(
+				smaller_child_examples_index.par_chunks(chunk_size),
+				gradients_ordered_buffer.par_chunks_mut(chunk_size),
+				hessians_ordered_buffer.par_chunks_mut(chunk_size),
+			)
+			.for_each(
+				|(example_index_for_node, ordered_gradients, ordered_hessians)| {
+					izip!(example_index_for_node, ordered_gradients, ordered_hessians).for_each(
+						|(example_index, ordered_gradient, ordered_hessian)| unsafe {
+							*ordered_gradient =
+								*gradients.get_unchecked(example_index.to_usize().unwrap());
+							*ordered_hessian =
+								*hessians.get_unchecked(example_index.to_usize().unwrap());
+						},
+					);
+				},
+			);
+		}
+	} else {
+		if smaller_child_examples_index.len() < 1024 {
+			izip!(smaller_child_examples_index, &mut *gradients_ordered_buffer,).for_each(
+				|(example_index, ordered_gradient)| unsafe {
+					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
+				},
+			);
+		} else {
+			let chunk_size = smaller_child_examples_index.len() / rayon::current_num_threads();
+			pzip!(
+				smaller_child_examples_index.par_chunks(chunk_size),
+				gradients_ordered_buffer.par_chunks_mut(chunk_size),
+			)
+			.for_each(|(example_index_for_node, ordered_gradients)| unsafe {
+				izip!(example_index_for_node, ordered_gradients,).for_each(
+					|(example_index, ordered_gradient)| {
+						*ordered_gradient =
+							*gradients.get_unchecked(example_index.to_usize().unwrap());
+					},
+				);
+			});
+		}
+	}
 }
