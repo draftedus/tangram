@@ -92,62 +92,7 @@ pub fn compute_bin_stats_for_not_root(
 	hessians_are_constant: bool,
 	examples_index_for_node: &[i32],
 ) {
-	if !hessians_are_constant {
-		if examples_index_for_node.len() < 1024 {
-			izip!(
-				examples_index_for_node,
-				&mut *ordered_gradients,
-				&mut *ordered_hessians,
-			)
-			.for_each(
-				|(example_index, ordered_gradient, ordered_hessian)| unsafe {
-					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
-					*ordered_hessian = *hessians.get_unchecked(example_index.to_usize().unwrap());
-				},
-			);
-		} else {
-			let chunk_size = examples_index_for_node.len() / rayon::current_num_threads();
-			pzip!(
-				examples_index_for_node.par_chunks(chunk_size),
-				ordered_gradients.par_chunks_mut(chunk_size),
-				ordered_hessians.par_chunks_mut(chunk_size),
-			)
-			.for_each(
-				|(example_index_for_node, ordered_gradients, ordered_hessians)| {
-					izip!(example_index_for_node, ordered_gradients, ordered_hessians).for_each(
-						|(example_index, ordered_gradient, ordered_hessian)| unsafe {
-							*ordered_gradient =
-								*gradients.get_unchecked(example_index.to_usize().unwrap());
-							*ordered_hessian =
-								*hessians.get_unchecked(example_index.to_usize().unwrap());
-						},
-					);
-				},
-			);
-		}
-	} else {
-		if examples_index_for_node.len() < 1024 {
-			izip!(examples_index_for_node, &mut *ordered_gradients,).for_each(
-				|(example_index, ordered_gradient)| unsafe {
-					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
-				},
-			);
-		} else {
-			let chunk_size = examples_index_for_node.len() / rayon::current_num_threads();
-			pzip!(
-				examples_index_for_node.par_chunks(chunk_size),
-				ordered_gradients.par_chunks_mut(chunk_size),
-			)
-			.for_each(|(example_index_for_node, ordered_gradients)| unsafe {
-				izip!(example_index_for_node, ordered_gradients,).for_each(
-					|(example_index, ordered_gradient)| {
-						*ordered_gradient =
-							*gradients.get_unchecked(example_index.to_usize().unwrap());
-					},
-				);
-			});
-		}
-	}
+
 	pzip!(
 		&mut smaller_child_bin_stats.entries,
 		&mut larger_child_bin_stats.entries,

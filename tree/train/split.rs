@@ -34,6 +34,18 @@ pub struct ChooseBestSplitFailure {
 	pub sum_hessians: f64,
 }
 
+pub struct BestSplitForFeature {
+	pub gain: f32,
+	pub split: TrainBranchSplit,
+	pub left_n_examples: usize,
+	pub left_sum_gradients: f64,
+	pub left_sum_hessians: f64,
+	pub right_n_examples: usize,
+	pub right_sum_gradients: f64,
+	pub right_sum_hessians: f64,
+}
+
+#[allow(clippy::too_many_arguments)]
 pub fn choose_best_split_root(
 	bin_stats_pool: &mut Pool<BinStats>,
 	binning_instructions: &[BinningInstructions],
@@ -64,7 +76,7 @@ pub fn choose_best_split_root(
 
 	// For each feature, compute bin stats and use them to choose the best split.
 	let mut bin_stats = bin_stats_pool.get().unwrap();
-	pzip!(
+	let best_split: Option<BestSplitForFeature> = pzip!(
 		binning_instructions,
 		&binned_features.columns,
 		&mut bin_stats.0
@@ -72,6 +84,7 @@ pub fn choose_best_split_root(
 	.enumerate()
 	.map(
 		|(feature_index, (binning_instructions, binned_feature, bin_stats_for_feature))| {
+			// Compute the bin stats.
 			compute_bin_stats_for_feature_root(
 				bin_stats_for_feature,
 				binned_feature,
@@ -79,31 +92,53 @@ pub fn choose_best_split_root(
 				hessians,
 				hessians_are_constant,
 			);
+			// Choose the best split for this featue.
 			match binning_instructions {
 				BinningInstructions::Number { .. } => choose_best_split_continuous(
 					feature_index,
 					&binning_instructions,
-					bin_stats,
-					sum_gradients,
-					sum_hessians,
-					examples_index_range.clone(),
+					bin_stats_for_feature,
+					sum_gradients_root,
+					sum_hessians_root,
+					0..gradients.len(),
 					options,
 				),
 				BinningInstructions::Enum { .. } => choose_best_split_discrete(
 					feature_index,
 					&binning_instructions,
-					bin_stats,
-					sum_gradients,
-					sum_hessians,
-					examples_index_range.clone(),
+					bin_stats_for_feature,
+					sum_gradients_root,
+					sum_hessians_root,
+					0..gradients.len(),
 					options,
 				),
 			}
 		},
 	)
-	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
+	.filter_map(|split| split)
+	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap());
+	match best_split {
+		Some(best_split) => ChooseBestSplitOutput::Success(ChooseBestSplitSuccess {
+			gain: best_split.gain,
+			split: best_split.split,
+			sum_gradients: sum_gradients_root,
+			sum_hessians: sum_hessians_root,
+			left_n_examples: best_split.left_n_examples,
+			left_sum_gradients: best_split.left_sum_gradients,
+			left_sum_hessians: best_split.left_sum_hessians,
+			right_n_examples: best_split.right_n_examples,
+			right_sum_gradients: best_split.right_sum_gradients,
+			right_sum_hessians: best_split.right_sum_hessians,
+			bin_stats,
+		}),
+		None => ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
+			sum_gradients: sum_gradients_root,
+			sum_hessians: sum_hessians_root,
+		}),
+	}
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn choose_best_splits_not_root(
 	bin_stats_pool: &mut Pool<BinStats>,
 	binned_features: &BinnedFeatures,
@@ -118,6 +153,62 @@ pub fn choose_best_splits_not_root(
 	options: &TrainOptions,
 	#[cfg(feature = "timing")] timing: &Timing,
 ) -> (ChooseBestSplitOutput, ChooseBestSplitOutput) {
+	// if !hessians_are_constant {
+	// 		if examples_index_for_node.len() < 1024 {
+	// 			izip!(
+	// 				examples_index_for_node,
+	// 				&mut *ordered_gradients,
+	// 				&mut *ordered_hessians,
+	// 			)
+	// 			.for_each(
+	// 				|(example_index, ordered_gradient, ordered_hessian)| unsafe {
+	// 					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
+	// 					*ordered_hessian = *hessians.get_unchecked(example_index.to_usize().unwrap());
+	// 				},
+	// 			);
+	// 		} else {
+	// 			let chunk_size = examples_index_for_node.len() / rayon::current_num_threads();
+	// 			pzip!(
+	// 				examples_index_for_node.par_chunks(chunk_size),
+	// 				ordered_gradients.par_chunks_mut(chunk_size),
+	// 				ordered_hessians.par_chunks_mut(chunk_size),
+	// 			)
+	// 			.for_each(
+	// 				|(example_index_for_node, ordered_gradients, ordered_hessians)| {
+	// 					izip!(example_index_for_node, ordered_gradients, ordered_hessians).for_each(
+	// 						|(example_index, ordered_gradient, ordered_hessian)| unsafe {
+	// 							*ordered_gradient =
+	// 								*gradients.get_unchecked(example_index.to_usize().unwrap());
+	// 							*ordered_hessian =
+	// 								*hessians.get_unchecked(example_index.to_usize().unwrap());
+	// 						},
+	// 					);
+	// 				},
+	// 			);
+	// 		}
+	// 	} else {
+	// 		if examples_index_for_node.len() < 1024 {
+	// 			izip!(examples_index_for_node, &mut *ordered_gradients,).for_each(
+	// 				|(example_index, ordered_gradient)| unsafe {
+	// 					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
+	// 				},
+	// 			);
+	// 		} else {
+	// 			let chunk_size = examples_index_for_node.len() / rayon::current_num_threads();
+	// 			pzip!(
+	// 				examples_index_for_node.par_chunks(chunk_size),
+	// 				ordered_gradients.par_chunks_mut(chunk_size),
+	// 			)
+	// 			.for_each(|(example_index_for_node, ordered_gradients)| unsafe {
+	// 				izip!(example_index_for_node, ordered_gradients,).for_each(
+	// 					|(example_index, ordered_gradient)| {
+	// 						*ordered_gradient =
+	// 							*gradients.get_unchecked(example_index.to_usize().unwrap());
+	// 					},
+	// 				);
+	// 			});
+	// 		}
+	// 	}
 	todo!()
 }
 
@@ -130,8 +221,8 @@ fn choose_best_split_continuous(
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
-) -> Option<ChooseBestSplitOutput> {
-	let mut best_split: Option<ChooseBestSplitOutput> = None;
+) -> Option<BestSplitForFeature> {
+	let mut best_split: Option<BestSplitForFeature> = None;
 	let negative_loss_parent_node = compute_negative_loss(
 		sum_gradients_parent,
 		sum_hessians_parent,
@@ -220,7 +311,7 @@ fn choose_best_split_continuous(
 				},
 				invalid_values_direction,
 			});
-			let current_split = ChooseBestSplitOutput {
+			let current_split = BestSplitForFeature {
 				gain: current_split_gain,
 				split,
 				left_n_examples,
@@ -261,8 +352,8 @@ fn choose_best_split_discrete(
 	sum_hessians_parent: f64,
 	examples_index_range: Range<usize>,
 	options: &TrainOptions,
-) -> Option<ChooseBestSplitOutput> {
-	let mut best_split_so_far: Option<ChooseBestSplitOutput> = None;
+) -> Option<BestSplitForFeature> {
+	let mut best_split_so_far: Option<BestSplitForFeature> = None;
 	let training_data_contains_invalid_values = bin_stats_for_feature[0].sum_hessians > 0.0;
 	let l2_regularization =
 		options.l2_regularization + options.supplemental_l2_regularization_for_discrete_splits;
@@ -340,7 +431,7 @@ fn choose_best_split_discrete(
 			feature_index,
 			directions: directions.clone(),
 		});
-		let current_split = ChooseBestSplitOutput {
+		let current_split = BestSplitForFeature {
 			gain: current_split_gain,
 			left_n_examples,
 			left_sum_gradients,
