@@ -69,7 +69,7 @@ pub fn choose_best_split_root(
 		.map(|gradient| gradient.to_f64().unwrap())
 		.sum::<f64>();
 	let sum_hessians = if hessians_are_constant {
-		gradients.len().to_f64().unwrap()
+		hessians.len().to_f64().unwrap()
 	} else {
 		hessians
 			.par_iter()
@@ -79,9 +79,19 @@ pub fn choose_best_split_root(
 	#[cfg(feature = "timing")]
 	timing.sum_gradients_and_hessians_root.inc(start.elapsed());
 
+	// Determine if we should try to split the root.
+	let should_try_to_split_root = gradients.len() >= 2 * options.min_examples_per_node
+		&& sum_hessians >= 2.0 * options.min_sum_hessians_per_node.to_f64().unwrap();
+	if !should_try_to_split_root {
+		return ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
+			sum_gradients,
+			sum_hessians,
+		});
+	}
+
 	// For each feature, compute bin stats and use them to choose the best split.
 	let mut bin_stats = bin_stats_pool.get().unwrap();
-	let best_split: Option<ChooseBestSplitForFeatureOutput> = pzip!(
+	let best_split_output: Option<ChooseBestSplitForFeatureOutput> = pzip!(
 		binning_instructions,
 		&binned_features.columns,
 		&mut bin_stats.0
@@ -113,7 +123,7 @@ pub fn choose_best_split_root(
 	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap());
 
 	// Assemble the output.
-	match best_split {
+	match best_split_output {
 		Some(best_split) => ChooseBestSplitOutput::Success(ChooseBestSplitSuccess {
 			gain: best_split.gain,
 			split: best_split.split,
@@ -260,24 +270,32 @@ pub fn choose_best_splits_not_root(
 				};
 
 			// Choose the best splits for the left and right children.
-			let left_child_best_split_for_feature = choose_best_split_for_feature(
-				feature_index,
-				binning_instructions,
-				left_child_bin_stats_for_feature,
-				left_child_n_examples,
-				left_child_sum_gradients,
-				left_child_sum_hessians,
-				options,
-			);
-			let right_child_best_split_for_feature = choose_best_split_for_feature(
-				feature_index,
-				binning_instructions,
-				right_child_bin_stats_for_feature,
-				right_child_n_examples,
-				right_child_sum_gradients,
-				right_child_sum_hessians,
-				options,
-			);
+			let left_child_best_split_for_feature = if should_try_to_split_left_child {
+				choose_best_split_for_feature(
+					feature_index,
+					binning_instructions,
+					left_child_bin_stats_for_feature,
+					left_child_n_examples,
+					left_child_sum_gradients,
+					left_child_sum_hessians,
+					options,
+				)
+			} else {
+				None
+			};
+			let right_child_best_split_for_feature = if should_try_to_split_right_child {
+				choose_best_split_for_feature(
+					feature_index,
+					binning_instructions,
+					right_child_bin_stats_for_feature,
+					right_child_n_examples,
+					right_child_sum_gradients,
+					right_child_sum_hessians,
+					options,
+				)
+			} else {
+				None
+			};
 
 			(
 				left_child_best_split_for_feature,

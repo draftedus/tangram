@@ -205,7 +205,7 @@ fn compute_binned_features_for_number_feature(
 		.as_number()
 		.unwrap()
 		.data
-		.iter()
+		.par_iter()
 		.map(|feature_value| {
 			// Invalid values go to the first bin.
 			if !feature_value.is_finite() {
@@ -230,7 +230,7 @@ fn compute_binned_features_for_enum_feature_u8(
 		.as_enum()
 		.unwrap()
 		.data
-		.iter()
+		.par_iter()
 		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
 		.collect::<Vec<u8>>();
 	BinnedFeaturesColumn::U8(binned_feature)
@@ -244,7 +244,7 @@ fn compute_binned_features_for_enum_feature_u16(
 		.as_enum()
 		.unwrap()
 		.data
-		.iter()
+		.par_iter()
 		.map(|feature_value| {
 			feature_value
 				.map(|v| v.get())
