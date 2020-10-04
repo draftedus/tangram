@@ -1,8 +1,6 @@
-use super::binning::{BinnedFeatures, BinnedFeaturesColumn, BinningInstructions};
+use super::binning::BinnedFeaturesColumn;
 use itertools::izip;
 use num_traits::ToPrimitive;
-use rayon::prelude::*;
-use tangram_thread_pool::pzip;
 
 #[derive(Clone)]
 pub struct BinStats(pub Vec<Vec<BinStatsEntry>>);

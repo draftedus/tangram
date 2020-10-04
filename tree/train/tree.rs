@@ -312,12 +312,15 @@ pub fn train(
 		let (left_child_best_split_output, right_child_best_split_output) =
 			choose_best_splits_not_root(
 				bin_stats_pool,
+				binning_instructions,
 				binned_features,
 				queue_item.depth,
 				gradients,
 				hessians,
+				queue_item.left_n_examples,
 				queue_item.left_sum_gradients,
 				queue_item.left_sum_hessians,
+				queue_item.right_n_examples,
 				queue_item.right_sum_gradients,
 				queue_item.right_sum_hessians,
 				left_child_examples_index,

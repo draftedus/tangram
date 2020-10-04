@@ -162,6 +162,15 @@ pub enum BinnedFeaturesColumn {
 	U16(Vec<u16>),
 }
 
+impl BinnedFeaturesColumn {
+	pub fn len(&self) -> usize {
+		match self {
+			BinnedFeaturesColumn::U8(values) => values.len(),
+			BinnedFeaturesColumn::U16(values) => values.len(),
+		}
+	}
+}
+
 /// Compute the binned features based on the binning instructions.
 pub fn compute_binned_features(
 	features: &DataFrameView,

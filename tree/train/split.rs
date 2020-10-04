@@ -10,7 +10,6 @@ use crate::{timing::Timing, SplitDirection, TrainOptions};
 use itertools::izip;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use std::ops::Range;
 use tangram_pool::{Pool, PoolGuard};
 use tangram_thread_pool::pzip;
 
@@ -38,7 +37,7 @@ pub struct ChooseBestSplitFailure {
 	pub sum_hessians: f64,
 }
 
-pub struct BestSplitForFeature {
+pub struct ChooseBestSplitForFeatureOutput {
 	pub gain: f32,
 	pub split: TrainBranchSplit,
 	pub left_n_examples: usize,
@@ -80,7 +79,7 @@ pub fn choose_best_split_root(
 
 	// For each feature, compute bin stats and use them to choose the best split.
 	let mut bin_stats = bin_stats_pool.get().unwrap();
-	let best_split: Option<BestSplitForFeature> = pzip!(
+	let best_split: Option<ChooseBestSplitForFeatureOutput> = pzip!(
 		binning_instructions,
 		&binned_features.columns,
 		&mut bin_stats.0
@@ -97,26 +96,15 @@ pub fn choose_best_split_root(
 				hessians_are_constant,
 			);
 			// Choose the best split for this featue.
-			match binning_instructions {
-				BinningInstructions::Number { .. } => choose_best_split_continuous(
-					feature_index,
-					&binning_instructions,
-					bin_stats_for_feature,
-					sum_gradients,
-					sum_hessians,
-					0..gradients.len(),
-					options,
-				),
-				BinningInstructions::Enum { .. } => choose_best_split_discrete(
-					feature_index,
-					&binning_instructions,
-					bin_stats_for_feature,
-					sum_gradients,
-					sum_hessians,
-					0..gradients.len(),
-					options,
-				),
-			}
+			choose_best_split_for_feature(
+				feature_index,
+				binning_instructions,
+				bin_stats_for_feature,
+				binned_feature.len(),
+				sum_gradients,
+				sum_hessians,
+				options,
+			)
 		},
 	)
 	.filter_map(|split| split)
@@ -147,12 +135,15 @@ pub fn choose_best_split_root(
 #[allow(clippy::too_many_arguments)]
 pub fn choose_best_splits_not_root(
 	bin_stats_pool: &mut Pool<BinStats>,
+	binning_instructions: &[BinningInstructions],
 	binned_features: &BinnedFeatures,
 	parent_depth: usize,
 	gradients: &[f32],
 	hessians: &[f32],
+	left_child_n_examples: usize,
 	left_child_sum_gradients: f64,
 	left_child_sum_hessians: f64,
+	right_child_n_examples: usize,
 	right_child_sum_gradients: f64,
 	right_child_sum_hessians: f64,
 	left_child_examples_index: &[i32],
@@ -213,18 +204,25 @@ pub fn choose_best_splits_not_root(
 		hessians_are_constant,
 	);
 
-	let smaller_child_bin_stats_for_features = smaller_child_bin_stats.0.as_slice();
-	let larger_child_bin_stats_for_features = larger_child_bin_stats.0.as_slice();
-	pzip!(
+	let children_best_splits: Vec<(
+		Option<ChooseBestSplitForFeatureOutput>,
+		Option<ChooseBestSplitForFeatureOutput>,
+	)> = pzip!(
+		binning_instructions,
 		&binned_features.columns,
-		smaller_child_bin_stats_for_features,
-		larger_child_bin_stats_for_features,
+		&mut smaller_child_bin_stats.0,
+		&mut larger_child_bin_stats.0,
 	)
+	.enumerate()
 	.map(
 		|(
-			binned_features_column,
-			smaller_child_bin_stats_for_feature,
-			larger_child_bin_stats_for_feature,
+			feature_index,
+			(
+				binning_instructions,
+				binned_features_column,
+				smaller_child_bin_stats_for_feature,
+				mut larger_child_bin_stats_for_feature,
+			),
 		)| {
 			// Compute the bin stats for the child with fewer examples.
 			#[cfg(feature = "timing")]
@@ -240,42 +238,180 @@ pub fn choose_best_splits_not_root(
 			#[cfg(feature = "timing")]
 			timing.compute_bin_stats_not_root.inc(start.elapsed());
 
-			// Compute larger bin stats by subtraction.
+			// Compute the larger child bin stats by subtraction.
 			compute_bin_stats_for_feature_not_root_subtraction(
 				&smaller_child_bin_stats_for_feature,
 				&mut larger_child_bin_stats_for_feature,
 			);
 
-			// Assign the smaller and larger bin stats to the left and right depending on which direction was smaller.
-			let (left_bin_stats, right_bin_stats) = match smaller_child_direction {
-				SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
-				SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
-			};
+			// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
+			let (left_child_bin_stats_for_feature, right_child_bin_stats_for_feature) =
+				match smaller_child_direction {
+					SplitDirection::Left => (
+						smaller_child_bin_stats_for_feature,
+						larger_child_bin_stats_for_feature,
+					),
+					SplitDirection::Right => (
+						larger_child_bin_stats_for_feature,
+						smaller_child_bin_stats_for_feature,
+					),
+				};
 
 			// Choose the best splits for the left and right children.
+			let left_child_best_split_for_feature = choose_best_split_for_feature(
+				feature_index,
+				binning_instructions,
+				left_child_bin_stats_for_feature,
+				left_child_n_examples,
+				left_child_sum_gradients,
+				left_child_sum_hessians,
+				options,
+			);
+			let right_child_best_split_for_feature = choose_best_split_for_feature(
+				feature_index,
+				binning_instructions,
+				right_child_bin_stats_for_feature,
+				right_child_n_examples,
+				right_child_sum_gradients,
+				right_child_sum_hessians,
+				options,
+			);
+
+			(
+				left_child_best_split_for_feature,
+				right_child_best_split_for_feature,
+			)
+		},
+	)
+	.collect();
+	let (left_child_best_split, right_child_best_split) = children_best_splits.into_iter().fold(
+		(None, None),
+		|(current_left, current_right), (candidate_left, candidate_right)| {
+			(
+				match (current_left, candidate_left) {
+					(None, None) => None,
+					(x, None) => x,
+					(None, x) => x,
+					(Some(current), Some(candidate)) => {
+						if candidate.gain > current.gain {
+							Some(candidate)
+						} else {
+							Some(current)
+						}
+					}
+				},
+				match (current_right, candidate_right) {
+					(None, None) => None,
+					(x, None) => x,
+					(None, x) => x,
+					(Some(current), Some(candidate)) => {
+						if candidate.gain > current.gain {
+							Some(candidate)
+						} else {
+							Some(current)
+						}
+					}
+				},
+			)
 		},
 	);
 
+	// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
+	let (left_child_bin_stats, right_child_bin_stats) = match smaller_child_direction {
+		SplitDirection::Left => (smaller_child_bin_stats, larger_child_bin_stats),
+		SplitDirection::Right => (larger_child_bin_stats, smaller_child_bin_stats),
+	};
+
+	// Assemble the output.
+	left_child_output = match left_child_best_split {
+		Some(best_split) => ChooseBestSplitOutput::Success(ChooseBestSplitSuccess {
+			gain: best_split.gain,
+			split: best_split.split,
+			sum_gradients: left_child_sum_gradients,
+			sum_hessians: left_child_sum_hessians,
+			left_n_examples: best_split.left_n_examples,
+			left_sum_gradients: best_split.left_sum_gradients,
+			left_sum_hessians: best_split.left_sum_hessians,
+			right_n_examples: best_split.right_n_examples,
+			right_sum_gradients: best_split.right_sum_gradients,
+			right_sum_hessians: best_split.right_sum_hessians,
+			bin_stats: left_child_bin_stats,
+		}),
+		None => ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
+			sum_gradients: left_child_sum_gradients,
+			sum_hessians: left_child_sum_hessians,
+		}),
+	};
+	right_child_output = match right_child_best_split {
+		Some(best_split) => ChooseBestSplitOutput::Success(ChooseBestSplitSuccess {
+			gain: best_split.gain,
+			split: best_split.split,
+			sum_gradients: right_child_sum_gradients,
+			sum_hessians: right_child_sum_hessians,
+			left_n_examples: best_split.left_n_examples,
+			left_sum_gradients: best_split.left_sum_gradients,
+			left_sum_hessians: best_split.left_sum_hessians,
+			right_n_examples: best_split.right_n_examples,
+			right_sum_gradients: best_split.right_sum_gradients,
+			right_sum_hessians: best_split.right_sum_hessians,
+			bin_stats: right_child_bin_stats,
+		}),
+		None => ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
+			sum_gradients: right_child_sum_gradients,
+			sum_hessians: right_child_sum_hessians,
+		}),
+	};
 	(left_child_output, right_child_output)
 }
 
-/// Choose the best continuous split for this feature.
-fn choose_best_split_continuous(
+fn choose_best_split_for_feature(
 	feature_index: usize,
 	binning_instructions: &BinningInstructions,
 	bin_stats_for_feature: &[BinStatsEntry],
+	n_examples: usize,
+	sum_gradients: f64,
+	sum_hessians: f64,
+	options: &TrainOptions,
+) -> Option<ChooseBestSplitForFeatureOutput> {
+	match binning_instructions {
+		BinningInstructions::Number { .. } => choose_best_split_for_continuous_feature(
+			feature_index,
+			&binning_instructions,
+			bin_stats_for_feature,
+			n_examples,
+			sum_gradients,
+			sum_hessians,
+			options,
+		),
+		BinningInstructions::Enum { .. } => choose_best_split_for_discrete_feature(
+			feature_index,
+			&binning_instructions,
+			bin_stats_for_feature,
+			n_examples,
+			sum_gradients,
+			sum_hessians,
+			options,
+		),
+	}
+}
+
+/// Choose the best continuous split for this feature.
+fn choose_best_split_for_continuous_feature(
+	feature_index: usize,
+	binning_instructions: &BinningInstructions,
+	bin_stats_for_feature: &[BinStatsEntry],
+	n_examples_parent: usize,
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
-	examples_index_range: Range<usize>,
 	options: &TrainOptions,
-) -> Option<BestSplitForFeature> {
-	let mut best_split: Option<BestSplitForFeature> = None;
+) -> Option<ChooseBestSplitForFeatureOutput> {
+	let mut best_split: Option<ChooseBestSplitForFeatureOutput> = None;
 	let negative_loss_parent_node = compute_negative_loss(
 		sum_gradients_parent,
 		sum_hessians_parent,
 		options.l2_regularization,
 	);
-	let count_multiplier = examples_index_range.len() as f64 / sum_hessians_parent;
+	let count_multiplier = n_examples_parent.to_f64().unwrap() / sum_hessians_parent;
 	let training_data_contains_invalid_values = bin_stats_for_feature[0].sum_hessians > 0.0;
 	let choose_best_direction_for_invalid_values = training_data_contains_invalid_values;
 	let invalid_values_directions = if choose_best_direction_for_invalid_values {
@@ -305,7 +441,7 @@ fn choose_best_split_continuous(
 				.unwrap();
 			left_sum_gradients += bin_stats_entry.sum_gradients;
 			left_sum_hessians += bin_stats_entry.sum_hessians;
-			let right_n_examples = match examples_index_range.len().checked_sub(left_n_examples) {
+			let right_n_examples = match n_examples_parent.checked_sub(left_n_examples) {
 				Some(right_n_examples) => right_n_examples,
 				None => break,
 			};
@@ -358,7 +494,7 @@ fn choose_best_split_continuous(
 				},
 				invalid_values_direction,
 			});
-			let current_split = BestSplitForFeature {
+			let current_split = ChooseBestSplitForFeatureOutput {
 				gain: current_split_gain,
 				split,
 				left_n_examples,
@@ -391,22 +527,22 @@ To find the subsets:
 1. Sort the bins by sum_gradients / (sum_hessians + categorical_smoothing_factor).
 2. Perform the same algorithm to find the best split as the continuous setting, but iterate bins in the sorted order defined in step 1.
 */
-fn choose_best_split_discrete(
+fn choose_best_split_for_discrete_feature(
 	feature_index: usize,
 	binning_instructions: &BinningInstructions,
 	bin_stats_for_feature: &[BinStatsEntry],
+	n_examples_parent: usize,
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
-	examples_index_range: Range<usize>,
 	options: &TrainOptions,
-) -> Option<BestSplitForFeature> {
-	let mut best_split_so_far: Option<BestSplitForFeature> = None;
+) -> Option<ChooseBestSplitForFeatureOutput> {
+	let mut best_split_so_far: Option<ChooseBestSplitForFeatureOutput> = None;
 	let training_data_contains_invalid_values = bin_stats_for_feature[0].sum_hessians > 0.0;
 	let l2_regularization =
 		options.l2_regularization + options.supplemental_l2_regularization_for_discrete_splits;
 	let negative_loss_parent_node =
 		compute_negative_loss(sum_gradients_parent, sum_hessians_parent, l2_regularization);
-	let count_multiplier = examples_index_range.len() as f64 / sum_hessians_parent;
+	let count_multiplier = n_examples_parent.to_f64().unwrap() / sum_hessians_parent;
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
@@ -436,7 +572,7 @@ fn choose_best_split_discrete(
 		left_sum_hessians += bin_stats_entry.sum_hessians;
 		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
 		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
-		let right_n_examples = match examples_index_range.len().checked_sub(left_n_examples) {
+		let right_n_examples = match n_examples_parent.checked_sub(left_n_examples) {
 			Some(right_n_examples) => right_n_examples,
 			None => break,
 		};
@@ -478,7 +614,7 @@ fn choose_best_split_discrete(
 			feature_index,
 			directions: directions.clone(),
 		});
-		let current_split = BestSplitForFeature {
+		let current_split = ChooseBestSplitForFeatureOutput {
 			gain: current_split_gain,
 			left_n_examples,
 			left_sum_gradients,
