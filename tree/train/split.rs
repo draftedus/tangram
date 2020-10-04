@@ -6,7 +6,9 @@ use super::{
 	binning::{BinnedFeatures, BinningInstructions},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
-use crate::{timing::Timing, SplitDirection, TrainOptions};
+#[cfg(feature = "timing")]
+use crate::timing::Timing;
+use crate::{SplitDirection, TrainOptions};
 use itertools::izip;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
