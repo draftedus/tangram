@@ -1,5 +1,5 @@
 use self::{
-	bin_stats::BinStats,
+	bin_stats::{BinStats, BinStatsEntry},
 	binning::{compute_binned_features, compute_binning_instructions},
 	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
 	feature_importances::compute_feature_importances,
@@ -8,7 +8,7 @@ use self::{
 		TrainLeafNode, TrainNode,
 	},
 };
-#[cfg(feature = "debug")]
+#[cfg(feature = "timing")]
 use crate::timing::Timing;
 use crate::{
 	binary_classifier::BinaryClassifier, multiclass_classifier::MulticlassClassifier,
@@ -57,7 +57,7 @@ pub fn train(
 	options: TrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
-	#[cfg(feature = "debug")]
+	#[cfg(feature = "timing")]
 	let timing = Timing::new();
 
 	// If early stopping is enabled, split the features and labels into train and early stopping sets.
@@ -94,21 +94,21 @@ pub fn train(
 	let n_examples_train = features_train.nrows();
 
 	// Determine how to bin each feature.
-	#[cfg(feature = "debug")]
+	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
 	let binning_instructions = compute_binning_instructions(&features_train, &options);
-	#[cfg(feature = "debug")]
+	#[cfg(feature = "timing")]
 	timing.compute_binning_instructions.inc(start.elapsed());
 
 	// Use the binning instructions from the previous step to compute the binned features.
 	let progress_counter = ProgressCounter::new(features_train.nrows().to_u64().unwrap());
 	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
-	#[cfg(feature = "debug")]
+	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
 	let binned_features = compute_binned_features(&features_train, &binning_instructions, &|| {
 		progress_counter.inc(1)
 	});
-	#[cfg(feature = "debug")]
+	#[cfg(feature = "timing")]
 	timing.compute_binned_features.inc(start.elapsed());
 
 	// Regression and binary classification train one tree per round. Multiclass classification trains one tree per class per round.
@@ -149,8 +149,8 @@ pub fn train(
 		unsafe { Array::uninitialized((n_examples_train, n_trees_per_round).f()) };
 	let mut gradients = unsafe { Array::uninitialized(n_examples_train) };
 	let mut hessians = unsafe { Array::uninitialized(n_examples_train) };
-	let mut ordered_gradients = unsafe { Array::uninitialized(n_examples_train) };
-	let mut ordered_hessians = unsafe { Array::uninitialized(n_examples_train) };
+	let mut gradients_ordered_buffer = unsafe { Array::uninitialized(n_examples_train) };
+	let mut hessians_ordered_buffer = unsafe { Array::uninitialized(n_examples_train) };
 	let mut examples_index = unsafe { Array::uninitialized(n_examples_train) };
 	let mut examples_index_left_buffer = unsafe { Array::uninitialized(n_examples_train) };
 	let mut examples_index_right_buffer = unsafe { Array::uninitialized(n_examples_train) };
@@ -168,9 +168,17 @@ pub fn train(
 	} else {
 		None
 	};
+	let binning_instructions_for_pool = binning_instructions.clone();
 	let mut bin_stats_pool = Pool::new(
 		options.max_leaf_nodes,
-		Box::new(move || BinStats::new(binning_instructions.clone())),
+		Box::new(move || {
+			BinStats(
+				binning_instructions_for_pool
+					.iter()
+					.map(|b| vec![BinStatsEntry::default(); b.n_bins()])
+					.collect(),
+			)
+		}),
 	);
 
 	// This is the total number of rounds that have been trained thus far.
@@ -197,8 +205,8 @@ pub fn train(
 		// Train n_trees_per_round trees.
 		let mut trees_for_round = Vec::with_capacity(n_trees_per_round);
 		for tree_per_round_index in 0..n_trees_per_round {
-			// Before training the next round of trees, we need to determine what value for each example we would like the tree to learn.
-			#[cfg(feature = "debug")]
+			// Before training the next tree, we need to determine what value for each example we would like the tree to learn.
+			#[cfg(feature = "timing")]
 			let start = std::time::Instant::now();
 			match task {
 				Task::Regression => {
@@ -230,7 +238,7 @@ pub fn train(
 					);
 				}
 			};
-			#[cfg(feature = "debug")]
+			#[cfg(feature = "timing")]
 			timing.compute_gradients_and_hessians.inc(start.elapsed());
 			// Reset the examples_index.
 			examples_index
@@ -242,26 +250,27 @@ pub fn train(
 					*value = index.to_i32().unwrap();
 				});
 			// Train the tree.
-			#[cfg(feature = "debug")]
+			#[cfg(feature = "timing")]
 			let start = std::time::Instant::now();
 			let tree = self::tree::train(
+				&binning_instructions,
 				&binned_features,
 				gradients.as_slice().unwrap(),
 				hessians.as_slice().unwrap(),
-				ordered_gradients.as_slice_mut().unwrap(),
-				ordered_hessians.as_slice_mut().unwrap(),
+				gradients_ordered_buffer.as_slice_mut().unwrap(),
+				hessians_ordered_buffer.as_slice_mut().unwrap(),
 				examples_index.as_slice_mut().unwrap(),
 				examples_index_left_buffer.as_slice_mut().unwrap(),
 				examples_index_right_buffer.as_slice_mut().unwrap(),
 				&mut bin_stats_pool,
 				has_constant_hessians,
 				&options,
-				#[cfg(feature = "debug")]
+				#[cfg(feature = "timing")]
 				&timing,
 			);
-			#[cfg(feature = "debug")]
+			#[cfg(feature = "timing")]
 			timing.total.inc(start.elapsed());
-			// Update the predictions using the leaf values from the most recently trained tree.
+			// Update the predictions using the leaf values from the tree.
 			update_predictions_with_tree(
 				predictions
 					.column_mut(tree_per_round_index)
@@ -269,7 +278,7 @@ pub fn train(
 					.unwrap(),
 				examples_index.as_slice().unwrap(),
 				&tree,
-				#[cfg(feature = "debug")]
+				#[cfg(feature = "timing")]
 				&timing,
 			);
 			trees_for_round.push(tree);
@@ -318,11 +327,11 @@ pub fn train(
 		}
 	}
 
-	// Compute feature importances.
+	// Compute the feature importances.
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
 
-	// Print out timing information and tree information if the debug feature is enabled.
-	#[cfg(feature = "debug")]
+	// Print out the timing and tree information if the debug feature is enabled.
+	#[cfg(feature = "timing")]
 	eprintln!("{:?}", timing);
 
 	// Assemble the model.
@@ -393,9 +402,9 @@ fn update_predictions_with_tree(
 	predictions: &mut [f32],
 	examples_index: &[i32],
 	tree: &TrainTree,
-	#[cfg(feature = "debug")] timing: &Timing,
+	#[cfg(feature = "timing")] timing: &Timing,
 ) {
-	#[cfg(feature = "debug")]
+	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
 	let predictions_cell = SuperUnsafe::new(predictions);
 	tree.leaf_values.par_iter().for_each(|(range, value)| {
@@ -407,7 +416,7 @@ fn update_predictions_with_tree(
 					.get_unchecked_mut(example_index.to_usize().unwrap()) += value;
 			});
 	});
-	#[cfg(feature = "debug")]
+	#[cfg(feature = "timing")]
 	timing.update_predictions.inc(start.elapsed());
 }
 

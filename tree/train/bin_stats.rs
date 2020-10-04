@@ -5,28 +5,12 @@ use rayon::prelude::*;
 use tangram_thread_pool::pzip;
 
 #[derive(Clone)]
-pub struct BinStats {
-	pub binning_instructions: Vec<BinningInstructions>,
-	pub entries: Vec<Vec<BinStatsEntry>>,
-}
+pub struct BinStats(pub Vec<Vec<BinStatsEntry>>);
 
 #[derive(Clone, Default)]
 pub struct BinStatsEntry {
 	pub sum_gradients: f64,
 	pub sum_hessians: f64,
-}
-
-impl BinStats {
-	pub fn new(binning_instructions: Vec<BinningInstructions>) -> Self {
-		let entries = binning_instructions
-			.iter()
-			.map(|b| vec![BinStatsEntry::default(); b.n_bins()])
-			.collect();
-		Self {
-			binning_instructions,
-			entries,
-		}
-	}
 }
 
 /// This value controls how far ahead in the `examples_index` the `compute_bin_stats_*` functions should prefetch binned_features to be used in subsequent iterations.
@@ -39,9 +23,9 @@ const ROOT_UNROLL: usize = 16;
 /// This value controls how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
 const NOT_ROOT_UNROLL: usize = 4;
 
-pub fn compute_bin_stats_for_root(
-	node_bin_stats: &mut BinStats,
-	binned_features: &BinnedFeatures,
+pub fn compute_bin_stats_for_feature_root(
+	bin_stats_for_feature: &mut [BinStatsEntry],
+	binned_feature: &BinnedFeaturesColumn,
 	// (n_examples)
 	gradients: &[f32],
 	// (n_examples)
@@ -49,55 +33,52 @@ pub fn compute_bin_stats_for_root(
 	// hessians are constant in least squares loss, so we don't have to waste time updating them
 	hessians_are_constant: bool,
 ) {
-	pzip!(&mut node_bin_stats.entries, &binned_features.columns).for_each(
-		|(bin_stats_for_feature, binned_feature_values)| {
-			for entry in bin_stats_for_feature.iter_mut() {
-				*entry = BinStatsEntry {
-					sum_gradients: 0.0,
-					sum_hessians: 0.0,
-				};
-			}
-			if hessians_are_constant {
-				match binned_feature_values {
-					BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-						compute_bin_stats_for_feature_root_no_hessian(
-							gradients,
-							binned_feature_values,
-							bin_stats_for_feature,
-						)
-					},
-					BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-						compute_bin_stats_for_feature_root_no_hessian(
-							gradients,
-							binned_feature_values,
-							bin_stats_for_feature,
-						)
-					},
-				}
-			} else {
-				match binned_feature_values {
-					BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-						compute_bin_stats_for_feature_root(
-							gradients,
-							hessians,
-							binned_feature_values,
-							bin_stats_for_feature,
-						)
-					},
-					BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-						compute_bin_stats_for_feature_root(
-							gradients,
-							hessians,
-							binned_feature_values,
-							bin_stats_for_feature,
-						)
-					},
-				}
-			}
-		},
-	);
+	for entry in bin_stats_for_feature.iter_mut() {
+		*entry = BinStatsEntry {
+			sum_gradients: 0.0,
+			sum_hessians: 0.0,
+		};
+	}
+	if hessians_are_constant {
+		match binned_feature {
+			BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
+				compute_bin_stats_for_feature_root_no_hessian(
+					gradients,
+					binned_feature_values,
+					bin_stats_for_feature,
+				)
+			},
+			BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
+				compute_bin_stats_for_feature_root_no_hessian(
+					gradients,
+					binned_feature_values,
+					bin_stats_for_feature,
+				)
+			},
+		}
+	} else {
+		match binned_feature {
+			BinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
+				compute_bin_stats_for_feature_root_yes_hessian(
+					gradients,
+					hessians,
+					binned_feature_values,
+					bin_stats_for_feature,
+				)
+			},
+			BinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
+				compute_bin_stats_for_feature_root_yes_hessian(
+					gradients,
+					hessians,
+					binned_feature_values,
+					bin_stats_for_feature,
+				)
+			},
+		}
+	}
 }
 
+/*
 #[allow(clippy::collapsible_if)]
 #[allow(clippy::too_many_arguments)]
 pub fn compute_bin_stats_for_not_root(
@@ -236,6 +217,7 @@ pub fn compute_bin_stats_for_not_root(
 		},
 	);
 }
+*/
 
 unsafe fn compute_bin_stats_for_feature_root_no_hessian<T>(
 	gradients: &[f32],
@@ -264,7 +246,7 @@ unsafe fn compute_bin_stats_for_feature_root_no_hessian<T>(
 	}
 }
 
-pub unsafe fn compute_bin_stats_for_feature_root<T>(
+pub unsafe fn compute_bin_stats_for_feature_root_yes_hessian<T>(
 	gradients: &[f32],
 	hessians: &[f32],
 	binned_feature_values: &[T],

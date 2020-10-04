@@ -1,37 +1,85 @@
 use super::{
-	bin_stats::{BinStats, BinStatsEntry},
-	binning::BinningInstructions,
+	bin_stats::{compute_bin_stats_for_feature_root, BinStats, BinStatsEntry},
+	binning::{BinnedFeatures, BinningInstructions},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
-use crate::{SplitDirection, TrainOptions};
+use crate::{timing::Timing, SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::ops::Range;
+use tangram_pool::{Pool, PoolGuard};
 use tangram_thread_pool::pzip;
 
-pub struct ChooseBestSplitOutput {
+pub enum ChooseBestSplitOutput {
+	Success(ChooseBestSplitSuccess),
+	Failure(ChooseBestSplitFailure),
+}
+
+pub struct ChooseBestSplitSuccess {
 	pub gain: f32,
 	pub split: TrainBranchSplit,
+	pub sum_gradients: f64,
+	pub sum_hessians: f64,
 	pub left_n_examples: usize,
 	pub left_sum_gradients: f64,
 	pub left_sum_hessians: f64,
 	pub right_n_examples: usize,
 	pub right_sum_gradients: f64,
 	pub right_sum_hessians: f64,
+	pub bin_stats: PoolGuard<BinStats>,
 }
 
-/// Choose the split with the highest gain, if a valid one exists.
-pub fn choose_best_split(
-	bin_stats: &BinStats,
-	sum_gradients: f64,
-	sum_hessians: f64,
-	examples_index_range: Range<usize>,
+pub struct ChooseBestSplitFailure {
+	pub sum_gradients: f64,
+	pub sum_hessians: f64,
+}
+
+pub fn choose_best_split_root(
+	bin_stats_pool: &mut Pool<BinStats>,
+	binning_instructions: &[BinningInstructions],
+	binned_features: &BinnedFeatures,
+	gradients: &[f32],
+	hessians: &[f32],
+	hessians_are_constant: bool,
 	options: &TrainOptions,
-) -> Option<ChooseBestSplitOutput> {
-	pzip!(&bin_stats.entries, &bin_stats.binning_instructions)
-		.enumerate()
-		.filter_map(
-			|(feature_index, (bin_stats, binning_instructions))| match binning_instructions {
+	#[cfg(feature = "timing")] timing: &Timing,
+) -> ChooseBestSplitOutput {
+	// Compute the sums of gradients and hessians.
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
+	let sum_gradients_root = gradients
+		.par_iter()
+		.map(|gradient| gradient.to_f64().unwrap())
+		.sum::<f64>();
+	let sum_hessians_root = if hessians_are_constant {
+		gradients.len().to_f64().unwrap()
+	} else {
+		hessians
+			.par_iter()
+			.map(|hessian| hessian.to_f64().unwrap())
+			.sum::<f64>()
+	};
+	#[cfg(feature = "timing")]
+	timing.sum_gradients_and_hessians_root.inc(start.elapsed());
+
+	// For each feature, compute bin stats and use them to choose the best split.
+	let mut bin_stats = bin_stats_pool.get().unwrap();
+	pzip!(
+		binning_instructions,
+		&binned_features.columns,
+		&mut bin_stats.0
+	)
+	.enumerate()
+	.map(
+		|(feature_index, (binning_instructions, binned_feature, bin_stats_for_feature))| {
+			compute_bin_stats_for_feature_root(
+				bin_stats_for_feature,
+				binned_feature,
+				gradients,
+				hessians,
+				hessians_are_constant,
+			);
+			match binning_instructions {
 				BinningInstructions::Number { .. } => choose_best_split_continuous(
 					feature_index,
 					&binning_instructions,
@@ -50,9 +98,27 @@ pub fn choose_best_split(
 					examples_index_range.clone(),
 					options,
 				),
-			},
-		)
-		.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
+			}
+		},
+	)
+	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
+}
+
+pub fn choose_best_splits_not_root(
+	bin_stats_pool: &mut Pool<BinStats>,
+	binned_features: &BinnedFeatures,
+	gradients: &[f32],
+	hessians: &[f32],
+	left_child_examples_index: &[i32],
+	right_child_examples_index: &[i32],
+	gradients_ordered_buffer: &mut [f32],
+	hessians_ordered_buffer: &mut [f32],
+	parent_bin_stats: PoolGuard<BinStats>,
+	hessians_are_constant: bool,
+	options: &TrainOptions,
+	#[cfg(feature = "timing")] timing: &Timing,
+) -> (ChooseBestSplitOutput, ChooseBestSplitOutput) {
+	todo!()
 }
 
 /// Choose the best continuous split for this feature.
