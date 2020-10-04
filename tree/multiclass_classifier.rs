@@ -6,8 +6,10 @@ use super::{
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
+use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use tangram_dataframe::*;
+use tangram_thread_pool::pzip;
 
 /// `MulticlasClassifier`s predict multiclass target values, for example which of several species a flower is.
 #[derive(Debug)]
@@ -160,32 +162,28 @@ pub fn compute_biases(
 pub fn compute_gradients_and_hessians(
 	class_index: usize,
 	// (n_examples)
-	mut gradients: ArrayViewMut1<f32>,
+	gradients: &mut [f32],
 	// (n_examples)
-	mut hessians: ArrayViewMut1<f32>,
+	hessians: &mut [f32],
 	// (n_examples)
 	labels: &[Option<NonZeroUsize>],
 	// (n_trees_per_round, n_examples)
 	logits: ArrayView2<f32>,
 ) {
-	izip!(
-		gradients.iter_mut(),
-		hessians.iter_mut(),
-		logits.axis_iter(Axis(0)),
-		labels.iter(),
-	)
-	.for_each(|(gradient, hessian, logits, label)| {
-		let max = logits.iter().fold(std::f32::MIN, |a, &b| f32::max(a, b));
-		let mut sum = 0.0;
-		for logit in logits.iter() {
-			sum += (*logit - max).exp();
-		}
-		let prediction = (logits[class_index] - max).exp() / sum;
-		let label = label.unwrap().get() - 1;
-		let label = if label == class_index { 1.0 } else { 0.0 };
-		*gradient = prediction - label;
-		*hessian = prediction * (1.0 - prediction);
-	});
+	pzip!(gradients, hessians, logits.axis_iter(Axis(0)), labels).for_each(
+		|(gradient, hessian, logits, label)| {
+			let max = logits.iter().fold(std::f32::MIN, |a, &b| f32::max(a, b));
+			let mut sum = 0.0;
+			for logit in logits.iter() {
+				sum += (*logit - max).exp();
+			}
+			let prediction = (logits[class_index] - max).exp() / sum;
+			let label = label.unwrap().get() - 1;
+			let label = if label == class_index { 1.0 } else { 0.0 };
+			*gradient = prediction - label;
+			*hessian = prediction * (1.0 - prediction);
+		},
+	);
 }
 
 fn softmax(mut logits: ArrayViewMut1<f32>) {

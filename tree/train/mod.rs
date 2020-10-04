@@ -175,7 +175,9 @@ pub fn train(
 			BinStats(
 				binning_instructions_for_pool
 					.iter()
-					.map(|b| vec![BinStatsEntry::default(); b.n_bins()])
+					.map(|binning_instructions| {
+						vec![BinStatsEntry::default(); binning_instructions.n_bins()]
+					})
 					.collect(),
 			)
 		}),
@@ -231,8 +233,8 @@ pub fn train(
 					let labels_train = labels_train.as_enum().unwrap();
 					super::multiclass_classifier::compute_gradients_and_hessians(
 						tree_per_round_index,
-						gradients.view_mut(),
-						hessians.view_mut(),
+						gradients.as_slice_mut().unwrap(),
+						hessians.as_slice_mut().unwrap(),
 						labels_train.data,
 						predictions.view(),
 					);
@@ -374,7 +376,7 @@ pub fn train(
 	}
 }
 
-/// Split the feature and labels into train and early stopping datasets, where the early stopping dataset with have `early_stopping_fraction * features.nrows()` rows.
+/// Split the feature and labels into train and early stopping datasets, where the early stopping dataset will have `early_stopping_fraction * features.nrows()` rows.
 fn train_early_stopping_split<'features, 'labels>(
 	features: DataFrameView<'features>,
 	labels: ColumnView<'labels>,

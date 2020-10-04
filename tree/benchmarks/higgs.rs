@@ -1,18 +1,17 @@
-use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
+use rayon::prelude::*;
 use std::path::Path;
 use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;
+use tangram_thread_pool::pzip;
 
 fn main() {
-	// load the data
+	// Load the data.
 	// let csv_file_path = Path::new("data/higgs.csv");
-	// let nrows_train = 10_500_000;
-	// let nrows_test = 500_000;
+	// let (nrows_train, _) = (10_500_000, 500_000);
 	let csv_file_path = Path::new("data/higgs-small.csv");
-	let nrows_train = 450_000;
-	let nrows_test = 50_000;
+	let (nrows_train, _) = (450_000, 50_000);
 	let target_column_index = 0;
 	let options = FromCsvOptions {
 		column_types: Some(btreemap! {
@@ -55,7 +54,7 @@ fn main() {
 	let labels_train = labels_train.as_enum().unwrap();
 	let labels_test = labels_test.as_enum().unwrap();
 
-	// train the model
+	// Train the model.
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: Some(9),
@@ -70,24 +69,37 @@ fn main() {
 		&mut |_| {},
 	);
 
-	// make predictions on the test data
+	// Make predictions on the test data and compute metrics.
 	let features_test = features_test.to_rows();
-	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((nrows_test, 2)) };
 	let chunk_size = features_test.nrows() / rayon::current_num_threads();
-	izip!(
+	let metrics = pzip!(
 		features_test.axis_chunks_iter(Axis(0), chunk_size),
-		probabilities.axis_chunks_iter_mut(Axis(0), chunk_size),
+		labels_test.data.par_chunks(chunk_size),
 	)
-	.for_each(|(features_test, probabilities)| {
-		model.predict(features_test, probabilities);
-	});
-
-	// compute metrics
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
-	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-		probabilities: probabilities.view(),
-		labels: labels_test.data.into(),
-	});
-	let metrics = metrics.finalize();
+	.fold(
+		|| {
+			let metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
+			let probabilities: Array2<f32> = unsafe { Array2::uninitialized((chunk_size, 2)) };
+			(metrics, probabilities)
+		},
+		|(mut metrics, mut probabilities), (features_test, labels_test)| {
+			let probabilities_slice = s![0..features_test.nrows(), ..];
+			model.predict(features_test, probabilities.slice_mut(probabilities_slice));
+			metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
+				probabilities: probabilities.slice(probabilities_slice),
+				labels: labels_test.into(),
+			});
+			(metrics, probabilities)
+		},
+	)
+	.map(|(metrics, _)| metrics)
+	.reduce(
+		|| tangram_metrics::BinaryClassificationMetrics::new(3),
+		|mut a, b| {
+			a.merge(b);
+			a
+		},
+	)
+	.finalize();
 	println!("{}", metrics.thresholds[1].accuracy);
 }
