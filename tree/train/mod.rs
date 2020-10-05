@@ -5,7 +5,7 @@ use self::{
 	feature_importances::compute_feature_importances,
 	tree::{
 		TrainBranchNode, TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
-		TrainLeafNode, TrainNode,
+		TrainLeafNode, TrainNode, TreeTrainOptions,
 	},
 };
 #[cfg(feature = "timing")]
@@ -119,7 +119,7 @@ pub fn train(
 	};
 
 	// The mean square error loss used in regression has a constant second derivative, so there is no need to use hessians for regression tasks.
-	let has_constant_hessians = match task {
+	let hessians_are_constant = match task {
 		Task::Regression => true,
 		Task::BinaryClassification => false,
 		Task::MulticlassClassification { .. } => false,
@@ -254,22 +254,22 @@ pub fn train(
 			// Train the tree.
 			#[cfg(feature = "timing")]
 			let start = std::time::Instant::now();
-			let tree = self::tree::train(
-				&binning_instructions,
-				&binned_features,
-				gradients.as_slice().unwrap(),
-				hessians.as_slice().unwrap(),
-				gradients_ordered_buffer.as_slice_mut().unwrap(),
-				hessians_ordered_buffer.as_slice_mut().unwrap(),
-				examples_index.as_slice_mut().unwrap(),
-				examples_index_left_buffer.as_slice_mut().unwrap(),
-				examples_index_right_buffer.as_slice_mut().unwrap(),
-				&mut bin_stats_pool,
-				has_constant_hessians,
-				&train_options,
+			let tree = self::tree::train(TreeTrainOptions {
+				binning_instructions: &binning_instructions,
+				binned_features: &binned_features,
+				gradients: gradients.as_slice().unwrap(),
+				hessians: hessians.as_slice().unwrap(),
+				gradients_ordered_buffer: gradients_ordered_buffer.as_slice_mut().unwrap(),
+				hessians_ordered_buffer: hessians_ordered_buffer.as_slice_mut().unwrap(),
+				examples_index: examples_index.as_slice_mut().unwrap(),
+				examples_index_left_buffer: examples_index_left_buffer.as_slice_mut().unwrap(),
+				examples_index_right_buffer: examples_index_right_buffer.as_slice_mut().unwrap(),
+				bin_stats_pool: &mut bin_stats_pool,
+				hessians_are_constant,
+				train_options: &train_options,
 				#[cfg(feature = "timing")]
-				&timing,
-			);
+				timing: &timing,
+			});
 			#[cfg(feature = "timing")]
 			timing.total.inc(start.elapsed());
 			// Update the predictions using the leaf values from the tree.

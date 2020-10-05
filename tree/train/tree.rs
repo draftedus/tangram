@@ -177,23 +177,43 @@ impl std::cmp::Ord for QueueItem {
 	}
 }
 
+pub struct TreeTrainOptions<'a> {
+	pub bin_stats_pool: &'a mut Pool<BinStats>,
+	pub binned_features: &'a BinnedFeatures,
+	pub binning_instructions: &'a [BinningInstructions],
+	pub examples_index_left_buffer: &'a mut [i32],
+	pub examples_index_right_buffer: &'a mut [i32],
+	pub examples_index: &'a mut [i32],
+	pub gradients_ordered_buffer: &'a mut [f32],
+	pub gradients: &'a [f32],
+	pub hessians_are_constant: bool,
+	pub hessians_ordered_buffer: &'a mut [f32],
+	pub hessians: &'a [f32],
+	#[cfg(feature = "timing")]
+	pub timing: &'a crate::timing::Timing,
+	pub train_options: &'a TrainOptions,
+}
+
 /// Train a tree.
 #[allow(clippy::too_many_arguments)]
-pub fn train(
-	binning_instructions: &[BinningInstructions],
-	binned_features: &BinnedFeatures,
-	gradients: &[f32],
-	hessians: &[f32],
-	gradients_ordered_buffer: &mut [f32],
-	hessians_ordered_buffer: &mut [f32],
-	examples_index: &mut [i32],
-	examples_index_left_buffer: &mut [i32],
-	examples_index_right_buffer: &mut [i32],
-	bin_stats_pool: &mut Pool<BinStats>,
-	hessians_are_constant: bool,
-	train_options: &TrainOptions,
-	#[cfg(feature = "timing")] timing: &crate::timing::Timing,
-) -> TrainTree {
+pub fn train(options: TreeTrainOptions) -> TrainTree {
+	let TreeTrainOptions {
+		bin_stats_pool,
+		binned_features,
+		binning_instructions,
+		examples_index_left_buffer,
+		examples_index_right_buffer,
+		examples_index,
+		gradients_ordered_buffer,
+		gradients,
+		hessians_are_constant,
+		hessians_ordered_buffer,
+		hessians,
+		train_options,
+		..
+	} = options;
+	#[cfg(feature = "timing")]
+	let timing = options.timing;
 	// These are the nodes in the tree returned by this function
 	let mut nodes = Vec::new();
 	// This priority queue stores the potential nodes to split ordered by their gain.
