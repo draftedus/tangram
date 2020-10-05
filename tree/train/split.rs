@@ -27,6 +27,30 @@ pub struct ChooseBestSplitRootOptions<'a> {
 	pub train_options: &'a TrainOptions,
 }
 
+pub struct ChooseBestSplitsNotRootOptions<'a> {
+	pub bin_stats_pool: &'a mut Pool<BinStats>,
+	pub binned_features: &'a BinnedFeatures,
+	pub binning_instructions: &'a [BinningInstructions],
+	pub gradients_ordered_buffer: &'a mut [f32],
+	pub gradients: &'a [f32],
+	pub hessians_are_constant: bool,
+	pub hessians_ordered_buffer: &'a mut [f32],
+	pub hessians: &'a [f32],
+	pub left_child_examples_index: &'a [i32],
+	pub left_child_n_examples: usize,
+	pub left_child_sum_gradients: f64,
+	pub left_child_sum_hessians: f64,
+	pub parent_bin_stats: PoolGuard<BinStats>,
+	pub parent_depth: usize,
+	pub right_child_examples_index: &'a [i32],
+	pub right_child_n_examples: usize,
+	pub right_child_sum_gradients: f64,
+	pub right_child_sum_hessians: f64,
+	#[cfg(feature = "timing")]
+	pub timing: &'a Timing,
+	pub train_options: &'a TrainOptions,
+}
+
 pub enum ChooseBestSplitOutput {
 	Success(ChooseBestSplitSuccess),
 	Failure(ChooseBestSplitFailure),
@@ -69,8 +93,8 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 		binned_features,
 		binning_instructions,
 		gradients,
-		hessians,
 		hessians_are_constant,
+		hessians,
 		train_options,
 		..
 	} = options;
@@ -161,27 +185,32 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 
 #[allow(clippy::too_many_arguments)]
 pub fn choose_best_splits_not_root(
-	bin_stats_pool: &mut Pool<BinStats>,
-	binning_instructions: &[BinningInstructions],
-	binned_features: &BinnedFeatures,
-	parent_depth: usize,
-	gradients: &[f32],
-	hessians: &[f32],
-	left_child_n_examples: usize,
-	left_child_sum_gradients: f64,
-	left_child_sum_hessians: f64,
-	right_child_n_examples: usize,
-	right_child_sum_gradients: f64,
-	right_child_sum_hessians: f64,
-	left_child_examples_index: &[i32],
-	right_child_examples_index: &[i32],
-	gradients_ordered_buffer: &mut [f32],
-	hessians_ordered_buffer: &mut [f32],
-	parent_bin_stats: PoolGuard<BinStats>,
-	hessians_are_constant: bool,
-	train_options: &TrainOptions,
-	#[cfg(feature = "timing")] timing: &Timing,
+	options: ChooseBestSplitsNotRootOptions,
 ) -> (ChooseBestSplitOutput, ChooseBestSplitOutput) {
+	let ChooseBestSplitsNotRootOptions {
+		bin_stats_pool,
+		binned_features,
+		binning_instructions,
+		gradients,
+		hessians,
+		hessians_are_constant,
+		parent_bin_stats,
+		gradients_ordered_buffer,
+		parent_depth,
+		right_child_examples_index,
+		right_child_n_examples,
+		right_child_sum_gradients,
+		right_child_sum_hessians,
+		train_options,
+		left_child_sum_hessians,
+		left_child_sum_gradients,
+		hessians_ordered_buffer,
+		left_child_examples_index,
+		left_child_n_examples,
+		..
+	} = options;
+	#[cfg(feature = "timing")]
+	let timing = options.timing;
 	let mut left_child_output = ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 		sum_gradients: left_child_sum_gradients,
 		sum_hessians: left_child_sum_hessians,

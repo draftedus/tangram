@@ -4,7 +4,7 @@ use super::{
 	examples_index::rearrange_examples_index,
 	split::{
 		choose_best_split_root, choose_best_splits_not_root, ChooseBestSplitOutput,
-		ChooseBestSplitRootOptions, ChooseBestSplitSuccess,
+		ChooseBestSplitRootOptions, ChooseBestSplitSuccess, ChooseBestSplitsNotRootOptions,
 	},
 };
 use crate::{SplitDirection, TrainOptions};
@@ -317,29 +317,29 @@ pub fn train(
 
 		// Choose the best splits for each of the right and left children of this new branch.
 		let (left_child_best_split_output, right_child_best_split_output) =
-			choose_best_splits_not_root(
+			choose_best_splits_not_root(ChooseBestSplitsNotRootOptions {
 				bin_stats_pool,
-				binning_instructions,
 				binned_features,
-				queue_item.depth,
-				gradients,
-				hessians,
-				queue_item.left_n_examples,
-				queue_item.left_sum_gradients,
-				queue_item.left_sum_hessians,
-				queue_item.right_n_examples,
-				queue_item.right_sum_gradients,
-				queue_item.right_sum_hessians,
-				left_child_examples_index,
-				right_child_examples_index,
+				binning_instructions,
 				gradients_ordered_buffer,
-				hessians_ordered_buffer,
-				queue_item.bin_stats,
+				gradients,
 				hessians_are_constant,
-				train_options,
+				hessians_ordered_buffer,
+				hessians,
+				left_child_examples_index,
+				left_child_n_examples: queue_item.left_n_examples,
+				left_child_sum_gradients: queue_item.left_sum_gradients,
+				left_child_sum_hessians: queue_item.left_sum_hessians,
+				parent_bin_stats: queue_item.bin_stats,
+				parent_depth: queue_item.depth,
+				right_child_examples_index,
+				right_child_n_examples: queue_item.right_n_examples,
+				right_child_sum_gradients: queue_item.right_sum_gradients,
+				right_child_sum_hessians: queue_item.right_sum_hessians,
 				#[cfg(feature = "timing")]
 				timing,
-			);
+				train_options,
+			});
 
 		// Add a queue item or leaf for the left child.
 		match left_child_best_split_output {
