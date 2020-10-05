@@ -86,7 +86,6 @@ pub struct ChooseBestSplitForFeatureOutput {
 	pub right_sum_hessians: f64,
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBestSplitOutput {
 	let ChooseBestSplitRootOptions {
 		bin_stats_pool,
@@ -183,7 +182,6 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 	}
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn choose_best_splits_not_root(
 	options: ChooseBestSplitsNotRootOptions,
 ) -> (ChooseBestSplitOutput, ChooseBestSplitOutput) {

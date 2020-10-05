@@ -30,17 +30,17 @@ fn tree_shap(example: &[tangram_dataframe::Value], tree: &Tree) -> Vec<f32> {
 	let mut phi = vec![0.0; n_features + 1];
 	let max_depth = max_depth(tree, 0, 0) + 2;
 	let mut unique_path = vec![PathItem::new(); max_depth * (max_depth + 1) / 2];
-	tree_shap_recursive(
-		phi.as_mut_slice(),
+	tree_shap_recursive(TreeShapRecursiveOptions {
+		phi: phi.as_mut_slice(),
 		example,
 		tree,
-		0,
-		unique_path.as_mut_slice(),
-		0,
-		1.0,
-		1.0,
-		None,
-	);
+		node_index: 0,
+		unique_path: unique_path.as_mut_slice(),
+		unique_depth: 0,
+		parent_zero_fraction: 1.0,
+		parent_one_fraction: 1.0,
+		parent_feature_index: None,
+	});
 	phi
 }
 
@@ -63,25 +63,37 @@ impl PathItem {
 	}
 }
 
-#[allow(clippy::too_many_arguments)]
-fn tree_shap_recursive(
-	phi: &mut [f32],
-	example: &[tangram_dataframe::Value],
-	tree: &Tree,
+struct TreeShapRecursiveOptions<'a> {
+	example: &'a [tangram_dataframe::Value<'a>],
 	node_index: usize,
-	unique_path: &mut [PathItem],
-	unique_depth: usize,
-	parent_zero_fraction: f32,
-	parent_one_fraction: f32,
 	parent_feature_index: Option<usize>,
-) {
-	extend_path(
+	parent_one_fraction: f32,
+	parent_zero_fraction: f32,
+	phi: &'a mut [f32],
+	tree: &'a Tree,
+	unique_depth: usize,
+	unique_path: &'a mut [PathItem],
+}
+
+fn tree_shap_recursive(options: TreeShapRecursiveOptions) {
+	let TreeShapRecursiveOptions {
+		example,
+		node_index,
+		parent_feature_index,
+		parent_one_fraction,
+		parent_zero_fraction,
+		phi,
+		tree,
+		unique_depth,
+		unique_path,
+	} = options;
+	extend_path(ExtendPathOptions {
 		unique_path,
 		unique_depth,
-		parent_zero_fraction,
-		parent_one_fraction,
-		parent_feature_index,
-	);
+		zero_fraction: parent_zero_fraction,
+		one_fraction: parent_one_fraction,
+		feature_index: parent_feature_index,
+	});
 	let mut unique_depth = unique_depth;
 	let node = &tree.nodes[node_index];
 	match node {
@@ -113,40 +125,49 @@ fn tree_shap_recursive(
 			let feature_index = n.split.feature_index();
 			let (parent_path, child_path) = unique_path.split_at_mut(unique_depth + 1);
 			child_path[0..parent_path.len()].clone_from_slice(parent_path);
-			tree_shap_recursive(
+			tree_shap_recursive(TreeShapRecursiveOptions {
 				phi,
 				example,
 				tree,
-				hot_child_index,
-				child_path,
-				unique_depth + 1,
-				hot_zero_fraction * incoming_zero_fraction,
-				incoming_one_fraction,
-				Some(feature_index),
-			);
+				node_index: hot_child_index,
+				unique_path: child_path,
+				unique_depth: unique_depth + 1,
+				parent_zero_fraction: hot_zero_fraction * incoming_zero_fraction,
+				parent_one_fraction: incoming_one_fraction,
+				parent_feature_index: Some(feature_index),
+			});
 			child_path[0..parent_path.len()].clone_from_slice(parent_path);
-			tree_shap_recursive(
+			tree_shap_recursive(TreeShapRecursiveOptions {
 				phi,
 				example,
 				tree,
-				cold_child_index,
-				child_path,
-				unique_depth + 1,
-				cold_zero_fraction * incoming_zero_fraction,
-				0.0,
-				Some(feature_index),
-			);
+				node_index: cold_child_index,
+				unique_path: child_path,
+				unique_depth: unique_depth + 1,
+				parent_zero_fraction: cold_zero_fraction * incoming_zero_fraction,
+				parent_one_fraction: 0.0,
+				parent_feature_index: Some(feature_index),
+			});
 		}
 	};
 }
 
-fn extend_path(
-	unique_path: &mut [PathItem],
+struct ExtendPathOptions<'a> {
+	unique_path: &'a mut [PathItem],
 	unique_depth: usize,
 	zero_fraction: f32,
 	one_fraction: f32,
 	feature_index: Option<usize>,
-) {
+}
+
+fn extend_path(options: ExtendPathOptions) {
+	let ExtendPathOptions {
+		feature_index,
+		one_fraction,
+		unique_depth,
+		unique_path,
+		zero_fraction,
+	} = options;
 	unique_path[unique_depth] = PathItem {
 		feature_index,
 		zero_fraction,

@@ -195,7 +195,6 @@ pub struct TreeTrainOptions<'a> {
 }
 
 /// Train a tree.
-#[allow(clippy::too_many_arguments)]
 pub fn train(options: TreeTrainOptions) -> TrainTree {
 	let TreeTrainOptions {
 		bin_stats_pool,
@@ -477,7 +476,6 @@ struct AddLeafOptions<'a> {
 }
 
 /// Add a leaf to the list of nodes and update the parent to refer to it.
-#[allow(clippy::too_many_arguments)]
 fn add_leaf(options: AddLeafOptions) {
 	let AddLeafOptions {
 		examples_index_range,
