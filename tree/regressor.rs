@@ -28,7 +28,7 @@ impl Regressor {
 	pub fn train(
 		features: DataFrameView,
 		labels: NumberColumnView,
-		options: TrainOptions,
+		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {
 		let task = crate::train::Task::Regression;
@@ -36,7 +36,7 @@ impl Regressor {
 			task,
 			features,
 			ColumnView::Number(labels),
-			options,
+			train_options,
 			update_progress,
 		);
 		match model {

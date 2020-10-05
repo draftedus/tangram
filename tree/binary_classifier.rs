@@ -32,7 +32,7 @@ impl BinaryClassifier {
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumColumnView,
-		options: TrainOptions,
+		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {
 		let task = crate::train::Task::BinaryClassification;
@@ -40,7 +40,7 @@ impl BinaryClassifier {
 			task,
 			features,
 			ColumnView::Enum(labels),
-			options,
+			train_options,
 			update_progress,
 		);
 		match model {

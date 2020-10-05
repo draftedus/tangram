@@ -54,21 +54,21 @@ pub fn train(
 	task: Task,
 	features: DataFrameView,
 	labels: ColumnView,
-	options: TrainOptions,
+	train_options: TrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
 	#[cfg(feature = "timing")]
 	let timing = Timing::new();
 
 	// If early stopping is enabled, split the features and labels into train and early stopping sets.
-	let early_stopping_enabled = options.early_stopping_options.is_some();
+	let early_stopping_enabled = train_options.early_stopping_options.is_some();
 	let (
 		features_train,
 		labels_train,
 		features_early_stopping,
 		labels_early_stopping,
 		mut early_stopping_monitor,
-	) = if let Some(early_stopping_options) = &options.early_stopping_options {
+	) = if let Some(early_stopping_options) = &train_options.early_stopping_options {
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
 				features,
@@ -96,7 +96,7 @@ pub fn train(
 	// Determine how to bin each feature.
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
-	let binning_instructions = compute_binning_instructions(&features_train, &options);
+	let binning_instructions = compute_binning_instructions(&features_train, &train_options);
 	#[cfg(feature = "timing")]
 	timing.compute_binning_instructions.inc(start.elapsed());
 
@@ -170,7 +170,7 @@ pub fn train(
 	};
 	let binning_instructions_for_pool = binning_instructions.clone();
 	let mut bin_stats_pool = Pool::new(
-		options.max_leaf_nodes,
+		train_options.max_leaf_nodes,
 		Box::new(move || {
 			BinStats(
 				binning_instructions_for_pool
@@ -188,7 +188,7 @@ pub fn train(
 	// These are the trees in round-major order. After training this will be converted to an array of shape (n_rounds, n_trees_per_round).
 	let mut trees: Vec<TrainTree> = Vec::new();
 	// Collect the loss on the training dataset for each round if enabled.
-	let mut losses: Option<Vec<f32>> = if options.compute_loss {
+	let mut losses: Option<Vec<f32>> = if train_options.compute_loss {
 		Some(Vec::new())
 	} else {
 		None
@@ -200,9 +200,9 @@ pub fn train(
 	}
 
 	// Train rounds of trees until we hit max_rounds or the early stopping monitor indicates we should stop early.
-	let round_counter = ProgressCounter::new(options.max_rounds.to_u64().unwrap());
+	let round_counter = ProgressCounter::new(train_options.max_rounds.to_u64().unwrap());
 	update_progress(super::TrainProgress::Training(round_counter.clone()));
-	for _ in 0..options.max_rounds {
+	for _ in 0..train_options.max_rounds {
 		round_counter.inc(1);
 		// Train n_trees_per_round trees.
 		let mut trees_for_round = Vec::with_capacity(n_trees_per_round);
@@ -266,7 +266,7 @@ pub fn train(
 				examples_index_right_buffer.as_slice_mut().unwrap(),
 				&mut bin_stats_pool,
 				has_constant_hessians,
-				&options,
+				&train_options,
 				#[cfg(feature = "timing")]
 				&timing,
 			);

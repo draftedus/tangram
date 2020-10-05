@@ -4,7 +4,7 @@ use super::{
 	examples_index::rearrange_examples_index,
 	split::{
 		choose_best_split_root, choose_best_splits_not_root, ChooseBestSplitOutput,
-		ChooseBestSplitSuccess,
+		ChooseBestSplitRootOptions, ChooseBestSplitSuccess,
 	},
 };
 use crate::{SplitDirection, TrainOptions};
@@ -191,7 +191,7 @@ pub fn train(
 	examples_index_right_buffer: &mut [i32],
 	bin_stats_pool: &mut Pool<BinStats>,
 	hessians_are_constant: bool,
-	options: &TrainOptions,
+	train_options: &TrainOptions,
 	#[cfg(feature = "timing")] timing: &crate::timing::Timing,
 ) -> TrainTree {
 	// These are the nodes in the tree returned by this function
@@ -205,35 +205,42 @@ pub fn train(
 	let examples_index_range_root = 0..n_examples_root;
 
 	// Choose the best split for the root node.
-	let choose_best_split_output_root = choose_best_split_root(
+	let choose_best_split_output_root = choose_best_split_root(ChooseBestSplitRootOptions {
 		bin_stats_pool,
-		binning_instructions,
 		binned_features,
+		binning_instructions,
 		gradients,
-		hessians,
 		hessians_are_constant,
-		options,
+		hessians,
 		#[cfg(feature = "timing")]
-		&timing,
-	);
+		timing,
+		train_options,
+	});
 
 	// If we were able to find a split for the root node, add it to the queue and proceed to the loop. Otherwise, return a tree with a single node.
 	match choose_best_split_output_root {
 		ChooseBestSplitOutput::Success(output) => {
-			add_queue_item(&mut queue, output, None, None, 0, examples_index_range_root);
+			add_queue_item(AddQueueItemOptions {
+				depth: 0,
+				examples_index_range: examples_index_range_root,
+				output,
+				parent_index: None,
+				queue: &mut queue,
+				split_direction: None,
+			});
 		}
 		ChooseBestSplitOutput::Failure(output) => {
-			add_leaf(
-				&mut nodes,
-				&mut leaf_values,
-				output.sum_gradients,
-				output.sum_hessians,
+			add_leaf(AddLeafOptions {
+				examples_index_range: examples_index_range_root,
+				leaf_values: &mut leaf_values,
 				n_examples_root,
-				examples_index_range_root,
-				None,
-				None,
-				options,
-			);
+				nodes: &mut nodes,
+				train_options,
+				parent_node_index: None,
+				split_direction: None,
+				sum_gradients: output.sum_gradients,
+				sum_hessians: output.sum_hessians,
+			});
 			return TrainTree { nodes, leaf_values };
 		}
 	}
@@ -242,7 +249,7 @@ pub fn train(
 	loop {
 		// If we will hit the maximum number of leaf nodes by adding the remaining queue items as leaves then exit the loop.
 		let n_leaf_nodes = leaf_values.len() + queue.len();
-		let max_leaf_nodes_reached = n_leaf_nodes == options.max_leaf_nodes;
+		let max_leaf_nodes_reached = n_leaf_nodes == train_options.max_leaf_nodes;
 		if max_leaf_nodes_reached {
 			break;
 		}
@@ -329,7 +336,7 @@ pub fn train(
 				hessians_ordered_buffer,
 				queue_item.bin_stats,
 				hessians_are_constant,
-				options,
+				train_options,
 				#[cfg(feature = "timing")]
 				timing,
 			);
@@ -337,122 +344,137 @@ pub fn train(
 		// Add a queue item or leaf for the left child.
 		match left_child_best_split_output {
 			ChooseBestSplitOutput::Success(output) => {
-				add_queue_item(
-					&mut queue,
+				add_queue_item(AddQueueItemOptions {
+					depth: queue_item.depth + 1,
+					examples_index_range: left_child_examples_index_range,
 					output,
-					Some(node_index),
-					Some(SplitDirection::Left),
-					queue_item.depth + 1,
-					left_child_examples_index_range,
-				);
+					parent_index: Some(node_index),
+					queue: &mut queue,
+					split_direction: Some(SplitDirection::Left),
+				});
 			}
 			ChooseBestSplitOutput::Failure(output) => {
-				add_leaf(
-					&mut nodes,
-					&mut leaf_values,
-					output.sum_gradients,
-					output.sum_hessians,
+				add_leaf(AddLeafOptions {
+					examples_index_range: left_child_examples_index_range,
+					leaf_values: &mut leaf_values,
 					n_examples_root,
-					left_child_examples_index_range,
-					Some(node_index),
-					Some(SplitDirection::Left),
-					options,
-				);
+					nodes: &mut nodes,
+					train_options,
+					parent_node_index: Some(node_index),
+					split_direction: Some(SplitDirection::Left),
+					sum_gradients: output.sum_gradients,
+					sum_hessians: output.sum_hessians,
+				});
 			}
 		}
 
 		// Add a queue item or leaf for the right child.
 		match right_child_best_split_output {
 			ChooseBestSplitOutput::Success(output) => {
-				add_queue_item(
-					&mut queue,
+				add_queue_item(AddQueueItemOptions {
+					depth: queue_item.depth + 1,
+					examples_index_range: right_child_examples_index_range,
 					output,
-					Some(node_index),
-					Some(SplitDirection::Right),
-					queue_item.depth + 1,
-					right_child_examples_index_range,
-				);
+					parent_index: Some(node_index),
+					queue: &mut queue,
+					split_direction: Some(SplitDirection::Right),
+				});
 			}
 			ChooseBestSplitOutput::Failure(output) => {
-				add_leaf(
-					&mut nodes,
-					&mut leaf_values,
-					output.sum_gradients,
-					output.sum_hessians,
+				add_leaf(AddLeafOptions {
+					examples_index_range: right_child_examples_index_range,
+					leaf_values: &mut leaf_values,
 					n_examples_root,
-					right_child_examples_index_range,
-					Some(node_index),
-					Some(SplitDirection::Right),
-					options,
-				);
+					nodes: &mut nodes,
+					train_options,
+					parent_node_index: Some(node_index),
+					split_direction: Some(SplitDirection::Right),
+					sum_gradients: output.sum_gradients,
+					sum_hessians: output.sum_hessians,
+				});
 			}
 		}
 	}
 
 	// The remaining items on the queue should all be made into leaves.
 	while let Some(queue_item) = queue.pop() {
-		add_leaf(
-			&mut nodes,
-			&mut leaf_values,
-			queue_item.sum_gradients,
-			queue_item.sum_hessians,
+		add_leaf(AddLeafOptions {
+			examples_index_range: queue_item.examples_index_range,
+			leaf_values: &mut leaf_values,
 			n_examples_root,
-			queue_item.examples_index_range,
-			Some(queue_item.parent_index.unwrap()),
-			Some(queue_item.split_direction.unwrap()),
-			options,
-		);
+			nodes: &mut nodes,
+			train_options,
+			parent_node_index: Some(queue_item.parent_index.unwrap()),
+			split_direction: Some(queue_item.split_direction.unwrap()),
+			sum_gradients: queue_item.sum_gradients,
+			sum_hessians: queue_item.sum_hessians,
+		});
 	}
 
 	TrainTree { nodes, leaf_values }
 }
 
-/// Add a queue item to the queue.
-fn add_queue_item(
-	queue: &mut BinaryHeap<QueueItem>,
-	output: ChooseBestSplitSuccess,
-	parent_index: Option<usize>,
-	split_direction: Option<SplitDirection>,
+struct AddQueueItemOptions<'a> {
 	depth: usize,
 	examples_index_range: Range<usize>,
-) {
-	queue.push(QueueItem {
-		gain: output.gain,
-		parent_index,
-		split_direction,
-		depth,
-		bin_stats: output.bin_stats,
-		examples_index_range,
-		sum_gradients: output.sum_gradients,
-		sum_hessians: output.sum_hessians,
-		split: output.split,
-		left_n_examples: output.left_n_examples,
-		left_sum_gradients: output.left_sum_gradients,
-		left_sum_hessians: output.left_sum_hessians,
-		right_n_examples: output.right_n_examples,
-		right_sum_gradients: output.right_sum_gradients,
-		right_sum_hessians: output.right_sum_hessians,
+	output: ChooseBestSplitSuccess,
+	parent_index: Option<usize>,
+	queue: &'a mut BinaryHeap<QueueItem>,
+	split_direction: Option<SplitDirection>,
+}
+
+/// Add a queue item to the queue.
+fn add_queue_item(options: AddQueueItemOptions) {
+	options.queue.push(QueueItem {
+		gain: options.output.gain,
+		parent_index: options.parent_index,
+		split_direction: options.split_direction,
+		depth: options.depth,
+		bin_stats: options.output.bin_stats,
+		examples_index_range: options.examples_index_range,
+		sum_gradients: options.output.sum_gradients,
+		sum_hessians: options.output.sum_hessians,
+		split: options.output.split,
+		left_n_examples: options.output.left_n_examples,
+		left_sum_gradients: options.output.left_sum_gradients,
+		left_sum_hessians: options.output.left_sum_hessians,
+		right_n_examples: options.output.right_n_examples,
+		right_sum_gradients: options.output.right_sum_gradients,
+		right_sum_hessians: options.output.right_sum_hessians,
 	});
+}
+
+struct AddLeafOptions<'a> {
+	examples_index_range: Range<usize>,
+	leaf_values: &'a mut Vec<(Range<usize>, f32)>,
+	n_examples_root: usize,
+	nodes: &'a mut Vec<TrainNode>,
+	train_options: &'a TrainOptions,
+	parent_node_index: Option<usize>,
+	split_direction: Option<SplitDirection>,
+	sum_gradients: f64,
+	sum_hessians: f64,
 }
 
 /// Add a leaf to the list of nodes and update the parent to refer to it.
 #[allow(clippy::too_many_arguments)]
-fn add_leaf(
-	nodes: &mut Vec<TrainNode>,
-	leaf_values: &mut Vec<(Range<usize>, f32)>,
-	sum_gradients: f64,
-	sum_hessians: f64,
-	n_examples_root: usize,
-	examples_index_range: Range<usize>,
-	parent_node_index: Option<usize>,
-	split_direction: Option<SplitDirection>,
-	options: &TrainOptions,
-) {
+fn add_leaf(options: AddLeafOptions) {
+	let AddLeafOptions {
+		examples_index_range,
+		leaf_values,
+		n_examples_root,
+		nodes,
+		train_options,
+		parent_node_index,
+		split_direction,
+		sum_gradients,
+		sum_hessians,
+	} = options;
 	// This is the index this leaf will have in the `nodes` array.
 	let leaf_index = nodes.len();
 	// Compute the leaf's value.
-	let value = (-options.learning_rate.to_f64().unwrap() * sum_gradients
-		/ (sum_hessians + options.l2_regularization.to_f64().unwrap() + std::f64::EPSILON))
+	let value = (-train_options.learning_rate.to_f64().unwrap() * sum_gradients
+		/ (sum_hessians + train_options.l2_regularization.to_f64().unwrap() + std::f64::EPSILON))
 		.to_f32()
 		.unwrap();
 	let examples_fraction =

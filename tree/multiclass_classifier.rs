@@ -35,7 +35,7 @@ impl MulticlassClassifier {
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumColumnView,
-		options: TrainOptions,
+		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {
 		let task = crate::train::Task::MulticlassClassification {
@@ -45,7 +45,7 @@ impl MulticlassClassifier {
 			task,
 			features,
 			ColumnView::Enum(labels),
-			options,
+			train_options,
 			update_progress,
 		);
 		match model {

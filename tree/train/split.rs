@@ -15,6 +15,18 @@ use rayon::prelude::*;
 use tangram_pool::{Pool, PoolGuard};
 use tangram_thread_pool::pzip;
 
+pub struct ChooseBestSplitRootOptions<'a> {
+	pub bin_stats_pool: &'a mut Pool<BinStats>,
+	pub binned_features: &'a BinnedFeatures,
+	pub binning_instructions: &'a [BinningInstructions],
+	pub gradients: &'a [f32],
+	pub hessians_are_constant: bool,
+	pub hessians: &'a [f32],
+	#[cfg(feature = "timing")]
+	pub timing: &'a Timing,
+	pub train_options: &'a TrainOptions,
+}
+
 pub enum ChooseBestSplitOutput {
 	Success(ChooseBestSplitSuccess),
 	Failure(ChooseBestSplitFailure),
@@ -51,16 +63,19 @@ pub struct ChooseBestSplitForFeatureOutput {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn choose_best_split_root(
-	bin_stats_pool: &mut Pool<BinStats>,
-	binning_instructions: &[BinningInstructions],
-	binned_features: &BinnedFeatures,
-	gradients: &[f32],
-	hessians: &[f32],
-	hessians_are_constant: bool,
-	options: &TrainOptions,
-	#[cfg(feature = "timing")] timing: &Timing,
-) -> ChooseBestSplitOutput {
+pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBestSplitOutput {
+	let ChooseBestSplitRootOptions {
+		bin_stats_pool,
+		binned_features,
+		binning_instructions,
+		gradients,
+		hessians,
+		hessians_are_constant,
+		train_options,
+		..
+	} = options;
+	#[cfg(feature = "timing")]
+	let timing = options.timing;
 	// Compute the sums of gradients and hessians.
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
@@ -80,8 +95,8 @@ pub fn choose_best_split_root(
 	timing.sum_gradients_and_hessians_root.inc(start.elapsed());
 
 	// Determine if we should try to split the root.
-	let should_try_to_split_root = gradients.len() >= 2 * options.min_examples_per_node
-		&& sum_hessians >= 2.0 * options.min_sum_hessians_per_node.to_f64().unwrap();
+	let should_try_to_split_root = gradients.len() >= 2 * train_options.min_examples_per_node
+		&& sum_hessians >= 2.0 * train_options.min_sum_hessians_per_node.to_f64().unwrap();
 	if !should_try_to_split_root {
 		return ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 			sum_gradients,
@@ -115,7 +130,7 @@ pub fn choose_best_split_root(
 				binned_feature.len(),
 				sum_gradients,
 				sum_hessians,
-				options,
+				train_options,
 			)
 		},
 	)
@@ -164,7 +179,7 @@ pub fn choose_best_splits_not_root(
 	hessians_ordered_buffer: &mut [f32],
 	parent_bin_stats: PoolGuard<BinStats>,
 	hessians_are_constant: bool,
-	options: &TrainOptions,
+	train_options: &TrainOptions,
 	#[cfg(feature = "timing")] timing: &Timing,
 ) -> (ChooseBestSplitOutput, ChooseBestSplitOutput) {
 	let mut left_child_output = ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
@@ -177,15 +192,15 @@ pub fn choose_best_splits_not_root(
 	});
 
 	// Determine if we should try to split the left and/or right children of this branch.
-	let children_will_exceed_max_depth = if let Some(max_depth) = options.max_depth {
+	let children_will_exceed_max_depth = if let Some(max_depth) = train_options.max_depth {
 		parent_depth + 1 > max_depth - 1
 	} else {
 		false
 	};
 	let should_try_to_split_left_child = !children_will_exceed_max_depth
-		&& left_child_examples_index.len() >= options.min_examples_per_node * 2;
+		&& left_child_examples_index.len() >= train_options.min_examples_per_node * 2;
 	let should_try_to_split_right_child = !children_will_exceed_max_depth
-		&& right_child_examples_index.len() >= options.min_examples_per_node * 2;
+		&& right_child_examples_index.len() >= train_options.min_examples_per_node * 2;
 
 	// If we should not split either left or right, then there is nothing left to do, so we can go to the next item on the queue.
 	if !should_try_to_split_left_child && !should_try_to_split_right_child {
@@ -278,7 +293,7 @@ pub fn choose_best_splits_not_root(
 					left_child_n_examples,
 					left_child_sum_gradients,
 					left_child_sum_hessians,
-					options,
+					train_options,
 				)
 			} else {
 				None
@@ -291,7 +306,7 @@ pub fn choose_best_splits_not_root(
 					right_child_n_examples,
 					right_child_sum_gradients,
 					right_child_sum_hessians,
-					options,
+					train_options,
 				)
 			} else {
 				None
@@ -391,7 +406,7 @@ fn choose_best_split_for_feature(
 	n_examples: usize,
 	sum_gradients: f64,
 	sum_hessians: f64,
-	options: &TrainOptions,
+	train_options: &TrainOptions,
 ) -> Option<ChooseBestSplitForFeatureOutput> {
 	match binning_instructions {
 		BinningInstructions::Number { .. } => choose_best_split_for_continuous_feature(
@@ -401,7 +416,7 @@ fn choose_best_split_for_feature(
 			n_examples,
 			sum_gradients,
 			sum_hessians,
-			options,
+			train_options,
 		),
 		BinningInstructions::Enum { .. } => choose_best_split_for_discrete_feature(
 			feature_index,
@@ -410,7 +425,7 @@ fn choose_best_split_for_feature(
 			n_examples,
 			sum_gradients,
 			sum_hessians,
-			options,
+			train_options,
 		),
 	}
 }
@@ -423,13 +438,13 @@ fn choose_best_split_for_continuous_feature(
 	n_examples_parent: usize,
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
-	options: &TrainOptions,
+	train_options: &TrainOptions,
 ) -> Option<ChooseBestSplitForFeatureOutput> {
 	let mut best_split: Option<ChooseBestSplitForFeatureOutput> = None;
 	let negative_loss_parent_node = compute_negative_loss(
 		sum_gradients_parent,
 		sum_hessians_parent,
-		options.l2_regularization,
+		train_options.l2_regularization,
 	);
 	let count_multiplier = n_examples_parent.to_f64().unwrap() / sum_hessians_parent;
 	let training_data_contains_invalid_values = bin_stats_for_feature[0].sum_hessians > 0.0;
@@ -468,19 +483,19 @@ fn choose_best_split_for_continuous_feature(
 			let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
 			let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
 			// check if we have violated the min samples leaf constraint
-			if left_n_examples < options.min_examples_per_node {
+			if left_n_examples < train_options.min_examples_per_node {
 				continue;
 			}
 			// Since we are in left to right mode, we will only get less examples if we continue so break instead.
-			if right_n_examples < options.min_examples_per_node {
+			if right_n_examples < train_options.min_examples_per_node {
 				break;
 			}
 			// If hessians are positive so the left sum hessians will continue to increase, so we can continue.
-			if left_sum_hessians < options.min_sum_hessians_per_node.to_f64().unwrap() {
+			if left_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
 				continue;
 			}
 			// If hessians are positive so we will continue to violate the min_hessian_to_split condition for the right node, break.
-			if right_sum_hessians < options.min_sum_hessians_per_node.to_f64().unwrap() {
+			if right_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
 				break;
 			}
 			let current_split_gain = compute_gain(
@@ -489,7 +504,7 @@ fn choose_best_split_for_continuous_feature(
 				right_sum_gradients,
 				right_sum_hessians,
 				negative_loss_parent_node,
-				options.l2_regularization,
+				train_options.l2_regularization,
 			);
 			// This is the direction invalid values should be sent.
 			let invalid_values_direction = if choose_best_direction_for_invalid_values {
@@ -531,7 +546,7 @@ fn choose_best_split_for_continuous_feature(
 					}
 				}
 				None => {
-					if current_split.gain > options.min_gain_to_split {
+					if current_split.gain > train_options.min_gain_to_split {
 						best_split = Some(current_split);
 					}
 				}
@@ -554,19 +569,19 @@ fn choose_best_split_for_discrete_feature(
 	n_examples_parent: usize,
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
-	options: &TrainOptions,
+	train_options: &TrainOptions,
 ) -> Option<ChooseBestSplitForFeatureOutput> {
 	let mut best_split_so_far: Option<ChooseBestSplitForFeatureOutput> = None;
 	let training_data_contains_invalid_values = bin_stats_for_feature[0].sum_hessians > 0.0;
-	let l2_regularization =
-		options.l2_regularization + options.supplemental_l2_regularization_for_discrete_splits;
+	let l2_regularization = train_options.l2_regularization
+		+ train_options.supplemental_l2_regularization_for_discrete_splits;
 	let negative_loss_parent_node =
 		compute_negative_loss(sum_gradients_parent, sum_hessians_parent, l2_regularization);
 	let count_multiplier = n_examples_parent.to_f64().unwrap() / sum_hessians_parent;
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let mut left_n_examples = 0;
-	let smoothing_factor = options
+	let smoothing_factor = train_options
 		.smoothing_factor_for_discrete_bin_sorting
 		.to_f64()
 		.unwrap();
@@ -597,19 +612,19 @@ fn choose_best_split_for_discrete_feature(
 			None => break,
 		};
 		// check if we have violated the min samples leaf constraint
-		if left_n_examples < options.min_examples_per_node {
+		if left_n_examples < train_options.min_examples_per_node {
 			continue;
 		}
-		if right_n_examples < options.min_examples_per_node {
+		if right_n_examples < train_options.min_examples_per_node {
 			// since we are in left to right mode, we will only get less examples if we continue so break instead
 			break;
 		}
-		if left_sum_hessians < options.min_sum_hessians_per_node.to_f64().unwrap() {
+		if left_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
 			// Hessians are positive so the left sum hessians will continue to increase,
 			// we can continue.
 			continue;
 		}
-		if right_sum_hessians < options.min_sum_hessians_per_node.to_f64().unwrap() {
+		if right_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
 			// Hessians are positive so we will continue to violate the min_hessian_to_split
 			// condition for the right node, break.
 			break;
@@ -651,7 +666,7 @@ fn choose_best_split_for_discrete_feature(
 				}
 			}
 			None => {
-				if current_split.gain > options.min_gain_to_split {
+				if current_split.gain > train_options.min_gain_to_split {
 					best_split_so_far = Some(current_split)
 				}
 			}

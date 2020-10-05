@@ -46,14 +46,14 @@ impl BinningInstructions {
 /// Compute the binning instructions for each column in `features`.
 pub fn compute_binning_instructions(
 	features: &DataFrameView,
-	options: &TrainOptions,
+	train_options: &TrainOptions,
 ) -> Vec<BinningInstructions> {
 	features
 		.columns
 		.par_iter()
 		.map(|column| match column.view() {
 			ColumnView::Number(column) => {
-				compute_binning_instructions_for_number_feature(column, &options)
+				compute_binning_instructions_for_number_feature(column, &train_options)
 			}
 			ColumnView::Enum(column) => BinningInstructions::Enum {
 				n_options: column.options.len(),
@@ -66,7 +66,7 @@ pub fn compute_binning_instructions(
 /// Compute the binning instructions for a number feature.
 fn compute_binning_instructions_for_number_feature(
 	column: NumberColumnView,
-	options: &TrainOptions,
+	train_options: &TrainOptions,
 ) -> BinningInstructions {
 	// Create a histogram of values in the number feature.
 	let mut histogram: BTreeMap<Finite<f32>, usize> = BTreeMap::new();
@@ -74,7 +74,7 @@ fn compute_binning_instructions_for_number_feature(
 	for value in &column.data[0..column
 		.data
 		.len()
-		.min(options.max_examples_for_computing_bin_thresholds)]
+		.min(train_options.max_examples_for_computing_bin_thresholds)]
 	{
 		if let Ok(value) = Finite::new(*value) {
 			*histogram.entry(value).or_insert(0) += 1;
@@ -83,7 +83,7 @@ fn compute_binning_instructions_for_number_feature(
 	}
 	// If the number of unique values is less than `max_valid_bins_for_number_features`, then create one bin per unique value. Otherwise, create bins at quantiles.
 	let thresholds = if histogram.len()
-		< options
+		< train_options
 			.max_valid_bins_for_number_features
 			.to_usize()
 			.unwrap()
@@ -97,7 +97,7 @@ fn compute_binning_instructions_for_number_feature(
 		compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_histogram(
 			histogram,
 			histogram_values_count,
-			options,
+			train_options,
 		)
 	};
 	BinningInstructions::Number { thresholds }
@@ -107,14 +107,20 @@ fn compute_binning_instructions_for_number_feature(
 fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_histogram(
 	histogram: BTreeMap<Finite<f32>, usize>,
 	histogram_values_count: usize,
-	options: &TrainOptions,
+	train_options: &TrainOptions,
 ) -> Vec<f32> {
 	let total_values_count = histogram_values_count.to_f32().unwrap();
-	let quantiles: Vec<f32> = (1..options
+	let quantiles: Vec<f32> = (1..train_options
 		.max_valid_bins_for_number_features
 		.to_usize()
 		.unwrap())
-		.map(|i| i.to_f32().unwrap() / options.max_valid_bins_for_number_features.to_f32().unwrap())
+		.map(|i| {
+			i.to_f32().unwrap()
+				/ train_options
+					.max_valid_bins_for_number_features
+					.to_f32()
+					.unwrap()
+		})
 		.collect();
 	let quantile_indexes: Vec<usize> = quantiles
 		.iter()
