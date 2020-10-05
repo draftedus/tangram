@@ -2,6 +2,23 @@ use super::binning::BinnedFeaturesColumn;
 use itertools::izip;
 use num_traits::ToPrimitive;
 
+// #[derive(Clone)]
+// pub struct SumGradientsSumHessiansForFeatures {
+// 	pub features: Vec<SumGradientsSumHessiansForFeature>,
+// }
+
+// #[derive(Clone)]
+// pub struct SumGradientsSumHessiansForFeature {
+// 	invalid_bin: SumGradientsSumHessiansForBin,
+// 	bins: Vec<SumGradientsSumHessiansForBin>,
+// }
+
+// #[derive(Clone, Default)]
+// pub struct SumGradientsSumHessiansForBin {
+// 	pub sum_gradients: f64,
+// 	pub sum_hessians: f64,
+// }
+
 #[derive(Clone)]
 pub struct BinStats(pub Vec<Vec<BinStatsEntry>>);
 

@@ -383,8 +383,8 @@ fn compute_features_one_hot_encoded_ndarray(
 		.data;
 	features.fill(0.0);
 	for (mut features, value) in features.axis_iter_mut(Axis(0)).zip(data.iter()) {
-		let index = value.map(|v| v.get()).unwrap_or(0);
-		features[index] = 1.0;
+		let feature_index = value.map(|v| v.get()).unwrap_or(0);
+		features[feature_index] = 1.0;
 		progress();
 	}
 }
