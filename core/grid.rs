@@ -1,6 +1,3 @@
-/*!
-*/
-
 use crate::{config, features, stats};
 use itertools::iproduct;
 
