@@ -20,23 +20,6 @@ use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use tangram_id::Id;
 
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id, search_params).await?;
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/production_stats/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
@@ -126,6 +109,23 @@ struct Quantiles {
 	p25: f32,
 	p50: f32,
 	p75: f32,
+}
+
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+	search_params: Option<BTreeMap<String, String>>,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id, search_params).await?;
+	let html = context
+		.pinwheel
+		.render_with("/repos/_repo_id/models/_model_id/production_stats/", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 async fn props(
@@ -323,6 +323,8 @@ fn compute_production_training_quantiles(
 		},
 	}
 }
+
+// TODO
 
 // const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
 // const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;

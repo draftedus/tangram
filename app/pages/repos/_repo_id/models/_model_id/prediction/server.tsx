@@ -119,16 +119,16 @@ export default function PredictPage(props: Props) {
 			pinwheelInfo={props.pinwheelInfo}
 			selectedItem={ModelSideNavItem.Prediction}
 		>
-			{props.prediction ? (
-				<PredictionOutputInner {...props} />
+			{props.prediction === null ? (
+				<PredictionForm {...props} />
 			) : (
-				<PredictionInputInner {...props} />
+				<PredictionResult {...props} />
 			)}
 		</ModelLayout>,
 	)
 }
 
-function PredictionInputInner(props: Props) {
+function PredictionForm(props: Props) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Prediction'}</ui.H1>
@@ -295,11 +295,12 @@ function TextField(props: TextFieldProps) {
 	)
 }
 
-function PredictionOutputInner(props: Props) {
+function PredictionResult(props: Props) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Prediction'}</ui.H1>
 			<div class="predict-output-items-wrapper">
+				<ui.H2>{'Input'}</ui.H2>
 				{props.columns.map(column => (
 					<div key={column.name}>
 						<span style="color: var(--muted-text-color)">{column.name}</span>
@@ -309,10 +310,10 @@ function PredictionOutputInner(props: Props) {
 				))}
 			</div>
 			{props.prediction &&
-				(props.prediction.type === PredictionType.Classification ? (
-					<ClassificationPredictionOutput {...props.prediction.value} />
-				) : props.prediction.type === PredictionType.Regression ? (
-					<RegressionPredictionOutput {...props.prediction.value} />
+				(props.prediction.type === PredictionType.Regression ? (
+					<RegressionOutput {...props.prediction.value} />
+				) : props.prediction.type === PredictionType.Classification ? (
+					<ClassificationOutput {...props.prediction.value} />
 				) : null)}
 		</ui.S1>
 	)
@@ -320,18 +321,16 @@ function PredictionOutputInner(props: Props) {
 
 type RegressionPredictionOutputProps = RegressionPrediction
 
-function RegressionPredictionOutput(props: RegressionPredictionOutputProps) {
+function RegressionOutput(props: RegressionPredictionOutputProps) {
 	return (
 		<ui.S2>
-			<ui.H2>{'Prediction Output'}</ui.H2>
+			<ui.H2>{'Output'}</ui.H2>
 			<ui.Card>
 				<ui.NumberChart title="Predicted" value={props.value.toString()} />
 			</ui.Card>
 			<ui.H2>{'Explanation'}</ui.H2>
 			<ui.P>
-				{
-					"Each prediction starts out at a baseline equal to the mean prediction in the training dataset. The learned model adjust its output based on what features it sees in the example. The chart below shows which features were most influential in making the model's decision."
-				}
+				{"This chart shows how the input values influenced the model's output."}
 			</ui.P>
 			<ui.Card>
 				<ShapChart
@@ -350,9 +349,7 @@ function RegressionPredictionOutput(props: RegressionPredictionOutputProps) {
 
 type ClassificationPredictionOutputProps = ClassificationPrediction
 
-function ClassificationPredictionOutput(
-	props: ClassificationPredictionOutputProps,
-) {
+function ClassificationOutput(props: ClassificationPredictionOutputProps) {
 	let probabilityData = [
 		{
 			color: ui.colors.blue,
@@ -366,9 +363,9 @@ function ClassificationPredictionOutput(
 	]
 	return (
 		<ui.S2>
-			<ui.H2>{'Prediction Output'}</ui.H2>
+			<ui.H2>{'Output'}</ui.H2>
 			<ui.Card>
-				<ui.NumberChart title="Predicted Class" value={props.className} />
+				<ui.NumberChart title="Prediction" value={props.className} />
 			</ui.Card>
 			<ui.Card>
 				<ui.NumberChart
@@ -385,9 +382,7 @@ function ClassificationPredictionOutput(
 			)}
 			<ui.H2>{'Explanation'}</ui.H2>
 			<ui.P>
-				{
-					"The baseline value is the mean value observed in the training dataset. Each feature in the example influences the model's output, either positively or negatively."
-				}
+				{"This chart shows how the input values influenced the model's output."}
 			</ui.P>
 			<ui.Card>
 				<ShapChart

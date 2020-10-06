@@ -22,19 +22,20 @@ export function drawTooltip(options: DrawTooltipOptions) {
 		values,
 	} = options
 	let tooltipWrapper = document.createElement('div')
-	tooltipWrapper.style.position = 'relative'
-	tooltipWrapper.style.display = 'grid'
-	tooltipWrapper.style.gridGap = '0.5rem'
-	tooltipWrapper.style.grid = 'auto / auto auto'
 	tooltipWrapper.style.alignItems = 'center'
-	tooltipWrapper.style.boxShadow = `0 0 ${chartConfig.tooltipShadowBlur} ${chartColors.current.tooltipShadowColor}`
-	tooltipWrapper.style.width = 'max-content'
-	tooltipWrapper.style.top = `calc(${y}px - 8px)`
-	tooltipWrapper.style.borderRadius = `${chartConfig.tooltipBorderRadius}px`
-	tooltipWrapper.style.font = chartConfig.font
 	tooltipWrapper.style.backgroundColor =
 		chartColors.current.tooltipBackgroundColor
+	tooltipWrapper.style.borderRadius = `${chartConfig.tooltipBorderRadius}px`
+	tooltipWrapper.style.boxShadow = `0 0 ${chartConfig.tooltipShadowBlur} ${chartColors.current.tooltipShadowColor}`
+	tooltipWrapper.style.display = 'grid'
+	tooltipWrapper.style.font = chartConfig.font
+	tooltipWrapper.style.grid = 'auto / auto auto'
+	tooltipWrapper.style.gridGap = '0.5rem'
 	tooltipWrapper.style.padding = `${chartConfig.tooltipPadding}px`
+	tooltipWrapper.style.position = 'relative'
+	tooltipWrapper.style.top = `calc(${y}px - 8px)`
+	tooltipWrapper.style.userSelect = 'none'
+	tooltipWrapper.style.width = 'max-content'
 	tooltipWrapper.style.zIndex = '2'
 	if (centerHorizontal) {
 		tooltipWrapper.style.left = `${x}px`

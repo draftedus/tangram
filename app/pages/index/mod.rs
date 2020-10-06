@@ -11,6 +11,34 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use tangram_id::Id;
 
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Props {
+	repos: Vec<Repo>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Repo {
+	id: String,
+	title: String,
+	created_at: String,
+	owner_name: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(tag = "action")]
+enum Action {
+	#[serde(rename = "delete_repo")]
+	DeleteRepo(DeleteRepoAction),
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DeleteRepoAction {
+	repo_id: String,
+}
+
 pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
 		.pool
@@ -30,25 +58,7 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	Ok(response)
 }
 
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Props {
-	pub repos: Vec<Repo>,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Repo {
-	pub id: String,
-	pub title: String,
-	pub created_at: String,
-	pub owner_name: Option<String>,
-}
-
-pub async fn props(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	user: &Option<User>,
-) -> Result<Props> {
+async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &Option<User>) -> Result<Props> {
 	if let Some(user) = user {
 		props_user(db, user).await
 	} else {
@@ -156,19 +166,6 @@ async fn props_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Props> 
 		})
 		.collect();
 	Ok(Props { repos })
-}
-
-#[derive(serde::Deserialize)]
-#[serde(tag = "action")]
-enum Action {
-	#[serde(rename = "delete_repo")]
-	DeleteRepo(DeleteRepoAction),
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct DeleteRepoAction {
-	pub repo_id: String,
 }
 
 pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {

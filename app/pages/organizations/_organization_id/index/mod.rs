@@ -1,7 +1,7 @@
 use crate::{
 	common::{
 		error::Error,
-		organizations,
+		organizations::{get_organization, Member, Plan},
 		user::{authorize_user, authorize_user_for_organization, User},
 	},
 	Context,
@@ -11,6 +11,97 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use sqlx::prelude::*;
 use tangram_id::Id;
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Props {
+	card: Option<Card>,
+	id: String,
+	members: Vec<Member>,
+	name: String,
+	plan: Plan,
+	user_id: String,
+	repos: Vec<Repo>,
+	stripe_publishable_key: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Repo {
+	id: String,
+	title: String,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Card {
+	brand: String,
+	country: String,
+	exp_month: u8,
+	exp_year: usize,
+	last4: String,
+	name: String,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(tag = "action")]
+enum Action {
+	#[serde(rename = "delete_organization")]
+	DeleteOrganization,
+	#[serde(rename = "change_plan")]
+	ChangePlan(ChangePlanAction),
+	#[serde(rename = "delete_member")]
+	DeleteMember(DeleteMemberAction),
+	#[serde(rename = "start_stripe_checkout")]
+	StartStripeCheckout,
+	#[serde(rename = "finish_stripe_checkout")]
+	FinishStripeCheckout(FinishStripeCheckoutAction),
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename = "camelCase")]
+struct ChangePlanAction {
+	plan: Plan,
+}
+
+#[derive(serde::Deserialize)]
+struct DeleteMemberAction {
+	#[serde(rename = "memberId")]
+	member_id: String,
+}
+
+#[derive(serde::Deserialize)]
+struct FinishStripeCheckoutAction {
+	#[serde(rename = "stripeCheckoutSessionId")]
+	stripe_checkout_session_id: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct StartStripeCheckoutResponse {
+	stripe_checkout_session_id: String,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct StripePaymentMethodResponse {
+	id: String,
+	card: StripeCard,
+	billing_details: BillingDetails,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct StripeCard {
+	brand: String,
+	country: String,
+	exp_month: u8,
+	exp_year: usize,
+	last4: String,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct BillingDetails {
+	name: String,
+}
 
 pub async fn get(
 	request: Request<Body>,
@@ -31,37 +122,6 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Props {
-	card: Option<Card>,
-	id: String,
-	members: Vec<organizations::Member>,
-	name: String,
-	plan: organizations::Plan,
-	user_id: String,
-	repos: Vec<Repo>,
-	stripe_publishable_key: String,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Repo {
-	pub id: String,
-	pub title: String,
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Card {
-	pub brand: String,
-	pub country: String,
-	pub exp_month: u8,
-	pub exp_year: usize,
-	pub last4: String,
-	pub name: String,
-}
-
 async fn props(request: Request<Body>, context: &Context, organization_id: &str) -> Result<Props> {
 	let mut db = context
 		.pool
@@ -76,7 +136,7 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
 		return Err(Error::NotFound.into());
 	}
-	let organization = organizations::get_organization(organization_id, &mut db)
+	let organization = get_organization(organization_id, &mut db)
 		.await?
 		.ok_or(Error::NotFound)?;
 	let card = get_card(
@@ -125,28 +185,7 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 	})
 }
 
-#[derive(serde::Deserialize, Debug)]
-struct BillingDetails {
-	name: String,
-}
-
-#[derive(serde::Deserialize, Debug)]
-struct StripePaymentMethodResponse {
-	id: String,
-	card: StripeCard,
-	billing_details: BillingDetails,
-}
-
-#[derive(serde::Deserialize, Debug)]
-struct StripeCard {
-	brand: String,
-	country: String,
-	exp_month: u8,
-	exp_year: usize,
-	last4: String,
-}
-
-pub async fn get_card(
+async fn get_card(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	stripe_secret_key: &str,
@@ -164,9 +203,7 @@ pub async fn get_card(
 	.bind(&organization_id.to_string())
 	.fetch_optional(&mut *db)
 	.await?;
-
 	let stripe_payment_method_id: Option<String> = row.map(|r| r.get(0));
-
 	match stripe_payment_method_id {
 		Some(stripe_payment_method_id) => {
 			let url = format!(
@@ -192,39 +229,6 @@ pub async fn get_card(
 		}
 		None => Ok(None),
 	}
-}
-
-#[derive(serde::Deserialize)]
-#[serde(tag = "action")]
-enum Action {
-	#[serde(rename = "delete_organization")]
-	DeleteOrganization,
-	#[serde(rename = "change_plan")]
-	ChangePlan(ChangePlanAction),
-	#[serde(rename = "delete_member")]
-	DeleteMember(DeleteMemberAction),
-	#[serde(rename = "start_stripe_checkout")]
-	StartStripeCheckout,
-	#[serde(rename = "finish_stripe_checkout")]
-	FinishStripeCheckout(FinishStripeCheckoutAction),
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename = "camelCase")]
-struct ChangePlanAction {
-	plan: organizations::Plan,
-}
-
-#[derive(serde::Deserialize)]
-struct DeleteMemberAction {
-	#[serde(rename = "memberId")]
-	member_id: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct FinishStripeCheckoutAction {
-	#[serde(rename = "stripeCheckoutSessionId")]
-	pub stripe_checkout_session_id: String,
 }
 
 pub async fn post(
@@ -323,10 +327,10 @@ async fn change_plan(
 ) -> Result<Response<Body>> {
 	let ChangePlanAction { plan } = action;
 	let plan = match plan {
-		organizations::Plan::Trial => "trial",
-		organizations::Plan::Startup => "startup",
-		organizations::Plan::Team => "team",
-		organizations::Plan::Enterprise => "Enterprise",
+		Plan::Trial => "trial",
+		Plan::Startup => "startup",
+		Plan::Team => "team",
+		Plan::Enterprise => "Enterprise",
 	};
 	sqlx::query(
 		"
@@ -350,13 +354,7 @@ async fn change_plan(
 	Ok(response)
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StartStripeCheckoutResponse {
-	pub stripe_checkout_session_id: String,
-}
-
-pub async fn start_stripe_checkout(
+async fn start_stripe_checkout(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	user: User,
@@ -377,7 +375,6 @@ pub async fn start_stripe_checkout(
 	.fetch_optional(&mut *db)
 	.await?
 	.and_then(|r| r.get(0));
-
 	// retrieve or create the stripe customer
 	let stripe_customer_id = match existing_stripe_customer_id {
 		Some(s) => s,
@@ -443,7 +440,7 @@ pub async fn start_stripe_checkout(
 	Ok(response)
 }
 
-pub async fn finish_stripe_checkout(
+async fn finish_stripe_checkout(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	action: FinishStripeCheckoutAction,

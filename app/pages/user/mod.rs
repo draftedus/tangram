@@ -12,6 +12,48 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use tangram_id::Id;
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Props {
+	inner: Inner,
+}
+
+#[derive(serde::Serialize)]
+#[serde(tag = "type", content = "value")]
+enum Inner {
+	#[serde(rename = "auth")]
+	Auth(AuthProps),
+	#[serde(rename = "no_auth")]
+	NoAuth(NoAuthProps),
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AuthProps {
+	email: String,
+	organizations: Vec<Organization>,
+	repos: Vec<Repo>,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NoAuthProps {
+	repos: Vec<Repo>,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Repo {
+	id: String,
+	title: String,
+}
+
+#[derive(serde::Deserialize, Debug)]
+#[serde(tag = "action", rename_all = "camelCase")]
+enum Action {
+	Logout,
+}
+
 pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
 	let mut db = context
 		.pool
@@ -31,46 +73,7 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	Ok(response)
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Props {
-	pub inner: Inner,
-}
-
-#[derive(serde::Serialize)]
-#[serde(tag = "type", content = "value")]
-pub enum Inner {
-	#[serde(rename = "auth")]
-	Auth(AuthProps),
-	#[serde(rename = "no_auth")]
-	NoAuth(NoAuthProps),
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AuthProps {
-	email: String,
-	organizations: Vec<Organization>,
-	repos: Vec<Repo>,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NoAuthProps {
-	repos: Vec<Repo>,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Repo {
-	id: String,
-	title: String,
-}
-
-pub async fn props(
-	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	user: Option<User>,
-) -> Result<Props> {
+async fn props(mut db: &mut sqlx::Transaction<'_, sqlx::Any>, user: Option<User>) -> Result<Props> {
 	if let Some(user) = user {
 		let organizations = get_organizations(&mut db, user.id).await?;
 		let repos = get_user_repositories(&mut db, user.id).await?;
@@ -87,12 +90,6 @@ pub async fn props(
 			inner: Inner::NoAuth(NoAuthProps { repos }),
 		})
 	}
-}
-
-#[derive(serde::Deserialize, Debug)]
-#[serde(tag = "action", rename_all = "camelCase")]
-enum Action {
-	Logout,
 }
 
 pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
@@ -112,7 +109,6 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.await
 		.map_err(|_| Error::BadRequest)?;
 	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-
 	let response = match action {
 		Action::Logout => logout(user, &mut db).await?,
 	};
@@ -120,10 +116,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 	Ok(response)
 }
 
-pub async fn logout(
-	user: User,
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-) -> Result<Response<Body>> {
+async fn logout(user: User, db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Response<Body>> {
 	let now = Utc::now().timestamp();
 	sqlx::query(
 		"
@@ -148,7 +141,7 @@ pub async fn logout(
 	Ok(response)
 }
 
-pub async fn get_user_repositories(
+async fn get_user_repositories(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user_id: Id,
 ) -> Result<Vec<Repo>> {
@@ -174,7 +167,7 @@ pub async fn get_user_repositories(
 		.collect())
 }
 
-pub async fn get_root_user_repositories(
+async fn get_root_user_repositories(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 ) -> Result<Vec<Repo>> {
 	let rows = sqlx::query(

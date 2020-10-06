@@ -12,22 +12,6 @@ use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use tangram_id::Id;
 
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
@@ -95,6 +79,22 @@ struct ClassMetrics {
 	recall: f32,
 }
 
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id).await?;
+	let html = context
+		.pinwheel
+		.render_with("/repos/_repo_id/models/_model_id/", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
+}
+
 async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
 	let mut db = context
 		.pool
@@ -148,10 +148,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			})
 		}
 	};
-
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
-
 	Ok(Props {
 		id: model_id.to_string(),
 		inner,

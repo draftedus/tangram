@@ -11,22 +11,6 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use tangram_id::Id;
 
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id).await?;
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/tuning", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
@@ -54,6 +38,22 @@ struct Metrics {
 	threshold: f32,
 	true_negatives: u64,
 	true_positives: u64,
+}
+
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id).await?;
+	let html = context
+		.pinwheel
+		.render_with("/repos/_repo_id/models/_model_id/tuning", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {

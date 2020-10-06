@@ -18,24 +18,6 @@ use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use tangram_id::Id;
 
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id, search_params).await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/production_metrics/class_metrics",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Props {
@@ -106,6 +88,24 @@ struct ConfusionMatrix {
 struct TrainingProductionMetrics {
 	production: Option<f32>,
 	training: f32,
+}
+
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+	search_params: Option<BTreeMap<String, String>>,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id, search_params).await?;
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/production_metrics/class_metrics",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 async fn props(

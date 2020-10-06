@@ -35,9 +35,9 @@ struct LoginProps {
 }
 
 #[derive(serde::Deserialize)]
-pub struct Action {
-	pub email: String,
-	pub code: Option<String>,
+struct Action {
+	email: String,
+	code: Option<String>,
 }
 
 pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {

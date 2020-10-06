@@ -143,7 +143,6 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 		None
 	};
 	let file_data = file_data.ok_or(Error::BadRequest)?;
-
 	let model = match tangram_core::model::Model::from_slice(&file_data) {
 		Ok(model) => model,
 		Err(e) => {
@@ -186,7 +185,6 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	} else {
 		crate::common::repos::create_root_repo(&mut db, repo_id, title.as_str()).await
 	};
-
 	if result.is_err() {
 		let error = "There was an error uploading your model.";
 		let props = props(&mut db, user, Some(String::from(error)), Some(title), owner).await?;
@@ -210,7 +208,6 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 			.unwrap();
 		return Ok(response);
 	};
-
 	db.commit().await?;
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)

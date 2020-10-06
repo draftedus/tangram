@@ -12,6 +12,24 @@ use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use tangram_id::Id;
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Props {
+	class: String,
+	classes: Vec<String>,
+	precision_recall_curve_data: Vec<PrecisionRecallPoint>,
+	id: String,
+	model_layout_info: ModelLayoutInfo,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PrecisionRecallPoint {
+	precision: f32,
+	recall: f32,
+	threshold: f32,
+}
+
 pub async fn get(
 	request: Request<Body>,
 	context: &Context,
@@ -29,24 +47,6 @@ pub async fn get(
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Props {
-	class: String,
-	classes: Vec<String>,
-	precision_recall_curve_data: Vec<PrecisionRecallPoint>,
-	id: String,
-	model_layout_info: ModelLayoutInfo,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct PrecisionRecallPoint {
-	precision: f32,
-	recall: f32,
-	threshold: f32,
 }
 
 async fn props(
@@ -91,9 +91,7 @@ async fn props(
 		})
 		.collect();
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-
 	db.commit().await?;
-
 	Ok(Props {
 		class,
 		classes,

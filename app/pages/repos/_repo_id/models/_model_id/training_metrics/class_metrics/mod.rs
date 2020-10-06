@@ -12,24 +12,6 @@ use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use tangram_id::Id;
 
-pub async fn get(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Response<Body>> {
-	let props = props(request, context, model_id, search_params).await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/training_metrics/class_metrics",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
@@ -75,6 +57,24 @@ struct MulticlassClassifier {
 	classes: Vec<String>,
 	id: String,
 	class: String,
+}
+
+pub async fn get(
+	request: Request<Body>,
+	context: &Context,
+	model_id: &str,
+	search_params: Option<BTreeMap<String, String>>,
+) -> Result<Response<Body>> {
+	let props = props(request, context, model_id, search_params).await?;
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/training_metrics/class_metrics",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 async fn props(
@@ -171,7 +171,6 @@ fn build_inner_multiclass(
 		0
 	};
 	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
-
 	let class_metrics = &class_metrics[class_index];
 	let class_metrics = ClassMetrics {
 		precision: class_metrics.precision,

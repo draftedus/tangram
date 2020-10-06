@@ -63,20 +63,17 @@ export function BinaryClassifierTrainingMetricsIndexPage(props: Props) {
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>
-						{props.classMetrics.map((_, i) => {
-							let className = props.classes[i]
-							return (
-								<ui.TableRow key={className}>
-									<ui.TableCell>{className}</ui.TableCell>
-									<ui.TableCell>
-										{ui.formatPercent(props.classMetrics[i].precision, 2)}
-									</ui.TableCell>
-									<ui.TableCell>
-										{ui.formatPercent(props.classMetrics[i].recall, 2)}
-									</ui.TableCell>
-								</ui.TableRow>
-							)
-						})}
+						{props.classes.map((className, i) => (
+							<ui.TableRow key={className}>
+								<ui.TableCell>{className}</ui.TableCell>
+								<ui.TableCell>
+									{ui.formatPercent(props.classMetrics[i].precision, 2)}
+								</ui.TableCell>
+								<ui.TableCell>
+									{ui.formatPercent(props.classMetrics[i].recall, 2)}
+								</ui.TableCell>
+							</ui.TableRow>
+						))}
 					</ui.TableBody>
 				</ui.Table>
 			</ui.S2>

@@ -11,6 +11,16 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use tangram_id::Id;
 
+#[derive(serde::Serialize)]
+struct Props {}
+
+#[derive(serde::Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Action {
+	email: String,
+	is_admin: Option<String>,
+}
+
 pub async fn get(
 	_request: Request<Body>,
 	context: &Context,
@@ -28,16 +38,6 @@ pub async fn get(
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
-}
-
-#[derive(serde::Serialize)]
-struct Props {}
-
-#[derive(serde::Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Action {
-	pub email: String,
-	pub is_admin: Option<String>,
 }
 
 pub async fn post(
@@ -78,9 +78,9 @@ async fn add_member(
 	organization_id: Id,
 ) -> Result<Response<Body>> {
 	let Action { email, .. } = action;
-	let inviter_email = user.email;
+	let sender_email = user.email;
 	if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
-		send_invite_email(email.clone(), inviter_email.clone(), sendgrid_api_token).await?;
+		send_invitation_email(email.clone(), sender_email.clone(), sendgrid_api_token).await?;
 	}
 	let user_id = Id::new();
 	let now = Utc::now().timestamp();
@@ -129,7 +129,7 @@ async fn add_member(
 	Ok(response)
 }
 
-async fn send_invite_email(
+async fn send_invitation_email(
 	email: String,
 	inviter_email: String,
 	sendgrid_api_token: String,

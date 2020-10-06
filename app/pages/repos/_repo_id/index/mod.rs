@@ -11,6 +11,32 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use tangram_id::Id;
 
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Props {
+	models: Vec<Model>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Model {
+	id: String,
+	created_at: String,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(tag = "action")]
+enum Action {
+	#[serde(rename = "delete_model")]
+	DeleteModel(DeleteModelAction),
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DeleteModelAction {
+	model_id: String,
+}
+
 pub async fn get(
 	request: Request<Body>,
 	context: &Context,
@@ -40,20 +66,7 @@ pub async fn get(
 	Ok(response)
 }
 
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Props {
-	pub models: Vec<Model>,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Model {
-	pub id: String,
-	pub created_at: String,
-}
-
-pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, repo_id: Id) -> Result<Props> {
+async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, repo_id: Id) -> Result<Props> {
 	let rows = sqlx::query(
 		"
 			select
@@ -83,19 +96,6 @@ pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, repo_id: Id) -> Re
 	Ok(Props { models })
 }
 
-#[derive(serde::Deserialize)]
-#[serde(tag = "action")]
-enum Action {
-	#[serde(rename = "delete_model")]
-	DeleteModel(DeleteModelAction),
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct DeleteModelAction {
-	pub model_id: String,
-}
-
 pub async fn post(
 	mut request: Request<Body>,
 	context: &Context,
@@ -113,7 +113,6 @@ pub async fn post(
 	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-
 	match action {
 		Action::DeleteModel(DeleteModelAction { model_id, .. }) => {
 			let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
@@ -133,9 +132,7 @@ pub async fn post(
 			.await?;
 		}
 	}
-
 	db.commit().await?;
-
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, format!("/repos/{}/", repo_id))

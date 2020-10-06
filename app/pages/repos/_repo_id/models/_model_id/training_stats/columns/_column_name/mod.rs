@@ -117,11 +117,9 @@ async fn props(
 			model.overall_target_column_stats,
 		),
 	};
-
 	let column_index = column_stats
 		.iter()
 		.position(|column_stats| column_stats.column_name() == column_name);
-
 	let column = if target_column_stats.column_name() == column_name {
 		target_column_stats
 	} else if let Some(column_index) = column_index {
@@ -132,7 +130,6 @@ async fn props(
 	} else {
 		return Err(Error::NotFound.into());
 	};
-
 	let inner = match column {
 		tangram_core::model::ColumnStats::Unknown(_) => unimplemented!(),
 		tangram_core::model::ColumnStats::Number(column) => Inner::Number(Number {
@@ -167,7 +164,6 @@ async fn props(
 				.collect(),
 		}),
 	};
-
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
 	Ok(Props {

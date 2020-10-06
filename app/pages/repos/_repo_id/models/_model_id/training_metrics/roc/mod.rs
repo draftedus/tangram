@@ -12,6 +12,24 @@ use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use tangram_id::Id;
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Props {
+	id: String,
+	roc_curve_data: Vec<ROCCurveData>,
+	classes: Vec<String>,
+	model_layout_info: ModelLayoutInfo,
+	class: String,
+	auc_roc: f32,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ROCCurveData {
+	false_positive_rate: f32,
+	true_positive_rate: f32,
+}
+
 pub async fn get(
 	request: Request<Body>,
 	context: &Context,
@@ -29,24 +47,6 @@ pub async fn get(
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Props {
-	id: String,
-	roc_curve_data: Vec<ROCCurveData>,
-	classes: Vec<String>,
-	model_layout_info: ModelLayoutInfo,
-	class: String,
-	auc_roc: f32,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ROCCurveData {
-	false_positive_rate: f32,
-	true_positive_rate: f32,
 }
 
 async fn props(
@@ -93,9 +93,7 @@ async fn props(
 				.collect();
 			let auc_roc = metrics.auc_roc;
 			let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-
 			db.commit().await?;
-
 			Ok(Props {
 				id: model_id.to_string(),
 				classes,

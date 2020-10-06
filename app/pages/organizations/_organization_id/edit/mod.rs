@@ -10,6 +10,20 @@ use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use tangram_id::Id;
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Props {
+	id: String,
+	members: Vec<organizations::Member>,
+	name: String,
+	plan: organizations::Plan,
+}
+
+#[derive(serde::Deserialize)]
+struct Action {
+	name: String,
+}
+
 pub async fn get(
 	request: Request<Body>,
 	context: &Context,
@@ -27,15 +41,6 @@ pub async fn get(
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Props {
-	id: String,
-	members: Vec<organizations::Member>,
-	name: String,
-	plan: organizations::Plan,
 }
 
 async fn props(request: Request<Body>, context: &Context, organization_id: &str) -> Result<Props> {
@@ -63,11 +68,6 @@ async fn props(request: Request<Body>, context: &Context, organization_id: &str)
 	})
 }
 
-#[derive(serde::Deserialize)]
-pub struct Action {
-	pub name: String,
-}
-
 pub async fn post(
 	mut request: Request<Body>,
 	context: &Context,
@@ -93,9 +93,7 @@ pub async fn post(
 	authorize_user_for_organization(&mut db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
-
 	let Action { name } = action;
-
 	sqlx::query(
 		"
 			update organizations
@@ -108,7 +106,6 @@ pub async fn post(
 	.execute(&mut *db)
 	.await?;
 	db.commit().await?;
-
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
