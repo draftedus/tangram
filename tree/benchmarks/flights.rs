@@ -6,6 +6,8 @@ use tangram_metrics::{Metric, StreamingMetric};
 
 fn main() {
 	// Load the data.
+	// let csv_file_path_train = Path::new("data/flights-100k.csv");
+	// let csv_file_path_test = Path::new("data/flights-test.csv");
 	let csv_file_path_train = Path::new("data/flights-1m.csv");
 	let csv_file_path_test = Path::new("data/flights-test.csv");
 	// let csv_file_path_train = Path::new("data/flights-10m.csv");

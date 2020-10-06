@@ -7,6 +7,9 @@ from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 # load the data
+# path = 'data/higgs-small.csv'
+# nrows_train = 450_000
+# nrows_test = 50_000
 path = 'data/higgs.csv'
 nrows_train = 10_500_000
 nrows_test = 500_000

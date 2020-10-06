@@ -207,8 +207,6 @@ pub fn choose_best_splits_not_root(
 		left_child_n_examples,
 		..
 	} = options;
-	#[cfg(feature = "timing")]
-	let timing = options.timing;
 	let mut left_child_output = ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 		sum_gradients: left_child_sum_gradients,
 		sum_hessians: left_child_sum_hessians,
@@ -279,8 +277,6 @@ pub fn choose_best_splits_not_root(
 			),
 		)| {
 			// Compute the bin stats for the child with fewer examples.
-			#[cfg(feature = "timing")]
-			let start = std::time::Instant::now();
 			compute_bin_stats_for_feature_not_root(
 				smaller_child_bin_stats_for_feature,
 				smaller_child_examples_index,
@@ -289,8 +285,6 @@ pub fn choose_best_splits_not_root(
 				hessians_ordered_buffer,
 				hessians_are_constant,
 			);
-			#[cfg(feature = "timing")]
-			timing.compute_bin_stats_not_root.inc(start.elapsed());
 
 			// Compute the larger child bin stats by subtraction.
 			compute_bin_stats_for_feature_not_root_subtraction(

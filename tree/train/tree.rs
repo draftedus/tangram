@@ -335,6 +335,8 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 		timing.rearrange_examples_index.inc(start.elapsed());
 
 		// Choose the best splits for each of the right and left children of this new branch.
+		#[cfg(feature = "timing")]
+		let start = std::time::Instant::now();
 		let (left_child_best_split_output, right_child_best_split_output) =
 			choose_best_splits_not_root(ChooseBestSplitsNotRootOptions {
 				bin_stats_pool,
@@ -359,6 +361,8 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 				timing,
 				train_options,
 			});
+		#[cfg(feature = "timing")]
+		timing.choose_best_split.inc(start.elapsed());
 
 		// Add a queue item or leaf for the left child.
 		match left_child_best_split_output {

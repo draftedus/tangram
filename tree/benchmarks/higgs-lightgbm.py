@@ -7,12 +7,12 @@ import pandas as pd
 import lightgbm as lgb
 
 # load the data
-# path = 'data/higgs.csv'
-# nrows_train = 10_500_000
-# nrows_test = 500_000
-path = 'data/higgs-small.csv'
-nrows_train = 450_000
-nrows_test = 50_000
+# path = 'data/higgs-small.csv'
+# nrows_train = 450_000
+# nrows_test = 50_000
+path = 'data/higgs.csv'
+nrows_train = 10_500_000
+nrows_test = 500_000
 target = "signal"
 data = pd.read_csv(
 	path,
@@ -61,6 +61,7 @@ labels = data[target]
 # train the model
 start = time()
 model = lgb.LGBMClassifier(
+	force_col_wise=True,
 	learning_rate=0.1,
 	max_depth=9,
 	n_estimators=100,

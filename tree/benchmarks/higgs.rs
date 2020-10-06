@@ -8,10 +8,10 @@ use tangram_thread_pool::pzip;
 
 fn main() {
 	// Load the data.
-	// let csv_file_path = Path::new("data/higgs.csv");
-	// let (nrows_train, _) = (10_500_000, 500_000);
-	let csv_file_path = Path::new("data/higgs-small.csv");
-	let (nrows_train, _) = (450_000, 50_000);
+	let csv_file_path = Path::new("data/higgs.csv");
+	let (nrows_train, _) = (10_500_000, 500_000);
+	// let csv_file_path = Path::new("data/higgs-small.csv");
+	// let (nrows_train, _) = (450_000, 50_000);
 	let target_column_index = 0;
 	let options = FromCsvOptions {
 		column_types: Some(btreemap! {
@@ -55,6 +55,7 @@ fn main() {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
+	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
 		max_depth: Some(9),
@@ -68,6 +69,7 @@ fn main() {
 		train_options,
 		&mut |_| {},
 	);
+	println!("{:?}", start.elapsed());
 
 	// Make predictions on the test data and compute metrics.
 	let features_test = features_test.to_rows();
