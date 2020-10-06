@@ -469,11 +469,9 @@ fn choose_best_split_for_continuous_feature(
 	train_options: &TrainOptions,
 ) -> Option<ChooseBestSplitForFeatureOutput> {
 	let mut best_split_for_feature: Option<ChooseBestSplitForFeatureOutput> = None;
-	let negative_loss_for_parent_node = compute_negative_loss(
-		sum_gradients_parent,
-		sum_hessians_parent,
-		train_options.l2_regularization,
-	);
+	let l2_regularization = train_options.l2_regularization;
+	let negative_loss_for_parent_node =
+		compute_negative_loss(sum_gradients_parent, sum_hessians_parent, l2_regularization);
 	let mut left_approximate_n_examples = 0;
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
@@ -533,7 +531,7 @@ fn choose_best_split_for_continuous_feature(
 			right_sum_gradients,
 			right_sum_hessians,
 			negative_loss_for_parent_node,
-			train_options.l2_regularization,
+			l2_regularization,
 		);
 		// If this split has a higher gain or if there is no existing best split, then use this split.
 		if best_split_for_feature
@@ -573,108 +571,98 @@ fn choose_best_split_for_discrete_feature(
 	sum_hessians_parent: f64,
 	train_options: &TrainOptions,
 ) -> Option<ChooseBestSplitForFeatureOutput> {
-	let mut best_split_so_far: Option<ChooseBestSplitForFeatureOutput> = None;
-	let training_data_contains_invalid_values = bin_stats_for_feature[0].sum_hessians > 0.0;
+	let mut best_split_for_feature: Option<ChooseBestSplitForFeatureOutput> = None;
 	let l2_regularization = train_options.l2_regularization
 		+ train_options.supplemental_l2_regularization_for_discrete_splits;
-	let negative_loss_parent_node =
+	let negative_loss_for_parent_node =
 		compute_negative_loss(sum_gradients_parent, sum_hessians_parent, l2_regularization);
-	let count_multiplier = n_examples_parent.to_f64().unwrap() / sum_hessians_parent;
+	let mut left_approximate_n_examples = 0;
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
-	let mut left_n_examples = 0;
+	// Sort the bin stats using a scoring function.
 	let smoothing_factor = train_options
 		.smoothing_factor_for_discrete_bin_sorting
 		.to_f64()
 		.unwrap();
-	let categorical_bin_score =
-		|bin: &BinStatsEntry| bin.sum_gradients / (bin.sum_hessians + smoothing_factor);
-	let mut sorted_bin_stats: Vec<(usize, &BinStatsEntry)> =
+	let mut sorted_bin_stats_for_feature: Vec<(usize, &BinStatsEntry)> =
 		bin_stats_for_feature.iter().enumerate().collect();
-	sorted_bin_stats.sort_by(|(_, a), (_, b)| {
-		categorical_bin_score(a)
-			.partial_cmp(&categorical_bin_score(b))
-			.unwrap()
+	sorted_bin_stats_for_feature.sort_by(|(_, a), (_, b)| {
+		let score_a = a.sum_gradients / (a.sum_hessians + smoothing_factor);
+		let score_b = b.sum_gradients / (b.sum_hessians + smoothing_factor);
+		score_a.partial_cmp(&score_b).unwrap()
 	});
+	// For each bin, determine if splitting at that bin's value would produce a better split.
 	let mut directions = vec![SplitDirection::Right; binning_instructions.n_bins()];
-	let iter = sorted_bin_stats[0..sorted_bin_stats.len() - 1].iter();
-	for (bin_index, bin_stats_entry) in iter {
+	for (bin_index, bin_stats_entry) in
+		sorted_bin_stats_for_feature[0..bin_stats_for_feature.len() - 1].iter()
+	{
 		*directions.get_mut(*bin_index).unwrap() = SplitDirection::Left;
-		// Approximate the number of examples that go left by assuming it is proporational to the sum of the hessians.
-		left_n_examples += (bin_stats_entry.sum_hessians * count_multiplier)
+		// Approximate the number of examples that would be sent to the left child by assuming the fraction of examples is equal to the fraction of the sum of hessians.
+		left_approximate_n_examples += (bin_stats_entry.sum_hessians
+			* n_examples_parent.to_f64().unwrap()
+			/ sum_hessians_parent)
 			.round()
 			.to_usize()
 			.unwrap();
 		left_sum_gradients += bin_stats_entry.sum_gradients;
 		left_sum_hessians += bin_stats_entry.sum_hessians;
+		// Above we approximate the number of examples based on the sum of hessians. It is possible this approximation is off by enough that left_approximate_n_examples exceeds n_examples_parent. If this happens, we must not consider any further bins as the split value by exiting the loop.
+		let right_approximate_n_examples =
+			match n_examples_parent.checked_sub(left_approximate_n_examples) {
+				Some(right_n_examples) => right_n_examples,
+				None => break,
+			};
+		// Compute the sum of gradients and hessians for the examples that would be sent to the right by this split. To make this fast, subtract the values for the left child from the parent.
 		let right_sum_gradients = sum_gradients_parent - left_sum_gradients;
 		let right_sum_hessians = sum_hessians_parent - left_sum_hessians;
-		let right_n_examples = match n_examples_parent.checked_sub(left_n_examples) {
-			Some(right_n_examples) => right_n_examples,
-			None => break,
-		};
-		// check if we have violated the min samples leaf constraint
-		if left_n_examples < train_options.min_examples_per_node {
+		// Check if fewer than `min_examples_per_node` would be sent to the left child by this split.
+		if left_approximate_n_examples < train_options.min_examples_per_node {
 			continue;
 		}
-		if right_n_examples < train_options.min_examples_per_node {
-			// since we are in left to right mode, we will only get less examples if we continue so break instead
+		// Check if fewer than `min_examples_per_node` would be sent to the right child by this split. If true, then splitting by the thresholds for all subsequent bins will also fail, so we can exit the loop.
+		if right_approximate_n_examples < train_options.min_examples_per_node {
 			break;
 		}
+		// Check if the sum of hessians for examples that would be sent to the left child by this split falls below `min_sum_hessians_per_node`.
 		if left_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
-			// Hessians are positive so the left sum hessians will continue to increase,
-			// we can continue.
 			continue;
 		}
+		// Check if the sum of hessians for examples that would be sent to the right child by this split falls below `min_sum_hessians_per_node`. If true, then splitting by the thresholds for all subsequent bins will also fail, so we can exit the loop. This is true because hessians are always positive.
 		if right_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
-			// Hessians are positive so we will continue to violate the min_hessian_to_split
-			// condition for the right node, break.
 			break;
 		}
-		let current_split_gain = compute_gain(
+		// Compute the gain for this candidate split.
+		let gain = compute_gain(
 			left_sum_gradients,
 			left_sum_hessians,
 			right_sum_gradients,
 			right_sum_hessians,
-			negative_loss_parent_node,
+			negative_loss_for_parent_node,
 			l2_regularization,
 		);
-		if !training_data_contains_invalid_values {
-			// no invalid values, send invalid values to the child with more examples
-			if left_n_examples > right_n_examples {
-				*directions.get_mut(0).unwrap() = SplitDirection::Left;
-			} else {
-				*directions.get_mut(0).unwrap() = SplitDirection::Right;
-			}
-		}
-		let split = TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-			feature_index,
-			directions: directions.clone(),
-		});
-		let current_split = ChooseBestSplitForFeatureOutput {
-			gain: current_split_gain,
-			left_approximate_n_examples: left_n_examples,
-			left_sum_gradients,
-			left_sum_hessians,
-			right_approximate_n_examples: right_n_examples,
-			right_sum_gradients,
-			right_sum_hessians,
-			split,
-		};
-		match &best_split_so_far {
-			Some(current_best_split) => {
-				if current_split.gain > current_best_split.gain {
-					best_split_so_far = Some(current_split)
-				}
-			}
-			None => {
-				if current_split.gain > train_options.min_gain_to_split {
-					best_split_so_far = Some(current_split)
-				}
-			}
+		// If this split has a higher gain or if there is no existing best split, then use this split.
+		if best_split_for_feature
+			.as_ref()
+			.map(|best_split_for_feature| gain > best_split_for_feature.gain)
+			.unwrap_or(true)
+		{
+			let split = TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+				feature_index,
+				directions: directions.clone(),
+			});
+			best_split_for_feature = Some(ChooseBestSplitForFeatureOutput {
+				gain,
+				split,
+				left_approximate_n_examples,
+				left_sum_gradients,
+				left_sum_hessians,
+				right_approximate_n_examples,
+				right_sum_gradients,
+				right_sum_hessians,
+			});
 		}
 	}
-	best_split_so_far
+	best_split_for_feature
 }
 
 /// The gain is a value that is used to measure how good a given split is.
