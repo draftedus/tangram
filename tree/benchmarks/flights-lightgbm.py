@@ -127,8 +127,6 @@ model = lgb.LGBMClassifier(
 	learning_rate=0.1,
 	n_estimators=100,
 	num_leaves=512,
-	max_depth=10000,
-	verbose=4,
 )
 categorical_features = ["Month", "DayofMonth", "DayOfWeek", "UniqueCarrier", "Origin", "Dest"]
 model.fit(
