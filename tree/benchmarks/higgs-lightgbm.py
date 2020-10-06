@@ -61,7 +61,6 @@ labels = data[target]
 # train the model
 start = time()
 model = lgb.LGBMClassifier(
-	force_col_wise=True,
 	learning_rate=0.1,
 	max_depth=9,
 	n_estimators=100,
