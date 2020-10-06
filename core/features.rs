@@ -300,7 +300,7 @@ fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStatsOutput) -
 		.iter()
 		.map(|token| (token.token.to_owned(), token.idf))
 		.collect::<Vec<(String, f32)>>();
-	// tokens must be sorted because we perform a binary search through them later
+	// Tokens must be sorted because we perform a binary search through them later.
 	tokens.sort_by(|(a, _), (b, _)| a.cmp(b));
 	FeatureGroup::BagOfWords(BagOfWordsFeatureGroup {
 		source_column_name: column_stats.column_name.to_owned(),
@@ -318,7 +318,6 @@ pub fn compute_features_ndarray(
 ) {
 	let mut feature_index = 0;
 	for feature_group in feature_groups.iter() {
-		// update for each feature group
 		let n_features_in_group = feature_group.n_features();
 		let slice = s![.., feature_index..feature_index + n_features_in_group];
 		let features = features.slice_mut(slice);

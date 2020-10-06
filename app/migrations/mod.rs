@@ -15,7 +15,7 @@ pub async fn run(database_pool: &sqlx::AnyPool) -> Result<()> {
 	let migrations = migrations();
 	let mut db = database_pool.begin().await?;
 
-	// create the _migrations table if necessary
+	// Create the _migrations table if necessary.
 	sqlx::query(
 		"
 			create table if not exists _migrations (
@@ -26,7 +26,7 @@ pub async fn run(database_pool: &sqlx::AnyPool) -> Result<()> {
 	.execute(&mut db)
 	.await?;
 
-	// apply each migration in a transaction if it has not been applied already
+	// Apply each migration in a transaction if it has not been applied already.
 	for (name, sql) in migrations {
 		let mut db = db.begin().await?;
 		let migration_has_run: bool = sqlx::query(

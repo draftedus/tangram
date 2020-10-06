@@ -273,8 +273,7 @@ impl NumberColumnStats {
 			valid_count: 0,
 		};
 		for value in column.data {
-			// if value parses as finite f32, add it to the histogram
-			// otherwise, increment the invalid count
+			// If the value parses as a finite f32, add it to the histogram. Otherwise, increment the invalid count.
 			if let Ok(value) = <Finite<f32>>::new(*value) {
 				*stats.histogram.entry(value).or_insert(0) += 1;
 				stats.valid_count += 1;

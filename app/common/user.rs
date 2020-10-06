@@ -26,7 +26,7 @@ pub async fn authorize_user(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	auth_enabled: bool,
 ) -> Result<Result<Option<User>, AuthorizeUserError>> {
-	// when auth is disabled, everyone is authorized as the root user
+	// When auth is disabled, everyone is authorized as the root user.
 	if !auth_enabled {
 		return Ok(Ok(None));
 	}

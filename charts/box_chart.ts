@@ -77,7 +77,7 @@ export function drawBoxChart(
 	let height = ctx.canvas.clientHeight
 	let hoverRegions: Array<HoverRegion<BoxChartHoverRegionInfo>> = []
 
-	// compute bounds
+	// Compute the bounds.
 	let yMin: number
 	if (options.yMin !== undefined) {
 		yMin = options.yMin
@@ -127,7 +127,7 @@ export function drawBoxChart(
 		(chartBox.w - chartConfig.barGroupGap * (categories.length + 1)) /
 		categories.length
 
-	// draw x axis labels
+	// Draw the X axis labels.
 	if (options.shouldDrawXAxisLabels ?? true) {
 		drawBarChartXAxisLabels({
 			barGroupGap: chartConfig.barGroupGap,
@@ -151,7 +151,7 @@ export function drawBoxChart(
 		yAxisGridLineInfo,
 	})
 
-	// draw y axis labels
+	// Draw the Y axis labels.
 	if (options.shouldDrawYAxisLabels ?? true) {
 		drawYAxisLabels({
 			box: yAxisLabelsBox,
@@ -174,7 +174,7 @@ export function drawBoxChart(
 		title: yAxisTitle,
 	})
 
-	// draw boxes
+	// Draw the boxes.
 	data.forEach((series, seriesIndex) => {
 		series.data.forEach((point, pointIndex) => {
 			let output = drawBox({
@@ -303,7 +303,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 	} = options
 	let hoverRegions: Array<HoverRegion<BoxChartHoverRegionInfo>> = []
 
-	// ignore boxes with null
+	// Ignore boxes with null values.
 	if (!point.y) {
 		return { hoverRegions }
 	}
@@ -323,7 +323,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		(-yMin / (yMax - yMin)) * chartBox.h -
 		(value / (yMax - yMin)) * chartBox.h
 
-	// box
+	// Draw the box.
 	let box = {
 		h: (Math.abs(point.y.p75 - point.y.p25) / (yMax - yMin)) * chartBox.h,
 		w: boxWidth,
@@ -343,7 +343,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		strokeWidth: chartConfig.barStrokeWidth,
 	})
 
-	// median line
+	// Draw the median line.
 	let medianBox = {
 		h: lineWidth,
 		w: boxWidth,
@@ -368,7 +368,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		}),
 	)
 
-	// min
+	// Draw the min line.
 	drawLine({
 		color: series.color,
 		ctx,
@@ -410,7 +410,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		}),
 	)
 
-	//max
+	// Draw the max line.
 	drawLine({
 		color: series.color,
 		ctx,
@@ -455,7 +455,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		}),
 	)
 
-	// p25 hit region
+	// Register the p25 hit region.
 	let p25Box = {
 		h: lineWidth,
 		w: boxWidth,
@@ -476,7 +476,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		}),
 	)
 
-	// p75 hit region
+	// Register the p75 hit region.
 	let p75Box = {
 		h: lineWidth,
 		w: boxWidth,

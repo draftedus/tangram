@@ -15,7 +15,7 @@ let codeForLanguage = {
 	})
 }
 
-// at a later point, perhaps on a timer
+// Do this at a later point, perhaps on a timer.
 model.flushLogQueue()`,
 	[Language.Python]: `for input in inputs:
 	output = model.predict_sync(input)
@@ -24,7 +24,7 @@ model.flushLogQueue()`,
 		output=output,
 	)
 
-// at a later point, perhaps on a timer
+// Do this at a later point, perhaps on a timer.
 model.flush_log_queue()`,
 	[Language.Ruby]: `for input in inputs do
 	output = model.predict_sync(input)
@@ -34,7 +34,7 @@ model.flush_log_queue()`,
 	)
 end
 
-// at a later point, perhaps on a timer
+// Do this at a later point, perhaps on a timer.
 model.flush_log_queue()`,
 	[Language.Go]: `for i, input := range inputs {
 	output := model.PredictOne(input, nil)
@@ -45,6 +45,6 @@ model.flush_log_queue()`,
 	model.EnqueLogPrediction(predictionEvent)
 }
 
-// at a later point, perhaps on a timer
+// Do this at a later point, perhaps on a timer.
 err := model.FlushLogQueue()`,
 }

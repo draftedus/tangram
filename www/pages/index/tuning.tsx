@@ -49,7 +49,7 @@ export function Tuning() {
 					</div>
 				</div>
 				<ui.Code
-					code={`// update your code to use the selected threshold.\nmodel.predict(input, { threshold: ${thresholdString} })`}
+					code={`// Update your code to use the selected threshold.\nmodel.predict(input, { threshold: ${thresholdString} })`}
 					language={ui.Language.JavaScript}
 				/>
 			</div>

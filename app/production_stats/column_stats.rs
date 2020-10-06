@@ -453,7 +453,7 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 		// 		let tokens = tokenizer.tokenize(value);
 		// 		let bigrams = tangram_core::util::text::bigrams(&tokens);
 		// 		for token in tokens.iter().chain(bigrams.iter()) {
-		// 			// insert the token into the histogram
+		// 			// Insert the token into the histogram.
 		// 			match self.token_histogram.get_mut(token) {
 		// 				Some(count) => *count += 1,
 		// 				None => {

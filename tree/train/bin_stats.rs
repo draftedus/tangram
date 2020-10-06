@@ -45,7 +45,7 @@ pub fn compute_bin_stats_for_feature_root(
 	gradients: &[f32],
 	// (n_examples)
 	hessians: &[f32],
-	// hessians are constant in least squares loss, so we don't have to waste time updating them
+	// The hessians are constant in least squares loss, so we don't have to waste time updating them.
 	hessians_are_constant: bool,
 ) {
 	for entry in bin_stats_for_feature.iter_mut() {

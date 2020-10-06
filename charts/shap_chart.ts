@@ -99,7 +99,7 @@ export function drawShapChart(
 	let annotationsPadding = 80
 	let hoverRegions: Array<HoverRegion<ShapChartHoverRegionInfo>> = []
 
-	// compute bounds
+	// Compute the bounds.
 	let xMin = Math.min(
 		...data.flatMap(classShapValues => classShapValues.baseline),
 		...data.flatMap(classShapValues => classShapValues.output),
@@ -222,7 +222,7 @@ export function drawShapChart(
 		drawYAxisTitle({ box: yAxisTitlesBox, ctx, title: 'Class' })
 	}
 
-	// compute grid line info
+	// Compute the grid line info.
 	let xAxisGridLineInfo = computeXAxisGridLineInfo({
 		chartWidth: chartBox.w,
 		ctx,
@@ -260,7 +260,7 @@ export function drawShapChart(
 		})
 	}
 
-	// draw group separators
+	// Draw the group separators.
 	for (let i = 1; i < categories.length; i++) {
 		let y =
 			chartBox.y +
@@ -277,7 +277,7 @@ export function drawShapChart(
 
 	let valueWidthMultiplier = chartBox.w / (xMax - xMin)
 	data.forEach((shapValues, shapValuesIndex) => {
-		// draw shap boxes
+		// Draw the shap boxes.
 		let sumPositives = shapValues.values
 			.filter(shapValue => shapValue.value > 0)
 			.reduce((posSum, shapValue) => (posSum += shapValue.value), 0.0)
@@ -345,14 +345,12 @@ function drawShap(options: DrawShapOptions): DrawShapChartOutput {
 
 	let min = Math.min(shapValues.baseline, shapValues.output)
 
-	// positive box
-	// starts at baseline and goes to max
+	// Draw the positive box which starts at baseline and goes to max.
 	let positiveValues = shapValues.values
 		.filter(shapValue => shapValue.value > 0)
 		.sort((a, b) => (a.value > b.value ? -1 : 1))
 	let x = box.x + (shapValues.baseline - min) * valueWidthMultiplier
 	let positiveValuesIndex = 0
-
 	ctx.textBaseline = 'bottom'
 	ctx.textAlign = 'right'
 	ctx.fillText(
@@ -401,7 +399,7 @@ function drawShap(options: DrawShapOptions): DrawShapChartOutput {
 		x += width
 		positiveValuesIndex += 1
 	}
-	// the rest of the values should be grouped into a single group
+	// The rest of the values should be grouped into a single group.
 	let nGrouped = 0
 	let groupedBoxWidth = 0
 	for (let i = positiveValuesIndex; i < positiveValues.length; i++) {
@@ -438,7 +436,7 @@ function drawShap(options: DrawShapOptions): DrawShapChartOutput {
 		)
 	}
 
-	// negative box
+	// Draw the negative box.
 	x = box.x + box.w
 	let y = box.y + shapValueBoxHeight + chartConfig.shapBarGap
 	let negativeValues = shapValues.values
@@ -446,7 +444,7 @@ function drawShap(options: DrawShapOptions): DrawShapChartOutput {
 		.sort((a, b) => (a.value > b.value ? -1 : 1))
 	groupedBoxWidth = 0
 	nGrouped = 0
-	// the first values should be grouped together
+	// The first values should be grouped together.
 	let negativeValuesIndex = 0
 	while (negativeValuesIndex < negativeValues.length) {
 		let shapValue = negativeValues[negativeValuesIndex]
@@ -683,7 +681,7 @@ export let drawShapBox = (options: DrawShapBoxOptions) => {
 	let drawEndArrow = true
 	let drawStartArrow = true
 
-	// endpoint
+	// Draw the endpoint.
 	if (drawEndArrow) {
 		ctx.lineTo(box.x + width - arrowDepth, box.y)
 		ctx.lineTo(box.x + width, box.y + box.h / 2)
@@ -693,7 +691,7 @@ export let drawShapBox = (options: DrawShapBoxOptions) => {
 		ctx.lineTo(box.x + width, box.y + box.h)
 	}
 
-	// startpoint
+	// Draw the startpoint.
 	if (drawStartArrow) {
 		ctx.lineTo(box.x, box.y + box.h)
 		ctx.lineTo(box.x + arrowDepth, box.y + box.h / 2)

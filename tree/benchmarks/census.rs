@@ -4,7 +4,7 @@ use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;
 
 fn main() {
-	// load the data
+	// Load the data.
 	let csv_file_path = Path::new("data/census.csv");
 	let n_rows_train = 26049;
 	let n_rows_test = 6512;
@@ -16,7 +16,7 @@ fn main() {
 	let labels_train = labels_train.as_enum().unwrap();
 	let labels_test = labels_test.as_enum().unwrap();
 
-	// train the model
+	// Train the model.
 	let model = tangram_tree::BinaryClassifier::train(
 		features_train,
 		labels_train.clone(),
@@ -24,12 +24,12 @@ fn main() {
 		&mut |_| {},
 	);
 
-	// make predictions on the test data
+	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
 	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((n_rows_test, 2)) };
 	model.predict(features_test.view(), probabilities.view_mut());
 
-	// compute metrics
+	// Compute Metrics.
 	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
 	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),

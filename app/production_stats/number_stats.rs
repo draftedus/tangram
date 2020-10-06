@@ -10,7 +10,7 @@ pub struct NumberStats {
 	pub max: f32,
 	pub mean: f64,
 	pub m2: f64,
-	/// We keep a reservoir of random samples to get an estimate for quantiles.
+	/// Keep a reservoir of random samples to get an estimate for quantiles.
 	pub reservoir: Vec<f32>,
 	pub reservoir_max_size: usize,
 }
@@ -88,13 +88,12 @@ impl StreamingMetric<'_> for NumberStats {
 	fn finalize(self) -> Self::Output {
 		let reservoir_len = self.reservoir.len().to_f32().unwrap();
 		let quantiles: Vec<f32> = vec![0.25, 0.50, 0.75];
-		// find the index of each quantile given the total number of values in the dataset
+		// Find the index of each quantile given the total number of values in the dataset.
 		let quantile_indexes: Vec<usize> = quantiles
 			.iter()
 			.map(|q| ((reservoir_len - 1.0) * q).trunc().to_usize().unwrap())
 			.collect();
-		// the fractiononal part of the index
-		// used to interpolate values if the index is not an integer value
+		// This is the fractiononal part of the index used to interpolate values if the index is not an integer value.
 		let quantile_fracts: Vec<f32> = quantiles
 			.iter()
 			.map(|q| ((reservoir_len - 1.0) * q).fract())
@@ -109,7 +108,7 @@ impl StreamingMetric<'_> for NumberStats {
 			let value = samples[*index];
 			if fract > 0.0 {
 				let next_value = samples[index + 1];
-				// interpolate between two values
+				// Interpolate between two values.
 				*quantile = value * (1.0 - fract) + next_value * fract;
 			} else {
 				*quantile = value;

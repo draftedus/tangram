@@ -1,7 +1,7 @@
 import * as ui from '@tangramhq/ui'
 
 let onAddPaymentMethod = async () => {
-	// get the stripe publishable key
+	// Get the stripe publishable key.
 	let stripe = await loadStripe()
 	let response = await fetch('', {
 		body: 'action=start_stripe_checkout',

@@ -146,6 +146,8 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 		.collect()
 }
 
+// TODO
+
 // const DEFAULT_LINEAR_MODEL_LEARNING_RATE_VALUES: [f32; 4] = [0.1, 0.01, 0.001, 0.0001];
 // const DEFAULT_LINEAR_L2_REGULARIZATION_VALUES: [f32; 6] = [1.0, 0.1, 0.01, 0.001, 0.0001, 0.0];
 // const DEFAULT_LINEAR_MAX_EPOCHS_VALUES: [u64; 1] = [100];

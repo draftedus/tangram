@@ -41,7 +41,7 @@ struct Action {
 }
 
 pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
-	// read the post data
+	// Read the post data.
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
@@ -52,7 +52,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	// upsert the user
+	// Upsert the user.
 	let user_id = Id::new();
 	let now = Utc::now().timestamp();
 	sqlx::query(
@@ -70,7 +70,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 	.bind(&email)
 	.execute(&mut *db)
 	.await?;
-	// retrieve the user's id
+	// Retrieve the user's id.
 	let user_id: String = sqlx::query(
 		"
 			select
@@ -87,7 +87,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 	let user_id: Id = user_id.parse()?;
 	if context.options.auth_enabled {
 		if let Some(code) = code {
-			// verify the code
+			// Verify the code.
 			let ten_minutes_in_seconds: i32 = 10 * 60;
 			let now = Utc::now().timestamp();
 			let row = sqlx::query(
@@ -129,7 +129,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 			let code_id: String = row.get(0);
 			let code_id: Id = code_id.parse()?;
 			let now = Utc::now().timestamp();
-			// delete the code
+			// Delete the code.
 			sqlx::query(
 				"
 					update codes
@@ -144,7 +144,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 			.execute(&mut db)
 			.await?;
 		} else {
-			// generate a code and redirect back to the login form
+			// Generate a code and redirect back to the login form.
 			let code: u64 = rand::thread_rng().gen_range(0, 1_000_000);
 			let code = format!("{:06}", code);
 			let now = Utc::now().timestamp();

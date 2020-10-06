@@ -108,7 +108,7 @@ model, err := tangram.LoadModelFromFile("./heart-disease.tangram", nil)
 if err != nil {
 	log.Fatal(err)
 }
-// destroy the model when it is no longer needed to free up memory.
+// Destroy the model when it is no longer needed to free up memory.
 defer model.Destroy()
 
 // Create an example input matching the schema of the CSV file the model was trained on. Here the data is just hard-coded, but in your application you will probably get this from a database or user input.

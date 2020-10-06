@@ -107,7 +107,7 @@ export function drawLineChart(
 	let height = ctx.canvas.clientHeight
 	let hoverRegions: Array<HoverRegion<LineChartHoverRegionInfo>> = []
 
-	// compute bounds
+	// Compute the bounds.
 	let xMin: number
 	if (options.xMin !== undefined) {
 		xMin = options.xMin
@@ -141,7 +141,7 @@ export function drawLineChart(
 		)
 	}
 
-	// compute boxes
+	// Compute the boxes.
 	let {
 		chartBox,
 		xAxisLabelsBox,
@@ -163,7 +163,7 @@ export function drawLineChart(
 		yMin,
 	})
 
-	// compute grid line info
+	// Compute the grid line info.
 	let xAxisGridLineInfo = computeXAxisGridLineInfo({
 		chartWidth: chartBox.w,
 		ctx,
@@ -196,7 +196,7 @@ export function drawLineChart(
 		xAxisGridLineInfo,
 	})
 
-	// draw x axis labels
+	// Draw the X axis labels.
 	if (options.shouldDrawXAxisLabels ?? true) {
 		drawXAxisLabels({
 			box: xAxisLabelsBox,
@@ -207,7 +207,7 @@ export function drawLineChart(
 		})
 	}
 
-	// draw y axis labels
+	// Draw the Y axis labels.
 	if (options.shouldDrawYAxisLabels ?? true) {
 		drawYAxisLabels({
 			box: yAxisLabelsBox,
@@ -230,7 +230,7 @@ export function drawLineChart(
 		title: yAxisTitle,
 	})
 
-	// draw lines
+	// Draw the lines.
 	data.forEach(series => {
 		drawLine({
 			chartBox,
@@ -247,7 +247,7 @@ export function drawLineChart(
 	let shouldDrawPoints =
 		chartBox.w / maxPointCount > 2 * chartConfig.pointRadius
 
-	// draw points
+	// Draw the points.
 	if (shouldDrawPoints) {
 		data.forEach(series => {
 			series.data.forEach(point => {
@@ -270,7 +270,7 @@ export function drawLineChart(
 		})
 	}
 
-	// hover regions
+	// Compute the hover regions.
 	data.forEach((series, seriesIndex) => {
 		series.data.forEach((point, pointIndex) => {
 			if (point.y === null) {
@@ -629,7 +629,7 @@ export function drawCrosshairs(options: DrawCrosshairsOptions) {
 	ctx.restore()
 }
 
-// get the location to draw on screen for a data point
+/** This function gets the location to draw on screen for a data point. */
 function pointToPixels(options: {
 	chartBox: Box
 	point: Point

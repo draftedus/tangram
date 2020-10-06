@@ -21,9 +21,9 @@ export function formatNumber(
 		return ''
 	}
 	let result = value.toPrecision(maxDigits ?? 6)
-	// remove trailing zeros including decimal point, for example 12345.000
+	// Remove trailing zeros including the decimal point, for example 12345.000.
 	result = result.replace(/\.(0*)$/, '')
-	// remove trailing zeros excluding decimal point, for example .01234500
+	// Remove trailing zeros excluding the decimal point, for example .01234500.
 	result = result.replace(/\.([0-9]*)([1-9])(0*)$/, '.$1$2')
 	return result
 }

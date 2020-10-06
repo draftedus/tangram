@@ -4,12 +4,10 @@ use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;
 
 fn main() {
-	// load the data
+	// Load the data.
 	let csv_file_path = Path::new("data/boston.csv");
 	let n_rows_train = 405;
 	let n_rows_test = 101;
-
-	// split into test and train
 	let target_column_index = 13;
 	let mut dataframe = DataFrame::from_path(csv_file_path, Default::default(), |_| {}).unwrap();
 	let labels = dataframe.columns.remove(target_column_index);
@@ -20,7 +18,7 @@ fn main() {
 
 	let features_train = dataframe_train.to_rows_f32().unwrap();
 
-	// train the model
+	// Train the model.
 	let model = tangram_linear::Regressor::train(
 		features_train.view(),
 		labels_train.clone(),
@@ -28,12 +26,12 @@ fn main() {
 		&mut |_| {},
 	);
 
-	// make predictions on the test data
+	// Make predictions on the test data.
 	let features_test = dataframe_test.to_rows_f32().unwrap();
 	let mut predictions: Array1<f32> = unsafe { Array::uninitialized(n_rows_test) };
 	model.predict(features_test.view(), predictions.view_mut());
 
-	// compute metrics
+	// Compute Metrics.
 	let mut metrics = tangram_metrics::RegressionMetrics::new();
 	metrics.update(tangram_metrics::RegressionMetricsInput {
 		predictions: predictions.as_slice().unwrap(),

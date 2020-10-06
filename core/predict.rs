@@ -153,7 +153,7 @@ pub fn predict(
 	input: PredictInput,
 	options: Option<PredictOptions>,
 ) -> PredictOutput {
-	// initialize the dataframe
+	// Initialize the dataframe.
 	let columns = match model {
 		PredictModel::LinearRegressor(model) => model.columns.as_slice(),
 		PredictModel::TreeRegressor(model) => model.columns.as_slice(),
@@ -176,7 +176,7 @@ pub fn predict(
 		.collect();
 	let mut dataframe = tangram_dataframe::DataFrame::new(column_names, column_types);
 
-	// fill the dataframe with the input
+	// Fill the dataframe with the input.
 	for input in input.0 {
 		for column in dataframe.columns.iter_mut() {
 			match column {
@@ -696,7 +696,7 @@ fn compute_shap_values_tree(
 				features::FeatureGroup::Identity(_) => match feature {
 					tangram_dataframe::Value::Number(value) => value.to_string(),
 					tangram_dataframe::Value::Enum(value) => {
-						// get the name of the category
+						// Get the name of the category.
 						if value.is_none() {
 							"oov".to_owned()
 						} else {

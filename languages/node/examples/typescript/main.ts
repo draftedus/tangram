@@ -4,7 +4,7 @@ import * as tangram from '@tangramhq/tangram-node'
 import * as fs from 'fs'
 import * as path from 'path'
 
-// define the type for the input to the model.
+// Define the type for the input to the model.
 type Input = {
 	age: number | null | undefined
 	chest_pain:
@@ -37,7 +37,7 @@ type Input = {
 		| undefined
 }
 
-// define the type for the output of the model.
+// Define the type for the output of the model.
 type Output = tangram.ClassificationOutput<'Positive' | 'Negative'>
 
 // If you are running the Tangram reporting and monitoring web app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.

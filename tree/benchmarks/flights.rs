@@ -5,7 +5,7 @@ use tangram_dataframe::*;
 use tangram_metrics::{Metric, StreamingMetric};
 
 fn main() {
-	// load the data
+	// Load the data.
 	let csv_file_path_train = Path::new("data/flights-1m.csv");
 	let csv_file_path_test = Path::new("data/flights-test.csv");
 	// let csv_file_path_train = Path::new("data/flights-10m.csv");
@@ -117,7 +117,7 @@ fn main() {
 	let labels_test = features_test.columns.remove(target_column_index);
 	let labels_test = labels_test.as_enum().unwrap();
 
-	// train the model
+	// Train the model.
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
 		max_rounds: 100,
@@ -131,14 +131,14 @@ fn main() {
 		&mut |_| {},
 	);
 
-	// make predictions on the test data
+	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
 
 	let mut probabilities: Array2<f32> =
 		unsafe { Array::uninitialized((features_test.nrows(), 2).f()) };
 	model.predict(features_test.view(), probabilities.view_mut());
 
-	// compute metrics
+	// Compute Metrics.
 	let labels = labels_test.view().data.into();
 	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
 	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {

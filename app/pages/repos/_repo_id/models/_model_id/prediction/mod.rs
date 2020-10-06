@@ -321,7 +321,7 @@ fn predict(
 		}
 		tangram_core::predict::PredictOutput::Classification(mut output) => {
 			let output = output.remove(0);
-			// get baseline probabliities
+			// Get the baseline probabliities.
 			let softmax = |logits: &[f32]| {
 				let mut probabilities = logits.to_owned();
 				let max = probabilities

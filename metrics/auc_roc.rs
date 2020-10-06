@@ -58,16 +58,16 @@ impl<'a> Metric<'a> for AUCROC {
 		}];
 		for true_positives_false_positives_point in true_positives_false_positives.iter() {
 			roc_curve.push(ROCCurvePoint {
-				// The true positive rate is the number of true positives divided by the total number of positives
+				// The true positive rate is the number of true positives divided by the total number of positives.
 				true_positive_rate: true_positives_false_positives_point.true_positives as f32
 					/ count_positives as f32,
 				threshold: true_positives_false_positives_point.probability,
-				// The false positive rate is the number of false positives divided by the total number of negatives
+				// The false positive rate is the number of false positives divided by the total number of negatives.
 				false_positive_rate: true_positives_false_positives_point.false_positives as f32
 					/ count_negatives as f32,
 			})
 		}
-		// compute the riemann sum using the trapezoidal rule
+		// Compute the riemann sum using the trapezoidal rule.
 		roc_curve
 			.iter()
 			.tuple_windows()

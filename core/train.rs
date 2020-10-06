@@ -465,8 +465,7 @@ fn shuffle(
 	config: &Option<Config>,
 	update_progress: &mut dyn FnMut(Progress),
 ) {
-	// check if shuffling is enabled in the config
-	// and use the seed from the config if provided
+	// Check if shuffling is enabled in the config. If it is, use the seed from the config.
 	let default_seed = 42;
 	let shuffle_options = config
 		.as_ref()
@@ -482,7 +481,7 @@ fn shuffle(
 			config::Shuffle::Options { seed } => Some(*seed),
 		})
 		.unwrap_or(Some(default_seed));
-	// shuffle the dataframe
+	// Shuffle the dataframe.
 	if let Some(seed) = shuffle_options {
 		update_progress(Progress::Shuffling);
 		dataframe.columns.iter_mut().for_each(|column| {
@@ -1214,7 +1213,6 @@ fn choose_best_model_classification(
 					.accuracy
 					.partial_cmp(&task_metrics_b.accuracy)
 					.unwrap(),
-				// compare the auc_roc for the positive class
 				ClassificationComparisonMetric::Aucroc => model_metrics_a
 					.as_ref()
 					.unwrap()

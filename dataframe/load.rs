@@ -259,8 +259,7 @@ impl<'a> InferStats<'a> {
 		match self.column_type {
 			InferColumnType::Unknown => ColumnType::Unknown,
 			InferColumnType::Number => {
-				// if all the values in a number column are zero and one
-				// then make this an enum column instead
+				// If all the values in a number column are zero or one then make this an enum column instead.
 				if let Some(unique_values) = self.unique_values {
 					let mut values = unique_values.iter();
 					if values.next().map(|s| s.as_str()) == Some("0")

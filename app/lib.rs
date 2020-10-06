@@ -288,7 +288,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 }
 
 pub async fn run(options: Options) -> Result<()> {
-	// create the pinwheel
+	// Create the pinwheel.
 	#[cfg(debug_assertions)]
 	fn pinwheel() -> Pinwheel {
 		Pinwheel::dev(
@@ -301,8 +301,7 @@ pub async fn run(options: Options) -> Result<()> {
 		Pinwheel::prod(include_dir::include_dir!("../target/app"))
 	}
 	let pinwheel = pinwheel();
-
-	// configure the database pool
+	// Configure the database pool.
 	let database_url = options.database_url.to_string();
 	let database_pool_max_size: u32 = std::env::var("DATABASE_POOL_MAX_SIZE")
 		.map(|s| {
@@ -326,10 +325,8 @@ pub async fn run(options: Options) -> Result<()> {
 		.max_connections(database_pool_max_size)
 		.connect_with(pool_options)
 		.await?;
-
 	// Run any pending migrations.
 	migrations::run(&pool).await?;
-
 	// If a model was included in the options, add it to the database now.
 	if let Some(model_path) = &options.model {
 		let mut db = pool.begin().await?;
@@ -345,8 +342,7 @@ pub async fn run(options: Options) -> Result<()> {
 		crate::common::repos::add_model_version(&mut db, repo_id, model.id(), &model_data).await?;
 		db.commit().await?;
 	}
-
-	// run the server
+	// Run the server.
 	let context = Arc::new(Context {
 		options,
 		pinwheel,

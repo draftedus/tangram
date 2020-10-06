@@ -67,16 +67,12 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 	}
 
 	fn merge(&mut self, other: Self) {
-		// for (s, o) in izip!(self.confusion_matrix.iter_mut(), other.confusion_matrix.iter()) {
-		// 	*s += *o;
-		// }
 		self.confusion_matrix += &other.confusion_matrix;
 	}
 
 	fn finalize(self) -> Self::Output {
 		let n_classes = self.classes.len();
 		let n_examples = self.confusion_matrix.sum();
-
 		let confusion_matrix = self.confusion_matrix;
 		let class_metrics: Vec<_> = self
 			.classes
@@ -108,11 +104,8 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 				}
 			})
 			.collect();
-
 		let n_correct: u64 = confusion_matrix.diag().sum();
-
 		let accuracy = n_correct.to_f32().unwrap() / n_examples.to_f32().unwrap();
-
 		let precision_unweighted = class_metrics
 			.iter()
 			.map(|class| class.precision)
@@ -120,7 +113,6 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 			/ n_classes.to_f32().unwrap();
 		let recall_unweighted = class_metrics.iter().map(|class| class.recall).sum::<f32>()
 			/ n_classes.to_f32().unwrap();
-
 		let n_examples_per_class = confusion_matrix.sum_axis(Axis(0));
 		let precision_weighted = class_metrics
 			.iter()
@@ -138,7 +130,6 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 			})
 			.sum::<f32>()
 			/ n_examples.to_f32().unwrap();
-
 		let baseline_accuracy = n_examples_per_class
 			.iter()
 			.map(|n| n.to_f32().unwrap())
@@ -184,7 +175,6 @@ fn test_binary() {
 		));
 	}
 	let metrics = metrics.finalize();
-
 	insta::assert_debug_snapshot!(metrics, @r###"
  Some(
      ClassificationProductionPredictionMetricsOutput {
@@ -225,8 +215,7 @@ fn test_binary() {
 
 #[test]
 fn test_multiclass() {
-	// example taken from https://en.wikipedia.org/wiki/Confusion_matrix
-
+	// This example is taken from https://en.wikipedia.org/wiki/Confusion_matrix.
 	let classes = vec!["Cat".into(), "Dog".into(), "Rabbit".into()];
 	let mut metrics = ClassificationProductionPredictionMetrics::new(classes);
 	metrics.update((
@@ -250,7 +239,6 @@ fn test_multiclass() {
 		));
 	}
 	let metrics = metrics.finalize();
-
 	insta::assert_debug_snapshot!(metrics, @r###"
  Some(
      ClassificationProductionPredictionMetricsOutput {

@@ -122,8 +122,6 @@ pub fn compute_gradients_and_hessians(
 	// (n_examples)
 	predictions: &[f32],
 ) {
-	// gradients are y_pred - y_true
-	// d / dy_pred (0.5 ( y_pred - y_true) **2 ) = 2 * (0.5) * (y_pred - y_pred) = y_pred - y_true
 	pzip!(gradients, labels, predictions).for_each(|(gradient, label, prediction)| {
 		*gradient = prediction - label;
 	});

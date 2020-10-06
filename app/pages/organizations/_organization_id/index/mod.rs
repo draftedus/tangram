@@ -360,7 +360,7 @@ async fn start_stripe_checkout(
 	user: User,
 	context: &Context,
 ) -> Result<Response<Body>> {
-	// retrieve the existing stripe customer id for the organization
+	// Retrieve the existing stripe customer id for the organization.
 	let existing_stripe_customer_id: Option<String> = sqlx::query(
 		"
 			select
@@ -375,12 +375,12 @@ async fn start_stripe_checkout(
 	.fetch_optional(&mut *db)
 	.await?
 	.and_then(|r| r.get(0));
-	// retrieve or create the stripe customer
+	// Retrieve or create the stripe customer.
 	let stripe_customer_id = match existing_stripe_customer_id {
 		Some(s) => s,
 		None => {
 			let client = reqwest::Client::new();
-			// create a stripe customer
+			// Create a stripe customer.
 			let json = json!({
 				"email": &user.email,
 			});
@@ -393,7 +393,7 @@ async fn start_stripe_checkout(
 				.json::<serde_json::Value>()
 				.await?;
 			let stripe_customer_id = response.get("id").unwrap().as_str().unwrap().to_owned();
-			// save the stripe customer id with the tangram user
+			// Save the stripe customer id with the tangram user.
 			sqlx::query(
 				"
 					update organizations
@@ -409,7 +409,7 @@ async fn start_stripe_checkout(
 			stripe_customer_id
 		}
 	};
-	// create the checkout session
+	// Create the checkout session.
 	let base_url = context.options.url.as_ref().unwrap();
 	let json = json!({
 		"payment_method_types[]": "card",

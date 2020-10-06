@@ -24,10 +24,12 @@ pub async fn get_production_metrics(
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,
 ) -> Result<GetProductionMetricsOutput> {
-	// compute the start date given the date window.
-	// * for today, use the start of this utc day.
-	// * for this month, use the start of this utc month.
-	// * for this year, use the start of this utc year.
+	/*
+	Compute the start date given the date window.
+	* For today, use the start of this UTC day.
+	* For this month, use the start of this UTC month.
+	* For this year, use the start of this UTC year.
+	*/
 	let now: DateTime<Tz> = Utc::now().with_timezone(&timezone);
 	let start_date = match date_window {
 		DateWindow::Today => timezone
@@ -61,10 +63,12 @@ pub async fn get_production_metrics(
 	.bind(&start_date.timestamp())
 	.fetch_all(&mut *db)
 	.await?;
-	// compute the number of intervals
-	// * for today, use 24
-	// * for this month, use the number of days in this month
-	// * for this year, use 12
+	/*
+	 Compute the number of intervals.
+	 * For today, use 24.
+	 * For this month, use the number of days in this month.
+	 * For this year, use 12.
+	*/
 	let n_intervals: usize = match date_window_interval {
 		DateWindowInterval::Hourly => 24,
 		DateWindowInterval::Daily => n_days_in_month(start_date.year(), start_date.month())
@@ -74,7 +78,7 @@ pub async fn get_production_metrics(
 	};
 	let mut intervals: Vec<ProductionMetrics> = (0..n_intervals.to_u32().unwrap())
 		.map(|i| {
-			// determine the start and end dates for the interval
+			// Determine the start and end dates for the interval.
 			let start = match date_window_interval {
 				DateWindowInterval::Hourly => start_date.with_hour(i).unwrap(),
 				DateWindowInterval::Daily => start_date.with_day0(i).unwrap(),
@@ -90,8 +94,7 @@ pub async fn get_production_metrics(
 			ProductionMetrics::new(&model, start.with_timezone(&Utc), end.with_timezone(&Utc))
 		})
 		.collect();
-	// merge each hourly production metrics
-	// entry into its corresponding interval
+	// Merge each hourly production metrics entry into its corresponding interval.
 	for row in rows {
 		let data: String = row.get(0);
 		let data: Vec<u8> = base64::decode(data)?;

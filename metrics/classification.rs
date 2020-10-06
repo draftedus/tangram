@@ -49,11 +49,9 @@ pub struct ClassMetrics {
 	pub false_negatives: u64,
 	/// The fraction of examples of this class that were correctly classified.
 	pub accuracy: f32,
-	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class.
-	/// true_positives / (true_positives + false_positives). See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
+	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class. `precision = true_positives / (true_positives + false_positives)`. See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
 	pub precision: f32,
-	/// The recall is the fraction of examples in the dataset whose label is equal to this class that the model predicted as equal to this class.
-	/// true_positives / (true_positives + false_negatives)
+	/// The recall is the fraction of examples in the dataset whose label is equal to this class that the model predicted as equal to this class. `recall = true_positives / (true_positives + false_negatives)`.
 	pub recall: f32,
 	/// The f1 score is the harmonic mean of the precision and the recall. See [F1 Score](https://en.wikipedia.org/wiki/F1_score).
 	pub f1_score: f32,
@@ -85,7 +83,7 @@ impl<'a> StreamingMetric<'a> for ClassificationMetrics {
 				.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
 				.unwrap()
 				.0;
-			// get index in confusion matrix for label
+			// Get the index in the confusion matrix for this label.
 			let label = label.unwrap().get() - 1;
 			self.confusion_matrix[(prediction, label)] += 1;
 		}
@@ -246,7 +244,7 @@ fn test_binary() {
 
 #[test]
 fn test_multiclass() {
-	// example taken from https://en.wikipedia.org/wiki/Confusion_matrix
+	// This example was taken from https://en.wikipedia.org/wiki/Confusion_matrix.
 	let classes = vec![
 		String::from("Cat"),
 		String::from("Dog"),

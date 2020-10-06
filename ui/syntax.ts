@@ -11,21 +11,19 @@ export function highlight(
 	grammar: SyntaxGrammar,
 	colors: SyntaxColors,
 ): string {
-	// replacements stores the range and scope
-	// for each part of the text to highlight.
+	// Replacements stores the range and scope for each part of the text to highlight.
 	let replacements: Replacement[] = []
-	// for each rule in the grammar
+	// Loop over each rule in the grammar.
 	let match
 	for (let { regex, scope } of grammar) {
-		// for each match of the rule in the text
+		// Loop over each match of the rule in the text.
 		while ((match = regex.exec(text)) !== null) {
-			// this is the range of the match in the text
+			// This is the range of the match in the text.
 			let range = {
 				end: match.index + match[0].length,
 				start: match.index,
 			}
-			// only use this match if it doesn't overlap
-			// with any of the existing replacements
+			// Only use this match if it doesn't overlap with any of the existing replacements.
 			let foundOverlap = false
 			for (let { range: existingRange } of replacements) {
 				if (
@@ -46,9 +44,9 @@ export function highlight(
 			}
 		}
 	}
-	// sort the replacements by start index
+	// Sort the replacements by start index.
 	replacements.sort((a, b) => (a.range.start <= b.range.start ? -1 : 1))
-	// apply the replacements to the text
+	// Apply the replacements to the text.
 	let html = text
 	let offset = 0
 	for (let { range, scope } of replacements) {

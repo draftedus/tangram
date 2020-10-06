@@ -115,7 +115,7 @@ pub async fn get_production_stats(
 		let hourly_production_stats = serde_json::from_slice(&data)?;
 		interval.merge(hourly_production_stats);
 	}
-	// compute the overall production stats by merging all the intervals together
+	// Compute the overall production stats by merging all the intervals together.
 	let overall = intervals
 		.iter()
 		.fold(
@@ -130,7 +130,7 @@ pub async fn get_production_stats(
 			},
 		)
 		.finalize();
-	// finalize the intervals
+	// Finalize the intervals.
 	let intervals: Vec<ProductionStatsOutput> = intervals
 		.into_iter()
 		.map(|stats| stats.finalize())

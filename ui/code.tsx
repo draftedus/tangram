@@ -179,7 +179,7 @@ export function InlineCode(props: InlineCodeProps) {
 }
 
 function countLines(text: string) {
-	// trim trailing newline
+	// Trim a trailing newline if one exists.
 	let trimmedText =
 		text[text.length - 1] === '\n' ? text.substr(0, text.length - 1) : text
 	return trimmedText.split('\n').length

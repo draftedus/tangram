@@ -4,7 +4,7 @@ use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;
 
 fn main() {
-	// load the data
+	// Load the data.
 	let csv_file_path = Path::new("data/heart-disease.csv");
 	let n_rows_train = 242;
 	let n_rows_test = 61;
@@ -19,7 +19,7 @@ fn main() {
 
 	let features_train = features_train.to_rows_f32().unwrap();
 
-	// train the model
+	// Train the model.
 	let model = tangram_linear::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.clone(),
@@ -27,12 +27,12 @@ fn main() {
 		&mut |_| {},
 	);
 
-	// make predictions on the test data
+	// Make predictions on the test data.
 	let features_test = features_test.to_rows_f32().unwrap();
 	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((n_rows_test, 2)) };
 	model.predict(features_test.view(), probabilities.view_mut());
 
-	// compute metrics
+	// Compute Metrics.
 	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
 	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),

@@ -46,8 +46,7 @@ pub struct BinaryClassificationThresholdMetricsOutput {
 	pub accuracy: f32,
 	/// The precision is the fraction of examples the model predicted as belonging to the positive class whose label is actually the positive class. true_positives / (true_positives + false_positives). See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
 	pub precision: f32,
-	/// The recall is the fraction of examples whose label is equal to the positive class that the model predicted as belonging to the positive class.
-	/// true_positives / (true_positives + false_negatives)
+	/// The recall is the fraction of examples whose label is equal to the positive class that the model predicted as belonging to the positive class. `recall = true_positives / (true_positives + false_negatives)`.
 	pub recall: f32,
 	/// The f1 score is the harmonic mean of the precision and the recall. See [F1 Score](https://en.wikipedia.org/wiki/F1_score).
 	pub f1_score: f32,

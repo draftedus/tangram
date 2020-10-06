@@ -60,7 +60,7 @@ impl Pinwheel {
 	where
 		T: serde::Serialize,
 	{
-		// compute the page entry from the pagename
+		// Compute the page entry from the pagename.
 		let page_entry = if pagename.ends_with('/') {
 			pagename.to_owned() + "index"
 		} else {
@@ -68,7 +68,7 @@ impl Pinwheel {
 		};
 		let page_entry = page_entry.strip_prefix('/').unwrap().to_owned();
 
-		// in dev mode compile the page
+		// In dev mode, compile the page.
 		if self.src_dir.is_some() {
 			esbuild_single_page(
 				self.src_dir.as_ref().unwrap(),
@@ -77,7 +77,7 @@ impl Pinwheel {
 			)?;
 		}
 
-		// determine output urls
+		// Determine the output URLs.
 		let static_js_url = Url::parse("dst:/")
 			.unwrap()
 			.join(&if self.src_dir.is_some() {
@@ -131,7 +131,7 @@ impl Pinwheel {
 			let context = v8::Context::new(&mut scope);
 			let mut scope = v8::ContextScope::new(&mut scope, context);
 
-			// create console global
+			// Create the console global.
 			let console = v8::Object::new(&mut scope);
 			let log_literal = v8::String::new(&mut scope, "log").unwrap();
 			let log = v8::Function::new(&mut scope, console_log).unwrap();
@@ -141,7 +141,7 @@ impl Pinwheel {
 				.global(&mut scope)
 				.set(&mut scope, console_literal.into(), console.into());
 
-			// get default export from page
+			// Get the default export from page.
 			let page_module_namespace =
 				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone())?;
 			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();
@@ -156,7 +156,7 @@ impl Pinwheel {
 			let page_module_default_export_function: v8::Local<v8::Function> =
 				unsafe { v8::Local::cast(page_module_default_export) };
 
-			// send the props to v8
+			// Send the props to v8.
 			let json = serde_json::to_string(&props)?;
 			let json = v8::String::new(&mut scope, &json).unwrap();
 			let props = v8::json::parse(&mut scope, json).unwrap();
@@ -177,7 +177,7 @@ impl Pinwheel {
 			props.set(&mut scope, info_literal.into(), info.into());
 			let props = props.into();
 
-			// call renderPage to render the page
+			// Call `renderPage` to render the page.
 			let mut try_catch_scope = v8::TryCatch::new(&mut scope);
 			let undefined = v8::undefined(&mut try_catch_scope).into();
 			let html =
@@ -203,13 +203,13 @@ impl Pinwheel {
 		let uri = request.uri();
 		let path_and_query = uri.path_and_query().unwrap();
 		let path = path_and_query.path();
-		// serve static files from pinwheel
+		// Serve static files from pinwheel.
 		let mut static_path = path.to_owned();
 		if static_path.ends_with('/') {
 			static_path.push_str("index.html");
 		}
 		let static_path = static_path.strip_prefix('/').unwrap();
-		// serve from the static dir in dev
+		// Serve from the static directory in dev.
 		if let Some(src_dir) = self.src_dir.as_ref() {
 			let static_path = src_dir.join("static").join(static_path);
 			if static_path.exists() {
@@ -222,7 +222,7 @@ impl Pinwheel {
 				return Ok(response);
 			}
 		}
-		// serve from the dst_dir
+		// Serve from the `dst_dir`.
 		let url = Url::parse(&format!("dst:/{}", static_path)).unwrap();
 		if self.fs.exists(&url) {
 			let data = self.fs.read(&url)?;
@@ -331,11 +331,9 @@ fn run_module<'s>(
 	Ok(object)
 }
 
-/// load a module at the specified path and return the module id
+/// Load a module at the specified path and return the module id.
 fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url) -> Result<i32> {
-	// return the id for an existing module
-	// if a module at the specified path
-	// has alread been loaded
+	// Return the id for an existing module if a module at the specified path has alread been loaded.
 	let state = get_state(scope);
 	let state = state.borrow();
 	let existing_module = get_module_handle_for_url(&state, &url);
@@ -344,7 +342,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	}
 	drop(state);
 
-	// define the origin
+	// Define the origin.
 	let resource_name = v8::String::new(scope, &url.to_string()).unwrap();
 	let resource_line_offset = v8::Integer::new(scope, 0);
 	let resource_column_offset = v8::Integer::new(scope, 0);
@@ -366,12 +364,12 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 		is_module,
 	);
 
-	// read the source
+	// Read the source.
 	let code = fs.read(&url)?;
 	let code = std::str::from_utf8(code.as_ref())?;
 	let source = v8::script_compiler::Source::new(v8::String::new(scope, code).unwrap(), &origin);
 
-	// read the source map
+	// Read the source map.
 	let source_map_url = match sourcemap::locate_sourcemap_reference_slice(code.as_bytes()).unwrap()
 	{
 		Some(s) => Some(url.join(s.get_url()).unwrap()),
@@ -385,7 +383,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 		None
 	};
 
-	// compile the module
+	// Compile the module.
 	let mut try_catch_scope = v8::TryCatch::new(scope);
 	let module = v8::script_compiler::compile_module(&mut try_catch_scope, source);
 	if try_catch_scope.has_caught() {
@@ -397,7 +395,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	let module = module.unwrap();
 	drop(try_catch_scope);
 
-	// register the module
+	// Register the module.
 	let id = module.get_identity_hash();
 	let state = get_state(scope);
 	let mut state = state.borrow_mut();
@@ -410,7 +408,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url
 	});
 	drop(state);
 
-	// load each of the module's dependencies recursively
+	// Load each of the module's dependencies recursively.
 	for i in 0..module.get_module_requests_length() {
 		let module_request = module.get_module_request(i);
 		let specifier = module_request.to_rust_string_lossy(scope);
@@ -530,7 +528,7 @@ impl VirtualFileSystem for IncludedFileSystem {
 }
 
 pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
-	// collect all pages in the pages directory
+	// Collect all pages in the pages directory.
 	let mut page_entries = <Vec<String>>::new();
 	let mut static_page_entries = <Vec<String>>::new();
 	let pages_dir = src_dir.join("pages");
@@ -556,9 +554,9 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 			_ => {}
 		}
 	}
-	// build the pages
+	// Build the pages.
 	esbuild_pages(src_dir, dst_dir, &page_entries).unwrap();
-	// copy static files
+	// Copy static files.
 	let static_dir = src_dir.join("static");
 	for path in walkdir::WalkDir::new(&static_dir) {
 		let path = path.unwrap();
@@ -569,7 +567,7 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 			std::fs::copy(path, out_path).unwrap();
 		}
 	}
-	// statically render pages
+	// Statically render the pages.
 	let pinwheel = Pinwheel {
 		src_dir: None,
 		dst_dir: None,
@@ -596,7 +594,7 @@ pub fn esbuild_single_page(src_dir: &Path, dst_dir: &Path, page_entry: String) -
 }
 
 pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) -> Result<()> {
-	// remove the dst_dir if it exists and create it
+	// Remove the `dst_dir` if it exists and create it.
 	if dst_dir.exists() {
 		std::fs::remove_dir_all(&dst_dir).unwrap();
 	}
@@ -644,7 +642,7 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
 	}
-	// HACK concat css
+	// TODO Concatenate CSS.
 	let output = std::process::Command::new("fd")
 		.args(&["-e", "css", ".", "../ui", "-x", "cat"])
 		.current_dir(src_dir)

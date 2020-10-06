@@ -18,7 +18,7 @@ async function githubRequest(method: string, path: string, body?: any) {
 	return await response.json()
 }
 
-// get the most recent workflow run
+// Get the most recent workflow run.
 let run = (
 	await githubRequest(
 		'GET',
@@ -26,7 +26,7 @@ let run = (
 	)
 ).workflow_runs[0]
 
-// get the artifacts from the workflow run
+// Get the artifacts from the workflow run.
 let artifacts = (
 	await githubRequest(
 		'GET',
@@ -34,7 +34,7 @@ let artifacts = (
 	)
 ).artifacts
 
-// download the artifacts
+// Download the artifacts.
 await Promise.all(
 	artifacts.map(async (artifact: any) => {
 		let response = await fetch(artifact.archive_download_url, {

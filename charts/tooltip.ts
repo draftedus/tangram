@@ -56,14 +56,14 @@ export function drawTooltip(options: DrawTooltipOptions) {
 		tooltipWrapper.appendChild(tooltip)
 	})
 	container.appendChild(tooltipWrapper)
-	// if the tooltip is not visible, place it elsewhere
+	// If the tooltip is not visible, place it elsewhere.
 	let boundingRect = tooltipWrapper.getBoundingClientRect()
 	let windowWidth = window.innerWidth
 	let overflowRight = boundingRect.x + boundingRect.width - windowWidth
 	let overflowLeft = -boundingRect.x
 	let padding = '16px'
 	if (overflowRight > 0) {
-		// translate by the amount that it is overflowing
+		// Translate by the amount that it is overflowing.
 		tooltipWrapper.style.transform = `translateX(calc(-50% - ${overflowRight}px - ${padding})) translateY(-100%)`
 	} else if (overflowLeft > 0) {
 		tooltipWrapper.style.transform = `translateX(calc(-50% + ${overflowLeft}px + ${padding})) translateY(-100%)`

@@ -4,7 +4,7 @@ use tangram_dataframe::*;
 use tangram_metrics::StreamingMetric;
 
 fn main() {
-	// load the data
+	// Load the data.
 	let csv_file_path = Path::new("data/iris.csv");
 	let n_rows_train = 120;
 	let n_rows_test = 30;
@@ -18,7 +18,7 @@ fn main() {
 
 	let features_train = features_train.to_rows_f32().unwrap();
 
-	// train the model
+	// Train the model.
 	let model = tangram_linear::MulticlassClassifier::train(
 		features_train.view(),
 		labels_train.clone(),
@@ -26,12 +26,12 @@ fn main() {
 		&mut |_| {},
 	);
 
-	// make predictions on the test data
+	// Make predictions on the test data.
 	let features_test = features_test.to_rows_f32().unwrap();
 	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((n_rows_test, 3)) };
 	model.predict(features_test.view(), probabilities.view_mut());
 
-	// compute metrics
+	// Compute Metrics.
 	let mut metrics = tangram_metrics::ClassificationMetrics::new(100);
 	metrics.update(tangram_metrics::ClassificationMetricsInput {
 		probabilities: probabilities.view(),

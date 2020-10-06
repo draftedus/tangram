@@ -71,7 +71,7 @@ export function drawBarChart(
 	let height = ctx.canvas.clientHeight
 	let hoverRegions: Array<HoverRegion<BarChartHoverRegionInfo>> = []
 
-	// compute bounds
+	// Compute the bounds.
 	let yMin: number
 	if (options.yMin !== undefined) {
 		yMin = options.yMin
@@ -93,7 +93,7 @@ export function drawBarChart(
 		yMax = yMin + 1
 	}
 
-	// compute boxes
+	// Compute the boxes.
 	let {
 		chartBox,
 		xAxisLabelsBox,
@@ -122,7 +122,7 @@ export function drawBarChart(
 	let barWidth =
 		(barGroupWidth - chartConfig.barGap * (data.length - 1)) / data.length
 
-	// draw x axis labels
+	// Draw the X axis labels.
 	if (options.shouldDrawXAxisLabels ?? true) {
 		drawBarChartXAxisLabels({
 			barGroupGap: chartConfig.barGroupGap,
@@ -146,7 +146,7 @@ export function drawBarChart(
 		yAxisGridLineInfo,
 	})
 
-	// draw y axis labels
+	// Draw the Y axis labels.
 	if (options.shouldDrawYAxisLabels ?? true) {
 		drawYAxisLabels({
 			box: yAxisLabelsBox,
@@ -169,7 +169,7 @@ export function drawBarChart(
 		title: yAxisTitle,
 	})
 
-	// draw bars
+	// Draw the bars.
 	data.forEach((series, seriesIndex) => {
 		series.data.forEach((point, pointIndex) => {
 			if (point.y === null) {
@@ -276,7 +276,7 @@ export function drawBarChartXAxisLabels(
 	ctx.textBaseline = 'bottom'
 	ctx.textAlign = 'center'
 	let labelStepSize = 1
-	// find the smallest label step size at which labels do not overlap
+	// Find the smallest label step size at which labels do not overlap.
 	while (true) {
 		let labelCenterSpacing = (barGroupGap + groupWidth) * labelStepSize
 		let labelWidths = categories
@@ -299,13 +299,13 @@ export function drawBarChartXAxisLabels(
 		}
 	}
 	categories.forEach((label, i) => {
-		// render every labelStepSize label
+		// Render every `labelStepSize` label.
 		if ((i + 1) % labelStepSize !== 0) {
 			return
 		}
 		let labelOffset =
 			barGroupGap + groupWidth / 2 + (barGroupGap + groupWidth) * i
-		// do not draw the label if it will overflow the chart
+		// Do not draw the label if it will overflow the chart.
 		if (
 			box.x + labelOffset - ctx.measureText(label).width / 2 < 0 ||
 			box.x + labelOffset + ctx.measureText(label).width / 2 > width

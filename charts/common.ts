@@ -49,7 +49,7 @@ export type Box = {
 	y: number
 }
 
-// interval is k * 10 ** p, k will always be 1, 2, or 5
+// The interval is k * 10 ** p. k will always be 1, 2, or 5.
 export type GridLineInterval = {
 	k: number
 	p: number
@@ -434,18 +434,17 @@ export function drawXAxisLabels(options: DrawXAxisLabelsOptions): void {
 			label = formatNumber(gridLineValue)
 		}
 
-		// do not draw the label if it will overlap the previous label
+		// Do not draw the label if it will overlap the previous label.
 		if (previousLabelEndpoint) {
 			if (
 				gridLineOffsetPixels - ctx.measureText(label).width / 2 <
 				previousLabelEndpoint
 			) {
-				// overlap
 				continue
 			}
 		}
 
-		// do not draw the label if it will overflow the chart
+		// Do not draw the label if it will overflow the chart.
 		if (
 			box.x + gridLineOffsetPixels - ctx.measureText(label).width / 2 < 0 ||
 			box.x + gridLineOffsetPixels + ctx.measureText(label).width / 2 > width
@@ -455,8 +454,7 @@ export function drawXAxisLabels(options: DrawXAxisLabelsOptions): void {
 
 		ctx.fillText(label, box.x + gridLineOffsetPixels, box.y + box.h)
 
-		// set the endpoint value of the previous label
-		// used to determine if the next label overlaps
+		// Set the endpoint value of the previous label. This is used to determine if the next label overlaps.
 		previousLabelEndpoint =
 			gridLineOffsetPixels + ctx.measureText(label).width / 2
 	}
@@ -651,9 +649,9 @@ export function formatNumber(value: number | null, maxDigits?: number): string {
 		return ''
 	}
 	let result = value.toPrecision(maxDigits ?? 6)
-	// remove trailing zeros including decimal point, for example 12345.000
+	// Remove trailing zeros including the decimal point, for example 12345.000.
 	result = result.replace(/\.(0*)$/, '')
-	// remove trailing zeros excluding decimal point, for example .01234500
+	// Remove trailing zeros excluding the decimal point, for example .01234500.
 	result = result.replace(/\.([0-9]*)([1-9])(0*)$/, '.$1$2')
 	return result
 }
