@@ -120,10 +120,11 @@ fn main() {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
+	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
 		max_rounds: 100,
-		max_leaf_nodes: 512,
+		max_leaf_nodes: 255,
 		..Default::default()
 	};
 	let model = tangram_tree::BinaryClassifier::train(
@@ -132,24 +133,20 @@ fn main() {
 		train_options,
 		&mut |_| {},
 	);
+	let duration = start.elapsed();
 
-	// Make predictions on the test data.
+	// Make predictions on the test data and compute metrics.
 	let features_test = features_test.to_rows();
-
 	let mut probabilities: Array2<f32> =
 		unsafe { Array::uninitialized((features_test.nrows(), 2).f()) };
 	model.predict(features_test.view(), probabilities.view_mut());
-
-	// Compute Metrics.
 	let labels = labels_test.view().data.into();
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
+	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
 	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels,
 	});
 	let metrics = metrics.finalize();
-	println!("{}", metrics.thresholds[50].accuracy);
-	println!("auc_roc: {}", metrics.auc_roc);
 	let auc_input = probabilities
 		.column(1)
 		.into_iter()
@@ -157,5 +154,9 @@ fn main() {
 		.map(|(p, l)| (*p, l.unwrap()))
 		.collect();
 	let auc = tangram_metrics::AUCROC::compute(auc_input);
+
+	// Print the results.
+	println!("duration {}", duration.as_secs_f32());
+	println!("accuracy {}", metrics.thresholds[1].accuracy);
 	println!("auc_roc: {}", auc);
 }

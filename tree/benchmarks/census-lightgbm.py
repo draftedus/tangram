@@ -1,5 +1,6 @@
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
+from time import time
 import numpy as np
 import pandas as pd
 
@@ -39,21 +40,19 @@ labels = data[target]
 	train_size=nrows_train,
 	shuffle=False
 )
-categorical_feature = ['workclass', 'education', 'marital_status', 'occupation', 'relationship', 'sex', 'native_country']
-categorical_feature=categorical_feature
 
 # train the model
+start = time()
 model = lgb.LGBMClassifier(
 	learning_rate=0.1,
-	max_depth=8,
-	min_data_in_leaf=100,
-	min_sum_hessian_in_leaf=0,
 	n_estimators=100,
 	num_leaves=255,
-	enable_bundle=False,
-	enable_sparse=False,
 )
-model.fit(features_train, labels_train, categorical_feature=categorical_feature)
+model.fit(
+	features_train,
+	labels_train
+)
+print('duration: ', time() - start)
 
 # compute accuracy
 predictions = model.predict(features_test)

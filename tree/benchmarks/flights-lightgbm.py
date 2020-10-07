@@ -1,6 +1,7 @@
+from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
-from pandas.api.types import CategoricalDtype
+from time import time
 import numpy as np
 import pandas as pd
 
@@ -127,27 +128,24 @@ labels_train = data_train[target]
 labels_test = data_test[target]
 
 # train the model
+start = time()
 model = lgb.LGBMClassifier(
 	learning_rate=0.1,
 	n_estimators=100,
-	num_leaves=512,
-	force_col_wise=True,
-	enable_sparse=False,
-	enable_bundle=False,
+	num_leaves=255,
 )
-categorical_features = ["Month", "DayofMonth", "DayOfWeek", "UniqueCarrier", "Origin", "Dest"]
 model.fit(
 	features_train,
 	labels_train,
-	categorical_feature=categorical_features
 )
+print('duration: ', time() - start)
 
 # compute accuracy
-predictions = model.predict(features_test)
-accuracy = accuracy_score(labels_test, predictions)
-print('accuracy: ', accuracy)
+# predictions = model.predict(features_test)
+# accuracy = accuracy_score(labels_test, predictions)
+# print('accuracy: ', accuracy)
 
 # compute auc
-predictions_proba = model.predict_proba(features_test)[:, 1]
-auc = roc_auc_score(labels_test, predictions_proba)
-print('auc: ', auc)
+# predictions_proba = model.predict_proba(features_test)[:, 1]
+# auc = roc_auc_score(labels_test, predictions_proba)
+# print('auc: ', auc)

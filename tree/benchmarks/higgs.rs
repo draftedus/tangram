@@ -58,7 +58,6 @@ fn main() {
 	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
-		max_depth: Some(9),
 		max_leaf_nodes: 255,
 		max_rounds: 100,
 		..Default::default()
@@ -69,7 +68,7 @@ fn main() {
 		train_options,
 		&mut |_| {},
 	);
-	println!("{:?}", start.elapsed());
+	let duration = start.elapsed();
 
 	// Make predictions on the test data and compute metrics.
 	let features_test = features_test.to_rows();
@@ -80,7 +79,7 @@ fn main() {
 	)
 	.fold(
 		|| {
-			let metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
+			let metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
 			let probabilities: Array2<f32> = unsafe { Array2::uninitialized((chunk_size, 2)) };
 			(metrics, probabilities)
 		},
@@ -96,12 +95,16 @@ fn main() {
 	)
 	.map(|(metrics, _)| metrics)
 	.reduce(
-		|| tangram_metrics::BinaryClassificationMetrics::new(3),
+		|| tangram_metrics::BinaryClassificationMetrics::new(100),
 		|mut a, b| {
 			a.merge(b);
 			a
 		},
 	)
 	.finalize();
-	println!("{}", metrics.thresholds[1].accuracy);
+
+	// Print the results.
+	println!("duration {}", duration.as_secs_f32());
+	println!("accuracy {}", metrics.thresholds[50].accuracy);
+	println!("auc {}", metrics.auc_roc);
 }
