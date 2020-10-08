@@ -33,21 +33,53 @@ pub enum PredictOutput {
 #[serde(rename_all = "camelCase")]
 pub struct RegressionPredictOutput {
 	pub value: f32,
-	pub shap_values: Option<ShapValues>,
+	pub shap_data: Option<RegressionShapData>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RegressionShapData {
+	/// The baseline value is the value output by the model for this class before taking into account the feature values.
+	pub baseline_value: f32,
+	/// The output value will be the sum of the baseline value and the shap values of all features.
+	pub output_value: f32,
+	/// These are the shap values for each feature.
+	pub shap_values: Vec<ShapValue>,
 }
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ClassificationPredictOutput {
 	pub class_name: String,
+	pub probability: f32,
 	pub probabilities: BTreeMap<String, f32>,
-	pub shap_values: Option<BTreeMap<String, ShapValues>>,
+	pub shap_data: Option<ClassificationShapData>,
 }
 
 #[derive(serde::Serialize, Debug)]
-pub struct ShapValues {
-	pub baseline: f32,
-	pub values: Vec<(String, f32)>,
+#[serde(rename_all = "camelCase")]
+pub struct ClassificationShapData {
+	pub classes: BTreeMap<String, ClassificationShapDataForClass>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ClassificationShapDataForClass {
+	/// The baseline value is the value output by the model for this class before taking into account the feature values.
+	pub baseline_value: f32,
+	/// The output value will be the sum of the baseline value and the shap values of all features.
+	pub output_value: f32,
+	/// These are the shap values for each feature.
+	pub shap_values: Vec<ShapValue>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ShapValue {
+	/// This is a human readable name describing the feature.
+	pub feature_name: String,
+	/// This is the shap value for this feature.
+	pub value: f32,
 }
 
 #[derive(Debug)]
@@ -137,17 +169,6 @@ pub struct TextColumn {
 	name: String,
 }
 
-impl Column {
-	fn column_name(&self) -> String {
-		match self {
-			Self::Unknown(c) => c.name.clone(),
-			Self::Number(c) => c.name.clone(),
-			Self::Enum(c) => c.name.clone(),
-			Self::Text(c) => c.name.clone(),
-		}
-	}
-}
-
 pub fn predict(
 	model: &PredictModel,
 	input: PredictInput,
@@ -162,7 +183,15 @@ pub fn predict(
 		PredictModel::LinearMulticlassClassifier(model) => model.columns.as_slice(),
 		PredictModel::TreeMulticlassClassifier(model) => model.columns.as_slice(),
 	};
-	let column_names = columns.iter().map(|c| c.column_name()).collect();
+	let column_names = columns
+		.iter()
+		.map(|c| match c {
+			Column::Unknown(c) => c.name.clone(),
+			Column::Number(c) => c.name.clone(),
+			Column::Enum(c) => c.name.clone(),
+			Column::Text(c) => c.name.clone(),
+		})
+		.collect();
 	let column_types = columns
 		.iter()
 		.map(|c| match c {
@@ -175,7 +204,6 @@ pub fn predict(
 		})
 		.collect();
 	let mut dataframe = tangram_dataframe::DataFrame::new(column_names, column_types);
-
 	// Fill the dataframe with the input.
 	for input in input.0 {
 		for column in dataframe.columns.iter_mut() {
@@ -212,7 +240,7 @@ pub fn predict(
 			}
 		}
 	}
-
+	// Make the predictions by matching on the model type.
 	match model {
 		PredictModel::LinearRegressor(model) => {
 			let n_examples = dataframe.nrows();
@@ -220,8 +248,8 @@ pub fn predict(
 			let feature_groups = &model.feature_groups;
 			let model = &model.model;
 			let mut features = unsafe { Array2::uninitialized((n_examples, n_features)) };
-			let mut shap_values = Array3::zeros((features.nrows(), 1, features.ncols() + 1));
 			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
+			let mut shap_values = Array3::zeros((features.nrows(), 1, features.ncols() + 1));
 			features::compute_features_ndarray(
 				&dataframe.view(),
 				feature_groups,
@@ -230,18 +258,13 @@ pub fn predict(
 			);
 			model.predict(features.view(), predictions.view_mut());
 			model.compute_shap_values(features.view(), shap_values.view_mut());
-			let shap_values = compute_shap_values_regression_output_linear(
-				feature_groups.as_slice(),
-				shap_values.view(),
-				features.view(),
-				dataframe.view(),
-			);
+			let shap_data = None;
 			let output = predictions
 				.into_iter()
-				.zip(shap_values.into_iter())
-				.map(|(prediction, shap_values)| RegressionPredictOutput {
+				.zip(shap_data.into_iter())
+				.map(|(prediction, shap_data)| RegressionPredictOutput {
 					value: *prediction,
-					shap_values: Some(shap_values),
+					shap_data: Some(shap_data),
 				})
 				.collect();
 			PredictOutput::Regression(output)
@@ -262,18 +285,13 @@ pub fn predict(
 			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
 			model.predict(features.view(), predictions.view_mut());
 			model.compute_shap_values(features.view(), shap_values.view_mut());
-			let shap_values = compute_shap_values_regression_output_tree(
-				feature_groups.as_slice(),
-				shap_values.view(),
-				features.view(),
-				dataframe.view(),
-			);
+			let shap_data = None;
 			let output = predictions
 				.into_iter()
-				.zip(shap_values.into_iter())
-				.map(|(prediction, shap_values)| RegressionPredictOutput {
+				.zip(shap_data.into_iter())
+				.map(|(prediction, shap_data)| RegressionPredictOutput {
 					value: *prediction,
-					shap_values: Some(shap_values),
+					shap_data: Some(shap_data),
 				})
 				.collect();
 			PredictOutput::Regression(output)
@@ -294,25 +312,17 @@ pub fn predict(
 			);
 			model.predict(features.view(), probabilities.view_mut());
 			model.compute_shap_values(features.view(), shap_values.view_mut());
-			let shap_values = compute_shap_values_classification_output_linear(
-				feature_groups.as_slice(),
-				&[model.classes[1].clone()],
-				shap_values.view(),
-				features.view(),
-				dataframe.view(),
-			);
 			let threshold = match options {
 				Some(options) => options.threshold,
 				None => 0.5,
 			};
 			let output = probabilities
 				.axis_iter(Axis(0))
-				.zip(shap_values.into_iter())
-				.map(|(probabilities, shap_values)| {
-					let class_name = if probabilities[1] >= threshold {
-						model.classes[1].clone()
+				.map(|probabilities| {
+					let (probability, class_name) = if probabilities[1] >= threshold {
+						(probabilities[1], model.classes[1].clone())
 					} else {
-						model.classes[0].clone()
+						(probabilities[0], model.classes[0].clone())
 					};
 					let probabilities = probabilities
 						.iter()
@@ -321,8 +331,9 @@ pub fn predict(
 						.collect::<BTreeMap<String, f32>>();
 					ClassificationPredictOutput {
 						class_name,
+						probability,
 						probabilities,
-						shap_values: Some(shap_values),
+						shap_data: None,
 					}
 				})
 				.collect();
@@ -344,25 +355,17 @@ pub fn predict(
 			let mut shap_values = Array3::zeros((features.nrows(), 1, features.ncols() + 1));
 			model.predict(features.view(), probabilities.view_mut());
 			model.compute_shap_values(features.view(), shap_values.view_mut());
-			let shap_values = compute_shap_values_classification_output_tree(
-				feature_groups.as_slice(),
-				&[model.classes[1].clone()],
-				shap_values.view(),
-				features.view(),
-				dataframe.view(),
-			);
 			let threshold = match options {
 				Some(options) => options.threshold,
 				None => 0.5,
 			};
 			let output = probabilities
 				.axis_iter(Axis(0))
-				.zip(shap_values.into_iter())
-				.map(|(probabilities, shap_values)| {
-					let class_name = if probabilities[1] >= threshold {
-						model.classes[1].clone()
+				.map(|probabilities| {
+					let (probability, class_name) = if probabilities[1] >= threshold {
+						(probabilities[1], model.classes[1].clone())
 					} else {
-						model.classes[0].clone()
+						(probabilities[0], model.classes[0].clone())
 					};
 					let probabilities = probabilities
 						.iter()
@@ -371,8 +374,9 @@ pub fn predict(
 						.collect::<BTreeMap<String, f32>>();
 					ClassificationPredictOutput {
 						class_name,
+						probability,
 						probabilities,
-						shap_values: Some(shap_values),
+						shap_data: None,
 					}
 				})
 				.collect();
@@ -396,33 +400,24 @@ pub fn predict(
 			);
 			model.predict(features.view(), probabilities.view_mut());
 			model.compute_shap_values(features.view(), shap_values.view_mut());
-			let shap_values = compute_shap_values_classification_output_linear(
-				feature_groups.as_slice(),
-				&model.classes,
-				shap_values.view(),
-				features.view(),
-				dataframe.view(),
-			);
 			let output = probabilities
 				.axis_iter(Axis(0))
-				.zip(shap_values.into_iter())
-				.map(|(probabilities, shap_values)| {
-					let class_name = probabilities
+				.map(|probabilities| {
+					let (probability, class_name) = probabilities
 						.iter()
 						.zip(model.classes.iter())
 						.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
-						.unwrap()
-						.1
-						.clone();
+						.unwrap();
 					let probabilities = probabilities
 						.iter()
 						.zip(model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
 					ClassificationPredictOutput {
-						class_name,
+						class_name: class_name.to_owned(),
+						probability: *probability,
 						probabilities,
-						shap_values: Some(shap_values),
+						shap_data: None,
 					}
 				})
 				.collect();
@@ -446,33 +441,24 @@ pub fn predict(
 				Array3::zeros((features.nrows(), n_classes, features.ncols() + 1));
 			model.predict(features.view(), probabilities.view_mut());
 			model.compute_shap_values(features.view(), shap_values.view_mut());
-			let shap_values = compute_shap_values_classification_output_tree(
-				feature_groups.as_slice(),
-				&model.classes.as_slice(),
-				shap_values.view(),
-				features.view(),
-				dataframe.view(),
-			);
 			let output = probabilities
 				.axis_iter(Axis(0))
-				.zip(shap_values.into_iter())
-				.map(|(probabilities, shap_values)| {
-					let class_index = probabilities
+				.map(|probabilities| {
+					let (probability, class_name) = probabilities
 						.iter()
-						.enumerate()
-						.max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-						.unwrap()
-						.0;
-					let class_name = model.classes[class_index].clone();
+						.zip(model.classes.iter())
+						.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
+						.unwrap();
 					let probabilities = probabilities
 						.iter()
 						.zip(model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
 					ClassificationPredictOutput {
-						class_name,
+						class_name: class_name.to_owned(),
+						probability: *probability,
 						probabilities,
-						shap_values: Some(shap_values),
+						shap_data: None,
 					}
 				})
 				.collect();
@@ -481,286 +467,284 @@ pub fn predict(
 	}
 }
 
-fn compute_shap_values_regression_output_linear(
-	feature_groups: &[features::FeatureGroup],
-	shap_values: ArrayView3<f32>,
-	features: ArrayView2<f32>,
-	dataframe: tangram_dataframe::DataFrameView,
-) -> Vec<ShapValues> {
-	let feature_names = compute_feature_names(feature_groups);
-	let feature_group_map = compute_feature_group_map(feature_groups);
-	shap_values
-		.axis_iter(Axis(0))
-		.zip(features.axis_iter(Axis(0)))
-		.map(|(shap_values, features)| {
-			let baseline = shap_values.get([0, shap_values.len() - 1]).unwrap();
-			let mut shap_values = compute_shap_values_linear(
-				feature_group_map.as_slice(),
-				feature_groups,
-				feature_names.as_slice(),
-				features.as_slice().unwrap(),
-				shap_values.row(0).as_slice().unwrap(),
-				&dataframe,
-			);
-			shap_values.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap());
-			ShapValues {
-				baseline: *baseline,
-				values: shap_values,
-			}
-		})
-		.collect()
-}
+// fn compute_shap_data_for_linear_regressor(
+// 	feature_groups: &[features::FeatureGroup],
+// 	shap_values: ArrayView3<f32>,
+// 	features: ArrayView2<f32>,
+// ) -> Vec<ShapData> {
+// 	let feature_names = compute_feature_names(feature_groups);
+// 	let feature_group_map = compute_feature_group_map(feature_groups);
+// 	shap_values
+// 		.axis_iter(Axis(0))
+// 		.zip(features.axis_iter(Axis(0)))
+// 		.map(|(shap_values, features)| {
+// 			let baseline_value = *shap_values.get([0, shap_values.len() - 1]).unwrap();
+// 			let mut shap_values = compute_shap_values_linear(
+// 				feature_group_map.as_slice(),
+// 				feature_groups,
+// 				feature_names.as_slice(),
+// 				features.as_slice().unwrap(),
+// 				shap_values.row(0).as_slice().unwrap(),
+// 			);
+// 			shap_values.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
+// 			ShapData {
+// 				baseline_value,
+// 				shap_values,
+// 			}
+// 		})
+// 		.collect()
+// }
 
-fn compute_shap_values_regression_output_tree(
-	feature_groups: &[features::FeatureGroup],
-	shap_values: ArrayView3<f32>,
-	features: ArrayView2<tangram_dataframe::Value>,
-	dataframe: tangram_dataframe::DataFrameView,
-) -> Vec<ShapValues> {
-	let feature_names = compute_feature_names(feature_groups);
-	let feature_group_map = compute_feature_group_map(feature_groups);
-	shap_values
-		.axis_iter(Axis(0))
-		.zip(features.axis_iter(Axis(0)))
-		.map(|(shap_values, features)| {
-			let baseline = shap_values.get([0, shap_values.len() - 1]).unwrap();
-			let mut shap_values = compute_shap_values_tree(
-				feature_group_map.as_slice(),
-				feature_groups,
-				feature_names.as_slice(),
-				features,
-				shap_values.row(0),
-				&dataframe,
-			);
-			shap_values.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap());
-			ShapValues {
-				baseline: *baseline,
-				values: shap_values,
-			}
-		})
-		.collect()
-}
+// fn compute_shap_data_for_tree_regressor(
+// 	feature_groups: &[features::FeatureGroup],
+// 	shap_values: ArrayView3<f32>,
+// 	features: ArrayView2<tangram_dataframe::Value>,
+// ) -> Vec<ShapData> {
+// 	let feature_names = compute_feature_names(feature_groups);
+// 	let feature_group_map = compute_feature_group_map(feature_groups);
+// 	shap_values
+// 		.axis_iter(Axis(0))
+// 		.zip(features.axis_iter(Axis(0)))
+// 		.map(|(shap_values, features)| {
+// 			let baseline_value = *shap_values.get([0, shap_values.len() - 1]).unwrap();
+// 			let mut shap_values = compute_shap_values_tree(
+// 				feature_group_map.as_slice(),
+// 				feature_groups,
+// 				feature_names.as_slice(),
+// 				features,
+// 				shap_values.row(0),
+// 			);
+// 			shap_values.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
+// 			ShapData {
+// 				baseline_value,
+// 				shap_values,
+// 			}
+// 		})
+// 		.collect()
+// }
 
-fn compute_shap_values_classification_output_linear(
-	feature_groups: &[features::FeatureGroup],
-	classes: &[String],
-	shap_values: ArrayView3<f32>,
-	features: ArrayView2<f32>,
-	dataframe: tangram_dataframe::DataFrameView,
-) -> Vec<BTreeMap<String, ShapValues>> {
-	let feature_names = compute_feature_names(feature_groups);
-	let feature_group_map = compute_feature_group_map(feature_groups);
-	shap_values
-		.axis_iter(Axis(0))
-		.zip(features.axis_iter(Axis(0)))
-		.map(|(shap_values, features)| {
-			classes
-				.iter()
-				.enumerate()
-				.map(|(class_index, class)| {
-					let shap_values = shap_values.slice(s![class_index, ..]);
-					let baseline = shap_values[shap_values.len() - 1];
-					let mut shap_values = compute_shap_values_linear(
-						feature_group_map.as_slice(),
-						feature_groups,
-						feature_names.as_slice(),
-						features.as_slice().unwrap(),
-						shap_values.as_slice().unwrap(),
-						&dataframe,
-					);
-					shap_values.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap());
-					(
-						class.clone(),
-						ShapValues {
-							baseline,
-							values: shap_values,
-						},
-					)
-				})
-				.collect::<BTreeMap<String, ShapValues>>()
-		})
-		.collect()
-}
+// fn compute_shap_values_for_linear_classifier(
+// 	feature_groups: &[features::FeatureGroup],
+// 	classes: &[String],
+// 	shap_values: ArrayView3<f32>,
+// 	features: ArrayView2<f32>,
+// 	dataframe: tangram_dataframe::DataFrameView,
+// ) -> Vec<BTreeMap<String, ShapData>> {
+// 	let feature_names = compute_feature_names(feature_groups);
+// 	let feature_group_map = compute_feature_group_map(feature_groups);
+// 	shap_values
+// 		.axis_iter(Axis(0))
+// 		.zip(features.axis_iter(Axis(0)))
+// 		.map(|(shap_values, features)| {
+// 			classes
+// 				.iter()
+// 				.enumerate()
+// 				.map(|(class_index, class)| {
+// 					let shap_values = shap_values.slice(s![class_index, ..]);
+// 					let baseline_value = shap_values[shap_values.len() - 1];
+// 					let mut shap_values = compute_shap_values_linear(
+// 						feature_group_map.as_slice(),
+// 						feature_groups,
+// 						feature_names.as_slice(),
+// 						features.as_slice().unwrap(),
+// 						shap_values.as_slice().unwrap(),
+// 					);
+// 					shap_values.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
+// 					(
+// 						class.clone(),
+// 						ShapData {
+// 							baseline_value,
+// 							shap_values,
+// 						},
+// 					)
+// 				})
+// 				.collect::<BTreeMap<String, ShapData>>()
+// 		})
+// 		.collect()
+// }
 
-fn compute_shap_values_linear(
-	feature_group_map: &[usize],
-	feature_groups: &[features::FeatureGroup],
-	feature_names: &[String],
-	features: &[f32],
-	shap_values: &[f32],
-	_dataframe: &tangram_dataframe::DataFrameView,
-) -> Vec<(String, f32)> {
-	feature_names
-		.iter()
-		.zip(shap_values.iter())
-		.zip(features)
-		.zip(feature_group_map.iter())
-		.map(|(((name, value), feature), feature_group_index)| {
-			let feature_str = match &feature_groups[*feature_group_index] {
-				features::FeatureGroup::BagOfWords(_) => {
-					if feature.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
-						"does not contain".to_owned()
-					} else {
-						"contains".to_owned()
-					}
-				}
-				features::FeatureGroup::Normalized(_) => "".to_owned(),
-				features::FeatureGroup::OneHotEncoded(_) => {
-					if feature.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
-						"false".to_owned()
-					} else {
-						"true".to_owned()
-					}
-				}
-				features::FeatureGroup::Identity(_) => feature.to_string(),
-			};
-			(name.replace("{}", feature_str.as_str()), *value)
-		})
-		.collect::<Vec<(String, f32)>>()
-}
+// fn compute_shap_values_for_tree_classifier(
+// 	feature_groups: &[features::FeatureGroup],
+// 	classes: &[String],
+// 	shap_values: ArrayView3<f32>,
+// 	features: ArrayView2<tangram_dataframe::Value>,
+// 	dataframe: tangram_dataframe::DataFrameView,
+// ) -> Vec<BTreeMap<String, ShapData>> {
+// 	let feature_names = compute_feature_names(feature_groups);
+// 	let feature_group_map = compute_feature_group_map(feature_groups);
+// 	shap_values
+// 		.axis_iter(Axis(0))
+// 		.zip(features.axis_iter(Axis(0)))
+// 		.map(|(shap_values, features)| {
+// 			classes
+// 				.iter()
+// 				.enumerate()
+// 				.map(|(class_index, class)| {
+// 					let shap_values = shap_values.slice(s![class_index, ..]);
+// 					let baseline_value = shap_values[shap_values.len() - 1];
+// 					let mut shap_values = compute_shap_values_tree(
+// 						feature_group_map.as_slice(),
+// 						feature_groups,
+// 						feature_names.as_slice(),
+// 						features,
+// 						shap_values,
+// 						&dataframe,
+// 					);
+// 					shap_values.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
+// 					(
+// 						class.clone(),
+// 						ShapData {
+// 							baseline_value,
+// 							shap_values,
+// 						},
+// 					)
+// 				})
+// 				.collect::<BTreeMap<String, ShapData>>()
+// 		})
+// 		.collect()
+// }
 
-fn compute_shap_values_classification_output_tree(
-	feature_groups: &[features::FeatureGroup],
-	classes: &[String],
-	shap_values: ArrayView3<f32>,
-	features: ArrayView2<tangram_dataframe::Value>,
-	dataframe: tangram_dataframe::DataFrameView,
-) -> Vec<BTreeMap<String, ShapValues>> {
-	let feature_names = compute_feature_names(feature_groups);
-	let feature_group_map = compute_feature_group_map(feature_groups);
-	shap_values
-		.axis_iter(Axis(0))
-		.zip(features.axis_iter(Axis(0)))
-		.map(|(shap_values, features)| {
-			classes
-				.iter()
-				.enumerate()
-				.map(|(class_index, class)| {
-					let shap_values = shap_values.slice(s![class_index, ..]);
-					let baseline = shap_values[shap_values.len() - 1];
-					let mut shap_values = compute_shap_values_tree(
-						feature_group_map.as_slice(),
-						feature_groups,
-						feature_names.as_slice(),
-						features,
-						shap_values,
-						&dataframe,
-					);
-					shap_values.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap());
-					(
-						class.clone(),
-						ShapValues {
-							baseline,
-							values: shap_values,
-						},
-					)
-				})
-				.collect::<BTreeMap<String, ShapValues>>()
-		})
-		.collect()
-}
+// fn compute_shap_values_linear(
+// 	feature_group_map: &[usize],
+// 	feature_groups: &[features::FeatureGroup],
+// 	feature_names: &[String],
+// 	features: &[f32],
+// 	shap_values: &[f32],
+// ) -> Vec<ShapValue> {
+// 	feature_names
+// 		.iter()
+// 		.zip(shap_values.iter())
+// 		.zip(features)
+// 		.zip(feature_group_map.iter())
+// 		.map(|(((feature_name, value), feature), feature_group_index)| {
+// 			let feature_str = match &feature_groups[*feature_group_index] {
+// 				features::FeatureGroup::Identity(_) => feature.to_string(),
+// 				features::FeatureGroup::Normalized(_) => "".to_owned(),
+// 				features::FeatureGroup::OneHotEncoded(_) => {
+// 					if feature.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
+// 						"false".to_owned()
+// 					} else {
+// 						"true".to_owned()
+// 					}
+// 				}
+// 				features::FeatureGroup::BagOfWords(_) => {
+// 					if feature.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
+// 						"does not contain".to_owned()
+// 					} else {
+// 						"contains".to_owned()
+// 					}
+// 				}
+// 			};
+// 			let feature_name = feature_name.replace("{}", feature_str.as_str());
+// 			ShapValue {
+// 				feature_name,
+// 				value: *value,
+// 			}
+// 		})
+// 		.collect()
+// }
 
-fn compute_shap_values_tree(
-	feature_group_map: &[usize],
-	feature_groups: &[features::FeatureGroup],
-	feature_names: &[String],
-	features: ArrayView1<tangram_dataframe::Value>,
-	shap_values: ArrayView1<f32>,
-	dataframe: &tangram_dataframe::DataFrameView,
-) -> Vec<(String, f32)> {
-	feature_names
-		.iter()
-		.zip(shap_values.iter())
-		.zip(features)
-		.zip(feature_group_map.iter())
-		.map(|(((name, value), feature), feature_group_index)| {
-			let feature = match feature_groups[*feature_group_index] {
-				features::FeatureGroup::BagOfWords(_) => match feature {
-					tangram_dataframe::Value::Number(v) => match v.partial_cmp(&0.0) {
-						Some(std::cmp::Ordering::Equal) => "does not contain".to_owned(),
-						_ => "contains".to_owned(),
-					},
-					_ => unreachable!(),
-				},
-				features::FeatureGroup::Normalized(_) => "".to_owned(),
-				features::FeatureGroup::OneHotEncoded(_) => match feature {
-					tangram_dataframe::Value::Number(v) => {
-						if v.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
-							"false".to_owned()
-						} else {
-							"true".to_owned()
-						}
-					}
-					_ => unreachable!(),
-				},
-				features::FeatureGroup::Identity(_) => match feature {
-					tangram_dataframe::Value::Number(value) => value.to_string(),
-					tangram_dataframe::Value::Enum(value) => {
-						// Get the name of the category.
-						if value.is_none() {
-							"oov".to_owned()
-						} else {
-							let column = &dataframe.columns[*feature_group_index];
-							match &column {
-								tangram_dataframe::ColumnView::Enum(column) => {
-									column.options[value.unwrap().get() - 1].clone()
-								}
-								_ => unreachable!(),
-							}
-						}
-					}
-					_ => unreachable!(),
-				},
-			};
-			(name.replace("{}", feature.as_str()), *value)
-		})
-		.collect::<Vec<(String, f32)>>()
-}
+// fn compute_shap_values_tree(
+// 	feature_group_map: &[usize],
+// 	feature_groups: &[features::FeatureGroup],
+// 	feature_names: &[String],
+// 	features: ArrayView1<tangram_dataframe::Value>,
+// 	shap_values: ArrayView1<f32>,
+// 	dataframe: &tangram_dataframe::DataFrameView,
+// ) -> Vec<ShapValue> {
+// 	izip!(feature_group_map, feature_names, features, shap_values)
+// 		.map(|(feature_group_index, feature_name, feature, shap_value)| {
+// 			let feature = match feature_groups[*feature_group_index] {
+// 				features::FeatureGroup::Identity(_) => match feature {
+// 					tangram_dataframe::Value::Number(value) => value.to_string(),
+// 					tangram_dataframe::Value::Enum(value) => {
+// 						// Get the name of the category.
+// 						if value.is_none() {
+// 							"oov".to_owned()
+// 						} else {
+// 							let column = &dataframe.columns[*feature_group_index];
+// 							match &column {
+// 								tangram_dataframe::ColumnView::Enum(column) => {
+// 									column.options[value.unwrap().get() - 1].clone()
+// 								}
+// 								_ => unreachable!(),
+// 							}
+// 						}
+// 					}
+// 					_ => unreachable!(),
+// 				},
+// 				features::FeatureGroup::Normalized(_) => "".to_owned(),
+// 				features::FeatureGroup::OneHotEncoded(_) => match feature {
+// 					tangram_dataframe::Value::Number(v) => {
+// 						if v.partial_cmp(&0.0) == Some(std::cmp::Ordering::Equal) {
+// 							"false".to_owned()
+// 						} else {
+// 							"true".to_owned()
+// 						}
+// 					}
+// 					_ => unreachable!(),
+// 				},
+// 				features::FeatureGroup::BagOfWords(_) => match feature {
+// 					tangram_dataframe::Value::Number(v) => match v.partial_cmp(&0.0) {
+// 						Some(std::cmp::Ordering::Equal) => "does not contain".to_owned(),
+// 						_ => "contains".to_owned(),
+// 					},
+// 					_ => unreachable!(),
+// 				},
+// 			};
+// 			let feature_name = feature_name.replace("{}", feature.as_str());
+// 			ShapValue {
+// 				feature_name,
+// 				value: *shap_value,
+// 			}
+// 		})
+// 		.collect()
+// }
 
-fn compute_feature_names(feature_groups: &[features::FeatureGroup]) -> Vec<String> {
-	feature_groups
-		.iter()
-		.flat_map(|feature_group| match feature_group {
-			features::FeatureGroup::Identity(feature_group) => {
-				let name = format!("{} = '{{}}'", feature_group.source_column_name.clone());
-				vec![name]
-			}
-			features::FeatureGroup::BagOfWords(feature_group) => {
-				let name = feature_group.source_column_name.clone();
-				feature_group
-					.tokens
-					.iter()
-					.map(|(token, _)| format!("{} {{}} '{}'", name, token,))
-					.collect()
-			}
-			features::FeatureGroup::OneHotEncoded(feature_group) => {
-				let name = feature_group.source_column_name.clone();
-				let mut names: Vec<String> = Vec::with_capacity(feature_group.categories.len() + 1);
-				names.push(format!("{} = unknown = '{{}}'", name));
-				for category in feature_group.categories.iter() {
-					names.push(format!("{} = {} = '{{}}'", name, category));
-				}
-				names
-			}
-			features::FeatureGroup::Normalized(feature_group) => {
-				let name = feature_group.source_column_name.clone();
-				vec![name]
-			}
-		})
-		.collect::<Vec<String>>()
-}
+// fn compute_feature_names(feature_groups: &[features::FeatureGroup]) -> Vec<String> {
+// 	feature_groups
+// 		.iter()
+// 		.flat_map(|feature_group| match feature_group {
+// 			features::FeatureGroup::Identity(feature_group) => {
+// 				let name = format!("{} = '{{}}'", feature_group.source_column_name.clone());
+// 				vec![name]
+// 			}
+// 			features::FeatureGroup::BagOfWords(feature_group) => {
+// 				let name = feature_group.source_column_name.clone();
+// 				feature_group
+// 					.tokens
+// 					.iter()
+// 					.map(|(token, _)| format!("{} {{}} '{}'", name, token,))
+// 					.collect()
+// 			}
+// 			features::FeatureGroup::OneHotEncoded(feature_group) => {
+// 				let name = feature_group.source_column_name.clone();
+// 				let mut names: Vec<String> = Vec::with_capacity(feature_group.categories.len() + 1);
+// 				names.push(format!("{} = unknown = '{{}}'", name));
+// 				for category in feature_group.categories.iter() {
+// 					names.push(format!("{} = {} = '{{}}'", name, category));
+// 				}
+// 				names
+// 			}
+// 			features::FeatureGroup::Normalized(feature_group) => {
+// 				let name = feature_group.source_column_name.clone();
+// 				vec![name]
+// 			}
+// 		})
+// 		.collect::<Vec<String>>()
+// }
 
-fn compute_feature_group_map(feature_groups: &[features::FeatureGroup]) -> Vec<usize> {
-	feature_groups
-		.iter()
-		.enumerate()
-		.flat_map(|(feature_group_index, feature_group)| {
-			(0..feature_group.n_features())
-				.map(|_| feature_group_index)
-				.collect::<Vec<usize>>()
-		})
-		.collect()
-}
+// fn compute_feature_group_map(feature_groups: &[features::FeatureGroup]) -> Vec<usize> {
+// 	feature_groups
+// 		.iter()
+// 		.enumerate()
+// 		.flat_map(|(feature_group_index, feature_group)| {
+// 			(0..feature_group.n_features())
+// 				.map(|_| feature_group_index)
+// 				.collect::<Vec<usize>>()
+// 		})
+// 		.collect()
+// }
 
 impl TryFrom<model::Model> for PredictModel {
 	type Error = anyhow::Error;
@@ -771,7 +755,7 @@ impl TryFrom<model::Model> for PredictModel {
 				let columns = model
 					.overall_column_stats
 					.into_iter()
-					.map(column_from_column_stats)
+					.map(TryFrom::try_from)
 					.collect::<Result<Vec<_>>>()?;
 				match model.model {
 					model::RegressionModel::Linear(model) => {
@@ -821,7 +805,7 @@ impl TryFrom<model::Model> for PredictModel {
 				let columns = model
 					.overall_column_stats
 					.into_iter()
-					.map(column_from_column_stats)
+					.map(TryFrom::try_from)
 					.collect::<Result<Vec<_>>>()?;
 				match model.model {
 					model::ClassificationModel::LinearBinary(model) => {
@@ -928,11 +912,11 @@ impl TryFrom<model::Model> for PredictModel {
 	}
 }
 
-impl TryInto<tangram_tree::Tree> for model::Tree {
+impl TryFrom<model::Tree> for tangram_tree::Tree {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<tangram_tree::Tree> {
-		Ok(tangram_tree::Tree {
-			nodes: self
+	fn try_from(value: model::Tree) -> Result<Self> {
+		Ok(Self {
+			nodes: value
 				.nodes
 				.into_iter()
 				.map(TryInto::try_into)
@@ -941,30 +925,30 @@ impl TryInto<tangram_tree::Tree> for model::Tree {
 	}
 }
 
-impl TryInto<tangram_tree::Node> for model::Node {
+impl TryFrom<model::Node> for tangram_tree::Node {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<tangram_tree::Node> {
-		match self {
-			Self::Branch(n) => Ok(tangram_tree::Node::Branch(tangram_tree::BranchNode {
-				left_child_index: n.left_child_index.to_usize().unwrap(),
-				right_child_index: n.right_child_index.to_usize().unwrap(),
-				split: n.split.try_into()?,
-				examples_fraction: n.examples_fraction,
+	fn try_from(value: model::Node) -> Result<Self> {
+		match value {
+			model::Node::Branch(value) => Ok(Self::Branch(tangram_tree::BranchNode {
+				left_child_index: value.left_child_index.to_usize().unwrap(),
+				right_child_index: value.right_child_index.to_usize().unwrap(),
+				split: value.split.try_into()?,
+				examples_fraction: value.examples_fraction,
 			})),
-			Self::Leaf(n) => Ok(tangram_tree::Node::Leaf(tangram_tree::LeafNode {
-				value: n.value,
-				examples_fraction: n.examples_fraction,
+			model::Node::Leaf(value) => Ok(Self::Leaf(tangram_tree::LeafNode {
+				value: value.value,
+				examples_fraction: value.examples_fraction,
 			})),
 		}
 	}
 }
 
-impl TryInto<tangram_tree::BranchSplit> for model::BranchSplit {
+impl TryFrom<model::BranchSplit> for tangram_tree::BranchSplit {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<tangram_tree::BranchSplit> {
-		match self {
-			Self::Continuous(s) => Ok(tangram_tree::BranchSplit::Continuous(
-				tangram_tree::BranchSplitContinuous {
+	fn try_from(value: model::BranchSplit) -> Result<Self> {
+		match value {
+			model::BranchSplit::Continuous(s) => {
+				Ok(Self::Continuous(tangram_tree::BranchSplitContinuous {
 					feature_index: s.feature_index.to_usize().unwrap(),
 					split_value: s.split_value,
 					invalid_values_direction: if s.invalid_values_direction {
@@ -972,47 +956,50 @@ impl TryInto<tangram_tree::BranchSplit> for model::BranchSplit {
 					} else {
 						tangram_tree::SplitDirection::Left
 					},
-				},
-			)),
-			Self::Discrete(s) => Ok(tangram_tree::BranchSplit::Discrete(
-				tangram_tree::BranchSplitDiscrete {
+				}))
+			}
+			model::BranchSplit::Discrete(s) => {
+				Ok(Self::Discrete(tangram_tree::BranchSplitDiscrete {
 					feature_index: s.feature_index.to_usize().unwrap(),
 					directions: s
 						.directions
 						.into_iter()
 						.map(TryInto::try_into)
 						.collect::<Result<_, _>>()?,
-				},
-			)),
+				}))
+			}
 		}
 	}
 }
 
-impl TryInto<tangram_tree::SplitDirection> for model::SplitDirection {
+impl TryFrom<model::SplitDirection> for tangram_tree::SplitDirection {
 	type Error = anyhow::Error;
-	fn try_into(self) -> Result<tangram_tree::SplitDirection> {
-		Ok(match self {
-			Self::Left => tangram_tree::SplitDirection::Left,
-			Self::Right => tangram_tree::SplitDirection::Right,
+	fn try_from(value: model::SplitDirection) -> Result<Self> {
+		Ok(match value {
+			model::SplitDirection::Left => Self::Left,
+			model::SplitDirection::Right => Self::Right,
 		})
 	}
 }
 
-fn column_from_column_stats(value: model::ColumnStats) -> Result<Column> {
-	match value {
-		model::ColumnStats::Unknown(value) => Ok(Column::Unknown(UnknownColumn {
-			name: value.column_name,
-		})),
-		model::ColumnStats::Number(value) => Ok(Column::Number(NumberColumn {
-			name: value.column_name,
-		})),
-		model::ColumnStats::Enum(value) => Ok(Column::Enum(EnumColumn {
-			name: value.column_name,
-			options: value.histogram.into_iter().map(|v| v.0).collect(),
-		})),
-		model::ColumnStats::Text(value) => Ok(Column::Text(TextColumn {
-			name: value.column_name,
-		})),
+impl TryFrom<model::ColumnStats> for Column {
+	type Error = anyhow::Error;
+	fn try_from(value: model::ColumnStats) -> Result<Column> {
+		match value {
+			model::ColumnStats::Unknown(value) => Ok(Column::Unknown(UnknownColumn {
+				name: value.column_name,
+			})),
+			model::ColumnStats::Number(value) => Ok(Column::Number(NumberColumn {
+				name: value.column_name,
+			})),
+			model::ColumnStats::Enum(value) => Ok(Column::Enum(EnumColumn {
+				name: value.column_name,
+				options: value.histogram.into_iter().map(|v| v.0).collect(),
+			})),
+			model::ColumnStats::Text(value) => Ok(Column::Text(TextColumn {
+				name: value.column_name,
+			})),
+		}
 	}
 }
 

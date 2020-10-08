@@ -272,7 +272,7 @@ fn number_props(
 			p75: train_column_stats.p75,
 		},
 	};
-	let intervals = get_production_stats_output
+	let interval_box_chart_data = get_production_stats_output
 		.intervals
 		.iter()
 		.map(|interval| {
@@ -287,14 +287,12 @@ fn number_props(
 				ProductionColumnStatsOutput::Number(s) => s,
 				_ => unreachable!(),
 			};
-			(production_column_stats, interval.start_date)
-		})
-		.collect::<Vec<_>>();
-	let interval_box_chart_data = intervals
-		.into_iter()
-		.map(
-			|(production_column_stats, start_date)| IntervalBoxChartDataPoint {
-				label: format_date_window_interval(start_date, date_window_interval, timezone),
+			IntervalBoxChartDataPoint {
+				label: format_date_window_interval(
+					interval.start_date,
+					date_window_interval,
+					timezone,
+				),
 				stats: production_column_stats.stats.as_ref().map(|c| {
 					IntervalBoxChartDataPointStats {
 						max: c.max,
@@ -304,8 +302,8 @@ fn number_props(
 						p75: c.p75,
 					}
 				}),
-			},
-		)
+			}
+		})
 		.collect();
 	let min_comparison = NumberTrainingProductionComparison {
 		production: overall.stats.as_ref().map(|s| s.min),

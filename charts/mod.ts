@@ -13,7 +13,7 @@ export type {
 	ShapChartOptions as DrawShapChartOptions,
 	ShapChartData,
 	ShapChartSeries,
-	ShapValue,
+	ShapChartValue as ShapValue,
 } from './shap_chart'
 export type {
 	LineChartOptions as DrawLineChartOptions,

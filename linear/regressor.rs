@@ -153,6 +153,7 @@ impl Regressor {
 	pub fn compute_shap_values(
 		&self,
 		features: ArrayView2<f32>,
+		// (n_examples, n_classes, n_features)
 		mut shap_values: ArrayViewMut3<f32>,
 	) {
 		for (features, mut shap_values) in izip!(

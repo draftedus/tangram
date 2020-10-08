@@ -1,5 +1,5 @@
 import './styles.css'
-import { BarChart, BoxChart, ShapChart } from '@tangramhq/charts'
+import { BarChart, BoxChart, ShapChart, ShapChartData } from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
@@ -80,17 +80,7 @@ type Prediction =
 	| null
 
 type RegressionPrediction = {
-	shapChartData: Array<{
-		baseline: number
-		baselineLabel: string
-		label: string
-		output: number
-		outputLabel: string
-		values: Array<{
-			feature: string
-			value: number
-		}>
-	}>
+	shapChartData: ShapChartData
 	value: number
 }
 
@@ -99,17 +89,7 @@ type ClassificationPrediction = {
 	classes: string[]
 	probabilities: Array<[string, number]>
 	probability: number
-	shapChartData: Array<{
-		baseline: number
-		baselineLabel: string
-		label: string
-		output: number
-		outputLabel: string
-		values: Array<{
-			feature: string
-			value: number
-		}>
-	}>
+	shapChartData: ShapChartData
 }
 
 export default function PredictPage(props: Props) {
@@ -319,7 +299,10 @@ function PredictionResult(props: Props) {
 	)
 }
 
-type RegressionPredictionOutputProps = RegressionPrediction
+type RegressionPredictionOutputProps = {
+	shapChartData: ShapChartData
+	value: number
+}
 
 function RegressionOutput(props: RegressionPredictionOutputProps) {
 	return (
@@ -373,13 +356,11 @@ function ClassificationOutput(props: ClassificationPredictionOutputProps) {
 					value={ui.formatPercent(props.probability, 2)}
 				/>
 			</ui.Card>
-			{props.probabilities.length > 2 && (
-				<BarChart
-					data={probabilityData}
-					id="probabilities"
-					title="Predicted Probabilities"
-				/>
-			)}
+			<BarChart
+				data={probabilityData}
+				id="probabilities"
+				title="Predicted Probabilities"
+			/>
 			<ui.H2>{'Explanation'}</ui.H2>
 			<ui.P>
 				{"This chart shows how the input values influenced the model's output."}

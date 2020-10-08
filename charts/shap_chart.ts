@@ -13,13 +13,9 @@ import { drawTooltip } from './tooltip'
 
 /** These are the options for displaying a SHAP chart. */
 export type ShapChartOptions = {
-	/** The data to display in the chart. */
 	data: ShapChartData
-	/** The default is true. */
 	includeXAxisTitle?: boolean
-	/** The default is true. */
 	includeYAxisLabels?: boolean
-	/** The default is true. */
 	includeYAxisTitle?: boolean
 	/** This is the color to fill the bars for negative values. You will probably want to use a shade of red. */
 	negativeColor: string
@@ -43,10 +39,10 @@ export type ShapChartSeries = {
 	label: string
 	output: number
 	outputLabel: string
-	values: ShapValue[]
+	values: ShapChartValue[]
 }
 
-export type ShapValue = {
+export type ShapChartValue = {
 	feature: string
 	value: number
 }

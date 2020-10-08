@@ -11,7 +11,6 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::ops::Neg;
 use tangram_id::Id;
 
 #[derive(serde::Serialize)]
@@ -67,58 +66,43 @@ struct Text {
 }
 
 #[derive(serde::Serialize, Debug)]
-struct PredictResponse {
-	output: Prediction,
-}
-
-#[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase", tag = "type", content = "value")]
 enum Prediction {
-	Regression(RegressionPredictOutput),
+	Regression(RegressionPrediction),
 	Classification(ClassificationPrediction),
 }
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct RegressionPredictOutput {
+struct RegressionPrediction {
 	value: f32,
-	shap_chart_data: Vec<RegressionShapValuesOutput>,
+	shap_chart_data: ShapChartData,
 }
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct ClassificationPrediction {
 	class_name: String,
-	probabilities: Vec<(String, f32)>,
 	probability: f32,
-	shap_chart_data: Vec<ClassificationShapValuesOutput>,
+	probabilities: Vec<(String, f32)>,
+	shap_chart_data: ShapChartData,
 }
+
+type ShapChartData = Vec<ShapChartSeries>;
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct ClassificationShapValuesOutput {
-	label: String,
-	baseline: f32,
-	baseline_label: String,
-	baseline_probability: f32,
-	output: f32,
-	output_label: String,
-	values: Vec<ShapValue>,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct RegressionShapValuesOutput {
+struct ShapChartSeries {
 	baseline: f32,
 	baseline_label: String,
 	label: String,
 	output: f32,
 	output_label: String,
-	values: Vec<ShapValue>,
+	values: Vec<ShapChartValue>,
 }
 
 #[derive(serde::Serialize, Debug)]
-struct ShapValue {
+struct ShapChartValue {
 	feature: String,
 	value: f32,
 }
@@ -301,18 +285,21 @@ fn predict(
 	let predict_output: Prediction = match output {
 		tangram_core::predict::PredictOutput::Regression(mut output) => {
 			let output = output.remove(0);
-			let shap_values = output.shap_values.unwrap();
-			let prediction = RegressionPredictOutput {
-				shap_chart_data: vec![RegressionShapValuesOutput {
-					baseline: shap_values.baseline,
-					baseline_label: shap_values.baseline.to_string(),
+			let shap_data = output.shap_data.unwrap();
+			let prediction = RegressionPrediction {
+				shap_chart_data: vec![ShapChartSeries {
+					baseline: shap_data.baseline_value,
+					baseline_label: format!("{}", shap_data.baseline_value),
 					label: "output".to_owned(),
-					output: output.value,
-					output_label: output.value.to_string(),
-					values: shap_values
-						.values
+					output: shap_data.output_value,
+					output_label: format!("{}", shap_data.output_value),
+					values: shap_data
+						.shap_values
 						.into_iter()
-						.map(|(feature, value)| ShapValue { feature, value })
+						.map(|shap_value| ShapChartValue {
+							feature: shap_value.feature_name,
+							value: shap_value.value,
+						})
 						.collect(),
 				}],
 				value: output.value,
@@ -321,79 +308,31 @@ fn predict(
 		}
 		tangram_core::predict::PredictOutput::Classification(mut output) => {
 			let output = output.remove(0);
-			// Get the baseline probabliities.
-			let softmax = |logits: &[f32]| {
-				let mut probabilities = logits.to_owned();
-				let max = probabilities
-					.iter()
-					.fold(std::f32::MIN, |a, &b| f32::max(a, b));
-				for p in probabilities.iter_mut() {
-					*p -= max;
-				}
-				for l in probabilities.iter_mut() {
-					*l = l.exp();
-				}
-				let sum = probabilities.iter().sum::<f32>();
-				for p in probabilities.iter_mut() {
-					*p /= sum;
-				}
-				probabilities
-			};
-			let sigmoid = |logits: &[f32]| {
-				let logit = logits[0];
-				vec![1.0 / (logit.neg().exp() + 1.0)]
-			};
-			let get_baseline_probabilities: Box<dyn Fn(&[f32]) -> Vec<f32>> = match predict_model {
-				tangram_core::predict::PredictModel::LinearBinaryClassifier(_) => Box::new(sigmoid),
-				tangram_core::predict::PredictModel::TreeBinaryClassifier(_) => Box::new(sigmoid),
-				tangram_core::predict::PredictModel::LinearMulticlassClassifier(_) => {
-					Box::new(softmax)
-				}
-				tangram_core::predict::PredictModel::TreeMulticlassClassifier(_) => {
-					Box::new(softmax)
-				}
-				_ => unreachable!(),
-			};
-			let output_probabilities = output.probabilities;
-			let shap_values = output.shap_values.unwrap();
-			let baselines = shap_values
-				.iter()
-				.map(|(_, shap_values)| shap_values.baseline)
-				.collect::<Vec<f32>>();
-			let baseline_probabilities = get_baseline_probabilities(baselines.as_slice());
-			let probability = output_probabilities
-				.get(&output.class_name)
+			let shap_chart_data = output
+				.shap_data
 				.unwrap()
-				.to_owned();
-			let shap_chart_data = shap_values
+				.classes
 				.into_iter()
-				.zip(baseline_probabilities)
-				.map(|((class, shap_values), baseline_probability)| {
-					let output_probability = output_probabilities.get(&class).unwrap();
-					let output = shap_values.baseline
-						+ shap_values.values.iter().fold(0.0, |mut sum, shap_value| {
-							sum += shap_value.1;
-							sum
-						});
-					ClassificationShapValuesOutput {
-						baseline: shap_values.baseline,
-						baseline_probability,
-						baseline_label: format!("{:.2}%", baseline_probability * 100.0),
-						output,
-						label: class,
-						output_label: format!("{:.2}%", output_probability * 100.0),
-						values: shap_values
-							.values
-							.into_iter()
-							.map(|(feature, value)| ShapValue { feature, value })
-							.collect(),
-					}
+				.map(|(class, shap_data)| ShapChartSeries {
+					baseline: shap_data.baseline_value,
+					baseline_label: format!("{}", shap_data.baseline_value),
+					label: class,
+					output: shap_data.output_value,
+					output_label: format!("{}", shap_data.output_value),
+					values: shap_data
+						.shap_values
+						.into_iter()
+						.map(|shap_value| ShapChartValue {
+							feature: shap_value.feature_name,
+							value: shap_value.value,
+						})
+						.collect(),
 				})
 				.collect::<Vec<_>>();
 			let prediction = ClassificationPrediction {
 				class_name: output.class_name,
-				probability,
-				probabilities: output_probabilities.into_iter().collect(),
+				probability: output.probability,
+				probabilities: output.probabilities.into_iter().collect(),
 				shap_chart_data,
 			};
 			Prediction::Classification(prediction)
