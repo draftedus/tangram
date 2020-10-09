@@ -44,7 +44,7 @@ pub struct RegressionShapOutput {
 	/// The output value will be the sum of the baseline value and the shap values of all features.
 	pub output_value: f32,
 	/// These are the shap values for each feature.
-	pub shap_values: Vec<ShapValue>,
+	pub feature_contributions: Vec<FeatureContribution>,
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -70,12 +70,12 @@ pub struct ClassificationShapOutputForClass {
 	/// The output value will be the sum of the baseline value and the shap values of all features.
 	pub output_value: f32,
 	/// These are the shap values for each feature.
-	pub shap_values: Vec<ShapValue>,
+	pub feature_contributions: Vec<FeatureContribution>,
 }
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ShapValue {
+pub struct FeatureContribution {
 	/// This is a human readable name describing the feature.
 	pub feature_name: String,
 	/// This is the shap value for this feature.
@@ -254,8 +254,8 @@ pub fn predict(
 				&|| {},
 			);
 			model.model.predict(features.view(), predictions.view_mut());
-			let shap_values = model.model.compute_shap_values(features.view());
 			let feature_names = compute_feature_names(&model.feature_groups);
+			let shap_values = model.model.compute_shap_values(features.view());
 			let output = predictions
 				.into_iter()
 				.zip(shap_values.into_iter())
@@ -263,7 +263,7 @@ pub fn predict(
 					let feature_contributions = feature_names
 						.iter()
 						.zip(shap_values.feature_contributions.iter())
-						.map(|(feature_name, value)| ShapValue {
+						.map(|(feature_name, value)| FeatureContribution {
 							feature_name: feature_name.clone(),
 							value: *value,
 						})
@@ -271,7 +271,7 @@ pub fn predict(
 					let shap_output = RegressionShapOutput {
 						baseline_value: shap_values.baseline_value,
 						output_value: shap_values.output_value,
-						shap_values: feature_contributions,
+						feature_contributions,
 					};
 					RegressionPredictOutput {
 						value: *prediction,
@@ -297,8 +297,8 @@ pub fn predict(
 			);
 			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
 			model.model.predict(features.view(), predictions.view_mut());
-			let shap_values = model.model.compute_shap_values(features.view());
 			let feature_names = compute_feature_names(&model.feature_groups);
+			let shap_values = model.model.compute_shap_values(features.view());
 			let output = predictions
 				.into_iter()
 				.zip(shap_values.into_iter())
@@ -306,7 +306,7 @@ pub fn predict(
 					let feature_contributions = feature_names
 						.iter()
 						.zip(shap_values.feature_contributions.iter())
-						.map(|(feature_name, value)| ShapValue {
+						.map(|(feature_name, value)| FeatureContribution {
 							feature_name: feature_name.clone(),
 							value: *value,
 						})
@@ -314,7 +314,7 @@ pub fn predict(
 					let shap_output = RegressionShapOutput {
 						baseline_value: shap_values.baseline_value,
 						output_value: shap_values.output_value,
-						shap_values: feature_contributions,
+						feature_contributions,
 					};
 					RegressionPredictOutput {
 						value: *prediction,
@@ -338,8 +338,8 @@ pub fn predict(
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
-			let shap_values = model.model.compute_shap_values(features.view());
 			let feature_names = compute_feature_names(&model.feature_groups);
+			let shap_values = model.model.compute_shap_values(features.view());
 			let threshold = match options {
 				Some(options) => options.threshold,
 				None => 0.5,
@@ -361,7 +361,7 @@ pub fn predict(
 					let feature_contributions = feature_names
 						.iter()
 						.zip(shap_values.feature_contributions.iter())
-						.map(|(feature_name, value)| ShapValue {
+						.map(|(feature_name, value)| FeatureContribution {
 							feature_name: feature_name.clone(),
 							value: *value,
 						})
@@ -372,7 +372,7 @@ pub fn predict(
 						ClassificationShapOutputForClass {
 							baseline_value: shap_values.baseline_value,
 							output_value: shap_values.output_value,
-							shap_values: feature_contributions,
+							feature_contributions,
 						},
 					);
 					let shap_output = ClassificationShapOutput { classes };
@@ -404,13 +404,16 @@ pub fn predict(
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
+			let feature_names = compute_feature_names(&model.feature_groups);
+			let shap_values = model.model.compute_shap_values(features.view());
 			let threshold = match options {
 				Some(options) => options.threshold,
 				None => 0.5,
 			};
 			let output = probabilities
 				.axis_iter(Axis(0))
-				.map(|probabilities| {
+				.zip(shap_values.iter())
+				.map(|(probabilities, shap_values)| {
 					let (probability, class_name) = if probabilities[1] >= threshold {
 						(probabilities[1], model.model.classes[1].clone())
 					} else {
@@ -421,11 +424,29 @@ pub fn predict(
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
+					let feature_contributions = feature_names
+						.iter()
+						.zip(shap_values.feature_contributions.iter())
+						.map(|(feature_name, value)| FeatureContribution {
+							feature_name: feature_name.clone(),
+							value: *value,
+						})
+						.collect();
+					let mut classes = BTreeMap::new();
+					classes.insert(
+						model.model.classes[1].clone(),
+						ClassificationShapOutputForClass {
+							baseline_value: shap_values.baseline_value,
+							output_value: shap_values.output_value,
+							feature_contributions,
+						},
+					);
+					let shap_output = ClassificationShapOutput { classes };
 					ClassificationPredictOutput {
 						class_name,
 						probability,
 						probabilities,
-						shap_output: None,
+						shap_output: Some(shap_output),
 					}
 				})
 				.collect();

@@ -16,7 +16,7 @@ export type RegressionOutput = {
 export type ClassificationOutput<Input = string, Classes = string> = {
 	className: Classes
 	probabilities: { [K in keyof Classes]: number }
-	shapValues: { [K in keyof Input]: number }
+	probability: number
 }
 
 export type Output = RegressionOutput | ClassificationOutput

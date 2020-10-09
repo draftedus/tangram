@@ -294,7 +294,7 @@ fn predict(
 					output: shap_data.output_value,
 					output_label: format!("{}", shap_data.output_value),
 					values: shap_data
-						.shap_values
+						.feature_contributions
 						.into_iter()
 						.map(|shap_value| ShapChartValue {
 							feature: shap_value.feature_name,
@@ -320,7 +320,7 @@ fn predict(
 					output: shap_data.output_value,
 					output_label: format!("{}", shap_data.output_value),
 					values: shap_data
-						.shap_values
+						.feature_contributions
 						.into_iter()
 						.map(|shap_value| ShapChartValue {
 							feature: shap_value.feature_name,
