@@ -12,12 +12,11 @@ export type Props = {
 	}>
 	classes: string[]
 	id: string
-	losses: number[]
+	losses: number[] | null
 }
 
 export function MulticlassClassifierTrainingMetricsIndexPage(props: Props) {
-	let loss = props.losses.slice(-1).pop()
-
+	let loss = props.losses?.slice(-1).pop()
 	return (
 		<ui.S1>
 			<ui.H1>{'Training Metrics'}</ui.H1>
