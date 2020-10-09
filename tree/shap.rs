@@ -4,34 +4,40 @@ use super::{
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
-// Compute the SHAP value for a single example.
-pub fn compute_shap(
+pub struct ShapValuesOutput {
+	pub baseline_value: f32,
+	pub output_value: f32,
+	pub feature_contributions: Vec<f32>,
+}
+
+/// This function is common code used by `compute_shap_values` for each model type.
+pub fn compute_shap_values_common(
 	example: &[tangram_dataframe::Value],
 	trees: ArrayView1<Tree>,
 	bias: f32,
-	shap_values: &mut [f32],
-) {
-	let n_features = example.len();
+) -> ShapValuesOutput {
+	let mut baseline_value = bias;
 	for tree in trees {
-		let shap_values_for_tree = tree_shap(example, tree);
-		for (shap_value, tree_shap_value) in shap_values.iter_mut().zip(shap_values_for_tree) {
-			*shap_value += tree_shap_value;
-		}
+		baseline_value += compute_expectation(tree, 0);
 	}
-	shap_values[n_features] += bias;
+	let mut feature_contributions = vec![0.0; example.len()];
 	for tree in trees {
-		shap_values[n_features] += compute_expectation(tree, 0);
+		tree_shap(example, tree, feature_contributions.as_mut_slice());
+	}
+	let output_value = baseline_value + feature_contributions.iter().sum::<f32>();
+	ShapValuesOutput {
+		baseline_value,
+		feature_contributions,
+		output_value,
 	}
 }
 
 /// This function, and the helper functions below it, are a direct port from https://github.com/slundberg/shap.
-fn tree_shap(example: &[tangram_dataframe::Value], tree: &Tree) -> Vec<f32> {
-	let n_features = example.len();
-	let mut phi = vec![0.0; n_features + 1];
+fn tree_shap(example: &[tangram_dataframe::Value], tree: &Tree, phi: &mut [f32]) {
 	let max_depth = max_depth(tree, 0, 0) + 2;
 	let mut unique_path = vec![PathItem::new(); max_depth * (max_depth + 1) / 2];
 	tree_shap_recursive(TreeShapRecursiveOptions {
-		phi: phi.as_mut_slice(),
+		phi,
 		example,
 		tree,
 		node_index: 0,
@@ -41,7 +47,6 @@ fn tree_shap(example: &[tangram_dataframe::Value], tree: &Tree) -> Vec<f32> {
 		parent_one_fraction: 1.0,
 		parent_feature_index: None,
 	});
-	phi
 }
 
 #[derive(Debug, Clone)]

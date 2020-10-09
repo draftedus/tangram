@@ -128,25 +128,30 @@ impl EarlyStoppingMonitor {
 	}
 }
 
+pub struct ShapValuesOutput {
+	pub baseline_value: f32,
+	pub output_value: f32,
+	pub feature_contributions: Vec<f32>,
+}
+
 /// This function is common code used by `compute_shap_values` for each model type.
 fn compute_shap_values_common(
-	example: &[f32],
+	features: &[f32],
 	bias: f32,
 	weights: &[f32],
 	means: &[f32],
-	shap_values: &mut [f32],
-) {
-	let mut bias_shap_value: f32 = bias;
-	bias_shap_value += weights
-		.iter()
-		.zip(means.iter())
-		.map(|(weight, mean)| weight * mean)
-		.sum::<f32>();
-	let len = shap_values.len();
-	shap_values[len - 1] = bias_shap_value;
-	for (shap_value, weight, feature, mean) in
-		izip!(&mut shap_values[0..len - 1], weights, example, means)
-	{
-		*shap_value = weight * (feature - mean);
+) -> ShapValuesOutput {
+	let baseline_value = bias
+		+ izip!(weights, means)
+			.map(|(weight, mean)| weight * mean)
+			.sum::<f32>();
+	let feature_contributions: Vec<f32> = izip!(weights, features, means)
+		.map(|(weight, feature, mean)| weight * (feature - mean))
+		.collect();
+	let output_value = baseline_value + feature_contributions.iter().sum::<f32>();
+	ShapValuesOutput {
+		baseline_value,
+		feature_contributions,
+		output_value,
 	}
 }

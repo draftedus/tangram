@@ -1,6 +1,6 @@
 use super::{
-	compute_shap_values_common, train_early_stopping_split, EarlyStoppingMonitor, TrainOptions,
-	TrainProgress,
+	compute_shap_values_common, train_early_stopping_split, EarlyStoppingMonitor, ShapValuesOutput,
+	TrainOptions, TrainProgress,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -183,23 +183,17 @@ impl BinaryClassifier {
 		}
 	}
 
-	/// Write SHAP values into `shap_values` for the input `features`.
-	pub fn compute_shap_values(
-		&self,
-		features: ArrayView2<f32>,
-		mut shap_values: ArrayViewMut3<f32>,
-	) {
-		for (features, mut shap_values) in izip!(
-			features.axis_iter(Axis(0)),
-			shap_values.axis_iter_mut(Axis(0)),
-		) {
-			compute_shap_values_common(
-				features.as_slice().unwrap(),
-				self.bias,
-				self.weights.as_slice().unwrap(),
-				&self.means,
-				shap_values.row_mut(0).as_slice_mut().unwrap(),
-			);
-		}
+	pub fn compute_shap_values(&self, features: ArrayView2<f32>) -> Vec<ShapValuesOutput> {
+		features
+			.axis_iter(Axis(0))
+			.map(|features| {
+				compute_shap_values_common(
+					features.as_slice().unwrap(),
+					self.bias,
+					self.weights.as_slice().unwrap(),
+					&self.means,
+				)
+			})
+			.collect()
 	}
 }

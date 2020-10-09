@@ -285,7 +285,7 @@ fn predict(
 	let predict_output: Prediction = match output {
 		tangram_core::predict::PredictOutput::Regression(mut output) => {
 			let output = output.remove(0);
-			let shap_data = output.shap_data.unwrap();
+			let shap_data = output.shap_output.unwrap();
 			let prediction = RegressionPrediction {
 				shap_chart_data: vec![ShapChartSeries {
 					baseline: shap_data.baseline_value,
@@ -309,7 +309,7 @@ fn predict(
 		tangram_core::predict::PredictOutput::Classification(mut output) => {
 			let output = output.remove(0);
 			let shap_chart_data = output
-				.shap_data
+				.shap_output
 				.unwrap()
 				.classes
 				.into_iter()

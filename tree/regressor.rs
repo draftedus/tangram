@@ -1,5 +1,5 @@
 use super::{
-	shap,
+	shap::{compute_shap_values_common, ShapValuesOutput},
 	train::{Model, TrainTree},
 	TrainOptions, Tree,
 };
@@ -60,27 +60,14 @@ impl Regressor {
 	}
 
 	/// Compute SHAP values.
-	pub fn compute_shap_values(
-		&self,
-		features: ArrayView2<Value>,
-		mut shap_values: ArrayViewMut3<f32>,
-	) {
+	pub fn compute_shap_values(&self, features: ArrayView2<Value>) -> Vec<ShapValuesOutput> {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
-		for (features, mut shap_values) in izip!(
-			features.axis_iter(Axis(0)),
-			shap_values.axis_iter_mut(Axis(0)),
-		) {
-			let mut row = vec![Value::Number(0.0); features.len()];
-			for (v, feature) in row.iter_mut().zip(features) {
-				*v = *feature;
-			}
-			shap::compute_shap(
-				row.as_slice(),
-				trees,
-				self.bias,
-				shap_values.row_mut(0).as_slice_mut().unwrap(),
-			);
-		}
+		features
+			.axis_iter(Axis(0))
+			.map(|features| {
+				compute_shap_values_common(features.as_slice().unwrap(), trees, self.bias)
+			})
+			.collect()
 	}
 }
 

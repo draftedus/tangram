@@ -1,5 +1,5 @@
 use super::{
-	shap,
+	shap::{compute_shap_values_common, ShapValuesOutput},
 	train::{Model, TrainTree},
 	TrainOptions, Tree,
 };
@@ -79,32 +79,21 @@ impl MulticlassClassifier {
 	}
 
 	/// Compute SHAP values.
-	pub fn compute_shap_values(
-		&self,
-		features: ArrayView2<Value>,
-		mut shap_values: ArrayViewMut3<f32>,
-	) {
+	pub fn compute_shap_values(&self, features: ArrayView2<Value>) -> Vec<Vec<ShapValuesOutput>> {
 		let n_rounds = self.n_rounds;
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
 		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
-		for (features, mut shap_values) in izip!(
-			features.axis_iter(Axis(0)),
-			shap_values.axis_iter_mut(Axis(0)),
-		) {
-			let mut row = vec![Value::Number(0.0); features.len()];
-			for (v, feature) in row.iter_mut().zip(features) {
-				*v = *feature;
-			}
-			for class_index in 0..n_classes {
-				shap::compute_shap(
-					row.as_slice(),
-					trees.column(class_index),
-					*biases.get(class_index).unwrap(),
-					shap_values.row_mut(class_index).as_slice_mut().unwrap(),
-				);
-			}
-		}
+		features
+			.axis_iter(Axis(0))
+			.map(|features| {
+				izip!(trees.axis_iter(Axis(1)), biases.iter())
+					.map(|(tree, bias)| {
+						compute_shap_values_common(features.as_slice().unwrap(), tree, *bias)
+					})
+					.collect()
+			})
+			.collect()
 	}
 }
 
