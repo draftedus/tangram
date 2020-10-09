@@ -75,6 +75,32 @@ pub struct ClassificationShapOutputForClass {
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
+#[serde(tag = "feature_type")]
+enum FeatureContributionFeatureDescriptor {
+	Identity {
+		column_name: String,
+		feature_contribution_value: f32,
+	},
+	Normalized {
+		column_name: String,
+		feature_contribution_value: f32,
+	},
+	OneHotEncoded {
+		column_name: String,
+		option: String,
+		value: bool,
+		feature_contribution_value: f32,
+	},
+	BagOfWords {
+		column_name: String,
+		token: String,
+		value: bool,
+		feature_contribution_value: f32,
+	},
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FeatureContribution {
 	/// This is a human readable name describing the feature.
 	pub feature_name: String,
