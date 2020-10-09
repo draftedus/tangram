@@ -21,7 +21,7 @@ pub struct MulticlassClassifier {
 	/// These are the mean values of each feature in the training set, which are used to compute SHAP values.
 	pub means: Vec<f32>,
 	/// These are the loss values for each epoch.
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	/// These are the class names of the target column.
 	pub classes: Vec<String>,
 }
@@ -55,7 +55,7 @@ impl MulticlassClassifier {
 			biases: <Array1<f32>>::zeros(n_classes),
 			weights: <Array2<f32>>::zeros((n_features, n_classes)),
 			means,
-			losses: vec![],
+			losses: None,
 			classes,
 		};
 		let mut early_stopping_monitor =

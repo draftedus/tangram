@@ -654,7 +654,7 @@ impl TryFrom<model::Model> for PredictModel {
 										.map(TryInto::try_into)
 										.collect::<Result<Vec<_>>>()?,
 									feature_importances: Some(model.feature_importances),
-									losses: Some(model.losses),
+									losses: model.losses,
 									classes: model.classes,
 								},
 							},
@@ -704,7 +704,7 @@ impl TryFrom<model::Model> for PredictModel {
 										.map(TryInto::try_into)
 										.collect::<Result<Vec<_>>>()?,
 									feature_importances: Some(model.feature_importances),
-									losses: Some(model.losses),
+									losses: model.losses,
 									classes: model.classes,
 									n_classes: model.n_classes.to_usize().unwrap(),
 									n_rounds: model.n_rounds.to_usize().unwrap(),

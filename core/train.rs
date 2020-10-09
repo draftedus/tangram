@@ -692,6 +692,7 @@ fn train_linear_regressor(
 		.as_number()
 		.unwrap();
 	let mut linear_options = tangram_linear::TrainOptions::default();
+	linear_options.compute_loss = true;
 	if let Some(l2_regularization) = options.l2_regularization {
 		linear_options.l2_regularization = l2_regularization;
 	}
@@ -742,6 +743,7 @@ fn train_tree_regressor(
 		.unwrap()
 		.clone();
 	let mut tree_options = tangram_tree::TrainOptions::default();
+	tree_options.compute_loss = true;
 	if let Some(learning_rate) = options.learning_rate {
 		tree_options.learning_rate = learning_rate;
 	}
@@ -792,6 +794,7 @@ fn train_linear_binary_classifier(
 		.as_enum()
 		.unwrap();
 	let mut linear_options = tangram_linear::TrainOptions::default();
+	linear_options.compute_loss = true;
 	if let Some(l2_regularization) = options.l2_regularization {
 		linear_options.l2_regularization = l2_regularization;
 	}
@@ -842,6 +845,7 @@ fn train_tree_binary_classifier(
 		.unwrap()
 		.clone();
 	let mut tree_options = tangram_tree::TrainOptions::default();
+	tree_options.compute_loss = true;
 	if let Some(learning_rate) = options.learning_rate {
 		tree_options.learning_rate = learning_rate;
 	}
@@ -1628,18 +1632,14 @@ impl Into<model::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 
 impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 	fn into(self) -> model::TreeBinaryClassifier {
-		let losses = self.model.losses.unwrap();
-		let trees = self.model.trees.into_iter().map(Into::into).collect();
-		let metrics = self.metrics.into();
-		let feature_importances = self.model.feature_importances.unwrap();
 		model::TreeBinaryClassifier {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			trees,
-			metrics,
+			trees: self.model.trees.into_iter().map(Into::into).collect(),
+			metrics: self.metrics.into(),
 			bias: self.model.bias,
-			losses,
+			losses: self.model.losses,
 			classes: self.model.classes,
-			feature_importances,
+			feature_importances: self.model.feature_importances.unwrap(),
 		}
 	}
 }
@@ -1652,7 +1652,7 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 			biases: self.model.biases,
 			trees: self.model.trees.into_iter().map(|t| t.into()).collect(),
 			feature_groups: self.feature_groups.into_iter().map(|t| t.into()).collect(),
-			losses: self.model.losses.unwrap(),
+			losses: self.model.losses,
 			classes: self.model.classes,
 			feature_importances: self.model.feature_importances.unwrap(),
 		}

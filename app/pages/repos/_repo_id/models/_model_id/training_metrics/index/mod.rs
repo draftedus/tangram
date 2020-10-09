@@ -45,7 +45,7 @@ struct BinaryClassifier {
 	baseline_accuracy: f32,
 	class_metrics: Vec<ClassMetrics>,
 	classes: Vec<String>,
-	losses: Vec<f32>,
+	losses: Option<Vec<f32>>,
 	id: String,
 }
 
@@ -63,7 +63,7 @@ struct MulticlassClassifier {
 	baseline_accuracy: f32,
 	class_metrics: Vec<ClassMetrics>,
 	classes: Vec<String>,
-	losses: Vec<f32>,
+	losses: Option<Vec<f32>>,
 	id: String,
 }
 

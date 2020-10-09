@@ -95,7 +95,7 @@ pub struct LinearRegressor {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub bias: f32,
 	pub weights: Vec<f32>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub means: Vec<f32>,
 }
 
@@ -183,7 +183,7 @@ pub struct LinearBinaryClassifier {
 	pub weights: Vec<f32>,
 	pub bias: f32,
 	pub classes: Vec<String>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub metrics: BinaryClassifierMetrics,
 	pub means: Vec<f32>,
 }
@@ -196,7 +196,7 @@ pub struct LinearMulticlassClassifier {
 	pub biases: Vec<f32>,
 	pub weights: Vec<f32>,
 	pub classes: Vec<String>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub means: Vec<f32>,
 }
 
@@ -206,7 +206,7 @@ pub struct TreeBinaryClassifier {
 	pub bias: f32,
 	pub trees: Vec<Tree>,
 	pub classes: Vec<String>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 	pub metrics: BinaryClassifierMetrics,
 }
@@ -219,7 +219,7 @@ pub struct TreeMulticlassClassifier {
 	pub biases: Vec<f32>,
 	pub trees: Vec<Tree>,
 	pub classes: Vec<String>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 

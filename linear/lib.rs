@@ -20,6 +20,8 @@ pub use regressor::Regressor;
 /// These are the options passed to `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
 #[derive(Debug)]
 pub struct TrainOptions {
+	/// If true, the model will include the loss on the training data after each epoch.
+	pub compute_loss: bool,
 	/// Specify options for early stopping. If the value is `Some`, early stopping will be enabled. If it is `None`, early stopping will be disabled.
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 	/// This is the L2 regularization value to use when updating the model parameters.
@@ -35,6 +37,7 @@ pub struct TrainOptions {
 impl Default for TrainOptions {
 	fn default() -> Self {
 		Self {
+			compute_loss: false,
 			l2_regularization: 0.0,
 			learning_rate: 0.1,
 			max_epochs: 100,

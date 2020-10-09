@@ -20,7 +20,7 @@ pub struct Regressor {
 	/// These are the mean values of each feature in the training set, which are used to compute SHAP values.
 	pub means: Vec<f32>,
 	/// These are the loss values for each epoch.
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 }
 
 impl Regressor {
@@ -50,7 +50,7 @@ impl Regressor {
 			bias: 0.0,
 			weights: <Array1<f32>>::zeros(n_features),
 			means,
-			losses: vec![],
+			losses: None,
 		};
 		let mut early_stopping_monitor =
 			if let Some(early_stopping_options) = &options.early_stopping_options {
