@@ -570,15 +570,6 @@ fn compute_feature_contributions(
 	feature_contributions
 }
 
-// feature_names
-// 	.iter()
-// 	.zip(shap_values.feature_contributions.iter())
-// 	.map(|(feature_name, value)| FeatureContribution {
-// 		feature_name: feature_name.clone(),
-// 		value: *value,
-// 	})
-// 	.collect();
-
 impl TryFrom<model::Model> for PredictModel {
 	type Error = anyhow::Error;
 	fn try_from(value: model::Model) -> Result<Self> {
