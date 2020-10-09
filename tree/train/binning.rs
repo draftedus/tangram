@@ -181,7 +181,7 @@ impl BinnedFeaturesColumn {
 pub fn compute_binned_features(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstructions],
-	progress: &(dyn Fn() + Sync),
+	progress: &(impl Fn() + Sync),
 ) -> BinnedFeatures {
 	let columns = pzip!(&features.columns, binning_instructions)
 		.map(
@@ -205,7 +205,7 @@ pub fn compute_binned_features(
 fn compute_binned_features_for_number_feature(
 	feature: &ColumnView,
 	thresholds: &[f32],
-	_progress: &(dyn Fn() + Sync),
+	_progress: &(impl Fn() + Sync),
 ) -> BinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_number()
@@ -230,7 +230,7 @@ fn compute_binned_features_for_number_feature(
 
 fn compute_binned_features_for_enum_feature_u8(
 	feature: &ColumnView,
-	_progress: &(dyn Fn() + Sync),
+	_progress: &(impl Fn() + Sync),
 ) -> BinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_enum()
@@ -244,7 +244,7 @@ fn compute_binned_features_for_enum_feature_u8(
 
 fn compute_binned_features_for_enum_feature_u16(
 	feature: &ColumnView,
-	_progress: &(dyn Fn() + Sync),
+	_progress: &(impl Fn() + Sync),
 ) -> BinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_enum()

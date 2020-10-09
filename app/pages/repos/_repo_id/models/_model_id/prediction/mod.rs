@@ -296,10 +296,7 @@ fn predict(
 					values: shap_data
 						.feature_contributions
 						.into_iter()
-						.map(|shap_value| ShapChartValue {
-							feature: shap_value.feature_name,
-							value: shap_value.value,
-						})
+						.map(compute_shap_chart_value)
 						.collect(),
 				}],
 				value: output.value,
@@ -322,10 +319,7 @@ fn predict(
 					values: shap_data
 						.feature_contributions
 						.into_iter()
-						.map(|shap_value| ShapChartValue {
-							feature: shap_value.feature_name,
-							value: shap_value.value,
-						})
+						.map(compute_shap_chart_value)
 						.collect(),
 				})
 				.collect::<Vec<_>>();
@@ -339,4 +333,58 @@ fn predict(
 		}
 	};
 	predict_output
+}
+
+fn compute_shap_chart_value(
+	feature_contribution: tangram_core::predict::FeatureContribution,
+) -> ShapChartValue {
+	match feature_contribution {
+		tangram_core::predict::FeatureContribution::Identity {
+			column_name,
+			feature_contribution_value,
+		} => ShapChartValue {
+			feature: column_name,
+			value: feature_contribution_value,
+		},
+		tangram_core::predict::FeatureContribution::Normalized {
+			column_name,
+			feature_contribution_value,
+		} => ShapChartValue {
+			feature: column_name,
+			value: feature_contribution_value,
+		},
+		tangram_core::predict::FeatureContribution::OneHotEncoded {
+			column_name,
+			option,
+			feature_value,
+			feature_contribution_value,
+		} => {
+			let predicate = if feature_value { "is" } else { "is not" };
+			let option = option
+				.map(|option| format!("\"{}\"", option))
+				.unwrap_or_else(|| "invalid".to_owned());
+			let feature = format!("{} {} {}", column_name, predicate, option);
+			ShapChartValue {
+				feature,
+				value: feature_contribution_value,
+			}
+		}
+		tangram_core::predict::FeatureContribution::BagOfWords {
+			column_name,
+			token,
+			feature_value,
+			feature_contribution_value,
+		} => {
+			let predicate = if feature_value {
+				"contains"
+			} else {
+				"does not contain"
+			};
+			let feature = format!("{} {} \"{}\"", column_name, predicate, token);
+			ShapChartValue {
+				feature,
+				value: feature_contribution_value,
+			}
+		}
+	}
 }

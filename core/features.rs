@@ -314,7 +314,7 @@ pub fn compute_features_ndarray(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
 	mut features: ArrayViewMut2<f32>,
-	progress: &dyn Fn(),
+	progress: &impl Fn(),
 ) {
 	let mut feature_index = 0;
 	for feature_group in feature_groups.iter() {
@@ -345,7 +345,7 @@ fn compute_features_normalized_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &NormalizedFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
-	progress: &dyn Fn(),
+	progress: &impl Fn(),
 ) {
 	let data = dataframe
 		.columns
@@ -370,7 +370,7 @@ fn compute_features_one_hot_encoded_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &OneHotEncodedFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
-	progress: &dyn Fn(),
+	progress: &impl Fn(),
 ) {
 	let data = dataframe
 		.columns
@@ -393,7 +393,7 @@ fn compute_features_bag_of_words_ndarray(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
-	progress: &dyn Fn(),
+	progress: &impl Fn(),
 ) {
 	features.fill(0.0);
 	let data = dataframe
@@ -435,7 +435,7 @@ fn compute_features_bag_of_words_ndarray(
 pub fn compute_features_dataframe(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
-	progress: &dyn Fn(),
+	progress: &impl Fn(),
 ) -> DataFrame {
 	let mut result = DataFrame { columns: vec![] };
 	for feature_group in feature_groups.iter() {
@@ -484,7 +484,7 @@ pub fn compute_features_dataframe(
 fn compute_features_bag_of_words_dataframe(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
-	progress: impl Fn(),
+	progress: &impl Fn(),
 ) -> Vec<Column> {
 	let data = dataframe
 		.columns
@@ -537,7 +537,7 @@ pub fn compute_features_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
 	mut features: ArrayViewMut2<Value>,
-	progress: &dyn Fn(),
+	progress: &impl Fn(),
 ) {
 	let mut feature_index = 0;
 	for feature_group in feature_groups.iter() {
@@ -569,7 +569,7 @@ fn compute_features_identity_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
 	mut features: ArrayViewMut2<Value>,
-	progress: &dyn Fn(),
+	progress: &impl Fn(),
 ) {
 	let column = dataframe
 		.columns
@@ -599,7 +599,7 @@ fn compute_features_bag_of_words_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
 	mut features: ArrayViewMut2<Value>,
-	progress: &dyn Fn(),
+	progress: &impl Fn(),
 ) {
 	let data = dataframe
 		.columns

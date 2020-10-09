@@ -76,7 +76,7 @@ pub struct ClassificationShapOutputForClass {
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "feature_type")]
-enum FeatureContributionFeatureDescriptor {
+pub enum FeatureContribution {
 	Identity {
 		column_name: String,
 		feature_contribution_value: f32,
@@ -87,25 +87,16 @@ enum FeatureContributionFeatureDescriptor {
 	},
 	OneHotEncoded {
 		column_name: String,
-		option: String,
-		value: bool,
+		option: Option<String>,
+		feature_value: bool,
 		feature_contribution_value: f32,
 	},
 	BagOfWords {
 		column_name: String,
 		token: String,
-		value: bool,
+		feature_value: bool,
 		feature_contribution_value: f32,
 	},
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct FeatureContribution {
-	/// This is a human readable name describing the feature.
-	pub feature_name: String,
-	/// This is the shap value for this feature.
-	pub value: f32,
 }
 
 #[derive(Debug)]
@@ -280,20 +271,15 @@ pub fn predict(
 				&|| {},
 			);
 			model.model.predict(features.view(), predictions.view_mut());
-			let feature_names = compute_feature_names(&model.feature_groups);
 			let shap_values = model.model.compute_shap_values(features.view());
 			let output = predictions
 				.into_iter()
 				.zip(shap_values.into_iter())
 				.map(|(prediction, shap_values)| {
-					let feature_contributions = feature_names
-						.iter()
-						.zip(shap_values.feature_contributions.iter())
-						.map(|(feature_name, value)| FeatureContribution {
-							feature_name: feature_name.clone(),
-							value: *value,
-						})
-						.collect();
+					let feature_contributions = compute_feature_contributions(
+						&model.feature_groups,
+						&shap_values.feature_contribution_values,
+					);
 					let shap_output = RegressionShapOutput {
 						baseline_value: shap_values.baseline_value,
 						output_value: shap_values.output_value,
@@ -323,20 +309,15 @@ pub fn predict(
 			);
 			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
 			model.model.predict(features.view(), predictions.view_mut());
-			let feature_names = compute_feature_names(&model.feature_groups);
 			let shap_values = model.model.compute_shap_values(features.view());
 			let output = predictions
 				.into_iter()
 				.zip(shap_values.into_iter())
 				.map(|(prediction, shap_values)| {
-					let feature_contributions = feature_names
-						.iter()
-						.zip(shap_values.feature_contributions.iter())
-						.map(|(feature_name, value)| FeatureContribution {
-							feature_name: feature_name.clone(),
-							value: *value,
-						})
-						.collect();
+					let feature_contributions = compute_feature_contributions(
+						&model.feature_groups,
+						&shap_values.feature_contribution_values,
+					);
 					let shap_output = RegressionShapOutput {
 						baseline_value: shap_values.baseline_value,
 						output_value: shap_values.output_value,
@@ -364,7 +345,6 @@ pub fn predict(
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
-			let feature_names = compute_feature_names(&model.feature_groups);
 			let shap_values = model.model.compute_shap_values(features.view());
 			let threshold = match options {
 				Some(options) => options.threshold,
@@ -373,7 +353,7 @@ pub fn predict(
 			let output = probabilities
 				.axis_iter(Axis(0))
 				.zip(shap_values.iter())
-				.map(|(probabilities, shap_values)| {
+				.map(|(probabilities, _shap_values)| {
 					let (probability, class_name) = if probabilities[1] >= threshold {
 						(probabilities[1], model.model.classes[1].clone())
 					} else {
@@ -384,29 +364,21 @@ pub fn predict(
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
-					let feature_contributions = feature_names
-						.iter()
-						.zip(shap_values.feature_contributions.iter())
-						.map(|(feature_name, value)| FeatureContribution {
-							feature_name: feature_name.clone(),
-							value: *value,
-						})
-						.collect();
-					let mut classes = BTreeMap::new();
-					classes.insert(
-						model.model.classes[1].clone(),
-						ClassificationShapOutputForClass {
-							baseline_value: shap_values.baseline_value,
-							output_value: shap_values.output_value,
-							feature_contributions,
-						},
-					);
-					let shap_output = ClassificationShapOutput { classes };
+					// let mut classes = BTreeMap::new();
+					// classes.insert(
+					// 	model.model.classes[1].clone(),
+					// 	ClassificationShapOutputForClass {
+					// 		baseline_value: shap_values.baseline_value,
+					// 		output_value: shap_values.output_value,
+					// 		feature_contributions,
+					// 	},
+					// );
+					// let shap_output = ClassificationShapOutput { classes };
 					ClassificationPredictOutput {
 						class_name,
 						probability,
 						probabilities,
-						shap_output: Some(shap_output),
+						shap_output: None,
 					}
 				})
 				.collect();
@@ -430,7 +402,6 @@ pub fn predict(
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
-			let feature_names = compute_feature_names(&model.feature_groups);
 			let shap_values = model.model.compute_shap_values(features.view());
 			let threshold = match options {
 				Some(options) => options.threshold,
@@ -439,7 +410,7 @@ pub fn predict(
 			let output = probabilities
 				.axis_iter(Axis(0))
 				.zip(shap_values.iter())
-				.map(|(probabilities, shap_values)| {
+				.map(|(probabilities, _shap_values)| {
 					let (probability, class_name) = if probabilities[1] >= threshold {
 						(probabilities[1], model.model.classes[1].clone())
 					} else {
@@ -450,29 +421,11 @@ pub fn predict(
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
-					let feature_contributions = feature_names
-						.iter()
-						.zip(shap_values.feature_contributions.iter())
-						.map(|(feature_name, value)| FeatureContribution {
-							feature_name: feature_name.clone(),
-							value: *value,
-						})
-						.collect();
-					let mut classes = BTreeMap::new();
-					classes.insert(
-						model.model.classes[1].clone(),
-						ClassificationShapOutputForClass {
-							baseline_value: shap_values.baseline_value,
-							output_value: shap_values.output_value,
-							feature_contributions,
-						},
-					);
-					let shap_output = ClassificationShapOutput { classes };
 					ClassificationPredictOutput {
 						class_name,
 						probability,
 						probabilities,
-						shap_output: Some(shap_output),
+						shap_output: None,
 					}
 				})
 				.collect();
@@ -561,36 +514,70 @@ pub fn predict(
 	}
 }
 
-fn compute_feature_names(feature_groups: &[features::FeatureGroup]) -> Vec<String> {
-	feature_groups
-		.iter()
-		.flat_map(|feature_group| match feature_group {
+fn compute_feature_contributions(
+	feature_groups: &[features::FeatureGroup],
+	feature_contribution_values: &[f32],
+) -> Vec<FeatureContribution> {
+	let mut feature_index = 0;
+	let mut feature_contributions = Vec::with_capacity(feature_contribution_values.len());
+	for feature_group in feature_groups {
+		match feature_group {
 			features::FeatureGroup::Identity(feature_group) => {
-				vec![feature_group.source_column_name.to_owned()]
+				feature_contributions.push(FeatureContribution::Identity {
+					column_name: feature_group.source_column_name.to_owned(),
+					feature_contribution_value: feature_contribution_values[feature_index],
+				});
+				feature_index += 1;
 			}
 			features::FeatureGroup::Normalized(feature_group) => {
-				vec![feature_group.source_column_name.to_owned()]
+				feature_contributions.push(FeatureContribution::Normalized {
+					column_name: feature_group.source_column_name.to_owned(),
+					feature_contribution_value: feature_contribution_values[feature_index],
+				});
+				feature_index += 1;
 			}
 			features::FeatureGroup::OneHotEncoded(feature_group) => {
-				let column_name = &feature_group.source_column_name;
-				let mut feature_names = Vec::new();
-				feature_names.push(format!("{} is invalid", column_name.to_owned()));
+				feature_contributions.push(FeatureContribution::OneHotEncoded {
+					column_name: feature_group.source_column_name.to_owned(),
+					option: None,
+					feature_value: false,
+					feature_contribution_value: feature_contribution_values[feature_index],
+				});
+				feature_index += 1;
 				for category in feature_group.categories.iter() {
-					feature_names.push(format!("{} = \"{}\"", column_name, category));
+					feature_contributions.push(FeatureContribution::OneHotEncoded {
+						column_name: feature_group.source_column_name.to_owned(),
+						option: Some(category.to_owned()),
+						feature_value: false,
+						feature_contribution_value: feature_contribution_values[feature_index],
+					});
+					feature_index += 1;
 				}
-				feature_names
 			}
 			features::FeatureGroup::BagOfWords(feature_group) => {
-				let column_name = &feature_group.source_column_name;
-				let mut feature_names = Vec::new();
 				for (token, _) in feature_group.tokens.iter() {
-					feature_names.push(format!("{} contains \"{}\"", column_name, token));
+					feature_contributions.push(FeatureContribution::BagOfWords {
+						column_name: feature_group.source_column_name.to_owned(),
+						token: token.to_owned(),
+						feature_value: false,
+						feature_contribution_value: feature_contribution_values[feature_index],
+					});
+					feature_index += 1;
 				}
-				feature_names
 			}
-		})
-		.collect()
+		}
+	}
+	feature_contributions
 }
+
+// feature_names
+// 	.iter()
+// 	.zip(shap_values.feature_contributions.iter())
+// 	.map(|(feature_name, value)| FeatureContribution {
+// 		feature_name: feature_name.clone(),
+// 		value: *value,
+// 	})
+// 	.collect();
 
 impl TryFrom<model::Model> for PredictModel {
 	type Error = anyhow::Error;

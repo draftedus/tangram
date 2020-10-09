@@ -7,9 +7,16 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
 
-pub mod load;
+mod load;
 
 pub use self::load::*;
+
+pub mod prelude {
+	pub use super::{
+		Column, DataFrame, DataFrameView, DataFrameViewMut, TextColumn, TextColumnView,
+		TextColumnViewMut, UnknownColumn, UnknownColumnView, Value,
+	};
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataFrame {

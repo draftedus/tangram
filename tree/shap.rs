@@ -7,7 +7,7 @@ use num_traits::ToPrimitive;
 pub struct ShapValuesOutput {
 	pub baseline_value: f32,
 	pub output_value: f32,
-	pub feature_contributions: Vec<f32>,
+	pub feature_contribution_values: Vec<f32>,
 }
 
 /// This function is common code used by `compute_shap_values` for each model type.
@@ -20,14 +20,14 @@ pub fn compute_shap_values_common(
 	for tree in trees {
 		baseline_value += compute_expectation(tree, 0);
 	}
-	let mut feature_contributions = vec![0.0; example.len()];
+	let mut feature_contribution_values = vec![0.0; example.len()];
 	for tree in trees {
-		tree_shap(example, tree, feature_contributions.as_mut_slice());
+		tree_shap(example, tree, feature_contribution_values.as_mut_slice());
 	}
-	let output_value = baseline_value + feature_contributions.iter().sum::<f32>();
+	let output_value = baseline_value + feature_contribution_values.iter().sum::<f32>();
 	ShapValuesOutput {
 		baseline_value,
-		feature_contributions,
+		feature_contribution_values,
 		output_value,
 	}
 }

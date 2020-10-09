@@ -134,7 +134,7 @@ impl EarlyStoppingMonitor {
 pub struct ShapValuesOutput {
 	pub baseline_value: f32,
 	pub output_value: f32,
-	pub feature_contributions: Vec<f32>,
+	pub feature_contribution_values: Vec<f32>,
 }
 
 /// This function is common code used by `compute_shap_values` for each model type.
@@ -154,7 +154,7 @@ fn compute_shap_values_common(
 	let output_value = baseline_value + feature_contributions.iter().sum::<f32>();
 	ShapValuesOutput {
 		baseline_value,
-		feature_contributions,
+		feature_contribution_values: feature_contributions,
 		output_value,
 	}
 }
