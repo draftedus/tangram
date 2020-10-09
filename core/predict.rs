@@ -67,7 +67,7 @@ pub struct ClassificationShapOutput {
 pub struct ClassificationShapOutputForClass {
 	/// The baseline value is the value output by the model for this class before taking into account the feature values.
 	pub baseline_value: f32,
-	/// The output value will be the sum of the baseline value and the shap values of all features.
+	/// The output value is the sum of the baseline value and the contributions of all features.
 	pub output_value: f32,
 	/// These are the shap values for each feature.
 	pub feature_contributions: Vec<FeatureContribution>,
@@ -539,35 +539,28 @@ fn compute_feature_names(feature_groups: &[features::FeatureGroup]) -> Vec<Strin
 	feature_groups
 		.iter()
 		.flat_map(|feature_group| match feature_group {
-			features::FeatureGroup::Identity(identity_feature_group) => {
-				vec![identity_feature_group.source_column_name.to_owned()]
+			features::FeatureGroup::Identity(feature_group) => {
+				vec![feature_group.source_column_name.to_owned()]
 			}
-			features::FeatureGroup::Normalized(normalized_feature_group) => {
-				vec![normalized_feature_group.source_column_name.to_owned()]
+			features::FeatureGroup::Normalized(feature_group) => {
+				vec![feature_group.source_column_name.to_owned()]
 			}
-			features::FeatureGroup::OneHotEncoded(one_hot_encoded_feature_group) => {
-				one_hot_encoded_feature_group
-					.categories
-					.iter()
-					.map(|category| {
-						format!(
-							"{} = \"{}\"",
-							one_hot_encoded_feature_group.source_column_name, category
-						)
-					})
-					.collect()
+			features::FeatureGroup::OneHotEncoded(feature_group) => {
+				let column_name = &feature_group.source_column_name;
+				let mut feature_names = Vec::new();
+				feature_names.push(format!("{} is invalid", column_name.to_owned()));
+				for category in feature_group.categories.iter() {
+					feature_names.push(format!("{} = \"{}\"", column_name, category));
+				}
+				feature_names
 			}
-			features::FeatureGroup::BagOfWords(bag_of_words_feature_group) => {
-				bag_of_words_feature_group
-					.tokens
-					.iter()
-					.map(|(token, _)| {
-						format!(
-							"{} contains \"{}\"",
-							bag_of_words_feature_group.source_column_name, token
-						)
-					})
-					.collect()
+			features::FeatureGroup::BagOfWords(feature_group) => {
+				let column_name = &feature_group.source_column_name;
+				let mut feature_names = Vec::new();
+				for (token, _) in feature_group.tokens.iter() {
+					feature_names.push(format!("{} contains \"{}\"", column_name, token));
+				}
+				feature_names
 			}
 		})
 		.collect()
