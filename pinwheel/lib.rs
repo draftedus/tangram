@@ -10,7 +10,7 @@ use url::Url;
 pub struct Pinwheel {
 	src_dir: Option<PathBuf>,
 	dst_dir: Option<PathBuf>,
-	fs: Box<dyn VirtualFileSystem>,
+	fs: Box<dyn FileSystem>,
 }
 
 #[derive(Debug)]
@@ -299,7 +299,7 @@ fn get_module_handle_for_url<'a>(state: &'a State, url: &Url) -> Option<&'a Modu
 
 fn run_module<'s>(
 	scope: &mut v8::HandleScope<'s>,
-	fs: &dyn VirtualFileSystem,
+	fs: &dyn FileSystem,
 	url: Url,
 ) -> Result<v8::Local<'s, v8::Object>> {
 	let module_id = load_module(scope, fs, url)?;
@@ -332,7 +332,7 @@ fn run_module<'s>(
 }
 
 /// Load a module at the specified path and return the module id.
-fn load_module(scope: &mut v8::HandleScope, fs: &dyn VirtualFileSystem, url: Url) -> Result<i32> {
+fn load_module(scope: &mut v8::HandleScope, fs: &dyn FileSystem, url: Url) -> Result<i32> {
 	// Return the id for an existing module if a module at the specified path has alread been loaded.
 	let state = get_state(scope);
 	let state = state.borrow();
@@ -489,7 +489,7 @@ fn exception_to_string(scope: &mut v8::HandleScope, exception: v8::Local<v8::Val
 	string
 }
 
-trait VirtualFileSystem: Send + Sync {
+trait FileSystem: Send + Sync {
 	fn exists(&self, url: &Url) -> bool;
 	fn read(&self, url: &Url) -> Result<Cow<'static, [u8]>>;
 }
@@ -498,7 +498,7 @@ struct RealFileSystem {
 	dst_dir: PathBuf,
 }
 
-impl VirtualFileSystem for RealFileSystem {
+impl FileSystem for RealFileSystem {
 	fn exists(&self, url: &Url) -> bool {
 		self.dst_dir
 			.join(url.path().strip_prefix('/').unwrap())
@@ -515,7 +515,7 @@ struct IncludedFileSystem {
 	dir: include_dir::Dir<'static>,
 }
 
-impl VirtualFileSystem for IncludedFileSystem {
+impl FileSystem for IncludedFileSystem {
 	fn exists(&self, url: &Url) -> bool {
 		self.dir.contains(url.path().strip_prefix('/').unwrap())
 	}

@@ -1,5 +1,6 @@
 use crate::{features, model};
 use anyhow::Result;
+use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::{
@@ -272,13 +273,12 @@ pub fn predict(
 			);
 			model.model.predict(features.view(), predictions.view_mut());
 			let shap_values = model.model.compute_shap_values(features.view());
-			let output = predictions
-				.into_iter()
-				.zip(shap_values.into_iter())
-				.map(|(prediction, shap_values)| {
+			let output = izip!(features.axis_iter(Axis(0)), predictions.iter(), shap_values)
+				.map(|(features, prediction, shap_values)| {
 					let feature_contributions = compute_feature_contributions(
 						&model.feature_groups,
-						&shap_values.feature_contribution_values,
+						features.iter().cloned(),
+						shap_values.feature_contribution_values.iter().cloned(),
 					);
 					let shap_output = RegressionShapOutput {
 						baseline_value: shap_values.baseline_value,
@@ -310,13 +310,18 @@ pub fn predict(
 			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
 			model.model.predict(features.view(), predictions.view_mut());
 			let shap_values = model.model.compute_shap_values(features.view());
-			let output = predictions
-				.into_iter()
-				.zip(shap_values.into_iter())
-				.map(|(prediction, shap_values)| {
+			let output = izip!(features.axis_iter(Axis(0)), predictions.iter(), shap_values)
+				.map(|(features, prediction, shap_values)| {
 					let feature_contributions = compute_feature_contributions(
 						&model.feature_groups,
-						&shap_values.feature_contribution_values,
+						features.iter().map(|v| match v {
+							tangram_dataframe::Value::Number(value) => *value,
+							tangram_dataframe::Value::Enum(value) => {
+								value.map(|v| v.get()).unwrap_or(0).to_f32().unwrap()
+							}
+							_ => unreachable!(),
+						}),
+						shap_values.feature_contribution_values.iter().cloned(),
 					);
 					let shap_output = RegressionShapOutput {
 						baseline_value: shap_values.baseline_value,
@@ -516,53 +521,58 @@ pub fn predict(
 
 fn compute_feature_contributions(
 	feature_groups: &[features::FeatureGroup],
-	feature_contribution_values: &[f32],
+	mut features: impl Iterator<Item = f32>,
+	mut feature_contribution_values: impl Iterator<Item = f32>,
 ) -> Vec<FeatureContribution> {
-	let mut feature_index = 0;
-	let mut feature_contributions = Vec::with_capacity(feature_contribution_values.len());
+	let mut feature_contributions = Vec::new();
 	for feature_group in feature_groups {
 		match feature_group {
 			features::FeatureGroup::Identity(feature_group) => {
+				let _feature_value = features.next().unwrap();
+				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::Identity {
 					column_name: feature_group.source_column_name.to_owned(),
-					feature_contribution_value: feature_contribution_values[feature_index],
+					feature_contribution_value,
 				});
-				feature_index += 1;
 			}
 			features::FeatureGroup::Normalized(feature_group) => {
+				let _feature_value = features.next().unwrap();
+				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::Normalized {
 					column_name: feature_group.source_column_name.to_owned(),
-					feature_contribution_value: feature_contribution_values[feature_index],
+					feature_contribution_value,
 				});
-				feature_index += 1;
 			}
 			features::FeatureGroup::OneHotEncoded(feature_group) => {
+				let feature_value = features.next().unwrap();
+				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::OneHotEncoded {
 					column_name: feature_group.source_column_name.to_owned(),
 					option: None,
-					feature_value: false,
-					feature_contribution_value: feature_contribution_values[feature_index],
+					feature_value: feature_value > 0.0,
+					feature_contribution_value,
 				});
-				feature_index += 1;
 				for category in feature_group.categories.iter() {
+					let feature_value = features.next().unwrap();
+					let feature_contribution_value = feature_contribution_values.next().unwrap();
 					feature_contributions.push(FeatureContribution::OneHotEncoded {
 						column_name: feature_group.source_column_name.to_owned(),
 						option: Some(category.to_owned()),
-						feature_value: false,
-						feature_contribution_value: feature_contribution_values[feature_index],
+						feature_value: feature_value > 0.0,
+						feature_contribution_value,
 					});
-					feature_index += 1;
 				}
 			}
 			features::FeatureGroup::BagOfWords(feature_group) => {
 				for (token, _) in feature_group.tokens.iter() {
+					let feature_value = features.next().unwrap();
+					let feature_contribution_value = feature_contribution_values.next().unwrap();
 					feature_contributions.push(FeatureContribution::BagOfWords {
 						column_name: feature_group.source_column_name.to_owned(),
 						token: token.to_owned(),
-						feature_value: false,
-						feature_contribution_value: feature_contribution_values[feature_index],
+						feature_value: feature_value > 0.0,
+						feature_contribution_value,
 					});
-					feature_index += 1;
 				}
 			}
 		}
