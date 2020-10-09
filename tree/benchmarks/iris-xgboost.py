@@ -30,7 +30,7 @@ model = xgb.XGBClassifier(
 	max_depth = 9,
 	max_leaves = 255,
 	min_child_weight = 100,
-	num_round = 100,
+	n_estimators = 100,
 	tree_method = 'hist'
 )
 model.fit(features_train, labels_train)
