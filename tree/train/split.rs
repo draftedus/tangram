@@ -192,10 +192,8 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 					)
 					.map(|(binned_features_chunk, gradients_chunk, hessians_chunk)| {
 						// TODO
-						let start = std::time::Instant::now();
 						let mut bin_stats_chunk: Vec<BinStatsEntry> =
 							bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
-						timing.allocations.inc(start.elapsed());
 						compute_bin_stats_row_wise_root(
 							bin_stats_chunk.as_mut_slice(),
 							binned_features_chunk,
@@ -306,6 +304,8 @@ pub fn choose_best_splits_not_root(
 		left_child_n_examples,
 		..
 	} = options;
+	#[cfg(feature = "timing")]
+	let timing = options.timing;
 	let mut left_child_output = ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 		sum_gradients: left_child_sum_gradients,
 		sum_hessians: left_child_sum_hessians,
@@ -469,63 +469,54 @@ pub fn choose_best_splits_not_root(
 				let n_threads = rayon::current_num_threads();
 				let chunk_size = (smaller_child_n_examples + n_threads - 1) / n_threads;
 				// Compute the bin stats for the child with fewer examples.
-				*smaller_child_bin_stats = pzip!(
-					smaller_child_examples_index.par_chunks(chunk_size),
-					// gradients_ordered_buffer.par_chunks(chunk_size),
-					// hessians_ordered_buffer.par_chunks(chunk_size),
-				)
-				.map(
-					|(
-						smaller_child_examples_index_chunk,
-						// gradients_ordered_buffer_chunk,
-						// hessians_ordered_buffer_chunk,
-					)| {
-						let mut smaller_child_bin_stats_chunk: Vec<BinStatsEntry> =
-							smaller_child_bin_stats
-								.iter()
-								.map(|_| BinStatsEntry::default())
-								.collect();
-						compute_bin_stats_row_wise_not_root(
-							smaller_child_bin_stats_chunk.as_mut_slice(),
-							smaller_child_examples_index_chunk,
-							binned_features,
-							gradients,
-							hessians,
-							hessians_are_constant,
+				*smaller_child_bin_stats =
+					pzip!(smaller_child_examples_index.par_chunks(chunk_size),)
+						.map(|(smaller_child_examples_index_chunk,)| {
+							let mut smaller_child_bin_stats_chunk: Vec<BinStatsEntry> =
+								smaller_child_bin_stats
+									.iter()
+									.map(|_| BinStatsEntry::default())
+									.collect();
+							compute_bin_stats_row_wise_not_root(
+								smaller_child_bin_stats_chunk.as_mut_slice(),
+								smaller_child_examples_index_chunk,
+								binned_features,
+								gradients,
+								hessians,
+								hessians_are_constant,
+							);
+							smaller_child_bin_stats_chunk
+						})
+						.fold(
+							|| {
+								smaller_child_bin_stats
+									.iter()
+									.map(|_| BinStatsEntry::default())
+									.collect::<Vec<_>>()
+							},
+							|mut res, chunk| {
+								res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
+									res.sum_gradients += chunk.sum_gradients;
+									res.sum_hessians += chunk.sum_hessians;
+								});
+								res
+							},
+						)
+						.reduce(
+							|| {
+								smaller_child_bin_stats
+									.iter()
+									.map(|_| BinStatsEntry::default())
+									.collect()
+							},
+							|mut res, chunk| {
+								res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
+									res.sum_gradients += chunk.sum_gradients;
+									res.sum_hessians += chunk.sum_hessians;
+								});
+								res
+							},
 						);
-						smaller_child_bin_stats_chunk
-					},
-				)
-				.fold(
-					|| {
-						smaller_child_bin_stats
-							.iter()
-							.map(|_| BinStatsEntry::default())
-							.collect::<Vec<_>>()
-					},
-					|mut res, chunk| {
-						res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
-							res.sum_gradients += chunk.sum_gradients;
-							res.sum_hessians += chunk.sum_hessians;
-						});
-						res
-					},
-				)
-				.reduce(
-					|| {
-						smaller_child_bin_stats
-							.iter()
-							.map(|_| BinStatsEntry::default())
-							.collect()
-					},
-					|mut res, chunk| {
-						res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
-							res.sum_gradients += chunk.sum_gradients;
-							res.sum_hessians += chunk.sum_hessians;
-						});
-						res
-					},
-				);
 			}
 
 			let smaller_child_bin_stats = super_unsafe::SuperUnsafe::new(smaller_child_bin_stats);
@@ -962,7 +953,8 @@ fn fill_gradients_and_hessians_ordered_buffers(
 				},
 			);
 		} else {
-			let chunk_size = smaller_child_examples_index.len() / rayon::current_num_threads();
+			let num_threads = rayon::current_num_threads();
+			let chunk_size = (smaller_child_examples_index.len() + num_threads - 1) / num_threads;
 			pzip!(
 				smaller_child_examples_index.par_chunks(chunk_size),
 				gradients_ordered_buffer.par_chunks_mut(chunk_size),
