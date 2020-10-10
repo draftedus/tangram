@@ -1,6 +1,8 @@
 use self::{
 	bin_stats::{BinStats, BinStatsEntry},
-	binning::{compute_binned_features, compute_binning_instructions},
+	binning::{
+		compute_binned_features, compute_binned_features_row_wise, compute_binning_instructions,
+	},
 	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
 	feature_importances::compute_feature_importances,
 	tree::{
@@ -105,9 +107,18 @@ pub fn train(
 	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
-	let binned_features = compute_binned_features(&features_train, &binning_instructions, &|| {
-		progress_counter.inc(1)
-	});
+	let binned_features_row_wise =
+		compute_binned_features_row_wise(&features_train, &binning_instructions, &|| {
+			progress_counter.inc(1)
+		});
+	let binned_features = binned_features_row_wise;
+	let binned_features_columnar =
+		compute_binned_features(&features_train, &binning_instructions, &|| {
+			progress_counter.inc(1)
+		});
+	// let binned_features = compute_binned_features(&features_train, &binning_instructions, &|| {
+	// 	progress_counter.inc(1)
+	// });
 	#[cfg(feature = "timing")]
 	timing.compute_binned_features.inc(start.elapsed());
 
@@ -169,19 +180,34 @@ pub fn train(
 		None
 	};
 	let binning_instructions_for_pool = binning_instructions.clone();
-	let mut bin_stats_pool = Pool::new(
-		train_options.max_leaf_nodes,
-		Box::new(move || {
-			BinStats(
-				binning_instructions_for_pool
-					.iter()
-					.map(|binning_instructions| {
-						vec![BinStatsEntry::default(); binning_instructions.n_bins()]
-					})
-					.collect(),
-			)
-		}),
-	);
+	let mut bin_stats_pool = match binned_features {
+		binning::BinnedFeatures::ColWise(_) => Pool::new(
+			train_options.max_leaf_nodes,
+			Box::new(move || {
+				BinStats::ColWise(
+					binning_instructions_for_pool
+						.iter()
+						.map(|binning_instructions| {
+							vec![BinStatsEntry::default(); binning_instructions.n_bins()]
+						})
+						.collect(),
+				)
+			}),
+		),
+		binning::BinnedFeatures::RowWise(_) => Pool::new(
+			train_options.max_leaf_nodes,
+			Box::new(move || {
+				BinStats::RowWise(
+					binning_instructions_for_pool
+						.iter()
+						.flat_map(|binning_instructions| {
+							vec![BinStatsEntry::default(); binning_instructions.n_bins()]
+						})
+						.collect(),
+				)
+			}),
+		),
+	};
 
 	// This is the total number of rounds that have been trained thus far.
 	let mut n_rounds_trained = 0;
@@ -257,6 +283,7 @@ pub fn train(
 			let tree = self::tree::train(TreeTrainOptions {
 				binning_instructions: &binning_instructions,
 				binned_features: &binned_features,
+				binned_features_columnar: &binned_features_columnar,
 				gradients: gradients.as_slice().unwrap(),
 				hessians: hessians.as_slice().unwrap(),
 				gradients_ordered_buffer: gradients_ordered_buffer.as_slice_mut().unwrap(),

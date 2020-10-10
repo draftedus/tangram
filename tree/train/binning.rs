@@ -1,5 +1,7 @@
 use crate::TrainOptions;
+use itertools::izip;
 use itertools::Itertools;
+use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BTreeMap};
@@ -159,20 +161,34 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 }
 
 /// A dataframe of features is binned into BinnedFeatures
-pub struct BinnedFeatures {
-	pub columns: Vec<BinnedFeaturesColumn>,
+#[derive(Debug)]
+pub enum BinnedFeatures {
+	RowWise(RowWiseBinnedFeatures),
+	ColWise(ColWiseBinnedFeatures),
 }
 
-pub enum BinnedFeaturesColumn {
+#[derive(Debug)]
+pub struct RowWiseBinnedFeatures {
+	pub values_with_offsets: Array2<u16>,
+	pub offsets: Vec<u16>,
+}
+
+#[derive(Debug)]
+pub struct ColWiseBinnedFeatures {
+	pub columns: Vec<ColWiseBinnedFeaturesColumn>,
+}
+
+#[derive(Debug)]
+pub enum ColWiseBinnedFeaturesColumn {
 	U8(Vec<u8>),
 	U16(Vec<u16>),
 }
 
-impl BinnedFeaturesColumn {
+impl ColWiseBinnedFeaturesColumn {
 	pub fn len(&self) -> usize {
 		match self {
-			BinnedFeaturesColumn::U8(values) => values.len(),
-			BinnedFeaturesColumn::U16(values) => values.len(),
+			ColWiseBinnedFeaturesColumn::U8(values) => values.len(),
+			ColWiseBinnedFeaturesColumn::U16(values) => values.len(),
 		}
 	}
 }
@@ -199,14 +215,98 @@ pub fn compute_binned_features(
 			},
 		)
 		.collect();
-	BinnedFeatures { columns }
+	BinnedFeatures::ColWise(ColWiseBinnedFeatures { columns })
+}
+
+pub fn compute_binned_features_row_wise(
+	features: &DataFrameView,
+	binning_instructions: &[BinningInstructions],
+	_progress: &(impl Fn() + Sync),
+) -> BinnedFeatures {
+	let total_bins = binning_instructions
+		.iter()
+		.map(|binning_instructions| binning_instructions.n_bins())
+		.sum::<usize>();
+	if total_bins < 15 {
+		todo!();
+	} else if total_bins < 255 {
+		todo!()
+	} else if total_bins < 65536 {
+		// bin type is u16
+		let n_features = features.ncols();
+		let n_examples = features.nrows();
+		let mut values_with_offsets: Array2<u16> =
+			unsafe { Array2::uninitialized((n_examples, n_features)) };
+		let mut current_offset = 0;
+		let offsets: Vec<u16> = binning_instructions
+			.iter()
+			.map(|binning_instructions| {
+				let this_offset = current_offset.to_u16().unwrap();
+				current_offset += binning_instructions.n_bins();
+				this_offset
+			})
+			.collect();
+		pzip!(
+			values_with_offsets.axis_iter_mut(Axis(1)),
+			&features.columns,
+			binning_instructions,
+			offsets.as_slice()
+		)
+		.for_each(
+			|(mut binned_features_column, feature, binning_instructions, offset)| {
+				match binning_instructions {
+					BinningInstructions::Number { thresholds } => {
+						izip!(
+							binned_features_column.iter_mut(),
+							feature.as_number().unwrap().data
+						)
+						.for_each(|(binned_feature_value, feature_value)| {
+							// Invalid values go to the first bin.
+							if !feature_value.is_finite() {
+								*binned_feature_value = *offset;
+							}
+							// Use binary search on the thresholds to find the bin for the feature value.
+							*binned_feature_value = offset
+								+ thresholds
+									.binary_search_by(|threshold| {
+										threshold.partial_cmp(feature_value).unwrap()
+									})
+									.unwrap_or_else(|bin| bin)
+									.to_u16()
+									.unwrap() + 1;
+						});
+					}
+					BinningInstructions::Enum { .. } => {
+						izip!(
+							binned_features_column.iter_mut(),
+							feature.as_enum().unwrap().data
+						)
+						.for_each(|(binned_feature_value, feature_value)| {
+							*binned_feature_value = offset
+								+ feature_value
+									.map(|v| v.get())
+									.unwrap_or(0)
+									.to_u16()
+									.unwrap();
+						});
+					}
+				}
+			},
+		);
+		BinnedFeatures::RowWise(RowWiseBinnedFeatures {
+			values_with_offsets,
+			offsets,
+		})
+	} else {
+		todo!()
+	}
 }
 
 fn compute_binned_features_for_number_feature(
 	feature: &ColumnView,
 	thresholds: &[f32],
 	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumn {
+) -> ColWiseBinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_number()
 		.unwrap()
@@ -225,13 +325,13 @@ fn compute_binned_features_for_number_feature(
 				.unwrap() + 1
 		})
 		.collect::<Vec<u8>>();
-	BinnedFeaturesColumn::U8(binned_feature)
+	ColWiseBinnedFeaturesColumn::U8(binned_feature)
 }
 
 fn compute_binned_features_for_enum_feature_u8(
 	feature: &ColumnView,
 	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumn {
+) -> ColWiseBinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_enum()
 		.unwrap()
@@ -239,13 +339,13 @@ fn compute_binned_features_for_enum_feature_u8(
 		.par_iter()
 		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
 		.collect::<Vec<u8>>();
-	BinnedFeaturesColumn::U8(binned_feature)
+	ColWiseBinnedFeaturesColumn::U8(binned_feature)
 }
 
 fn compute_binned_features_for_enum_feature_u16(
 	feature: &ColumnView,
 	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumn {
+) -> ColWiseBinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_enum()
 		.unwrap()
@@ -259,5 +359,5 @@ fn compute_binned_features_for_enum_feature_u16(
 				.unwrap()
 		})
 		.collect::<Vec<u16>>();
-	BinnedFeaturesColumn::U16(binned_feature)
+	ColWiseBinnedFeaturesColumn::U16(binned_feature)
 }

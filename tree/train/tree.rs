@@ -180,6 +180,7 @@ impl std::cmp::Ord for QueueItem {
 pub struct TreeTrainOptions<'a> {
 	pub bin_stats_pool: &'a mut Pool<BinStats>,
 	pub binned_features: &'a BinnedFeatures,
+	pub binned_features_columnar: &'a BinnedFeatures,
 	pub binning_instructions: &'a [BinningInstructions],
 	pub examples_index_left_buffer: &'a mut [i32],
 	pub examples_index_right_buffer: &'a mut [i32],
@@ -199,6 +200,7 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 	let TreeTrainOptions {
 		bin_stats_pool,
 		binned_features,
+		binned_features_columnar,
 		binning_instructions,
 		examples_index_left_buffer,
 		examples_index_right_buffer,
@@ -307,7 +309,7 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 		#[cfg(feature = "timing")]
 		let start = std::time::Instant::now();
 		let (left, right) = rearrange_examples_index(
-			binned_features,
+			binned_features_columnar,
 			&queue_item.split,
 			examples_index
 				.get_mut(queue_item.examples_index_range.clone())
@@ -362,7 +364,7 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 				train_options,
 			});
 		#[cfg(feature = "timing")]
-		timing.choose_best_split.inc(start.elapsed());
+		timing.choose_best_split_not_root.inc(start.elapsed());
 
 		// Add a queue item or leaf for the left child.
 		match left_child_best_split_output {
