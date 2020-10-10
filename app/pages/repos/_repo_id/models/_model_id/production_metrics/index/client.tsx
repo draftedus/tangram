@@ -1,7 +1,7 @@
 import { hydrateLineChart } from '@tangramhq/charts'
-import { bootDateWindowSelectField } from 'common/date_window_select'
+import { bootDateWindowSelect } from 'common/date_window_select'
 
-bootDateWindowSelectField()
+bootDateWindowSelect()
 if (document.getElementById('mse')) {
 	hydrateLineChart('mse')
 }

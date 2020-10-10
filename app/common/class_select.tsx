@@ -6,34 +6,17 @@ type ClassSelectProps = {
 	classes: string[]
 }
 
-export function ClassSelect(props: ClassSelectProps) {
+export function ClassSelectField(props: ClassSelectProps) {
 	return (
-		<div>
-			<ui.Form>
-				<ui.SelectField
-					id="class-select"
-					label="Select Class"
-					name="class"
-					options={props.classes}
-					value={props.class}
-				/>
-				<noscript>
-					<ui.Button>{'Submit'}</ui.Button>
-				</noscript>
-			</ui.Form>
-		</div>
+		<ui.SelectField
+			id="class-select"
+			label="Select Class"
+			name="class"
+			options={props.classes.map(className => ({
+				text: className,
+				value: className,
+			}))}
+			value={props.class}
+		/>
 	)
-}
-
-export function bootClassSelectField() {
-	let selectElements = document.querySelectorAll('#class-select')
-	selectElements.forEach(selectElement => {
-		if (!(selectElement instanceof HTMLSelectElement)) throw Error()
-		selectElement.addEventListener('change', event => {
-			if (!(event.currentTarget instanceof HTMLSelectElement)) throw Error()
-			let form = event.currentTarget.closest('form')
-			if (!(form instanceof HTMLFormElement)) throw Error()
-			form.submit()
-		})
-	})
 }

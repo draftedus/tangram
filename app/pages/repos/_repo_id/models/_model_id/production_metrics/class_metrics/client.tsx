@@ -1,9 +1,8 @@
 import { hydrateLineChart } from '@tangramhq/charts'
-import { bootClassSelectField } from 'common/class_select'
-import { bootDateWindowSelectField } from 'common/date_window_select'
+import { selectSubmitOnChange } from '@tangramhq/ui'
 
-bootClassSelectField()
-bootDateWindowSelectField()
+selectSubmitOnChange('date-window-select-field')
+selectSubmitOnChange('class-select-field')
 hydrateLineChart('precision_intervals')
 hydrateLineChart('recall_intervals')
 hydrateLineChart('f1_intervals')

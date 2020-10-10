@@ -1,7 +1,7 @@
 import { LineChart } from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
-import { ClassSelect } from 'common/class_select'
+import { ClassSelectField } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { renderPage } from 'common/render'
 import {
@@ -81,7 +81,12 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					</ui.TabLink>
 					<ui.TabLink href="roc">{'ROC Curve'}</ui.TabLink>
 				</ui.TabBar>
-				<ClassSelect class={props.class} classes={props.classes} />
+				<ui.Form>
+					<ClassSelectField class={props.class} classes={props.classes} />
+					<noscript>
+						<ui.Button>{'Submit'}</ui.Button>
+					</noscript>
+				</ui.Form>
 				<ui.S2>
 					<ui.H2>{'Parametric Precision Recall Curve'}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>

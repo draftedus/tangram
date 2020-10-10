@@ -125,7 +125,12 @@ export default function ProductionStatsIndexPage(props: Props) {
 		>
 			<ui.S1>
 				<ui.H1>{'Production Stats'}</ui.H1>
-				<DateWindowSelectField dateWindow={props.dateWindow} />
+				<ui.Form>
+					<DateWindowSelectField dateWindow={props.dateWindow} />
+					<noscript>
+						<ui.Button>{'Submit'}</ui.Button>
+					</noscript>
+				</ui.Form>
 				{props.predictionStatsIntervalChart.type === Task.Regression ? (
 					<ui.Card>
 						<RegressionProductionStatsIntervalChart

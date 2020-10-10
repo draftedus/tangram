@@ -1,5 +1,5 @@
 import * as ui from '@tangramhq/ui'
-import { ClassSelect } from 'common/class_select'
+import { ClassSelectField } from 'common/class_select'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { h } from 'preact'
@@ -29,7 +29,12 @@ export function MulticlassClassifierClassMetricsPage(props: Props) {
 					{'Class Metrics'}
 				</ui.TabLink>
 			</ui.TabBar>
-			<ClassSelect class={props.class} classes={props.classes} />
+			<ui.Form>
+				<ClassSelectField class={props.class} classes={props.classes} />
+				<noscript>
+					<ui.Button>{'Submit'}</ui.Button>
+				</noscript>
+			</ui.Form>
 			<ui.S2>
 				<ui.H2>{'Precision and Recall'}</ui.H2>
 				<ui.P>{definitions.precisionRecall}</ui.P>

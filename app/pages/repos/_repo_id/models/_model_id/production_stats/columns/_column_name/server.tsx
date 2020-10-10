@@ -63,7 +63,12 @@ export default function ProductionStatsColumnsPage(props: Props) {
 		>
 			<ui.S1>
 				<ui.H1>{props.columnName}</ui.H1>
-				<DateWindowSelectField dateWindow={props.dateWindow} />
+				<ui.Form>
+					<DateWindowSelectField dateWindow={props.dateWindow} />
+					<noscript>
+						<ui.Button>{'Submit'}</ui.Button>
+					</noscript>
+				</ui.Form>
 				{inner}
 			</ui.S1>
 		</ModelLayout>,

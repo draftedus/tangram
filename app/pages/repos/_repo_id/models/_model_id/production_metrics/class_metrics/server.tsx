@@ -1,6 +1,8 @@
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
+import { ClassSelectField } from 'common/class_select'
+import { DateWindowSelectField } from 'common/date_window_select'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { renderPage } from 'common/render'
@@ -188,27 +190,13 @@ export default function ProductionMetricsPage(props: Props) {
 						{'Class Metrics'}
 					</ui.TabLink>
 				</ui.TabBar>
-				<div>
-					<ui.Form>
-						<ui.SelectField
-							id="date-window-select"
-							label="Date Window"
-							name="date_window"
-							options={Object.values(DateWindow)}
-							value={props.dateWindow}
-						/>
-						<ui.SelectField
-							id="class-select"
-							label="Class"
-							name="class"
-							options={props.classes}
-							value={props.class}
-						/>
-						<noscript>
-							<ui.Button>{'Submit'}</ui.Button>
-						</noscript>
-					</ui.Form>
-				</div>
+				<ui.Form>
+					<DateWindowSelectField dateWindow={props.dateWindow} />
+					<ClassSelectField class={props.class} classes={props.classes} />
+					<noscript>
+						<ui.Button>{'Submit'}</ui.Button>
+					</noscript>
+				</ui.Form>
 				{selectedOverallClassMetrics !== null && (
 					<>
 						<ui.S2>

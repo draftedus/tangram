@@ -16,11 +16,6 @@ export function LinearMulticlassClassifierModelPage(props: Props) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Model'}</ui.H1>
-			<ui.SelectField
-				label="Select Class"
-				options={props.classes}
-				value={props.selectedClass}
-			/>
 			<ui.P>
 				{'The model is a '}
 				<b>{'Linear Multiclass Classifier'}</b>

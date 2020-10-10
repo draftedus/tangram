@@ -76,7 +76,12 @@ export function ClassifierProductionMetricsIndexPage(props: Props) {
 				</ui.TabLink>
 			</ui.TabBar>
 			<ui.S2>
-				<DateWindowSelectField dateWindow={props.dateWindow} />
+				<ui.Form>
+					<DateWindowSelectField dateWindow={props.dateWindow} />
+					<noscript>
+						<ui.Button>{'Submit'}</ui.Button>
+					</noscript>
+				</ui.Form>
 				<ui.P>
 					{'You have logged '}
 					<b>{props.overall.trueValuesCount}</b>
