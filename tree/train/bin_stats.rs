@@ -401,9 +401,17 @@ pub unsafe fn compute_bin_stats_row_wise_root_no_hessians<T>(
 		for i in i * unroll..i * unroll + unroll {
 			#[cfg(target_arch = "x86_64")]
 			{
-				let prefetch_index = (i + PREFETCH_OFFSET) * n_features;
-				let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
-				core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+				let prefetch_index = i + PREFETCH_OFFSET;
+				core::arch::x86_64::_mm_prefetch(
+					binned_feature_values
+						.as_ptr()
+						.add(prefetch_index * n_features) as *const i8,
+					core::arch::x86_64::_MM_HINT_T0,
+				);
+				core::arch::x86_64::_mm_prefetch(
+					gradients.as_ptr().add(prefetch_index) as *const i8,
+					core::arch::x86_64::_MM_HINT_T0,
+				);
 			}
 			let row = binned_feature_values.row(i);
 			let ordered_gradient = *gradients.get_unchecked(i);
@@ -441,9 +449,21 @@ pub unsafe fn compute_bin_stats_row_wise_root_yes_hessians<T>(
 		for i in i * unroll..i * unroll + unroll {
 			#[cfg(target_arch = "x86_64")]
 			{
-				let prefetch_index = (i + PREFETCH_OFFSET) * n_features;
-				let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
-				core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+				let prefetch_index = i + PREFETCH_OFFSET;
+				core::arch::x86_64::_mm_prefetch(
+					binned_feature_values
+						.as_ptr()
+						.add(prefetch_index * n_features) as *const i8,
+					core::arch::x86_64::_MM_HINT_T0,
+				);
+				core::arch::x86_64::_mm_prefetch(
+					gradients.as_ptr().add(prefetch_index) as *const i8,
+					core::arch::x86_64::_MM_HINT_T0,
+				);
+				core::arch::x86_64::_mm_prefetch(
+					hessians.as_ptr().add(prefetch_index) as *const i8,
+					core::arch::x86_64::_MM_HINT_T0,
+				);
 			}
 			let row = binned_feature_values.row(i);
 			let ordered_gradient = *gradients.get_unchecked(i);
@@ -469,7 +489,7 @@ pub unsafe fn compute_bin_stats_row_wise_root_yes_hessians<T>(
 }
 
 pub unsafe fn compute_bin_stats_row_wise_not_root_no_hessians<T>(
-	ordered_gradients: &[f32],
+	gradients: &[f32],
 	binned_feature_values: ArrayView2<T>,
 	bin_stats: &mut [BinStatsEntry],
 	examples_index: &[i32],
@@ -486,12 +506,18 @@ pub unsafe fn compute_bin_stats_row_wise_not_root_no_hessians<T>(
 				let prefetch_index = examples_index
 					.get_unchecked(i + PREFETCH_OFFSET)
 					.to_usize()
-					.unwrap() * n_features;
-				let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
+					.unwrap();
+				let prefetch_ptr = binned_feature_values
+					.as_ptr()
+					.add(prefetch_index * n_features) as *const i8;
 				core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+				core::arch::x86_64::_mm_prefetch(
+					gradients.as_ptr().add(prefetch_index) as *const i8,
+					core::arch::x86_64::_MM_HINT_T0,
+				);
 			}
 			let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
-			let ordered_gradient = *ordered_gradients.get_unchecked(i);
+			let ordered_gradient = *gradients.get_unchecked(example_index);
 			let row = binned_feature_values.row(example_index);
 			row.iter().for_each(|bin_index| {
 				let bin_stats = bin_stats.get_unchecked_mut(bin_index.to_usize().unwrap());
@@ -502,7 +528,7 @@ pub unsafe fn compute_bin_stats_row_wise_not_root_no_hessians<T>(
 	}
 	for i in (len / unroll) * unroll..len {
 		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
-		let ordered_gradient = *ordered_gradients.get_unchecked(i);
+		let ordered_gradient = *gradients.get_unchecked(example_index);
 		let row = binned_feature_values.row(example_index);
 		row.iter().for_each(|bin_index| {
 			let bin_stats = bin_stats.get_unchecked_mut(bin_index.to_usize().unwrap());
@@ -513,8 +539,8 @@ pub unsafe fn compute_bin_stats_row_wise_not_root_no_hessians<T>(
 }
 
 pub unsafe fn compute_bin_stats_row_wise_not_root_yes_hessians<T>(
-	ordered_gradients: &[f32],
-	ordered_hessians: &[f32],
+	gradients: &[f32],
+	hessians: &[f32],
 	binned_feature_values: &[T],
 	bin_stats: &mut [BinStatsEntry],
 	examples_index: &[i32],
@@ -536,10 +562,18 @@ pub unsafe fn compute_bin_stats_row_wise_not_root_yes_hessians<T>(
 					.as_ptr()
 					.add(prefetch_index * n_features) as *const i8;
 				core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+				core::arch::x86_64::_mm_prefetch(
+					gradients.as_ptr().add(prefetch_index) as *const i8,
+					core::arch::x86_64::_MM_HINT_T0,
+				);
+				core::arch::x86_64::_mm_prefetch(
+					hessians.as_ptr().add(prefetch_index) as *const i8,
+					core::arch::x86_64::_MM_HINT_T0,
+				);
 			}
 			let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
-			let ordered_gradient = *ordered_gradients.get_unchecked(i);
-			let ordered_hessian = *ordered_hessians.get_unchecked(i);
+			let ordered_gradient = *gradients.get_unchecked(example_index);
+			let ordered_hessian = *hessians.get_unchecked(example_index);
 			let binned_feature_row_start = example_index * n_features;
 			for binned_feature_value_index in
 				binned_feature_row_start..binned_feature_row_start + n_features
@@ -555,8 +589,8 @@ pub unsafe fn compute_bin_stats_row_wise_not_root_yes_hessians<T>(
 	}
 	for i in (len / unroll) * unroll..len {
 		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
-		let ordered_gradient = *ordered_gradients.get_unchecked(i);
-		let ordered_hessian = *ordered_hessians.get_unchecked(i);
+		let ordered_gradient = *gradients.get_unchecked(example_index);
+		let ordered_hessian = *hessians.get_unchecked(example_index);
 		let binned_feature_row_start = example_index * n_features;
 		for binned_feature_value_index in
 			binned_feature_row_start..binned_feature_row_start + n_features

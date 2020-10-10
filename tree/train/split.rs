@@ -345,15 +345,15 @@ pub fn choose_best_splits_not_root(
 	let mut smaller_child_bin_stats = bin_stats_pool.get().unwrap();
 	let mut larger_child_bin_stats = parent_bin_stats;
 
-	// Fill the gradients and hessians ordered buffers. The buffers contain the gradients and hessians for each example as ordered by the examples index. This makes the access of the gradients and hessians sequential in the next step.
-	fill_gradients_and_hessians_ordered_buffers(
-		smaller_child_examples_index,
-		gradients,
-		hessians,
-		gradients_ordered_buffer,
-		hessians_ordered_buffer,
-		hessians_are_constant,
-	);
+	// // Fill the gradients and hessians ordered buffers. The buffers contain the gradients and hessians for each example as ordered by the examples index. This makes the access of the gradients and hessians sequential in the next step.
+	// fill_gradients_and_hessians_ordered_buffers(
+	// 	smaller_child_examples_index,
+	// 	gradients,
+	// 	hessians,
+	// 	gradients_ordered_buffer,
+	// 	hessians_ordered_buffer,
+	// 	hessians_are_constant,
+	// );
 
 	let children_best_splits: Vec<(
 		Option<ChooseBestSplitForFeatureOutput>,
@@ -461,8 +461,8 @@ pub fn choose_best_splits_not_root(
 					smaller_child_bin_stats.as_mut_slice(),
 					smaller_child_examples_index,
 					binned_features,
-					gradients_ordered_buffer,
-					hessians_ordered_buffer,
+					gradients,
+					hessians,
 					hessians_are_constant,
 				);
 			} else {
@@ -471,14 +471,14 @@ pub fn choose_best_splits_not_root(
 				// Compute the bin stats for the child with fewer examples.
 				*smaller_child_bin_stats = pzip!(
 					smaller_child_examples_index.par_chunks(chunk_size),
-					gradients_ordered_buffer.par_chunks(chunk_size),
-					hessians_ordered_buffer.par_chunks(chunk_size),
+					// gradients_ordered_buffer.par_chunks(chunk_size),
+					// hessians_ordered_buffer.par_chunks(chunk_size),
 				)
 				.map(
 					|(
 						smaller_child_examples_index_chunk,
-						gradients_ordered_buffer_chunk,
-						hessians_ordered_buffer_chunk,
+						// gradients_ordered_buffer_chunk,
+						// hessians_ordered_buffer_chunk,
 					)| {
 						let mut smaller_child_bin_stats_chunk: Vec<BinStatsEntry> =
 							smaller_child_bin_stats
@@ -489,8 +489,8 @@ pub fn choose_best_splits_not_root(
 							smaller_child_bin_stats_chunk.as_mut_slice(),
 							smaller_child_examples_index_chunk,
 							binned_features,
-							gradients_ordered_buffer_chunk,
-							hessians_ordered_buffer_chunk,
+							gradients,
+							hessians,
 							hessians_are_constant,
 						);
 						smaller_child_bin_stats_chunk

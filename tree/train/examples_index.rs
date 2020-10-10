@@ -178,7 +178,8 @@ fn rearrange_examples_index_parallel(
 	examples_index_left_buffer: &mut [i32],
 	examples_index_right_buffer: &mut [i32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
-	let chunk_size = examples_index.len() / rayon::current_num_threads();
+	let chunk_size =
+		(examples_index.len() + rayon::current_num_threads() - 1) / rayon::current_num_threads();
 	let counts: Vec<(usize, usize)> = pzip!(
 		examples_index.par_chunks_mut(chunk_size),
 		examples_index_left_buffer.par_chunks_mut(chunk_size),
