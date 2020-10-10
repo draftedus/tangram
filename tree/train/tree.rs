@@ -1,6 +1,6 @@
 use super::{
 	bin_stats::BinStats,
-	binning::{BinnedFeatures, BinningInstructions},
+	binning::{BinnedFeatures, BinningInstruction},
 	examples_index::rearrange_examples_index,
 	split::{
 		choose_best_split_root, choose_best_splits_not_root, ChooseBestSplitOutput,
@@ -181,7 +181,7 @@ pub struct TreeTrainOptions<'a> {
 	pub bin_stats_pool: &'a mut Pool<BinStats>,
 	pub binned_features: &'a BinnedFeatures,
 	pub binned_features_columnar: &'a BinnedFeatures,
-	pub binning_instructions: &'a [BinningInstructions],
+	pub binning_instructions: &'a [BinningInstruction],
 	pub examples_index_left_buffer: &'a mut [i32],
 	pub examples_index_right_buffer: &'a mut [i32],
 	pub examples_index: &'a mut [i32],

@@ -1,7 +1,8 @@
 use self::{
 	bin_stats::{BinStats, BinStatsEntry},
 	binning::{
-		compute_binned_features, compute_binned_features_row_wise, compute_binning_instructions,
+		compute_binned_features_col_wise, compute_binned_features_row_wise,
+		compute_binning_instructions,
 	},
 	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
 	feature_importances::compute_feature_importances,
@@ -113,7 +114,7 @@ pub fn train(
 		});
 	let binned_features = binned_features_row_wise;
 	let binned_features_columnar =
-		compute_binned_features(&features_train, &binning_instructions, &|| {
+		compute_binned_features_col_wise(&features_train, &binning_instructions, &|| {
 			progress_counter.inc(1)
 		});
 	// let binned_features = compute_binned_features(&features_train, &binning_instructions, &|| {

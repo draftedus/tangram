@@ -1,10 +1,10 @@
 use super::{
 	bin_stats::{
-		compute_bin_stats_for_examples_not_root, compute_bin_stats_for_examples_root,
-		compute_bin_stats_for_feature_not_root, compute_bin_stats_for_feature_not_root_subtraction,
-		compute_bin_stats_for_feature_root, BinStats, BinStatsEntry,
+		compute_bin_stats_col_wise_not_root, compute_bin_stats_col_wise_not_root_subtraction,
+		compute_bin_stats_col_wise_root, compute_bin_stats_row_wise_not_root,
+		compute_bin_stats_row_wise_root, BinStats, BinStatsEntry,
 	},
-	binning::{BinnedFeatures, BinningInstructions},
+	binning::{BinnedFeatures, BinningInstruction},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 #[cfg(feature = "timing")]
@@ -20,7 +20,7 @@ use tangram_thread_pool::pzip;
 pub struct ChooseBestSplitRootOptions<'a> {
 	pub bin_stats_pool: &'a mut Pool<BinStats>,
 	pub binned_features: &'a BinnedFeatures,
-	pub binning_instructions: &'a [BinningInstructions],
+	pub binning_instructions: &'a [BinningInstruction],
 	pub gradients: &'a [f32],
 	pub hessians_are_constant: bool,
 	pub hessians: &'a [f32],
@@ -32,7 +32,7 @@ pub struct ChooseBestSplitRootOptions<'a> {
 pub struct ChooseBestSplitsNotRootOptions<'a> {
 	pub bin_stats_pool: &'a mut Pool<BinStats>,
 	pub binned_features: &'a BinnedFeatures,
-	pub binning_instructions: &'a [BinningInstructions],
+	pub binning_instructions: &'a [BinningInstruction],
 	pub gradients_ordered_buffer: &'a mut [f32],
 	pub gradients: &'a [f32],
 	pub hessians_are_constant: bool,
@@ -146,7 +146,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 							(binning_instructions, binned_feature, bin_stats_for_feature),
 						)| {
 							// Compute the bin stats.
-							compute_bin_stats_for_feature_root(
+							compute_bin_stats_col_wise_root(
 								bin_stats_for_feature,
 								binned_feature,
 								gradients,
@@ -172,7 +172,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 			(BinStats::RowWise(bin_stats), BinnedFeatures::RowWise(binned_features)) => {
 				let n_examples = binned_features.values_with_offsets.nrows();
 				if n_examples < MIN_EXAMPLES_TO_PARALLELIZE {
-					compute_bin_stats_for_examples_root(
+					compute_bin_stats_row_wise_root(
 						bin_stats.as_mut_slice(),
 						binned_features.values_with_offsets.view(),
 						gradients,
@@ -196,7 +196,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 						let mut bin_stats_chunk: Vec<BinStatsEntry> =
 							bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
 						timing.allocations.inc(start.elapsed());
-						compute_bin_stats_for_examples_root(
+						compute_bin_stats_row_wise_root(
 							bin_stats_chunk.as_mut_slice(),
 							binned_features_chunk,
 							gradients_chunk,
@@ -386,7 +386,7 @@ pub fn choose_best_splits_not_root(
 					),
 				)| {
 					// Compute the bin stats for the child with fewer examples.
-					compute_bin_stats_for_feature_not_root(
+					compute_bin_stats_col_wise_not_root(
 						smaller_child_bin_stats_for_feature,
 						smaller_child_examples_index,
 						binned_features_column,
@@ -396,7 +396,7 @@ pub fn choose_best_splits_not_root(
 					);
 
 					// Compute the larger child bin stats by subtraction.
-					compute_bin_stats_for_feature_not_root_subtraction(
+					compute_bin_stats_col_wise_not_root_subtraction(
 						&smaller_child_bin_stats_for_feature,
 						&mut larger_child_bin_stats_for_feature,
 					);
@@ -457,7 +457,7 @@ pub fn choose_best_splits_not_root(
 		) => {
 			let smaller_child_n_examples = smaller_child_examples_index.len();
 			if smaller_child_n_examples < MIN_EXAMPLES_TO_PARALLELIZE {
-				compute_bin_stats_for_examples_not_root(
+				compute_bin_stats_row_wise_not_root(
 					smaller_child_bin_stats.as_mut_slice(),
 					smaller_child_examples_index,
 					binned_features,
@@ -485,7 +485,7 @@ pub fn choose_best_splits_not_root(
 								.iter()
 								.map(|_| BinStatsEntry::default())
 								.collect();
-						compute_bin_stats_for_examples_not_root(
+						compute_bin_stats_row_wise_not_root(
 							smaller_child_bin_stats_chunk.as_mut_slice(),
 							smaller_child_examples_index_chunk,
 							binned_features,
@@ -543,7 +543,7 @@ pub fn choose_best_splits_not_root(
 					};
 
 					// Compute the larger child bin stats by subtraction.
-					compute_bin_stats_for_feature_not_root_subtraction(
+					compute_bin_stats_col_wise_not_root_subtraction(
 						smaller_child_bin_stats_for_feature,
 						larger_child_bin_stats_for_feature,
 					);
@@ -682,7 +682,7 @@ pub fn choose_best_splits_not_root(
 /// Choose the best split for a feature by choosing a continuous split for number features and a discrete split for enum features.
 fn choose_best_split_for_feature(
 	feature_index: usize,
-	binning_instructions: &BinningInstructions,
+	binning_instructions: &BinningInstruction,
 	bin_stats_for_feature: &[BinStatsEntry],
 	n_examples: usize,
 	sum_gradients: f64,
@@ -690,7 +690,7 @@ fn choose_best_split_for_feature(
 	train_options: &TrainOptions,
 ) -> Option<ChooseBestSplitForFeatureOutput> {
 	match binning_instructions {
-		BinningInstructions::Number { .. } => choose_best_split_for_continuous_feature(
+		BinningInstruction::Number { .. } => choose_best_split_for_continuous_feature(
 			feature_index,
 			&binning_instructions,
 			bin_stats_for_feature,
@@ -699,7 +699,7 @@ fn choose_best_split_for_feature(
 			sum_hessians,
 			train_options,
 		),
-		BinningInstructions::Enum { .. } => choose_best_split_for_discrete_feature(
+		BinningInstruction::Enum { .. } => choose_best_split_for_discrete_feature(
 			feature_index,
 			&binning_instructions,
 			bin_stats_for_feature,
@@ -714,7 +714,7 @@ fn choose_best_split_for_feature(
 /// Choose the best continuous split for this feature.
 fn choose_best_split_for_continuous_feature(
 	feature_index: usize,
-	binning_instructions: &BinningInstructions,
+	binning_instructions: &BinningInstruction,
 	bin_stats_for_feature: &[BinStatsEntry],
 	n_examples_parent: usize,
 	sum_gradients_parent: f64,
@@ -729,7 +729,7 @@ fn choose_best_split_for_continuous_feature(
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	let thresholds = match binning_instructions {
-		BinningInstructions::Number { thresholds } => thresholds,
+		BinningInstruction::Number { thresholds } => thresholds,
 		_ => unreachable!(),
 	};
 	// Always send invalid values to the left.
@@ -817,7 +817,7 @@ fn choose_best_split_for_continuous_feature(
 /// Choose the best discrete split for this feature.
 fn choose_best_split_for_discrete_feature(
 	feature_index: usize,
-	binning_instructions: &BinningInstructions,
+	binning_instructions: &BinningInstruction,
 	bin_stats_for_feature: &[BinStatsEntry],
 	n_examples_parent: usize,
 	sum_gradients_parent: f64,

@@ -45,7 +45,7 @@ const ROOT_UNROLL: usize = 16;
 /// This value controls how many times to unroll the loop in `compute_bin_stats_for_feature_not_root`.
 const NOT_ROOT_UNROLL: usize = 4;
 
-pub fn compute_bin_stats_for_feature_root(
+pub fn compute_bin_stats_col_wise_root(
 	bin_stats_for_feature: &mut [BinStatsEntry],
 	binned_feature: &ColWiseBinnedFeaturesColumn,
 	// (n_examples)
@@ -64,14 +64,14 @@ pub fn compute_bin_stats_for_feature_root(
 	if hessians_are_constant {
 		match binned_feature {
 			ColWiseBinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-				compute_bin_stats_for_feature_root_no_hessians(
+				compute_bin_stats_col_wise_root_no_hessians(
 					gradients,
 					binned_feature_values,
 					bin_stats_for_feature,
 				)
 			},
 			ColWiseBinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-				compute_bin_stats_for_feature_root_no_hessians(
+				compute_bin_stats_col_wise_root_no_hessians(
 					gradients,
 					binned_feature_values,
 					bin_stats_for_feature,
@@ -81,7 +81,7 @@ pub fn compute_bin_stats_for_feature_root(
 	} else {
 		match binned_feature {
 			ColWiseBinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-				compute_bin_stats_for_feature_root_yes_hessians(
+				compute_bin_stats_col_wise_root_yes_hessians(
 					gradients,
 					hessians,
 					binned_feature_values,
@@ -89,7 +89,7 @@ pub fn compute_bin_stats_for_feature_root(
 				)
 			},
 			ColWiseBinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-				compute_bin_stats_for_feature_root_yes_hessians(
+				compute_bin_stats_col_wise_root_yes_hessians(
 					gradients,
 					hessians,
 					binned_feature_values,
@@ -100,7 +100,7 @@ pub fn compute_bin_stats_for_feature_root(
 	}
 }
 
-pub fn compute_bin_stats_for_feature_not_root(
+pub fn compute_bin_stats_col_wise_not_root(
 	smaller_child_bin_stats_for_feature: &mut [BinStatsEntry],
 	smaller_child_examples_index: &[i32],
 	binned_features_column: &ColWiseBinnedFeaturesColumn,
@@ -117,7 +117,7 @@ pub fn compute_bin_stats_for_feature_not_root(
 	if hessians_are_constant {
 		match binned_features_column {
 			ColWiseBinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-				compute_bin_stats_for_feature_not_root_no_hessians(
+				compute_bin_stats_col_wise_not_root_no_hessians(
 					ordered_gradients,
 					binned_feature_values.as_slice(),
 					smaller_child_bin_stats_for_feature,
@@ -125,7 +125,7 @@ pub fn compute_bin_stats_for_feature_not_root(
 				)
 			},
 			ColWiseBinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-				compute_bin_stats_for_feature_not_root_no_hessians(
+				compute_bin_stats_col_wise_not_root_no_hessians(
 					ordered_gradients,
 					binned_feature_values.as_slice(),
 					smaller_child_bin_stats_for_feature,
@@ -136,7 +136,7 @@ pub fn compute_bin_stats_for_feature_not_root(
 	} else {
 		match binned_features_column {
 			ColWiseBinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
-				compute_bin_stats_for_feature_not_root_yes_hessians(
+				compute_bin_stats_col_wise_not_root_yes_hessians(
 					ordered_gradients,
 					ordered_hessians,
 					binned_feature_values.as_slice(),
@@ -145,7 +145,7 @@ pub fn compute_bin_stats_for_feature_not_root(
 				)
 			},
 			ColWiseBinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
-				compute_bin_stats_for_feature_not_root_yes_hessians(
+				compute_bin_stats_col_wise_not_root_yes_hessians(
 					ordered_gradients,
 					ordered_hessians,
 					binned_feature_values.as_slice(),
@@ -157,7 +157,7 @@ pub fn compute_bin_stats_for_feature_not_root(
 	}
 }
 
-pub fn compute_bin_stats_for_feature_not_root_subtraction(
+pub fn compute_bin_stats_col_wise_not_root_subtraction(
 	smaller_child_bin_stats_for_feature: &[BinStatsEntry],
 	larger_child_bin_stats_for_feature: &mut [BinStatsEntry],
 ) {
@@ -170,7 +170,7 @@ pub fn compute_bin_stats_for_feature_not_root_subtraction(
 	}
 }
 
-unsafe fn compute_bin_stats_for_feature_root_no_hessians<T>(
+unsafe fn compute_bin_stats_col_wise_root_no_hessians<T>(
 	gradients: &[f32],
 	binned_feature_values: &[T],
 	bin_stats_for_feature: &mut [BinStatsEntry],
@@ -197,7 +197,7 @@ unsafe fn compute_bin_stats_for_feature_root_no_hessians<T>(
 	}
 }
 
-pub unsafe fn compute_bin_stats_for_feature_root_yes_hessians<T>(
+pub unsafe fn compute_bin_stats_col_wise_root_yes_hessians<T>(
 	gradients: &[f32],
 	hessians: &[f32],
 	binned_feature_values: &[T],
@@ -227,7 +227,7 @@ pub unsafe fn compute_bin_stats_for_feature_root_yes_hessians<T>(
 	}
 }
 
-unsafe fn compute_bin_stats_for_feature_not_root_no_hessians<T>(
+unsafe fn compute_bin_stats_col_wise_not_root_no_hessians<T>(
 	ordered_gradients: &[f32],
 	binned_feature_values: &[T],
 	bin_stats_for_feature: &mut [BinStatsEntry],
@@ -272,7 +272,7 @@ unsafe fn compute_bin_stats_for_feature_not_root_no_hessians<T>(
 	}
 }
 
-pub unsafe fn compute_bin_stats_for_feature_not_root_yes_hessians<T>(
+pub unsafe fn compute_bin_stats_col_wise_not_root_yes_hessians<T>(
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
 	binned_feature_values: &[T],
@@ -320,7 +320,7 @@ pub unsafe fn compute_bin_stats_for_feature_not_root_yes_hessians<T>(
 	}
 }
 
-pub fn compute_bin_stats_for_examples_root(
+pub fn compute_bin_stats_row_wise_root(
 	bin_stats: &mut [BinStatsEntry],
 	binned_features: ArrayView2<u16>,
 	gradients: &[f32],
@@ -335,11 +335,11 @@ pub fn compute_bin_stats_for_examples_root(
 	}
 	if hessians_are_constant {
 		unsafe {
-			compute_bin_stats_for_examples_root_no_hessians(gradients, binned_features, bin_stats)
+			compute_bin_stats_row_wise_root_no_hessians(gradients, binned_features, bin_stats)
 		}
 	} else {
 		unsafe {
-			compute_bin_stats_for_examples_root_yes_hessians(
+			compute_bin_stats_row_wise_root_yes_hessians(
 				gradients,
 				hessians,
 				binned_features,
@@ -349,7 +349,7 @@ pub fn compute_bin_stats_for_examples_root(
 	}
 }
 
-pub fn compute_bin_stats_for_examples_not_root(
+pub fn compute_bin_stats_row_wise_not_root(
 	smaller_child_bin_stats: &mut [BinStatsEntry],
 	smaller_child_examples_index: &[i32],
 	binned_features: &RowWiseBinnedFeatures,
@@ -357,6 +357,7 @@ pub fn compute_bin_stats_for_examples_not_root(
 	ordered_hessians: &[f32],
 	hessians_are_constant: bool,
 ) {
+	let n_features = binned_features.values_with_offsets.ncols();
 	for entry in smaller_child_bin_stats.iter_mut() {
 		*entry = BinStatsEntry {
 			sum_gradients: 0.0,
@@ -365,7 +366,7 @@ pub fn compute_bin_stats_for_examples_not_root(
 	}
 	if hessians_are_constant {
 		unsafe {
-			compute_bin_stats_for_examples_not_root_no_hessians(
+			compute_bin_stats_row_wise_not_root_no_hessians(
 				ordered_gradients,
 				binned_features.values_with_offsets.view(),
 				smaller_child_bin_stats,
@@ -374,18 +375,19 @@ pub fn compute_bin_stats_for_examples_not_root(
 		}
 	} else {
 		unsafe {
-			compute_bin_stats_for_examples_not_root_yes_hessians(
+			compute_bin_stats_row_wise_not_root_yes_hessians(
 				ordered_gradients,
 				ordered_hessians,
-				binned_features.values_with_offsets.view(),
+				binned_features.values_with_offsets.as_slice().unwrap(),
 				smaller_child_bin_stats,
 				smaller_child_examples_index,
+				n_features,
 			)
 		}
 	}
 }
 
-pub unsafe fn compute_bin_stats_for_examples_root_no_hessians<T>(
+pub unsafe fn compute_bin_stats_row_wise_root_no_hessians<T>(
 	gradients: &[f32],
 	binned_feature_values: ArrayView2<T>,
 	bin_stats_for_feature: &mut [BinStatsEntry],
@@ -424,7 +426,7 @@ pub unsafe fn compute_bin_stats_for_examples_root_no_hessians<T>(
 	}
 }
 
-pub unsafe fn compute_bin_stats_for_examples_root_yes_hessians<T>(
+pub unsafe fn compute_bin_stats_row_wise_root_yes_hessians<T>(
 	gradients: &[f32],
 	hessians: &[f32],
 	binned_feature_values: ArrayView2<T>,
@@ -466,7 +468,7 @@ pub unsafe fn compute_bin_stats_for_examples_root_yes_hessians<T>(
 	}
 }
 
-pub unsafe fn compute_bin_stats_for_examples_not_root_no_hessians<T>(
+pub unsafe fn compute_bin_stats_row_wise_not_root_no_hessians<T>(
 	ordered_gradients: &[f32],
 	binned_feature_values: ArrayView2<T>,
 	bin_stats: &mut [BinStatsEntry],
@@ -510,18 +512,18 @@ pub unsafe fn compute_bin_stats_for_examples_not_root_no_hessians<T>(
 	}
 }
 
-pub unsafe fn compute_bin_stats_for_examples_not_root_yes_hessians<T>(
+pub unsafe fn compute_bin_stats_row_wise_not_root_yes_hessians<T>(
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
-	binned_feature_values: ArrayView2<T>,
+	binned_feature_values: &[T],
 	bin_stats: &mut [BinStatsEntry],
 	examples_index: &[i32],
+	n_features: usize,
 ) where
 	T: ToPrimitive,
 {
 	let unroll = NOT_ROOT_UNROLL;
 	let len = examples_index.len();
-	let n_features = binned_feature_values.ncols();
 	for i in 0..len / unroll {
 		for i in i * unroll..i * unroll + unroll {
 			#[cfg(target_arch = "x86_64")]
@@ -529,30 +531,41 @@ pub unsafe fn compute_bin_stats_for_examples_not_root_yes_hessians<T>(
 				let prefetch_index = examples_index
 					.get_unchecked(i + PREFETCH_OFFSET)
 					.to_usize()
-					.unwrap() * n_features;
-				let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
+					.unwrap();
+				let prefetch_ptr = binned_feature_values
+					.as_ptr()
+					.add(prefetch_index * n_features) as *const i8;
 				core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
 			}
 			let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
 			let ordered_gradient = *ordered_gradients.get_unchecked(i);
 			let ordered_hessian = *ordered_hessians.get_unchecked(i);
-			let row = binned_feature_values.row(example_index);
-			row.iter().for_each(|bin_index| {
-				let bin_stats = bin_stats.get_unchecked_mut(bin_index.to_usize().unwrap());
+			let binned_feature_row_start = example_index * n_features;
+			for binned_feature_value_index in
+				binned_feature_row_start..binned_feature_row_start + n_features
+			{
+				let bin_stats_index =
+					binned_feature_values.get_unchecked(binned_feature_value_index);
+				let bin_stats_index = bin_stats_index.to_usize().unwrap();
+				let bin_stats = bin_stats.get_unchecked_mut(bin_stats_index);
 				bin_stats.sum_gradients += ordered_gradient as f64;
 				bin_stats.sum_hessians += ordered_hessian as f64;
-			});
+			}
 		}
 	}
 	for i in (len / unroll) * unroll..len {
 		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
 		let ordered_hessian = *ordered_hessians.get_unchecked(i);
-		let row = binned_feature_values.row(example_index);
-		row.iter().for_each(|bin_index| {
-			let bin_stats = bin_stats.get_unchecked_mut(bin_index.to_usize().unwrap());
+		let binned_feature_row_start = example_index * n_features;
+		for binned_feature_value_index in
+			binned_feature_row_start..binned_feature_row_start + n_features
+		{
+			let bin_stats_index = binned_feature_values.get_unchecked(binned_feature_value_index);
+			let bin_stats_index = bin_stats_index.to_usize().unwrap();
+			let bin_stats = bin_stats.get_unchecked_mut(bin_stats_index);
 			bin_stats.sum_gradients += ordered_gradient as f64;
 			bin_stats.sum_hessians += ordered_hessian as f64;
-		});
+		}
 	}
 }
