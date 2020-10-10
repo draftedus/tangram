@@ -15,8 +15,8 @@ use self::{
 use crate::timing::Timing;
 use crate::{
 	binary_classifier::BinaryClassifier, multiclass_classifier::MulticlassClassifier,
-	regressor::Regressor, BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete,
-	LeafNode, Node, TrainOptions, TrainProgress, Tree,
+	regressor::Regressor, BinnedFeaturesLayout, BranchNode, BranchSplit, BranchSplitContinuous,
+	BranchSplitDiscrete, LeafNode, Node, TrainOptions, TrainProgress, Tree,
 };
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -104,6 +104,7 @@ pub fn train(
 	timing.compute_binning_instructions.inc(start.elapsed());
 
 	// Use the binning instructions from the previous step to compute the binned features.
+	let binned_features_layout = train_options.binned_features_layout;
 	let progress_counter = ProgressCounter::new(features_train.nrows().to_u64().unwrap());
 	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
 	#[cfg(feature = "timing")]
@@ -112,14 +113,10 @@ pub fn train(
 		compute_binned_features_row_wise(&features_train, &binning_instructions, &|| {
 			progress_counter.inc(1)
 		});
-	let binned_features = binned_features_row_wise;
-	let binned_features_columnar =
+	let binned_features_col_wise =
 		compute_binned_features_col_wise(&features_train, &binning_instructions, &|| {
 			progress_counter.inc(1)
 		});
-	// let binned_features = compute_binned_features(&features_train, &binning_instructions, &|| {
-	// 	progress_counter.inc(1)
-	// });
 	#[cfg(feature = "timing")]
 	timing.compute_binned_features.inc(start.elapsed());
 
@@ -181,8 +178,8 @@ pub fn train(
 		None
 	};
 	let binning_instructions_for_pool = binning_instructions.clone();
-	let mut bin_stats_pool = match binned_features {
-		binning::BinnedFeatures::ColWise(_) => Pool::new(
+	let mut bin_stats_pool = match binned_features_layout {
+		BinnedFeaturesLayout::ColumnMajor => Pool::new(
 			train_options.max_leaf_nodes,
 			Box::new(move || {
 				BinStats::ColWise(
@@ -195,7 +192,7 @@ pub fn train(
 				)
 			}),
 		),
-		binning::BinnedFeatures::RowWise(_) => Pool::new(
+		BinnedFeaturesLayout::RowMajor => Pool::new(
 			train_options.max_leaf_nodes,
 			Box::new(move || {
 				BinStats::RowWise(
@@ -283,8 +280,8 @@ pub fn train(
 			let start = std::time::Instant::now();
 			let tree = self::tree::train(TreeTrainOptions {
 				binning_instructions: &binning_instructions,
-				binned_features: &binned_features,
-				binned_features_columnar: &binned_features_columnar,
+				binned_features_row_wise: &binned_features_row_wise,
+				binned_features_col_wise: &binned_features_col_wise,
 				gradients: gradients.as_slice().unwrap(),
 				hessians: hessians.as_slice().unwrap(),
 				gradients_ordered_buffer: gradients_ordered_buffer.as_slice_mut().unwrap(),

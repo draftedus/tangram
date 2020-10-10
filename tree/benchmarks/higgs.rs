@@ -57,6 +57,7 @@ fn main() {
 	// Train the model.
 	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
+		binned_features_layout: tangram_tree::BinnedFeaturesLayout::RowMajor,
 		learning_rate: 0.1,
 		max_leaf_nodes: 255,
 		max_rounds: 100,

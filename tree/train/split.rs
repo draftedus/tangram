@@ -153,7 +153,6 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 								hessians,
 								hessians_are_constant,
 							);
-
 							// Choose the best split for this featue.
 							choose_best_split_for_feature(
 								feature_index,
@@ -170,66 +169,40 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 					.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 			}
 			(BinStats::RowWise(bin_stats), BinnedFeatures::RowWise(binned_features)) => {
+				// Compute the bin stats for the child with fewer examples.
 				let n_examples = binned_features.values_with_offsets.nrows();
-				if n_examples < MIN_EXAMPLES_TO_PARALLELIZE {
+				let n_threads = rayon::current_num_threads();
+				let chunk_size = (n_examples + n_threads - 1) / n_threads;
+				*bin_stats = pzip!(
+					binned_features
+						.values_with_offsets
+						.axis_chunks_iter(Axis(0), chunk_size),
+					gradients.par_chunks(chunk_size),
+					hessians.par_chunks(chunk_size)
+				)
+				.map(|(binned_features_chunk, gradients_chunk, hessians_chunk)| {
+					let mut bin_stats_chunk: Vec<BinStatsEntry> =
+						bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
 					compute_bin_stats_row_wise_root(
-						bin_stats.as_mut_slice(),
-						binned_features.values_with_offsets.view(),
-						gradients,
-						hessians,
+						bin_stats_chunk.as_mut_slice(),
+						binned_features_chunk,
+						gradients_chunk,
+						hessians_chunk,
 						hessians_are_constant,
 					);
-				} else {
-					let n_threads = rayon::current_num_threads();
-					let chunk_size = (n_examples + n_threads - 1) / n_threads;
-					// Compute the bin stats for the child with fewer examples.
-					*bin_stats = pzip!(
-						binned_features
-							.values_with_offsets
-							.axis_chunks_iter(Axis(0), chunk_size),
-						gradients.par_chunks(chunk_size),
-						hessians.par_chunks(chunk_size)
-					)
-					.map(|(binned_features_chunk, gradients_chunk, hessians_chunk)| {
-						// TODO
-						let mut bin_stats_chunk: Vec<BinStatsEntry> =
-							bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
-						compute_bin_stats_row_wise_root(
-							bin_stats_chunk.as_mut_slice(),
-							binned_features_chunk,
-							gradients_chunk,
-							hessians_chunk,
-							hessians_are_constant,
-						);
-						bin_stats_chunk
-					})
-					.fold(
-						|| {
-							bin_stats
-								.iter()
-								.map(|_| BinStatsEntry::default())
-								.collect::<Vec<_>>()
-						},
-						|mut res, chunk| {
-							res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
-								res.sum_gradients += chunk.sum_gradients;
-								res.sum_hessians += chunk.sum_hessians;
-							});
-							res
-						},
-					)
-					.reduce(
-						|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
-						|mut res, chunk| {
-							res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
-								res.sum_gradients += chunk.sum_gradients;
-								res.sum_hessians += chunk.sum_hessians;
-							});
-							res
-						},
-					);
-				}
-
+					bin_stats_chunk
+				})
+				.reduce(
+					|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
+					|mut res, chunk| {
+						res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
+							res.sum_gradients += chunk.sum_gradients;
+							res.sum_hessians += chunk.sum_hessians;
+						});
+						res
+					},
+				);
+				// Choose the best split for each featue.
 				let bin_stats = super_unsafe::SuperUnsafe::new(bin_stats);
 				pzip!(binning_instructions, &binned_features.offsets,)
 					.enumerate()
@@ -238,7 +211,6 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 							&mut bin_stats.get()[offset.to_usize().unwrap()
 								..offset.to_usize().unwrap() + binning_instructions.n_bins()]
 						};
-						// Choose the best split for this featue.
 						choose_best_split_for_feature(
 							feature_index,
 							binning_instructions,
@@ -304,8 +276,6 @@ pub fn choose_best_splits_not_root(
 		left_child_n_examples,
 		..
 	} = options;
-	#[cfg(feature = "timing")]
-	let timing = options.timing;
 	let mut left_child_output = ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 		sum_gradients: left_child_sum_gradients,
 		sum_hessians: left_child_sum_hessians,
@@ -345,15 +315,17 @@ pub fn choose_best_splits_not_root(
 	let mut smaller_child_bin_stats = bin_stats_pool.get().unwrap();
 	let mut larger_child_bin_stats = parent_bin_stats;
 
-	// // Fill the gradients and hessians ordered buffers. The buffers contain the gradients and hessians for each example as ordered by the examples index. This makes the access of the gradients and hessians sequential in the next step.
-	// fill_gradients_and_hessians_ordered_buffers(
-	// 	smaller_child_examples_index,
-	// 	gradients,
-	// 	hessians,
-	// 	gradients_ordered_buffer,
-	// 	hessians_ordered_buffer,
-	// 	hessians_are_constant,
-	// );
+	// If the binned features are column major, fill the gradients and hessians ordered buffers. The buffers contain the gradients and hessians for each example as ordered by the examples index. This makes the access of the gradients and hessians sequential in the next step.
+	if let BinnedFeatures::ColWise(_) = binned_features {
+		fill_gradients_and_hessians_ordered_buffers(
+			smaller_child_examples_index,
+			gradients,
+			hessians,
+			gradients_ordered_buffer,
+			hessians_ordered_buffer,
+			hessians_are_constant,
+		);
+	}
 
 	let children_best_splits: Vec<(
 		Option<ChooseBestSplitForFeatureOutput>,
@@ -455,6 +427,7 @@ pub fn choose_best_splits_not_root(
 			BinStats::RowWise(larger_child_bin_stats),
 			BinnedFeatures::RowWise(binned_features),
 		) => {
+			// Compute the bin stats for the child with fewer examples.
 			let smaller_child_n_examples = smaller_child_examples_index.len();
 			if smaller_child_n_examples < MIN_EXAMPLES_TO_PARALLELIZE {
 				compute_bin_stats_row_wise_not_root(
@@ -468,7 +441,6 @@ pub fn choose_best_splits_not_root(
 			} else {
 				let n_threads = rayon::current_num_threads();
 				let chunk_size = (smaller_child_n_examples + n_threads - 1) / n_threads;
-				// Compute the bin stats for the child with fewer examples.
 				*smaller_child_bin_stats =
 					pzip!(smaller_child_examples_index.par_chunks(chunk_size),)
 						.map(|(smaller_child_examples_index_chunk,)| {
@@ -487,21 +459,6 @@ pub fn choose_best_splits_not_root(
 							);
 							smaller_child_bin_stats_chunk
 						})
-						.fold(
-							|| {
-								smaller_child_bin_stats
-									.iter()
-									.map(|_| BinStatsEntry::default())
-									.collect::<Vec<_>>()
-							},
-							|mut res, chunk| {
-								res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
-									res.sum_gradients += chunk.sum_gradients;
-									res.sum_hessians += chunk.sum_hessians;
-								});
-								res
-							},
-						)
 						.reduce(
 							|| {
 								smaller_child_bin_stats
@@ -519,9 +476,10 @@ pub fn choose_best_splits_not_root(
 						);
 			}
 
+			// Choose the best split for each feature.
 			let smaller_child_bin_stats = super_unsafe::SuperUnsafe::new(smaller_child_bin_stats);
 			let larger_child_bin_stats = super_unsafe::SuperUnsafe::new(larger_child_bin_stats);
-			pzip!(binning_instructions, &binned_features.offsets,)
+			pzip!(binning_instructions, &binned_features.offsets)
 				.enumerate()
 				.map(|(feature_index, (binning_instructions, offset))| {
 					let smaller_child_bin_stats_for_feature = unsafe {

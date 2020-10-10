@@ -1,10 +1,9 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 pub struct Pool<T> {
 	create_item: Box<dyn Fn() -> T>,
 	max_items: usize,
-	state: Rc<RefCell<State<T>>>,
+	state: Arc<Mutex<State<T>>>,
 }
 
 struct State<T> {
@@ -17,15 +16,15 @@ impl<T> Pool<T> {
 		Self {
 			create_item,
 			max_items,
-			state: Rc::new(RefCell::new(State {
+			state: Arc::new(Mutex::new(State {
 				n_items_outstanding: 0,
 				available_items: Vec::new(),
 			})),
 		}
 	}
 
-	pub fn get(&mut self) -> Option<PoolGuard<T>> {
-		let mut state = self.state.borrow_mut();
+	pub fn get(&self) -> Option<PoolGuard<T>> {
+		let mut state = self.state.lock().unwrap();
 		if let Some(item) = state.available_items.pop() {
 			state.n_items_outstanding += 1;
 			Some(PoolGuard {
@@ -47,7 +46,7 @@ impl<T> Pool<T> {
 
 pub struct PoolGuard<T> {
 	item: Option<T>,
-	state: Rc<RefCell<State<T>>>,
+	state: Arc<Mutex<State<T>>>,
 }
 
 impl<T> std::ops::Deref for PoolGuard<T> {
@@ -65,7 +64,7 @@ impl<T> std::ops::DerefMut for PoolGuard<T> {
 
 impl<T> Drop for PoolGuard<T> {
 	fn drop(&mut self) {
-		let mut state = self.state.borrow_mut();
+		let mut state = self.state.lock().unwrap();
 		state.available_items.push(self.item.take().unwrap());
 		state.n_items_outstanding -= 1;
 	}

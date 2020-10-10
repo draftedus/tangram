@@ -21,6 +21,8 @@ pub use regressor::Regressor;
 /// These are the options passed to `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
 #[derive(Debug)]
 pub struct TrainOptions {
+	/// This option controls whether binned features will be layed out in row major or column major order. Each will produce the same result, but row major will be faster for datasets with more rows and fewer columns, while column major will be faster for datasets with fewer rows and more columns.
+	pub binned_features_layout: BinnedFeaturesLayout,
 	/// If true, the model will include the loss on the training data after each round.
 	pub compute_loss: bool,
 	/// This option controls early stopping. If it is `Some`, then early stopping will be enabled. If it is `None`, then early stopping will be disabled.
@@ -31,6 +33,8 @@ pub struct TrainOptions {
 	pub learning_rate: f32,
 	/// This is the maximum depth of a single tree. If this value is `None`, the depth will not be limited.
 	pub max_depth: Option<usize>,
+	/// This is the maximum number of examples to consider when determining the bin thresholds for number features.
+	pub max_examples_for_computing_bin_thresholds: usize,
 	/// This is the maximum number of leaf nodes in a single tree.
 	pub max_leaf_nodes: usize,
 	/// When computing the bin thresholds for number features, this is the maximum number of bins for valid values to create. If the number of unique values in the number feature is less than this value, the thresholds will be equal to the unique values, which can improve accuracy when number features have a small set of possible values.
@@ -43,8 +47,6 @@ pub struct TrainOptions {
 	pub min_gain_to_split: f32,
 	/// A split will only be considered valid if the sum of hessians in each of the resulting children is at least this value.
 	pub min_sum_hessians_per_node: f32,
-	/// This is the maximum number of examples to consider when determining the bin thresholds for number features.
-	pub max_examples_for_computing_bin_thresholds: usize,
 	/// When choosing which direction each enum option should be sent in a discrete split, the enum options are sorted by a score computed from the sum of gradients and hessians for examples with that enum option. This smoothing factor is added to the denominator of that score.
 	pub smoothing_factor_for_discrete_bin_sorting: f32,
 	/// For discrete splits, the L2 regularization is `l2_regularization + supplemental_l2_regularization_for_discrete_splits`.
@@ -54,6 +56,7 @@ pub struct TrainOptions {
 impl Default for TrainOptions {
 	fn default() -> Self {
 		Self {
+			binned_features_layout: BinnedFeaturesLayout::ColumnMajor,
 			compute_loss: false,
 			early_stopping_options: None,
 			l2_regularization: 0.0,
@@ -70,6 +73,13 @@ impl Default for TrainOptions {
 			supplemental_l2_regularization_for_discrete_splits: 10.0,
 		}
 	}
+}
+
+/// This enum defines whether binned features will be layed out in row major or column major order.
+#[derive(Clone, Copy, Debug)]
+pub enum BinnedFeaturesLayout {
+	RowMajor,
+	ColumnMajor,
 }
 
 /// The parameters in this struct control how to determine whether training should stop early after each round. `early_stopping_fraction` is the fraction of the dataset that is set aside to compute the early stopping metric. If `early_stopping_rounds` rounds pass by without an improvement of at least `early_stopping_threshold` in the early stopping metric over the previous round, training will be stopped early.

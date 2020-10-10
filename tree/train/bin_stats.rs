@@ -37,7 +37,7 @@ pub struct BinStatsEntry {
 
 /// This value controls how far ahead in the `examples_index` the `compute_bin_stats_*` functions should prefetch binned_features to be used in subsequent iterations.
 #[cfg(target_arch = "x86_64")]
-const PREFETCH_OFFSET: usize = 16;
+const PREFETCH_OFFSET: usize = 64;
 
 /// This value controls how many times to unroll the loop in `compute_bin_stats_for_feature_root`.
 const ROOT_UNROLL: usize = 16;

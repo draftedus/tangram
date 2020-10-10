@@ -7,7 +7,7 @@ use super::{
 		ChooseBestSplitRootOptions, ChooseBestSplitSuccess, ChooseBestSplitsNotRootOptions,
 	},
 };
-use crate::{SplitDirection, TrainOptions};
+use crate::{BinnedFeaturesLayout, SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
 use tangram_pool::{Pool, PoolGuard};
@@ -179,8 +179,8 @@ impl std::cmp::Ord for QueueItem {
 
 pub struct TreeTrainOptions<'a> {
 	pub bin_stats_pool: &'a mut Pool<BinStats>,
-	pub binned_features: &'a BinnedFeatures,
-	pub binned_features_columnar: &'a BinnedFeatures,
+	pub binned_features_row_wise: &'a BinnedFeatures,
+	pub binned_features_col_wise: &'a BinnedFeatures,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub examples_index_left_buffer: &'a mut [i32],
 	pub examples_index_right_buffer: &'a mut [i32],
@@ -199,8 +199,8 @@ pub struct TreeTrainOptions<'a> {
 pub fn train(options: TreeTrainOptions) -> TrainTree {
 	let TreeTrainOptions {
 		bin_stats_pool,
-		binned_features,
-		binned_features_columnar,
+		binned_features_row_wise,
+		binned_features_col_wise,
 		binning_instructions,
 		examples_index_left_buffer,
 		examples_index_right_buffer,
@@ -224,6 +224,10 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 
 	let n_examples_root = examples_index.len();
 	let examples_index_range_root = 0..n_examples_root;
+	let binned_features = match train_options.binned_features_layout {
+		BinnedFeaturesLayout::ColumnMajor => binned_features_col_wise,
+		BinnedFeaturesLayout::RowMajor => binned_features_row_wise,
+	};
 
 	// Choose the best split for the root node.
 	let choose_best_split_output_root = choose_best_split_root(ChooseBestSplitRootOptions {
@@ -309,7 +313,7 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 		#[cfg(feature = "timing")]
 		let start = std::time::Instant::now();
 		let (left, right) = rearrange_examples_index(
-			binned_features_columnar,
+			binned_features_col_wise,
 			&queue_item.split,
 			examples_index
 				.get_mut(queue_item.examples_index_range.clone())
