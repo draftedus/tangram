@@ -1,14 +1,11 @@
-let font = '14px JetBrains Mono'
-let fontSize = 14
-
 export let chartConfig = {
 	axisWidth: 2,
 	barGap: 2,
 	barGroupGap: 4,
 	barStrokeWidth: 2,
 	bottomPadding: 8,
-	font,
-	fontSize,
+	font: '14px JetBrains Mono',
+	fontSize: 14,
 	labelPadding: 8,
 	leftPadding: 8,
 	maxCornerRadius: 8,

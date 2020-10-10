@@ -629,7 +629,6 @@ export function drawCrosshairs(options: DrawCrosshairsOptions) {
 	ctx.restore()
 }
 
-/** This function gets the location to draw on screen for a data point. */
 function pointToPixels(options: {
 	chartBox: Box
 	point: Point

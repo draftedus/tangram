@@ -254,7 +254,6 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 			start: { x: chartBox.x, y: activeHoverRegion.info.tooltipOriginPixels.y },
 		})
 	}
-
 	if (tooltips.length > 0) {
 		let origin =
 			activeHoverRegions[activeHoverRegions.length - 1].info.tooltipOriginPixels

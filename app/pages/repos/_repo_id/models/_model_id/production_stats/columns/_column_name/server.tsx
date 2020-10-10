@@ -4,7 +4,7 @@ import { Text, Props as TextProps } from './text'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
-import { DateWindow, DateWindowSelectField } from 'common/time'
+import { DateWindow } from 'common/time'
 import {
 	ModelLayout,
 	ModelLayoutInfo,
@@ -12,6 +12,7 @@ import {
 } from 'layouts/model_layout'
 import { h } from 'preact'
 export type { Props as EnumProps } from './enum'
+import { DateWindowSelectField } from 'common/date_window_select'
 
 export type Props = {
 	columnName: string

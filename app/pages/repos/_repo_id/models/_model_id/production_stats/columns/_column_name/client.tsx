@@ -1,6 +1,6 @@
 import { hydrateBarChart, hydrateBoxChart } from '@tangramhq/charts'
 import { bootClassSelectField } from 'common/class_select'
-import { bootDateWindowSelectField } from 'common/time'
+import { bootDateWindowSelectField } from 'common/date_window_select'
 
 bootClassSelectField()
 bootDateWindowSelectField()

@@ -1,5 +1,5 @@
 import { hydrateBarChart, hydrateBoxChart } from '@tangramhq/charts'
-import { bootDateWindowSelectField } from 'common/time'
+import { bootDateWindowSelectField } from 'common/date_window_select'
 
 bootDateWindowSelectField()
 hydrateBarChart('prediction_count')

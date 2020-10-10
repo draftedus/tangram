@@ -395,7 +395,7 @@ function drawShap(options: DrawShapOptions): DrawShapChartOutput {
 		x += width
 		positiveValuesIndex += 1
 	}
-	// The rest of the values should be grouped into a single group.
+	// Draw the box for the remaining features.
 	let nGrouped = 0
 	let groupedBoxWidth = 0
 	for (let i = positiveValuesIndex; i < positiveValues.length; i++) {
