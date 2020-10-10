@@ -23,18 +23,18 @@ impl<T> Pool<T> {
 		}
 	}
 
-	pub fn get(&self) -> Option<PoolGuard<T>> {
+	pub fn get(&self) -> Option<PoolItem<T>> {
 		let mut state = self.state.lock().unwrap();
 		if let Some(item) = state.available_items.pop() {
 			state.n_items_outstanding += 1;
-			Some(PoolGuard {
+			Some(PoolItem {
 				item: Some(item),
 				state: self.state.clone(),
 			})
 		} else if state.n_items_outstanding < self.max_items {
 			state.n_items_outstanding += 1;
 			let item = (self.create_item)();
-			Some(PoolGuard {
+			Some(PoolItem {
 				item: Some(item),
 				state: self.state.clone(),
 			})
@@ -44,25 +44,25 @@ impl<T> Pool<T> {
 	}
 }
 
-pub struct PoolGuard<T> {
+pub struct PoolItem<T> {
 	item: Option<T>,
 	state: Arc<Mutex<State<T>>>,
 }
 
-impl<T> std::ops::Deref for PoolGuard<T> {
+impl<T> std::ops::Deref for PoolItem<T> {
 	type Target = T;
 	fn deref(&self) -> &Self::Target {
 		self.item.as_ref().unwrap()
 	}
 }
 
-impl<T> std::ops::DerefMut for PoolGuard<T> {
+impl<T> std::ops::DerefMut for PoolItem<T> {
 	fn deref_mut(&mut self) -> &mut Self::Target {
 		self.item.as_mut().unwrap()
 	}
 }
 
-impl<T> Drop for PoolGuard<T> {
+impl<T> Drop for PoolItem<T> {
 	fn drop(&mut self) {
 		let mut state = self.state.lock().unwrap();
 		state.available_items.push(self.item.take().unwrap());

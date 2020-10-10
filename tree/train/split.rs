@@ -1,8 +1,9 @@
 use super::{
 	bin_stats::{
-		compute_bin_stats_col_wise_not_root, compute_bin_stats_col_wise_not_root_subtraction,
-		compute_bin_stats_col_wise_root, compute_bin_stats_row_wise_not_root,
-		compute_bin_stats_row_wise_root, BinStats, BinStatsEntry,
+		compute_bin_stats_column_major_not_root,
+		compute_bin_stats_column_major_not_root_subtraction, compute_bin_stats_column_major_root,
+		compute_bin_stats_row_major_not_root, compute_bin_stats_row_major_root, BinStats,
+		SumGradientsSumHessiansForBin,
 	},
 	binning::{BinnedFeatures, BinningInstruction},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
@@ -14,11 +15,11 @@ use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use tangram_pool::{Pool, PoolGuard};
+use tangram_pool::{Pool, PoolItem};
 use tangram_thread_pool::pzip;
 
 pub struct ChooseBestSplitRootOptions<'a> {
-	pub bin_stats_pool: &'a mut Pool<BinStats>,
+	pub bin_stats_pool: &'a Pool<BinStats>,
 	pub binned_features: &'a BinnedFeatures,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub gradients: &'a [f32],
@@ -30,7 +31,7 @@ pub struct ChooseBestSplitRootOptions<'a> {
 }
 
 pub struct ChooseBestSplitsNotRootOptions<'a> {
-	pub bin_stats_pool: &'a mut Pool<BinStats>,
+	pub bin_stats_pool: &'a Pool<BinStats>,
 	pub binned_features: &'a BinnedFeatures,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub gradients_ordered_buffer: &'a mut [f32],
@@ -42,7 +43,7 @@ pub struct ChooseBestSplitsNotRootOptions<'a> {
 	pub left_child_n_examples: usize,
 	pub left_child_sum_gradients: f64,
 	pub left_child_sum_hessians: f64,
-	pub parent_bin_stats: PoolGuard<BinStats>,
+	pub parent_bin_stats: PoolItem<BinStats>,
 	pub parent_depth: usize,
 	pub right_child_examples_index: &'a [i32],
 	pub right_child_n_examples: usize,
@@ -69,7 +70,7 @@ pub struct ChooseBestSplitSuccess {
 	pub right_n_examples: usize,
 	pub right_sum_gradients: f64,
 	pub right_sum_hessians: f64,
-	pub bin_stats: PoolGuard<BinStats>,
+	pub bin_stats: PoolItem<BinStats>,
 }
 
 pub struct ChooseBestSplitFailure {
@@ -137,7 +138,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 	let mut bin_stats = bin_stats_pool.get().unwrap();
 	let best_split_output: Option<ChooseBestSplitForFeatureOutput> =
 		match (&mut *bin_stats, binned_features) {
-			(BinStats::ColWise(bin_stats), BinnedFeatures::ColWise(binned_features)) => {
+			(BinStats::ColumnMajor(bin_stats), BinnedFeatures::ColumnMajor(binned_features)) => {
 				pzip!(binning_instructions, &binned_features.columns, bin_stats)
 					.enumerate()
 					.map(
@@ -146,7 +147,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 							(binning_instructions, binned_feature, bin_stats_for_feature),
 						)| {
 							// Compute the bin stats.
-							compute_bin_stats_col_wise_root(
+							compute_bin_stats_column_major_root(
 								bin_stats_for_feature,
 								binned_feature,
 								gradients,
@@ -168,7 +169,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 					.filter_map(|split| split)
 					.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 			}
-			(BinStats::RowWise(bin_stats), BinnedFeatures::RowWise(binned_features)) => {
+			(BinStats::RowMajor(bin_stats), BinnedFeatures::RowMajor(binned_features)) => {
 				// Compute the bin stats for the child with fewer examples.
 				let n_examples = binned_features.values_with_offsets.nrows();
 				let n_threads = rayon::current_num_threads();
@@ -181,9 +182,11 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 					hessians.par_chunks(chunk_size)
 				)
 				.map(|(binned_features_chunk, gradients_chunk, hessians_chunk)| {
-					let mut bin_stats_chunk: Vec<BinStatsEntry> =
-						bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
-					compute_bin_stats_row_wise_root(
+					let mut bin_stats_chunk: Vec<SumGradientsSumHessiansForBin> = bin_stats
+						.iter()
+						.map(|_| SumGradientsSumHessiansForBin::default())
+						.collect();
+					compute_bin_stats_row_major_root(
 						bin_stats_chunk.as_mut_slice(),
 						binned_features_chunk,
 						gradients_chunk,
@@ -193,7 +196,12 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 					bin_stats_chunk
 				})
 				.reduce(
-					|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
+					|| {
+						bin_stats
+							.iter()
+							.map(|_| SumGradientsSumHessiansForBin::default())
+							.collect()
+					},
 					|mut res, chunk| {
 						res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
 							res.sum_gradients += chunk.sum_gradients;
@@ -316,7 +324,7 @@ pub fn choose_best_splits_not_root(
 	let mut larger_child_bin_stats = parent_bin_stats;
 
 	// If the binned features are column major, fill the gradients and hessians ordered buffers. The buffers contain the gradients and hessians for each example as ordered by the examples index. This makes the access of the gradients and hessians sequential in the next step.
-	if let BinnedFeatures::ColWise(_) = binned_features {
+	if let BinnedFeatures::ColumnMajor(_) = binned_features {
 		fill_gradients_and_hessians_ordered_buffers(
 			smaller_child_examples_index,
 			gradients,
@@ -327,6 +335,7 @@ pub fn choose_best_splits_not_root(
 		);
 	}
 
+	// Collect the best splits for the left and right children for each feature.
 	let children_best_splits: Vec<(
 		Option<ChooseBestSplitForFeatureOutput>,
 		Option<ChooseBestSplitForFeatureOutput>,
@@ -336,9 +345,9 @@ pub fn choose_best_splits_not_root(
 		binned_features,
 	) {
 		(
-			BinStats::ColWise(smaller_child_bin_stats),
-			BinStats::ColWise(larger_child_bin_stats),
-			BinnedFeatures::ColWise(binned_features),
+			BinStats::ColumnMajor(smaller_child_bin_stats),
+			BinStats::ColumnMajor(larger_child_bin_stats),
+			BinnedFeatures::ColumnMajor(binned_features),
 		) => {
 			pzip!(
 				binning_instructions,
@@ -358,7 +367,7 @@ pub fn choose_best_splits_not_root(
 					),
 				)| {
 					// Compute the bin stats for the child with fewer examples.
-					compute_bin_stats_col_wise_not_root(
+					compute_bin_stats_column_major_not_root(
 						smaller_child_bin_stats_for_feature,
 						smaller_child_examples_index,
 						binned_features_column,
@@ -368,7 +377,7 @@ pub fn choose_best_splits_not_root(
 					);
 
 					// Compute the larger child bin stats by subtraction.
-					compute_bin_stats_col_wise_not_root_subtraction(
+					compute_bin_stats_column_major_not_root_subtraction(
 						&smaller_child_bin_stats_for_feature,
 						&mut larger_child_bin_stats_for_feature,
 					);
@@ -423,14 +432,14 @@ pub fn choose_best_splits_not_root(
 			.collect()
 		}
 		(
-			BinStats::RowWise(smaller_child_bin_stats),
-			BinStats::RowWise(larger_child_bin_stats),
-			BinnedFeatures::RowWise(binned_features),
+			BinStats::RowMajor(smaller_child_bin_stats),
+			BinStats::RowMajor(larger_child_bin_stats),
+			BinnedFeatures::RowMajor(binned_features),
 		) => {
 			// Compute the bin stats for the child with fewer examples.
 			let smaller_child_n_examples = smaller_child_examples_index.len();
 			if smaller_child_n_examples < MIN_EXAMPLES_TO_PARALLELIZE {
-				compute_bin_stats_row_wise_not_root(
+				compute_bin_stats_row_major_not_root(
 					smaller_child_bin_stats.as_mut_slice(),
 					smaller_child_examples_index,
 					binned_features,
@@ -444,12 +453,13 @@ pub fn choose_best_splits_not_root(
 				*smaller_child_bin_stats =
 					pzip!(smaller_child_examples_index.par_chunks(chunk_size),)
 						.map(|(smaller_child_examples_index_chunk,)| {
-							let mut smaller_child_bin_stats_chunk: Vec<BinStatsEntry> =
-								smaller_child_bin_stats
-									.iter()
-									.map(|_| BinStatsEntry::default())
-									.collect();
-							compute_bin_stats_row_wise_not_root(
+							let mut smaller_child_bin_stats_chunk: Vec<
+								SumGradientsSumHessiansForBin,
+							> = smaller_child_bin_stats
+								.iter()
+								.map(|_| SumGradientsSumHessiansForBin::default())
+								.collect();
+							compute_bin_stats_row_major_not_root(
 								smaller_child_bin_stats_chunk.as_mut_slice(),
 								smaller_child_examples_index_chunk,
 								binned_features,
@@ -463,7 +473,7 @@ pub fn choose_best_splits_not_root(
 							|| {
 								smaller_child_bin_stats
 									.iter()
-									.map(|_| BinStatsEntry::default())
+									.map(|_| SumGradientsSumHessiansForBin::default())
 									.collect()
 							},
 							|mut res, chunk| {
@@ -492,7 +502,7 @@ pub fn choose_best_splits_not_root(
 					};
 
 					// Compute the larger child bin stats by subtraction.
-					compute_bin_stats_col_wise_not_root_subtraction(
+					compute_bin_stats_column_major_not_root_subtraction(
 						smaller_child_bin_stats_for_feature,
 						larger_child_bin_stats_for_feature,
 					);
@@ -546,8 +556,10 @@ pub fn choose_best_splits_not_root(
 				})
 				.collect()
 		}
-		_ => unimplemented!(),
+		_ => unreachable!(),
 	};
+
+	// Choose the splits for the left and right children with the highest gain.
 	let (left_child_best_split, right_child_best_split) = children_best_splits.into_iter().fold(
 		(None, None),
 		|(current_left, current_right), (candidate_left, candidate_right)| {
@@ -632,7 +644,7 @@ pub fn choose_best_splits_not_root(
 fn choose_best_split_for_feature(
 	feature_index: usize,
 	binning_instructions: &BinningInstruction,
-	bin_stats_for_feature: &[BinStatsEntry],
+	bin_stats_for_feature: &[SumGradientsSumHessiansForBin],
 	n_examples: usize,
 	sum_gradients: f64,
 	sum_hessians: f64,
@@ -664,7 +676,7 @@ fn choose_best_split_for_feature(
 fn choose_best_split_for_continuous_feature(
 	feature_index: usize,
 	binning_instructions: &BinningInstruction,
-	bin_stats_for_feature: &[BinStatsEntry],
+	bin_stats_for_feature: &[SumGradientsSumHessiansForBin],
 	n_examples_parent: usize,
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
@@ -767,7 +779,7 @@ fn choose_best_split_for_continuous_feature(
 fn choose_best_split_for_discrete_feature(
 	feature_index: usize,
 	binning_instructions: &BinningInstruction,
-	bin_stats_for_feature: &[BinStatsEntry],
+	bin_stats_for_feature: &[SumGradientsSumHessiansForBin],
 	n_examples_parent: usize,
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
@@ -786,7 +798,7 @@ fn choose_best_split_for_discrete_feature(
 		.smoothing_factor_for_discrete_bin_sorting
 		.to_f64()
 		.unwrap();
-	let mut sorted_bin_stats_for_feature: Vec<(usize, &BinStatsEntry)> =
+	let mut sorted_bin_stats_for_feature: Vec<(usize, &SumGradientsSumHessiansForBin)> =
 		bin_stats_for_feature.iter().enumerate().collect();
 	sorted_bin_stats_for_feature.sort_by(|(_, a), (_, b)| {
 		let score_a = a.sum_gradients / (a.sum_hessians + smoothing_factor);

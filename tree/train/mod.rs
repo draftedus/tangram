@@ -1,7 +1,7 @@
 use self::{
-	bin_stats::{BinStats, BinStatsEntry},
+	bin_stats::{BinStats, SumGradientsSumHessiansForBin},
 	binning::{
-		compute_binned_features_col_wise, compute_binned_features_row_wise,
+		compute_binned_features_column_major, compute_binned_features_row_major,
 		compute_binning_instructions,
 	},
 	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
@@ -109,12 +109,12 @@ pub fn train(
 	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
-	let binned_features_row_wise =
-		compute_binned_features_row_wise(&features_train, &binning_instructions, &|| {
+	let binned_features_row_major =
+		compute_binned_features_row_major(&features_train, &binning_instructions, &|| {
 			progress_counter.inc(1)
 		});
-	let binned_features_col_wise =
-		compute_binned_features_col_wise(&features_train, &binning_instructions, &|| {
+	let binned_features_column_major =
+		compute_binned_features_column_major(&features_train, &binning_instructions, &|| {
 			progress_counter.inc(1)
 		});
 	#[cfg(feature = "timing")]
@@ -178,15 +178,18 @@ pub fn train(
 		None
 	};
 	let binning_instructions_for_pool = binning_instructions.clone();
-	let mut bin_stats_pool = match binned_features_layout {
+	let bin_stats_pool = match binned_features_layout {
 		BinnedFeaturesLayout::ColumnMajor => Pool::new(
 			train_options.max_leaf_nodes,
 			Box::new(move || {
-				BinStats::ColWise(
+				BinStats::ColumnMajor(
 					binning_instructions_for_pool
 						.iter()
 						.map(|binning_instructions| {
-							vec![BinStatsEntry::default(); binning_instructions.n_bins()]
+							vec![
+								SumGradientsSumHessiansForBin::default();
+								binning_instructions.n_bins()
+							]
 						})
 						.collect(),
 				)
@@ -195,11 +198,14 @@ pub fn train(
 		BinnedFeaturesLayout::RowMajor => Pool::new(
 			train_options.max_leaf_nodes,
 			Box::new(move || {
-				BinStats::RowWise(
+				BinStats::RowMajor(
 					binning_instructions_for_pool
 						.iter()
 						.flat_map(|binning_instructions| {
-							vec![BinStatsEntry::default(); binning_instructions.n_bins()]
+							vec![
+								SumGradientsSumHessiansForBin::default();
+								binning_instructions.n_bins()
+							]
 						})
 						.collect(),
 				)
@@ -280,8 +286,8 @@ pub fn train(
 			let start = std::time::Instant::now();
 			let tree = self::tree::train(TreeTrainOptions {
 				binning_instructions: &binning_instructions,
-				binned_features_row_wise: &binned_features_row_wise,
-				binned_features_col_wise: &binned_features_col_wise,
+				binned_features_row_major: &binned_features_row_major,
+				binned_features_column_major: &binned_features_column_major,
 				gradients: gradients.as_slice().unwrap(),
 				hessians: hessians.as_slice().unwrap(),
 				gradients_ordered_buffer: gradients_ordered_buffer.as_slice_mut().unwrap(),
@@ -289,7 +295,7 @@ pub fn train(
 				examples_index: examples_index.as_slice_mut().unwrap(),
 				examples_index_left_buffer: examples_index_left_buffer.as_slice_mut().unwrap(),
 				examples_index_right_buffer: examples_index_right_buffer.as_slice_mut().unwrap(),
-				bin_stats_pool: &mut bin_stats_pool,
+				bin_stats_pool: &bin_stats_pool,
 				hessians_are_constant,
 				train_options: &train_options,
 				#[cfg(feature = "timing")]

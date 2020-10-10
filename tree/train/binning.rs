@@ -163,38 +163,38 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 /// A dataframe of features is binned into BinnedFeatures
 #[derive(Debug)]
 pub enum BinnedFeatures {
-	RowWise(RowWiseBinnedFeatures),
-	ColWise(ColWiseBinnedFeatures),
+	RowMajor(RowMajorBinnedFeatures),
+	ColumnMajor(ColumnMajorBinnedFeatures),
 }
 
 #[derive(Debug)]
-pub struct RowWiseBinnedFeatures {
+pub struct RowMajorBinnedFeatures {
 	pub values_with_offsets: Array2<u16>,
 	pub offsets: Vec<u16>,
 }
 
 #[derive(Debug)]
-pub struct ColWiseBinnedFeatures {
-	pub columns: Vec<ColWiseBinnedFeaturesColumn>,
+pub struct ColumnMajorBinnedFeatures {
+	pub columns: Vec<ColumnMajorBinnedFeaturesColumn>,
 }
 
 #[derive(Debug)]
-pub enum ColWiseBinnedFeaturesColumn {
+pub enum ColumnMajorBinnedFeaturesColumn {
 	U8(Vec<u8>),
 	U16(Vec<u16>),
 }
 
-impl ColWiseBinnedFeaturesColumn {
+impl ColumnMajorBinnedFeaturesColumn {
 	pub fn len(&self) -> usize {
 		match self {
-			ColWiseBinnedFeaturesColumn::U8(values) => values.len(),
-			ColWiseBinnedFeaturesColumn::U16(values) => values.len(),
+			ColumnMajorBinnedFeaturesColumn::U8(values) => values.len(),
+			ColumnMajorBinnedFeaturesColumn::U16(values) => values.len(),
 		}
 	}
 }
 
 /// Compute the binned features based on the binning instructions.
-pub fn compute_binned_features_col_wise(
+pub fn compute_binned_features_column_major(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	progress: &(impl Fn() + Sync),
@@ -213,10 +213,10 @@ pub fn compute_binned_features_col_wise(
 			}
 		})
 		.collect();
-	BinnedFeatures::ColWise(ColWiseBinnedFeatures { columns })
+	BinnedFeatures::ColumnMajor(ColumnMajorBinnedFeatures { columns })
 }
 
-pub fn compute_binned_features_row_wise(
+pub fn compute_binned_features_row_major(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	progress: &(impl Fn() + Sync),
@@ -227,13 +227,13 @@ pub fn compute_binned_features_row_wise(
 		.sum::<usize>();
 	match n_bins_across_all_features {
 		n_bins_across_all_features if n_bins_across_all_features < 1 << 16 => {
-			compute_binned_features_row_wise_u16(features, binning_instructions, progress)
+			compute_binned_features_row_major_u16(features, binning_instructions, progress)
 		}
 		_ => unreachable!(),
 	}
 }
 
-fn compute_binned_features_row_wise_u16(
+fn compute_binned_features_row_major_u16(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	_progress: &(impl Fn() + Sync),
@@ -295,7 +295,7 @@ fn compute_binned_features_row_wise_u16(
 			}
 		},
 	);
-	BinnedFeatures::RowWise(RowWiseBinnedFeatures {
+	BinnedFeatures::RowMajor(RowMajorBinnedFeatures {
 		values_with_offsets,
 		offsets,
 	})
@@ -305,7 +305,7 @@ fn compute_binned_features_for_number_feature(
 	feature: &ColumnView,
 	thresholds: &[f32],
 	_progress: &(impl Fn() + Sync),
-) -> ColWiseBinnedFeaturesColumn {
+) -> ColumnMajorBinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_number()
 		.unwrap()
@@ -324,13 +324,13 @@ fn compute_binned_features_for_number_feature(
 				.unwrap() + 1
 		})
 		.collect::<Vec<u8>>();
-	ColWiseBinnedFeaturesColumn::U8(binned_feature)
+	ColumnMajorBinnedFeaturesColumn::U8(binned_feature)
 }
 
 fn compute_binned_features_for_enum_feature_u8(
 	feature: &ColumnView,
 	_progress: &(impl Fn() + Sync),
-) -> ColWiseBinnedFeaturesColumn {
+) -> ColumnMajorBinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_enum()
 		.unwrap()
@@ -338,13 +338,13 @@ fn compute_binned_features_for_enum_feature_u8(
 		.par_iter()
 		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
 		.collect::<Vec<u8>>();
-	ColWiseBinnedFeaturesColumn::U8(binned_feature)
+	ColumnMajorBinnedFeaturesColumn::U8(binned_feature)
 }
 
 fn compute_binned_features_for_enum_feature_u16(
 	feature: &ColumnView,
 	_progress: &(impl Fn() + Sync),
-) -> ColWiseBinnedFeaturesColumn {
+) -> ColumnMajorBinnedFeaturesColumn {
 	let binned_feature = feature
 		.as_enum()
 		.unwrap()
@@ -358,5 +358,5 @@ fn compute_binned_features_for_enum_feature_u16(
 				.unwrap()
 		})
 		.collect::<Vec<u16>>();
-	ColWiseBinnedFeaturesColumn::U16(binned_feature)
+	ColumnMajorBinnedFeaturesColumn::U16(binned_feature)
 }

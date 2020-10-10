@@ -1,5 +1,5 @@
 use super::{
-	binning::{BinnedFeatures, ColWiseBinnedFeaturesColumn},
+	binning::{BinnedFeatures, ColumnMajorBinnedFeaturesColumn},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 use crate::SplitDirection;
@@ -45,10 +45,10 @@ fn rearrange_examples_index_serial(
 			bin_index,
 			..
 		}) => match binned_features {
-			BinnedFeatures::ColWise(binned_features) => {
+			BinnedFeatures::ColumnMajor(binned_features) => {
 				let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 				match binned_feature {
-					ColWiseBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+					ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
 						rearrange_examples_index_serial_continuous(
 							&mut left,
 							&mut right,
@@ -57,7 +57,7 @@ fn rearrange_examples_index_serial(
 							binned_feature.into(),
 						)
 					},
-					ColWiseBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+					ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
 						rearrange_examples_index_serial_continuous(
 							&mut left,
 							&mut right,
@@ -68,7 +68,7 @@ fn rearrange_examples_index_serial(
 					},
 				}
 			}
-			BinnedFeatures::RowWise(binned_features) => unsafe {
+			BinnedFeatures::RowMajor(binned_features) => unsafe {
 				rearrange_examples_index_serial_continuous(
 					&mut left,
 					&mut right,
@@ -83,10 +83,10 @@ fn rearrange_examples_index_serial(
 			directions,
 			..
 		}) => match binned_features {
-			BinnedFeatures::ColWise(binned_features) => {
+			BinnedFeatures::ColumnMajor(binned_features) => {
 				let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 				match binned_feature {
-					ColWiseBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+					ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
 						rearrange_examples_index_serial_discrete(
 							&mut left,
 							&mut right,
@@ -95,7 +95,7 @@ fn rearrange_examples_index_serial(
 							binned_feature.into(),
 						)
 					},
-					ColWiseBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+					ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
 						rearrange_examples_index_serial_discrete(
 							&mut left,
 							&mut right,
@@ -106,7 +106,7 @@ fn rearrange_examples_index_serial(
 					},
 				}
 			}
-			BinnedFeatures::RowWise(binned_features) => unsafe {
+			BinnedFeatures::RowMajor(binned_features) => unsafe {
 				rearrange_examples_index_serial_discrete(
 					&mut left,
 					&mut right,
@@ -195,10 +195,10 @@ fn rearrange_examples_index_parallel(
 					bin_index,
 					..
 				}) => match binned_features {
-					BinnedFeatures::ColWise(binned_features) => {
+					BinnedFeatures::ColumnMajor(binned_features) => {
 						let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 						match binned_feature {
-							ColWiseBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+							ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
 								rearrange_examples_index_parallel_step_one_continuous(
 									&mut n_left,
 									&mut n_right,
@@ -209,7 +209,7 @@ fn rearrange_examples_index_parallel(
 									binned_feature.into(),
 								)
 							},
-							ColWiseBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+							ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
 								rearrange_examples_index_parallel_step_one_continuous(
 									&mut n_left,
 									&mut n_right,
@@ -222,7 +222,7 @@ fn rearrange_examples_index_parallel(
 							},
 						}
 					}
-					BinnedFeatures::RowWise(binned_features) => unsafe {
+					BinnedFeatures::RowMajor(binned_features) => unsafe {
 						rearrange_examples_index_parallel_step_one_continuous(
 							&mut n_left,
 							&mut n_right,
@@ -240,10 +240,10 @@ fn rearrange_examples_index_parallel(
 					directions,
 					..
 				}) => match binned_features {
-					BinnedFeatures::ColWise(binned_features) => {
+					BinnedFeatures::ColumnMajor(binned_features) => {
 						let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 						match binned_feature {
-							ColWiseBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+							ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
 								rearrange_examples_index_parallel_step_one_discrete(
 									&mut n_left,
 									&mut n_right,
@@ -254,7 +254,7 @@ fn rearrange_examples_index_parallel(
 									binned_feature.into(),
 								)
 							},
-							ColWiseBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+							ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
 								rearrange_examples_index_parallel_step_one_discrete(
 									&mut n_left,
 									&mut n_right,
@@ -267,7 +267,7 @@ fn rearrange_examples_index_parallel(
 							},
 						}
 					}
-					BinnedFeatures::RowWise(binned_features) => unsafe {
+					BinnedFeatures::RowMajor(binned_features) => unsafe {
 						rearrange_examples_index_parallel_step_one_discrete(
 							&mut n_left,
 							&mut n_right,

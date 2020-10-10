@@ -10,7 +10,7 @@ use super::{
 use crate::{BinnedFeaturesLayout, SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
-use tangram_pool::{Pool, PoolGuard};
+use tangram_pool::{Pool, PoolItem};
 
 #[derive(Debug)]
 pub struct TrainTree {
@@ -134,7 +134,7 @@ struct QueueItem {
 	/// This is the depth of the item in the tree.
 	pub depth: usize,
 	/// The bin_stats consisting of aggregate hessian/gradient statistics of the training examples that reach this node.
-	pub bin_stats: PoolGuard<BinStats>,
+	pub bin_stats: PoolItem<BinStats>,
 	/// The examples_index_range tells you what range of entries in the examples index correspond to this node.
 	pub examples_index_range: std::ops::Range<usize>,
 	/// This is the sum of the gradients for the training examples that pass through this node.
@@ -178,9 +178,9 @@ impl std::cmp::Ord for QueueItem {
 }
 
 pub struct TreeTrainOptions<'a> {
-	pub bin_stats_pool: &'a mut Pool<BinStats>,
-	pub binned_features_row_wise: &'a BinnedFeatures,
-	pub binned_features_col_wise: &'a BinnedFeatures,
+	pub bin_stats_pool: &'a Pool<BinStats>,
+	pub binned_features_row_major: &'a BinnedFeatures,
+	pub binned_features_column_major: &'a BinnedFeatures,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub examples_index_left_buffer: &'a mut [i32],
 	pub examples_index_right_buffer: &'a mut [i32],
@@ -199,8 +199,8 @@ pub struct TreeTrainOptions<'a> {
 pub fn train(options: TreeTrainOptions) -> TrainTree {
 	let TreeTrainOptions {
 		bin_stats_pool,
-		binned_features_row_wise,
-		binned_features_col_wise,
+		binned_features_row_major,
+		binned_features_column_major,
 		binning_instructions,
 		examples_index_left_buffer,
 		examples_index_right_buffer,
@@ -225,8 +225,8 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 	let n_examples_root = examples_index.len();
 	let examples_index_range_root = 0..n_examples_root;
 	let binned_features = match train_options.binned_features_layout {
-		BinnedFeaturesLayout::ColumnMajor => binned_features_col_wise,
-		BinnedFeaturesLayout::RowMajor => binned_features_row_wise,
+		BinnedFeaturesLayout::ColumnMajor => binned_features_column_major,
+		BinnedFeaturesLayout::RowMajor => binned_features_row_major,
 	};
 
 	// Choose the best split for the root node.
@@ -313,7 +313,7 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 		#[cfg(feature = "timing")]
 		let start = std::time::Instant::now();
 		let (left, right) = rearrange_examples_index(
-			binned_features_col_wise,
+			binned_features_column_major,
 			&queue_item.split,
 			examples_index
 				.get_mut(queue_item.examples_index_range.clone())
