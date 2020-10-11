@@ -6,7 +6,7 @@ import pandas as pd
 
 import lightgbm as lgb
 
-# load the data
+# Load the data.
 path = 'data/heart-disease.csv'
 nrows_train = 242
 nrows_test = 61
@@ -40,7 +40,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 start = time()
 model = lgb.LGBMClassifier(
 	learning_rate=0.1,

@@ -5,7 +5,7 @@ import pandas as pd
 
 import lightgbm as lgb
 
-# load the data
+# Load the data.
 path = 'data/iris.csv'
 nrows_train = 120
 nrows_test = 30
@@ -23,7 +23,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = lgb.LGBMClassifier(
 	learning_rate=0.1,
 	max_depth=9,

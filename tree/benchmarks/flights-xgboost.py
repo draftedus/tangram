@@ -5,7 +5,7 @@ import pandas as pd
 
 import xgboost as xgb
 
-# load the data
+# Load the data.
 # path_train = 'data/flights-100k.csv'
 # path_test = 'data/flights-test.csv'
 # nrows_train = 100_000
@@ -68,7 +68,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = xgb.XGBClassifier(
 	eta = 0.1,
 	max_depth = 10,

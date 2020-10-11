@@ -6,7 +6,7 @@ import pandas as pd
 
 import lightgbm as lgb
 
-# load the data
+# Load the data.
 path = 'data/census.csv'
 nrows_train = 26049
 nrows_test = 6512
@@ -41,7 +41,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 start = time()
 model = lgb.LGBMClassifier(
 	learning_rate=0.1,

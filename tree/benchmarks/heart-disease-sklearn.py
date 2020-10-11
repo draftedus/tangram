@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier
 
-# load the data
+# Load the data.
 path = 'data/heart-disease.csv'
 nrows_train = 242
 nrows_test = 61
@@ -25,7 +25,7 @@ features = pd.get_dummies(features)
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = HistGradientBoostingClassifier(
 	learning_rate=0.1,
 	max_depth=8,

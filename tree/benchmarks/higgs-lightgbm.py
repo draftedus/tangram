@@ -6,7 +6,7 @@ import pandas as pd
 
 import lightgbm as lgb
 
-# load the data
+# Load the data.
 # path = 'data/higgs-small.csv'
 # nrows_train = 450_000
 # nrows_test = 50_000
@@ -58,7 +58,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 start = time()
 model = lgb.LGBMClassifier(
 	force_row_wise=True,

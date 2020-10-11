@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
 
-# load the data
+# Load the data.
 path = 'data/boston.csv'
 nrows_train = 405
 nrows_test = 101
@@ -25,11 +25,11 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = HistGradientBoostingRegressor()
 model.fit(features_train, labels_train)
 
-# compute mse
+# Compute metrics.
 predictions = model.predict(features_test)
 mse = mean_squared_error(predictions, labels_test)
 print('mse: ', mse)

@@ -5,7 +5,7 @@ import pandas as pd
 
 import xgboost as xgb
 
-# load the data
+# Load the data.
 path = 'data/census.csv'
 nrows_train = 26049
 nrows_test = 6512
@@ -24,7 +24,7 @@ features = pd.get_dummies(features)
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = xgb.XGBClassifier(
 	eta = 0.1,
 	grow_policy = 'lossguide',

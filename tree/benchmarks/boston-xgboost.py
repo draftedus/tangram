@@ -5,7 +5,7 @@ import pandas as pd
 
 import xgboost as xgb
 
-# load the data
+# Load the data.
 path = 'data/boston.csv'
 nrows_train = 405
 nrows_test = 101
@@ -23,7 +23,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = xgb.XGBRegressor(
 	eta = 0.1,
 	grow_policy = 'lossguide',
@@ -35,7 +35,7 @@ model = xgb.XGBRegressor(
 )
 model.fit(features_train, labels_train)
 
-# compute mse
+# Compute metrics.
 predictions = model.predict(features_test)
 mse = mean_squared_error(predictions, labels_test)
 print('mse: ', mse)

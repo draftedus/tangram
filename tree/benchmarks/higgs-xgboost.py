@@ -5,7 +5,7 @@ import pandas as pd
 
 import xgboost as xgb
 
-# load the data
+# Load the data.
 # path = 'data/higgs-small.csv'
 # nrows_train = 450_000
 # nrows_test = 50_000
@@ -56,7 +56,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = xgb.XGBClassifier(
 	eta = 0.1,
 	grow_policy = 'lossguide',

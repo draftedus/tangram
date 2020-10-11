@@ -6,9 +6,8 @@ import pandas as pd
 import h2o
 from h2o.estimators import H2OGradientBoostingEstimator
 h2o.init()
-h2o.no_progress()
 
-# load the data
+# Load the data.
 path = 'data/census.csv'
 nrows_train = 26049
 nrows_test = 6512
@@ -41,9 +40,9 @@ data = pd.read_csv(
 )
 data_train = h2o.H2OFrame(python_obj=data_train)
 data_test = h2o.H2OFrame(python_obj=data_test)
-x = [column for column in data_train.columns if column != target]
+feature_column_names = [column for column in data_train.columns if column != target]
 
-# train the model
+# Train the model.
 model = H2OGradientBoostingEstimator(
   distribution="bernoulli",
   ntrees = 100,
@@ -54,12 +53,8 @@ model = H2OGradientBoostingEstimator(
 model.train(
   training_frame=data_train,
   y=target,
-  x=x,
+  x=feature_column_names,
 )
 
-# compute accuracy
-perf = model.model_performance(data_test)
-print('accuracy: ', perf.accuracy()[0][1])
-
-# compute auc
+# Compute metrics.
 print('auc: ', perf.auc())

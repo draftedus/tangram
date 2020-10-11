@@ -9,7 +9,7 @@ import h2o
 from h2o.estimators import H2OGradientBoostingEstimator
 h2o.init()
 
-# load the data
+# Load the data.
 # path = 'data/higgs-small.csv'
 # nrows_train = 450_000
 # nrows_test = 50_000
@@ -61,7 +61,7 @@ data_train = h2o.H2OFrame(python_obj=data_train)
 data_test = h2o.H2OFrame(python_obj=data_test)
 x = [column for column in data_train.columns if column != target]
 
-# train the model
+# Train the model.
 model = H2OGradientBoostingEstimator(
   distribution="bernoulli",
   ntrees = 100,

@@ -7,7 +7,7 @@ import pandas as pd
 
 import lightgbm as lgb
 
-# load the data
+# Load the data.
 # path_train = 'data/flights-100k.csv'
 # path_test = 'data/flights-test.csv'
 # nrows_train=100_000
@@ -127,7 +127,7 @@ features_test = data_test.loc[:, data_test.columns != target]
 labels_train = data_train[target]
 labels_test = data_test[target]
 
-# train the model
+# Train the model.
 start = time()
 model = lgb.LGBMClassifier(
 	force_row_wise=True,

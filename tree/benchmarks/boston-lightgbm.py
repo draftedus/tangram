@@ -5,7 +5,7 @@ import pandas as pd
 
 import lightgbm as lgb
 
-# load the data
+# Load the data.
 path = 'data/boston.csv'
 nrows_train = 405
 nrows_test = 101
@@ -23,20 +23,15 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = lgb.LGBMRegressor(
 	learning_rate=0.1,
-	max_depth=8,
-	min_data_in_leaf=100,
-	min_sum_hessian_in_leaf=0,
 	n_estimators=100,
 	num_leaves=255,
-	enable_bundle=False,
-	enable_sparse=False,
 )
 model.fit(features_train, labels_train)
 
-# compute mse
+# Compute metrics.
 predictions = model.predict(features_test)
 mse = mean_squared_error(predictions, labels_test)
 print('mse: ', mse)

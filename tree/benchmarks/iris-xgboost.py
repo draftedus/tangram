@@ -5,7 +5,7 @@ import pandas as pd
 
 import xgboost as xgb
 
-# load the data
+# Load the data.
 path = 'data/iris.csv'
 nrows_train = 120
 nrows_test = 30
@@ -23,7 +23,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = xgb.XGBClassifier(
 	eta = 0.1,
 	grow_policy = 'lossguide',

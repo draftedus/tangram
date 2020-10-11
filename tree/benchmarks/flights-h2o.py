@@ -8,7 +8,7 @@ import h2o
 from h2o.estimators import H2OGradientBoostingEstimator
 h2o.init()
 
-# load the data
+# Load the data.
 # path_train = 'data/flights-100k.csv'
 # path_test = 'data/flights-test.csv'
 # nrows_train = 100_000
@@ -124,7 +124,7 @@ data_train = h2o.H2OFrame(python_obj=data_train)
 data_test = h2o.H2OFrame(python_obj=data_test)
 x = [column for column in data_train.columns if column != target]
 
-# train the model
+# Train the model.
 model = H2OGradientBoostingEstimator(
   distribution="bernoulli",
   ntrees = 100,
