@@ -8,7 +8,7 @@ use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::{num::NonZeroUsize, ops::Neg};
 use super_unsafe::SuperUnsafe;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_metrics::{BinaryCrossEntropy, BinaryCrossEntropyInput, StreamingMetric};
 use tangram_progress::ProgressCounter;
 use tangram_thread_pool::pzip;
@@ -30,7 +30,7 @@ impl BinaryClassifier {
 	/// Train a linear binary classifier.
 	pub fn train(
 		features: ArrayView2<f32>,
-		labels: EnumColumnView,
+		labels: EnumDataFrameColumnView,
 		options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> BinaryClassifier {

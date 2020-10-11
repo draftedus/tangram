@@ -13,120 +13,123 @@ pub use self::load::*;
 
 pub mod prelude {
 	pub use super::{
-		Column, DataFrame, DataFrameView, DataFrameViewMut, TextColumn, TextColumnView,
-		TextColumnViewMut, UnknownColumn, UnknownColumnView, Value,
+		DataFrame, DataFrameColumn, DataFrameColumnType, DataFrameColumnView, DataFrameValue,
+		DataFrameView, DataFrameViewMut, EnumDataFrameColumn, EnumDataFrameColumnView,
+		NumberDataFrameColumn, NumberDataFrameColumnView, TextDataFrameColumn,
+		TextDataFrameColumnView, TextDataFrameColumnViewMut, UnknownDataFrameColumn,
+		UnknownDataFrameColumnView,
 	};
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataFrame {
-	pub columns: Vec<Column>,
+	pub columns: Vec<DataFrameColumn>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataFrameView<'a> {
-	pub columns: Vec<ColumnView<'a>>,
+	pub columns: Vec<DataFrameColumnView<'a>>,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct DataFrameViewMut<'a> {
-	pub columns: Vec<ColumnViewMut<'a>>,
+	pub columns: Vec<DataFrameColumnViewMut<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Column {
-	Unknown(UnknownColumn),
-	Number(NumberColumn),
-	Enum(EnumColumn),
-	Text(TextColumn),
+pub enum DataFrameColumn {
+	Unknown(UnknownDataFrameColumn),
+	Number(NumberDataFrameColumn),
+	Enum(EnumDataFrameColumn),
+	Text(TextDataFrameColumn),
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct UnknownColumn {
+pub struct UnknownDataFrameColumn {
 	pub name: String,
 	pub len: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct NumberColumn {
+pub struct NumberDataFrameColumn {
 	pub name: String,
 	pub data: Vec<f32>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct EnumColumn {
+pub struct EnumDataFrameColumn {
 	pub name: String,
 	pub options: Vec<String>,
 	pub data: Vec<Option<NonZeroUsize>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct TextColumn {
+pub struct TextDataFrameColumn {
 	pub name: String,
 	pub data: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ColumnView<'a> {
-	Unknown(UnknownColumnView<'a>),
-	Number(NumberColumnView<'a>),
-	Enum(EnumColumnView<'a>),
-	Text(TextColumnView<'a>),
+pub enum DataFrameColumnView<'a> {
+	Unknown(UnknownDataFrameColumnView<'a>),
+	Number(NumberDataFrameColumnView<'a>),
+	Enum(EnumDataFrameColumnView<'a>),
+	Text(TextDataFrameColumnView<'a>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct UnknownColumnView<'a> {
+pub struct UnknownDataFrameColumnView<'a> {
 	pub name: &'a str,
 	pub len: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct NumberColumnView<'a> {
+pub struct NumberDataFrameColumnView<'a> {
 	pub name: &'a str,
 	pub data: &'a [f32],
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct EnumColumnView<'a> {
+pub struct EnumDataFrameColumnView<'a> {
 	pub name: &'a str,
 	pub options: &'a [String],
 	pub data: &'a [Option<NonZeroUsize>],
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct TextColumnView<'a> {
+pub struct TextDataFrameColumnView<'a> {
 	pub name: &'a str,
 	pub data: &'a [String],
 }
 
 #[derive(Debug, PartialEq)]
-pub enum ColumnViewMut<'a> {
-	Number(NumberColumnViewMut<'a>),
-	Enum(EnumColumnViewMut<'a>),
-	Text(TextColumnViewMut<'a>),
+pub enum DataFrameColumnViewMut<'a> {
+	Number(NumberDataFrameColumnViewMut<'a>),
+	Enum(EnumDataFrameColumnViewMut<'a>),
+	Text(TextDataFrameColumnViewMut<'a>),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct NumberColumnViewMut<'a> {
+pub struct NumberDataFrameColumnViewMut<'a> {
 	pub name: &'a mut str,
 	pub data: &'a mut [f32],
 }
 
 #[derive(Debug, PartialEq)]
-pub struct EnumColumnViewMut<'a> {
+pub struct EnumDataFrameColumnViewMut<'a> {
 	pub name: &'a mut str,
 	pub options: &'a mut [String],
 	pub data: &'a mut [usize],
 }
 
 #[derive(Debug, PartialEq)]
-pub struct TextColumnViewMut<'a> {
+pub struct TextDataFrameColumnViewMut<'a> {
 	pub name: &'a mut str,
 	pub data: &'a mut [String],
 }
 
 #[derive(Debug, Clone)]
-pub enum ColumnType {
+pub enum DataFrameColumnType {
 	Unknown,
 	Number,
 	Enum { options: Vec<String> },
@@ -134,7 +137,7 @@ pub enum ColumnType {
 }
 
 #[derive(Debug, Clone)]
-pub enum ColumnTypeView<'a> {
+pub enum DataFrameColumnTypeView<'a> {
 	Unknown,
 	Number,
 	Enum { options: &'a [String] },
@@ -142,7 +145,7 @@ pub enum ColumnTypeView<'a> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Value<'a> {
+pub enum DataFrameValue<'a> {
 	Unknown,
 	Number(f32),
 	Enum(Option<NonZeroUsize>),
@@ -150,15 +153,23 @@ pub enum Value<'a> {
 }
 
 impl DataFrame {
-	pub fn new(column_names: Vec<String>, column_types: Vec<ColumnType>) -> Self {
+	pub fn new(column_names: Vec<String>, column_types: Vec<DataFrameColumnType>) -> Self {
 		let columns = column_names
 			.into_iter()
 			.zip(column_types.into_iter())
 			.map(|(column_name, column_type)| match column_type {
-				ColumnType::Unknown => Column::Unknown(UnknownColumn::new(column_name)),
-				ColumnType::Number => Column::Number(NumberColumn::new(column_name)),
-				ColumnType::Enum { options } => Column::Enum(EnumColumn::new(column_name, options)),
-				ColumnType::Text => Column::Text(TextColumn::new(column_name)),
+				DataFrameColumnType::Unknown => {
+					DataFrameColumn::Unknown(UnknownDataFrameColumn::new(column_name))
+				}
+				DataFrameColumnType::Number => {
+					DataFrameColumn::Number(NumberDataFrameColumn::new(column_name))
+				}
+				DataFrameColumnType::Enum { options } => {
+					DataFrameColumn::Enum(EnumDataFrameColumn::new(column_name, options))
+				}
+				DataFrameColumnType::Text => {
+					DataFrameColumn::Text(TextDataFrameColumn::new(column_name))
+				}
 			})
 			.collect();
 		Self { columns }
@@ -183,12 +194,12 @@ impl DataFrame {
 			izip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
-				Column::Number(column) => {
+				DataFrameColumn::Number(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
 						*a = *b;
 					}
 				}
-				Column::Enum(column) => {
+				DataFrameColumn::Enum(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
 						*a = b.unwrap().get().to_f32().unwrap();
 					}
@@ -199,26 +210,26 @@ impl DataFrame {
 		Some(features_train)
 	}
 
-	pub fn to_rows(&self) -> Array2<Value> {
+	pub fn to_rows(&self) -> Array2<DataFrameValue> {
 		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
 		for (mut ndarray_column, dataframe_column) in
 			izip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
-				Column::Unknown(_) => ndarray_column.fill(Value::Unknown),
-				Column::Number(column) => {
+				DataFrameColumn::Unknown(_) => ndarray_column.fill(DataFrameValue::Unknown),
+				DataFrameColumn::Number(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
-						*a = Value::Number(*b);
+						*a = DataFrameValue::Number(*b);
 					}
 				}
-				Column::Enum(column) => {
+				DataFrameColumn::Enum(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
-						*a = Value::Enum(*b);
+						*a = DataFrameValue::Enum(*b);
 					}
 				}
-				Column::Text(column) => {
+				DataFrameColumn::Text(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
-						*a = Value::Text(b);
+						*a = DataFrameValue::Text(b);
 					}
 				}
 			}
@@ -227,7 +238,7 @@ impl DataFrame {
 	}
 }
 
-impl Column {
+impl DataFrameColumn {
 	pub fn len(&self) -> usize {
 		match self {
 			Self::Unknown(s) => s.len,
@@ -255,51 +266,51 @@ impl Column {
 		}
 	}
 
-	pub fn as_number(&self) -> Option<&NumberColumn> {
+	pub fn as_number(&self) -> Option<&NumberDataFrameColumn> {
 		match self {
 			Self::Number(s) => Some(s),
 			_ => None,
 		}
 	}
 
-	pub fn as_enum(&self) -> Option<&EnumColumn> {
+	pub fn as_enum(&self) -> Option<&EnumDataFrameColumn> {
 		match self {
 			Self::Enum(s) => Some(s),
 			_ => None,
 		}
 	}
 
-	pub fn as_text(&self) -> Option<&TextColumn> {
+	pub fn as_text(&self) -> Option<&TextDataFrameColumn> {
 		match self {
 			Self::Text(s) => Some(s),
 			_ => None,
 		}
 	}
 
-	pub fn view(&self) -> ColumnView {
+	pub fn view(&self) -> DataFrameColumnView {
 		match self {
-			Self::Unknown(column) => ColumnView::Unknown(column.view()),
-			Self::Number(column) => ColumnView::Number(column.view()),
-			Self::Enum(column) => ColumnView::Enum(column.view()),
-			Self::Text(column) => ColumnView::Text(column.view()),
+			Self::Unknown(column) => DataFrameColumnView::Unknown(column.view()),
+			Self::Number(column) => DataFrameColumnView::Number(column.view()),
+			Self::Enum(column) => DataFrameColumnView::Enum(column.view()),
+			Self::Text(column) => DataFrameColumnView::Text(column.view()),
 		}
 	}
 }
 
-impl UnknownColumn {
+impl UnknownDataFrameColumn {
 	pub fn new(name: String) -> Self {
 		Self { name, len: 0 }
 	}
 
-	pub fn view(&self) -> UnknownColumnView {
-		UnknownColumnView {
+	pub fn view(&self) -> UnknownDataFrameColumnView {
+		UnknownDataFrameColumnView {
 			name: &self.name,
 			len: self.len,
 		}
 	}
 }
 
-impl NumberColumn {
+impl NumberDataFrameColumn {
 	pub fn new(name: String) -> Self {
 		Self {
 			name,
@@ -307,15 +318,15 @@ impl NumberColumn {
 		}
 	}
 
-	pub fn view(&self) -> NumberColumnView {
-		NumberColumnView {
+	pub fn view(&self) -> NumberDataFrameColumnView {
+		NumberDataFrameColumnView {
 			name: &self.name,
 			data: &self.data,
 		}
 	}
 }
 
-impl EnumColumn {
+impl EnumDataFrameColumn {
 	pub fn new(name: String, options: Vec<String>) -> Self {
 		Self {
 			name,
@@ -324,8 +335,8 @@ impl EnumColumn {
 		}
 	}
 
-	pub fn view(&self) -> EnumColumnView {
-		EnumColumnView {
+	pub fn view(&self) -> EnumDataFrameColumnView {
+		EnumDataFrameColumnView {
 			name: &self.name,
 			data: &self.data,
 			options: &self.options,
@@ -333,7 +344,7 @@ impl EnumColumn {
 	}
 }
 
-impl TextColumn {
+impl TextDataFrameColumn {
 	pub fn new(name: String) -> Self {
 		Self {
 			name,
@@ -341,8 +352,8 @@ impl TextColumn {
 		}
 	}
 
-	pub fn view(&self) -> TextColumnView {
-		TextColumnView {
+	pub fn view(&self) -> TextDataFrameColumnView {
+		TextDataFrameColumnView {
 			name: &self.name,
 			data: &self.data,
 		}
@@ -362,13 +373,13 @@ impl<'a> DataFrameView<'a> {
 		self.clone()
 	}
 
-	pub fn read_row(&self, index: usize, row: &mut [Value<'a>]) {
+	pub fn read_row(&self, index: usize, row: &mut [DataFrameValue<'a>]) {
 		for (value, column) in row.iter_mut().zip(self.columns.iter()) {
 			*value = match column {
-				ColumnView::Unknown(_) => Value::Unknown,
-				ColumnView::Number(column) => Value::Number(column.data[index]),
-				ColumnView::Enum(column) => Value::Enum(column.data[index]),
-				ColumnView::Text(column) => Value::Text(&column.data[index]),
+				DataFrameColumnView::Unknown(_) => DataFrameValue::Unknown,
+				DataFrameColumnView::Number(column) => DataFrameValue::Number(column.data[index]),
+				DataFrameColumnView::Enum(column) => DataFrameValue::Enum(column.data[index]),
+				DataFrameColumnView::Text(column) => DataFrameValue::Text(&column.data[index]),
 			}
 		}
 	}
@@ -390,12 +401,12 @@ impl<'a> DataFrameView<'a> {
 			izip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
-				ColumnView::Number(column) => {
+				DataFrameColumnView::Number(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
 						*a = *b;
 					}
 				}
-				ColumnView::Enum(column) => {
+				DataFrameColumnView::Enum(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
 						*a = b.unwrap().get().to_f32().unwrap();
 					}
@@ -406,26 +417,26 @@ impl<'a> DataFrameView<'a> {
 		Some(features_train)
 	}
 
-	pub fn to_rows(&self) -> Array2<Value<'a>> {
+	pub fn to_rows(&self) -> Array2<DataFrameValue<'a>> {
 		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
 		for (mut ndarray_column, dataframe_column) in
 			izip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
-				ColumnView::Unknown(_) => ndarray_column.fill(Value::Unknown),
-				ColumnView::Number(column) => {
+				DataFrameColumnView::Unknown(_) => ndarray_column.fill(DataFrameValue::Unknown),
+				DataFrameColumnView::Number(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
-						*a = Value::Number(*b);
+						*a = DataFrameValue::Number(*b);
 					}
 				}
-				ColumnView::Enum(column) => {
+				DataFrameColumnView::Enum(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
-						*a = Value::Enum(*b);
+						*a = DataFrameValue::Enum(*b);
 					}
 				}
-				ColumnView::Text(column) => {
+				DataFrameColumnView::Text(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
-						*a = Value::Text(b);
+						*a = DataFrameValue::Text(b);
 					}
 				}
 			}
@@ -434,7 +445,7 @@ impl<'a> DataFrameView<'a> {
 	}
 }
 
-impl<'a> ColumnView<'a> {
+impl<'a> DataFrameColumnView<'a> {
 	pub fn len(&self) -> usize {
 		match self {
 			Self::Unknown(s) => s.len,
@@ -462,32 +473,32 @@ impl<'a> ColumnView<'a> {
 		}
 	}
 
-	pub fn column_type(&self) -> ColumnTypeView {
+	pub fn column_type(&self) -> DataFrameColumnTypeView {
 		match self {
-			Self::Unknown(_) => ColumnTypeView::Unknown,
-			Self::Number(_) => ColumnTypeView::Number,
-			Self::Enum(column) => ColumnTypeView::Enum {
+			Self::Unknown(_) => DataFrameColumnTypeView::Unknown,
+			Self::Number(_) => DataFrameColumnTypeView::Number,
+			Self::Enum(column) => DataFrameColumnTypeView::Enum {
 				options: column.options,
 			},
-			Self::Text(_) => ColumnTypeView::Text,
+			Self::Text(_) => DataFrameColumnTypeView::Text,
 		}
 	}
 
-	pub fn as_number(&self) -> Option<NumberColumnView> {
+	pub fn as_number(&self) -> Option<NumberDataFrameColumnView> {
 		match self {
 			Self::Number(s) => Some(s.clone()),
 			_ => None,
 		}
 	}
 
-	pub fn as_enum(&self) -> Option<EnumColumnView> {
+	pub fn as_enum(&self) -> Option<EnumDataFrameColumnView> {
 		match self {
 			Self::Enum(s) => Some(s.clone()),
 			_ => None,
 		}
 	}
 
-	pub fn as_text(&self) -> Option<TextColumnView> {
+	pub fn as_text(&self) -> Option<TextDataFrameColumnView> {
 		match self {
 			Self::Text(s) => Some(s.clone()),
 			_ => None,
@@ -496,52 +507,52 @@ impl<'a> ColumnView<'a> {
 
 	pub fn split_at_row(&self, index: usize) -> (Self, Self) {
 		match self {
-			ColumnView::Unknown(column) => (
-				ColumnView::Unknown(UnknownColumnView {
+			DataFrameColumnView::Unknown(column) => (
+				DataFrameColumnView::Unknown(UnknownDataFrameColumnView {
 					name: column.name,
 					len: index,
 				}),
-				ColumnView::Unknown(UnknownColumnView {
+				DataFrameColumnView::Unknown(UnknownDataFrameColumnView {
 					name: column.name,
 					len: column.len - index,
 				}),
 			),
-			ColumnView::Number(column) => {
+			DataFrameColumnView::Number(column) => {
 				let (data_a, data_b) = column.data.split_at(index);
 				(
-					ColumnView::Number(NumberColumnView {
+					DataFrameColumnView::Number(NumberDataFrameColumnView {
 						name: column.name,
 						data: data_a,
 					}),
-					ColumnView::Number(NumberColumnView {
+					DataFrameColumnView::Number(NumberDataFrameColumnView {
 						name: column.name,
 						data: data_b,
 					}),
 				)
 			}
-			ColumnView::Enum(column) => {
+			DataFrameColumnView::Enum(column) => {
 				let (data_a, data_b) = column.data.split_at(index);
 				(
-					ColumnView::Enum(EnumColumnView {
+					DataFrameColumnView::Enum(EnumDataFrameColumnView {
 						name: column.name,
 						options: column.options,
 						data: data_a,
 					}),
-					ColumnView::Enum(EnumColumnView {
+					DataFrameColumnView::Enum(EnumDataFrameColumnView {
 						name: column.name,
 						options: column.options,
 						data: data_b,
 					}),
 				)
 			}
-			ColumnView::Text(column) => {
+			DataFrameColumnView::Text(column) => {
 				let (data_a, data_b) = column.data.split_at(index);
 				(
-					ColumnView::Text(TextColumnView {
+					DataFrameColumnView::Text(TextDataFrameColumnView {
 						name: column.name,
 						data: data_a,
 					}),
-					ColumnView::Text(TextColumnView {
+					DataFrameColumnView::Text(TextDataFrameColumnView {
 						name: column.name,
 						data: data_b,
 					}),
@@ -552,39 +563,39 @@ impl<'a> ColumnView<'a> {
 
 	pub fn view(&self) -> Self {
 		match self {
-			ColumnView::Unknown(s) => ColumnView::Unknown(s.view()),
-			ColumnView::Number(s) => ColumnView::Number(s.view()),
-			ColumnView::Enum(s) => ColumnView::Enum(s.view()),
-			ColumnView::Text(s) => ColumnView::Text(s.view()),
+			DataFrameColumnView::Unknown(s) => DataFrameColumnView::Unknown(s.view()),
+			DataFrameColumnView::Number(s) => DataFrameColumnView::Number(s.view()),
+			DataFrameColumnView::Enum(s) => DataFrameColumnView::Enum(s.view()),
+			DataFrameColumnView::Text(s) => DataFrameColumnView::Text(s.view()),
 		}
 	}
 }
 
-impl<'a> UnknownColumnView<'a> {
+impl<'a> UnknownDataFrameColumnView<'a> {
 	pub fn view(&self) -> Self {
 		self.clone()
 	}
 }
 
-impl<'a> NumberColumnView<'a> {
+impl<'a> NumberDataFrameColumnView<'a> {
 	pub fn view(&self) -> Self {
 		self.clone()
 	}
 }
 
-impl<'a> EnumColumnView<'a> {
+impl<'a> EnumDataFrameColumnView<'a> {
 	pub fn view(&self) -> Self {
 		self.clone()
 	}
 }
 
-impl<'a> TextColumnView<'a> {
+impl<'a> TextDataFrameColumnView<'a> {
 	pub fn view(&self) -> Self {
 		self.clone()
 	}
 }
 
-impl<'a> Value<'a> {
+impl<'a> DataFrameValue<'a> {
 	pub fn as_number(&self) -> Option<&f32> {
 		match self {
 			Self::Number(s) => Some(s),

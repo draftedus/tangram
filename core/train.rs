@@ -9,7 +9,7 @@ use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::BTreeMap, path::Path};
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_id::Id;
 use tangram_metrics::{self as metrics};
 use tangram_progress::ProgressCounter;
@@ -429,7 +429,7 @@ fn load_dataframe(
 	let len = std::fs::metadata(file_path)?.len();
 	let progress_counter = ProgressCounter::new(len);
 	update_progress(Progress::Loading(progress_counter.clone()));
-	let column_types: Option<BTreeMap<String, ColumnType>> = config
+	let column_types: Option<BTreeMap<String, DataFrameColumnType>> = config
 		.as_ref()
 		.and_then(|config| config.column_types.as_ref())
 		.map(|column_types| {
@@ -437,12 +437,12 @@ fn load_dataframe(
 				.iter()
 				.map(|(column_name, column_type)| {
 					let column_type = match column_type {
-						config::ColumnType::Unknown => ColumnType::Unknown,
-						config::ColumnType::Number => ColumnType::Number,
-						config::ColumnType::Enum { options } => ColumnType::Enum {
+						config::ColumnType::Unknown => DataFrameColumnType::Unknown,
+						config::ColumnType::Number => DataFrameColumnType::Number,
+						config::ColumnType::Enum { options } => DataFrameColumnType::Enum {
 							options: options.clone(),
 						},
-						config::ColumnType::Text => ColumnType::Text,
+						config::ColumnType::Text => DataFrameColumnType::Text,
 					};
 					(column_name.clone(), column_type)
 				})
@@ -450,7 +450,7 @@ fn load_dataframe(
 		});
 	let dataframe = DataFrame::from_path(
 		file_path,
-		FromCsvOptions {
+		tangram_dataframe::FromCsvOptions {
 			column_types,
 			infer_options: Default::default(),
 			..Default::default()
@@ -487,10 +487,10 @@ fn shuffle(
 		dataframe.columns.iter_mut().for_each(|column| {
 			let mut rng = Xoshiro256Plus::seed_from_u64(seed);
 			match column {
-				Column::Unknown(_) => {}
-				Column::Number(column) => column.data.shuffle(&mut rng),
-				Column::Enum(column) => column.data.shuffle(&mut rng),
-				Column::Text(column) => column.data.shuffle(&mut rng),
+				DataFrameColumn::Unknown(_) => {}
+				DataFrameColumn::Number(column) => column.data.shuffle(&mut rng),
+				DataFrameColumn::Enum(column) => column.data.shuffle(&mut rng),
+				DataFrameColumn::Text(column) => column.data.shuffle(&mut rng),
 			}
 		});
 	}

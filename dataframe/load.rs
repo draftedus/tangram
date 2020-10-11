@@ -7,7 +7,7 @@ use std::{
 
 #[derive(Clone)]
 pub struct FromCsvOptions<'a> {
-	pub column_types: Option<BTreeMap<String, ColumnType>>,
+	pub column_types: Option<BTreeMap<String, DataFrameColumnType>>,
 	pub infer_options: InferOptions,
 	pub invalid_values: &'a [&'a str],
 }
@@ -65,7 +65,7 @@ impl DataFrame {
 
 		#[derive(Clone)]
 		enum ColumnTypeOrInferStats<'a> {
-			ColumnType(ColumnType),
+			ColumnType(DataFrameColumnType),
 			InferStats(InferStats<'a>),
 		}
 
@@ -101,7 +101,7 @@ impl DataFrame {
 			);
 
 		// If the infer pass is necessary, pass over the dataset and infer the types for those columns whose types were not specified.
-		let column_types: Vec<ColumnType> = if needs_infer {
+		let column_types: Vec<DataFrameColumnType> = if needs_infer {
 			let mut infer_stats: Vec<(usize, &mut InferStats)> = column_types
 				.iter_mut()
 				.enumerate()
@@ -155,10 +155,10 @@ impl DataFrame {
 		if let Some(n_rows) = n_rows {
 			for column in dataframe.columns.iter_mut() {
 				match column {
-					Column::Unknown(_) => {}
-					Column::Number(column) => column.data.reserve_exact(n_rows),
-					Column::Enum(column) => column.data.reserve_exact(n_rows),
-					Column::Text(column) => column.data.reserve_exact(n_rows),
+					DataFrameColumn::Unknown(_) => {}
+					DataFrameColumn::Number(column) => column.data.reserve_exact(n_rows),
+					DataFrameColumn::Enum(column) => column.data.reserve_exact(n_rows),
+					DataFrameColumn::Text(column) => column.data.reserve_exact(n_rows),
 				}
 			}
 		}
@@ -168,17 +168,17 @@ impl DataFrame {
 			progress(record.position().unwrap().byte());
 			for (column, value) in dataframe.columns.iter_mut().zip(record.iter()) {
 				match column {
-					Column::Unknown(column) => {
+					DataFrameColumn::Unknown(column) => {
 						column.len += 1;
 					}
-					Column::Number(column) => {
+					DataFrameColumn::Number(column) => {
 						let value = match lexical::parse::<f32, &[u8]>(value) {
 							Ok(value) if value.is_finite() => value,
 							_ => std::f32::NAN,
 						};
 						column.data.push(value);
 					}
-					Column::Enum(column) => {
+					DataFrameColumn::Enum(column) => {
 						let value = column
 							.options
 							.iter()
@@ -187,7 +187,7 @@ impl DataFrame {
 							.unwrap_or(None);
 						column.data.push(value);
 					}
-					Column::Text(column) => {
+					DataFrameColumn::Text(column) => {
 						column.data.push(std::str::from_utf8(value)?.to_owned())
 					}
 				}
@@ -255,9 +255,9 @@ impl<'a> InferStats<'a> {
 		}
 	}
 
-	pub fn finalize(self) -> ColumnType {
+	pub fn finalize(self) -> DataFrameColumnType {
 		match self.column_type {
-			InferColumnType::Unknown => ColumnType::Unknown,
+			InferColumnType::Unknown => DataFrameColumnType::Unknown,
 			InferColumnType::Number => {
 				// If all the values in a number column are zero or one then make this an enum column instead.
 				if let Some(unique_values) = self.unique_values {
@@ -265,17 +265,17 @@ impl<'a> InferStats<'a> {
 					if values.next().map(|s| s.as_str()) == Some("0")
 						&& values.next().map(|s| s.as_str()) == Some("1")
 					{
-						return ColumnType::Enum {
+						return DataFrameColumnType::Enum {
 							options: unique_values.into_iter().collect(),
 						};
 					}
 				}
-				ColumnType::Number
+				DataFrameColumnType::Number
 			}
-			InferColumnType::Enum => ColumnType::Enum {
+			InferColumnType::Enum => DataFrameColumnType::Enum {
 				options: self.unique_values.unwrap().into_iter().collect(),
 			},
-			InferColumnType::Text => ColumnType::Text,
+			InferColumnType::Text => DataFrameColumnType::Text,
 		}
 	}
 }
@@ -347,10 +347,10 @@ fn test_column_types() {
 2,test,world
 "#;
 	let mut column_types = BTreeMap::new();
-	column_types.insert("text".to_owned(), ColumnType::Text);
+	column_types.insert("text".to_owned(), DataFrameColumnType::Text);
 	column_types.insert(
 		"enum".to_owned(),
-		ColumnType::Enum {
+		DataFrameColumnType::Enum {
 			options: vec!["hello".to_owned(), "world".to_owned()],
 		},
 	);

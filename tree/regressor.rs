@@ -8,7 +8,7 @@ use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_thread_pool::pzip;
 
 /// `Regressor`s predict continuous target values, for example the selling price of a home.
@@ -28,7 +28,7 @@ impl Regressor {
 	/// Train a regressor.
 	pub fn train(
 		features: DataFrameView,
-		labels: NumberColumnView,
+		labels: NumberDataFrameColumnView,
 		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> Self {
@@ -36,7 +36,7 @@ impl Regressor {
 		let model = train(
 			task,
 			features,
-			ColumnView::Number(labels),
+			DataFrameColumnView::Number(labels),
 			train_options,
 			update_progress,
 		);
@@ -47,9 +47,13 @@ impl Regressor {
 	}
 
 	/// Make predictions.
-	pub fn predict(&self, features: ArrayView2<Value>, mut predictions: ArrayViewMut1<f32>) {
+	pub fn predict(
+		&self,
+		features: ArrayView2<DataFrameValue>,
+		mut predictions: ArrayViewMut1<f32>,
+	) {
 		predictions.fill(self.bias);
-		let mut row = vec![Value::Number(0.0); features.ncols()];
+		let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
 		for (i, prediction) in predictions.iter_mut().enumerate() {
 			for tree in &self.trees {
 				for (v, feature) in row.iter_mut().zip(features.row(i)) {
@@ -61,7 +65,10 @@ impl Regressor {
 	}
 
 	/// Compute SHAP values.
-	pub fn compute_shap_values(&self, features: ArrayView2<Value>) -> Vec<ShapValuesOutput> {
+	pub fn compute_shap_values(
+		&self,
+		features: ArrayView2<DataFrameValue>,
+	) -> Vec<ShapValuesOutput> {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
 		features
 			.axis_iter(Axis(0))
@@ -75,7 +82,7 @@ impl Regressor {
 /// This function is used by the common train function to update the logits after each round of trees is trained for regression.
 pub fn update_logits(
 	trees_for_round: &[TrainTree],
-	features: ArrayView2<Value>,
+	features: ArrayView2<DataFrameValue>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
 	for (prediction, features) in izip!(predictions.row_mut(0), features.axis_iter(Axis(0))) {

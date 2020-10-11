@@ -7,7 +7,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use super_unsafe::SuperUnsafe;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_metrics::{MeanSquaredError, StreamingMetric};
 use tangram_progress::ProgressCounter;
 use tangram_thread_pool::pzip;
@@ -27,7 +27,7 @@ impl Regressor {
 	/// Train a linear regressor.
 	pub fn train(
 		features: ArrayView2<f32>,
-		labels: NumberColumnView,
+		labels: NumberDataFrameColumnView,
 		options: &TrainOptions,
 		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Self {

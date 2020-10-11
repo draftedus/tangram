@@ -10,7 +10,7 @@ use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use std::ops::Neg;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_thread_pool::pzip;
 
 /// `BinaryClassifier`s predict binary target values, for example whether a patient has heart disease or not.
@@ -32,7 +32,7 @@ impl BinaryClassifier {
 	/// Train a binary classifier.
 	pub fn train(
 		features: DataFrameView,
-		labels: EnumColumnView,
+		labels: EnumDataFrameColumnView,
 		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> Self {
@@ -40,7 +40,7 @@ impl BinaryClassifier {
 		let model = train(
 			task,
 			features,
-			ColumnView::Enum(labels),
+			DataFrameColumnView::Enum(labels),
 			train_options,
 			update_progress,
 		);
@@ -51,12 +51,16 @@ impl BinaryClassifier {
 	}
 
 	/// Make predictions.
-	pub fn predict(&self, features: ArrayView2<Value>, mut probabilities: ArrayViewMut2<f32>) {
+	pub fn predict(
+		&self,
+		features: ArrayView2<DataFrameValue>,
+		mut probabilities: ArrayViewMut2<f32>,
+	) {
 		let mut predictions = probabilities.column_mut(1);
 		predictions.fill(self.bias);
 		for (example_index, logit) in predictions.iter_mut().enumerate() {
 			for tree in &self.trees {
-				let mut row = vec![Value::Number(0.0); features.ncols()];
+				let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
 				for (v, feature) in row.iter_mut().zip(features.row(example_index)) {
 					*v = *feature;
 				}
@@ -73,7 +77,10 @@ impl BinaryClassifier {
 	}
 
 	/// Compute SHAP values.
-	pub fn compute_shap_values(&self, features: ArrayView2<Value>) -> Vec<ShapValuesOutput> {
+	pub fn compute_shap_values(
+		&self,
+		features: ArrayView2<DataFrameValue>,
+	) -> Vec<ShapValuesOutput> {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
 		features
 			.axis_iter(Axis(0))
@@ -87,7 +94,7 @@ impl BinaryClassifier {
 /// This function is used by the common train function to update the logits after each tree is trained for binary classification.
 pub fn update_logits(
 	trees_for_round: &[TrainTree],
-	binned_features: ArrayView2<Value>,
+	binned_features: ArrayView2<DataFrameValue>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
 	for tree in trees_for_round {

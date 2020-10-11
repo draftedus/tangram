@@ -213,12 +213,12 @@ pub fn predict(
 	let column_types = columns
 		.iter()
 		.map(|c| match c {
-			Column::Unknown(_) => tangram_dataframe::ColumnType::Unknown,
-			Column::Number(_) => tangram_dataframe::ColumnType::Number,
-			Column::Enum(s) => tangram_dataframe::ColumnType::Enum {
+			Column::Unknown(_) => tangram_dataframe::DataFrameColumnType::Unknown,
+			Column::Number(_) => tangram_dataframe::DataFrameColumnType::Number,
+			Column::Enum(s) => tangram_dataframe::DataFrameColumnType::Enum {
 				options: s.options.clone(),
 			},
-			Column::Text(_) => tangram_dataframe::ColumnType::Text,
+			Column::Text(_) => tangram_dataframe::DataFrameColumnType::Text,
 		})
 		.collect();
 	let mut dataframe = tangram_dataframe::DataFrame::new(column_names, column_types);
@@ -226,8 +226,8 @@ pub fn predict(
 	for input in input.0 {
 		for column in dataframe.columns.iter_mut() {
 			match column {
-				tangram_dataframe::Column::Unknown(column) => column.len += 1,
-				tangram_dataframe::Column::Number(column) => {
+				tangram_dataframe::DataFrameColumn::Unknown(column) => column.len += 1,
+				tangram_dataframe::DataFrameColumn::Number(column) => {
 					let value = match input.get(&column.name) {
 						Some(serde_json::Value::Number(value)) => {
 							value.as_f64().unwrap().to_f32().unwrap()
@@ -236,7 +236,7 @@ pub fn predict(
 					};
 					column.data.push(value);
 				}
-				tangram_dataframe::Column::Enum(column) => {
+				tangram_dataframe::DataFrameColumn::Enum(column) => {
 					let value = input.get(&column.name).and_then(|value| value.as_str());
 					let value = value.and_then(|value| {
 						column
@@ -247,7 +247,7 @@ pub fn predict(
 					});
 					column.data.push(value);
 				}
-				tangram_dataframe::Column::Text(column) => {
+				tangram_dataframe::DataFrameColumn::Text(column) => {
 					let value = input
 						.get(&column.name)
 						.and_then(|value| value.as_str())
@@ -315,8 +315,8 @@ pub fn predict(
 					let feature_contributions = compute_feature_contributions(
 						&model.feature_groups,
 						features.iter().map(|v| match v {
-							tangram_dataframe::Value::Number(value) => *value,
-							tangram_dataframe::Value::Enum(value) => {
+							tangram_dataframe::DataFrameValue::Number(value) => *value,
+							tangram_dataframe::DataFrameValue::Enum(value) => {
 								value.map(|v| v.get()).unwrap_or(0).to_f32().unwrap()
 							}
 							_ => unreachable!(),

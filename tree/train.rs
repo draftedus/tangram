@@ -21,7 +21,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use super_unsafe::SuperUnsafe;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_pool::Pool;
 use tangram_progress::ProgressCounter;
 
@@ -45,7 +45,7 @@ pub enum Model {
 pub fn train(
 	task: Task,
 	features: DataFrameView,
-	labels: ColumnView,
+	labels: DataFrameColumnView,
 	train_options: TrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
@@ -356,10 +356,7 @@ pub fn train(
 			losses,
 		}),
 		Task::BinaryClassification => {
-			let classes = match labels_train {
-				ColumnView::Enum(c) => c.options.to_vec(),
-				_ => unreachable!(),
-			};
+			let classes = labels_train.as_enum().unwrap().options.to_owned();
 			Model::BinaryClassifier(BinaryClassifier {
 				bias: *biases.get(0).unwrap(),
 				trees,
@@ -369,10 +366,7 @@ pub fn train(
 			})
 		}
 		Task::MulticlassClassification { .. } => {
-			let classes = match labels_train {
-				ColumnView::Enum(c) => c.options.to_vec(),
-				_ => unreachable!(),
-			};
+			let classes = labels_train.as_enum().unwrap().options.to_owned();
 			Model::MulticlassClassifier(MulticlassClassifier {
 				n_rounds: n_rounds_trained,
 				n_classes: n_trees_per_round,
@@ -451,13 +445,13 @@ impl EarlyStoppingMonitor {
 /// Split the feature and labels into train and early stopping datasets, where the early stopping dataset will have `early_stopping_fraction * features.nrows()` rows.
 fn train_early_stopping_split<'features, 'labels>(
 	features: DataFrameView<'features>,
-	labels: ColumnView<'labels>,
+	labels: DataFrameColumnView<'labels>,
 	early_stopping_fraction: f32,
 ) -> (
 	DataFrameView<'features>,
-	ColumnView<'labels>,
+	DataFrameColumnView<'labels>,
 	DataFrameView<'features>,
-	ColumnView<'labels>,
+	DataFrameColumnView<'labels>,
 ) {
 	let split_index = (early_stopping_fraction * labels.len().to_f32().unwrap())
 		.to_usize()
@@ -476,8 +470,8 @@ fn train_early_stopping_split<'features, 'labels>(
 fn compute_early_stopping_metric(
 	task: &Task,
 	trees_for_round: &[TrainTree],
-	features: ArrayView2<Value>,
-	labels: ColumnView,
+	features: ArrayView2<DataFrameValue>,
+	labels: DataFrameColumnView,
 	mut predictions: ArrayViewMut2<f32>,
 ) -> f32 {
 	match task {

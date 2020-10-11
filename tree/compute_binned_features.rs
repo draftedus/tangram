@@ -2,7 +2,7 @@ use crate::compute_binning_instructions::BinningInstruction;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use tangram_dataframe::{ColumnView, DataFrameView};
+use tangram_dataframe::{DataFrameColumnView, DataFrameView};
 use tangram_thread_pool::pzip;
 
 #[derive(Debug)]
@@ -141,7 +141,7 @@ fn compute_binned_features_row_major_u16(
 }
 
 fn compute_binned_features_for_number_feature(
-	feature: &ColumnView,
+	feature: &DataFrameColumnView,
 	thresholds: &[f32],
 	_progress: &(impl Fn() + Sync),
 ) -> BinnedFeaturesColumnMajorColumn {
@@ -167,7 +167,7 @@ fn compute_binned_features_for_number_feature(
 }
 
 fn compute_binned_features_for_enum_feature_u8(
-	feature: &ColumnView,
+	feature: &DataFrameColumnView,
 	_progress: &(impl Fn() + Sync),
 ) -> BinnedFeaturesColumnMajorColumn {
 	let binned_feature_column = feature
@@ -181,7 +181,7 @@ fn compute_binned_features_for_enum_feature_u8(
 }
 
 fn compute_binned_features_for_enum_feature_u16(
-	feature: &ColumnView,
+	feature: &DataFrameColumnView,
 	_progress: &(impl Fn() + Sync),
 ) -> BinnedFeaturesColumnMajorColumn {
 	let binned_feature_column = feature

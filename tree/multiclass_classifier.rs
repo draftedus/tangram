@@ -9,7 +9,7 @@ use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::num::NonZeroUsize;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_thread_pool::pzip;
 
 /// `MulticlasClassifier`s predict multiclass target values, for example which of several species a flower is.
@@ -35,7 +35,7 @@ impl MulticlassClassifier {
 	// Train a multiclass classifier.
 	pub fn train(
 		features: DataFrameView,
-		labels: EnumColumnView,
+		labels: EnumDataFrameColumnView,
 		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> Self {
@@ -45,7 +45,7 @@ impl MulticlassClassifier {
 		let model = crate::train::train(
 			task,
 			features,
-			ColumnView::Enum(labels),
+			DataFrameColumnView::Enum(labels),
 			train_options,
 			update_progress,
 		);
@@ -56,7 +56,11 @@ impl MulticlassClassifier {
 	}
 
 	// Make predictions.
-	pub fn predict(&self, features: ArrayView2<Value>, mut probabilities: ArrayViewMut2<f32>) {
+	pub fn predict(
+		&self,
+		features: ArrayView2<DataFrameValue>,
+		mut probabilities: ArrayViewMut2<f32>,
+	) {
 		let n_rounds = self.n_rounds;
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
@@ -65,7 +69,7 @@ impl MulticlassClassifier {
 			probabilities.axis_iter_mut(Axis(0)),
 			features.axis_iter(Axis(0))
 		) {
-			let mut row = vec![Value::Number(0.0); features.len()];
+			let mut row = vec![DataFrameValue::Number(0.0); features.len()];
 			for (v, feature) in row.iter_mut().zip(features) {
 				*v = *feature;
 			}
@@ -80,7 +84,10 @@ impl MulticlassClassifier {
 	}
 
 	/// Compute SHAP values.
-	pub fn compute_shap_values(&self, features: ArrayView2<Value>) -> Vec<Vec<ShapValuesOutput>> {
+	pub fn compute_shap_values(
+		&self,
+		features: ArrayView2<DataFrameValue>,
+	) -> Vec<Vec<ShapValuesOutput>> {
 		let n_rounds = self.n_rounds;
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
@@ -101,7 +108,7 @@ impl MulticlassClassifier {
 /// This function is used by the common train function to update the logits after each round of trees is trained for multiclass classification.
 pub fn update_logits(
 	trees_for_round: &[TrainTree],
-	binned_features: ArrayView2<Value>,
+	binned_features: ArrayView2<DataFrameValue>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
 	let features_rows = binned_features.axis_iter(Axis(0));

@@ -2,7 +2,7 @@ use crate::{features, train::ModelTestProgress};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_metrics::{self as metrics, StreamingMetric};
 use tangram_progress::ProgressCounter;
 

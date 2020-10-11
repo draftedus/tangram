@@ -417,30 +417,6 @@ pub fn choose_best_splits_not_root(
 		Option<ChooseBestSplitForFeatureOutput>,
 		Option<ChooseBestSplitForFeatureOutput>,
 	)> = match train_options.binned_features_layout {
-		BinnedFeaturesLayout::ColumnMajor => {
-			let smaller_child_bin_stats = smaller_child_bin_stats.as_column_major_mut().unwrap();
-			let larger_child_bin_stats = larger_child_bin_stats.as_column_major_mut().unwrap();
-			choose_best_splits_not_root_column_major(ChooseBestSplitsNotRootColumnMajorOptions {
-				should_try_to_split_right_child,
-				smaller_child_bin_stats,
-				larger_child_bin_stats,
-				binned_features_column_major,
-				binning_instructions,
-				gradients_ordered_buffer,
-				hessians_are_constant,
-				hessians_ordered_buffer,
-				train_options,
-				left_child_n_examples,
-				left_child_sum_gradients,
-				left_child_sum_hessians,
-				right_child_n_examples,
-				right_child_sum_gradients,
-				right_child_sum_hessians,
-				smaller_child_examples_index,
-				should_try_to_split_left_child,
-				smaller_child_direction,
-			})
-		}
 		BinnedFeaturesLayout::RowMajor => {
 			let smaller_child_bin_stats = smaller_child_bin_stats.as_row_major_mut().unwrap();
 			let larger_child_bin_stats = larger_child_bin_stats.as_row_major_mut().unwrap();
@@ -453,6 +429,30 @@ pub fn choose_best_splits_not_root(
 				gradients,
 				hessians_are_constant,
 				hessians,
+				train_options,
+				left_child_n_examples,
+				left_child_sum_gradients,
+				left_child_sum_hessians,
+				right_child_n_examples,
+				right_child_sum_gradients,
+				right_child_sum_hessians,
+				smaller_child_examples_index,
+				should_try_to_split_left_child,
+				smaller_child_direction,
+			})
+		}
+		BinnedFeaturesLayout::ColumnMajor => {
+			let smaller_child_bin_stats = smaller_child_bin_stats.as_column_major_mut().unwrap();
+			let larger_child_bin_stats = larger_child_bin_stats.as_column_major_mut().unwrap();
+			choose_best_splits_not_root_column_major(ChooseBestSplitsNotRootColumnMajorOptions {
+				should_try_to_split_right_child,
+				smaller_child_bin_stats,
+				larger_child_bin_stats,
+				binned_features_column_major,
+				binning_instructions,
+				gradients_ordered_buffer,
+				hessians_are_constant,
+				hessians_ordered_buffer,
 				train_options,
 				left_child_n_examples,
 				left_child_sum_gradients,

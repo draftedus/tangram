@@ -3,7 +3,7 @@ use itertools::Itertools;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BTreeMap};
-use tangram_dataframe::{ColumnView, DataFrameView, NumberColumnView};
+use tangram_dataframe::{DataFrameColumnView, DataFrameView, NumberDataFrameColumnView};
 use tangram_finite::Finite;
 
 /*
@@ -51,10 +51,10 @@ pub fn compute_binning_instructions(
 		.columns
 		.par_iter()
 		.map(|column| match column.view() {
-			ColumnView::Number(column) => {
+			DataFrameColumnView::Number(column) => {
 				compute_binning_instructions_for_number_feature(column, &train_options)
 			}
-			ColumnView::Enum(column) => BinningInstruction::Enum {
+			DataFrameColumnView::Enum(column) => BinningInstruction::Enum {
 				n_options: column.options.len(),
 			},
 			_ => unreachable!(),
@@ -64,7 +64,7 @@ pub fn compute_binning_instructions(
 
 /// Compute the binning instructions for a number feature.
 fn compute_binning_instructions_for_number_feature(
-	column: NumberColumnView,
+	column: NumberDataFrameColumnView,
 	train_options: &TrainOptions,
 ) -> BinningInstruction {
 	// Create a histogram of values in the number feature.

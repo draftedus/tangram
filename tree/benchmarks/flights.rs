@@ -2,7 +2,7 @@ use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
 use std::path::Path;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_metrics::StreamingMetric;
 use tangram_thread_pool::pzip;
 
@@ -96,19 +96,19 @@ fn main() {
 	.iter()
 	.map(|m| m.to_string())
 	.collect();
-	let options = FromCsvOptions {
+	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-		  "Month".into() => ColumnType::Enum {options: month_options },
-		  "DayOfWeek".into() => ColumnType::Enum {options: day_of_week_options },
-		  "DayOfMonth".into() => ColumnType::Enum {options: day_of_month_options },
-		  "DepTime".into() => ColumnType::Number,
-		  "UniqueCarrier".into() => ColumnType::Enum { options: carrier_options },
-		  "Origin".into() => ColumnType::Enum { options: origin_options },
-		  "Dest".into() => ColumnType::Enum { options: dest_options },
-		  "Distance".into() => ColumnType::Number,
-		  "dep_delayed_15min".into() => ColumnType::Enum { options: vec!["N".into(), "Y".into()] }
+		  "Month".into() => DataFrameColumnType::Enum {options: month_options },
+		  "DayOfWeek".into() => DataFrameColumnType::Enum {options: day_of_week_options },
+		  "DayOfMonth".into() => DataFrameColumnType::Enum {options: day_of_month_options },
+		  "DepTime".into() => DataFrameColumnType::Number,
+		  "UniqueCarrier".into() => DataFrameColumnType::Enum { options: carrier_options },
+		  "Origin".into() => DataFrameColumnType::Enum { options: origin_options },
+		  "Dest".into() => DataFrameColumnType::Enum { options: dest_options },
+		  "Distance".into() => DataFrameColumnType::Number,
+		  "dep_delayed_15min".into() => DataFrameColumnType::Enum { options: vec!["N".into(), "Y".into()] }
 		}),
-		infer_options: InferOptions {
+		infer_options: tangram_dataframe::InferOptions {
 			enum_max_unique_values: 292,
 		},
 		..Default::default()

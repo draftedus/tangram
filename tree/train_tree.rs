@@ -21,7 +21,7 @@ pub struct TrainTree {
 
 impl TrainTree {
 	/// Make a prediction.
-	pub fn predict(&self, example: &[tangram_dataframe::Value]) -> f32 {
+	pub fn predict(&self, example: &[tangram_dataframe::DataFrameValue]) -> f32 {
 		// Start at the root node.
 		let mut node_index = 0;
 		// Traverse the tree until we get to a leaf.

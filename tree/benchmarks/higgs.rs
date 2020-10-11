@@ -2,7 +2,7 @@ use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
 use std::path::Path;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_metrics::StreamingMetric;
 use tangram_thread_pool::pzip;
 
@@ -13,37 +13,37 @@ fn main() {
 	let csv_file_path = Path::new("data/higgs-small.csv");
 	let (nrows_train, _) = (450_000, 50_000);
 	let target_column_index = 0;
-	let options = FromCsvOptions {
+	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-			"signal".to_owned() => ColumnType::Enum { options: vec!["false".into(), "true".into()] },
-			"lepton_pt".to_owned() => ColumnType::Number,
-			"lepton_eta".to_owned() => ColumnType::Number,
-			"lepton_phi".to_owned() => ColumnType::Number,
-			"missing_energy_magnitude".to_owned() => ColumnType::Number,
-			"missing_energy_phi".to_owned() => ColumnType::Number,
-			"jet_1_pt".to_owned() => ColumnType::Number,
-			"jet_1_eta".to_owned() => ColumnType::Number,
-			"jet_1_phi".to_owned() => ColumnType::Number,
-			"jet_1_b_tag".to_owned() => ColumnType::Number,
-			"jet_2_pt".to_owned() => ColumnType::Number,
-			"jet_2_eta".to_owned() => ColumnType::Number,
-			"jet_2_phi".to_owned() => ColumnType::Number,
-			"jet_2_b_tag".to_owned() => ColumnType::Number,
-			"jet_3_pt".to_owned() => ColumnType::Number,
-			"jet_3_eta".to_owned() => ColumnType::Number,
-			"jet_3_phi".to_owned() => ColumnType::Number,
-			"jet_3_b_tag".to_owned() => ColumnType::Number,
-			"jet_4_pt".to_owned() => ColumnType::Number,
-			"jet_4_eta".to_owned() => ColumnType::Number,
-			"jet_4_phi".to_owned() => ColumnType::Number,
-			"jet_4_b_tag".to_owned() => ColumnType::Number,
-			"m_jj".to_owned() => ColumnType::Number,
-			"m_jjj".to_owned() => ColumnType::Number,
-			"m_lv".to_owned() => ColumnType::Number,
-			"m_jlv".to_owned() => ColumnType::Number,
-			"m_bb".to_owned() => ColumnType::Number,
-			"m_wbb".to_owned() => ColumnType::Number,
-			"m_wwbb".to_owned() => ColumnType::Number,
+			"signal".to_owned() => DataFrameColumnType::Enum { options: vec!["false".into(), "true".into()] },
+			"lepton_pt".to_owned() => DataFrameColumnType::Number,
+			"lepton_eta".to_owned() => DataFrameColumnType::Number,
+			"lepton_phi".to_owned() => DataFrameColumnType::Number,
+			"missing_energy_magnitude".to_owned() => DataFrameColumnType::Number,
+			"missing_energy_phi".to_owned() => DataFrameColumnType::Number,
+			"jet_1_pt".to_owned() => DataFrameColumnType::Number,
+			"jet_1_eta".to_owned() => DataFrameColumnType::Number,
+			"jet_1_phi".to_owned() => DataFrameColumnType::Number,
+			"jet_1_b_tag".to_owned() => DataFrameColumnType::Number,
+			"jet_2_pt".to_owned() => DataFrameColumnType::Number,
+			"jet_2_eta".to_owned() => DataFrameColumnType::Number,
+			"jet_2_phi".to_owned() => DataFrameColumnType::Number,
+			"jet_2_b_tag".to_owned() => DataFrameColumnType::Number,
+			"jet_3_pt".to_owned() => DataFrameColumnType::Number,
+			"jet_3_eta".to_owned() => DataFrameColumnType::Number,
+			"jet_3_phi".to_owned() => DataFrameColumnType::Number,
+			"jet_3_b_tag".to_owned() => DataFrameColumnType::Number,
+			"jet_4_pt".to_owned() => DataFrameColumnType::Number,
+			"jet_4_eta".to_owned() => DataFrameColumnType::Number,
+			"jet_4_phi".to_owned() => DataFrameColumnType::Number,
+			"jet_4_b_tag".to_owned() => DataFrameColumnType::Number,
+			"m_jj".to_owned() => DataFrameColumnType::Number,
+			"m_jjj".to_owned() => DataFrameColumnType::Number,
+			"m_lv".to_owned() => DataFrameColumnType::Number,
+			"m_jlv".to_owned() => DataFrameColumnType::Number,
+			"m_bb".to_owned() => DataFrameColumnType::Number,
+			"m_wbb".to_owned() => DataFrameColumnType::Number,
+			"m_wwbb".to_owned() => DataFrameColumnType::Number,
 		}),
 		..Default::default()
 	};

@@ -112,7 +112,7 @@ pub struct Tree {
 
 impl Tree {
 	/// Make a prediction.
-	pub fn predict(&self, example: &[tangram_dataframe::Value]) -> f32 {
+	pub fn predict(&self, example: &[tangram_dataframe::DataFrameValue]) -> f32 {
 		// Start at the root node.
 		let mut node_index = 0;
 		// Traverse the tree until we get to a leaf.
@@ -175,6 +175,20 @@ pub enum Node {
 }
 
 impl Node {
+	pub fn as_branch(&self) -> Option<&BranchNode> {
+		match self {
+			Self::Branch(branch) => Some(branch),
+			_ => None,
+		}
+	}
+
+	pub fn as_leaf(&self) -> Option<&LeafNode> {
+		match self {
+			Self::Leaf(leaf) => Some(leaf),
+			_ => None,
+		}
+	}
+
 	pub fn examples_fraction(&self) -> f32 {
 		match self {
 			Self::Leaf(LeafNode {

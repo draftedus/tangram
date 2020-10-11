@@ -5,7 +5,7 @@ This module implements Tangram's feature engineering that prepares datasets for 
 use crate::stats;
 use itertools::izip;
 use ndarray::{prelude::*, s};
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 
 /// This struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
 #[derive(Debug)]
@@ -447,19 +447,21 @@ pub fn compute_features_dataframe(
 					.find(|column| column.name() == feature_group.source_column_name)
 					.unwrap();
 				let column = match column {
-					ColumnView::Unknown(c) => {
-						Column::Unknown(UnknownColumn::new(c.name.to_owned()))
+					DataFrameColumnView::Unknown(c) => {
+						DataFrameColumn::Unknown(UnknownDataFrameColumn::new(c.name.to_owned()))
 					}
-					ColumnView::Number(c) => Column::Number(NumberColumn {
-						name: c.name.to_owned(),
-						data: c.data.to_owned(),
-					}),
-					ColumnView::Enum(c) => Column::Enum(EnumColumn {
+					DataFrameColumnView::Number(c) => {
+						DataFrameColumn::Number(NumberDataFrameColumn {
+							name: c.name.to_owned(),
+							data: c.data.to_owned(),
+						})
+					}
+					DataFrameColumnView::Enum(c) => DataFrameColumn::Enum(EnumDataFrameColumn {
 						name: c.name.to_owned(),
 						data: c.data.to_owned(),
 						options: c.options.to_owned(),
 					}),
-					ColumnView::Text(c) => Column::Text(TextColumn {
+					DataFrameColumnView::Text(c) => DataFrameColumn::Text(TextDataFrameColumn {
 						name: c.name.to_owned(),
 						data: c.data.to_owned(),
 					}),
@@ -485,7 +487,7 @@ fn compute_features_bag_of_words_dataframe(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
 	progress: &impl Fn(),
-) -> Vec<Column> {
+) -> Vec<DataFrameColumn> {
 	let data = dataframe
 		.columns
 		.iter()
@@ -494,10 +496,10 @@ fn compute_features_bag_of_words_dataframe(
 		.as_text()
 		.unwrap()
 		.data;
-	let mut columns: Vec<NumberColumn> = feature_group
+	let mut columns: Vec<NumberDataFrameColumn> = feature_group
 		.tokens
 		.iter()
-		.map(|token| NumberColumn {
+		.map(|token| NumberDataFrameColumn {
 			name: token.0.clone(),
 			data: vec![0.0; data.len()],
 		})
@@ -529,14 +531,14 @@ fn compute_features_bag_of_words_dataframe(
 		}
 		progress();
 	}
-	columns.into_iter().map(Column::Number).collect()
+	columns.into_iter().map(DataFrameColumn::Number).collect()
 }
 
 /// Compute features given the original data `dataframe` and a slice of [FeatureGroup](enum.FeatureGroup.html) one for each column in the dataframe. The function returns an Array of [Value](../dataframe/enum.Value.html). The `progress` closure is called to track progress through the function. This function is used to compute features for making **predictions** with [tree](../tree/index.html) models.
 pub fn compute_features_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
-	mut features: ArrayViewMut2<Value>,
+	mut features: ArrayViewMut2<DataFrameValue>,
 	progress: &impl Fn(),
 ) {
 	let mut feature_index = 0;
@@ -568,7 +570,7 @@ pub fn compute_features_ndarray_value(
 fn compute_features_identity_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
-	mut features: ArrayViewMut2<Value>,
+	mut features: ArrayViewMut2<DataFrameValue>,
 	progress: &impl Fn(),
 ) {
 	let column = dataframe
@@ -577,20 +579,20 @@ fn compute_features_identity_ndarray_value(
 		.find(|column| column.name() == feature_group.source_column_name)
 		.unwrap();
 	match column {
-		ColumnView::Unknown(_) => unimplemented!(),
-		ColumnView::Number(c) => {
+		DataFrameColumnView::Unknown(_) => unimplemented!(),
+		DataFrameColumnView::Number(c) => {
 			izip!(features.column_mut(0), c.data).for_each(|(feature_column, column_value)| {
-				*feature_column = Value::Number(*column_value);
+				*feature_column = DataFrameValue::Number(*column_value);
 				progress()
 			});
 		}
-		ColumnView::Enum(c) => {
+		DataFrameColumnView::Enum(c) => {
 			izip!(features.column_mut(0), c.data).for_each(|(feature_column, column_value)| {
-				*feature_column = Value::Enum(*column_value);
+				*feature_column = DataFrameValue::Enum(*column_value);
 				progress()
 			});
 		}
-		ColumnView::Text(_) => unimplemented!(),
+		DataFrameColumnView::Text(_) => unimplemented!(),
 	}
 }
 
@@ -598,7 +600,7 @@ fn compute_features_identity_ndarray_value(
 fn compute_features_bag_of_words_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
-	mut features: ArrayViewMut2<Value>,
+	mut features: ArrayViewMut2<DataFrameValue>,
 	progress: &impl Fn(),
 ) {
 	let data = dataframe
@@ -611,7 +613,7 @@ fn compute_features_bag_of_words_ndarray_value(
 		.data;
 	features
 		.iter_mut()
-		.for_each(|feature| *feature = Value::Number(0.0));
+		.for_each(|feature| *feature = DataFrameValue::Number(0.0));
 	for (example_index, value) in data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {

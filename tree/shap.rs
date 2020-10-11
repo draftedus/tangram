@@ -12,7 +12,7 @@ pub struct ShapValuesOutput {
 
 /// This function is common code used by `compute_shap_values` for each model type.
 pub fn compute_shap_values_common(
-	example: &[tangram_dataframe::Value],
+	example: &[tangram_dataframe::DataFrameValue],
 	trees: ArrayView1<Tree>,
 	bias: f32,
 ) -> ShapValuesOutput {
@@ -33,7 +33,7 @@ pub fn compute_shap_values_common(
 }
 
 /// This function, and the helper functions below it, are a direct port from https://github.com/slundberg/shap.
-fn tree_shap(example: &[tangram_dataframe::Value], tree: &Tree, phi: &mut [f32]) {
+fn tree_shap(example: &[tangram_dataframe::DataFrameValue], tree: &Tree, phi: &mut [f32]) {
 	let max_depth = max_depth(tree, 0, 0) + 2;
 	let mut unique_path = vec![PathItem::new(); max_depth * (max_depth + 1) / 2];
 	tree_shap_recursive(TreeShapRecursiveOptions {
@@ -69,7 +69,7 @@ impl PathItem {
 }
 
 struct TreeShapRecursiveOptions<'a> {
-	example: &'a [tangram_dataframe::Value<'a>],
+	example: &'a [tangram_dataframe::DataFrameValue<'a>],
 	node_index: usize,
 	parent_feature_index: Option<usize>,
 	parent_one_fraction: f32,
@@ -239,7 +239,7 @@ fn unwound_path_sum(unique_path: &[PathItem], unique_depth: usize, path_index: u
 
 fn compute_hot_cold_child(
 	node: &BranchNode,
-	example: &[tangram_dataframe::Value],
+	example: &[tangram_dataframe::DataFrameValue],
 ) -> (usize, usize) {
 	match &node.split {
 		BranchSplit::Continuous(BranchSplitContinuous {
@@ -247,7 +247,7 @@ fn compute_hot_cold_child(
 			split_value,
 			invalid_values_direction,
 		}) => match example[*feature_index] {
-			tangram_dataframe::Value::Number(v) => {
+			tangram_dataframe::DataFrameValue::Number(v) => {
 				if v.is_nan() {
 					if let SplitDirection::Left = invalid_values_direction {
 						(node.left_child_index, node.right_child_index)
@@ -266,7 +266,7 @@ fn compute_hot_cold_child(
 			feature_index,
 			directions,
 		}) => match example[*feature_index] {
-			tangram_dataframe::Value::Enum(value) => {
+			tangram_dataframe::DataFrameValue::Enum(value) => {
 				if *directions.get(value.unwrap().get()).unwrap() == SplitDirection::Left {
 					(node.left_child_index, node.right_child_index)
 				} else {
@@ -283,10 +283,7 @@ fn max_depth(tree: &Tree, node_index: usize, depth: usize) -> usize {
 	if let Node::Leaf(_) = current_node {
 		return depth;
 	}
-	let current_node = match current_node {
-		Node::Branch(n) => n,
-		_ => unreachable!(),
-	};
+	let current_node = current_node.as_branch().unwrap();
 	let left_child_index = current_node.left_child_index;
 	let right_child_index = current_node.right_child_index;
 	let left_depth = max_depth(tree, left_child_index, depth + 1);
@@ -299,10 +296,7 @@ fn compute_expectation(tree: &Tree, node_index: usize) -> f32 {
 	if let Node::Leaf(n) = current_node {
 		return n.value;
 	}
-	let current_node = match current_node {
-		Node::Branch(n) => n,
-		_ => unreachable!(),
-	};
+	let current_node = current_node.as_branch().unwrap();
 	let left_child_index = current_node.left_child_index;
 	let right_child_index = current_node.right_child_index;
 	let left_child = &tree.nodes[left_child_index];

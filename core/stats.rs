@@ -5,7 +5,7 @@ use std::{
 	collections::{BTreeMap, BTreeSet},
 	num::NonZeroU64,
 };
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_finite::Finite;
 use tangram_metrics as metrics;
 
@@ -221,18 +221,22 @@ impl Stats {
 }
 
 impl ColumnStats {
-	fn compute(column: ColumnView, settings: &StatsSettings) -> Self {
+	fn compute(column: DataFrameColumnView, settings: &StatsSettings) -> Self {
 		match column {
-			ColumnView::Unknown(column) => Self::Unknown(UnknownColumnStats {
+			DataFrameColumnView::Unknown(column) => Self::Unknown(UnknownColumnStats {
 				column_name: column.name.to_owned(),
 				count: column.len,
 				invalid_count: column.len,
 			}),
-			ColumnView::Number(column) => {
+			DataFrameColumnView::Number(column) => {
 				Self::Number(NumberColumnStats::compute(column.view(), settings))
 			}
-			ColumnView::Enum(column) => Self::Enum(EnumColumnStats::compute(column, settings)),
-			ColumnView::Text(column) => Self::Text(TextColumnStats::compute(column, settings)),
+			DataFrameColumnView::Enum(column) => {
+				Self::Enum(EnumColumnStats::compute(column, settings))
+			}
+			DataFrameColumnView::Text(column) => {
+				Self::Text(TextColumnStats::compute(column, settings))
+			}
 		}
 	}
 
@@ -264,7 +268,7 @@ impl ColumnStats {
 }
 
 impl NumberColumnStats {
-	fn compute(column: NumberColumnView, _settings: &StatsSettings) -> Self {
+	fn compute(column: NumberDataFrameColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),
@@ -387,7 +391,7 @@ impl NumberColumnStats {
 }
 
 impl EnumColumnStats {
-	fn compute(column: EnumColumnView, _settings: &StatsSettings) -> Self {
+	fn compute(column: EnumDataFrameColumnView, _settings: &StatsSettings) -> Self {
 		let mut histogram = vec![0; column.options.len() + 1];
 		for value in column.data {
 			let index = value.map(|v| v.get()).unwrap_or(0);
@@ -431,7 +435,7 @@ impl EnumColumnStats {
 }
 
 impl TextColumnStats {
-	fn compute(column: TextColumnView, _settings: &StatsSettings) -> Self {
+	fn compute(column: TextDataFrameColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),

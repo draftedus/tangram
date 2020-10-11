@@ -1,6 +1,6 @@
 use ndarray::prelude::*;
 use std::path::Path;
-use tangram_dataframe::*;
+use tangram_dataframe::prelude::*;
 use tangram_metrics::StreamingMetric;
 
 fn main() {
