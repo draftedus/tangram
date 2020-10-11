@@ -12,7 +12,7 @@ import xgboost as xgb
 path = 'data/higgs.csv'
 nrows_train = 10_500_000
 nrows_test = 500_000
-target = "signal"
+target_column_name = "signal"
 data = pd.read_csv(
 	path,
 	dtype={
@@ -47,8 +47,8 @@ data = pd.read_csv(
 		'm_wwbb': np.float64,
 	}
 )
-features = data.loc[:, data.columns != target]
-labels = data[target]
+features = data.loc[:, data.columns != target_column_name]
+labels = data[target_column_name]
 (features_train, features_test, labels_train, labels_test) = train_test_split(
 	features,
 	labels,
@@ -61,19 +61,12 @@ model = xgb.XGBClassifier(
 	eta = 0.1,
 	grow_policy = 'lossguide',
 	max_depth = 9,
-	max_leaves = 255,
-	min_child_weight = 100,
 	n_estimators = 100,
 	tree_method = 'hist',
 )
 model.fit(features_train, labels_train)
 
-# compute accuracy
-predictions = model.predict(features_test)
-accuracy = accuracy_score(labels_test, predictions)
-print('accuracy: ', accuracy)
-
-# compute auc
+# Compute metrics.
 predictions_proba = model.predict_proba(features_test)[:, 1]
 auc = roc_auc_score(labels_test, predictions_proba)
 print('auc: ', auc)

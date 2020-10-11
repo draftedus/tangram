@@ -10,7 +10,7 @@ h2o.init()
 path = 'data/boston.csv'
 nrows_train = 405
 nrows_test = 101
-target = "medv"
+target_column_name = "medv"
 data = pd.read_csv(
 	path,
 )
@@ -22,7 +22,7 @@ data = pd.read_csv(
 )
 data_train = h2o.H2OFrame(python_obj=data_train)
 data_test = h2o.H2OFrame(python_obj=data_test)
-feature_column_names = [column for column in data_train.columns if column != target]
+feature_column_names = [column for column in data_train.columns if column != target_column_name]
 
 # Train the model.
 model = H2OGradientBoostingEstimator(
@@ -33,7 +33,7 @@ model = H2OGradientBoostingEstimator(
 )
 model.train(
   training_frame=data_train,
-  y=target,
+  y=target_column_name,
   x=feature_column_names,
 )
 

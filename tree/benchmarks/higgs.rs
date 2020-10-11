@@ -12,7 +12,7 @@ fn main() {
 	let (nrows_train, _) = (10_500_000, 500_000);
 	// let csv_file_path = Path::new("data/higgs-small.csv");
 	// let (nrows_train, _) = (450_000, 50_000);
-	let target_column_index = 0;
+	let target_column_name_column_index = 0;
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
 			"signal".to_owned() => DataFrameColumnType::Enum { options: vec!["false".into(), "true".into()] },
@@ -48,7 +48,7 @@ fn main() {
 		..Default::default()
 	};
 	let mut features = DataFrame::from_path(csv_file_path, options, |_| {}).unwrap();
-	let labels = features.columns.remove(target_column_index);
+	let labels = features.columns.remove(target_column_name_column_index);
 	let (features_train, features_test) = features.view().split_at_row(nrows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
 	let labels_train = labels_train.as_enum().unwrap();
@@ -71,7 +71,7 @@ fn main() {
 	);
 	let duration = start.elapsed();
 
-	// Make predictions on the test data and compute metrics.
+	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
 	let chunk_size = features_test.nrows() / rayon::current_num_threads();
 	let metrics = pzip!(
@@ -104,8 +104,7 @@ fn main() {
 	)
 	.finalize();
 
-	// Print the results.
+	// Compute metrics.
 	println!("duration {}", duration.as_secs_f32());
-	println!("accuracy {}", metrics.thresholds[50].accuracy);
-	println!("auc {}", metrics.auc_roc);
+	println!("auc: {}", metrics.auc_roc);
 }

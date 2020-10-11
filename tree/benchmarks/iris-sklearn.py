@@ -10,12 +10,12 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 path = 'data/iris.csv'
 nrows_train = 120
 nrows_test = 30
-target = "species"
+target_column_name = "species"
 data = pd.read_csv(
 	path,
 )
-features = data.loc[:, data.columns != target]
-labels = data[target]
+features = data.loc[:, data.columns != target_column_name]
+labels = data[target_column_name]
 (features_train, features_test, labels_train, labels_test) = train_test_split(
 	features,
 	labels,
@@ -34,7 +34,7 @@ model = HistGradientBoostingClassifier(
 )
 model.fit(features_train, labels_train)
 
-# compute accuracy
+# Compute metrics.
 predictions = model.predict(features_test)
 accuracy = accuracy_score(predictions, labels_test)
 print('accuracy: ', accuracy)

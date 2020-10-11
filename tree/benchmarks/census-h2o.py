@@ -11,7 +11,7 @@ h2o.init()
 path = 'data/census.csv'
 nrows_train = 26049
 nrows_test = 6512
-target = "income"
+target_column_name = "income"
 data = pd.read_csv(
 	path,
 	dtype={
@@ -40,20 +40,20 @@ data = pd.read_csv(
 )
 data_train = h2o.H2OFrame(python_obj=data_train)
 data_test = h2o.H2OFrame(python_obj=data_test)
-feature_column_names = [column for column in data_train.columns if column != target]
+feature_column_names = [column for column in data_train.columns if column != target_column_name]
 
 # Train the model.
 model = H2OGradientBoostingEstimator(
   distribution="bernoulli",
-  ntrees = 100,
-  max_depth = 8,
   learn_rate = 0.1,
+  max_depth = 9,
   nbins = 255
+  ntrees = 100,
 )
 model.train(
   training_frame=data_train,
-  y=target,
   x=feature_column_names,
+  y=target_column_name,
 )
 
 # Compute metrics.

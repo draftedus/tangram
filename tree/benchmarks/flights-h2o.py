@@ -3,7 +3,6 @@ from pandas.api.types import CategoricalDtype
 import numpy as np
 import pandas as pd
 
-# requires that you have java
 import h2o
 from h2o.estimators import H2OGradientBoostingEstimator
 h2o.init()
@@ -84,7 +83,7 @@ dest_options = [
 		"TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF", "TXK", "TYR", "TYS", "VCT", "VIS", "VLD",
 		"VPS", "WRG", "WYS", "XNA", "YAK", "YUM",
 ]
-target = "dep_delayed_15min"
+target_column_name = "dep_delayed_15min"
 data_train = pd.read_csv(
 	path_train,
 	dtype={
@@ -122,25 +121,22 @@ data = pd.concat([data_train, data_test])
 )
 data_train = h2o.H2OFrame(python_obj=data_train)
 data_test = h2o.H2OFrame(python_obj=data_test)
-x = [column for column in data_train.columns if column != target]
+feature_column_names = [column for column in data_train.columns if column != target_column_name]
 
 # Train the model.
 model = H2OGradientBoostingEstimator(
   distribution="bernoulli",
-  ntrees = 100,
-  max_depth = 10,
   learn_rate = 0.1,
+  max_depth = 10,
   nbins = 255
+  ntrees = 100,
 )
 model.train(
   training_frame=data_train,
-  y=target,
-  x=x,
+  x=feature_column_names,
+  y=target_column_name,
 )
 
-# compute accuracy
+# Compute metrics.
 perf = model.model_performance(data_test)
-print('accuracy: ', perf.accuracy()[0][1])
-
-# compute auc
 print('auc: ', perf.auc())

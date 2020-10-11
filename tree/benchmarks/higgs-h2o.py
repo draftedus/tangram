@@ -16,7 +16,7 @@ h2o.init()
 path = 'data/higgs.csv'
 nrows_train = 10_500_000
 nrows_test = 500_000
-target = "signal"
+target_column_name = "signal"
 data = pd.read_csv(
 	path,
 	dtype={
@@ -59,25 +59,22 @@ data = pd.read_csv(
 )
 data_train = h2o.H2OFrame(python_obj=data_train)
 data_test = h2o.H2OFrame(python_obj=data_test)
-x = [column for column in data_train.columns if column != target]
+feature_column_names = [column for column in data_train.columns if column != target_column_name]
 
 # Train the model.
 model = H2OGradientBoostingEstimator(
   distribution="bernoulli",
-  ntrees = 100,
-  max_depth = 9,
   learn_rate = 0.1,
+  max_depth = 9,
   nbins = 255
+  ntrees = 100,
 )
 model.train(
   training_frame=data_train,
-  y=target,
-  x=x,
+  x=feature_column_names,
+  y=target_column_name,
 )
 
-# compute accuracy
+# Compute metrics.
 perf = model.model_performance(data_test)
-print('accuracy: ', perf.accuracy()[0][1])
-
-# compute auc
 print('auc: ', perf.auc())

@@ -11,7 +11,7 @@ h2o.init()
 path = 'data/iris.csv'
 nrows_train = 120
 nrows_test = 30
-target = "species"
+target_column_name = "species"
 data = pd.read_csv(
 	path,
 )
@@ -23,21 +23,21 @@ data = pd.read_csv(
 )
 data_train = h2o.H2OFrame(python_obj=data_train)
 data_test = h2o.H2OFrame(python_obj=data_test)
-x = [column for column in data_train.columns if column != target]
+feature_column_names = [column for column in data_train.columns if column != target_column_name]
 
 # Train the model.
 model = H2OGradientBoostingEstimator(
-  ntrees = 100,
-  max_depth = 9,
   learn_rate = 0.1,
+  max_depth = 9,
   nbins = 255
+  ntrees = 100,
 )
 model.train(
   training_frame=data_train,
-  y=target,
-  x=x,
+  x=feature_column_names,
+  y=target_column_name,
 )
 
-# compute accuracy
+# Compute metrics.
 perf = model.model_performance(data_test)
 print('accuracy: ', 1 - perf.confusion_matrix()[3][3])

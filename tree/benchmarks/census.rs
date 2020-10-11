@@ -8,16 +8,15 @@ fn main() {
 	let csv_file_path = Path::new("data/census.csv");
 	let n_rows_train = 26049;
 	let n_rows_test = 6512;
-	let target_column_index = 14;
+	let target_column_name_column_index = 14;
 	let mut features = DataFrame::from_path(csv_file_path, Default::default(), |_| {}).unwrap();
-	let labels = features.columns.remove(target_column_index);
+	let labels = features.columns.remove(target_column_name_column_index);
 	let (features_train, features_test) = features.view().split_at_row(n_rows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(n_rows_train);
 	let labels_train = labels_train.as_enum().unwrap();
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
-	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
 		learning_rate: 0.1,
 		max_leaf_nodes: 255,
@@ -30,7 +29,6 @@ fn main() {
 		train_options,
 		&mut |_| {},
 	);
-	let duration = start.elapsed();
 
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
@@ -44,9 +42,5 @@ fn main() {
 		labels: labels_test.data.into(),
 	});
 	let metrics = metrics.finalize();
-
-	// Print the results.
-	println!("duration {}", duration.as_secs_f32());
-	println!("accuracy {}", metrics.thresholds[50].accuracy);
-	println!("auc {}", metrics.auc_roc);
+	println!("auc: {}", metrics.auc_roc);
 }

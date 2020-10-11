@@ -83,7 +83,7 @@ dest_options= [
 	"TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF", "TXK", "TYR", "TYS", "VCT", "VIS", "VLD",
 	"VPS", "WRG", "WYS", "XNA", "YAK", "YUM",
 ]
-target = "dep_delayed_15min"
+target_column_name = "dep_delayed_15min"
 data_train = pd.read_csv(
 	path_train,
 	dtype={
@@ -122,10 +122,10 @@ data_test = pd.read_csv(
 		'Y': 1
 	}
 })
-features_train = data_train.loc[:, data_train.columns != target]
-features_test = data_test.loc[:, data_test.columns != target]
-labels_train = data_train[target]
-labels_test = data_test[target]
+features_train = data_train.loc[:, data_train.columns != target_column_name]
+features_test = data_test.loc[:, data_test.columns != target_column_name]
+labels_train = data_train[target_column_name]
+labels_test = data_test[target_column_name]
 
 # Train the model.
 start = time()
@@ -141,12 +141,7 @@ model.fit(
 )
 print('duration: ', time() - start)
 
-# compute accuracy
-predictions = model.predict(features_test)
-accuracy = accuracy_score(labels_test, predictions)
-print('accuracy: ', accuracy)
-
-# compute auc
+# Compute metrics.
 predictions_proba = model.predict_proba(features_test)[:, 1]
 auc = roc_auc_score(labels_test, predictions_proba)
 print('auc: ', auc)

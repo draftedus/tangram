@@ -14,7 +14,7 @@ fn main() {
 	// let csv_file_path_test = Path::new("data/flights-test.csv");
 	let csv_file_path_train = Path::new("data/flights-10m.csv");
 	let csv_file_path_test = Path::new("data/flights-test.csv");
-	let target_column_index = 8;
+	let target_column_name_column_index = 8;
 	let month_options = vec![
 		"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 	]
@@ -115,10 +115,14 @@ fn main() {
 	};
 	let mut features_train =
 		DataFrame::from_path(csv_file_path_train, options.clone(), |_| {}).unwrap();
-	let labels_train = features_train.columns.remove(target_column_index);
+	let labels_train = features_train
+		.columns
+		.remove(target_column_name_column_index);
 	let labels_train = labels_train.as_enum().unwrap();
 	let mut features_test = DataFrame::from_path(csv_file_path_test, options, |_| {}).unwrap();
-	let labels_test = features_test.columns.remove(target_column_index);
+	let labels_test = features_test
+		.columns
+		.remove(target_column_name_column_index);
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
@@ -138,7 +142,7 @@ fn main() {
 	);
 	let duration = start.elapsed();
 
-	// Make predictions on the test data and compute metrics.
+	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
 	let chunk_size = features_test.nrows() / rayon::current_num_threads();
 	let metrics = pzip!(
@@ -171,8 +175,7 @@ fn main() {
 	)
 	.finalize();
 
-	// Print the results.
-	println!("duration {}", duration.as_secs_f32());
-	println!("accuracy {}", metrics.thresholds[50].accuracy);
-	println!("auc {}", metrics.auc_roc);
+	// Compute metrics.
+	println!("duration: {}", duration.as_secs_f32());
+	println!("auc: {}", metrics.auc_roc);
 }

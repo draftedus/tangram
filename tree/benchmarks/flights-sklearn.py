@@ -19,7 +19,7 @@ nrows_test = 100_000
 # path_test = 'data/flights-test.csv'
 # nrows_train = 10_000_000
 # nrows_test = 100_000
-target = "dep_delayed_15min"
+target_column_name = "dep_delayed_15min"
 data_train = pd.read_csv(
 	path_train,
 	dtype={
@@ -59,8 +59,8 @@ data_test = pd.read_csv(
 	}
 })
 data = pd.get_dummies(pd.concat([data_train, data_test]))
-features = data.loc[:, data.columns != target]
-labels = data[target]
+features = data.loc[:, data.columns != target_column_name]
+labels = data[target_column_name]
 (features_train, features_test, labels_train, labels_test) = train_test_split(
 	features,
 	labels,
@@ -77,12 +77,7 @@ model = HistGradientBoostingClassifier(
 )
 model.fit(features_train, labels_train)
 
-# compute accuracy
-predictions = model.predict(features_test)
-accuracy = accuracy_score(labels_test, predictions)
-print('accuracy: ', accuracy)
-
-# compute auc
+# Compute metrics.
 predictions_proba = model.predict_proba(features_test)[:, 1]
 auc = roc_auc_score(labels_test, predictions_proba)
 print('auc: ', auc)

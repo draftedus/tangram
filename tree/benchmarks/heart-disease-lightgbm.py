@@ -10,7 +10,7 @@ import lightgbm as lgb
 path = 'data/heart-disease.csv'
 nrows_train = 242
 nrows_test = 61
-target = "diagnosis"
+target_column_name = "diagnosis"
 data = pd.read_csv(
 	path,
 	dtype={
@@ -30,8 +30,8 @@ data = pd.read_csv(
 		'diagnosis': 'category'
 	}
 )
-features = data.loc[:, data.columns != target]
-labels = data[target]
+features = data.loc[:, data.columns != target_column_name]
+labels = data[target_column_name]
 (features_train, features_test, labels_train, labels_test) = train_test_split(
 	features,
 	labels,
@@ -57,12 +57,7 @@ categorical_feature=categorical_feature
 model.fit(features_train, labels_train, categorical_feature=categorical_feature)
 print(time() - start)
 
-# compute accuracy
-predictions = model.predict(features_test)
-accuracy = accuracy_score(labels_test, predictions)
-print('accuracy: ', accuracy)
-
-# compute auc
+# Compute metrics.
 predictions_proba = model.predict_proba(features_test)[:, 1]
 auc = roc_auc_score(labels_test, predictions_proba)
 print('auc: ', auc)

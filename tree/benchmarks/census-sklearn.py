@@ -10,12 +10,12 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 path = 'data/census.csv'
 nrows_train = 26049
 nrows_test = 6512
-target = "income"
+target_column_name = "income"
 data = pd.read_csv(
 	path,
 )
-features = data.loc[:, data.columns != target]
-labels = data[target]
+features = data.loc[:, data.columns != target_column_name]
+labels = data[target_column_name]
 features = pd.get_dummies(features)
 (features_train, features_test, labels_train, labels_test) = train_test_split(
 	features,
@@ -35,12 +35,7 @@ model = HistGradientBoostingClassifier(
 )
 model.fit(features_train, labels_train)
 
-# compute accuracy
-predictions = model.predict(features_test)
-accuracy = accuracy_score(predictions, labels_test)
-print('accuracy: ', accuracy)
-
-# compute auc
+# Compute metrics.
 predictions_proba = model.predict_proba(features_test)[:, 1]
 auc = roc_auc_score(labels_test, predictions_proba)
 print('auc: ', auc)
