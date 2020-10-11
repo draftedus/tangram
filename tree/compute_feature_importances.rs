@@ -1,4 +1,7 @@
-use super::tree::*;
+use crate::train_tree::{
+	TrainBranchNode, TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
+	TrainNode, TrainTree,
+};
 
 /// This function computes feature importances using the "split" method, where a feature's importance is proportional to the number of branches that use it to split.
 pub fn compute_feature_importances(trees: &[TrainTree], n_features: usize) -> Vec<f32> {

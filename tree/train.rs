@@ -1,22 +1,21 @@
-use self::{
-	bin_stats::{BinStats, BinStatsEntry},
-	binning::{
-		compute_binned_features_column_major, compute_binned_features_row_major,
-		compute_binning_instructions,
-	},
-	early_stopping::{compute_early_stopping_metric, EarlyStoppingMonitor},
-	feature_importances::compute_feature_importances,
-	tree::{
-		TrainBranchNode, TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
-		TrainLeafNode, TrainNode, TreeTrainOptions,
-	},
-};
 #[cfg(feature = "timing")]
 use crate::timing::Timing;
 use crate::{
-	binary_classifier::BinaryClassifier, multiclass_classifier::MulticlassClassifier,
-	regressor::Regressor, BinnedFeaturesLayout, BranchNode, BranchSplit, BranchSplitContinuous,
-	BranchSplitDiscrete, LeafNode, Node, TrainOptions, TrainProgress, Tree,
+	binary_classifier::BinaryClassifier,
+	compute_bin_stats::{BinStats, BinStatsEntry},
+	compute_binned_features::{
+		compute_binned_features_column_major, compute_binned_features_row_major,
+	},
+	compute_binning_instructions::compute_binning_instructions,
+	compute_feature_importances::compute_feature_importances,
+	multiclass_classifier::MulticlassClassifier,
+	regressor::Regressor,
+	train_tree::{
+		train_tree, TrainBranchNode, TrainBranchSplit, TrainBranchSplitContinuous,
+		TrainBranchSplitDiscrete, TrainLeafNode, TrainNode, TrainTree, TrainTreeOptions,
+	},
+	BinnedFeaturesLayout, BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete,
+	LeafNode, Node, TrainOptions, TrainProgress, Tree,
 };
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -25,16 +24,6 @@ use super_unsafe::SuperUnsafe;
 use tangram_dataframe::*;
 use tangram_pool::Pool;
 use tangram_progress::ProgressCounter;
-
-mod bin_stats;
-mod binning;
-mod early_stopping;
-mod examples_index;
-mod feature_importances;
-mod split;
-mod tree;
-
-pub use self::tree::TrainTree;
 
 /// This enum is used by the common `train` function below to customize the training code slightly for each task.
 #[derive(Clone, Copy, Debug)]
@@ -106,7 +95,7 @@ pub fn train(
 	// Use the binning instructions from the previous step to compute the binned features.
 	let binned_features_layout = train_options.binned_features_layout;
 	let progress_counter = ProgressCounter::new(features_train.nrows().to_u64().unwrap());
-	update_progress(super::TrainProgress::Initializing(progress_counter.clone()));
+	update_progress(TrainProgress::Initializing(progress_counter.clone()));
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
 	let binned_features_row_major =
@@ -139,17 +128,17 @@ pub fn train(
 		// For regression, the bias is the mean of the labels.
 		Task::Regression => {
 			let labels_train = labels_train.as_number().unwrap().data.into();
-			super::regressor::compute_biases(labels_train)
+			crate::regressor::compute_biases(labels_train)
 		}
 		// For binary classification, the bias is the log of the ratio of positive examples to negative examples in the training set, so the baseline prediction is the majority class.
 		Task::BinaryClassification => {
 			let labels_train = labels_train.as_enum().unwrap().data.into();
-			super::binary_classifier::compute_biases(labels_train)
+			crate::binary_classifier::compute_biases(labels_train)
 		}
 		// For multiclass classification the biases are the logs of each class's proporation in the training set, so the baseline prediction is the majority class.
 		Task::MulticlassClassification { .. } => {
 			let labels_train = labels_train.as_enum().unwrap().data.into();
-			super::multiclass_classifier::compute_biases(labels_train, n_trees_per_round)
+			crate::multiclass_classifier::compute_biases(labels_train, n_trees_per_round)
 		}
 	};
 
@@ -225,7 +214,7 @@ pub fn train(
 
 	// Train rounds of trees until we hit max_rounds or the early stopping monitor indicates we should stop early.
 	let round_counter = ProgressCounter::new(train_options.max_rounds.to_u64().unwrap());
-	update_progress(super::TrainProgress::Training(round_counter.clone()));
+	update_progress(TrainProgress::Training(round_counter.clone()));
 	for _ in 0..train_options.max_rounds {
 		round_counter.inc(1);
 		// Train n_trees_per_round trees.
@@ -237,7 +226,7 @@ pub fn train(
 			match task {
 				Task::Regression => {
 					let labels_train = labels_train.as_number().unwrap();
-					super::regressor::compute_gradients_and_hessians(
+					crate::regressor::compute_gradients_and_hessians(
 						gradients.as_slice_mut().unwrap(),
 						hessians.as_slice_mut().unwrap(),
 						labels_train.data,
@@ -246,7 +235,7 @@ pub fn train(
 				}
 				Task::BinaryClassification => {
 					let labels_train = labels_train.as_enum().unwrap();
-					super::binary_classifier::compute_gradients_and_hessians(
+					crate::binary_classifier::compute_gradients_and_hessians(
 						gradients.as_slice_mut().unwrap(),
 						hessians.as_slice_mut().unwrap(),
 						labels_train.data,
@@ -255,7 +244,7 @@ pub fn train(
 				}
 				Task::MulticlassClassification { .. } => {
 					let labels_train = labels_train.as_enum().unwrap();
-					super::multiclass_classifier::compute_gradients_and_hessians(
+					crate::multiclass_classifier::compute_gradients_and_hessians(
 						tree_per_round_index,
 						gradients.as_slice_mut().unwrap(),
 						hessians.as_slice_mut().unwrap(),
@@ -276,7 +265,7 @@ pub fn train(
 					*value = index.to_i32().unwrap();
 				});
 			// Train the tree.
-			let tree = self::tree::train(TreeTrainOptions {
+			let tree = train_tree(TrainTreeOptions {
 				binning_instructions: &binning_instructions,
 				binned_features_row_major: &binned_features_row_major,
 				binned_features_column_major: &binned_features_column_major,
@@ -311,15 +300,15 @@ pub fn train(
 			let loss = match task {
 				Task::Regression => {
 					let labels_train = labels_train.as_number().unwrap().data.into();
-					super::regressor::compute_loss(labels_train, predictions.view())
+					crate::regressor::compute_loss(labels_train, predictions.view())
 				}
 				Task::BinaryClassification => {
 					let labels_train = labels_train.as_enum().unwrap().data.into();
-					super::binary_classifier::compute_loss(labels_train, predictions.view())
+					crate::binary_classifier::compute_loss(labels_train, predictions.view())
 				}
 				Task::MulticlassClassification { .. } => {
 					let labels_train = labels_train.as_enum().unwrap().data.into();
-					super::multiclass_classifier::compute_loss(labels_train, predictions.view())
+					crate::multiclass_classifier::compute_loss(labels_train, predictions.view())
 				}
 			};
 			losses.push(loss);
@@ -397,6 +386,68 @@ pub fn train(
 	}
 }
 
+fn update_predictions_with_tree(
+	predictions: &mut [f32],
+	examples_index: &[i32],
+	tree: &TrainTree,
+	#[cfg(feature = "timing")] timing: &Timing,
+) {
+	#[cfg(feature = "timing")]
+	let start = std::time::Instant::now();
+	let predictions_cell = SuperUnsafe::new(predictions);
+	tree.leaf_values.par_iter().for_each(|(range, value)| {
+		examples_index[range.clone()]
+			.iter()
+			.for_each(|&example_index| unsafe {
+				*predictions_cell
+					.get()
+					.get_unchecked_mut(example_index.to_usize().unwrap()) += value;
+			});
+	});
+	#[cfg(feature = "timing")]
+	timing.update_predictions.inc(start.elapsed());
+}
+
+#[derive(Clone)]
+pub struct EarlyStoppingMonitor {
+	tolerance: f32,
+	max_rounds_no_improve: usize,
+	previous_stopping_metric: Option<f32>,
+	num_rounds_no_improve: usize,
+}
+
+impl EarlyStoppingMonitor {
+	/// Create a train stop monitor,
+	pub fn new(tolerance: f32, max_rounds_no_improve: usize) -> Self {
+		EarlyStoppingMonitor {
+			tolerance,
+			max_rounds_no_improve,
+			previous_stopping_metric: None,
+			num_rounds_no_improve: 0,
+		}
+	}
+
+	/// Update with the next epoch's task metrics. Returns true if training should stop.
+	pub fn update(&mut self, value: f32) -> bool {
+		let stopping_metric = value;
+		let result = if let Some(previous_stopping_metric) = self.previous_stopping_metric {
+			if stopping_metric > previous_stopping_metric
+				|| f32::abs(stopping_metric - previous_stopping_metric) < self.tolerance
+			{
+				self.num_rounds_no_improve += 1;
+				self.num_rounds_no_improve >= self.max_rounds_no_improve
+			} else {
+				self.num_rounds_no_improve = 0;
+				false
+			}
+		} else {
+			false
+		};
+		self.previous_stopping_metric = Some(stopping_metric);
+		result
+	}
+}
+
 /// Split the feature and labels into train and early stopping datasets, where the early stopping dataset will have `early_stopping_fraction * features.nrows()` rows.
 fn train_early_stopping_split<'features, 'labels>(
 	features: DataFrameView<'features>,
@@ -421,26 +472,43 @@ fn train_early_stopping_split<'features, 'labels>(
 	)
 }
 
-fn update_predictions_with_tree(
-	predictions: &mut [f32],
-	examples_index: &[i32],
-	tree: &TrainTree,
-	#[cfg(feature = "timing")] timing: &Timing,
-) {
-	#[cfg(feature = "timing")]
-	let start = std::time::Instant::now();
-	let predictions_cell = SuperUnsafe::new(predictions);
-	tree.leaf_values.par_iter().for_each(|(range, value)| {
-		examples_index[range.clone()]
-			.iter()
-			.for_each(|&example_index| unsafe {
-				*predictions_cell
-					.get()
-					.get_unchecked_mut(example_index.to_usize().unwrap()) += value;
-			});
-	});
-	#[cfg(feature = "timing")]
-	timing.update_predictions.inc(start.elapsed());
+/// Compute the early stopping metric value for the set of trees that have been trained thus far.
+fn compute_early_stopping_metric(
+	task: &Task,
+	trees_for_round: &[TrainTree],
+	features: ArrayView2<Value>,
+	labels: ColumnView,
+	mut predictions: ArrayViewMut2<f32>,
+) -> f32 {
+	match task {
+		Task::Regression => {
+			let labels = labels.as_number().unwrap().data.into();
+			crate::regressor::update_logits(
+				trees_for_round,
+				features.view(),
+				predictions.view_mut(),
+			);
+			crate::regressor::compute_loss(labels, predictions.view())
+		}
+		Task::BinaryClassification => {
+			let labels = labels.as_enum().unwrap().data.into();
+			crate::binary_classifier::update_logits(
+				trees_for_round,
+				features.view(),
+				predictions.view_mut(),
+			);
+			crate::binary_classifier::compute_loss(labels, predictions.view())
+		}
+		Task::MulticlassClassification { .. } => {
+			let labels = labels.as_enum().unwrap().data.into();
+			crate::multiclass_classifier::update_logits(
+				trees_for_round,
+				features.view(),
+				predictions.view_mut(),
+			);
+			crate::multiclass_classifier::compute_loss(labels, predictions.view())
+		}
+	}
 }
 
 impl From<TrainTree> for Tree {

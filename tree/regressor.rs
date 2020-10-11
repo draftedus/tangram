@@ -1,7 +1,8 @@
-use super::{
+use crate::{
 	shap::{compute_shap_values_common, ShapValuesOutput},
-	train::{Model, TrainTree},
-	TrainOptions, Tree,
+	train::{train, Model, Task},
+	train_tree::TrainTree,
+	TrainOptions, TrainProgress, Tree,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -29,10 +30,10 @@ impl Regressor {
 		features: DataFrameView,
 		labels: NumberColumnView,
 		train_options: TrainOptions,
-		update_progress: &mut dyn FnMut(super::TrainProgress),
+		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> Self {
-		let task = crate::train::Task::Regression;
-		let model = crate::train::train(
+		let task = Task::Regression;
+		let model = train(
 			task,
 			features,
 			ColumnView::Number(labels),

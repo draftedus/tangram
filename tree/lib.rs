@@ -7,12 +7,19 @@ For an example of regression, see `benchmarks/boston.rs`.rs`. For an example of 
 #![allow(clippy::tabs_in_doc_comments)]
 
 mod binary_classifier;
+mod choose_best_split;
+mod compute_bin_stats;
+mod compute_binned_features;
+mod compute_binning_instructions;
+mod compute_feature_importances;
 mod multiclass_classifier;
+mod rearrange_examples_index;
 mod regressor;
 mod shap;
 #[cfg(feature = "timing")]
 mod timing;
 mod train;
+mod train_tree;
 
 pub use binary_classifier::BinaryClassifier;
 pub use multiclass_classifier::MulticlassClassifier;

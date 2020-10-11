@@ -1,16 +1,17 @@
-use super::{
-	bin_stats::{
+#[cfg(feature = "timing")]
+use crate::timing::Timing;
+use crate::{
+	compute_bin_stats::{
 		compute_bin_stats_column_major_not_root,
 		compute_bin_stats_column_major_not_root_subtraction, compute_bin_stats_column_major_root,
 		compute_bin_stats_row_major_not_root, compute_bin_stats_row_major_root, BinStats,
 		BinStatsEntry,
 	},
-	binning::{BinnedFeaturesColumnMajor, BinnedFeaturesRowMajor, BinningInstruction},
-	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
+	compute_binned_features::{BinnedFeaturesColumnMajor, BinnedFeaturesRowMajor},
+	compute_binning_instructions::BinningInstruction,
+	train_tree::{TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete},
+	BinnedFeaturesLayout, SplitDirection, TrainOptions,
 };
-#[cfg(feature = "timing")]
-use crate::timing::Timing;
-use crate::{BinnedFeaturesLayout, SplitDirection, TrainOptions};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -142,10 +143,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 	let best_split_output: Option<ChooseBestSplitForFeatureOutput> =
 		match train_options.binned_features_layout {
 			BinnedFeaturesLayout::ColumnMajor => {
-				let bin_stats = match &mut *bin_stats {
-					BinStats::ColumnMajor(bin_stats) => bin_stats,
-					_ => unreachable!(),
-				};
+				let bin_stats = bin_stats.as_column_major_mut().unwrap();
 				choose_best_split_root_column_major(ChooseBestSplitRootColumnMajorOptions {
 					bin_stats,
 					binned_features_column_major,
@@ -159,10 +157,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 				})
 			}
 			BinnedFeaturesLayout::RowMajor => {
-				let bin_stats = match &mut *bin_stats {
-					BinStats::RowMajor(bin_stats) => bin_stats,
-					_ => unreachable!(),
-				};
+				let bin_stats = bin_stats.as_row_major_mut().unwrap();
 				choose_best_split_root_row_major(ChooseBestSplitRootRowMajorOptions {
 					bin_stats,
 					binned_features_row_major,
@@ -234,11 +229,11 @@ fn choose_best_split_root_column_major(
 	)
 	.enumerate()
 	.map(
-		|(feature_index, (binning_instructions, binned_feature, bin_stats_for_feature))| {
+		|(feature_index, (binning_instructions, binned_feature_column, bin_stats_for_feature))| {
 			// Compute the bin stats.
 			compute_bin_stats_column_major_root(
 				bin_stats_for_feature,
-				binned_feature,
+				binned_feature_column,
 				gradients,
 				hessians,
 				hessians_are_constant,
@@ -248,7 +243,7 @@ fn choose_best_split_root_column_major(
 				feature_index,
 				binning_instructions,
 				bin_stats_for_feature,
-				binned_feature.len(),
+				binned_feature_column.len(),
 				sum_gradients,
 				sum_hessians,
 				train_options,
@@ -323,10 +318,9 @@ fn choose_best_split_root_row_major(
 	pzip!(binning_instructions, &binned_features_row_major.offsets)
 		.enumerate()
 		.map(|(feature_index, (binning_instructions, offset))| {
-			let bin_stats_for_feature = unsafe {
-				&mut bin_stats.get()[offset.to_usize().unwrap()
-					..offset.to_usize().unwrap() + binning_instructions.n_bins()]
-			};
+			let offset = offset.to_usize().unwrap();
+			let bin_stats_range = offset..offset + binning_instructions.n_bins();
+			let bin_stats_for_feature = unsafe { &mut bin_stats.get()[bin_stats_range] };
 			choose_best_split_for_feature(
 				feature_index,
 				binning_instructions,
@@ -424,14 +418,8 @@ pub fn choose_best_splits_not_root(
 		Option<ChooseBestSplitForFeatureOutput>,
 	)> = match train_options.binned_features_layout {
 		BinnedFeaturesLayout::ColumnMajor => {
-			let smaller_child_bin_stats = match &mut *smaller_child_bin_stats {
-				BinStats::ColumnMajor(bin_stats) => bin_stats,
-				_ => unreachable!(),
-			};
-			let larger_child_bin_stats = match &mut *larger_child_bin_stats {
-				BinStats::ColumnMajor(bin_stats) => bin_stats,
-				_ => unreachable!(),
-			};
+			let smaller_child_bin_stats = smaller_child_bin_stats.as_column_major_mut().unwrap();
+			let larger_child_bin_stats = larger_child_bin_stats.as_column_major_mut().unwrap();
 			choose_best_splits_not_root_column_major(ChooseBestSplitsNotRootColumnMajorOptions {
 				should_try_to_split_right_child,
 				smaller_child_bin_stats,
@@ -454,14 +442,8 @@ pub fn choose_best_splits_not_root(
 			})
 		}
 		BinnedFeaturesLayout::RowMajor => {
-			let smaller_child_bin_stats = match &mut *smaller_child_bin_stats {
-				BinStats::RowMajor(bin_stats) => bin_stats,
-				_ => unreachable!(),
-			};
-			let larger_child_bin_stats = match &mut *larger_child_bin_stats {
-				BinStats::RowMajor(bin_stats) => bin_stats,
-				_ => unreachable!(),
-			};
+			let smaller_child_bin_stats = smaller_child_bin_stats.as_row_major_mut().unwrap();
+			let larger_child_bin_stats = larger_child_bin_stats.as_row_major_mut().unwrap();
 			choose_best_splits_not_root_row_major(ChooseBestSplitsNotRootRowMajorOptions {
 				should_try_to_split_right_child,
 				smaller_child_bin_stats,
@@ -1164,31 +1146,27 @@ fn choose_splits_with_highest_gain(
 		(None, None),
 		|(current_left, current_right), (candidate_left, candidate_right)| {
 			(
-				match (current_left, candidate_left) {
-					(None, None) => None,
-					(current, None) => current,
-					(None, candidate) => candidate,
-					(Some(current), Some(candidate)) => {
-						if candidate.gain > current.gain {
-							Some(candidate)
-						} else {
-							Some(current)
-						}
-					}
-				},
-				match (current_right, candidate_right) {
-					(None, None) => None,
-					(current, None) => current,
-					(None, candidate) => candidate,
-					(Some(current), Some(candidate)) => {
-						if candidate.gain > current.gain {
-							Some(candidate)
-						} else {
-							Some(current)
-						}
-					}
-				},
+				choose_split_with_highest_gain(current_left, candidate_left),
+				choose_split_with_highest_gain(current_right, candidate_right),
 			)
 		},
 	)
+}
+
+fn choose_split_with_highest_gain(
+	current: Option<ChooseBestSplitForFeatureOutput>,
+	candidate: Option<ChooseBestSplitForFeatureOutput>,
+) -> Option<ChooseBestSplitForFeatureOutput> {
+	match (current, candidate) {
+		(None, None) => None,
+		(current, None) => current,
+		(None, candidate) => candidate,
+		(Some(current), Some(candidate)) => {
+			if candidate.gain > current.gain {
+				Some(candidate)
+			} else {
+				Some(current)
+			}
+		}
+	}
 }

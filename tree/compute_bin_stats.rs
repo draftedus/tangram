@@ -1,4 +1,4 @@
-use super::binning::{BinnedFeaturesColumnMajorColumn, BinnedFeaturesRowMajor};
+use crate::compute_binned_features::{BinnedFeaturesColumnMajorColumn, BinnedFeaturesRowMajor};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -32,6 +32,22 @@ pub enum BinStats {
 	ColumnMajor(Vec<Vec<BinStatsEntry>>),
 }
 
+impl BinStats {
+	pub fn as_row_major_mut(&mut self) -> Option<&mut Vec<BinStatsEntry>> {
+		match self {
+			BinStats::RowMajor(bin_stats) => Some(bin_stats),
+			_ => None,
+		}
+	}
+
+	pub fn as_column_major_mut(&mut self) -> Option<&mut Vec<Vec<BinStatsEntry>>> {
+		match self {
+			BinStats::ColumnMajor(bin_stats) => Some(bin_stats),
+			_ => None,
+		}
+	}
+}
+
 /// This struct tracks the sum of gradients and hessians for all examples whose value for a particular feature falls in a particular bin.
 #[derive(Clone, Default, Debug)]
 pub struct BinStatsEntry {
@@ -45,7 +61,7 @@ const PREFETCH_OFFSET: usize = 64;
 
 pub fn compute_bin_stats_column_major_root(
 	bin_stats_for_feature: &mut [BinStatsEntry],
-	binned_feature: &BinnedFeaturesColumnMajorColumn,
+	binned_feature_column: &BinnedFeaturesColumnMajorColumn,
 	// (n_examples)
 	gradients: &[f32],
 	// (n_examples)
@@ -60,7 +76,7 @@ pub fn compute_bin_stats_column_major_root(
 		};
 	}
 	if hessians_are_constant {
-		match binned_feature {
+		match binned_feature_column {
 			BinnedFeaturesColumnMajorColumn::U8(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_root_no_hessians(
 					gradients,
@@ -77,7 +93,7 @@ pub fn compute_bin_stats_column_major_root(
 			},
 		}
 	} else {
-		match binned_feature {
+		match binned_feature_column {
 			BinnedFeaturesColumnMajorColumn::U8(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_root_yes_hessians(
 					gradients,

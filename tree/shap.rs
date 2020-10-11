@@ -1,4 +1,4 @@
-use super::{
+use crate::{
 	BranchNode, BranchSplit, BranchSplitContinuous, BranchSplitDiscrete, Node, SplitDirection, Tree,
 };
 use ndarray::prelude::*;

@@ -1,13 +1,14 @@
-use super::{
-	bin_stats::BinStats,
-	binning::{BinnedFeaturesColumnMajor, BinnedFeaturesRowMajor, BinningInstruction},
-	examples_index::rearrange_examples_index,
-	split::{
+use crate::{
+	choose_best_split::{
 		choose_best_split_root, choose_best_splits_not_root, ChooseBestSplitOutput,
 		ChooseBestSplitRootOptions, ChooseBestSplitSuccess, ChooseBestSplitsNotRootOptions,
 	},
+	compute_bin_stats::BinStats,
+	compute_binned_features::{BinnedFeaturesColumnMajor, BinnedFeaturesRowMajor},
+	compute_binning_instructions::BinningInstruction,
+	rearrange_examples_index::rearrange_examples_index,
+	SplitDirection, TrainOptions,
 };
-use crate::{SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
 use tangram_pool::{Pool, PoolItem};
@@ -177,7 +178,7 @@ impl std::cmp::Ord for QueueItem {
 	}
 }
 
-pub struct TreeTrainOptions<'a> {
+pub struct TrainTreeOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
 	pub binned_features_row_major: &'a BinnedFeaturesRowMajor,
 	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
@@ -196,8 +197,8 @@ pub struct TreeTrainOptions<'a> {
 }
 
 /// Train a tree.
-pub fn train(options: TreeTrainOptions) -> TrainTree {
-	let TreeTrainOptions {
+pub fn train_tree(options: TrainTreeOptions) -> TrainTree {
+	let TrainTreeOptions {
 		bin_stats_pool,
 		binned_features_row_major,
 		binned_features_column_major,

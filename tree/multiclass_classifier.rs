@@ -1,7 +1,8 @@
-use super::{
+use crate::{
 	shap::{compute_shap_values_common, ShapValuesOutput},
-	train::{Model, TrainTree},
-	TrainOptions, Tree,
+	train::Model,
+	train_tree::TrainTree,
+	TrainOptions, TrainProgress, Tree,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -36,7 +37,7 @@ impl MulticlassClassifier {
 		features: DataFrameView,
 		labels: EnumColumnView,
 		train_options: TrainOptions,
-		update_progress: &mut dyn FnMut(super::TrainProgress),
+		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> Self {
 		let task = crate::train::Task::MulticlassClassification {
 			n_classes: labels.options.len(),
@@ -74,7 +75,7 @@ impl MulticlassClassifier {
 					*logit += tree.predict(&row);
 				}
 			}
-			softmax(logits);
+			softmax(logits.as_slice_mut().unwrap());
 		}
 	}
 
@@ -117,7 +118,7 @@ pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2
 	let mut loss = 0.0;
 	for (label, logits) in labels.into_iter().zip(logits.axis_iter(Axis(0))) {
 		let mut probabilities = logits.to_owned();
-		softmax(probabilities.view_mut());
+		softmax(probabilities.as_slice_mut().unwrap());
 		for (index, &probability) in probabilities.indexed_iter() {
 			let probability = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
 			if index == (label.unwrap().get() - 1) {
@@ -175,11 +176,13 @@ pub fn compute_gradients_and_hessians(
 	);
 }
 
-fn softmax(mut logits: ArrayViewMut1<f32>) {
+fn softmax(logits: &mut [f32]) {
 	let max = logits.iter().fold(std::f32::MIN, |a, &b| f32::max(a, b));
 	for logit in logits.iter_mut() {
 		*logit = (*logit - max).exp();
 	}
 	let sum = logits.iter().sum::<f32>();
-	logits /= sum;
+	for logit in logits.iter_mut() {
+		*logit /= sum;
+	}
 }
