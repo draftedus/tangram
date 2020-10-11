@@ -1,5 +1,5 @@
 use super::{
-	binning::{ColumnMajorBinnedFeatures, ColumnMajorBinnedFeaturesColumn},
+	binning::{BinnedFeaturesColumnMajor, BinnedFeaturesColumnMajorColumn},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 use crate::SplitDirection;
@@ -11,7 +11,7 @@ const MIN_EXAMPLES_TO_PARALLELIZE: usize = 10_000;
 
 /// This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
 pub fn rearrange_examples_index(
-	binned_features: &ColumnMajorBinnedFeatures,
+	binned_features: &BinnedFeaturesColumnMajor,
 	split: &TrainBranchSplit,
 	examples_index: &mut [i32],
 	examples_index_left_buffer: &mut [i32],
@@ -32,7 +32,7 @@ pub fn rearrange_examples_index(
 
 /// Rearrange the examples index on a single thread.
 fn rearrange_examples_index_serial(
-	binned_features: &ColumnMajorBinnedFeatures,
+	binned_features: &BinnedFeaturesColumnMajor,
 	split: &TrainBranchSplit,
 	examples_index: &mut [i32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
@@ -46,7 +46,7 @@ fn rearrange_examples_index_serial(
 		}) => {
 			let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 			match binned_feature {
-				ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+				BinnedFeaturesColumnMajorColumn::U8(binned_feature) => unsafe {
 					rearrange_examples_index_serial_continuous(
 						&mut left,
 						&mut right,
@@ -55,7 +55,7 @@ fn rearrange_examples_index_serial(
 						binned_feature.as_slice(),
 					)
 				},
-				ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+				BinnedFeaturesColumnMajorColumn::U16(binned_feature) => unsafe {
 					rearrange_examples_index_serial_continuous(
 						&mut left,
 						&mut right,
@@ -73,7 +73,7 @@ fn rearrange_examples_index_serial(
 		}) => {
 			let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 			match binned_feature {
-				ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+				BinnedFeaturesColumnMajorColumn::U8(binned_feature) => unsafe {
 					rearrange_examples_index_serial_discrete(
 						&mut left,
 						&mut right,
@@ -82,7 +82,7 @@ fn rearrange_examples_index_serial(
 						binned_feature.as_slice(),
 					)
 				},
-				ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+				BinnedFeaturesColumnMajorColumn::U16(binned_feature) => unsafe {
 					rearrange_examples_index_serial_discrete(
 						&mut left,
 						&mut right,
@@ -155,7 +155,7 @@ unsafe fn rearrange_examples_index_serial_discrete<T>(
 
 /// Rearrange the examples index with multiple threads. This is done by segmenting the `examples_index` into chunks and writing the indexes of the examples that will be sent left and right by the split to chunks of the temporary buffers `examples_index_left_buffer` and `examples_index_right_buffer`. Then, the parts of each chunk that were written to are copied to the real examples index.
 fn rearrange_examples_index_parallel(
-	binned_features: &ColumnMajorBinnedFeatures,
+	binned_features: &BinnedFeaturesColumnMajor,
 	split: &TrainBranchSplit,
 	examples_index: &mut [i32],
 	examples_index_left_buffer: &mut [i32],
@@ -180,7 +180,7 @@ fn rearrange_examples_index_parallel(
 				}) => {
 					let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 					match binned_feature {
-						ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+						BinnedFeaturesColumnMajorColumn::U8(binned_feature) => unsafe {
 							rearrange_examples_index_parallel_step_one_continuous(
 								&mut n_left,
 								&mut n_right,
@@ -191,7 +191,7 @@ fn rearrange_examples_index_parallel(
 								binned_feature.as_slice(),
 							)
 						},
-						ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+						BinnedFeaturesColumnMajorColumn::U16(binned_feature) => unsafe {
 							rearrange_examples_index_parallel_step_one_continuous(
 								&mut n_left,
 								&mut n_right,
@@ -211,7 +211,7 @@ fn rearrange_examples_index_parallel(
 				}) => {
 					let binned_feature = binned_features.columns.get(*feature_index).unwrap();
 					match binned_feature {
-						ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+						BinnedFeaturesColumnMajorColumn::U8(binned_feature) => unsafe {
 							rearrange_examples_index_parallel_step_one_discrete(
 								&mut n_left,
 								&mut n_right,
@@ -222,7 +222,7 @@ fn rearrange_examples_index_parallel(
 								binned_feature.as_slice(),
 							)
 						},
-						ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+						BinnedFeaturesColumnMajorColumn::U16(binned_feature) => unsafe {
 							rearrange_examples_index_parallel_step_one_discrete(
 								&mut n_left,
 								&mut n_right,

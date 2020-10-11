@@ -1,8 +1,10 @@
 use maplit::btreemap;
 use ndarray::prelude::*;
+use rayon::prelude::*;
 use std::path::Path;
 use tangram_dataframe::*;
-use tangram_metrics::{Metric, StreamingMetric};
+use tangram_metrics::StreamingMetric;
+use tangram_thread_pool::pzip;
 
 fn main() {
 	// Load the data.
@@ -122,6 +124,7 @@ fn main() {
 	// Train the model.
 	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
+		binned_features_layout: tangram_tree::BinnedFeaturesLayout::RowMajor,
 		learning_rate: 0.1,
 		max_rounds: 100,
 		max_leaf_nodes: 255,
@@ -137,26 +140,39 @@ fn main() {
 
 	// Make predictions on the test data and compute metrics.
 	let features_test = features_test.to_rows();
-	let mut probabilities: Array2<f32> =
-		unsafe { Array::uninitialized((features_test.nrows(), 2).f()) };
-	model.predict(features_test.view(), probabilities.view_mut());
-	let labels = labels_test.view().data.into();
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
-	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-		probabilities: probabilities.view(),
-		labels,
-	});
-	let metrics = metrics.finalize();
-	let auc_input = probabilities
-		.column(1)
-		.into_iter()
-		.zip(labels.into_iter())
-		.map(|(p, l)| (*p, l.unwrap()))
-		.collect();
-	let auc = tangram_metrics::AUCROC::compute(auc_input);
+	let chunk_size = features_test.nrows() / rayon::current_num_threads();
+	let metrics = pzip!(
+		features_test.axis_chunks_iter(Axis(0), chunk_size),
+		labels_test.data.par_chunks(chunk_size),
+	)
+	.fold(
+		|| {
+			let metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
+			let probabilities: Array2<f32> = unsafe { Array2::uninitialized((chunk_size, 2)) };
+			(metrics, probabilities)
+		},
+		|(mut metrics, mut probabilities), (features_test, labels_test)| {
+			let probabilities_slice = s![0..features_test.nrows(), ..];
+			model.predict(features_test, probabilities.slice_mut(probabilities_slice));
+			metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
+				probabilities: probabilities.slice(probabilities_slice),
+				labels: labels_test.into(),
+			});
+			(metrics, probabilities)
+		},
+	)
+	.map(|(metrics, _)| metrics)
+	.reduce(
+		|| tangram_metrics::BinaryClassificationMetrics::new(100),
+		|mut a, b| {
+			a.merge(b);
+			a
+		},
+	)
+	.finalize();
 
 	// Print the results.
 	println!("duration {}", duration.as_secs_f32());
-	println!("accuracy {}", metrics.thresholds[1].accuracy);
-	println!("auc_roc: {}", auc);
+	println!("accuracy {}", metrics.thresholds[50].accuracy);
+	println!("auc {}", metrics.auc_roc);
 }

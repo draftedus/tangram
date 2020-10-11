@@ -1,6 +1,6 @@
 use super::{
 	bin_stats::BinStats,
-	binning::{BinningInstruction, ColumnMajorBinnedFeatures, RowMajorBinnedFeatures},
+	binning::{BinnedFeaturesColumnMajor, BinnedFeaturesRowMajor, BinningInstruction},
 	examples_index::rearrange_examples_index,
 	split::{
 		choose_best_split_root, choose_best_splits_not_root, ChooseBestSplitOutput,
@@ -179,8 +179,8 @@ impl std::cmp::Ord for QueueItem {
 
 pub struct TreeTrainOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
-	pub binned_features_row_major: &'a RowMajorBinnedFeatures,
-	pub binned_features_column_major: &'a ColumnMajorBinnedFeatures,
+	pub binned_features_row_major: &'a BinnedFeaturesRowMajor,
+	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub examples_index_left_buffer: &'a mut [i32],
 	pub examples_index_right_buffer: &'a mut [i32],

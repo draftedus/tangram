@@ -160,27 +160,27 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 }
 
 #[derive(Debug)]
-pub struct RowMajorBinnedFeatures {
+pub struct BinnedFeaturesRowMajor {
 	pub values_with_offsets: Array2<u16>,
 	pub offsets: Vec<u16>,
 }
 
 #[derive(Debug)]
-pub struct ColumnMajorBinnedFeatures {
-	pub columns: Vec<ColumnMajorBinnedFeaturesColumn>,
+pub struct BinnedFeaturesColumnMajor {
+	pub columns: Vec<BinnedFeaturesColumnMajorColumn>,
 }
 
 #[derive(Debug)]
-pub enum ColumnMajorBinnedFeaturesColumn {
+pub enum BinnedFeaturesColumnMajorColumn {
 	U8(Vec<u8>),
 	U16(Vec<u16>),
 }
 
-impl ColumnMajorBinnedFeaturesColumn {
+impl BinnedFeaturesColumnMajorColumn {
 	pub fn len(&self) -> usize {
 		match self {
-			ColumnMajorBinnedFeaturesColumn::U8(values) => values.len(),
-			ColumnMajorBinnedFeaturesColumn::U16(values) => values.len(),
+			BinnedFeaturesColumnMajorColumn::U8(values) => values.len(),
+			BinnedFeaturesColumnMajorColumn::U16(values) => values.len(),
 		}
 	}
 }
@@ -190,7 +190,7 @@ pub fn compute_binned_features_column_major(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	progress: &(impl Fn() + Sync),
-) -> ColumnMajorBinnedFeatures {
+) -> BinnedFeaturesColumnMajor {
 	let columns = pzip!(&features.columns, binning_instructions)
 		.map(|(feature, binning_instruction)| match binning_instruction {
 			BinningInstruction::Number { thresholds } => {
@@ -205,14 +205,14 @@ pub fn compute_binned_features_column_major(
 			}
 		})
 		.collect();
-	ColumnMajorBinnedFeatures { columns }
+	BinnedFeaturesColumnMajor { columns }
 }
 
 pub fn compute_binned_features_row_major(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	progress: &(impl Fn() + Sync),
-) -> RowMajorBinnedFeatures {
+) -> BinnedFeaturesRowMajor {
 	let n_bins_across_all_features = binning_instructions
 		.iter()
 		.map(|binning_instructions| binning_instructions.n_bins())
@@ -229,7 +229,7 @@ fn compute_binned_features_row_major_u16(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	_progress: &(impl Fn() + Sync),
-) -> RowMajorBinnedFeatures {
+) -> BinnedFeaturesRowMajor {
 	let n_features = features.ncols();
 	let n_examples = features.nrows();
 	let mut values_with_offsets: Array2<u16> =
@@ -288,7 +288,7 @@ fn compute_binned_features_row_major_u16(
 			}
 		},
 	);
-	RowMajorBinnedFeatures {
+	BinnedFeaturesRowMajor {
 		values_with_offsets,
 		offsets,
 	}
@@ -298,7 +298,7 @@ fn compute_binned_features_for_number_feature(
 	feature: &ColumnView,
 	thresholds: &[f32],
 	_progress: &(impl Fn() + Sync),
-) -> ColumnMajorBinnedFeaturesColumn {
+) -> BinnedFeaturesColumnMajorColumn {
 	let binned_feature = feature
 		.as_number()
 		.unwrap()
@@ -317,13 +317,13 @@ fn compute_binned_features_for_number_feature(
 				.unwrap() + 1
 		})
 		.collect::<Vec<u8>>();
-	ColumnMajorBinnedFeaturesColumn::U8(binned_feature)
+	BinnedFeaturesColumnMajorColumn::U8(binned_feature)
 }
 
 fn compute_binned_features_for_enum_feature_u8(
 	feature: &ColumnView,
 	_progress: &(impl Fn() + Sync),
-) -> ColumnMajorBinnedFeaturesColumn {
+) -> BinnedFeaturesColumnMajorColumn {
 	let binned_feature = feature
 		.as_enum()
 		.unwrap()
@@ -331,13 +331,13 @@ fn compute_binned_features_for_enum_feature_u8(
 		.par_iter()
 		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
 		.collect::<Vec<u8>>();
-	ColumnMajorBinnedFeaturesColumn::U8(binned_feature)
+	BinnedFeaturesColumnMajorColumn::U8(binned_feature)
 }
 
 fn compute_binned_features_for_enum_feature_u16(
 	feature: &ColumnView,
 	_progress: &(impl Fn() + Sync),
-) -> ColumnMajorBinnedFeaturesColumn {
+) -> BinnedFeaturesColumnMajorColumn {
 	let binned_feature = feature
 		.as_enum()
 		.unwrap()
@@ -351,5 +351,5 @@ fn compute_binned_features_for_enum_feature_u16(
 				.unwrap()
 		})
 		.collect::<Vec<u16>>();
-	ColumnMajorBinnedFeaturesColumn::U16(binned_feature)
+	BinnedFeaturesColumnMajorColumn::U16(binned_feature)
 }

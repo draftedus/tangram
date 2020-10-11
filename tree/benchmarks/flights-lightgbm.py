@@ -12,14 +12,14 @@ import lightgbm as lgb
 # path_test = 'data/flights-test.csv'
 # nrows_train=100_000
 # nrows_test=100_000
-path_train = 'data/flights-1m.csv'
-path_test = 'data/flights-test.csv'
-nrows_train=1_000_000
-nrows_test=100_000
-# path_train = 'data/flights-10m.csv'
+# path_train = 'data/flights-1m.csv'
 # path_test = 'data/flights-test.csv'
-# nrows_train=10_000_000
+# nrows_train=1_000_000
 # nrows_test=100_000
+path_train = 'data/flights-10m.csv'
+path_test = 'data/flights-test.csv'
+nrows_train=10_000_000
+nrows_test=100_000
 month_options = [
 	"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 ]
@@ -130,6 +130,7 @@ labels_test = data_test[target]
 # train the model
 start = time()
 model = lgb.LGBMClassifier(
+	force_row_wise=True,
 	learning_rate=0.1,
 	n_estimators=100,
 	num_leaves=255,
@@ -141,11 +142,11 @@ model.fit(
 print('duration: ', time() - start)
 
 # compute accuracy
-# predictions = model.predict(features_test)
-# accuracy = accuracy_score(labels_test, predictions)
-# print('accuracy: ', accuracy)
+predictions = model.predict(features_test)
+accuracy = accuracy_score(labels_test, predictions)
+print('accuracy: ', accuracy)
 
 # compute auc
-# predictions_proba = model.predict_proba(features_test)[:, 1]
-# auc = roc_auc_score(labels_test, predictions_proba)
-# print('auc: ', auc)
+predictions_proba = model.predict_proba(features_test)[:, 1]
+auc = roc_auc_score(labels_test, predictions_proba)
+print('auc: ', auc)

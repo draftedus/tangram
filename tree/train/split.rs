@@ -5,7 +5,7 @@ use super::{
 		compute_bin_stats_row_major_not_root, compute_bin_stats_row_major_root, BinStats,
 		BinStatsEntry,
 	},
-	binning::{BinningInstruction, ColumnMajorBinnedFeatures, RowMajorBinnedFeatures},
+	binning::{BinnedFeaturesColumnMajor, BinnedFeaturesRowMajor, BinningInstruction},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 #[cfg(feature = "timing")]
@@ -20,8 +20,8 @@ use tangram_thread_pool::pzip;
 
 pub struct ChooseBestSplitRootOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
-	pub binned_features_column_major: &'a ColumnMajorBinnedFeatures,
-	pub binned_features_row_major: &'a RowMajorBinnedFeatures,
+	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
+	pub binned_features_row_major: &'a BinnedFeaturesRowMajor,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub gradients: &'a [f32],
 	pub hessians_are_constant: bool,
@@ -33,8 +33,8 @@ pub struct ChooseBestSplitRootOptions<'a> {
 
 pub struct ChooseBestSplitsNotRootOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
-	pub binned_features_column_major: &'a ColumnMajorBinnedFeatures,
-	pub binned_features_row_major: &'a RowMajorBinnedFeatures,
+	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
+	pub binned_features_row_major: &'a BinnedFeaturesRowMajor,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub gradients_ordered_buffer: &'a mut [f32],
 	pub gradients: &'a [f32],
@@ -140,99 +140,41 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 	// For each feature, compute bin stats and use them to choose the best split.
 	let mut bin_stats = bin_stats_pool.get().unwrap();
 	let best_split_output: Option<ChooseBestSplitForFeatureOutput> =
-		match (&mut *bin_stats, train_options.binned_features_layout) {
-			(BinStats::ColumnMajor(bin_stats), BinnedFeaturesLayout::ColumnMajor) => {
-				pzip!(
+		match train_options.binned_features_layout {
+			BinnedFeaturesLayout::ColumnMajor => {
+				let bin_stats = match &mut *bin_stats {
+					BinStats::ColumnMajor(bin_stats) => bin_stats,
+					_ => unreachable!(),
+				};
+				choose_best_split_root_column_major(ChooseBestSplitRootColumnMajorOptions {
+					bin_stats,
+					binned_features_column_major,
 					binning_instructions,
-					&binned_features_column_major.columns,
-					bin_stats
-				)
-				.enumerate()
-				.map(
-					|(
-						feature_index,
-						(binning_instructions, binned_feature, bin_stats_for_feature),
-					)| {
-						// Compute the bin stats.
-						compute_bin_stats_column_major_root(
-							bin_stats_for_feature,
-							binned_feature,
-							gradients,
-							hessians,
-							hessians_are_constant,
-						);
-						// Choose the best split for this featue.
-						choose_best_split_for_feature(
-							feature_index,
-							binning_instructions,
-							bin_stats_for_feature,
-							binned_feature.len(),
-							sum_gradients,
-							sum_hessians,
-							train_options,
-						)
-					},
-				)
-				.filter_map(|split| split)
-				.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
-			}
-			(BinStats::RowMajor(bin_stats), BinnedFeaturesLayout::RowMajor) => {
-				// Compute the bin stats for the child with fewer examples.
-				let n_examples = binned_features_row_major.values_with_offsets.nrows();
-				let n_threads = rayon::current_num_threads();
-				let chunk_size = (n_examples + n_threads - 1) / n_threads;
-				*bin_stats = pzip!(
-					binned_features_row_major
-						.values_with_offsets
-						.axis_chunks_iter(Axis(0), chunk_size),
-					gradients.par_chunks(chunk_size),
-					hessians.par_chunks(chunk_size)
-				)
-				.map(|(binned_features_chunk, gradients_chunk, hessians_chunk)| {
-					let mut bin_stats_chunk: Vec<BinStatsEntry> =
-						bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
-					compute_bin_stats_row_major_root(
-						bin_stats_chunk.as_mut_slice(),
-						binned_features_chunk,
-						gradients_chunk,
-						hessians_chunk,
-						hessians_are_constant,
-					);
-					bin_stats_chunk
+					gradients,
+					hessians_are_constant,
+					hessians,
+					sum_gradients,
+					sum_hessians,
+					train_options,
 				})
-				.reduce(
-					|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
-					|mut res, chunk| {
-						res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
-							res.sum_gradients += chunk.sum_gradients;
-							res.sum_hessians += chunk.sum_hessians;
-						});
-						res
-					},
-				);
-				// Choose the best split for each featue.
-				let bin_stats = super_unsafe::SuperUnsafe::new(bin_stats);
-				pzip!(binning_instructions, &binned_features_row_major.offsets)
-					.enumerate()
-					.map(|(feature_index, (binning_instructions, offset))| {
-						let bin_stats_for_feature = unsafe {
-							&mut bin_stats.get()[offset.to_usize().unwrap()
-								..offset.to_usize().unwrap() + binning_instructions.n_bins()]
-						};
-						choose_best_split_for_feature(
-							feature_index,
-							binning_instructions,
-							bin_stats_for_feature,
-							n_examples,
-							sum_gradients,
-							sum_hessians,
-							train_options,
-						)
-					})
-					.filter_map(|split| split)
-					.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 			}
-			_ => unreachable!(),
+			BinnedFeaturesLayout::RowMajor => {
+				let bin_stats = match &mut *bin_stats {
+					BinStats::RowMajor(bin_stats) => bin_stats,
+					_ => unreachable!(),
+				};
+				choose_best_split_root_row_major(ChooseBestSplitRootRowMajorOptions {
+					bin_stats,
+					binned_features_row_major,
+					binning_instructions,
+					gradients,
+					hessians_are_constant,
+					hessians,
+					sum_gradients,
+					sum_hessians,
+					train_options,
+				})
+			}
 		};
 	#[cfg(feature = "timing")]
 	timing.choose_best_split_root.inc(start.elapsed());
@@ -257,6 +199,146 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 			sum_hessians,
 		}),
 	}
+}
+
+struct ChooseBestSplitRootColumnMajorOptions<'a> {
+	bin_stats: &'a mut Vec<Vec<BinStatsEntry>>,
+	binned_features_column_major: &'a BinnedFeaturesColumnMajor,
+	binning_instructions: &'a [BinningInstruction],
+	gradients: &'a [f32],
+	hessians_are_constant: bool,
+	hessians: &'a [f32],
+	sum_gradients: f64,
+	sum_hessians: f64,
+	train_options: &'a TrainOptions,
+}
+
+fn choose_best_split_root_column_major(
+	options: ChooseBestSplitRootColumnMajorOptions,
+) -> Option<ChooseBestSplitForFeatureOutput> {
+	let ChooseBestSplitRootColumnMajorOptions {
+		bin_stats,
+		binned_features_column_major,
+		binning_instructions,
+		gradients,
+		hessians_are_constant,
+		hessians,
+		sum_gradients,
+		sum_hessians,
+		train_options,
+	} = options;
+	pzip!(
+		binning_instructions,
+		&binned_features_column_major.columns,
+		bin_stats
+	)
+	.enumerate()
+	.map(
+		|(feature_index, (binning_instructions, binned_feature, bin_stats_for_feature))| {
+			// Compute the bin stats.
+			compute_bin_stats_column_major_root(
+				bin_stats_for_feature,
+				binned_feature,
+				gradients,
+				hessians,
+				hessians_are_constant,
+			);
+			// Choose the best split for this featue.
+			choose_best_split_for_feature(
+				feature_index,
+				binning_instructions,
+				bin_stats_for_feature,
+				binned_feature.len(),
+				sum_gradients,
+				sum_hessians,
+				train_options,
+			)
+		},
+	)
+	.filter_map(|split| split)
+	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
+}
+
+struct ChooseBestSplitRootRowMajorOptions<'a> {
+	bin_stats: &'a mut Vec<BinStatsEntry>,
+	binned_features_row_major: &'a BinnedFeaturesRowMajor,
+	binning_instructions: &'a [BinningInstruction],
+	gradients: &'a [f32],
+	hessians_are_constant: bool,
+	hessians: &'a [f32],
+	sum_gradients: f64,
+	sum_hessians: f64,
+	train_options: &'a TrainOptions,
+}
+
+fn choose_best_split_root_row_major(
+	options: ChooseBestSplitRootRowMajorOptions,
+) -> Option<ChooseBestSplitForFeatureOutput> {
+	let ChooseBestSplitRootRowMajorOptions {
+		bin_stats,
+		binned_features_row_major,
+		binning_instructions,
+		gradients,
+		hessians_are_constant,
+		hessians,
+		sum_gradients,
+		sum_hessians,
+		train_options,
+	} = options;
+	// Compute the bin stats for the child with fewer examples.
+	let n_examples = binned_features_row_major.values_with_offsets.nrows();
+	let n_threads = rayon::current_num_threads();
+	let chunk_size = (n_examples + n_threads - 1) / n_threads;
+	*bin_stats = pzip!(
+		binned_features_row_major
+			.values_with_offsets
+			.axis_chunks_iter(Axis(0), chunk_size),
+		gradients.par_chunks(chunk_size),
+		hessians.par_chunks(chunk_size)
+	)
+	.map(|(binned_features_chunk, gradients_chunk, hessians_chunk)| {
+		let mut bin_stats_chunk: Vec<BinStatsEntry> =
+			bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
+		compute_bin_stats_row_major_root(
+			bin_stats_chunk.as_mut_slice(),
+			binned_features_chunk,
+			gradients_chunk,
+			hessians_chunk,
+			hessians_are_constant,
+		);
+		bin_stats_chunk
+	})
+	.reduce(
+		|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
+		|mut res, chunk| {
+			res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
+				res.sum_gradients += chunk.sum_gradients;
+				res.sum_hessians += chunk.sum_hessians;
+			});
+			res
+		},
+	);
+	// Choose the best split for each featue.
+	let bin_stats = super_unsafe::SuperUnsafe::new(bin_stats);
+	pzip!(binning_instructions, &binned_features_row_major.offsets)
+		.enumerate()
+		.map(|(feature_index, (binning_instructions, offset))| {
+			let bin_stats_for_feature = unsafe {
+				&mut bin_stats.get()[offset.to_usize().unwrap()
+					..offset.to_usize().unwrap() + binning_instructions.n_bins()]
+			};
+			choose_best_split_for_feature(
+				feature_index,
+				binning_instructions,
+				bin_stats_for_feature,
+				n_examples,
+				sum_gradients,
+				sum_hessians,
+				train_options,
+			)
+		})
+		.filter_map(|split| split)
+		.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
 }
 
 pub fn choose_best_splits_not_root(
@@ -337,260 +419,75 @@ pub fn choose_best_splits_not_root(
 	}
 
 	// Collect the best splits for the left and right children for each feature.
-	let children_best_splits: Vec<(
+	let children_best_splits_for_features: Vec<(
 		Option<ChooseBestSplitForFeatureOutput>,
 		Option<ChooseBestSplitForFeatureOutput>,
-	)> = match (
-		&mut *smaller_child_bin_stats,
-		&mut *larger_child_bin_stats,
-		train_options.binned_features_layout,
-	) {
-		(
-			BinStats::ColumnMajor(smaller_child_bin_stats),
-			BinStats::ColumnMajor(larger_child_bin_stats),
-			BinnedFeaturesLayout::ColumnMajor,
-		) => {
-			pzip!(
-				binning_instructions,
-				&binned_features_column_major.columns,
+	)> = match train_options.binned_features_layout {
+		BinnedFeaturesLayout::ColumnMajor => {
+			let smaller_child_bin_stats = match &mut *smaller_child_bin_stats {
+				BinStats::ColumnMajor(bin_stats) => bin_stats,
+				_ => unreachable!(),
+			};
+			let larger_child_bin_stats = match &mut *larger_child_bin_stats {
+				BinStats::ColumnMajor(bin_stats) => bin_stats,
+				_ => unreachable!(),
+			};
+			choose_best_splits_not_root_column_major(ChooseBestSplitsNotRootColumnMajorOptions {
+				should_try_to_split_right_child,
 				smaller_child_bin_stats,
 				larger_child_bin_stats,
-			)
-			.enumerate()
-			.map(
-				|(
-					feature_index,
-					(
-						binning_instructions,
-						binned_features_column,
-						smaller_child_bin_stats_for_feature,
-						mut larger_child_bin_stats_for_feature,
-					),
-				)| {
-					// Compute the bin stats for the child with fewer examples.
-					compute_bin_stats_column_major_not_root(
-						smaller_child_bin_stats_for_feature,
-						smaller_child_examples_index,
-						binned_features_column,
-						gradients_ordered_buffer,
-						hessians_ordered_buffer,
-						hessians_are_constant,
-					);
-
-					// Compute the larger child bin stats by subtraction.
-					compute_bin_stats_column_major_not_root_subtraction(
-						&smaller_child_bin_stats_for_feature,
-						&mut larger_child_bin_stats_for_feature,
-					);
-
-					// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
-					let (left_child_bin_stats_for_feature, right_child_bin_stats_for_feature) =
-						match smaller_child_direction {
-							SplitDirection::Left => (
-								smaller_child_bin_stats_for_feature,
-								larger_child_bin_stats_for_feature,
-							),
-							SplitDirection::Right => (
-								larger_child_bin_stats_for_feature,
-								smaller_child_bin_stats_for_feature,
-							),
-						};
-
-					// Choose the best splits for the left and right children.
-					let left_child_best_split_for_feature = if should_try_to_split_left_child {
-						choose_best_split_for_feature(
-							feature_index,
-							binning_instructions,
-							left_child_bin_stats_for_feature,
-							left_child_n_examples,
-							left_child_sum_gradients,
-							left_child_sum_hessians,
-							train_options,
-						)
-					} else {
-						None
-					};
-					let right_child_best_split_for_feature = if should_try_to_split_right_child {
-						choose_best_split_for_feature(
-							feature_index,
-							binning_instructions,
-							right_child_bin_stats_for_feature,
-							right_child_n_examples,
-							right_child_sum_gradients,
-							right_child_sum_hessians,
-							train_options,
-						)
-					} else {
-						None
-					};
-
-					(
-						left_child_best_split_for_feature,
-						right_child_best_split_for_feature,
-					)
-				},
-			)
-			.collect()
+				binned_features_column_major,
+				binning_instructions,
+				gradients_ordered_buffer,
+				hessians_are_constant,
+				hessians_ordered_buffer,
+				train_options,
+				left_child_n_examples,
+				left_child_sum_gradients,
+				left_child_sum_hessians,
+				right_child_n_examples,
+				right_child_sum_gradients,
+				right_child_sum_hessians,
+				smaller_child_examples_index,
+				should_try_to_split_left_child,
+				smaller_child_direction,
+			})
 		}
-		(
-			BinStats::RowMajor(smaller_child_bin_stats),
-			BinStats::RowMajor(larger_child_bin_stats),
-			BinnedFeaturesLayout::RowMajor,
-		) => {
-			// Compute the bin stats for the child with fewer examples.
-			let smaller_child_n_examples = smaller_child_examples_index.len();
-			if smaller_child_n_examples < MIN_EXAMPLES_TO_PARALLELIZE {
-				compute_bin_stats_row_major_not_root(
-					smaller_child_bin_stats.as_mut_slice(),
-					smaller_child_examples_index,
-					binned_features_row_major,
-					gradients,
-					hessians,
-					hessians_are_constant,
-				);
-			} else {
-				let n_threads = rayon::current_num_threads();
-				let chunk_size = (smaller_child_n_examples + n_threads - 1) / n_threads;
-				*smaller_child_bin_stats =
-					pzip!(smaller_child_examples_index.par_chunks(chunk_size))
-						.map(|(smaller_child_examples_index_chunk,)| {
-							let mut smaller_child_bin_stats_chunk: Vec<BinStatsEntry> =
-								smaller_child_bin_stats
-									.iter()
-									.map(|_| BinStatsEntry::default())
-									.collect();
-							compute_bin_stats_row_major_not_root(
-								smaller_child_bin_stats_chunk.as_mut_slice(),
-								smaller_child_examples_index_chunk,
-								binned_features_row_major,
-								gradients,
-								hessians,
-								hessians_are_constant,
-							);
-							smaller_child_bin_stats_chunk
-						})
-						.reduce(
-							|| {
-								smaller_child_bin_stats
-									.iter()
-									.map(|_| BinStatsEntry::default())
-									.collect()
-							},
-							|mut res, chunk| {
-								res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
-									res.sum_gradients += chunk.sum_gradients;
-									res.sum_hessians += chunk.sum_hessians;
-								});
-								res
-							},
-						);
-			}
-
-			// Choose the best split for each feature.
-			let smaller_child_bin_stats = super_unsafe::SuperUnsafe::new(smaller_child_bin_stats);
-			let larger_child_bin_stats = super_unsafe::SuperUnsafe::new(larger_child_bin_stats);
-			pzip!(binning_instructions, &binned_features_row_major.offsets)
-				.enumerate()
-				.map(|(feature_index, (binning_instructions, offset))| {
-					let smaller_child_bin_stats_for_feature = unsafe {
-						&mut smaller_child_bin_stats.get()[offset.to_usize().unwrap()
-							..offset.to_usize().unwrap() + binning_instructions.n_bins()]
-					};
-					let larger_child_bin_stats_for_feature = unsafe {
-						&mut larger_child_bin_stats.get()[offset.to_usize().unwrap()
-							..offset.to_usize().unwrap() + binning_instructions.n_bins()]
-					};
-
-					// Compute the larger child bin stats by subtraction.
-					compute_bin_stats_column_major_not_root_subtraction(
-						smaller_child_bin_stats_for_feature,
-						larger_child_bin_stats_for_feature,
-					);
-
-					// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
-					let (left_child_bin_stats_for_feature, right_child_bin_stats_for_feature) =
-						match smaller_child_direction {
-							SplitDirection::Left => (
-								smaller_child_bin_stats_for_feature,
-								larger_child_bin_stats_for_feature,
-							),
-							SplitDirection::Right => (
-								larger_child_bin_stats_for_feature,
-								smaller_child_bin_stats_for_feature,
-							),
-						};
-
-					// Choose the best splits for the left and right children.
-					let left_child_best_split_for_feature = if should_try_to_split_left_child {
-						choose_best_split_for_feature(
-							feature_index,
-							binning_instructions,
-							left_child_bin_stats_for_feature,
-							left_child_n_examples,
-							left_child_sum_gradients,
-							left_child_sum_hessians,
-							train_options,
-						)
-					} else {
-						None
-					};
-
-					let right_child_best_split_for_feature = if should_try_to_split_right_child {
-						choose_best_split_for_feature(
-							feature_index,
-							binning_instructions,
-							right_child_bin_stats_for_feature,
-							right_child_n_examples,
-							right_child_sum_gradients,
-							right_child_sum_hessians,
-							train_options,
-						)
-					} else {
-						None
-					};
-
-					(
-						left_child_best_split_for_feature,
-						right_child_best_split_for_feature,
-					)
-				})
-				.collect()
+		BinnedFeaturesLayout::RowMajor => {
+			let smaller_child_bin_stats = match &mut *smaller_child_bin_stats {
+				BinStats::RowMajor(bin_stats) => bin_stats,
+				_ => unreachable!(),
+			};
+			let larger_child_bin_stats = match &mut *larger_child_bin_stats {
+				BinStats::RowMajor(bin_stats) => bin_stats,
+				_ => unreachable!(),
+			};
+			choose_best_splits_not_root_row_major(ChooseBestSplitsNotRootRowMajorOptions {
+				should_try_to_split_right_child,
+				smaller_child_bin_stats,
+				larger_child_bin_stats,
+				binned_features_row_major,
+				binning_instructions,
+				gradients,
+				hessians_are_constant,
+				hessians,
+				train_options,
+				left_child_n_examples,
+				left_child_sum_gradients,
+				left_child_sum_hessians,
+				right_child_n_examples,
+				right_child_sum_gradients,
+				right_child_sum_hessians,
+				smaller_child_examples_index,
+				should_try_to_split_left_child,
+				smaller_child_direction,
+			})
 		}
-		_ => unreachable!(),
 	};
 
 	// Choose the splits for the left and right children with the highest gain.
-	let (left_child_best_split, right_child_best_split) = children_best_splits.into_iter().fold(
-		(None, None),
-		|(current_left, current_right), (candidate_left, candidate_right)| {
-			(
-				match (current_left, candidate_left) {
-					(None, None) => None,
-					(x, None) => x,
-					(None, x) => x,
-					(Some(current), Some(candidate)) => {
-						if candidate.gain > current.gain {
-							Some(candidate)
-						} else {
-							Some(current)
-						}
-					}
-				},
-				match (current_right, candidate_right) {
-					(None, None) => None,
-					(x, None) => x,
-					(None, x) => x,
-					(Some(current), Some(candidate)) => {
-						if candidate.gain > current.gain {
-							Some(candidate)
-						} else {
-							Some(current)
-						}
-					}
-				},
-			)
-		},
-	);
+	let (left_child_best_split, right_child_best_split) =
+		choose_splits_with_highest_gain(children_best_splits_for_features);
 
 	// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
 	let (left_child_bin_stats, right_child_bin_stats) = match smaller_child_direction {
@@ -638,6 +535,291 @@ pub fn choose_best_splits_not_root(
 		}),
 	};
 	(left_child_output, right_child_output)
+}
+
+struct ChooseBestSplitsNotRootColumnMajorOptions<'a> {
+	binned_features_column_major: &'a BinnedFeaturesColumnMajor,
+	binning_instructions: &'a [BinningInstruction],
+	gradients_ordered_buffer: &'a [f32],
+	hessians_are_constant: bool,
+	hessians_ordered_buffer: &'a [f32],
+	larger_child_bin_stats: &'a mut Vec<Vec<BinStatsEntry>>,
+	left_child_n_examples: usize,
+	left_child_sum_gradients: f64,
+	left_child_sum_hessians: f64,
+	right_child_n_examples: usize,
+	right_child_sum_gradients: f64,
+	right_child_sum_hessians: f64,
+	should_try_to_split_left_child: bool,
+	should_try_to_split_right_child: bool,
+	smaller_child_bin_stats: &'a mut Vec<Vec<BinStatsEntry>>,
+	smaller_child_direction: SplitDirection,
+	smaller_child_examples_index: &'a [i32],
+	train_options: &'a TrainOptions,
+}
+
+fn choose_best_splits_not_root_column_major(
+	options: ChooseBestSplitsNotRootColumnMajorOptions,
+) -> Vec<(
+	Option<ChooseBestSplitForFeatureOutput>,
+	Option<ChooseBestSplitForFeatureOutput>,
+)> {
+	let ChooseBestSplitsNotRootColumnMajorOptions {
+		binned_features_column_major,
+		binning_instructions,
+		gradients_ordered_buffer,
+		hessians_are_constant,
+		hessians_ordered_buffer,
+		larger_child_bin_stats,
+		left_child_n_examples,
+		left_child_sum_gradients,
+		left_child_sum_hessians,
+		right_child_n_examples,
+		right_child_sum_gradients,
+		right_child_sum_hessians,
+		should_try_to_split_left_child,
+		should_try_to_split_right_child,
+		smaller_child_bin_stats,
+		smaller_child_direction,
+		smaller_child_examples_index,
+		train_options,
+	} = options;
+	pzip!(
+		binning_instructions,
+		&binned_features_column_major.columns,
+		smaller_child_bin_stats,
+		larger_child_bin_stats,
+	)
+	.enumerate()
+	.map(
+		|(
+			feature_index,
+			(
+				binning_instructions,
+				binned_features_column,
+				smaller_child_bin_stats_for_feature,
+				mut larger_child_bin_stats_for_feature,
+			),
+		)| {
+			// Compute the bin stats for the child with fewer examples.
+			compute_bin_stats_column_major_not_root(
+				smaller_child_bin_stats_for_feature,
+				smaller_child_examples_index,
+				binned_features_column,
+				gradients_ordered_buffer,
+				hessians_ordered_buffer,
+				hessians_are_constant,
+			);
+			// Compute the larger child bin stats by subtraction.
+			compute_bin_stats_column_major_not_root_subtraction(
+				&smaller_child_bin_stats_for_feature,
+				&mut larger_child_bin_stats_for_feature,
+			);
+			// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
+			let (left_child_bin_stats_for_feature, right_child_bin_stats_for_feature) =
+				match smaller_child_direction {
+					SplitDirection::Left => (
+						smaller_child_bin_stats_for_feature,
+						larger_child_bin_stats_for_feature,
+					),
+					SplitDirection::Right => (
+						larger_child_bin_stats_for_feature,
+						smaller_child_bin_stats_for_feature,
+					),
+				};
+			// Choose the best splits for the left and right children.
+			let left_child_best_split_for_feature = if should_try_to_split_left_child {
+				choose_best_split_for_feature(
+					feature_index,
+					binning_instructions,
+					left_child_bin_stats_for_feature,
+					left_child_n_examples,
+					left_child_sum_gradients,
+					left_child_sum_hessians,
+					train_options,
+				)
+			} else {
+				None
+			};
+			let right_child_best_split_for_feature = if should_try_to_split_right_child {
+				choose_best_split_for_feature(
+					feature_index,
+					binning_instructions,
+					right_child_bin_stats_for_feature,
+					right_child_n_examples,
+					right_child_sum_gradients,
+					right_child_sum_hessians,
+					train_options,
+				)
+			} else {
+				None
+			};
+			(
+				left_child_best_split_for_feature,
+				right_child_best_split_for_feature,
+			)
+		},
+	)
+	.collect()
+}
+
+struct ChooseBestSplitsNotRootRowMajorOptions<'a> {
+	binned_features_row_major: &'a BinnedFeaturesRowMajor,
+	binning_instructions: &'a [BinningInstruction],
+	gradients: &'a [f32],
+	hessians_are_constant: bool,
+	hessians: &'a [f32],
+	larger_child_bin_stats: &'a mut Vec<BinStatsEntry>,
+	left_child_n_examples: usize,
+	left_child_sum_gradients: f64,
+	left_child_sum_hessians: f64,
+	right_child_n_examples: usize,
+	right_child_sum_gradients: f64,
+	right_child_sum_hessians: f64,
+	should_try_to_split_left_child: bool,
+	should_try_to_split_right_child: bool,
+	smaller_child_bin_stats: &'a mut Vec<BinStatsEntry>,
+	smaller_child_direction: SplitDirection,
+	smaller_child_examples_index: &'a [i32],
+	train_options: &'a TrainOptions,
+}
+
+fn choose_best_splits_not_root_row_major(
+	options: ChooseBestSplitsNotRootRowMajorOptions,
+) -> Vec<(
+	Option<ChooseBestSplitForFeatureOutput>,
+	Option<ChooseBestSplitForFeatureOutput>,
+)> {
+	let ChooseBestSplitsNotRootRowMajorOptions {
+		binned_features_row_major,
+		binning_instructions,
+		gradients,
+		hessians_are_constant,
+		hessians,
+		larger_child_bin_stats,
+		left_child_n_examples,
+		left_child_sum_gradients,
+		left_child_sum_hessians,
+		right_child_n_examples,
+		right_child_sum_gradients,
+		right_child_sum_hessians,
+		should_try_to_split_left_child,
+		should_try_to_split_right_child,
+		smaller_child_bin_stats,
+		smaller_child_direction,
+		smaller_child_examples_index,
+		train_options,
+	} = options;
+	// Compute the bin stats for the child with fewer examples.
+	let smaller_child_n_examples = smaller_child_examples_index.len();
+	if smaller_child_n_examples < MIN_EXAMPLES_TO_PARALLELIZE {
+		compute_bin_stats_row_major_not_root(
+			smaller_child_bin_stats.as_mut_slice(),
+			smaller_child_examples_index,
+			binned_features_row_major,
+			gradients,
+			hessians,
+			hessians_are_constant,
+		);
+	} else {
+		let n_threads = rayon::current_num_threads();
+		let chunk_size = (smaller_child_n_examples + n_threads - 1) / n_threads;
+		*smaller_child_bin_stats = pzip!(smaller_child_examples_index.par_chunks(chunk_size))
+			.map(|(smaller_child_examples_index_chunk,)| {
+				let mut smaller_child_bin_stats_chunk: Vec<BinStatsEntry> = smaller_child_bin_stats
+					.iter()
+					.map(|_| BinStatsEntry::default())
+					.collect();
+				compute_bin_stats_row_major_not_root(
+					smaller_child_bin_stats_chunk.as_mut_slice(),
+					smaller_child_examples_index_chunk,
+					binned_features_row_major,
+					gradients,
+					hessians,
+					hessians_are_constant,
+				);
+				smaller_child_bin_stats_chunk
+			})
+			.reduce(
+				|| {
+					smaller_child_bin_stats
+						.iter()
+						.map(|_| BinStatsEntry::default())
+						.collect()
+				},
+				|mut res, chunk| {
+					res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
+						res.sum_gradients += chunk.sum_gradients;
+						res.sum_hessians += chunk.sum_hessians;
+					});
+					res
+				},
+			);
+	}
+	// Choose the best split for each feature.
+	let smaller_child_bin_stats = super_unsafe::SuperUnsafe::new(smaller_child_bin_stats);
+	let larger_child_bin_stats = super_unsafe::SuperUnsafe::new(larger_child_bin_stats);
+	pzip!(binning_instructions, &binned_features_row_major.offsets)
+		.enumerate()
+		.map(|(feature_index, (binning_instructions, offset))| {
+			let smaller_child_bin_stats_for_feature = unsafe {
+				&mut smaller_child_bin_stats.get()[offset.to_usize().unwrap()
+					..offset.to_usize().unwrap() + binning_instructions.n_bins()]
+			};
+			let larger_child_bin_stats_for_feature = unsafe {
+				&mut larger_child_bin_stats.get()[offset.to_usize().unwrap()
+					..offset.to_usize().unwrap() + binning_instructions.n_bins()]
+			};
+			// Compute the larger child bin stats by subtraction.
+			compute_bin_stats_column_major_not_root_subtraction(
+				smaller_child_bin_stats_for_feature,
+				larger_child_bin_stats_for_feature,
+			);
+			// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
+			let (left_child_bin_stats_for_feature, right_child_bin_stats_for_feature) =
+				match smaller_child_direction {
+					SplitDirection::Left => (
+						smaller_child_bin_stats_for_feature,
+						larger_child_bin_stats_for_feature,
+					),
+					SplitDirection::Right => (
+						larger_child_bin_stats_for_feature,
+						smaller_child_bin_stats_for_feature,
+					),
+				};
+			// Choose the best splits for the left and right children.
+			let left_child_best_split_for_feature = if should_try_to_split_left_child {
+				choose_best_split_for_feature(
+					feature_index,
+					binning_instructions,
+					left_child_bin_stats_for_feature,
+					left_child_n_examples,
+					left_child_sum_gradients,
+					left_child_sum_hessians,
+					train_options,
+				)
+			} else {
+				None
+			};
+			let right_child_best_split_for_feature = if should_try_to_split_right_child {
+				choose_best_split_for_feature(
+					feature_index,
+					binning_instructions,
+					right_child_bin_stats_for_feature,
+					right_child_n_examples,
+					right_child_sum_gradients,
+					right_child_sum_hessians,
+					train_options,
+				)
+			} else {
+				None
+			};
+			(
+				left_child_best_split_for_feature,
+				right_child_best_split_for_feature,
+			)
+		})
+		.collect()
 }
 
 /// Choose the best split for a feature by choosing a continuous split for number features and a discrete split for enum features.
@@ -966,4 +1148,47 @@ fn fill_gradients_and_hessians_ordered_buffers(
 			});
 		}
 	}
+}
+
+/// Choose the splits for the left and right children with the highest gain.
+fn choose_splits_with_highest_gain(
+	children_best_splits_for_features: Vec<(
+		Option<ChooseBestSplitForFeatureOutput>,
+		Option<ChooseBestSplitForFeatureOutput>,
+	)>,
+) -> (
+	Option<ChooseBestSplitForFeatureOutput>,
+	Option<ChooseBestSplitForFeatureOutput>,
+) {
+	children_best_splits_for_features.into_iter().fold(
+		(None, None),
+		|(current_left, current_right), (candidate_left, candidate_right)| {
+			(
+				match (current_left, candidate_left) {
+					(None, None) => None,
+					(current, None) => current,
+					(None, candidate) => candidate,
+					(Some(current), Some(candidate)) => {
+						if candidate.gain > current.gain {
+							Some(candidate)
+						} else {
+							Some(current)
+						}
+					}
+				},
+				match (current_right, candidate_right) {
+					(None, None) => None,
+					(current, None) => current,
+					(None, candidate) => candidate,
+					(Some(current), Some(candidate)) => {
+						if candidate.gain > current.gain {
+							Some(candidate)
+						} else {
+							Some(current)
+						}
+					}
+				},
+			)
+		},
+	)
 }

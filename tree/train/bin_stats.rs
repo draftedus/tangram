@@ -1,4 +1,4 @@
-use super::binning::{ColumnMajorBinnedFeaturesColumn, RowMajorBinnedFeatures};
+use super::binning::{BinnedFeaturesColumnMajorColumn, BinnedFeaturesRowMajor};
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -45,7 +45,7 @@ const PREFETCH_OFFSET: usize = 64;
 
 pub fn compute_bin_stats_column_major_root(
 	bin_stats_for_feature: &mut [BinStatsEntry],
-	binned_feature: &ColumnMajorBinnedFeaturesColumn,
+	binned_feature: &BinnedFeaturesColumnMajorColumn,
 	// (n_examples)
 	gradients: &[f32],
 	// (n_examples)
@@ -61,14 +61,14 @@ pub fn compute_bin_stats_column_major_root(
 	}
 	if hessians_are_constant {
 		match binned_feature {
-			ColumnMajorBinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
+			BinnedFeaturesColumnMajorColumn::U8(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_root_no_hessians(
 					gradients,
 					binned_feature_values,
 					bin_stats_for_feature,
 				)
 			},
-			ColumnMajorBinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
+			BinnedFeaturesColumnMajorColumn::U16(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_root_no_hessians(
 					gradients,
 					binned_feature_values,
@@ -78,7 +78,7 @@ pub fn compute_bin_stats_column_major_root(
 		}
 	} else {
 		match binned_feature {
-			ColumnMajorBinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
+			BinnedFeaturesColumnMajorColumn::U8(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_root_yes_hessians(
 					gradients,
 					hessians,
@@ -86,7 +86,7 @@ pub fn compute_bin_stats_column_major_root(
 					bin_stats_for_feature,
 				)
 			},
-			ColumnMajorBinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
+			BinnedFeaturesColumnMajorColumn::U16(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_root_yes_hessians(
 					gradients,
 					hessians,
@@ -101,7 +101,7 @@ pub fn compute_bin_stats_column_major_root(
 pub fn compute_bin_stats_column_major_not_root(
 	smaller_child_bin_stats_for_feature: &mut [BinStatsEntry],
 	smaller_child_examples_index: &[i32],
-	binned_features_column: &ColumnMajorBinnedFeaturesColumn,
+	binned_features_column: &BinnedFeaturesColumnMajorColumn,
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
 	hessians_are_constant: bool,
@@ -114,7 +114,7 @@ pub fn compute_bin_stats_column_major_not_root(
 	}
 	if hessians_are_constant {
 		match binned_features_column {
-			ColumnMajorBinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
+			BinnedFeaturesColumnMajorColumn::U8(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_not_root_no_hessians(
 					ordered_gradients,
 					binned_feature_values.as_slice(),
@@ -122,7 +122,7 @@ pub fn compute_bin_stats_column_major_not_root(
 					smaller_child_examples_index,
 				)
 			},
-			ColumnMajorBinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
+			BinnedFeaturesColumnMajorColumn::U16(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_not_root_no_hessians(
 					ordered_gradients,
 					binned_feature_values.as_slice(),
@@ -133,7 +133,7 @@ pub fn compute_bin_stats_column_major_not_root(
 		}
 	} else {
 		match binned_features_column {
-			ColumnMajorBinnedFeaturesColumn::U8(binned_feature_values) => unsafe {
+			BinnedFeaturesColumnMajorColumn::U8(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_not_root_yes_hessians(
 					ordered_gradients,
 					ordered_hessians,
@@ -142,7 +142,7 @@ pub fn compute_bin_stats_column_major_not_root(
 					smaller_child_examples_index,
 				)
 			},
-			ColumnMajorBinnedFeaturesColumn::U16(binned_feature_values) => unsafe {
+			BinnedFeaturesColumnMajorColumn::U16(binned_feature_values) => unsafe {
 				compute_bin_stats_column_major_not_root_yes_hessians(
 					ordered_gradients,
 					ordered_hessians,
@@ -300,7 +300,7 @@ pub fn compute_bin_stats_row_major_root(
 pub fn compute_bin_stats_row_major_not_root(
 	smaller_child_bin_stats: &mut [BinStatsEntry],
 	smaller_child_examples_index: &[i32],
-	binned_features: &RowMajorBinnedFeatures,
+	binned_features: &BinnedFeaturesRowMajor,
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
 	hessians_are_constant: bool,
