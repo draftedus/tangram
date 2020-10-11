@@ -4,18 +4,14 @@ use std::time::Duration;
 
 #[derive(Debug)]
 pub struct Timing {
-	pub allocations: TimingDuration,
-	pub compute_binning_instructions: TimingDuration,
-	pub compute_binned_features: TimingDuration,
-	pub compute_gradients_and_hessians: TimingDuration,
-	pub sum_gradients_and_hessians_root: TimingDuration,
-	pub rearrange_examples_index: TimingDuration,
-	pub compute_bin_stats_root: TimingDuration,
-	pub compute_bin_stats_not_root: TimingDuration,
 	pub choose_best_split_not_root: TimingDuration,
 	pub choose_best_split_root: TimingDuration,
+	pub compute_binned_features: TimingDuration,
+	pub compute_binning_instructions: TimingDuration,
+	pub compute_gradients_and_hessians: TimingDuration,
+	pub rearrange_examples_index: TimingDuration,
+	pub sum_gradients_and_hessians_root: TimingDuration,
 	pub update_predictions: TimingDuration,
-	pub total: TimingDuration,
 }
 
 pub struct TimingDuration(AtomicU64);
@@ -23,18 +19,14 @@ pub struct TimingDuration(AtomicU64);
 impl Timing {
 	pub fn new() -> Timing {
 		Timing {
-			allocations: TimingDuration::new(),
 			compute_binning_instructions: TimingDuration::new(),
 			compute_binned_features: TimingDuration::new(),
 			compute_gradients_and_hessians: TimingDuration::new(),
 			sum_gradients_and_hessians_root: TimingDuration::new(),
 			rearrange_examples_index: TimingDuration::new(),
-			compute_bin_stats_root: TimingDuration::new(),
-			compute_bin_stats_not_root: TimingDuration::new(),
 			choose_best_split_not_root: TimingDuration::new(),
 			choose_best_split_root: TimingDuration::new(),
 			update_predictions: TimingDuration::new(),
-			total: TimingDuration::new(),
 		}
 	}
 }

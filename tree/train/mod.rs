@@ -276,8 +276,6 @@ pub fn train(
 					*value = index.to_i32().unwrap();
 				});
 			// Train the tree.
-			#[cfg(feature = "timing")]
-			let start = std::time::Instant::now();
 			let tree = self::tree::train(TreeTrainOptions {
 				binning_instructions: &binning_instructions,
 				binned_features_row_major: &binned_features_row_major,
@@ -295,8 +293,6 @@ pub fn train(
 				#[cfg(feature = "timing")]
 				timing: &timing,
 			});
-			#[cfg(feature = "timing")]
-			timing.total.inc(start.elapsed());
 			// Update the predictions using the leaf values from the tree.
 			update_predictions_with_tree(
 				predictions
