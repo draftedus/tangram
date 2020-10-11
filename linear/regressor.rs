@@ -1,6 +1,6 @@
 use super::{
-	compute_shap_values_common, train_early_stopping_split, EarlyStoppingMonitor, ShapValuesOutput,
-	TrainOptions,
+	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
+	train_early_stopping_split, EarlyStoppingMonitor, TrainOptions,
 };
 use itertools::izip;
 use ndarray::prelude::*;
@@ -150,11 +150,14 @@ impl Regressor {
 		ndarray::linalg::general_mat_vec_mul(1.0, &features, &self.weights, 1.0, &mut predictions);
 	}
 
-	pub fn compute_shap_values(&self, features: ArrayView2<f32>) -> Vec<ShapValuesOutput> {
+	pub fn compute_feature_contributions(
+		&self,
+		features: ArrayView2<f32>,
+	) -> Vec<ComputeShapValuesForExampleOutput> {
 		features
 			.axis_iter(Axis(0))
 			.map(|features| {
-				compute_shap_values_common(
+				compute_shap_values_for_example(
 					features.as_slice().unwrap(),
 					self.bias,
 					self.weights.as_slice().unwrap(),

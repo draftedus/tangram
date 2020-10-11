@@ -4,18 +4,18 @@ use crate::{
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
-pub struct ShapValuesOutput {
+pub struct ComputeShapValuesForExampleOutput {
 	pub baseline_value: f32,
 	pub output_value: f32,
 	pub feature_contribution_values: Vec<f32>,
 }
 
-/// This function is common code used by `compute_shap_values` for each model type.
-pub fn compute_shap_values_common(
+/// Compute the SHAP values for a single example.
+pub fn compute_shap_values_for_example(
 	example: &[tangram_dataframe::DataFrameValue],
 	trees: ArrayView1<Tree>,
 	bias: f32,
-) -> ShapValuesOutput {
+) -> ComputeShapValuesForExampleOutput {
 	let mut baseline_value = bias;
 	for tree in trees {
 		baseline_value += compute_expectation(tree, 0);
@@ -25,10 +25,10 @@ pub fn compute_shap_values_common(
 		tree_shap(example, tree, feature_contribution_values.as_mut_slice());
 	}
 	let output_value = baseline_value + feature_contribution_values.iter().sum::<f32>();
-	ShapValuesOutput {
+	ComputeShapValuesForExampleOutput {
 		baseline_value,
-		feature_contribution_values,
 		output_value,
+		feature_contribution_values,
 	}
 }
 

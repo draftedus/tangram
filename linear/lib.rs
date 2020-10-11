@@ -2,16 +2,15 @@
 This crate is an implementation of linear machine learning models for regression and classification. There are three model types, [`Regressor`](struct.Regressor.html), [`BinaryClassifier`](struct.BinaryClassifier.html), and [`MulticlassClassifier`](struct.MulticlassClassifier.html). `BinaryClassifier` uses the sigmoid activation function, and `MulticlassClassifier` trains `n_classes` linear models whose outputs are combined with the `softmax` function.
 
 To make training faster on multicore processors, we allow simultaneous read/write access to the model parameters from multiple threads. This means each thread will be reading weights partially updated by other threads and the weights it writes may be clobbered by other threads. Unsafe sharing is implmented using the [super_unsafe](docs.io/crates/super_unsafe) crate. This makes training nondeterministic, but in practice we observe little variation in the outcome, because there is feedback control: the change in loss is monitored after each epoch, and training terminates when the loss has stabilized.
-
 */
 
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
 mod binary_classifier;
 mod multiclass_classifier;
 mod regressor;
+mod shap;
 
 pub use binary_classifier::BinaryClassifier;
 pub use multiclass_classifier::MulticlassClassifier;
@@ -128,33 +127,5 @@ impl EarlyStoppingMonitor {
 		};
 		self.previous_epoch_metric_value = Some(early_stopping_metric_value);
 		result
-	}
-}
-
-pub struct ShapValuesOutput {
-	pub baseline_value: f32,
-	pub output_value: f32,
-	pub feature_contribution_values: Vec<f32>,
-}
-
-/// This function is common code used by `compute_shap_values` for each model type.
-fn compute_shap_values_common(
-	features: &[f32],
-	bias: f32,
-	weights: &[f32],
-	means: &[f32],
-) -> ShapValuesOutput {
-	let baseline_value = bias
-		+ izip!(weights, means)
-			.map(|(weight, mean)| weight * mean)
-			.sum::<f32>();
-	let feature_contributions: Vec<f32> = izip!(weights, features, means)
-		.map(|(weight, feature, mean)| weight * (feature - mean))
-		.collect();
-	let output_value = baseline_value + feature_contributions.iter().sum::<f32>();
-	ShapValuesOutput {
-		baseline_value,
-		feature_contribution_values: feature_contributions,
-		output_value,
 	}
 }

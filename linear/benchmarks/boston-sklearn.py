@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import SGDRegressor
 
-# load the data
+# Load the data.
 path = 'data/boston.csv'
 nrows_train = 405
 nrows_test = 101
@@ -23,7 +23,7 @@ labels = data[target]
 	shuffle=False
 )
 
-# train the model
+# Train the model.
 model = SGDRegressor()
 model.fit(features_train, labels_train)
 

@@ -171,7 +171,7 @@ pub fn compute_bin_stats_column_major_not_root(
 	}
 }
 
-pub fn compute_bin_stats_column_major_not_root_subtraction(
+pub fn compute_bin_stats_subtraction(
 	smaller_child_bin_stats_for_feature: &[BinStatsEntry],
 	larger_child_bin_stats_for_feature: &mut [BinStatsEntry],
 ) {

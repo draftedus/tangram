@@ -2,10 +2,9 @@
 use crate::timing::Timing;
 use crate::{
 	compute_bin_stats::{
-		compute_bin_stats_column_major_not_root,
-		compute_bin_stats_column_major_not_root_subtraction, compute_bin_stats_column_major_root,
-		compute_bin_stats_row_major_not_root, compute_bin_stats_row_major_root, BinStats,
-		BinStatsEntry,
+		compute_bin_stats_column_major_not_root, compute_bin_stats_column_major_root,
+		compute_bin_stats_row_major_not_root, compute_bin_stats_row_major_root,
+		compute_bin_stats_subtraction, BinStats, BinStatsEntry,
 	},
 	compute_binned_features::{BinnedFeaturesColumnMajor, BinnedFeaturesRowMajor},
 	compute_binning_instructions::BinningInstruction,
@@ -593,7 +592,7 @@ fn choose_best_splits_not_root_column_major(
 				hessians_are_constant,
 			);
 			// Compute the larger child bin stats by subtraction.
-			compute_bin_stats_column_major_not_root_subtraction(
+			compute_bin_stats_subtraction(
 				&smaller_child_bin_stats_for_feature,
 				&mut larger_child_bin_stats_for_feature,
 			);
@@ -753,7 +752,7 @@ fn choose_best_splits_not_root_row_major(
 					..offset.to_usize().unwrap() + binning_instructions.n_bins()]
 			};
 			// Compute the larger child bin stats by subtraction.
-			compute_bin_stats_column_major_not_root_subtraction(
+			compute_bin_stats_subtraction(
 				smaller_child_bin_stats_for_feature,
 				larger_child_bin_stats_for_feature,
 			);

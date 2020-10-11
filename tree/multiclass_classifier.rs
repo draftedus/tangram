@@ -1,5 +1,5 @@
 use crate::{
-	shap::{compute_shap_values_common, ShapValuesOutput},
+	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
 	train::Model,
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
@@ -87,7 +87,7 @@ impl MulticlassClassifier {
 	pub fn compute_shap_values(
 		&self,
 		features: ArrayView2<DataFrameValue>,
-	) -> Vec<Vec<ShapValuesOutput>> {
+	) -> Vec<Vec<ComputeShapValuesForExampleOutput>> {
 		let n_rounds = self.n_rounds;
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
@@ -97,7 +97,7 @@ impl MulticlassClassifier {
 			.map(|features| {
 				izip!(trees.axis_iter(Axis(1)), biases.iter())
 					.map(|(tree, bias)| {
-						compute_shap_values_common(features.as_slice().unwrap(), tree, *bias)
+						compute_shap_values_for_example(features.as_slice().unwrap(), tree, *bias)
 					})
 					.collect()
 			})

@@ -1,5 +1,5 @@
 use crate::{
-	shap::{compute_shap_values_common, ShapValuesOutput},
+	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
 	train::{train, Model, Task},
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
@@ -68,12 +68,12 @@ impl Regressor {
 	pub fn compute_shap_values(
 		&self,
 		features: ArrayView2<DataFrameValue>,
-	) -> Vec<ShapValuesOutput> {
+	) -> Vec<ComputeShapValuesForExampleOutput> {
 		let trees = ArrayView1::from_shape(self.trees.len(), &self.trees).unwrap();
 		features
 			.axis_iter(Axis(0))
 			.map(|features| {
-				compute_shap_values_common(features.as_slice().unwrap(), trees, self.bias)
+				compute_shap_values_for_example(features.as_slice().unwrap(), trees, self.bias)
 			})
 			.collect()
 	}

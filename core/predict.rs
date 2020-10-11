@@ -34,18 +34,7 @@ pub enum PredictOutput {
 #[serde(rename_all = "camelCase")]
 pub struct RegressionPredictOutput {
 	pub value: f32,
-	pub shap_output: Option<RegressionShapOutput>,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct RegressionShapOutput {
-	/// The baseline value is the value output by the model for this class before taking into account the feature values.
-	pub baseline_value: f32,
-	/// The output value will be the sum of the baseline value and the shap values of all features.
-	pub output_value: f32,
-	/// These are the shap values for each feature.
-	pub feature_contributions: Vec<FeatureContribution>,
+	pub feature_contributions_output: Option<FeatureContributionsOutput>,
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -54,23 +43,23 @@ pub struct ClassificationPredictOutput {
 	pub class_name: String,
 	pub probability: f32,
 	pub probabilities: BTreeMap<String, f32>,
-	pub shap_output: Option<ClassificationShapOutput>,
+	pub feature_contributions_output: Option<ClassificationFeatureContributionsOutput>,
 }
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ClassificationShapOutput {
-	pub classes: BTreeMap<String, ClassificationShapOutputForClass>,
+pub struct ClassificationFeatureContributionsOutput {
+	pub classes: BTreeMap<String, FeatureContributionsOutput>,
 }
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ClassificationShapOutputForClass {
+pub struct FeatureContributionsOutput {
 	/// The baseline value is the value output by the model for this class before taking into account the feature values.
 	pub baseline_value: f32,
-	/// The output value is the sum of the baseline value and the contributions of all features.
+	/// The output value is the sum of the baseline value and the feature contribution values of all features.
 	pub output_value: f32,
-	/// These are the shap values for each feature.
+	/// These are the feature contribution values for each feature.
 	pub feature_contributions: Vec<FeatureContribution>,
 }
 
@@ -272,7 +261,7 @@ pub fn predict(
 				&|| {},
 			);
 			model.model.predict(features.view(), predictions.view_mut());
-			let shap_values = model.model.compute_shap_values(features.view());
+			let shap_values = model.model.compute_feature_contributions(features.view());
 			let output = izip!(features.axis_iter(Axis(0)), predictions.iter(), shap_values)
 				.map(|(features, prediction, shap_values)| {
 					let feature_contributions = compute_feature_contributions(
@@ -280,14 +269,14 @@ pub fn predict(
 						features.iter().cloned(),
 						shap_values.feature_contribution_values.iter().cloned(),
 					);
-					let shap_output = RegressionShapOutput {
+					let shap_output = RegressionFeatureContributions {
 						baseline_value: shap_values.baseline_value,
 						output_value: shap_values.output_value,
 						feature_contributions,
 					};
 					RegressionPredictOutput {
 						value: *prediction,
-						shap_output: Some(shap_output),
+						feature_contributions: Some(shap_output),
 					}
 				})
 				.collect();
@@ -323,14 +312,14 @@ pub fn predict(
 						}),
 						shap_values.feature_contribution_values.iter().cloned(),
 					);
-					let shap_output = RegressionShapOutput {
+					let shap_output = RegressionFeatureContributions {
 						baseline_value: shap_values.baseline_value,
 						output_value: shap_values.output_value,
 						feature_contributions,
 					};
 					RegressionPredictOutput {
 						value: *prediction,
-						shap_output: Some(shap_output),
+						feature_contributions: Some(shap_output),
 					}
 				})
 				.collect();
@@ -350,7 +339,9 @@ pub fn predict(
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
-			let shap_values = model.model.compute_shap_values(features.view());
+			let shap_values = model
+				.model
+				.compute_feature_contribution_values(features.view());
 			let threshold = match options {
 				Some(options) => options.threshold,
 				None => 0.5,
@@ -383,7 +374,7 @@ pub fn predict(
 						class_name,
 						probability,
 						probabilities,
-						shap_output: None,
+						feature_contributions: None,
 					}
 				})
 				.collect();
@@ -430,7 +421,7 @@ pub fn predict(
 						class_name,
 						probability,
 						probabilities,
-						shap_output: None,
+						feature_contributions: None,
 					}
 				})
 				.collect();
@@ -468,7 +459,7 @@ pub fn predict(
 						class_name: class_name.to_owned(),
 						probability: *probability,
 						probabilities,
-						shap_output: None,
+						feature_contributions: None,
 					}
 				})
 				.collect();
@@ -510,7 +501,7 @@ pub fn predict(
 						class_name: class_name.to_owned(),
 						probability: *probability,
 						probabilities,
-						shap_output: None,
+						feature_contributions: None,
 					}
 				})
 				.collect();
