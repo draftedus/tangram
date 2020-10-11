@@ -57,7 +57,7 @@ pub struct BinStatsEntry {
 
 /// This value controls how far ahead in the `examples_index` the `compute_bin_stats_*` functions should prefetch binned_features to be used in subsequent iterations.
 #[cfg(target_arch = "x86_64")]
-const PREFETCH_OFFSET: usize = 64;
+const PREFETCH_OFFSET: usize = 32;
 
 pub fn compute_bin_stats_column_major_root(
 	bin_stats_for_feature: &mut [BinStatsEntry],
@@ -483,6 +483,10 @@ pub unsafe fn compute_bin_stats_row_major_not_root_yes_hessians<T>(
 			let prefetch_ptr = binned_feature_values
 				.as_ptr()
 				.add(prefetch_index * n_features) as *const i8;
+			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+			let prefetch_ptr = binned_feature_values
+				.as_ptr()
+				.add(prefetch_index * n_features + n_features - 1) as *const i8;
 			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
 			core::arch::x86_64::_mm_prefetch(
 				gradients.as_ptr().add(prefetch_index) as *const i8,
