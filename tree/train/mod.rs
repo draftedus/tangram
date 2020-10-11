@@ -1,5 +1,5 @@
 use self::{
-	bin_stats::{BinStats, SumGradientsSumHessiansForBin},
+	bin_stats::{BinStats, BinStatsEntry},
 	binning::{
 		compute_binned_features_column_major, compute_binned_features_row_major,
 		compute_binning_instructions,
@@ -186,10 +186,7 @@ pub fn train(
 					binning_instructions_for_pool
 						.iter()
 						.map(|binning_instructions| {
-							vec![
-								SumGradientsSumHessiansForBin::default();
-								binning_instructions.n_bins()
-							]
+							vec![BinStatsEntry::default(); binning_instructions.n_bins()]
 						})
 						.collect(),
 				)
@@ -202,10 +199,7 @@ pub fn train(
 					binning_instructions_for_pool
 						.iter()
 						.flat_map(|binning_instructions| {
-							vec![
-								SumGradientsSumHessiansForBin::default();
-								binning_instructions.n_bins()
-							]
+							vec![BinStatsEntry::default(); binning_instructions.n_bins()]
 						})
 						.collect(),
 				)

@@ -3,7 +3,7 @@ use super::{
 		compute_bin_stats_column_major_not_root,
 		compute_bin_stats_column_major_not_root_subtraction, compute_bin_stats_column_major_root,
 		compute_bin_stats_row_major_not_root, compute_bin_stats_row_major_root, BinStats,
-		SumGradientsSumHessiansForBin,
+		BinStatsEntry,
 	},
 	binning::{BinnedFeatures, BinningInstruction},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
@@ -182,10 +182,8 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 					hessians.par_chunks(chunk_size)
 				)
 				.map(|(binned_features_chunk, gradients_chunk, hessians_chunk)| {
-					let mut bin_stats_chunk: Vec<SumGradientsSumHessiansForBin> = bin_stats
-						.iter()
-						.map(|_| SumGradientsSumHessiansForBin::default())
-						.collect();
+					let mut bin_stats_chunk: Vec<BinStatsEntry> =
+						bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
 					compute_bin_stats_row_major_root(
 						bin_stats_chunk.as_mut_slice(),
 						binned_features_chunk,
@@ -196,12 +194,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 					bin_stats_chunk
 				})
 				.reduce(
-					|| {
-						bin_stats
-							.iter()
-							.map(|_| SumGradientsSumHessiansForBin::default())
-							.collect()
-					},
+					|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
 					|mut res, chunk| {
 						res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
 							res.sum_gradients += chunk.sum_gradients;
@@ -453,12 +446,11 @@ pub fn choose_best_splits_not_root(
 				*smaller_child_bin_stats =
 					pzip!(smaller_child_examples_index.par_chunks(chunk_size),)
 						.map(|(smaller_child_examples_index_chunk,)| {
-							let mut smaller_child_bin_stats_chunk: Vec<
-								SumGradientsSumHessiansForBin,
-							> = smaller_child_bin_stats
-								.iter()
-								.map(|_| SumGradientsSumHessiansForBin::default())
-								.collect();
+							let mut smaller_child_bin_stats_chunk: Vec<BinStatsEntry> =
+								smaller_child_bin_stats
+									.iter()
+									.map(|_| BinStatsEntry::default())
+									.collect();
 							compute_bin_stats_row_major_not_root(
 								smaller_child_bin_stats_chunk.as_mut_slice(),
 								smaller_child_examples_index_chunk,
@@ -473,7 +465,7 @@ pub fn choose_best_splits_not_root(
 							|| {
 								smaller_child_bin_stats
 									.iter()
-									.map(|_| SumGradientsSumHessiansForBin::default())
+									.map(|_| BinStatsEntry::default())
 									.collect()
 							},
 							|mut res, chunk| {
@@ -644,7 +636,7 @@ pub fn choose_best_splits_not_root(
 fn choose_best_split_for_feature(
 	feature_index: usize,
 	binning_instructions: &BinningInstruction,
-	bin_stats_for_feature: &[SumGradientsSumHessiansForBin],
+	bin_stats_for_feature: &[BinStatsEntry],
 	n_examples: usize,
 	sum_gradients: f64,
 	sum_hessians: f64,
@@ -676,7 +668,7 @@ fn choose_best_split_for_feature(
 fn choose_best_split_for_continuous_feature(
 	feature_index: usize,
 	binning_instructions: &BinningInstruction,
-	bin_stats_for_feature: &[SumGradientsSumHessiansForBin],
+	bin_stats_for_feature: &[BinStatsEntry],
 	n_examples_parent: usize,
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
@@ -779,7 +771,7 @@ fn choose_best_split_for_continuous_feature(
 fn choose_best_split_for_discrete_feature(
 	feature_index: usize,
 	binning_instructions: &BinningInstruction,
-	bin_stats_for_feature: &[SumGradientsSumHessiansForBin],
+	bin_stats_for_feature: &[BinStatsEntry],
 	n_examples_parent: usize,
 	sum_gradients_parent: f64,
 	sum_hessians_parent: f64,
@@ -798,7 +790,7 @@ fn choose_best_split_for_discrete_feature(
 		.smoothing_factor_for_discrete_bin_sorting
 		.to_f64()
 		.unwrap();
-	let mut sorted_bin_stats_for_feature: Vec<(usize, &SumGradientsSumHessiansForBin)> =
+	let mut sorted_bin_stats_for_feature: Vec<(usize, &BinStatsEntry)> =
 		bin_stats_for_feature.iter().enumerate().collect();
 	sorted_bin_stats_for_feature.sort_by(|(_, a), (_, b)| {
 		let score_a = a.sum_gradients / (a.sum_hessians + smoothing_factor);
