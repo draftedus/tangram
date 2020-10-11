@@ -879,7 +879,7 @@ fn choose_best_split_for_discrete_feature(
 	best_split_for_feature
 }
 
-/// The gain is a value that is used to measure how good a given split is.
+/// Compute the gain for a candidate split.
 fn compute_gain(
 	sum_gradients_left: f64,
 	sum_hessians_left: f64,
