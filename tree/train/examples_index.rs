@@ -1,9 +1,8 @@
 use super::{
-	binning::{BinnedFeatures, ColumnMajorBinnedFeaturesColumn},
+	binning::{ColumnMajorBinnedFeatures, ColumnMajorBinnedFeaturesColumn},
 	TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete,
 };
 use crate::SplitDirection;
-use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_thread_pool::pzip;
@@ -12,7 +11,7 @@ const MIN_EXAMPLES_TO_PARALLELIZE: usize = 10_000;
 
 /// This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
 pub fn rearrange_examples_index(
-	binned_features: &BinnedFeatures,
+	binned_features: &ColumnMajorBinnedFeatures,
 	split: &TrainBranchSplit,
 	examples_index: &mut [i32],
 	examples_index_left_buffer: &mut [i32],
@@ -33,7 +32,7 @@ pub fn rearrange_examples_index(
 
 /// Rearrange the examples index on a single thread.
 fn rearrange_examples_index_serial(
-	binned_features: &BinnedFeatures,
+	binned_features: &ColumnMajorBinnedFeatures,
 	split: &TrainBranchSplit,
 	examples_index: &mut [i32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
@@ -44,78 +43,56 @@ fn rearrange_examples_index_serial(
 			feature_index,
 			bin_index,
 			..
-		}) => match binned_features {
-			BinnedFeatures::ColumnMajor(binned_features) => {
-				let binned_feature = binned_features.columns.get(*feature_index).unwrap();
-				match binned_feature {
-					ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
-						rearrange_examples_index_serial_continuous(
-							&mut left,
-							&mut right,
-							*bin_index,
-							examples_index,
-							binned_feature.into(),
-						)
-					},
-					ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
-						rearrange_examples_index_serial_continuous(
-							&mut left,
-							&mut right,
-							*bin_index,
-							examples_index,
-							binned_feature.into(),
-						)
-					},
-				}
+		}) => {
+			let binned_feature = binned_features.columns.get(*feature_index).unwrap();
+			match binned_feature {
+				ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+					rearrange_examples_index_serial_continuous(
+						&mut left,
+						&mut right,
+						*bin_index,
+						examples_index,
+						binned_feature.as_slice(),
+					)
+				},
+				ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+					rearrange_examples_index_serial_continuous(
+						&mut left,
+						&mut right,
+						*bin_index,
+						examples_index,
+						binned_feature.as_slice(),
+					)
+				},
 			}
-			BinnedFeatures::RowMajor(binned_features) => unsafe {
-				rearrange_examples_index_serial_continuous(
-					&mut left,
-					&mut right,
-					*bin_index,
-					examples_index,
-					binned_features.values_with_offsets.column(*feature_index),
-				)
-			},
-		},
+		}
 		TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 			feature_index,
 			directions,
 			..
-		}) => match binned_features {
-			BinnedFeatures::ColumnMajor(binned_features) => {
-				let binned_feature = binned_features.columns.get(*feature_index).unwrap();
-				match binned_feature {
-					ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
-						rearrange_examples_index_serial_discrete(
-							&mut left,
-							&mut right,
-							directions,
-							examples_index,
-							binned_feature.into(),
-						)
-					},
-					ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
-						rearrange_examples_index_serial_discrete(
-							&mut left,
-							&mut right,
-							directions,
-							examples_index,
-							binned_feature.into(),
-						)
-					},
-				}
+		}) => {
+			let binned_feature = binned_features.columns.get(*feature_index).unwrap();
+			match binned_feature {
+				ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+					rearrange_examples_index_serial_discrete(
+						&mut left,
+						&mut right,
+						directions,
+						examples_index,
+						binned_feature.as_slice(),
+					)
+				},
+				ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+					rearrange_examples_index_serial_discrete(
+						&mut left,
+						&mut right,
+						directions,
+						examples_index,
+						binned_feature.as_slice(),
+					)
+				},
 			}
-			BinnedFeatures::RowMajor(binned_features) => unsafe {
-				rearrange_examples_index_serial_discrete(
-					&mut left,
-					&mut right,
-					directions,
-					examples_index,
-					binned_features.values_with_offsets.column(*feature_index),
-				)
-			},
-		},
+		}
 	}
 	(0..left, left..examples_index.len())
 }
@@ -125,13 +102,16 @@ unsafe fn rearrange_examples_index_serial_continuous<T>(
 	right: &mut usize,
 	bin_index: usize,
 	examples_index: &mut [i32],
-	binned_feature: ArrayView1<T>,
+	binned_feature: &[T],
 ) where
 	T: ToPrimitive,
 {
 	while left < right {
 		let example_index = examples_index.get_unchecked(*left).to_usize().unwrap();
-		let binned_feature_value = binned_feature.uget(example_index).to_usize().unwrap();
+		let binned_feature_value = binned_feature
+			.get_unchecked(example_index)
+			.to_usize()
+			.unwrap();
 		if binned_feature_value <= bin_index {
 			*left += 1;
 		} else {
@@ -150,13 +130,16 @@ unsafe fn rearrange_examples_index_serial_discrete<T>(
 	right: &mut usize,
 	directions: &[SplitDirection],
 	examples_index: &mut [i32],
-	binned_feature: ArrayView1<T>,
+	binned_feature: &[T],
 ) where
 	T: ToPrimitive,
 {
 	while left < right {
 		let example_index = examples_index.get_unchecked(*left).to_usize().unwrap();
-		let binned_feature_value = binned_feature.uget(example_index).to_usize().unwrap();
+		let binned_feature_value = binned_feature
+			.get_unchecked(example_index)
+			.to_usize()
+			.unwrap();
 		if *directions.get_unchecked(binned_feature_value) == SplitDirection::Left {
 			*left += 1;
 		} else {
@@ -172,7 +155,7 @@ unsafe fn rearrange_examples_index_serial_discrete<T>(
 
 /// Rearrange the examples index with multiple threads. This is done by segmenting the `examples_index` into chunks and writing the indexes of the examples that will be sent left and right by the split to chunks of the temporary buffers `examples_index_left_buffer` and `examples_index_right_buffer`. Then, the parts of each chunk that were written to are copied to the real examples index.
 fn rearrange_examples_index_parallel(
-	binned_features: &BinnedFeatures,
+	binned_features: &ColumnMajorBinnedFeatures,
 	split: &TrainBranchSplit,
 	examples_index: &mut [i32],
 	examples_index_left_buffer: &mut [i32],
@@ -194,91 +177,64 @@ fn rearrange_examples_index_parallel(
 					feature_index,
 					bin_index,
 					..
-				}) => match binned_features {
-					BinnedFeatures::ColumnMajor(binned_features) => {
-						let binned_feature = binned_features.columns.get(*feature_index).unwrap();
-						match binned_feature {
-							ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
-								rearrange_examples_index_parallel_step_one_continuous(
-									&mut n_left,
-									&mut n_right,
-									*bin_index,
-									examples_index,
-									examples_index_left_buffer,
-									examples_index_right_buffer,
-									binned_feature.into(),
-								)
-							},
-							ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
-								rearrange_examples_index_parallel_step_one_continuous(
-									&mut n_left,
-									&mut n_right,
-									*bin_index,
-									examples_index,
-									examples_index_left_buffer,
-									examples_index_right_buffer,
-									binned_feature.into(),
-								)
-							},
-						}
+				}) => {
+					let binned_feature = binned_features.columns.get(*feature_index).unwrap();
+					match binned_feature {
+						ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+							rearrange_examples_index_parallel_step_one_continuous(
+								&mut n_left,
+								&mut n_right,
+								*bin_index,
+								examples_index,
+								examples_index_left_buffer,
+								examples_index_right_buffer,
+								binned_feature.as_slice(),
+							)
+						},
+						ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+							rearrange_examples_index_parallel_step_one_continuous(
+								&mut n_left,
+								&mut n_right,
+								*bin_index,
+								examples_index,
+								examples_index_left_buffer,
+								examples_index_right_buffer,
+								binned_feature.as_slice(),
+							)
+						},
 					}
-					BinnedFeatures::RowMajor(binned_features) => unsafe {
-						rearrange_examples_index_parallel_step_one_continuous(
-							&mut n_left,
-							&mut n_right,
-							*bin_index,
-							examples_index,
-							examples_index_left_buffer,
-							examples_index_right_buffer,
-							binned_features.values_with_offsets.column(*feature_index),
-						)
-					},
-				},
-
+				}
 				TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
 					feature_index,
 					directions,
 					..
-				}) => match binned_features {
-					BinnedFeatures::ColumnMajor(binned_features) => {
-						let binned_feature = binned_features.columns.get(*feature_index).unwrap();
-						match binned_feature {
-							ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
-								rearrange_examples_index_parallel_step_one_discrete(
-									&mut n_left,
-									&mut n_right,
-									directions,
-									examples_index,
-									examples_index_left_buffer,
-									examples_index_right_buffer,
-									binned_feature.into(),
-								)
-							},
-							ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
-								rearrange_examples_index_parallel_step_one_discrete(
-									&mut n_left,
-									&mut n_right,
-									directions,
-									examples_index,
-									examples_index_left_buffer,
-									examples_index_right_buffer,
-									binned_feature.into(),
-								)
-							},
-						}
+				}) => {
+					let binned_feature = binned_features.columns.get(*feature_index).unwrap();
+					match binned_feature {
+						ColumnMajorBinnedFeaturesColumn::U8(binned_feature) => unsafe {
+							rearrange_examples_index_parallel_step_one_discrete(
+								&mut n_left,
+								&mut n_right,
+								directions,
+								examples_index,
+								examples_index_left_buffer,
+								examples_index_right_buffer,
+								binned_feature.as_slice(),
+							)
+						},
+						ColumnMajorBinnedFeaturesColumn::U16(binned_feature) => unsafe {
+							rearrange_examples_index_parallel_step_one_discrete(
+								&mut n_left,
+								&mut n_right,
+								directions,
+								examples_index,
+								examples_index_left_buffer,
+								examples_index_right_buffer,
+								binned_feature.as_slice(),
+							)
+						},
 					}
-					BinnedFeatures::RowMajor(binned_features) => unsafe {
-						rearrange_examples_index_parallel_step_one_discrete(
-							&mut n_left,
-							&mut n_right,
-							directions,
-							examples_index,
-							examples_index_left_buffer,
-							examples_index_right_buffer,
-							binned_features.values_with_offsets.column(*feature_index),
-						)
-					},
-				},
+				}
 			}
 			(n_left, n_right)
 		},
@@ -342,13 +298,13 @@ unsafe fn rearrange_examples_index_parallel_step_one_continuous<T>(
 	examples_index: &mut [i32],
 	examples_index_left_buffer: &mut [i32],
 	examples_index_right_buffer: &mut [i32],
-	binned_feature: ArrayView1<T>,
+	binned_feature: &[T],
 ) where
 	T: ToPrimitive,
 {
 	for example_index in examples_index {
 		let binned_feature_value = binned_feature
-			.uget(example_index.to_usize().unwrap())
+			.get_unchecked(example_index.to_usize().unwrap())
 			.to_usize()
 			.unwrap();
 		if binned_feature_value <= bin_index {
@@ -368,13 +324,13 @@ unsafe fn rearrange_examples_index_parallel_step_one_discrete<T>(
 	examples_index: &mut [i32],
 	examples_index_left_buffer: &mut [i32],
 	examples_index_right_buffer: &mut [i32],
-	binned_feature: ArrayView1<T>,
+	binned_feature: &[T],
 ) where
 	T: ToPrimitive,
 {
 	for example_index in examples_index {
 		let binned_feature_value = binned_feature
-			.uget(example_index.to_usize().unwrap())
+			.get_unchecked(example_index.to_usize().unwrap())
 			.to_usize()
 			.unwrap();
 		if *directions.get_unchecked(binned_feature_value) == SplitDirection::Left {

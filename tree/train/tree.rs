@@ -1,13 +1,13 @@
 use super::{
 	bin_stats::BinStats,
-	binning::{BinnedFeatures, BinningInstruction},
+	binning::{BinningInstruction, ColumnMajorBinnedFeatures, RowMajorBinnedFeatures},
 	examples_index::rearrange_examples_index,
 	split::{
 		choose_best_split_root, choose_best_splits_not_root, ChooseBestSplitOutput,
 		ChooseBestSplitRootOptions, ChooseBestSplitSuccess, ChooseBestSplitsNotRootOptions,
 	},
 };
-use crate::{BinnedFeaturesLayout, SplitDirection, TrainOptions};
+use crate::{SplitDirection, TrainOptions};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
 use tangram_pool::{Pool, PoolItem};
@@ -179,8 +179,8 @@ impl std::cmp::Ord for QueueItem {
 
 pub struct TreeTrainOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
-	pub binned_features_row_major: &'a BinnedFeatures,
-	pub binned_features_column_major: &'a BinnedFeatures,
+	pub binned_features_row_major: &'a RowMajorBinnedFeatures,
+	pub binned_features_column_major: &'a ColumnMajorBinnedFeatures,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub examples_index_left_buffer: &'a mut [i32],
 	pub examples_index_right_buffer: &'a mut [i32],
@@ -224,19 +224,16 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 
 	let n_examples_root = examples_index.len();
 	let examples_index_range_root = 0..n_examples_root;
-	let binned_features = match train_options.binned_features_layout {
-		BinnedFeaturesLayout::ColumnMajor => binned_features_column_major,
-		BinnedFeaturesLayout::RowMajor => binned_features_row_major,
-	};
 
 	// Choose the best split for the root node.
 	let choose_best_split_output_root = choose_best_split_root(ChooseBestSplitRootOptions {
 		bin_stats_pool,
-		binned_features,
 		binning_instructions,
+		binned_features_column_major,
 		gradients,
 		hessians_are_constant,
 		hessians,
+		binned_features_row_major,
 		#[cfg(feature = "timing")]
 		timing,
 		train_options,
@@ -346,7 +343,8 @@ pub fn train(options: TreeTrainOptions) -> TrainTree {
 		let (left_child_best_split_output, right_child_best_split_output) =
 			choose_best_splits_not_root(ChooseBestSplitsNotRootOptions {
 				bin_stats_pool,
-				binned_features,
+				binned_features_column_major,
+				binned_features_row_major,
 				binning_instructions,
 				gradients_ordered_buffer,
 				gradients,

@@ -8,10 +8,10 @@ use tangram_thread_pool::pzip;
 
 fn main() {
 	// Load the data.
-	let csv_file_path = Path::new("data/higgs.csv");
-	let (nrows_train, _) = (10_500_000, 500_000);
-	// let csv_file_path = Path::new("data/higgs-small.csv");
-	// let (nrows_train, _) = (450_000, 50_000);
+	// let csv_file_path = Path::new("data/higgs.csv");
+	// let (nrows_train, _) = (10_500_000, 500_000);
+	let csv_file_path = Path::new("data/higgs-small.csv");
+	let (nrows_train, _) = (450_000, 50_000);
 	let target_column_index = 0;
 	let options = FromCsvOptions {
 		column_types: Some(btreemap! {
@@ -57,7 +57,7 @@ fn main() {
 	// Train the model.
 	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
-		binned_features_layout: tangram_tree::BinnedFeaturesLayout::RowMajor,
+		binned_features_layout: tangram_tree::BinnedFeaturesLayout::ColumnMajor,
 		learning_rate: 0.1,
 		max_leaf_nodes: 255,
 		max_rounds: 100,

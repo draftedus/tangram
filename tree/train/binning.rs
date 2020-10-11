@@ -1,5 +1,4 @@
 use crate::TrainOptions;
-use itertools::izip;
 use itertools::Itertools;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -160,13 +159,6 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 	quantiles.into_iter().map(|q| q.unwrap()).collect()
 }
 
-/// A dataframe of features is binned into BinnedFeatures
-#[derive(Debug)]
-pub enum BinnedFeatures {
-	RowMajor(RowMajorBinnedFeatures),
-	ColumnMajor(ColumnMajorBinnedFeatures),
-}
-
 #[derive(Debug)]
 pub struct RowMajorBinnedFeatures {
 	pub values_with_offsets: Array2<u16>,
@@ -198,7 +190,7 @@ pub fn compute_binned_features_column_major(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	progress: &(impl Fn() + Sync),
-) -> BinnedFeatures {
+) -> ColumnMajorBinnedFeatures {
 	let columns = pzip!(&features.columns, binning_instructions)
 		.map(|(feature, binning_instruction)| match binning_instruction {
 			BinningInstruction::Number { thresholds } => {
@@ -213,14 +205,14 @@ pub fn compute_binned_features_column_major(
 			}
 		})
 		.collect();
-	BinnedFeatures::ColumnMajor(ColumnMajorBinnedFeatures { columns })
+	ColumnMajorBinnedFeatures { columns }
 }
 
 pub fn compute_binned_features_row_major(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	progress: &(impl Fn() + Sync),
-) -> BinnedFeatures {
+) -> RowMajorBinnedFeatures {
 	let n_bins_across_all_features = binning_instructions
 		.iter()
 		.map(|binning_instructions| binning_instructions.n_bins())
@@ -237,7 +229,7 @@ fn compute_binned_features_row_major_u16(
 	features: &DataFrameView,
 	binning_instructions: &[BinningInstruction],
 	_progress: &(impl Fn() + Sync),
-) -> BinnedFeatures {
+) -> RowMajorBinnedFeatures {
 	let n_features = features.ncols();
 	let n_examples = features.nrows();
 	let mut values_with_offsets: Array2<u16> =
@@ -258,12 +250,13 @@ fn compute_binned_features_row_major_u16(
 		|(mut binned_features_column, feature, binning_instruction, offset)| {
 			match binning_instruction {
 				BinningInstruction::Number { thresholds } => {
-					izip!(
-						binned_features_column.iter_mut(),
+					pzip!(
+						binned_features_column.axis_iter_mut(Axis(0)),
 						feature.as_number().unwrap().data
 					)
 					.for_each(|(binned_feature_value, feature_value)| {
 						// Invalid values go to the first bin.
+						let binned_feature_value = binned_feature_value.into_scalar();
 						if !feature_value.is_finite() {
 							*binned_feature_value = *offset;
 						}
@@ -279,12 +272,12 @@ fn compute_binned_features_row_major_u16(
 					});
 				}
 				BinningInstruction::Enum { .. } => {
-					izip!(
-						binned_features_column.iter_mut(),
+					pzip!(
+						binned_features_column.axis_iter_mut(Axis(0)),
 						feature.as_enum().unwrap().data
 					)
 					.for_each(|(binned_feature_value, feature_value)| {
-						*binned_feature_value = offset
+						*binned_feature_value.into_scalar() = offset
 							+ feature_value
 								.map(|v| v.get())
 								.unwrap_or(0)
@@ -295,10 +288,10 @@ fn compute_binned_features_row_major_u16(
 			}
 		},
 	);
-	BinnedFeatures::RowMajor(RowMajorBinnedFeatures {
+	RowMajorBinnedFeatures {
 		values_with_offsets,
 		offsets,
-	})
+	}
 }
 
 fn compute_binned_features_for_number_feature(
