@@ -486,6 +486,10 @@ pub unsafe fn compute_bin_stats_row_major_not_root_yes_hessians<T>(
 			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
 			let prefetch_ptr = binned_feature_values
 				.as_ptr()
+				.add(prefetch_index * n_features + n_features / 2) as *const i8;
+			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
+			let prefetch_ptr = binned_feature_values
+				.as_ptr()
 				.add(prefetch_index * n_features + n_features - 1) as *const i8;
 			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
 			core::arch::x86_64::_mm_prefetch(
