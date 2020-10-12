@@ -1,7 +1,7 @@
-import { PricingCards } from './pricing_cards'
 import './styles.css'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
+import { PricingCards } from 'common/pricing_cards'
 import { renderPage } from 'common/render'
 import { PageLayout } from 'layouts/page_layout'
 import { h } from 'preact'

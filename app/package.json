@@ -3,9 +3,14 @@
 		"@tangramhq/charts": "*",
 		"@tangramhq/pinwheel": "*",
 		"@tangramhq/ui": "*",
+		"@tangramhq/www": "*",
 		"preact": "10.5.4",
 		"preact-render-to-string": "5.1.10"
 	},
+	"files": [
+		"**/*.ts",
+		"**/*.tsx"
+	],
 	"license": "UNLICENSED",
 	"name": "@tangramhq/app",
 	"version": "0.0.0"

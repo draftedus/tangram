@@ -1,6 +1,6 @@
 import './footer.css'
-import { Logo, LogoScheme } from './layout'
 import * as ui from '@tangramhq/ui'
+import { Logo, LogoScheme } from 'common/logo'
 import { h } from 'preact'
 
 export function Footer() {

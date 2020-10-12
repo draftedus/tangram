@@ -1,17 +1,6 @@
 {
+	"extends": "../tsconfig-common.json",
 	"compilerOptions": {
-		"isolatedModules": true,
-		"jsx": "react",
-		"jsxFactory": "h",
-		"jsxFragmentFactory": "Fragment",
-		"lib": ["esnext", "dom"],
-		"module": "esnext",
-		"moduleResolution": "node",
-		"noEmit": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"skipLibCheck": true,
-		"strict": true,
-		"target": "esnext"
+		"baseUrl": "."
 	}
 }

@@ -1,0 +1,9 @@
+{
+	"references": [
+		{ "path": "app" },
+		{ "path": "charts" },
+		{ "path": "pinwheel" },
+		{ "path": "ui" },
+		{ "path": "www" }
+	]
+}
