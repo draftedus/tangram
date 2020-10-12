@@ -11,12 +11,12 @@ args = parser.parse_args()
 library = args.library
 
 # Load the data.
-path = 'data/higgs-small.csv'
-nrows_train = 450_000
-nrows_test = 50_000
-# path = 'data/higgs.csv'
-# nrows_train = 10_500_000
-# nrows_test = 500_000
+# path = 'data/higgs-small.csv'
+# nrows_train = 450_000
+# nrows_test = 50_000
+path = 'data/higgs.csv'
+nrows_train = 10_500_000
+nrows_test = 500_000
 target_column_name = "signal"
 data = pd.read_csv(
 	path,
@@ -86,6 +86,8 @@ if library == 'h2o':
   )
 elif library == 'lightgbm':
   import lightgbm as lgb
+  import time
+  start = time.time()
   model = lgb.LGBMClassifier(
     force_row_wise=True,
     learning_rate=0.1,
@@ -93,6 +95,7 @@ elif library == 'lightgbm':
     num_leaves=255,
   )
   model.fit(features_train, labels_train)
+  print('duration: ', time.time() - start)
 elif library == 'sklearn':
   from sklearn.experimental import enable_hist_gradient_boosting
   from sklearn.ensemble import HistGradientBoostingClassifier
