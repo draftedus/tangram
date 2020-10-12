@@ -6,6 +6,7 @@ use crate::stats;
 use itertools::izip;
 use ndarray::{prelude::*, s};
 use tangram_dataframe::prelude::*;
+use tangram_util::text::{bigrams, AlphanumericTokenizer};
 
 /// This struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
 #[derive(Debug)]
@@ -407,9 +408,9 @@ fn compute_features_bag_of_words_ndarray(
 	for (mut features, value) in features.axis_iter_mut(Axis(0)).zip(data.iter()) {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = tangram_text::AlphanumericTokenizer;
+				let tokenizer = AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
-				let bigrams = tangram_text::bigrams(&tokens);
+				let bigrams = bigrams(&tokens);
 				let mut total = 0.0;
 				for token in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group
@@ -507,9 +508,9 @@ fn compute_features_bag_of_words_dataframe(
 	for (example_index, value) in data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = tangram_text::AlphanumericTokenizer;
+				let tokenizer = AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
-				let bigrams = tangram_text::bigrams(&tokens);
+				let bigrams = bigrams(&tokens);
 				let mut total = 0.0;
 				for token in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group
@@ -617,9 +618,9 @@ fn compute_features_bag_of_words_ndarray_value(
 	for (example_index, value) in data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = tangram_text::AlphanumericTokenizer;
+				let tokenizer = AlphanumericTokenizer;
 				let tokens = tokenizer.tokenize(value);
-				let bigrams = tangram_text::bigrams(&tokens);
+				let bigrams = bigrams(&tokens);
 				let mut total = 0.0;
 				for token in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group

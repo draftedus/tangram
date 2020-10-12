@@ -11,7 +11,7 @@ use crate::{
 };
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BinaryHeap, ops::Range};
-use tangram_pool::{Pool, PoolItem};
+use tangram_util::pool::{Pool, PoolItem};
 
 #[derive(Debug)]
 pub struct TrainTree {

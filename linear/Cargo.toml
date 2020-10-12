@@ -23,8 +23,6 @@ itertools = "0.9"
 ndarray = "0.13"
 num-traits = "0.2"
 rayon = "1.4"
-super_unsafe = { path = "../super_unsafe" }
 tangram_dataframe = { path = "../dataframe" }
 tangram_metrics = { path = "../metrics" }
-tangram_progress = { path = "../progress" }
-tangram_thread_pool = { path = "../thread_pool" }
+tangram_util = { path = "../util" }

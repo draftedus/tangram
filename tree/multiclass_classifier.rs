@@ -10,7 +10,7 @@ use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use tangram_dataframe::prelude::*;
-use tangram_thread_pool::pzip;
+use tangram_util::pzip;
 
 /// `MulticlasClassifier`s predict multiclass target values, for example which of several species a flower is.
 #[derive(Debug)]

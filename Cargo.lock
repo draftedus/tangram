@@ -2054,10 +2054,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "343f3f510c2915908f155e94f17220b19ccfacf2a64a2a5d8004f2c3e311e7fd"
 
 [[package]]
-name = "super_unsafe"
-version = "1.0.0"
-
-[[package]]
 name = "syn"
 version = "1.0.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2097,9 +2093,8 @@ dependencies = [
  "serde_urlencoded 0.7.0",
  "sqlx",
  "tangram_core",
- "tangram_finite",
- "tangram_id",
  "tangram_metrics",
+ "tangram_util",
  "tokio",
  "url",
 ]
@@ -2139,7 +2134,7 @@ dependencies = [
  "sqlx",
  "tangram_app",
  "tangram_core",
- "tangram_id",
+ "tangram_util",
  "term-ui",
  "tokio",
  "url",
@@ -2161,13 +2156,10 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "tangram_dataframe",
- "tangram_finite",
- "tangram_id",
  "tangram_linear",
  "tangram_metrics",
- "tangram_progress",
- "tangram_text",
  "tangram_tree",
+ "tangram_util",
 ]
 
 [[package]]
@@ -2181,22 +2173,7 @@ dependencies = [
  "lexical",
  "ndarray",
  "num-traits",
- "tangram_finite",
-]
-
-[[package]]
-name = "tangram_finite"
-version = "1.0.0"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
-name = "tangram_id"
-version = "1.0.0"
-dependencies = [
- "rand",
- "serde",
+ "tangram_util",
 ]
 
 [[package]]
@@ -2207,11 +2184,9 @@ dependencies = [
  "ndarray",
  "num-traits",
  "rayon",
- "super_unsafe",
  "tangram_dataframe",
  "tangram_metrics",
- "tangram_progress",
- "tangram_thread_pool",
+ "tangram_util",
 ]
 
 [[package]]
@@ -2234,32 +2209,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tangram_pool"
-version = "0.0.0"
-
-[[package]]
-name = "tangram_progress"
-version = "0.0.0"
-dependencies = [
- "rayon",
-]
-
-[[package]]
-name = "tangram_text"
-version = "0.0.0"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
-name = "tangram_thread_pool"
-version = "0.0.0"
-dependencies = [
- "crossbeam",
- "once_cell",
-]
-
-[[package]]
 name = "tangram_tree"
 version = "0.0.0"
 dependencies = [
@@ -2269,13 +2218,21 @@ dependencies = [
  "num-traits",
  "once_cell",
  "rayon",
- "super_unsafe",
  "tangram_dataframe",
- "tangram_finite",
  "tangram_metrics",
- "tangram_pool",
- "tangram_progress",
- "tangram_thread_pool",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_util"
+version = "0.0.0"
+dependencies = [
+ "crossbeam",
+ "num-traits",
+ "once_cell",
+ "rand",
+ "rayon",
+ "serde",
 ]
 
 [[package]]

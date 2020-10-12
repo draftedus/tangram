@@ -4,7 +4,7 @@ use rayon::prelude::*;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::StreamingMetric;
-use tangram_thread_pool::pzip;
+use tangram_util::pzip;
 
 fn main() {
 	// Load the data.

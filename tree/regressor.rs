@@ -9,7 +9,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_dataframe::prelude::*;
-use tangram_thread_pool::pzip;
+use tangram_util::pzip;
 
 /// `Regressor`s predict continuous target values, for example the selling price of a home.
 #[derive(Debug)]

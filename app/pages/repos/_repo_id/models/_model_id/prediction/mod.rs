@@ -11,7 +11,7 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
-use tangram_id::Id;
+use tangram_util::id::Id;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

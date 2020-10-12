@@ -10,7 +10,7 @@ pub struct ComputeShapValuesForExampleOutput {
 	pub feature_contribution_values: Vec<f32>,
 }
 
-/// Compute the SHAP values for a single example.
+/// Compute the SHAP values for a single class for a single example.
 pub fn compute_shap_values_for_example(
 	example: &[tangram_dataframe::DataFrameValue],
 	trees: ArrayView1<Tree>,

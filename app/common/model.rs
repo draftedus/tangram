@@ -1,6 +1,6 @@
 use anyhow::Result;
 use sqlx::prelude::*;
-use tangram_id::Id;
+use tangram_util::id::Id;
 
 /// Retrieves the model with the specified id.
 pub async fn get_model(

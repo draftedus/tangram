@@ -63,7 +63,7 @@ pub struct EarlyStoppingOptions {
 
 /// This is the training progress, which tracks the current epoch.
 #[derive(Debug)]
-pub struct TrainProgress(pub tangram_progress::ProgressCounter);
+pub struct TrainProgress(pub tangram_util::progress::ProgressCounter);
 
 /// This function splits the `features` and `labels` arrays into training and early stopping arrays, where the size of the early stopping stopping array will be `features.len() * early_stopping_fraction`.
 fn train_early_stopping_split<'features, 'labels, Label>(

@@ -10,9 +10,8 @@ use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::BTreeMap, path::Path};
 use tangram_dataframe::prelude::*;
-use tangram_id::Id;
 use tangram_metrics::{self as metrics};
-use tangram_progress::ProgressCounter;
+use tangram_util::{id::Id, progress::ProgressCounter};
 
 /**
 Train a model.

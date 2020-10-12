@@ -3,7 +3,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_dataframe::{DataFrameColumnView, DataFrameView};
-use tangram_thread_pool::pzip;
+use tangram_util::pzip;
 
 #[derive(Debug)]
 pub struct BinnedFeaturesRowMajor {

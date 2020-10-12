@@ -41,10 +41,6 @@ ndarray = { version = "0.13", features = ["rayon"] }
 num-traits = "0.2"
 once_cell = "1"
 rayon = "1.4"
-super_unsafe = { path = "../super_unsafe" }
 tangram_dataframe = { path = "../dataframe" }
-tangram_finite = { path = "../finite" }
 tangram_metrics = { path = "../metrics" }
-tangram_pool = { path = "../pool" }
-tangram_progress = { path = "../progress" }
-tangram_thread_pool = { path = "../thread_pool" }
+tangram_util = { path = "../util" }

@@ -5,7 +5,7 @@ use crate::{
 };
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use tangram_thread_pool::pzip;
+use tangram_util::pzip;
 
 const MIN_EXAMPLES_TO_PARALLELIZE: usize = 10_000;
 

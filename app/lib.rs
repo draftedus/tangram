@@ -11,7 +11,7 @@ use std::{
 	collections::BTreeMap, convert::Infallible, panic::AssertUnwindSafe, path::PathBuf,
 	str::FromStr, sync::Arc,
 };
-use tangram_id::Id;
+use tangram_util::id::Id;
 use url::Url;
 
 mod api;

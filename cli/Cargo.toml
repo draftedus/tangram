@@ -40,7 +40,7 @@ serde_yaml = "0.8"
 sqlx = { git = "https://github.com/nitsky/sqlx", branch = "master", default-features = false, features = ["any", "chrono", "postgres", "runtime-tokio", "sqlite"] }
 tangram_app = { path = "../app" }
 tangram_core = { path = "../core" }
-tangram_id = { path = "../id" }
+tangram_util = { path = "../util" }
 term-ui = { git = "https://github.com/tangram-hq/term-ui" }
 tokio = { version = "0.2", features = ["rt-threaded"] }
 url = "2"

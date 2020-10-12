@@ -4,7 +4,7 @@ use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BTreeMap};
 use tangram_dataframe::{DataFrameColumnView, DataFrameView, NumberDataFrameColumnView};
-use tangram_finite::Finite;
+use tangram_util::finite::Finite;
 
 /*
 This struct specifies how to produce a binned feature from a feature.

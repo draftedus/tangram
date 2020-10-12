@@ -15,8 +15,11 @@ use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use tangram_pool::{Pool, PoolItem};
-use tangram_thread_pool::pzip;
+use tangram_util::{
+	pool::{Pool, PoolItem},
+	pzip,
+	super_unsafe::SuperUnsafe,
+};
 
 pub struct ChooseBestSplitRootOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
@@ -313,7 +316,7 @@ fn choose_best_split_root_row_major(
 		},
 	);
 	// Choose the best split for each featue.
-	let bin_stats = super_unsafe::SuperUnsafe::new(bin_stats);
+	let bin_stats = SuperUnsafe::new(bin_stats);
 	pzip!(binning_instructions, &binned_features_row_major.offsets)
 		.enumerate()
 		.map(|(feature_index, (binning_instructions, offset))| {
@@ -738,8 +741,8 @@ fn choose_best_splits_not_root_row_major(
 			);
 	}
 	// Choose the best split for each feature.
-	let smaller_child_bin_stats = super_unsafe::SuperUnsafe::new(smaller_child_bin_stats);
-	let larger_child_bin_stats = super_unsafe::SuperUnsafe::new(larger_child_bin_stats);
+	let smaller_child_bin_stats = SuperUnsafe::new(smaller_child_bin_stats);
+	let larger_child_bin_stats = SuperUnsafe::new(larger_child_bin_stats);
 	pzip!(binning_instructions, &binned_features_row_major.offsets)
 		.enumerate()
 		.map(|(feature_index, (binning_instructions, offset))| {

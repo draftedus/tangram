@@ -1,7 +1,0 @@
-[package]
-edition = "2018"
-name = "tangram_pool"
-version = "0.0.0"
-
-[lib]
-path = "lib.rs"

@@ -17,7 +17,7 @@ use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram_id::Id;
+use tangram_util::id::Id;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

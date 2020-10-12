@@ -9,7 +9,7 @@ use anyhow::Result;
 use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use tangram_id::Id;
+use tangram_util::id::Id;
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]

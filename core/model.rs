@@ -3,7 +3,7 @@ use std::{
 	io::{Read, Write},
 	path::Path,
 };
-use tangram_id::Id;
+use tangram_util::id::Id;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Model {

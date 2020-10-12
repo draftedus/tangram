@@ -10,7 +10,7 @@ use anyhow::Result;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use sqlx::prelude::*;
-use tangram_id::Id;
+use tangram_util::id::Id;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

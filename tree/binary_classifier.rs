@@ -11,7 +11,7 @@ use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use std::ops::Neg;
 use tangram_dataframe::prelude::*;
-use tangram_thread_pool::pzip;
+use tangram_util::pzip;
 
 /// `BinaryClassifier`s predict binary target values, for example whether a patient has heart disease or not.
 #[derive(Debug)]

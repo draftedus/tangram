@@ -11,7 +11,7 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram_id::Id;
+use tangram_util::id::Id;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

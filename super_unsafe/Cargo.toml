@@ -1,7 +1,0 @@
-[package]
-edition = "2018"
-name = "super_unsafe"
-version = "1.0.0"
-
-[lib]
-path = "lib.rs"

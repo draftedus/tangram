@@ -4,19 +4,13 @@ members = [
 	"app",
 	"cli",
 	"core",
-	"finite",
-	"id",
 	"libtangram",
 	"linear",
 	"metrics",
 	"ndarray",
 	"pinwheel",
-	"pool",
-	"progress",
-	"super_unsafe",
-	"text",
-	"thread_pool",
 	"tree",
+	"util",
 ]
 
 [profile.release]

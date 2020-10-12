@@ -20,10 +20,8 @@ use crate::{
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
-use super_unsafe::SuperUnsafe;
 use tangram_dataframe::prelude::*;
-use tangram_pool::Pool;
-use tangram_progress::ProgressCounter;
+use tangram_util::{pool::Pool, progress::ProgressCounter, super_unsafe::SuperUnsafe};
 
 /// This enum is used by the common `train` function below to customize the training code slightly for each task.
 #[derive(Clone, Copy, Debug)]

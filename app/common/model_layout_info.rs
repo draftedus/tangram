@@ -1,6 +1,6 @@
 use anyhow::Result;
 use sqlx::prelude::*;
-use tangram_id::Id;
+use tangram_util::id::Id;
 
 #[derive(serde::Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
