@@ -1,3 +1,2 @@
-ssh -t tangram@router.tangramhq.com "sudo systemctl stop tangram"
-rsync --progress --archive --chown=api:api --chmod=770 target/release/tangram tangram@router.tangramhq.com:/var/lib/tangram/tangram
-ssh -t tangram@router.tangramhq.com "sudo systemctl start tangram"
+rsync --progress --archive --chown=tangram:tangram --chmod=770 target/release/tangram tangram@router.tangramhq.com:/var/lib/tangram/tangram
+ssh -t tangram@router.tangramhq.com "sudo systemctl restart tangram"

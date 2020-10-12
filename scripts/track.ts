@@ -1,5 +1,5 @@
-import * as csv from 'https://deno.land/std@0.61.0/encoding/csv.ts'
-import * as utf8 from 'https://deno.land/std@0.61.0/encoding/utf8.ts'
+import * as csv from 'https://deno.land/std@0.74.0/encoding/csv.ts'
+import * as utf8 from 'https://deno.land/std@0.74.0/encoding/utf8.ts'
 
 let modelName = Deno.args[0]
 let modelId = Deno.args[1]
@@ -72,9 +72,9 @@ let networkConfig: NetworkConfig = {
 }
 
 let csvData = await Deno.readFile(config.csvPath)
-let rows = (await csv.parse(utf8.decode(csvData), {
-	header: true,
-})) as Array<{ [key: string]: string }>
+let rows = (await csv.parse(utf8.decode(csvData))) as Array<{
+	[key: string]: string
+}>
 
 let nRows = rows.length
 
@@ -148,7 +148,10 @@ for (let i = 0; i < 1000; i++) {
 		type: 'prediction',
 	}
 
+	// Track the prediction.
 	await track(prediction)
+
+	// For about 60% of predictions, track the true value.
 	if (Math.random() > 0.4) {
 		let trueValue: TrueValue = {
 			date: date.toISOString(),
