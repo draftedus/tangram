@@ -1,5 +1,5 @@
 import { Label } from './label'
-import './select.css'
+import './select_field.css'
 import { ComponentChildren, h } from 'preact'
 
 export type SelectFieldProps = {

@@ -1,8 +1,8 @@
+import './checkbox_field.css'
 import { Label } from './label'
-import './text.css'
 import { h } from 'preact'
 
-type TextFieldProps = {
+type CheckboxFieldProps = {
 	autocomplete?: string
 	disabled?: boolean
 	label?: string
@@ -10,22 +10,19 @@ type TextFieldProps = {
 	onChange?: (newValue: string | null) => void
 	placeholder?: string
 	readOnly?: boolean
-	required?: boolean
 	value?: string | null
 }
 
-export function TextField(props: TextFieldProps) {
+export function CheckboxField(props: CheckboxFieldProps) {
 	return (
 		<Label>
 			{props.label}
 			<input
-				autocomplete={props.autocomplete}
-				class="form-text-field"
+				class="form-checkbox-field"
 				name={props.name}
 				placeholder={props.placeholder}
 				readOnly={props.readOnly}
-				required={props.required}
-				spellcheck={false}
+				type="checkbox"
 				value={props.value ?? undefined}
 			/>
 		</Label>
