@@ -1,2 +1,2 @@
 cargo fmt
-yarn run -s prettier --no-color --write "**/*.{ts,tsx,css}"
+yarn run -s prettier --loglevel silent --write "**/*.{ts,tsx,css}"
