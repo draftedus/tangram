@@ -1,4 +1,4 @@
-import { TreeFeatureImportances } from './tree'
+import { TreeFeatureImportances } from './tree_feature_importances'
 import { h } from 'preact'
 
 type Props = {

@@ -1,4 +1,4 @@
-import { LinearFeatureWeights } from './linear'
+import { LinearFeatureWeights } from './linear_feature_weights'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
