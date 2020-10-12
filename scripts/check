@@ -1,3 +1,1 @@
 cargo clippy --all-targets --all-features
-yarn run -s tsc -p app/tsconfig.json
-yarn run -s eslint --ext ts,tsx app
