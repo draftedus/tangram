@@ -1,13 +1,6 @@
 use crossbeam::channel::{bounded, unbounded, Receiver, Sender};
 use once_cell::sync::Lazy;
 
-#[macro_export]
-macro_rules! pzip {
-	($($e:expr),* $(,)*) => {
-		rayon::iter::IntoParallelIterator::into_par_iter(($($e,)*))
-	};
-}
-
 pub static GLOBAL_THREAD_POOL: Lazy<ThreadPool> = Lazy::new(|| ThreadPool::new(16));
 
 pub struct ThreadPool {
