@@ -50,7 +50,7 @@ export type FeatureContributionsChartValue = {
 export type FeatureContributionsChartHoverRegionInfo = {
 	box: Box
 	color: string
-	direction: Direction
+	direction: FeatureContributionsBoxDirection
 	label: string
 	tooltipOriginPixels: Point
 }
@@ -354,12 +354,13 @@ function drawFeatureContributionsSeries(
 
 	let min = Math.min(series.baseline, series.output)
 
-	// Draw the positive boxes which start at the baseline and go to the max.
+	// Draw the positive boxes which start at the baseline and go to the max, ending with the remaining features box.
 	let positiveValues = series.values
 		.filter(({ value }) => value > 0)
 		.sort((a, b) => (a.value > b.value ? -1 : 1))
 	let x = box.x + (series.baseline - min) * valueWidthMultiplier
 	let positiveValuesIndex = 0
+	// Draw the baseline value and label.
 	ctx.textBaseline = 'bottom'
 	ctx.textAlign = 'right'
 	ctx.fillText(`baseline`, x - chartConfig.labelPadding, box.y + boxHeight / 2)
@@ -386,14 +387,14 @@ function drawFeatureContributionsSeries(
 			box: valueBox,
 			color: positiveColor,
 			ctx,
-			direction: Direction.Right,
+			direction: FeatureContributionsBoxDirection.Negative,
 			label: `${featureContributionValue.feature}`,
 		})
 		hoverRegions.push(
 			featureContributionsChartHoverRegion({
 				box: valueBox,
 				color: positiveColor,
-				direction: Direction.Right,
+				direction: FeatureContributionsBoxDirection.Negative,
 				label: `${featureContributionValue.feature}`,
 				tooltipOriginPixels: {
 					...valueBox,
@@ -404,7 +405,6 @@ function drawFeatureContributionsSeries(
 		x += width
 		positiveValuesIndex += 1
 	}
-	// Draw the box for the remaining features.
 	let nRemainingFeatures = 0
 	let remainingFeaturesBoxWidth = 0
 	for (let i = positiveValuesIndex; i < positiveValues.length; i++) {
@@ -424,14 +424,14 @@ function drawFeatureContributionsSeries(
 			box: remainingFeaturesBox,
 			color: `${positiveColor}33`,
 			ctx,
-			direction: Direction.Right,
+			direction: FeatureContributionsBoxDirection.Negative,
 			label: `${nRemainingFeatures} other features`,
 		})
 		hoverRegions.push(
 			featureContributionsChartHoverRegion({
 				box: remainingFeaturesBox,
 				color: `${positiveColor}33`,
-				direction: Direction.Right,
+				direction: FeatureContributionsBoxDirection.Negative,
 				label: `${nRemainingFeatures} other features`,
 				tooltipOriginPixels: {
 					...remainingFeaturesBox,
@@ -441,7 +441,7 @@ function drawFeatureContributionsSeries(
 		)
 	}
 
-	// Draw the negative boxes which start at the max and go to the output.
+	// Draw the negative boxes which start at the max and go to the output, starting with the remaining features box.
 	x = box.x + box.w
 	let y = box.y + boxHeight + chartConfig.featureContributionsBarGap
 	let negativeValues = series.values
@@ -472,14 +472,14 @@ function drawFeatureContributionsSeries(
 			box: remainingFeaturesBox,
 			color: `${negativeColor}33`,
 			ctx,
-			direction: Direction.Left,
+			direction: FeatureContributionsBoxDirection.Positive,
 			label: `${nRemainingFeatures} other features`,
 		})
 		hoverRegions.push(
 			featureContributionsChartHoverRegion({
 				box: remainingFeaturesBox,
 				color: `${negativeColor}33`,
-				direction: Direction.Left,
+				direction: FeatureContributionsBoxDirection.Positive,
 				label: `${nRemainingFeatures} other features`,
 				tooltipOriginPixels: {
 					...remainingFeaturesBox,
@@ -501,14 +501,14 @@ function drawFeatureContributionsSeries(
 			box: valueBox,
 			color: negativeColor,
 			ctx,
-			direction: Direction.Left,
+			direction: FeatureContributionsBoxDirection.Positive,
 			label: `${featureContributionValue.feature}`,
 		})
 		hoverRegions.push(
 			featureContributionsChartHoverRegion({
 				box: valueBox,
 				color: negativeColor,
-				direction: Direction.Left,
+				direction: FeatureContributionsBoxDirection.Positive,
 				label: `${featureContributionValue.feature}`,
 				tooltipOriginPixels: {
 					...valueBox,
@@ -518,7 +518,7 @@ function drawFeatureContributionsSeries(
 		)
 		x += width
 	}
-
+	// Draw the output value and label.
 	ctx.textBaseline = 'bottom'
 	ctx.fillText(
 		`output`,
@@ -621,7 +621,7 @@ let drawFeatureContributionTooltips = (
 type RegisterFeatureContributionsChartHoverRegionOptions = {
 	box: Box
 	color: string
-	direction: Direction
+	direction: FeatureContributionsBoxDirection
 	label: string
 	tooltipOriginPixels: Box
 }
@@ -656,15 +656,13 @@ type DrawFeatureContributionBoxOptions = {
 	box: Box
 	color: string
 	ctx: CanvasRenderingContext2D
-	direction: Direction
+	direction: FeatureContributionsBoxDirection
 	label: string
 }
 
-enum Direction {
-	Left,
-	Right,
-	Up,
-	Down,
+enum FeatureContributionsBoxDirection {
+	Positive,
+	Negative,
 }
 
 export let drawFeatureContributionBox = (
@@ -674,7 +672,7 @@ export let drawFeatureContributionBox = (
 
 	let textPadding = 4
 	let arrowDepth =
-		direction == Direction.Right
+		direction == FeatureContributionsBoxDirection.Negative
 			? chartConfig.featureContributionsArrowDepth
 			: -chartConfig.featureContributionsArrowDepth
 
