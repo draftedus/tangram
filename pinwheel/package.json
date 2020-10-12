@@ -2,6 +2,7 @@
 	"dependencies": {
 		"esbuild": "0.7.14"
 	},
+	"license": "MIT",
 	"main": "mod.ts",
 	"name": "@tangramhq/pinwheel",
 	"version": "0.0.0"

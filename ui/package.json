@@ -3,6 +3,7 @@
 		"@tangramhq/pinwheel": "*",
 		"preact": "10.5.4"
 	},
+	"license": "UNLICENSED",
 	"main": "mod.ts",
 	"name": "@tangramhq/ui",
 	"version": "0.0.0"
