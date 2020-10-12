@@ -86,7 +86,6 @@ if library == 'h2o':
   )
 elif library == 'lightgbm':
   import lightgbm as lgb
-  import time
   start = time.time()
   model = lgb.LGBMClassifier(
     force_row_wise=True,
@@ -95,7 +94,6 @@ elif library == 'lightgbm':
     num_leaves=255,
   )
   model.fit(features_train, labels_train)
-  print('duration: ', time.time() - start)
 elif library == 'sklearn':
   from sklearn.experimental import enable_hist_gradient_boosting
   from sklearn.ensemble import HistGradientBoostingClassifier
