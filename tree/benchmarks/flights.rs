@@ -3,17 +3,17 @@ use ndarray::prelude::*;
 use rayon::prelude::*;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
-use tangram_metrics::StreamingMetric;
+use tangram_metrics::Metric;
 use tangram_util::pzip;
 
 fn main() {
 	// Load the data.
 	// let csv_file_path_train = Path::new("data/flights-100k.csv");
 	// let csv_file_path_test = Path::new("data/flights-test.csv");
-	// let csv_file_path_train = Path::new("data/flights-1m.csv");
-	// let csv_file_path_test = Path::new("data/flights-test.csv");
-	let csv_file_path_train = Path::new("data/flights-10m.csv");
+	let csv_file_path_train = Path::new("data/flights-1m.csv");
 	let csv_file_path_test = Path::new("data/flights-test.csv");
+	// let csv_file_path_train = Path::new("data/flights-10m.csv");
+	// let csv_file_path_test = Path::new("data/flights-test.csv");
 	let target_column_name_column_index = 8;
 	let month_options = vec![
 		"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
@@ -144,38 +144,27 @@ fn main() {
 
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
-	let chunk_size = features_test.nrows() / rayon::current_num_threads();
-	let metrics = pzip!(
+	let chunk_size =
+		(features_test.nrows() + rayon::current_num_threads() - 1) / rayon::current_num_threads();
+	let mut probabilities: Array2<f32> =
+		unsafe { Array2::uninitialized((features_test.nrows(), 2)) };
+	pzip!(
 		features_test.axis_chunks_iter(Axis(0), chunk_size),
-		labels_test.data.par_chunks(chunk_size),
+		probabilities.axis_chunks_iter_mut(Axis(0), chunk_size),
 	)
-	.fold(
-		|| {
-			let metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
-			let probabilities: Array2<f32> = unsafe { Array2::uninitialized((chunk_size, 2)) };
-			(metrics, probabilities)
-		},
-		|(mut metrics, mut probabilities), (features_test, labels_test)| {
-			let probabilities_slice = s![0..features_test.nrows(), ..];
-			model.predict(features_test, probabilities.slice_mut(probabilities_slice));
-			metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-				probabilities: probabilities.slice(probabilities_slice),
-				labels: labels_test.into(),
-			});
-			(metrics, probabilities)
-		},
-	)
-	.map(|(metrics, _)| metrics)
-	.reduce(
-		|| tangram_metrics::BinaryClassificationMetrics::new(100),
-		|mut a, b| {
-			a.merge(b);
-			a
-		},
-	)
-	.finalize();
+	.for_each(|(features_test_chunk, probabilities_chunk)| {
+		model.predict(features_test_chunk, probabilities_chunk);
+	});
 
 	// Compute metrics.
-	println!("duration: {}", duration.as_secs_f32());
-	println!("auc: {}", metrics.auc_roc);
+	let labels = labels_test;
+	let input = probabilities
+		.column(1)
+		.iter()
+		.cloned()
+		.zip(labels.data.iter().map(|d| d.unwrap()))
+		.collect();
+	let auc_roc = tangram_metrics::AUCROC::compute(input);
+	println!("duration {}", duration.as_secs_f32());
+	println!("auc: {}", auc_roc);
 }

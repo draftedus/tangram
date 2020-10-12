@@ -1,6 +1,7 @@
 use ndarray::prelude::*;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
+use tangram_metrics::Metric;
 use tangram_metrics::StreamingMetric;
 
 fn main() {
@@ -32,15 +33,23 @@ fn main() {
 
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
-	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((n_rows_test, 2)) };
+	let mut probabilities: Array2<f32> = unsafe { Array2::uninitialized((n_rows_test, 2)) };
 	model.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute metrics.
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(100);
+	let input = probabilities
+		.column(1)
+		.iter()
+		.cloned()
+		.zip(labels_test.data.iter().map(|d| d.unwrap()))
+		.collect();
+	let auc_roc = tangram_metrics::AUCROC::compute(input);
+	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
 	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels_test.data.into(),
 	});
 	let metrics = metrics.finalize();
-	println!("auc: {}", metrics.auc_roc);
+	println!("accuracy: {}", metrics.thresholds[1].accuracy);
+	println!("auc: {}", auc_roc);
 }
