@@ -690,20 +690,7 @@ fn train_linear_regressor(
 		.unwrap()
 		.as_number()
 		.unwrap();
-	let mut linear_options = tangram_linear::TrainOptions::default();
-	linear_options.compute_loss = true;
-	if let Some(l2_regularization) = options.l2_regularization {
-		linear_options.l2_regularization = l2_regularization;
-	}
-	if let Some(learning_rate) = options.learning_rate {
-		linear_options.learning_rate = learning_rate;
-	}
-	if let Some(max_epochs) = options.max_epochs {
-		linear_options.max_epochs = max_epochs.to_usize().unwrap();
-	}
-	if let Some(n_examples_per_batch) = options.n_examples_per_batch {
-		linear_options.n_examples_per_batch = n_examples_per_batch.to_usize().unwrap();
-	}
+	let linear_options = compute_linear_options(&options);
 	let model = tangram_linear::Regressor::train(
 		features.view(),
 		labels,
@@ -741,20 +728,7 @@ fn train_tree_regressor(
 		.as_number()
 		.unwrap()
 		.clone();
-	let mut tree_options = tangram_tree::TrainOptions::default();
-	tree_options.compute_loss = true;
-	if let Some(learning_rate) = options.learning_rate {
-		tree_options.learning_rate = learning_rate;
-	}
-	if let Some(max_depth) = options.max_depth {
-		tree_options.max_depth = Some(max_depth.to_usize().unwrap());
-	}
-	if let Some(max_depth) = options.max_depth {
-		tree_options.max_leaf_nodes = 2usize.pow(max_depth.to_u32().unwrap());
-	}
-	if let Some(max_rounds) = options.max_rounds {
-		tree_options.max_rounds = max_rounds.to_usize().unwrap();
-	}
+	let tree_options = compute_tree_options(&options);
 	let model =
 		tangram_tree::Regressor::train(features.view(), labels, tree_options, &mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
@@ -792,20 +766,7 @@ fn train_linear_binary_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let mut linear_options = tangram_linear::TrainOptions::default();
-	linear_options.compute_loss = true;
-	if let Some(l2_regularization) = options.l2_regularization {
-		linear_options.l2_regularization = l2_regularization;
-	}
-	if let Some(learning_rate) = options.learning_rate {
-		linear_options.learning_rate = learning_rate;
-	}
-	if let Some(max_epochs) = options.max_epochs {
-		linear_options.max_epochs = max_epochs.to_usize().unwrap();
-	}
-	if let Some(n_examples_per_batch) = options.n_examples_per_batch {
-		linear_options.n_examples_per_batch = n_examples_per_batch.to_usize().unwrap();
-	}
+	let linear_options = compute_linear_options(&options);
 	let model = tangram_linear::BinaryClassifier::train(
 		features.view(),
 		labels,
@@ -843,20 +804,7 @@ fn train_tree_binary_classifier(
 		.as_enum()
 		.unwrap()
 		.clone();
-	let mut tree_options = tangram_tree::TrainOptions::default();
-	tree_options.compute_loss = true;
-	if let Some(learning_rate) = options.learning_rate {
-		tree_options.learning_rate = learning_rate;
-	}
-	if let Some(max_depth) = options.max_depth {
-		tree_options.max_depth = Some(max_depth.to_usize().unwrap());
-	}
-	if let Some(max_depth) = options.max_depth {
-		tree_options.max_leaf_nodes = 2usize.pow(max_depth.to_u32().unwrap());
-	}
-	if let Some(max_rounds) = options.max_rounds {
-		tree_options.max_rounds = max_rounds.to_usize().unwrap();
-	}
+	let tree_options = compute_tree_options(&options);
 	let model = tangram_tree::BinaryClassifier::train(
 		features.view(),
 		labels,
@@ -898,19 +846,7 @@ fn train_linear_multiclass_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let mut linear_options = tangram_linear::TrainOptions::default();
-	if let Some(l2_regularization) = options.l2_regularization {
-		linear_options.l2_regularization = l2_regularization;
-	}
-	if let Some(learning_rate) = options.learning_rate {
-		linear_options.learning_rate = learning_rate;
-	}
-	if let Some(max_epochs) = options.max_epochs {
-		linear_options.max_epochs = max_epochs.to_usize().unwrap();
-	}
-	if let Some(n_examples_per_batch) = options.n_examples_per_batch {
-		linear_options.n_examples_per_batch = n_examples_per_batch.to_usize().unwrap();
-	}
+	let linear_options = compute_linear_options(&options);
 	let model = tangram_linear::MulticlassClassifier::train(
 		features.view(),
 		labels,
@@ -948,19 +884,7 @@ fn train_tree_multiclass_classifier(
 		.as_enum()
 		.unwrap()
 		.clone();
-	let mut tree_options = tangram_tree::TrainOptions::default();
-	if let Some(learning_rate) = options.learning_rate {
-		tree_options.learning_rate = learning_rate;
-	}
-	if let Some(max_depth) = options.max_depth {
-		tree_options.max_depth = Some(max_depth.to_usize().unwrap());
-	}
-	if let Some(max_rounds) = options.max_rounds {
-		tree_options.max_rounds = max_rounds.to_usize().unwrap();
-	}
-	if let Some(min_examples_per_leaf) = options.min_examples_per_leaf {
-		tree_options.min_examples_per_node = min_examples_per_leaf.to_usize().unwrap();
-	}
+	let tree_options = compute_tree_options(&options);
 	let model = tangram_tree::MulticlassClassifier::train(
 		features.view(),
 		labels,
@@ -977,6 +901,97 @@ fn train_tree_multiclass_classifier(
 		target_column_index,
 		options,
 	})
+}
+
+fn compute_linear_options(options: &grid::LinearModelTrainOptions) -> tangram_linear::TrainOptions {
+	let mut linear_options = tangram_linear::TrainOptions::default();
+	linear_options.compute_loss = true;
+	if let Some(l2_regularization) = options.l2_regularization {
+		linear_options.l2_regularization = l2_regularization;
+	}
+	if let Some(learning_rate) = options.learning_rate {
+		linear_options.learning_rate = learning_rate;
+	}
+	if let Some(max_epochs) = options.max_epochs {
+		linear_options.max_epochs = max_epochs.to_usize().unwrap();
+	}
+	if let Some(n_examples_per_batch) = options.n_examples_per_batch {
+		linear_options.n_examples_per_batch = n_examples_per_batch.to_usize().unwrap();
+	}
+	if let Some(compute_loss) = options.compute_loss {
+		linear_options.compute_loss = compute_loss;
+	}
+	if let Some(early_stopping_options) = options.early_stopping_options.as_ref() {
+		linear_options.early_stopping_options = Some(tangram_linear::EarlyStoppingOptions {
+			early_stopping_fraction: early_stopping_options.early_stopping_fraction,
+			min_decrease_in_loss_for_significant_change: early_stopping_options
+				.early_stopping_fraction,
+			n_epochs_without_improvement_to_stop: early_stopping_options.early_stopping_rounds,
+		})
+	}
+	linear_options
+}
+
+fn compute_tree_options(options: &grid::TreeModelTrainOptions) -> tangram_tree::TrainOptions {
+	let mut tree_options = tangram_tree::TrainOptions::default();
+	if let Some(compute_loss) = options.compute_loss {
+		tree_options.compute_loss = compute_loss;
+	}
+	if let Some(early_stopping_options) = options.early_stopping_options.as_ref() {
+		tree_options.early_stopping_options = Some(tangram_tree::EarlyStoppingOptions {
+			early_stopping_fraction: early_stopping_options.early_stopping_fraction,
+			early_stopping_rounds: early_stopping_options.early_stopping_rounds,
+			early_stopping_threshold: early_stopping_options.early_stopping_threshold,
+		})
+	}
+	if let Some(l2_regularization) = options.l2_regularization {
+		tree_options.l2_regularization = l2_regularization;
+	}
+	if let Some(learning_rate) = options.learning_rate {
+		tree_options.learning_rate = learning_rate;
+	}
+	if let Some(max_depth) = options.max_depth {
+		tree_options.max_depth = Some(max_depth.to_usize().unwrap());
+	}
+	if let Some(max_examples_for_computing_bin_thresholds) =
+		options.max_examples_for_computing_bin_thresholds
+	{
+		tree_options.max_examples_for_computing_bin_thresholds =
+			max_examples_for_computing_bin_thresholds
+				.to_usize()
+				.unwrap();
+	}
+	if let Some(max_leaf_nodes) = options.max_leaf_nodes {
+		tree_options.max_depth = Some(max_leaf_nodes.to_usize().unwrap());
+	}
+	if let Some(max_rounds) = options.max_rounds {
+		tree_options.max_rounds = max_rounds.to_usize().unwrap();
+	}
+	if let Some(max_valid_bins_for_number_features) = options.max_valid_bins_for_number_features {
+		tree_options.max_valid_bins_for_number_features = max_valid_bins_for_number_features;
+	}
+	if let Some(min_examples_per_node) = options.min_examples_per_node {
+		tree_options.min_examples_per_node = min_examples_per_node.to_usize().unwrap();
+	}
+	if let Some(min_gain_to_split) = options.min_gain_to_split {
+		tree_options.min_gain_to_split = min_gain_to_split;
+	}
+	if let Some(min_sum_hessians_per_node) = options.min_sum_hessians_per_node {
+		tree_options.min_sum_hessians_per_node = min_sum_hessians_per_node;
+	}
+	if let Some(smoothing_factor_for_discrete_bin_sorting) =
+		options.smoothing_factor_for_discrete_bin_sorting
+	{
+		tree_options.smoothing_factor_for_discrete_bin_sorting =
+			smoothing_factor_for_discrete_bin_sorting;
+	}
+	if let Some(supplemental_l2_regularization_for_discrete_splits) =
+		options.supplemental_l2_regularization_for_discrete_splits
+	{
+		tree_options.supplemental_l2_regularization_for_discrete_splits =
+			supplemental_l2_regularization_for_discrete_splits;
+	}
+	tree_options
 }
 
 fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<ComparisonMetric> {
