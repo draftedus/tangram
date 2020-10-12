@@ -1,4 +1,4 @@
-import { Label } from './label'
+import { FieldLabel } from './field_label'
 import './select_field.css'
 import { ComponentChildren, h } from 'preact'
 
@@ -22,7 +22,7 @@ export type SelectFieldOption = {
 
 export function SelectField(props: SelectFieldProps) {
 	return (
-		<Label>
+		<FieldLabel>
 			{props.label}
 			<select
 				class="form-select"
@@ -44,7 +44,7 @@ export function SelectField(props: SelectFieldProps) {
 					  ))
 					: props.children}
 			</select>
-		</Label>
+		</FieldLabel>
 	)
 }
 

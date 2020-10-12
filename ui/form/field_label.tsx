@@ -1,4 +1,4 @@
-import './label.css'
+import './field_label.css'
 import { ComponentChildren, h } from 'preact'
 
 type Props = {
@@ -6,9 +6,9 @@ type Props = {
 	for?: string
 }
 
-export function Label(props: Props) {
+export function FieldLabel(props: Props) {
 	return (
-		<label class="form-label" htmlFor={props.for}>
+		<label class="field-label" htmlFor={props.for}>
 			{props.children}
 		</label>
 	)

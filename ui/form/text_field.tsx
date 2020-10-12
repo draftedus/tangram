@@ -1,4 +1,4 @@
-import { Label } from './label'
+import { FieldLabel } from './field_label'
 import './text_field.css'
 import { h } from 'preact'
 
@@ -16,7 +16,7 @@ type TextFieldProps = {
 
 export function TextField(props: TextFieldProps) {
 	return (
-		<Label>
+		<FieldLabel>
 			{props.label}
 			<input
 				autocomplete={props.autocomplete}
@@ -28,6 +28,6 @@ export function TextField(props: TextFieldProps) {
 				spellcheck={false}
 				value={props.value ?? undefined}
 			/>
-		</Label>
+		</FieldLabel>
 	)
 }

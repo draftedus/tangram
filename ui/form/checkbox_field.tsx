@@ -1,5 +1,5 @@
 import './checkbox_field.css'
-import { Label } from './label'
+import { FieldLabel } from './field_label'
 import { h } from 'preact'
 
 type CheckboxFieldProps = {
@@ -15,7 +15,7 @@ type CheckboxFieldProps = {
 
 export function CheckboxField(props: CheckboxFieldProps) {
 	return (
-		<Label>
+		<FieldLabel>
 			{props.label}
 			<input
 				class="form-checkbox-field"
@@ -25,6 +25,6 @@ export function CheckboxField(props: CheckboxFieldProps) {
 				type="checkbox"
 				value={props.value ?? undefined}
 			/>
-		</Label>
+		</FieldLabel>
 	)
 }

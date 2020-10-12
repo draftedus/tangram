@@ -1,5 +1,5 @@
+import { FieldLabel } from './field_label'
 import './file_field.css'
-import { Label } from './label'
 import { h } from 'preact'
 
 type FileFieldProps = {
@@ -12,7 +12,7 @@ type FileFieldProps = {
 
 export function FileField(props: FileFieldProps) {
 	return (
-		<Label>
+		<FieldLabel>
 			{props.label}
 			<div class="form-file-wrapper">
 				{'Choose File'}
@@ -24,7 +24,7 @@ export function FileField(props: FileFieldProps) {
 					value={props.value}
 				/>
 			</div>
-		</Label>
+		</FieldLabel>
 	)
 }
 
