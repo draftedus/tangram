@@ -10,11 +10,11 @@ export type {
 	BoxChartOptions as DrawBoxChartOptions,
 } from './box_chart'
 export type {
-	ShapChartOptions as DrawShapChartOptions,
-	ShapChartData,
-	ShapChartSeries,
-	ShapChartValue as ShapValue,
-} from './shap_chart'
+	FeatureContributionsChartOptions as DrawFeatureContributionsChartOptions,
+	FeatureContributionsChartData,
+	FeatureContributionsChartSeries,
+	FeatureContributionsChartValue,
+} from './feature_contributions_chart'
 export type {
 	LineChartOptions as DrawLineChartOptions,
 	LineChartData,
@@ -23,15 +23,15 @@ export type {
 export { createBarChart } from './bar_chart'
 export { createBoxChart } from './box_chart'
 export { createLineChart, LineStyle, PointStyle } from './line_chart'
-export { createShapChart } from './shap_chart'
+export { createFeatureContributionsChart } from './feature_contributions_chart'
 export { chartConfig, lightChartColors, darkChartColors } from './config'
 export * from './components'
 
 import { createBarChart } from './bar_chart'
 import { createBoxChart } from './box_chart'
 import { Chart } from './chart'
+import { createFeatureContributionsChart } from './feature_contributions_chart'
 import { createLineChart } from './line_chart'
-import { createShapChart } from './shap_chart'
 
 export function hydrateChart<Options>(
 	id: string,
@@ -58,6 +58,6 @@ export function hydrateLineChart(id: string) {
 	hydrateChart(id, createLineChart)
 }
 
-export function hydrateShapChart(id: string) {
-	hydrateChart(id, createShapChart)
+export function hydrateFeatureContributionsChart(id: string) {
+	hydrateChart(id, createFeatureContributionsChart)
 }

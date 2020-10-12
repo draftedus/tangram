@@ -1,5 +1,5 @@
 import './explanations.css'
-import { BarChart, ShapChart } from '@tangramhq/charts'
+import { BarChart, FeatureContributionsChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
@@ -11,8 +11,7 @@ export function Explanations() {
 		],
 		className: 'Positive',
 		classes: ['Negative', 'Positive'],
-		probability: 0.9748272,
-		shapChartData: [
+		featureContributionsChartData: [
 			{
 				baseline: 0.02783647,
 				baselineLabel: '51%',
@@ -43,6 +42,7 @@ export function Explanations() {
 				],
 			},
 		],
+		probability: 0.9748272,
 	}
 
 	return (
@@ -72,8 +72,8 @@ export function Explanations() {
 					/>
 				)}
 				<ui.Card>
-					<ShapChart
-						data={data.shapChartData}
+					<FeatureContributionsChart
+						data={data.featureContributionsChartData}
 						includeXAxisTitle={true}
 						includeYAxisLabels={true}
 						includeYAxisTitle={true}

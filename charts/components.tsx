@@ -2,8 +2,11 @@ import { BarChartOptions, createBarChart } from './bar_chart'
 import { BoxChartOptions, createBoxChart } from './box_chart'
 import './charts.css'
 import { chartConfig } from './config'
+import {
+	FeatureContributionsChartOptions,
+	createFeatureContributionsChart,
+} from './feature_contributions_chart'
 import { LineChartOptions, createLineChart } from './line_chart'
-import { ShapChartOptions, createShapChart } from './shap_chart'
 import { ComponentChildren, h } from 'preact'
 import { useEffect, useRef } from 'preact/hooks'
 
@@ -140,26 +143,30 @@ export function LineChart(props: LineChartProps) {
 	)
 }
 
-export type ShapChartProps = ShapChartOptions & {
+export type FeatureContributionsChartProps = FeatureContributionsChartOptions & {
 	id?: string
 	title?: string
 }
 
-export function ShapChart(props: ShapChartProps) {
+export function FeatureContributionsChart(
+	props: FeatureContributionsChartProps,
+) {
 	let containerRef = useRef<HTMLDivElement | null>(null)
-	let chartRef = useRef<ReturnType<typeof createShapChart> | null>(null)
+	let chartRef = useRef<ReturnType<
+		typeof createFeatureContributionsChart
+	> | null>(null)
 
 	useEffect(() => {
 		if (!containerRef.current) throw Error()
-		chartRef.current = createShapChart(containerRef.current)
+		chartRef.current = createFeatureContributionsChart(containerRef.current)
 		return () => chartRef.current?.destroy()
 	}, [])
 
 	useEffect(() => chartRef.current?.draw(props))
 
 	let innerChartHeight =
-		props.data.length * chartConfig.shapGroupHeight +
-		(props.data.length - 1) * chartConfig.shapGroupGap
+		props.data.length * chartConfig.featureContributionsSeriesHeight +
+		(props.data.length - 1) * chartConfig.featureContributionsSeriesGap
 	let { bottomPadding, fontSize, labelPadding, topPadding } = chartConfig
 	let height =
 		innerChartHeight +

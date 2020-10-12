@@ -11,9 +11,9 @@ import {
 import { chartColors, chartConfig } from './config'
 import { drawTooltip } from './tooltip'
 
-/** These are the options for displaying a SHAP chart. */
-export type ShapChartOptions = {
-	data: ShapChartData
+/** These are the options for displaying a feature contributions chart. */
+export type FeatureContributionsChartOptions = {
+	data: FeatureContributionsChartData
 	includeXAxisTitle?: boolean
 	includeYAxisLabels?: boolean
 	includeYAxisTitle?: boolean
@@ -23,31 +23,31 @@ export type ShapChartOptions = {
 	positiveColor: string
 }
 
-/** These are the configuration used across all SHAP charts. */
-export type ShapChartConfig = {
+/** These are the configuration used across all feature contributions charts. */
+export type FeatureContributionsChartConfig = {
 	arrowDepth: number
 	barGap: number
-	groupGap: number
-	groupWidth: number
+	seriesGap: number
+	seriesWidth: number
 }
 
-export type ShapChartData = ShapChartSeries[]
+export type FeatureContributionsChartData = FeatureContributionsChartSeries[]
 
-export type ShapChartSeries = {
+export type FeatureContributionsChartSeries = {
 	baseline: number
 	baselineLabel: string
 	label: string
 	output: number
 	outputLabel: string
-	values: ShapChartValue[]
+	values: FeatureContributionsChartValue[]
 }
 
-export type ShapChartValue = {
+export type FeatureContributionsChartValue = {
 	feature: string
 	value: number
 }
 
-export type ShapChartHoverRegionInfo = {
+export type FeatureContributionsChartHoverRegionInfo = {
 	box: Box
 	color: string
 	direction: Direction
@@ -55,23 +55,27 @@ export type ShapChartHoverRegionInfo = {
 	tooltipOriginPixels: Point
 }
 
-export type ShapChartOverlayInfo = {
+export type FeatureContributionsChartOverlayInfo = {
 	chartBox: Box
 }
 
-export type DrawMultiShapChartOutput = {
-	hoverRegions: Array<HoverRegion<ShapChartHoverRegionInfo>>
-	overlayInfo: ShapChartOverlayInfo
+export type DrawFeatureContributionsChartOutput = {
+	hoverRegions: Array<HoverRegion<FeatureContributionsChartHoverRegionInfo>>
+	overlayInfo: FeatureContributionsChartOverlayInfo
 }
 
-export function createShapChart(container: HTMLElement) {
-	return createChart(container, drawShapChart, drawShapChartOverlay)
+export function createFeatureContributionsChart(container: HTMLElement) {
+	return createChart(
+		container,
+		drawFeatureContributionsChart,
+		drawFeatureContributionsChartOverlay,
+	)
 }
 
-export function drawShapChart(
+export function drawFeatureContributionsChart(
 	ctx: CanvasRenderingContext2D,
-	options: ShapChartOptions,
-): DrawMultiShapChartOutput {
+	options: FeatureContributionsChartOptions,
+): DrawFeatureContributionsChartOutput {
 	let {
 		data,
 		includeXAxisTitle,
@@ -93,22 +97,27 @@ export function drawShapChart(
 	} = chartConfig
 
 	let annotationsPadding = 80
-	let hoverRegions: Array<HoverRegion<ShapChartHoverRegionInfo>> = []
+	let hoverRegions: Array<HoverRegion<
+		FeatureContributionsChartHoverRegionInfo
+	>> = []
 
 	// Compute the bounds.
 	let xMin = Math.min(
-		...data.flatMap(classShapValues => classShapValues.baseline),
-		...data.flatMap(classShapValues => classShapValues.output),
+		...data.flatMap(
+			classFeatureContributionValues => classFeatureContributionValues.baseline,
+		),
+		...data.flatMap(
+			classFeatureContributionValues => classFeatureContributionValues.output,
+		),
 	)
 	let xMax = Math.max(
 		...data.flatMap(
-			classShapValues =>
-				classShapValues.baseline +
-				classShapValues.values
+			classFeatureContributionValues =>
+				classFeatureContributionValues.baseline +
+				classFeatureContributionValues.values
 					.filter(v => v.value > 0)
 					.reduce(
-						(positiveValuesSum, shapValue) =>
-							(positiveValuesSum += shapValue.value),
+						(positiveValuesSum, { value }) => (positiveValuesSum += value),
 						0.0,
 					),
 		),
@@ -246,9 +255,9 @@ export function drawShapChart(
 		width,
 	})
 
-	let categories = data.map(classShapValues => classShapValues.label)
+	let categories = data.map(({ label }) => label)
 	if (includeYAxisLabels) {
-		drawShapChartYAxisLabels({
+		drawFeatureContributionsChartYAxisLabels({
 			box: yAxisLabelsBox,
 			categories,
 			ctx,
@@ -256,13 +265,13 @@ export function drawShapChart(
 		})
 	}
 
-	// Draw the group separators.
+	// Draw the series separators.
 	for (let i = 1; i < categories.length; i++) {
 		let y =
 			chartBox.y +
-			i * chartConfig.shapGroupHeight +
-			(i - 1) * chartConfig.shapGroupGap +
-			chartConfig.shapGroupGap / 2
+			i * chartConfig.featureContributionsSeriesHeight +
+			(i - 1) * chartConfig.featureContributionsSeriesGap +
+			chartConfig.featureContributionsSeriesGap / 2
 		ctx.save()
 		ctx.strokeStyle = chartColors.current.gridLineColor
 		ctx.moveTo(chartBox.x, y)
@@ -272,34 +281,34 @@ export function drawShapChart(
 	}
 
 	let valueWidthMultiplier = chartBox.w / (xMax - xMin)
-	data.forEach((shapValues, shapValuesIndex) => {
-		// Draw the shap boxes.
-		let sumPositives = shapValues.values
-			.filter(shapValue => shapValue.value > 0)
-			.reduce((posSum, shapValue) => (posSum += shapValue.value), 0.0)
-		let min = Math.min(shapValues.baseline, shapValues.output)
-		let max = shapValues.baseline + sumPositives
+	data.forEach((series, seriesIndex) => {
+		let sumPositives = series.values
+			.filter(({ value }) => value > 0)
+			.reduce((posSum, { value }) => (posSum += value), 0.0)
+		let min = Math.min(series.baseline, series.output)
+		let max = series.baseline + sumPositives
 		let width = max - min
-		let shapValueBoxHeight =
-			(chartConfig.shapGroupHeight - chartConfig.shapBarGap) / 2
-
+		let boxHeight =
+			(chartConfig.featureContributionsSeriesHeight -
+				chartConfig.featureContributionsBarGap) /
+			2
 		let box = {
-			h: chartConfig.shapGroupHeight,
+			h: chartConfig.featureContributionsSeriesHeight,
 			w: width * valueWidthMultiplier,
 			x: chartBox.x + (min - xMin) * valueWidthMultiplier,
 			y:
 				chartBox.y +
-				(chartConfig.shapGroupGap + chartConfig.shapGroupHeight) *
-					shapValuesIndex,
+				(chartConfig.featureContributionsSeriesGap +
+					chartConfig.featureContributionsSeriesHeight) *
+					seriesIndex,
 		}
-
-		let output = drawShap({
+		let output = drawFeatureContributionsSeries({
 			box,
+			boxHeight,
 			ctx,
 			negativeColor,
 			positiveColor,
-			shapValueBoxHeight,
-			shapValues,
+			series,
 			valueWidthMultiplier,
 		})
 		hoverRegions.push(...output.hoverRegions)
@@ -313,79 +322,79 @@ export function drawShapChart(
 	}
 }
 
-type DrawShapOptions = {
+type DrawFeatureContributionSeriesOptions = {
 	box: Box
+	boxHeight: number
 	ctx: CanvasRenderingContext2D
 	negativeColor: string
 	positiveColor: string
-	shapValueBoxHeight: number
-	shapValues: ShapChartSeries
+	series: FeatureContributionsChartSeries
 	valueWidthMultiplier: number
 }
 
-type DrawShapChartOutput = {
-	hoverRegions: Array<HoverRegion<ShapChartHoverRegionInfo>>
+type DrawFeatureContributionsSeriesOutput = {
+	hoverRegions: Array<HoverRegion<FeatureContributionsChartHoverRegionInfo>>
 }
 
-function drawShap(options: DrawShapOptions): DrawShapChartOutput {
-	let hoverRegions: Array<HoverRegion<ShapChartHoverRegionInfo>> = []
+function drawFeatureContributionsSeries(
+	options: DrawFeatureContributionSeriesOptions,
+): DrawFeatureContributionsSeriesOutput {
+	let hoverRegions: Array<HoverRegion<
+		FeatureContributionsChartHoverRegionInfo
+	>> = []
 	let {
 		box,
+		boxHeight,
 		ctx,
 		negativeColor,
 		positiveColor,
-		shapValueBoxHeight,
-		shapValues,
+		series,
 		valueWidthMultiplier,
 	} = options
 
-	let min = Math.min(shapValues.baseline, shapValues.output)
+	let min = Math.min(series.baseline, series.output)
 
-	// Draw the positive box which starts at baseline and goes to max.
-	let positiveValues = shapValues.values
-		.filter(shapValue => shapValue.value > 0)
+	// Draw the positive boxes which start at the baseline and go to the max.
+	let positiveValues = series.values
+		.filter(({ value }) => value > 0)
 		.sort((a, b) => (a.value > b.value ? -1 : 1))
-	let x = box.x + (shapValues.baseline - min) * valueWidthMultiplier
+	let x = box.x + (series.baseline - min) * valueWidthMultiplier
 	let positiveValuesIndex = 0
 	ctx.textBaseline = 'bottom'
 	ctx.textAlign = 'right'
-	ctx.fillText(
-		`baseline`,
-		x - chartConfig.labelPadding,
-		box.y + shapValueBoxHeight / 2,
-	)
+	ctx.fillText(`baseline`, x - chartConfig.labelPadding, box.y + boxHeight / 2)
 	ctx.textBaseline = 'top'
 	ctx.textAlign = 'right'
 	ctx.fillText(
-		shapValues.baselineLabel,
+		series.baselineLabel,
 		x - chartConfig.labelPadding,
-		box.y + shapValueBoxHeight / 2,
+		box.y + boxHeight / 2,
 	)
 	while (positiveValuesIndex < positiveValues.length) {
-		let shapValue = positiveValues[positiveValuesIndex]
-		let width = shapValue.value * valueWidthMultiplier
-		if (width < chartConfig.shapArrowDepth * 2) {
+		let featureContributionValue = positiveValues[positiveValuesIndex]
+		let width = featureContributionValue.value * valueWidthMultiplier
+		if (width < chartConfig.featureContributionsArrowDepth * 2) {
 			break
 		}
 		let valueBox = {
-			h: shapValueBoxHeight,
+			h: boxHeight,
 			w: width,
 			x,
 			y: box.y,
 		}
-		drawShapBox({
+		drawFeatureContributionBox({
 			box: valueBox,
 			color: positiveColor,
 			ctx,
 			direction: Direction.Right,
-			label: `${shapValue.feature}`,
+			label: `${featureContributionValue.feature}`,
 		})
 		hoverRegions.push(
-			shapChartHoverRegion({
+			featureContributionsChartHoverRegion({
 				box: valueBox,
 				color: positiveColor,
 				direction: Direction.Right,
-				label: `${shapValue.feature}`,
+				label: `${featureContributionValue.feature}`,
 				tooltipOriginPixels: {
 					...valueBox,
 					x: valueBox.x + valueBox.w / 2,
@@ -396,112 +405,111 @@ function drawShap(options: DrawShapOptions): DrawShapChartOutput {
 		positiveValuesIndex += 1
 	}
 	// Draw the box for the remaining features.
-	let nGrouped = 0
-	let groupedBoxWidth = 0
+	let nRemainingFeatures = 0
+	let remainingFeaturesBoxWidth = 0
 	for (let i = positiveValuesIndex; i < positiveValues.length; i++) {
-		let shapValue = positiveValues[i]
-		let width = shapValue.value * valueWidthMultiplier
-		groupedBoxWidth += width
-		nGrouped += 1
+		let featureContributionValue = positiveValues[i]
+		let width = featureContributionValue.value * valueWidthMultiplier
+		remainingFeaturesBoxWidth += width
+		nRemainingFeatures += 1
 	}
-	if (groupedBoxWidth > 0) {
-		let groupedValueBox = {
-			h: shapValueBoxHeight,
-			w: groupedBoxWidth,
+	if (remainingFeaturesBoxWidth > 0) {
+		let remainingFeaturesBox = {
+			h: boxHeight,
+			w: remainingFeaturesBoxWidth,
 			x,
 			y: box.y,
 		}
-		drawShapBox({
-			box: groupedValueBox,
+		drawFeatureContributionBox({
+			box: remainingFeaturesBox,
 			color: `${positiveColor}33`,
 			ctx,
 			direction: Direction.Right,
-			label: `${nGrouped} other features`,
+			label: `${nRemainingFeatures} other features`,
 		})
 		hoverRegions.push(
-			shapChartHoverRegion({
-				box: groupedValueBox,
+			featureContributionsChartHoverRegion({
+				box: remainingFeaturesBox,
 				color: `${positiveColor}33`,
 				direction: Direction.Right,
-				label: `${nGrouped} other features`,
+				label: `${nRemainingFeatures} other features`,
 				tooltipOriginPixels: {
-					...groupedValueBox,
-					x: groupedValueBox.x + groupedValueBox.w / 2,
+					...remainingFeaturesBox,
+					x: remainingFeaturesBox.x + remainingFeaturesBox.w / 2,
 				},
 			}),
 		)
 	}
 
-	// Draw the negative box.
+	// Draw the negative boxes which start at the max and go to the output.
 	x = box.x + box.w
-	let y = box.y + shapValueBoxHeight + chartConfig.shapBarGap
-	let negativeValues = shapValues.values
-		.filter(shapValue => shapValue.value < 0)
+	let y = box.y + boxHeight + chartConfig.featureContributionsBarGap
+	let negativeValues = series.values
+		.filter(({ value }) => value < 0)
 		.sort((a, b) => (a.value > b.value ? -1 : 1))
-	groupedBoxWidth = 0
-	nGrouped = 0
-	// The first values should be grouped together.
+	remainingFeaturesBoxWidth = 0
+	nRemainingFeatures = 0
 	let negativeValuesIndex = 0
 	while (negativeValuesIndex < negativeValues.length) {
-		let shapValue = negativeValues[negativeValuesIndex]
-		let width = shapValue.value * valueWidthMultiplier
-		if (width < -chartConfig.shapArrowDepth * 2) {
+		let featureContributionValue = negativeValues[negativeValuesIndex]
+		let width = featureContributionValue.value * valueWidthMultiplier
+		if (width < -chartConfig.featureContributionsArrowDepth * 2) {
 			break
 		}
-		groupedBoxWidth += width
-		nGrouped += 1
+		remainingFeaturesBoxWidth += width
+		nRemainingFeatures += 1
 		negativeValuesIndex += 1
 	}
-	if (groupedBoxWidth < 0) {
-		let groupedValueBox = {
-			h: shapValueBoxHeight,
-			w: groupedBoxWidth,
+	if (remainingFeaturesBoxWidth < 0) {
+		let remainingFeaturesBox = {
+			h: boxHeight,
+			w: remainingFeaturesBoxWidth,
 			x,
 			y,
 		}
-		x += groupedBoxWidth
-		drawShapBox({
-			box: groupedValueBox,
+		x += remainingFeaturesBoxWidth
+		drawFeatureContributionBox({
+			box: remainingFeaturesBox,
 			color: `${negativeColor}33`,
 			ctx,
 			direction: Direction.Left,
-			label: `${nGrouped} other features`,
+			label: `${nRemainingFeatures} other features`,
 		})
 		hoverRegions.push(
-			shapChartHoverRegion({
-				box: groupedValueBox,
+			featureContributionsChartHoverRegion({
+				box: remainingFeaturesBox,
 				color: `${negativeColor}33`,
 				direction: Direction.Left,
-				label: `${nGrouped} other features`,
+				label: `${nRemainingFeatures} other features`,
 				tooltipOriginPixels: {
-					...groupedValueBox,
-					x: groupedValueBox.x + groupedValueBox.w / 2,
+					...remainingFeaturesBox,
+					x: remainingFeaturesBox.x + remainingFeaturesBox.w / 2,
 				},
 			}),
 		)
 	}
 	for (let i = negativeValuesIndex; i < negativeValues.length; i++) {
-		let shapValue = negativeValues[i]
-		let width = shapValue.value * valueWidthMultiplier
+		let featureContributionValue = negativeValues[i]
+		let width = featureContributionValue.value * valueWidthMultiplier
 		let valueBox = {
-			h: shapValueBoxHeight,
+			h: boxHeight,
 			w: width,
 			x,
 			y,
 		}
-		drawShapBox({
+		drawFeatureContributionBox({
 			box: valueBox,
 			color: negativeColor,
 			ctx,
 			direction: Direction.Left,
-			label: `${shapValue.feature}`,
+			label: `${featureContributionValue.feature}`,
 		})
 		hoverRegions.push(
-			shapChartHoverRegion({
+			featureContributionsChartHoverRegion({
 				box: valueBox,
 				color: negativeColor,
 				direction: Direction.Left,
-				label: `${shapValue.feature}`,
+				label: `${featureContributionValue.feature}`,
 				tooltipOriginPixels: {
 					...valueBox,
 					x: valueBox.x + valueBox.w / 2,
@@ -515,19 +523,13 @@ function drawShap(options: DrawShapOptions): DrawShapChartOutput {
 	ctx.fillText(
 		`output`,
 		x - chartConfig.labelPadding,
-		box.y +
-			shapValueBoxHeight +
-			chartConfig.shapBarGap +
-			shapValueBoxHeight / 2,
+		box.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
 	)
 	ctx.textBaseline = 'top'
 	ctx.fillText(
-		shapValues.outputLabel,
+		series.outputLabel,
 		x - chartConfig.labelPadding,
-		box.y +
-			shapValueBoxHeight +
-			chartConfig.shapBarGap +
-			shapValueBoxHeight / 2,
+		box.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
 	)
 
 	return {
@@ -535,42 +537,50 @@ function drawShap(options: DrawShapOptions): DrawShapChartOutput {
 	}
 }
 
-type DrawShapChartYAxisLabelsOptions = {
+type DrawFeatureContributionsChartYAxisLabelsOptions = {
 	box: Box
 	categories: string[]
 	ctx: CanvasRenderingContext2D
 	width: number
 }
 
-function drawShapChartYAxisLabels(options: DrawShapChartYAxisLabelsOptions) {
+function drawFeatureContributionsChartYAxisLabels(
+	options: DrawFeatureContributionsChartYAxisLabelsOptions,
+) {
 	let { box, categories, ctx } = options
 	ctx.textAlign = 'end'
 	categories.forEach((label, i) => {
 		let labelOffset =
-			chartConfig.shapGroupHeight / 2 +
-			(chartConfig.shapGroupGap + chartConfig.shapGroupHeight) * i
+			chartConfig.featureContributionsSeriesHeight / 2 +
+			(chartConfig.featureContributionsSeriesGap +
+				chartConfig.featureContributionsSeriesHeight) *
+				i
 		ctx.textBaseline = 'middle'
 		ctx.fillText(label, box.x + box.w, box.y + labelOffset)
 	})
 }
 
-type DrawShapChartOverlayOptions = {
-	activeHoverRegions: Array<ActiveHoverRegion<ShapChartHoverRegionInfo>>
+type DrawFeatureContributionsChartOverlayOptions = {
+	activeHoverRegions: Array<
+		ActiveHoverRegion<FeatureContributionsChartHoverRegionInfo>
+	>
 	ctx: CanvasRenderingContext2D
-	info: ShapChartOverlayInfo
+	info: FeatureContributionsChartOverlayInfo
 	overlayDiv: HTMLElement
 }
 
-export function drawShapChartOverlay(options: DrawShapChartOverlayOptions) {
+export function drawFeatureContributionsChartOverlay(
+	options: DrawFeatureContributionsChartOverlayOptions,
+) {
 	let { activeHoverRegions, ctx, info, overlayDiv } = options
-	drawShapTooltips({
+	drawFeatureContributionTooltips({
 		activeHoverRegions,
 		chartBox: info.chartBox,
 		ctx,
 		overlayDiv,
 	})
 	activeHoverRegions.forEach(activeHoverRegion => {
-		drawShapBox({
+		drawFeatureContributionBox({
 			box: activeHoverRegion.info.box,
 			color: '#00000022',
 			ctx,
@@ -580,14 +590,18 @@ export function drawShapChartOverlay(options: DrawShapChartOverlayOptions) {
 	})
 }
 
-type DrawShapTooltipOptions = {
-	activeHoverRegions: Array<ActiveHoverRegion<ShapChartHoverRegionInfo>>
+type DrawFeatureContributionTooltipOptions = {
+	activeHoverRegions: Array<
+		ActiveHoverRegion<FeatureContributionsChartHoverRegionInfo>
+	>
 	chartBox: Box
 	ctx: CanvasRenderingContext2D
 	overlayDiv: HTMLElement
 }
 
-let drawShapTooltips = (options: DrawShapTooltipOptions) => {
+let drawFeatureContributionTooltips = (
+	options: DrawFeatureContributionTooltipOptions,
+) => {
 	let { activeHoverRegions, overlayDiv } = options
 	for (let activeHoverRegion of activeHoverRegions) {
 		drawTooltip({
@@ -604,7 +618,7 @@ let drawShapTooltips = (options: DrawShapTooltipOptions) => {
 	}
 }
 
-type RegisterShapChartHoverRegionOptions = {
+type RegisterFeatureContributionsChartHoverRegionOptions = {
 	box: Box
 	color: string
 	direction: Direction
@@ -612,9 +626,9 @@ type RegisterShapChartHoverRegionOptions = {
 	tooltipOriginPixels: Box
 }
 
-let shapChartHoverRegion = (
-	options: RegisterShapChartHoverRegionOptions,
-): HoverRegion<ShapChartHoverRegionInfo> => {
+let featureContributionsChartHoverRegion = (
+	options: RegisterFeatureContributionsChartHoverRegionOptions,
+): HoverRegion<FeatureContributionsChartHoverRegionInfo> => {
 	let { box, color, direction, label, tooltipOriginPixels } = options
 	return {
 		distance: (mouseX: number, mouseY: number) => {
@@ -634,11 +648,11 @@ let shapChartHoverRegion = (
 			direction,
 			label,
 			tooltipOriginPixels,
-		} as ShapChartHoverRegionInfo,
+		} as FeatureContributionsChartHoverRegionInfo,
 	}
 }
 
-type DrawShapBoxOptions = {
+type DrawFeatureContributionBoxOptions = {
 	box: Box
 	color: string
 	ctx: CanvasRenderingContext2D
@@ -653,14 +667,16 @@ enum Direction {
 	Down,
 }
 
-export let drawShapBox = (options: DrawShapBoxOptions) => {
+export let drawFeatureContributionBox = (
+	options: DrawFeatureContributionBoxOptions,
+) => {
 	let { box, color, ctx, direction, label } = options
 
 	let textPadding = 4
 	let arrowDepth =
 		direction == Direction.Right
-			? chartConfig.shapArrowDepth
-			: -chartConfig.shapArrowDepth
+			? chartConfig.featureContributionsArrowDepth
+			: -chartConfig.featureContributionsArrowDepth
 
 	ctx.save()
 	if (color) {
@@ -706,7 +722,9 @@ export let drawShapBox = (options: DrawShapBoxOptions) => {
 
 	if (
 		labelWidth <=
-		Math.abs(box.w) - textPadding - chartConfig.shapArrowDepth * 2
+		Math.abs(box.w) -
+			textPadding -
+			chartConfig.featureContributionsArrowDepth * 2
 	) {
 		ctx.fillText(label, box.x + (box.w + arrowDepth) / 2, box.y + box.h / 2)
 	}

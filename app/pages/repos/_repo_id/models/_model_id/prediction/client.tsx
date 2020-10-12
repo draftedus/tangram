@@ -1,17 +1,17 @@
 import {
 	hydrateBarChart,
 	hydrateBoxChart,
-	hydrateShapChart,
+	hydrateFeatureContributionsChart,
 } from '@tangramhq/charts'
 
 if (document.getElementById('probabilities')) {
 	hydrateBarChart('probabilities')
 }
-if (document.getElementById('regression_shap')) {
-	hydrateShapChart('regression_shap')
+if (document.getElementById('regression_feature_contributions')) {
+	hydrateFeatureContributionsChart('regression_feature_contributions')
 }
-if (document.getElementById('classification_shap')) {
-	hydrateShapChart('classification_shap')
+if (document.getElementById('classification_feature_contributions')) {
+	hydrateFeatureContributionsChart('classification_feature_contributions')
 }
 
 let barCharts = document.querySelectorAll(

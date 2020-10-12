@@ -366,16 +366,6 @@ pub fn predict(
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
-					// let mut classes = BTreeMap::new();
-					// classes.insert(
-					// 	model.model.classes[1].clone(),
-					// 	ClassificationShapOutputForClass {
-					// 		baseline_value: shap_values.baseline_value,
-					// 		output_value: shap_values.output_value,
-					// 		feature_contributions,
-					// 	},
-					// );
-					// let shap_output = ClassificationShapOutput { classes };
 					ClassificationPredictOutput {
 						class_name,
 						probability,

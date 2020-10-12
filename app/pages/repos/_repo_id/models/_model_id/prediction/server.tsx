@@ -1,5 +1,10 @@
 import './styles.css'
-import { BarChart, BoxChart, ShapChart, ShapChartData } from '@tangramhq/charts'
+import {
+	BarChart,
+	BoxChart,
+	FeatureContributionsChart,
+	FeatureContributionsChartData,
+} from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
@@ -80,16 +85,16 @@ type Prediction =
 	| null
 
 type RegressionPrediction = {
-	shapChartData: ShapChartData
+	featureContributionsChartData: FeatureContributionsChartData
 	value: number
 }
 
 type ClassificationPrediction = {
 	className: string
 	classes: string[]
+	featureContributionsChartData: FeatureContributionsChartData
 	probabilities: Array<[string, number]>
 	probability: number
-	shapChartData: ShapChartData
 }
 
 export default function PredictPage(props: Props) {
@@ -303,7 +308,7 @@ function PredictionResult(props: Props) {
 }
 
 type RegressionPredictionOutputProps = {
-	shapChartData: ShapChartData
+	featureContributionsChartData: FeatureContributionsChartData
 	value: number
 }
 
@@ -319,9 +324,9 @@ function RegressionOutput(props: RegressionPredictionOutputProps) {
 				{"This chart shows how the input values influenced the model's output."}
 			</ui.P>
 			<ui.Card>
-				<ShapChart
-					data={props.shapChartData}
-					id="regression_shap"
+				<FeatureContributionsChart
+					data={props.featureContributionsChartData}
+					id="regression_feature_contributions"
 					includeXAxisTitle={true}
 					includeYAxisLabels={false}
 					includeYAxisTitle={false}
@@ -369,9 +374,9 @@ function ClassificationOutput(props: ClassificationPredictionOutputProps) {
 				{"This chart shows how the input values influenced the model's output."}
 			</ui.P>
 			<ui.Card>
-				<ShapChart
-					data={props.shapChartData}
-					id="classification_shap"
+				<FeatureContributionsChart
+					data={props.featureContributionsChartData}
+					id="classification_feature_contributions"
 					includeXAxisTitle={true}
 					includeYAxisLabels={true}
 					includeYAxisTitle={true}

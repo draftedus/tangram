@@ -76,7 +76,7 @@ enum Prediction {
 #[serde(rename_all = "camelCase")]
 struct RegressionPrediction {
 	value: f32,
-	shap_chart_data: ShapChartData,
+	feature_contributions_chart_data: FeatureContributionsChartData,
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -85,24 +85,24 @@ struct ClassificationPrediction {
 	class_name: String,
 	probability: f32,
 	probabilities: Vec<(String, f32)>,
-	shap_chart_data: ShapChartData,
+	feature_contributions_chart_data: FeatureContributionsChartData,
 }
 
-type ShapChartData = Vec<ShapChartSeries>;
+type FeatureContributionsChartData = Vec<FeatureContributionsChartSeries>;
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct ShapChartSeries {
+struct FeatureContributionsChartSeries {
 	baseline: f32,
 	baseline_label: String,
 	label: String,
 	output: f32,
 	output_label: String,
-	values: Vec<ShapChartValue>,
+	values: Vec<FeatureContributionsChartValue>,
 }
 
 #[derive(serde::Serialize, Debug)]
-struct ShapChartValue {
+struct FeatureContributionsChartValue {
 	feature: String,
 	value: f32,
 }
@@ -285,18 +285,18 @@ fn predict(
 	let predict_output: Prediction = match output {
 		tangram_core::predict::PredictOutput::Regression(mut output) => {
 			let output = output.remove(0);
-			let shap_data = output.feature_contributions.unwrap();
+			let feature_contributions = output.feature_contributions.unwrap();
 			let prediction = RegressionPrediction {
-				shap_chart_data: vec![ShapChartSeries {
-					baseline: shap_data.baseline_value,
-					baseline_label: format!("{}", shap_data.baseline_value),
+				feature_contributions_chart_data: vec![FeatureContributionsChartSeries {
+					baseline: feature_contributions.baseline_value,
+					baseline_label: format!("{}", feature_contributions.baseline_value),
 					label: "output".to_owned(),
-					output: shap_data.output_value,
-					output_label: format!("{}", shap_data.output_value),
-					values: shap_data
+					output: feature_contributions.output_value,
+					output_label: format!("{}", feature_contributions.output_value),
+					values: feature_contributions
 						.feature_contributions
 						.into_iter()
-						.map(compute_shap_chart_value)
+						.map(compute_feature_contributions_chart_value)
 						.collect(),
 				}],
 				value: output.value,
@@ -305,28 +305,30 @@ fn predict(
 		}
 		tangram_core::predict::PredictOutput::Classification(mut output) => {
 			let output = output.remove(0);
-			let shap_chart_data = output
+			let feature_contributions_chart_data = output
 				.feature_contributions
 				.unwrap()
 				.into_iter()
-				.map(|(class, shap_data)| ShapChartSeries {
-					baseline: shap_data.baseline_value,
-					baseline_label: format!("{}", shap_data.baseline_value),
-					label: class,
-					output: shap_data.output_value,
-					output_label: format!("{}", shap_data.output_value),
-					values: shap_data
-						.feature_contributions
-						.into_iter()
-						.map(compute_shap_chart_value)
-						.collect(),
-				})
+				.map(
+					|(class, feature_contributions)| FeatureContributionsChartSeries {
+						baseline: feature_contributions.baseline_value,
+						baseline_label: format!("{}", feature_contributions.baseline_value),
+						label: class,
+						output: feature_contributions.output_value,
+						output_label: format!("{}", feature_contributions.output_value),
+						values: feature_contributions
+							.feature_contributions
+							.into_iter()
+							.map(compute_feature_contributions_chart_value)
+							.collect(),
+					},
+				)
 				.collect::<Vec<_>>();
 			let prediction = ClassificationPrediction {
 				class_name: output.class_name,
 				probability: output.probability,
 				probabilities: output.probabilities.into_iter().collect(),
-				shap_chart_data,
+				feature_contributions_chart_data,
 			};
 			Prediction::Classification(prediction)
 		}
@@ -334,21 +336,21 @@ fn predict(
 	predict_output
 }
 
-fn compute_shap_chart_value(
+fn compute_feature_contributions_chart_value(
 	feature_contribution: tangram_core::predict::FeatureContribution,
-) -> ShapChartValue {
+) -> FeatureContributionsChartValue {
 	match feature_contribution {
 		tangram_core::predict::FeatureContribution::Identity {
 			column_name,
 			feature_contribution_value,
-		} => ShapChartValue {
+		} => FeatureContributionsChartValue {
 			feature: column_name,
 			value: feature_contribution_value,
 		},
 		tangram_core::predict::FeatureContribution::Normalized {
 			column_name,
 			feature_contribution_value,
-		} => ShapChartValue {
+		} => FeatureContributionsChartValue {
 			feature: column_name,
 			value: feature_contribution_value,
 		},
@@ -363,7 +365,7 @@ fn compute_shap_chart_value(
 				.map(|option| format!("\"{}\"", option))
 				.unwrap_or_else(|| "invalid".to_owned());
 			let feature = format!("{} {} {}", column_name, predicate, option);
-			ShapChartValue {
+			FeatureContributionsChartValue {
 				feature,
 				value: feature_contribution_value,
 			}
@@ -380,7 +382,7 @@ fn compute_shap_chart_value(
 				"does not contain"
 			};
 			let feature = format!("{} {} \"{}\"", column_name, predicate, token);
-			ShapChartValue {
+			FeatureContributionsChartValue {
 				feature,
 				value: feature_contribution_value,
 			}
