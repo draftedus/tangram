@@ -7,7 +7,7 @@ use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_util::pzip;
 
-const MIN_EXAMPLES_TO_PARALLELIZE: usize = 10_000;
+const MIN_EXAMPLES_TO_PARALLELIZE: usize = 1024;
 
 /// This function returns the `examples_index_range`s for the left and right nodes and rearranges the `examples_index` so that the example indexes in the first returned range correspond to the examples sent by the split to the left node and the example indexes in the second returned range correspond to the examples sent by the split to the right node.
 pub fn rearrange_examples_index(
@@ -243,16 +243,17 @@ fn rearrange_examples_index_parallel(
 	)
 	.collect();
 	let mut left_starting_indexes: Vec<(usize, usize)> = Vec::with_capacity(counts.len());
-	let mut left_starting_index = 0;
+	let mut left_starting_index_for_chunk = 0;
 	for (n_left, _) in counts.iter() {
-		left_starting_indexes.push((left_starting_index, *n_left));
-		left_starting_index += n_left;
+		left_starting_indexes.push((left_starting_index_for_chunk, *n_left));
+		left_starting_index_for_chunk += n_left;
 	}
 	let mut right_starting_indexes: Vec<(usize, usize)> = Vec::with_capacity(counts.len());
-	let mut right_starting_index = left_starting_index;
+	let right_starting_index = left_starting_index_for_chunk;
+	let mut right_starting_index_for_chunk = right_starting_index;
 	for (_, n_right) in counts.iter() {
-		right_starting_indexes.push((right_starting_index, *n_right));
-		right_starting_index += n_right;
+		right_starting_indexes.push((right_starting_index_for_chunk, *n_right));
+		right_starting_index_for_chunk += n_right;
 	}
 	pzip!(
 		left_starting_indexes,
@@ -288,8 +289,8 @@ fn rearrange_examples_index_parallel(
 		},
 	);
 	(
-		0..left_starting_index,
-		left_starting_index..examples_index.len(),
+		0..right_starting_index,
+		right_starting_index..examples_index.len(),
 	)
 }
 
