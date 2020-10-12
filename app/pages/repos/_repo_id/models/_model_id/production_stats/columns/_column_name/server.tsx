@@ -12,7 +12,7 @@ import {
 } from 'layouts/model_layout'
 import { h } from 'preact'
 export type { Props as EnumProps } from './enum'
-import { DateWindowSelectField } from 'common/date_window_select'
+import { DateWindowSelectField } from 'common/date_window_select_field'
 
 export type Props = {
 	columnName: string

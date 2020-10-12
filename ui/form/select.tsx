@@ -2,25 +2,25 @@ import { Label } from './label'
 import './select.css'
 import { ComponentChildren, h } from 'preact'
 
-export type SelectProps = {
+export type SelectFieldProps = {
 	children?: ComponentChildren
 	disabled?: boolean
 	id?: string
 	label?: string
 	name?: string
 	onChange?: (newValue: string) => void
-	options?: SelectOption[]
+	options?: SelectFieldOption[]
 	placeholder?: string
 	required?: boolean
 	value?: string
 }
 
-export type SelectOption = {
+export type SelectFieldOption = {
 	text: string
 	value: string
 }
 
-export function SelectField(props: SelectProps) {
+export function SelectField(props: SelectFieldProps) {
 	return (
 		<Label>
 			{props.label}
@@ -48,7 +48,7 @@ export function SelectField(props: SelectProps) {
 	)
 }
 
-export function selectSubmitOnChange(id: string) {
+export function selectFieldSubmitOnChange(id: string) {
 	let selectElement = document.getElementById(id)
 	if (!(selectElement instanceof HTMLSelectElement)) throw Error()
 	selectElement.addEventListener('change', event => {

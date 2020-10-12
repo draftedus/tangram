@@ -308,7 +308,6 @@ fn predict(
 			let shap_chart_data = output
 				.feature_contributions
 				.unwrap()
-				.classes
 				.into_iter()
 				.map(|(class, shap_data)| ShapChartSeries {
 					baseline: shap_data.baseline_value,

@@ -1,7 +1,7 @@
 import { LineChart } from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
-import { ClassSelectField } from 'common/class_select'
+import { ClassSelectField } from 'common/class_select_field'
 import * as definitions from 'common/definitions'
 import { renderPage } from 'common/render'
 import {

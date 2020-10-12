@@ -65,7 +65,7 @@ impl Regressor {
 	}
 
 	/// Compute SHAP values.
-	pub fn compute_shap_values(
+	pub fn compute_feature_contributions(
 		&self,
 		features: ArrayView2<DataFrameValue>,
 	) -> Vec<ComputeShapValuesForExampleOutput> {

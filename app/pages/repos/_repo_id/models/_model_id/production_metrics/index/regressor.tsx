@@ -1,6 +1,6 @@
 import { LineChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
-import { DateWindowSelectField } from 'common/date_window_select'
+import { DateWindowSelectField } from 'common/date_window_select_field'
 import { MetricsRow } from 'common/metrics_row'
 import { DateWindow, DateWindowInterval, intervalChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'

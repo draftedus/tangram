@@ -183,7 +183,7 @@ impl BinaryClassifier {
 		}
 	}
 
-	pub fn compute_feature_contribution_values(
+	pub fn compute_feature_contributions(
 		&self,
 		features: ArrayView2<f32>,
 	) -> Vec<ComputeShapValuesForExampleOutput> {

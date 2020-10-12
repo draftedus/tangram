@@ -1,7 +1,7 @@
 import { BarChart, BoxChart } from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
-import { DateWindowSelectField } from 'common/date_window_select'
+import { DateWindowSelectField } from 'common/date_window_select_field'
 import { renderPage } from 'common/render'
 import {
 	DateWindow,

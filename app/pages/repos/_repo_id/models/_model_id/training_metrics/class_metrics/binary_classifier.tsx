@@ -1,5 +1,5 @@
 import * as ui from '@tangramhq/ui'
-import { ClassSelectField } from 'common/class_select'
+import { ClassSelectField } from 'common/class_select_field'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { h } from 'preact'

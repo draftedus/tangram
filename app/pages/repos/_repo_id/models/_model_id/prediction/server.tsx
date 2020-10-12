@@ -225,7 +225,10 @@ function EnumField(props: EnumFieldProps) {
 					key={props.column.name}
 					label={props.column.name}
 					name={props.column.name}
-					options={props.column.options}
+					options={props.column.options.map(option => ({
+						text: option,
+						value: option,
+					}))}
 					value={props.column.value ?? undefined}
 				/>
 			</div>

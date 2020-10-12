@@ -23,3 +23,7 @@ export function DateWindowSelectField(props: DateWindowSelectFieldProps) {
 		/>
 	)
 }
+
+export function bootDateWindowSelect() {
+	ui.selectFieldSubmitOnChange('date-window-select-field')
+}
