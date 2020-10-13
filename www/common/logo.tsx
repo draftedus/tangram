@@ -37,27 +37,22 @@ export function Logo(props: LogoProps) {
 		largeTriangle2 = props.color
 	}
 	return (
-		<svg class={props.class} height="100%" viewBox="0 0 200 200" width="100%">
+		<svg
+			class={props.class}
+			fill="none"
+			height="100%"
+			viewBox="0 0 200 200"
+			width="100%"
+			xmlns="http://www.w3.org/2000/svg"
+		>
 			<desc>{'tangram'}</desc>
-			<polygon
-				fill={trapezoid}
-				points="4 9.657 4 98.343 46 140.343 46 51.657"
-			/>
-			<polygon
-				fill={square}
-				points="100 105.657 55.657 150 100 194.343 144.343 150"
-			/>
-			<polygon fill={mediumTriangle} points="4 109.657 4 196 90.343 196" />
-			<polygon fill={smallTriangle1} points="54 59.657 54 140.343 94.343 100" />
-			<polygon
-				fill={smallTriangle2}
-				points="150 155.657 109.657 196 190.343 196"
-			/>
-			<polygon fill={largeTriangle1} points="190.343 4 9.657 4 100 94.343" />
-			<polygon
-				fill={largeTriangle2}
-				points="196 9.657 105.657 100 196 190.343"
-			/>
+			<path d="M0 0L50 50V150L0 100V0Z" fill={trapezoid} />
+			<path d="M100 100L150 150L100 200L50 150L100 100Z" fill={square} />
+			<path d="M0 100L100 200H0V100Z" fill={mediumTriangle} />
+			<path d="M150 150L200 200H100L150 150Z" fill={smallTriangle2} />
+			<path d="M50 50L100 100L50 150V50Z" fill={smallTriangle1} />
+			<path d="M200 0V200L100 100L200 0Z" fill={largeTriangle2} />
+			<path d="M200 0L100 100L0 0H200Z" fill={largeTriangle1} />
 		</svg>
 	)
 }

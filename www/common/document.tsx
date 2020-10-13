@@ -22,6 +22,7 @@ export function Document(props: DocumentProps) {
 				<link href="/charts.css" rel="stylesheet" />
 				<link href="/www.css" rel="stylesheet" />
 				<link href="/app.css" rel="stylesheet" />
+				<link href="/favicon.png" rel="icon" type="image/png" />
 				<title>{'Tangram'}</title>
 				<meta
 					content="All-In-One Machine Learning Toolkit for Developers"
