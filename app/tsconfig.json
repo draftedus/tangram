@@ -1,6 +1,14 @@
 {
-	"extends": "../tsconfig-common.json",
+	"extends": "../tscommon.json",
 	"compilerOptions": {
-		"baseUrl": "."
-	}
+		"baseUrl": ".",
+		"outDir": "../target/tsc/app"
+	},
+	"references": [
+		{ "path": "../charts" },
+		{ "path": "../pinwheel" },
+		{ "path": "../ui" },
+		{ "path": "../www" }
+	],
+	"include": ["**/*.ts", "**/*.tsx"]
 }
