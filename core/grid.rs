@@ -290,8 +290,8 @@ const DEFAULT_LINEAR_N_EXAMPLES_PER_BATCH_VALUES: [u64; 1] = [128];
 const DEFAULT_TREE_LEARNING_RATE_VALUES: [f32; 1] = [0.1];
 const DEFAULT_TREE_L2_REGULARIZATION_VALUES: [f32; 1] = [1.0];
 const DEFAULT_TREE_DEPTH_VALUES: [u64; 1] = [3];
-const DEFAULT_TREE_MAX_TREES_VALUES: [u64; 1] = [100];
-const DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES: [u64; 1] = [10];
+const DEFAULT_TREE_MAX_ROUNDS_VALUES: [u64; 1] = [100];
+const DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES: [u64; 1] = [3];
 
 /// Compute the default hyperparameter grid for regression.
 pub fn default_regression_hyperparameter_grid(
@@ -322,7 +322,7 @@ pub fn default_regression_hyperparameter_grid(
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
 		DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES.iter(),
-		DEFAULT_TREE_MAX_TREES_VALUES.iter()
+		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
 	) {
 		grid.push(GridItem::TreeRegressor {
 			target_column_index,
@@ -369,7 +369,7 @@ pub fn default_binary_classification_hyperparameter_grid(
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
 		DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES.iter(),
-		DEFAULT_TREE_MAX_TREES_VALUES.iter()
+		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
 	) {
 		grid.push(GridItem::TreeBinaryClassifier {
 			target_column_index,
@@ -416,7 +416,7 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
 		DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES.iter(),
-		DEFAULT_TREE_MAX_TREES_VALUES.iter()
+		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
 	) {
 		grid.push(GridItem::TreeMulticlassClassifier {
 			target_column_index,

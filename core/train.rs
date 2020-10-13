@@ -960,7 +960,7 @@ fn compute_tree_options(options: &grid::TreeModelTrainOptions) -> tangram_tree::
 				.unwrap();
 	}
 	if let Some(max_leaf_nodes) = options.max_leaf_nodes {
-		tree_options.max_depth = Some(max_leaf_nodes.to_usize().unwrap());
+		tree_options.max_leaf_nodes = max_leaf_nodes;
 	}
 	if let Some(max_rounds) = options.max_rounds {
 		tree_options.max_rounds = max_rounds.to_usize().unwrap();
