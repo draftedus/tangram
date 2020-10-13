@@ -9,9 +9,9 @@ fn main() {
 	let csv_file_path = Path::new("data/census.csv");
 	let n_rows_train = 26049;
 	let n_rows_test = 6512;
-	let target_column_name_column_index = 14;
+	let target_column_index = 14;
 	let mut features = DataFrame::from_path(csv_file_path, Default::default(), |_| {}).unwrap();
-	let labels = features.columns.remove(target_column_name_column_index);
+	let labels = features.columns.remove(target_column_index);
 	let (features_train, features_test) = features.view().split_at_row(n_rows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(n_rows_train);
 	let labels_train = labels_train.as_enum().unwrap();

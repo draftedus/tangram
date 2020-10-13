@@ -10,11 +10,11 @@ fn main() {
 	// Load the data.
 	// let csv_file_path_train = Path::new("data/flights-100k.csv");
 	// let csv_file_path_test = Path::new("data/flights-test.csv");
-	let csv_file_path_train = Path::new("data/flights-1m.csv");
-	let csv_file_path_test = Path::new("data/flights-test.csv");
-	// let csv_file_path_train = Path::new("data/flights-10m.csv");
+	// let csv_file_path_train = Path::new("data/flights-1m.csv");
 	// let csv_file_path_test = Path::new("data/flights-test.csv");
-	let target_column_name_column_index = 8;
+	let csv_file_path_train = Path::new("data/flights-10m.csv");
+	let csv_file_path_test = Path::new("data/flights-test.csv");
+	let target_column_index = 8;
 	let month_options = vec![
 		"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 	]
@@ -100,7 +100,7 @@ fn main() {
 		column_types: Some(btreemap! {
 		  "Month".into() => DataFrameColumnType::Enum {options: month_options },
 		  "DayOfWeek".into() => DataFrameColumnType::Enum {options: day_of_week_options },
-		  "DayOfMonth".into() => DataFrameColumnType::Enum {options: day_of_month_options },
+		  "DayofMonth".into() => DataFrameColumnType::Enum {options: day_of_month_options },
 		  "DepTime".into() => DataFrameColumnType::Number,
 		  "UniqueCarrier".into() => DataFrameColumnType::Enum { options: carrier_options },
 		  "Origin".into() => DataFrameColumnType::Enum { options: origin_options },
@@ -108,21 +108,14 @@ fn main() {
 		  "Distance".into() => DataFrameColumnType::Number,
 		  "dep_delayed_15min".into() => DataFrameColumnType::Enum { options: vec!["N".into(), "Y".into()] }
 		}),
-		infer_options: tangram_dataframe::InferOptions {
-			enum_max_unique_values: 292,
-		},
 		..Default::default()
 	};
 	let mut features_train =
 		DataFrame::from_path(csv_file_path_train, options.clone(), |_| {}).unwrap();
-	let labels_train = features_train
-		.columns
-		.remove(target_column_name_column_index);
+	let labels_train = features_train.columns.remove(target_column_index);
 	let labels_train = labels_train.as_enum().unwrap();
 	let mut features_test = DataFrame::from_path(csv_file_path_test, options, |_| {}).unwrap();
-	let labels_test = features_test
-		.columns
-		.remove(target_column_name_column_index);
+	let labels_test = features_test.columns.remove(target_column_index);
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
