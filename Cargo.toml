@@ -1,5 +1,4 @@
 [workspace]
-exclude = ["languages/rust"]
 members = [
 	"app",
 	"cli",
@@ -12,4 +11,3 @@ members = [
 	"tree",
 	"util",
 ]
-
