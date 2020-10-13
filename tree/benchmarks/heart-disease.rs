@@ -22,7 +22,7 @@ fn main() {
 	let model = tangram_tree::BinaryClassifier::train(
 		features_train,
 		labels_train.clone(),
-		tangram_tree::TrainOptions {
+		&tangram_tree::TrainOptions {
 			max_leaf_nodes: 255,
 			..Default::default()
 		},

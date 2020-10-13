@@ -93,8 +93,8 @@ pub enum BinnedFeaturesLayout {
 #[derive(Debug)]
 pub struct EarlyStoppingOptions {
 	pub early_stopping_fraction: f32,
-	pub early_stopping_rounds: usize,
-	pub early_stopping_threshold: f32,
+	pub n_epochs_without_improvement_to_stop: usize,
+	pub min_decrease_in_loss_for_significant_change: f32,
 }
 
 /// This struct reports the training progress.

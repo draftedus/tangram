@@ -97,6 +97,7 @@ pub struct LinearRegressor {
 	pub weights: Vec<f32>,
 	pub losses: Option<Vec<f32>>,
 	pub means: Vec<f32>,
+	pub train_options: LinearModelTrainOptions,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -106,6 +107,42 @@ pub struct TreeRegressor {
 	pub trees: Vec<Tree>,
 	pub losses: Vec<f32>,
 	pub feature_importances: Vec<f32>,
+	pub train_options: TreeModelTrainOptions,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct LinearModelTrainOptions {
+	pub compute_loss: bool,
+	pub l2_regularization: f32,
+	pub learning_rate: f32,
+	pub max_epochs: u64,
+	pub n_examples_per_batch: u64,
+	pub early_stopping_options: Option<EarlyStoppingOptions>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct TreeModelTrainOptions {
+	pub compute_loss: bool,
+	pub early_stopping_options: Option<EarlyStoppingOptions>,
+	pub l2_regularization: f32,
+	pub learning_rate: f32,
+	pub max_depth: Option<u64>,
+	pub max_examples_for_computing_bin_thresholds: usize,
+	pub max_leaf_nodes: usize,
+	pub max_rounds: u64,
+	pub max_valid_bins_for_number_features: u8,
+	pub min_examples_per_node: u64,
+	pub min_gain_to_split: f32,
+	pub min_sum_hessians_per_node: f32,
+	pub smoothing_factor_for_discrete_bin_sorting: f32,
+	pub supplemental_l2_regularization_for_discrete_splits: f32,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct EarlyStoppingOptions {
+	pub early_stopping_fraction: f32,
+	pub n_epochs_without_improvement_to_stop: usize,
+	pub min_decrease_in_loss_for_significant_change: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -186,6 +223,7 @@ pub struct LinearBinaryClassifier {
 	pub losses: Option<Vec<f32>>,
 	pub metrics: BinaryClassifierMetrics,
 	pub means: Vec<f32>,
+	pub train_options: LinearModelTrainOptions,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -198,6 +236,7 @@ pub struct LinearMulticlassClassifier {
 	pub classes: Vec<String>,
 	pub losses: Option<Vec<f32>>,
 	pub means: Vec<f32>,
+	pub train_options: LinearModelTrainOptions,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -209,6 +248,7 @@ pub struct TreeBinaryClassifier {
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 	pub metrics: BinaryClassifierMetrics,
+	pub train_options: TreeModelTrainOptions,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -221,6 +261,7 @@ pub struct TreeMulticlassClassifier {
 	pub classes: Vec<String>,
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
+	pub train_options: TreeModelTrainOptions,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

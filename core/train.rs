@@ -289,19 +289,6 @@ enum Task {
 	Classification { classes: Vec<String> },
 }
 
-struct TreeBinaryClassifier {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_tree::BinaryClassifier,
-	pub metrics: metrics::BinaryClassificationMetricsOutput,
-	pub options: grid::TreeModelTrainOptions,
-}
-
-struct TreeMulticlassClassifier {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_tree::MulticlassClassifier,
-	pub options: grid::TreeModelTrainOptions,
-}
-
 enum ClassificationComparisonMetric {
 	Accuracy,
 	Aucroc,
@@ -315,13 +302,13 @@ enum RegressionModel {
 
 struct LinearRegressor {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub options: grid::LinearModelTrainOptions,
+	pub options: tangram_linear::TrainOptions,
 	pub model: tangram_linear::Regressor,
 }
 
 struct TreeRegressor {
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub options: grid::TreeModelTrainOptions,
+	pub options: tangram_tree::TrainOptions,
 	pub model: tangram_tree::Regressor,
 }
 
@@ -343,13 +330,26 @@ struct LinearBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: tangram_linear::BinaryClassifier,
 	pub metrics: metrics::BinaryClassificationMetricsOutput,
-	pub options: grid::LinearModelTrainOptions,
+	pub options: tangram_linear::TrainOptions,
 }
 
 struct LinearMulticlassClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: tangram_linear::MulticlassClassifier,
-	pub options: grid::LinearModelTrainOptions,
+	pub options: tangram_linear::TrainOptions,
+}
+
+struct TreeBinaryClassifier {
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub model: tangram_tree::BinaryClassifier,
+	pub metrics: metrics::BinaryClassificationMetricsOutput,
+	pub options: tangram_tree::TrainOptions,
+}
+
+struct TreeMulticlassClassifier {
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub model: tangram_tree::MulticlassClassifier,
+	pub options: tangram_tree::TrainOptions,
 }
 
 enum ComparisonMetric {
@@ -554,42 +554,42 @@ struct LinearRegressorTrainModelOutput {
 	model: tangram_linear::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::LinearModelTrainOptions,
+	options: tangram_linear::TrainOptions,
 }
 
 struct TreeRegressorTrainModelOutput {
 	model: tangram_tree::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::TreeModelTrainOptions,
+	options: tangram_tree::TrainOptions,
 }
 
 struct LinearBinaryClassifierTrainModelOutput {
 	model: tangram_linear::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::LinearModelTrainOptions,
+	options: tangram_linear::TrainOptions,
 }
 
 struct TreeBinaryClassifierTrainModelOutput {
 	model: tangram_tree::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::TreeModelTrainOptions,
+	options: tangram_tree::TrainOptions,
 }
 
 struct LinearMulticlassClassifierTrainModelOutput {
 	model: tangram_linear::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::LinearModelTrainOptions,
+	options: tangram_linear::TrainOptions,
 }
 
 struct TreeMulticlassClassifierTrainModelOutput {
 	model: tangram_tree::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	options: grid::TreeModelTrainOptions,
+	options: tangram_tree::TrainOptions,
 }
 
 fn train_model(
@@ -705,7 +705,7 @@ fn train_linear_regressor(
 		model,
 		feature_groups,
 		target_column_index,
-		options,
+		options: linear_options,
 	})
 }
 
@@ -730,7 +730,7 @@ fn train_tree_regressor(
 		.clone();
 	let tree_options = compute_tree_options(&options);
 	let model =
-		tangram_tree::Regressor::train(features.view(), labels, tree_options, &mut |progress| {
+		tangram_tree::Regressor::train(features.view(), labels, &tree_options, &mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 				progress,
 			)))
@@ -739,7 +739,7 @@ fn train_tree_regressor(
 		model,
 		feature_groups,
 		target_column_index,
-		options,
+		options: tree_options,
 	})
 }
 
@@ -781,7 +781,7 @@ fn train_linear_binary_classifier(
 		model,
 		feature_groups,
 		target_column_index,
-		options,
+		options: linear_options,
 	})
 }
 
@@ -808,7 +808,7 @@ fn train_tree_binary_classifier(
 	let model = tangram_tree::BinaryClassifier::train(
 		features.view(),
 		labels,
-		tree_options,
+		&tree_options,
 		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 				progress,
@@ -819,7 +819,7 @@ fn train_tree_binary_classifier(
 		model,
 		feature_groups,
 		target_column_index,
-		options,
+		options: tree_options,
 	})
 }
 
@@ -861,7 +861,7 @@ fn train_linear_multiclass_classifier(
 		model,
 		feature_groups,
 		target_column_index,
-		options,
+		options: linear_options,
 	})
 }
 
@@ -888,7 +888,7 @@ fn train_tree_multiclass_classifier(
 	let model = tangram_tree::MulticlassClassifier::train(
 		features.view(),
 		labels,
-		tree_options,
+		&tree_options,
 		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 				progress,
@@ -899,12 +899,13 @@ fn train_tree_multiclass_classifier(
 		model,
 		feature_groups,
 		target_column_index,
-		options,
+		options: tree_options,
 	})
 }
 
 fn compute_linear_options(options: &grid::LinearModelTrainOptions) -> tangram_linear::TrainOptions {
 	let mut linear_options = tangram_linear::TrainOptions::default();
+	// Always compute the loss.
 	linear_options.compute_loss = true;
 	if let Some(l2_regularization) = options.l2_regularization {
 		linear_options.l2_regularization = l2_regularization;
@@ -917,9 +918,6 @@ fn compute_linear_options(options: &grid::LinearModelTrainOptions) -> tangram_li
 	}
 	if let Some(n_examples_per_batch) = options.n_examples_per_batch {
 		linear_options.n_examples_per_batch = n_examples_per_batch.to_usize().unwrap();
-	}
-	if let Some(compute_loss) = options.compute_loss {
-		linear_options.compute_loss = compute_loss;
 	}
 	if let Some(early_stopping_options) = options.early_stopping_options.as_ref() {
 		linear_options.early_stopping_options = Some(tangram_linear::EarlyStoppingOptions {
@@ -934,14 +932,14 @@ fn compute_linear_options(options: &grid::LinearModelTrainOptions) -> tangram_li
 
 fn compute_tree_options(options: &grid::TreeModelTrainOptions) -> tangram_tree::TrainOptions {
 	let mut tree_options = tangram_tree::TrainOptions::default();
-	if let Some(compute_loss) = options.compute_loss {
-		tree_options.compute_loss = compute_loss;
-	}
+	// Always compute the loss.
+	tree_options.compute_loss = true;
 	if let Some(early_stopping_options) = options.early_stopping_options.as_ref() {
 		tree_options.early_stopping_options = Some(tangram_tree::EarlyStoppingOptions {
 			early_stopping_fraction: early_stopping_options.early_stopping_fraction,
-			early_stopping_rounds: early_stopping_options.early_stopping_rounds,
-			early_stopping_threshold: early_stopping_options.early_stopping_threshold,
+			n_epochs_without_improvement_to_stop: early_stopping_options.early_stopping_rounds,
+			min_decrease_in_loss_for_significant_change: early_stopping_options
+				.early_stopping_threshold,
 		})
 	}
 	if let Some(l2_regularization) = options.l2_regularization {
@@ -1625,6 +1623,7 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
 			bias: self.model.bias,
 			losses: self.model.losses,
 			classes: self.model.classes,
+			train_options: self.options.into(),
 		}
 	}
 }
@@ -1640,6 +1639,7 @@ impl Into<model::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 			losses: self.model.losses,
 			classes: self.model.classes,
 			means: self.model.means,
+			train_options: self.options.into(),
 		}
 	}
 }
@@ -1654,6 +1654,7 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 			losses: self.model.losses,
 			classes: self.model.classes,
 			feature_importances: self.model.feature_importances.unwrap(),
+			train_options: self.options.into(),
 		}
 	}
 }
@@ -1669,6 +1670,7 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 			losses: self.model.losses,
 			classes: self.model.classes,
 			feature_importances: self.model.feature_importances.unwrap(),
+			train_options: self.options.into(),
 		}
 	}
 }
@@ -1727,6 +1729,7 @@ impl Into<model::LinearRegressor> for LinearRegressor {
 			bias: self.model.bias,
 			losses: self.model.losses,
 			means: self.model.means,
+			train_options: self.options.into(),
 		}
 	}
 }
@@ -1741,6 +1744,66 @@ impl Into<model::TreeRegressor> for TreeRegressor {
 			bias: self.model.bias,
 			losses,
 			feature_importances: self.model.feature_importances.unwrap(),
+			train_options: self.options.into(),
+		}
+	}
+}
+
+impl Into<model::LinearModelTrainOptions> for tangram_linear::TrainOptions {
+	fn into(self) -> model::LinearModelTrainOptions {
+		model::LinearModelTrainOptions {
+			compute_loss: self.compute_loss,
+			l2_regularization: self.l2_regularization,
+			learning_rate: self.learning_rate,
+			max_epochs: self.max_epochs.to_u64().unwrap(),
+			n_examples_per_batch: self.n_examples_per_batch.to_u64().unwrap(),
+			early_stopping_options: self.early_stopping_options.map(Into::into),
+		}
+	}
+}
+
+impl Into<model::TreeModelTrainOptions> for tangram_tree::TrainOptions {
+	fn into(self) -> model::TreeModelTrainOptions {
+		model::TreeModelTrainOptions {
+			compute_loss: self.compute_loss,
+			l2_regularization: self.l2_regularization,
+			learning_rate: self.learning_rate,
+			max_depth: self.max_depth.map(|d| d.to_u64().unwrap()),
+			max_rounds: self.max_rounds.to_u64().unwrap(),
+			early_stopping_options: self.early_stopping_options.map(Into::into),
+			max_examples_for_computing_bin_thresholds: self
+				.max_examples_for_computing_bin_thresholds,
+			max_leaf_nodes: self.max_leaf_nodes,
+			max_valid_bins_for_number_features: self.max_valid_bins_for_number_features,
+			min_examples_per_node: self.min_examples_per_node.to_u64().unwrap(),
+			min_gain_to_split: self.min_gain_to_split,
+			min_sum_hessians_per_node: self.min_sum_hessians_per_node,
+			smoothing_factor_for_discrete_bin_sorting: self
+				.smoothing_factor_for_discrete_bin_sorting,
+			supplemental_l2_regularization_for_discrete_splits: self
+				.supplemental_l2_regularization_for_discrete_splits,
+		}
+	}
+}
+
+impl Into<model::EarlyStoppingOptions> for tangram_linear::EarlyStoppingOptions {
+	fn into(self) -> model::EarlyStoppingOptions {
+		model::EarlyStoppingOptions {
+			early_stopping_fraction: self.early_stopping_fraction,
+			n_epochs_without_improvement_to_stop: self.n_epochs_without_improvement_to_stop,
+			min_decrease_in_loss_for_significant_change: self
+				.min_decrease_in_loss_for_significant_change,
+		}
+	}
+}
+
+impl Into<model::EarlyStoppingOptions> for tangram_tree::EarlyStoppingOptions {
+	fn into(self) -> model::EarlyStoppingOptions {
+		model::EarlyStoppingOptions {
+			early_stopping_fraction: self.early_stopping_fraction,
+			n_epochs_without_improvement_to_stop: self.n_epochs_without_improvement_to_stop,
+			min_decrease_in_loss_for_significant_change: self
+				.min_decrease_in_loss_for_significant_change,
 		}
 	}
 }

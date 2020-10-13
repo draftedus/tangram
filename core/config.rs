@@ -48,7 +48,6 @@ pub struct LinearGridItem {
 	pub learning_rate: Option<f32>,
 	pub max_epochs: Option<u64>,
 	pub n_examples_per_batch: Option<u64>,
-	pub compute_loss: Option<bool>,
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 }
 
@@ -58,7 +57,6 @@ pub struct TreeGridItem {
 	pub learning_rate: Option<f32>,
 	pub max_depth: Option<u64>,
 	pub max_rounds: Option<u64>,
-	pub compute_loss: Option<bool>,
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 	pub max_examples_for_computing_bin_thresholds: Option<usize>,
 	pub max_leaf_nodes: Option<usize>,

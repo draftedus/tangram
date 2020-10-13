@@ -130,7 +130,7 @@ fn main() {
 	let model = tangram_tree::BinaryClassifier::train(
 		features_train.view().clone(),
 		labels_train.view(),
-		train_options,
+		&train_options,
 		&mut |_| {},
 	);
 	let duration = start.elapsed();

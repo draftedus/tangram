@@ -21,7 +21,7 @@ fn main() {
 	let model = tangram_tree::MulticlassClassifier::train(
 		features_train,
 		labels_train.clone(),
-		Default::default(),
+		&Default::default(),
 		&mut |_| {},
 	);
 

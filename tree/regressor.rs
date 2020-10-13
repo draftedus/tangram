@@ -29,7 +29,7 @@ impl Regressor {
 	pub fn train(
 		features: DataFrameView,
 		labels: NumberDataFrameColumnView,
-		train_options: TrainOptions,
+		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> Self {
 		let task = Task::Regression;

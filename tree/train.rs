@@ -44,7 +44,7 @@ pub fn train(
 	task: Task,
 	features: DataFrameView,
 	labels: DataFrameColumnView,
-	train_options: TrainOptions,
+	train_options: &TrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
 	#[cfg(feature = "timing")]
@@ -66,8 +66,8 @@ pub fn train(
 				early_stopping_options.early_stopping_fraction,
 			);
 		let early_stopping_monitor = EarlyStoppingMonitor::new(
-			early_stopping_options.early_stopping_threshold,
-			early_stopping_options.early_stopping_rounds,
+			early_stopping_options.min_decrease_in_loss_for_significant_change,
+			early_stopping_options.n_epochs_without_improvement_to_stop,
 		);
 		(
 			features_train,

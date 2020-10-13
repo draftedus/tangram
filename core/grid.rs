@@ -40,7 +40,6 @@ pub struct LinearModelTrainOptions {
 	pub learning_rate: Option<f32>,
 	pub max_epochs: Option<u64>,
 	pub n_examples_per_batch: Option<u64>,
-	pub compute_loss: Option<bool>,
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 }
 
@@ -51,13 +50,12 @@ impl Default for LinearModelTrainOptions {
 			learning_rate: None,
 			max_epochs: None,
 			n_examples_per_batch: None,
-			compute_loss: None,
 			early_stopping_options: None,
 		}
 	}
 }
+
 pub struct TreeModelTrainOptions {
-	pub compute_loss: Option<bool>,
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 	pub l2_regularization: Option<f32>,
 	pub learning_rate: Option<f32>,
@@ -76,7 +74,6 @@ pub struct TreeModelTrainOptions {
 impl Default for TreeModelTrainOptions {
 	fn default() -> Self {
 		Self {
-			compute_loss: None,
 			early_stopping_options: None,
 			l2_regularization: None,
 			learning_rate: None,
@@ -93,6 +90,7 @@ impl Default for TreeModelTrainOptions {
 		}
 	}
 }
+
 pub struct EarlyStoppingOptions {
 	pub early_stopping_fraction: f32,
 	pub early_stopping_rounds: usize,
@@ -114,7 +112,6 @@ pub fn compute_regression_hyperparameter_grid(
 					learning_rate: item.learning_rate,
 					max_epochs: item.max_epochs,
 					n_examples_per_batch: item.n_examples_per_batch,
-					compute_loss: item.compute_loss,
 					early_stopping_options: item.early_stopping_options.as_ref().map(
 						|early_stopping_options| EarlyStoppingOptions {
 							early_stopping_fraction: early_stopping_options.early_stopping_fraction,
@@ -134,7 +131,6 @@ pub fn compute_regression_hyperparameter_grid(
 					l2_regularization: item.l2_regularization,
 					min_examples_per_node: item.min_examples_per_node,
 					max_rounds: item.max_rounds,
-					compute_loss: item.compute_loss,
 					early_stopping_options: item.early_stopping_options.as_ref().map(
 						|early_stopping_options| EarlyStoppingOptions {
 							early_stopping_fraction: early_stopping_options.early_stopping_fraction,
@@ -174,7 +170,6 @@ pub fn compute_binary_classification_hyperparameter_grid(
 					learning_rate: item.learning_rate,
 					max_epochs: item.max_epochs,
 					n_examples_per_batch: item.n_examples_per_batch,
-					compute_loss: item.compute_loss,
 					early_stopping_options: item.early_stopping_options.as_ref().map(
 						|early_stopping_options| EarlyStoppingOptions {
 							early_stopping_fraction: early_stopping_options.early_stopping_fraction,
@@ -194,7 +189,6 @@ pub fn compute_binary_classification_hyperparameter_grid(
 					min_examples_per_node: item.min_examples_per_node,
 					max_rounds: item.max_rounds,
 					l2_regularization: item.l2_regularization,
-					compute_loss: item.compute_loss,
 					early_stopping_options: item.early_stopping_options.as_ref().map(
 						|early_stopping_options| EarlyStoppingOptions {
 							early_stopping_fraction: early_stopping_options.early_stopping_fraction,
@@ -234,7 +228,14 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 					learning_rate: item.learning_rate,
 					max_epochs: item.max_epochs,
 					n_examples_per_batch: item.n_examples_per_batch,
-					..Default::default()
+					early_stopping_options: item.early_stopping_options.as_ref().map(
+						|early_stopping_options| EarlyStoppingOptions {
+							early_stopping_fraction: early_stopping_options.early_stopping_fraction,
+							early_stopping_rounds: early_stopping_options.early_stopping_rounds,
+							early_stopping_threshold: early_stopping_options
+								.early_stopping_threshold,
+						},
+					),
 				},
 			},
 			config::GridItem::Tree(item) => GridItem::TreeMulticlassClassifier {
@@ -246,7 +247,6 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 					min_examples_per_node: item.min_examples_per_node,
 					max_rounds: item.max_rounds,
 					l2_regularization: item.l2_regularization,
-					compute_loss: item.compute_loss,
 					early_stopping_options: item.early_stopping_options.as_ref().map(
 						|early_stopping_options| EarlyStoppingOptions {
 							early_stopping_fraction: early_stopping_options.early_stopping_fraction,
