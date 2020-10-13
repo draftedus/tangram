@@ -260,7 +260,7 @@ pub fn train(
 				.par_iter_mut()
 				.enumerate()
 				.for_each(|(index, value)| {
-					*value = index.to_i32().unwrap();
+					*value = index.to_u32().unwrap();
 				});
 			// Train the tree.
 			let tree = train_tree(TrainTreeOptions {
@@ -380,7 +380,7 @@ pub fn train(
 
 fn update_predictions_with_tree(
 	predictions: &mut [f32],
-	examples_index: &[i32],
+	examples_index: &[u32],
 	tree: &TrainTree,
 	#[cfg(feature = "timing")] timing: &Timing,
 ) {

@@ -44,13 +44,13 @@ pub struct ChooseBestSplitsNotRootOptions<'a> {
 	pub hessians_are_constant: bool,
 	pub hessians_ordered_buffer: &'a mut [f32],
 	pub hessians: &'a [f32],
-	pub left_child_examples_index: &'a [i32],
+	pub left_child_examples_index: &'a [u32],
 	pub left_child_n_examples: usize,
 	pub left_child_sum_gradients: f64,
 	pub left_child_sum_hessians: f64,
 	pub parent_bin_stats: PoolItem<BinStats>,
 	pub parent_depth: usize,
-	pub right_child_examples_index: &'a [i32],
+	pub right_child_examples_index: &'a [u32],
 	pub right_child_n_examples: usize,
 	pub right_child_sum_gradients: f64,
 	pub right_child_sum_hessians: f64,
@@ -538,7 +538,7 @@ struct ChooseBestSplitsNotRootColumnMajorOptions<'a> {
 	should_try_to_split_right_child: bool,
 	smaller_child_bin_stats: &'a mut Vec<Vec<BinStatsEntry>>,
 	smaller_child_direction: SplitDirection,
-	smaller_child_examples_index: &'a [i32],
+	smaller_child_examples_index: &'a [u32],
 	train_options: &'a TrainOptions,
 }
 
@@ -664,7 +664,7 @@ struct ChooseBestSplitsNotRootRowMajorOptions<'a> {
 	should_try_to_split_right_child: bool,
 	smaller_child_bin_stats: &'a mut Vec<BinStatsEntry>,
 	smaller_child_direction: SplitDirection,
-	smaller_child_examples_index: &'a [i32],
+	smaller_child_examples_index: &'a [u32],
 	train_options: &'a TrainOptions,
 }
 
@@ -1067,7 +1067,7 @@ fn compute_negative_loss(sum_gradients: f64, sum_hessians: f64, l2_regularizatio
 }
 
 fn fill_gradients_and_hessians_ordered_buffers(
-	smaller_child_examples_index: &[i32],
+	smaller_child_examples_index: &[u32],
 	gradients: &[f32],
 	hessians: &[f32],
 	gradients_ordered_buffer: &mut [f32],

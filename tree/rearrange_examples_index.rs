@@ -13,9 +13,9 @@ const MIN_EXAMPLES_TO_PARALLELIZE: usize = 1024;
 pub fn rearrange_examples_index(
 	binned_features: &BinnedFeaturesColumnMajor,
 	split: &TrainBranchSplit,
-	examples_index: &mut [i32],
-	examples_index_left_buffer: &mut [i32],
-	examples_index_right_buffer: &mut [i32],
+	examples_index: &mut [u32],
+	examples_index_left_buffer: &mut [u32],
+	examples_index_right_buffer: &mut [u32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	if examples_index.len() <= MIN_EXAMPLES_TO_PARALLELIZE {
 		rearrange_examples_index_serial(binned_features, split, examples_index)
@@ -34,7 +34,7 @@ pub fn rearrange_examples_index(
 fn rearrange_examples_index_serial(
 	binned_features: &BinnedFeaturesColumnMajor,
 	split: &TrainBranchSplit,
-	examples_index: &mut [i32],
+	examples_index: &mut [u32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let mut left = 0;
 	let mut right = examples_index.len();
@@ -101,7 +101,7 @@ unsafe fn rearrange_examples_index_serial_continuous<T>(
 	left: &mut usize,
 	right: &mut usize,
 	bin_index: usize,
-	examples_index: &mut [i32],
+	examples_index: &mut [u32],
 	binned_feature_values: &[T],
 ) where
 	T: ToPrimitive,
@@ -129,7 +129,7 @@ unsafe fn rearrange_examples_index_serial_discrete<T>(
 	left: &mut usize,
 	right: &mut usize,
 	directions: &[SplitDirection],
-	examples_index: &mut [i32],
+	examples_index: &mut [u32],
 	binned_feature_values: &[T],
 ) where
 	T: ToPrimitive,
@@ -157,9 +157,9 @@ unsafe fn rearrange_examples_index_serial_discrete<T>(
 fn rearrange_examples_index_parallel(
 	binned_features: &BinnedFeaturesColumnMajor,
 	split: &TrainBranchSplit,
-	examples_index: &mut [i32],
-	examples_index_left_buffer: &mut [i32],
-	examples_index_right_buffer: &mut [i32],
+	examples_index: &mut [u32],
+	examples_index_left_buffer: &mut [u32],
+	examples_index_right_buffer: &mut [u32],
 ) -> (std::ops::Range<usize>, std::ops::Range<usize>) {
 	let chunk_size =
 		(examples_index.len() + rayon::current_num_threads() - 1) / rayon::current_num_threads();
@@ -272,7 +272,7 @@ fn rearrange_examples_index_parallel(
 				&examples_index[left_starting_index..left_starting_index + n_left];
 			let examples_index_slice = unsafe {
 				std::slice::from_raw_parts_mut(
-					examples_index_slice.as_ptr() as *mut i32,
+					examples_index_slice.as_ptr() as *mut u32,
 					examples_index_slice.len(),
 				)
 			};
@@ -281,7 +281,7 @@ fn rearrange_examples_index_parallel(
 				&examples_index[right_starting_index..right_starting_index + n_right];
 			let examples_index_slice = unsafe {
 				std::slice::from_raw_parts_mut(
-					examples_index_slice.as_ptr() as *mut i32,
+					examples_index_slice.as_ptr() as *mut u32,
 					examples_index_slice.len(),
 				)
 			};
@@ -298,9 +298,9 @@ unsafe fn rearrange_examples_index_parallel_step_one_continuous<T>(
 	n_left: &mut usize,
 	n_right: &mut usize,
 	bin_index: usize,
-	examples_index: &mut [i32],
-	examples_index_left_buffer: &mut [i32],
-	examples_index_right_buffer: &mut [i32],
+	examples_index: &mut [u32],
+	examples_index_left_buffer: &mut [u32],
+	examples_index_right_buffer: &mut [u32],
 	binned_feature_values: &[T],
 ) where
 	T: ToPrimitive,
@@ -324,9 +324,9 @@ unsafe fn rearrange_examples_index_parallel_step_one_discrete<T>(
 	n_left: &mut usize,
 	n_right: &mut usize,
 	directions: &[SplitDirection],
-	examples_index: &mut [i32],
-	examples_index_left_buffer: &mut [i32],
-	examples_index_right_buffer: &mut [i32],
+	examples_index: &mut [u32],
+	examples_index_left_buffer: &mut [u32],
+	examples_index_right_buffer: &mut [u32],
 	binned_feature_values: &[T],
 ) where
 	T: ToPrimitive,

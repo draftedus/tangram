@@ -116,7 +116,7 @@ pub fn compute_bin_stats_column_major_root(
 
 pub fn compute_bin_stats_column_major_not_root(
 	smaller_child_bin_stats_for_feature: &mut [BinStatsEntry],
-	smaller_child_examples_index: &[i32],
+	smaller_child_examples_index: &[u32],
 	binned_features_column: &BinnedFeaturesColumnMajorColumn,
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
@@ -224,7 +224,7 @@ unsafe fn compute_bin_stats_column_major_not_root_no_hessians<T>(
 	ordered_gradients: &[f32],
 	binned_feature_values: &[T],
 	bin_stats_for_feature: &mut [BinStatsEntry],
-	examples_index: &[i32],
+	examples_index: &[u32],
 ) where
 	T: ToPrimitive,
 {
@@ -256,7 +256,7 @@ pub unsafe fn compute_bin_stats_column_major_not_root_yes_hessians<T>(
 	ordered_hessians: &[f32],
 	binned_feature_values: &[T],
 	bin_stats_for_feature: &mut [BinStatsEntry],
-	examples_index: &[i32],
+	examples_index: &[u32],
 ) where
 	T: ToPrimitive,
 {
@@ -315,7 +315,7 @@ pub fn compute_bin_stats_row_major_root(
 
 pub fn compute_bin_stats_row_major_not_root(
 	smaller_child_bin_stats: &mut [BinStatsEntry],
-	smaller_child_examples_index: &[i32],
+	smaller_child_examples_index: &[u32],
 	binned_features: &BinnedFeaturesRowMajor,
 	ordered_gradients: &[f32],
 	ordered_hessians: &[f32],
@@ -429,7 +429,7 @@ pub unsafe fn compute_bin_stats_row_major_not_root_no_hessians<T>(
 	gradients: &[f32],
 	binned_feature_values: ArrayView2<T>,
 	bin_stats: &mut [BinStatsEntry],
-	examples_index: &[i32],
+	examples_index: &[u32],
 ) where
 	T: ToPrimitive,
 {
@@ -467,7 +467,7 @@ pub unsafe fn compute_bin_stats_row_major_not_root_yes_hessians<T>(
 	hessians: &[f32],
 	binned_feature_values: &[T],
 	bin_stats: &mut [BinStatsEntry],
-	examples_index: &[i32],
+	examples_index: &[u32],
 	n_features: usize,
 ) where
 	T: ToPrimitive,
