@@ -1,8 +1,7 @@
 import './topbar_layout.css'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
-import { Document } from '@tangramhq/www/common/document'
-import { Logo, LogoScheme } from '@tangramhq/www/common/logo'
+import { Document, Logo, LogoScheme } from '@tangramhq/www'
 import { ComponentChildren, h } from 'preact'
 
 type LayoutProps = {

@@ -1,6 +1,6 @@
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
-import { PricingCards } from '@tangramhq/www/common/pricing_cards'
+import { PricingCards } from '@tangramhq/www'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { h } from 'preact'

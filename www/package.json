@@ -11,6 +11,7 @@
 		"**/*.tsx"
 	],
 	"license": "UNLICENSED",
+	"main": "mod.ts",
 	"name": "@tangramhq/www",
 	"version": "0.0.0"
 }
