@@ -8,8 +8,8 @@ use hyper::{
 };
 use pinwheel::Pinwheel;
 use std::{
-	collections::BTreeMap, convert::Infallible, panic::AssertUnwindSafe, path::PathBuf,
-	str::FromStr, sync::Arc,
+	borrow::Cow, collections::BTreeMap, convert::Infallible, panic::AssertUnwindSafe,
+	path::PathBuf, str::FromStr, sync::Arc,
 };
 use tangram_util::id::Id;
 use url::Url;
@@ -276,9 +276,14 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 				}
 			} else {
 				eprintln!("{}", error);
+				let body: Cow<str> = if cfg!(debug_assertions) {
+					error.to_string().into()
+				} else {
+					"internal server error".into()
+				};
 				Response::builder()
 					.status(StatusCode::INTERNAL_SERVER_ERROR)
-					.body(Body::from("internal server error"))
+					.body(Body::from(body))
 					.unwrap()
 			}
 		}

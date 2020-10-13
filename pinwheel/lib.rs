@@ -471,20 +471,17 @@ fn exception_to_string(scope: &mut v8::HandleScope, exception: v8::Local<v8::Val
 				(source_column - 1).to_u32().unwrap(),
 			)
 			.unwrap();
-		writeln!(
+		write!(
 			&mut string,
-			"{}:{}:{} -> {}:{}:{}",
-			stack_trace_frame
-				.get_script_name(scope)
-				.unwrap()
-				.to_rust_string_lossy(scope),
-			stack_trace_frame.get_line_number(),
-			stack_trace_frame.get_column(),
+			"{}:{}:{}",
 			token.get_source().unwrap_or("<unknown>"),
 			token.get_src_line() + 1,
 			token.get_src_col() + 1,
 		)
 		.unwrap();
+		if i < stack_trace.get_frame_count() - 1 {
+			writeln!(&mut string).unwrap();
+		}
 	}
 	string
 }
