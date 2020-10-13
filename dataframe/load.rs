@@ -22,7 +22,7 @@ impl<'a> Default for FromCsvOptions<'a> {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct InferOptions {
 	pub enum_max_unique_values: usize,
 }
@@ -63,7 +63,7 @@ impl DataFrame {
 		let infer_options = &options.infer_options;
 		let mut n_rows = None;
 
-		#[derive(Clone)]
+		#[derive(Clone, Debug)]
 		enum ColumnTypeOrInferStats<'a> {
 			ColumnType(DataFrameColumnType),
 			InferStats(InferStats<'a>),
@@ -197,14 +197,14 @@ impl DataFrame {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct InferStats<'a> {
 	infer_options: &'a InferOptions,
 	column_type: InferColumnType,
 	unique_values: Option<BTreeSet<String>>,
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 enum InferColumnType {
 	Unknown,
 	Number,
