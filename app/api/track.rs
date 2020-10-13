@@ -26,7 +26,7 @@ enum MonitorEventSet {
 	Multiple(Vec<MonitorEvent>),
 }
 
-pub(crate) async fn track(
+pub(crate) async fn post(
 	mut request: Request<Body>,
 	context: Arc<Context>,
 ) -> Result<Response<Body>> {

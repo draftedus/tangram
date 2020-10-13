@@ -57,7 +57,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 		});
 	let result = match (&method, path_components.as_slice()) {
 		(&Method::GET, &["health"]) => self::api::health::get(request, &context).await,
-		(&Method::POST, &["track"]) => self::api::track::track(request, context).await,
+		(&Method::POST, &["track"]) => self::api::track::post(request, context).await,
 		(&Method::GET, &["login"]) => self::pages::login::get(request, context, search_params).await,
 		(&Method::POST, &["login"]) => self::pages::login::post(request, &context).await,
 		(&Method::GET, &[""]) => self::pages::index::get(request, &context).await,
@@ -352,6 +352,8 @@ pub async fn run(options: Options) -> Result<()> {
 		let context = context.clone();
 		async move {
 			Ok::<_, Infallible>(service_fn(move |request| {
+				let method = request.method().to_owned();
+				let path = request.uri().path_and_query().unwrap().path().to_owned();
 				let context = context.clone();
 				async move {
 					Ok::<_, Infallible>(
@@ -359,6 +361,7 @@ pub async fn run(options: Options) -> Result<()> {
 							.catch_unwind()
 							.await
 							.unwrap_or_else(|_| {
+								eprintln!("{} {} 500", method, path);
 								Response::builder()
 									.status(StatusCode::INTERNAL_SERVER_ERROR)
 									.body(Body::from("internal server error"))
