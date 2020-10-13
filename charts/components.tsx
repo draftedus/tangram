@@ -221,11 +221,11 @@ export type LegendItem = {
 export function ChartLegend(props: ChartLegendProps) {
 	return (
 		<div class="chart-legend-wrapper">
-			{props.items.map(category => (
+			{props.items.map(item => (
 				<ChartLegendItemCell
-					color={category.color}
-					key={category.title}
-					title={category.title}
+					color={item.color}
+					key={item.title}
+					title={item.title}
 				/>
 			))}
 		</div>

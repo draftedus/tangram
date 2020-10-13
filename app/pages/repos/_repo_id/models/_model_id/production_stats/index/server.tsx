@@ -309,7 +309,7 @@ function ClassificationProductionStatsChart(props: {
 	chartData: ClassificationChartEntry
 	dateWindow: DateWindow
 }) {
-	let categories = props.chartData.histogram.production.map(x => x[0])
+	let options = props.chartData.histogram.production.map(x => x[0])
 	let colorOptions = [
 		ui.colors.green,
 		ui.colors.blue,
@@ -332,7 +332,7 @@ function ClassificationProductionStatsChart(props: {
 						},
 				  ]
 				: [],
-		title: categories[i],
+		title: options[i],
 	}))
 
 	let title = overallChartTitle(props.dateWindow, 'Prediction Stats')
@@ -344,7 +344,7 @@ function ClassificationProductionStatsIntervalChart(props: {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 }) {
-	let categories = props.chartData[0].histogram.production.map(x => x[0])
+	let options = props.chartData[0].histogram.production.map(x => x[0])
 	let colorOptions = [
 		ui.colors.green,
 		ui.colors.blue,
@@ -362,7 +362,7 @@ function ClassificationProductionStatsIntervalChart(props: {
 			x: j,
 			y: entry?.histogram.production[i][1] ?? null,
 		})),
-		title: categories[i],
+		title: options[i],
 	}))
 	let title = intervalChartTitle(props.dateWindowInterval, 'Prediction Stats')
 	return <BarChart data={data} id="histogram_intervals" title={title} />

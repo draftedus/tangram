@@ -23,38 +23,37 @@ An `IdentityFeatureGroup` describes the simplest possible feature engineering, w
 # Example
 1. **Source Column Type**: [NumberColumn](../dataframe/struct.NumberColumn.html).
 
-| input values  | output values  |
-|---------------|----------------|
-| 0.2           | 0.2            |
-| 3.0           | 3.0            |
-| 2.1           | 2.1            |
+| dataframe value | feature value |
+|-----------------|---------------|
+| 0.2             | 0.2           |
+| 3.0             | 3.0           |
+| 2.1             | 2.1           |
 
 2. **Source Column Type**: [EnumColumn](../dataframe/struct.EnumColumn.html).
 
-The source column:
 ```
 use std::num::NonZeroUsize;
 use tangram_dataframe::EnumColumn;
 EnumColumn {
   name: "color".to_string(),
   options: vec!["red".to_string(), "green".to_string(), "blue".to_string()],
-  data: vec![NonZeroUsize::new(1), None, NonZeroUsize::new(1), NonZeroUsize::new(3)],
+  data: vec![None, Some(NonZeroUsize::new(1)), Some(NonZeroUsize::new(2)), Some(NonZeroUsize::new(3))],
 };
 ```
 
 | value       | encoding |
 |-------------|----------|
-| \<MISSING\> | None     |
-| red         | Some(1)  |
-| green       | Some(2)  |
-| blue        | Some(3)  |
+| "INVALID!"  | None     |
+| "red"       | Some(1)  |
+| "green"     | Some(2)  |
+| "blue"      | Some(3)  |
 
-| original data in csv                  | dataframe [data](../dataframe/struct.EnumColumn.html#structfield.data) | feature values |
-|---------------------------------------|------------------------------------------------------------------------|----------------|
-| "red"                                 | Some(1)                                                                | 1              |
-|\<MISSING\>                            | None                                                                   | 0              |
-| "red"                                 | Some(1)                                                                | 1              |
-| "blue"                                | Some(3)                                                                | 3              |
+| dataframe value | feature value |
+|-----------------|---------------|
+| "INVALID!"      | None          |
+| "red"           | Some(1)       |
+| "green"         | Some(2)       |
+| "blue"          | Some(3)       |
 */
 #[derive(Debug)]
 pub struct IdentityFeatureGroup {
@@ -62,7 +61,7 @@ pub struct IdentityFeatureGroup {
 }
 
 /**
-A `NormalizedFeatureGroup` describes a feature column whose values are normalized, i.e. scaled to zero mean and unit variance. [Learn more](https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization).
+A `NormalizedFeatureGroup` transforms a number column to zero mean and unit variance. [Learn more](https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization).
 
 # Example
 use tangram_dataframe::NumberColumn;
@@ -82,8 +81,6 @@ Standard Deviation: 2.70617
 | 0.0             | (0.0 - 2.16667) / 2.70617  = -0.80064 |
 | 5.2             | (5.2 - 2.16667) / 2.70617  = 1.12089  |
 | 1.3             | (1.3 - 2.16667) / 2.70617  = -0.32026 |
-| 10.0            | (10.0 - 2.16667) / 2.70617 = 2.89462  |
-
 */
 #[derive(Debug)]
 pub struct NormalizedFeatureGroup {
@@ -92,11 +89,8 @@ pub struct NormalizedFeatureGroup {
 	pub variance: f32,
 }
 
-/** A OneHotEncodedFeatureGroup describes a *one-hot-encoded* feature.
-
-For each variant in the raw data, a new *feature* will be created whose value is 1 if the raw data's value is equal to this variant and 0 otherwise. It is called *one-hot* because for every source column, only one of the `n` generated features will have a value of 1.
-
-OneHotEncodedFeatureGroups are used for transforming EnumColumns into features for linear models.
+/**
+A `OneHotEncodedFeatureGroup` creates one number feature for each option in an enum column, plus one number feature for invalid values. For each example, all of the features will have the value 0.0, except the feature corresponding to the column's value, which will have the value 1.0.
 
 # Example
 ```
@@ -105,33 +99,28 @@ use std::num::NonZeroUsize;
 EnumColumn {
   name: "color".to_string(),
   options: vec!["red".to_string(), "green".to_string(), "blue".to_string()],
-  data: vec![NonZeroUsize::new(3), NonZeroUsize::new(2), None, NonZeroUsize::new(1)]
+  data: vec![None, NonZeroUsize::new(1), NonZeroUsize::new(2), NonZeroUsize::new(3)]
 };
 ```
 
-We generate a total of 3 features, one for each of the enum options.
-
-| original data in csv                  | dataframe [data](../dataframe/struct.EnumColumn.html#structfield.data) | features (3)  |
-|---------------------------------------|------------------------------------------------------------------------|---------------|
-| "blue"                                | Some(3)                                                                | [0, 0, 1]     |
-| "green"                               | Some(2)                                                                | [0, 1, 0]     |
-| \<MISSING\>                           | None                                                                   | [0, 0, 0]     |
-| "red"                                 | Some(1)                                                                | [1, 0, 0]     |
-
-Unlike in the dataframe case, we don't need a special feature for "missing", because the all 0's vector encodes this.
-
+| dataframe value | feature values |
+|-----------------|----------------|
+| "INVALID!"      | [0, 0, 0]      |
+| "red"           | [1, 0, 0]      |
+| "green"         | [0, 1, 0]      |
+| "blue"          | [0, 0, 1]      |
 */
 #[derive(Debug)]
 pub struct OneHotEncodedFeatureGroup {
 	pub source_column_name: String,
-	/// These are the names for each one-hot feature.
-	pub categories: Vec<String>,
+	pub options: Vec<String>,
 }
 
-/** A BagOfWordsFeatureGroup describes a text feature that is transformed using the *bag-of-words* method. The source column is always a [TextColumn](../dataframe/struct.TextColumn.html).
+/**
+A BagOfWordsFeatureGroup creates features for a text column using the *bag-of-words* method.
 
 The raw text value is tokenized. There are `n` features, one for each token found in the training dataset.
-A feature will have a value of _count_*_idf_ if it appears in the raw text and 0 otherwise, where *count* is the number of times the token appears in the raw text and *idf* is the inverse document frequency. See [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
+A feature will have a value of `count * idf` if it appears in the raw text and 0 otherwise, where *count* is the number of times the token appears in the raw text and *idf* is the inverse document frequency. See [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 
 # Example
 **Source Column Type**: [TextColumn](../dataframe/struct.TextColumn.html).
@@ -155,7 +144,6 @@ In computing stats, we computed the [idf](https://en.wikipedia.org/wiki/Tf%E2%80
 | "stuart" | 5     | log(1/3) |
 | "the"    | 6     | log(2/3) |
 
-
 We generated one feature for every token in the vocabulary where the feature index corresponds to the index of the token in the previous map. E.g. the bag of words feature at index 1 corresponds to the token "cat", and the bag of words feature at index 5 corresponds to the token "prince".
 
 The feature value is computed using the tf-idf formula: `value = tf * idf`.
@@ -171,15 +159,20 @@ The idf was computed during stats and is a score that downweights frequently occ
 | "The Little Prince"  | ["the", "little", "prince"]        | [0, 0, 0, log(3/2), log(3/1), 0, log(3/2)]        |
 | "Stuart Little"      | ["stuart", "little"]               | [0, 0, 0, log(3/2), 0, log(3/1), 0]               |
 | "The Cat in the Hat" | ["the", "cat", "in", "the", "hat"] | [log(3/1), log(3/1), log(3/1), 0, 0, 0, log(3/2)] |
-
 */
 #[derive(Debug)]
 pub struct BagOfWordsFeatureGroup {
 	pub source_column_name: String,
-	/// This is the tokenizer used to split the text into individual tokens.
+	/// This is the tokenizer used to split the text into tokens.
 	pub tokenizer: Tokenizer,
-	/// The first value is the token and the second value is the [inverse document frequency](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
-	pub tokens: Vec<(String, f32)>,
+	/// These are the tokens that were produced for the source column.
+	pub tokens: Vec<BagOfWordsFeatureGroupToken>,
+}
+
+#[derive(Debug)]
+pub struct BagOfWordsFeatureGroupToken {
+	pub token: String,
+	pub idf: f32,
 }
 
 /// A Tokenizer describes how raw text is transformed into tokens.
@@ -190,12 +183,12 @@ pub enum Tokenizer {
 }
 
 impl FeatureGroup {
-	/// The number of features described by this feature group. For example, OneHotEncoded features generate one feature for every category in the source column and BagOfWords features generate one feature for every token in the vocabulary of the source column. Identity and Normalized features generate a single feature.
+	/// Return the number of features this feature group will produce.
 	pub fn n_features(&self) -> usize {
 		match self {
 			Self::Identity(_) => 1,
 			Self::Normalized(_) => 1,
-			Self::OneHotEncoded(f) => f.categories.len() + 1,
+			Self::OneHotEncoded(f) => f.options.len() + 1,
 			Self::BagOfWords(f) => f.tokens.len(),
 		}
 	}
@@ -270,9 +263,9 @@ fn compute_normalized_feature_group(column_stats: &stats::ColumnStatsOutput) -> 
 	})
 }
 
-/// Create a OneHotEncodedFeatureGroup. This function uses the categories taken from the [ColumnStats](../stats/struct.ColumnStats.html).
+/// Create a OneHotEncodedFeatureGroup.
 fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
-	let categories = match column_stats {
+	let options = match column_stats {
 		stats::ColumnStatsOutput::Enum(stats) => {
 			let mut unique_values: Vec<_> = stats
 				.histogram
@@ -286,7 +279,7 @@ fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStatsOutput
 	};
 	FeatureGroup::OneHotEncoded(OneHotEncodedFeatureGroup {
 		source_column_name: column_stats.column_name().to_owned(),
-		categories,
+		options,
 	})
 }
 
@@ -299,10 +292,13 @@ fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStatsOutput) -
 	let mut tokens = column_stats
 		.top_tokens
 		.iter()
-		.map(|token| (token.token.to_owned(), token.idf))
-		.collect::<Vec<(String, f32)>>();
+		.map(|token| BagOfWordsFeatureGroupToken {
+			token: token.token.to_owned(),
+			idf: token.idf,
+		})
+		.collect::<Vec<_>>();
 	// Tokens must be sorted because we perform a binary search through them later.
-	tokens.sort_by(|(a, _), (b, _)| a.cmp(b));
+	tokens.sort_by(|a, b| a.token.cmp(&b.token));
 	FeatureGroup::BagOfWords(BagOfWordsFeatureGroup {
 		source_column_name: column_stats.column_name.to_owned(),
 		tokenizer: Tokenizer::Alphanumeric,
@@ -412,12 +408,12 @@ fn compute_features_bag_of_words_ndarray(
 				let tokens = tokenizer.tokenize(value);
 				let bigrams = bigrams(&tokens);
 				let mut total = 0.0;
-				for token in tokens.iter().chain(bigrams.iter()) {
+				for token_text in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group
 						.tokens
-						.binary_search_by(|(t, _)| t.cmp(&token))
+						.binary_search_by(|token| token.token.cmp(&token_text))
 					{
-						let value = 1.0 * feature_group.tokens.get(index).unwrap().1;
+						let value = 1.0 * feature_group.tokens.get(index).unwrap().idf;
 						features[index] += value;
 						total += value.powi(2);
 					}
@@ -501,7 +497,7 @@ fn compute_features_bag_of_words_dataframe(
 		.tokens
 		.iter()
 		.map(|token| NumberDataFrameColumn {
-			name: token.0.clone(),
+			name: token.token.clone(),
 			data: vec![0.0; data.len()],
 		})
 		.collect();
@@ -512,12 +508,12 @@ fn compute_features_bag_of_words_dataframe(
 				let tokens = tokenizer.tokenize(value);
 				let bigrams = bigrams(&tokens);
 				let mut total = 0.0;
-				for token in tokens.iter().chain(bigrams.iter()) {
+				for token_text in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group
 						.tokens
-						.binary_search_by(|(t, _)| t.cmp(&token))
+						.binary_search_by(|token| token.token.cmp(&token_text))
 					{
-						let idf = feature_group.tokens[index].1;
+						let idf = feature_group.tokens[index].idf;
 						let feature_value = 1.0 * idf;
 						total += feature_value.powi(2);
 						columns[index].data[example_index] += feature_value;
@@ -567,7 +563,7 @@ pub fn compute_features_ndarray_value(
 	}
 }
 
-/// Compute identity features given a IdentityFeatureGroup and `dataframe` with the original data. The result is written to `features`.
+/// Compute the feature values for an `IdentitifyFeatureGroup` from `dataframe` and write them to `features`.
 fn compute_features_identity_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
@@ -597,7 +593,7 @@ fn compute_features_identity_ndarray_value(
 	}
 }
 
-/// Compute "Bag of Words" encoded features given a `BagOfWordsFeatureGroup` and `dataframe` with the original data. The result is written to `features`.
+/// Compute the feature values for a `BagOfWordsFeatureGroup` from `dataframe` and write them to `features`.
 fn compute_features_bag_of_words_ndarray_value(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
@@ -622,17 +618,17 @@ fn compute_features_bag_of_words_ndarray_value(
 				let tokens = tokenizer.tokenize(value);
 				let bigrams = bigrams(&tokens);
 				let mut total = 0.0;
-				for token in tokens.iter().chain(bigrams.iter()) {
+				for token_text in tokens.iter().chain(bigrams.iter()) {
 					if let Ok(index) = feature_group
 						.tokens
-						.binary_search_by(|(t, _)| t.cmp(&token))
+						.binary_search_by(|token| token.token.cmp(&token_text))
 					{
 						let value = features
 							.get_mut([example_index, index])
 							.unwrap()
 							.as_number_mut()
 							.unwrap();
-						let idf = feature_group.tokens[index].1;
+						let idf = feature_group.tokens[index].idf;
 						let feature_value = 1.0 * idf;
 						total += feature_value.powi(2);
 						*value += 1.0 * idf;

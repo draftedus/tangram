@@ -403,14 +403,20 @@ pub struct NormalizedFeatureGroup {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct OneHotEncodedFeatureGroup {
 	pub source_column_name: String,
-	pub categories: Vec<String>,
+	pub options: Vec<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BagOfWordsFeatureGroup {
 	pub source_column_name: String,
 	pub tokenizer: Tokenizer,
-	pub tokens: Vec<(String, f32)>,
+	pub tokens: Vec<BagOfWordsFeatureGroupToken>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct BagOfWordsFeatureGroupToken {
+	pub token: String,
+	pub idf: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

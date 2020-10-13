@@ -539,24 +539,24 @@ fn compute_feature_contributions(
 					feature_value: feature_value > 0.0,
 					feature_contribution_value,
 				});
-				for category in feature_group.categories.iter() {
+				for option in feature_group.options.iter() {
 					let feature_value = features.next().unwrap();
 					let feature_contribution_value = feature_contribution_values.next().unwrap();
 					feature_contributions.push(FeatureContribution::OneHotEncoded {
 						column_name: feature_group.source_column_name.to_owned(),
-						option: Some(category.to_owned()),
+						option: Some(option.to_owned()),
 						feature_value: feature_value > 0.0,
 						feature_contribution_value,
 					});
 				}
 			}
 			features::FeatureGroup::BagOfWords(feature_group) => {
-				for (token, _) in feature_group.tokens.iter() {
+				for token in feature_group.tokens.iter() {
 					let feature_value = features.next().unwrap();
 					let feature_contribution_value = feature_contribution_values.next().unwrap();
 					feature_contributions.push(FeatureContribution::BagOfWords {
 						column_name: feature_group.source_column_name.to_owned(),
-						token: token.to_owned(),
+						token: token.token.to_owned(),
 						feature_value: feature_value > 0.0,
 						feature_contribution_value,
 					});
@@ -843,14 +843,21 @@ impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
 			model::FeatureGroup::OneHotEncoded(f) => Ok(features::FeatureGroup::OneHotEncoded(
 				features::OneHotEncodedFeatureGroup {
 					source_column_name: f.source_column_name,
-					categories: f.categories,
+					options: f.options,
 				},
 			)),
 			model::FeatureGroup::BagOfWords(f) => Ok(features::FeatureGroup::BagOfWords(
 				features::BagOfWordsFeatureGroup {
 					source_column_name: f.source_column_name,
 					tokenizer: f.tokenizer.try_into()?,
-					tokens: f.tokens,
+					tokens: f
+						.tokens
+						.into_iter()
+						.map(|token| features::BagOfWordsFeatureGroupToken {
+							token: token.token,
+							idf: token.idf,
+						})
+						.collect(),
 				},
 			)),
 		}

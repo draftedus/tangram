@@ -185,11 +185,11 @@ pub struct TextColumnStatsOutput {
 #[derive(Debug)]
 pub struct TokenStats {
 	pub token: String,
-	/// The total number of occurrences of this token.
+	/// This is the total number of occurrences of this token.
 	pub count: u64,
-	/// The total number of examples that contain this token.
+	/// This is the total number of examples that contain this token.
 	pub examples_count: u64,
-	/// The inverse document frequency. See	https://en.wikipedia.org/wiki/Tf%E2%80%93idf.
+	/// This is the inverse document frequency. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 	pub idf: f32,
 }
 

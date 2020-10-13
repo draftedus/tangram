@@ -1387,7 +1387,7 @@ impl Into<model::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatureGr
 	fn into(self) -> model::OneHotEncodedFeatureGroup {
 		model::OneHotEncodedFeatureGroup {
 			source_column_name: self.source_column_name,
-			categories: self.categories,
+			options: self.options,
 		}
 	}
 }
@@ -1397,7 +1397,14 @@ impl Into<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
 		model::BagOfWordsFeatureGroup {
 			source_column_name: self.source_column_name,
 			tokenizer: self.tokenizer.into(),
-			tokens: self.tokens,
+			tokens: self
+				.tokens
+				.into_iter()
+				.map(|token| model::BagOfWordsFeatureGroupToken {
+					token: token.token,
+					idf: token.idf,
+				})
+				.collect(),
 		}
 	}
 }

@@ -246,12 +246,12 @@ fn compute_feature_names(feature_groups: &[tangram_core::model::FeatureGroup]) -
 			tangram_core::model::FeatureGroup::OneHotEncoded(feature_group) => {
 				vec!["OOV".to_owned()]
 					.iter()
-					.chain(feature_group.categories.iter())
-					.map(|category| {
+					.chain(feature_group.options.iter())
+					.map(|option| {
 						format!(
 							"{} = {}",
 							feature_group.source_column_name.to_owned(),
-							category.to_owned()
+							option.to_owned(),
 						)
 					})
 					.collect()
@@ -259,11 +259,11 @@ fn compute_feature_names(feature_groups: &[tangram_core::model::FeatureGroup]) -
 			tangram_core::model::FeatureGroup::BagOfWords(feature_group) => feature_group
 				.tokens
 				.iter()
-				.map(|(token, _)| {
+				.map(|token| {
 					format!(
 						"{} contains {}",
 						feature_group.source_column_name.to_owned(),
-						token
+						token.token,
 					)
 				})
 				.collect(),
