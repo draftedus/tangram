@@ -38,7 +38,6 @@ if library == 'h2o':
   model = H2OGradientBoostingEstimator(
     distribution="gaussian",
     learn_rate = 0.1,
-    nbins = 255,
     ntrees = 100,
   )
   model.train(
