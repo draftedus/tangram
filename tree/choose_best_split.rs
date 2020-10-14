@@ -772,32 +772,39 @@ fn choose_best_splits_not_root_row_major(
 					),
 				};
 			// Choose the best splits for the left and right children.
-			let left_child_best_split_for_feature = if should_try_to_split_left_child {
-				choose_best_split_for_feature(
-					feature_index,
-					binning_instructions,
-					left_child_bin_stats_for_feature,
-					left_child_n_examples,
-					left_child_sum_gradients,
-					left_child_sum_hessians,
-					train_options,
-				)
-			} else {
-				None
-			};
-			let right_child_best_split_for_feature = if should_try_to_split_right_child {
-				choose_best_split_for_feature(
-					feature_index,
-					binning_instructions,
-					right_child_bin_stats_for_feature,
-					right_child_n_examples,
-					right_child_sum_gradients,
-					right_child_sum_hessians,
-					train_options,
-				)
-			} else {
-				None
-			};
+			let (left_child_best_split_for_feature, right_child_best_split_for_feature) =
+				rayon::join(
+					|| {
+						if should_try_to_split_left_child {
+							choose_best_split_for_feature(
+								feature_index,
+								binning_instructions,
+								left_child_bin_stats_for_feature,
+								left_child_n_examples,
+								left_child_sum_gradients,
+								left_child_sum_hessians,
+								train_options,
+							)
+						} else {
+							None
+						}
+					},
+					|| {
+						if should_try_to_split_right_child {
+							choose_best_split_for_feature(
+								feature_index,
+								binning_instructions,
+								right_child_bin_stats_for_feature,
+								right_child_n_examples,
+								right_child_sum_gradients,
+								right_child_sum_hessians,
+								train_options,
+							)
+						} else {
+							None
+						}
+					},
+				);
 			(
 				left_child_best_split_for_feature,
 				right_child_best_split_for_feature,
