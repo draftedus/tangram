@@ -62,7 +62,7 @@ impl ClassificationMetrics {
 		//                                           prediction    label
 		//                                               |           |
 		//                                               v           v
-		let confusion_matrix = <Array2<u64>>::zeros((n_classes, n_classes));
+		let confusion_matrix = Array2::zeros((n_classes, n_classes));
 		Self { confusion_matrix }
 	}
 }
@@ -123,7 +123,7 @@ impl<'a> StreamingMetric<'a> for ClassificationMetrics {
 				}
 			})
 			.collect();
-		let n_correct: u64 = confusion_matrix.diag().sum();
+		let n_correct = confusion_matrix.diag().sum();
 		let accuracy = n_correct.to_f32().unwrap() / n_examples.to_f32().unwrap();
 		let precision_unweighted = class_metrics
 			.iter()

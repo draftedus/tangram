@@ -117,18 +117,25 @@ pub struct LinearModelTrainOptions {
 	pub learning_rate: f32,
 	pub max_epochs: u64,
 	pub n_examples_per_batch: u64,
-	pub early_stopping_options: Option<EarlyStoppingOptions>,
+	pub early_stopping_options: Option<LinearEarlyStoppingOptions>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct LinearEarlyStoppingOptions {
+	pub early_stopping_fraction: f32,
+	pub n_epochs_without_improvement_to_stop: u64,
+	pub min_decrease_in_loss_for_significant_change: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeModelTrainOptions {
 	pub compute_loss: bool,
-	pub early_stopping_options: Option<EarlyStoppingOptions>,
+	pub early_stopping_options: Option<TreeEarlyStoppingOptions>,
 	pub l2_regularization: f32,
 	pub learning_rate: f32,
 	pub max_depth: Option<u64>,
-	pub max_examples_for_computing_bin_thresholds: usize,
-	pub max_leaf_nodes: usize,
+	pub max_examples_for_computing_bin_thresholds: u64,
+	pub max_leaf_nodes: u64,
 	pub max_rounds: u64,
 	pub max_valid_bins_for_number_features: u8,
 	pub min_examples_per_node: u64,
@@ -139,9 +146,9 @@ pub struct TreeModelTrainOptions {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct EarlyStoppingOptions {
+pub struct TreeEarlyStoppingOptions {
 	pub early_stopping_fraction: f32,
-	pub n_epochs_without_improvement_to_stop: usize,
+	pub n_epochs_without_improvement_to_stop: u64,
 	pub min_decrease_in_loss_for_significant_change: f32,
 }
 
@@ -229,8 +236,8 @@ pub struct LinearBinaryClassifier {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearMulticlassClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub n_features: u64,
-	pub n_classes: u64,
+	pub n_features: usize,
+	pub n_classes: usize,
 	pub biases: Vec<f32>,
 	pub weights: Vec<f32>,
 	pub classes: Vec<String>,
@@ -254,8 +261,8 @@ pub struct TreeBinaryClassifier {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeMulticlassClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
-	pub n_classes: u64,
-	pub n_rounds: u64,
+	pub n_classes: usize,
+	pub n_rounds: usize,
 	pub biases: Vec<f32>,
 	pub trees: Vec<Tree>,
 	pub classes: Vec<String>,
@@ -294,8 +301,8 @@ pub enum ClassificationComparisonMetric {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct StatsSettings {
-	pub text_histogram_max_size: u64,
-	pub number_histogram_max_size: u64,
+	pub text_histogram_max_size: usize,
+	pub number_histogram_max_size: usize,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -376,7 +383,7 @@ pub struct TextColumnStats {
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TokenStats {
 	pub token: String,
-	pub count: u64,
+	pub occurrence_count: u64,
 	pub examples_count: u64,
 }
 
@@ -437,8 +444,8 @@ pub enum Node {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BranchNode {
-	pub left_child_index: u64,
-	pub right_child_index: u64,
+	pub left_child_index: usize,
+	pub right_child_index: usize,
 	pub split: BranchSplit,
 	pub examples_fraction: f32,
 }
@@ -451,14 +458,14 @@ pub enum BranchSplit {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BranchSplitContinuous {
-	pub feature_index: u64,
+	pub feature_index: usize,
 	pub split_value: f32,
 	pub invalid_values_direction: bool,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BranchSplitDiscrete {
-	pub feature_index: u64,
+	pub feature_index: usize,
 	pub directions: Vec<SplitDirection>,
 }
 

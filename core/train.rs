@@ -1348,8 +1348,8 @@ fn test_model(
 impl Into<model::StatsSettings> for stats::StatsSettings {
 	fn into(self) -> model::StatsSettings {
 		model::StatsSettings {
-			text_histogram_max_size: self.text_histogram_max_size.to_u64().unwrap(),
-			number_histogram_max_size: self.number_histogram_max_size.to_u64().unwrap(),
+			text_histogram_max_size: self.text_histogram_max_size,
+			number_histogram_max_size: self.number_histogram_max_size,
 		}
 	}
 }
@@ -1440,9 +1440,14 @@ impl Into<model::NumberColumnStats> for stats::NumberColumnStatsOutput {
 	fn into(self) -> model::NumberColumnStats {
 		model::NumberColumnStats {
 			column_name: self.column_name,
-			histogram: self.histogram,
-			invalid_count: self.invalid_count,
-			unique_count: self.unique_count,
+			histogram: self.histogram.map(|histogram| {
+				histogram
+					.into_iter()
+					.map(|(k, v)| (k.get(), v.to_u64().unwrap()))
+					.collect()
+			}),
+			invalid_count: self.invalid_count.to_u64().unwrap(),
+			unique_count: self.unique_count.to_u64().unwrap(),
 			min: self.min,
 			max: self.max,
 			mean: self.mean,
@@ -1462,7 +1467,7 @@ impl Into<model::EnumColumnStats> for stats::EnumColumnStatsOutput {
 			histogram: self
 				.histogram
 				.into_iter()
-				.map(|(s, v)| (s, v.to_u64().unwrap()))
+				.map(|(k, v)| (k, v.to_u64().unwrap()))
 				.collect(),
 			invalid_count: self.invalid_count.to_u64().unwrap(),
 			unique_count: self.unique_count.to_u64().unwrap(),
@@ -1483,8 +1488,8 @@ impl Into<model::TokenStats> for stats::TokenStats {
 	fn into(self) -> model::TokenStats {
 		model::TokenStats {
 			token: self.token,
-			count: self.count,
-			examples_count: self.examples_count,
+			occurrence_count: self.count.to_u64().unwrap(),
+			examples_count: self.examples_count.to_u64().unwrap(),
 		}
 	}
 }
@@ -1551,8 +1556,8 @@ impl Into<model::Node> for tangram_tree::Node {
 impl Into<model::BranchNode> for tangram_tree::BranchNode {
 	fn into(self) -> model::BranchNode {
 		model::BranchNode {
-			left_child_index: self.left_child_index.to_u64().unwrap(),
-			right_child_index: self.right_child_index.to_u64().unwrap(),
+			left_child_index: self.left_child_index,
+			right_child_index: self.right_child_index,
 			split: self.split.into(),
 			examples_fraction: self.examples_fraction,
 		}
@@ -1575,7 +1580,7 @@ impl Into<model::BranchSplitContinuous> for tangram_tree::BranchSplitContinuous 
 			tangram_tree::SplitDirection::Right => true,
 		};
 		model::BranchSplitContinuous {
-			feature_index: self.feature_index.to_u64().unwrap(),
+			feature_index: self.feature_index,
 			split_value: self.split_value,
 			invalid_values_direction,
 		}
@@ -1585,7 +1590,7 @@ impl Into<model::BranchSplitContinuous> for tangram_tree::BranchSplitContinuous 
 impl Into<model::BranchSplitDiscrete> for tangram_tree::BranchSplitDiscrete {
 	fn into(self) -> model::BranchSplitDiscrete {
 		model::BranchSplitDiscrete {
-			feature_index: self.feature_index.to_u64().unwrap(),
+			feature_index: self.feature_index,
 			directions: self.directions.into_iter().map(Into::into).collect(),
 		}
 	}
@@ -1639,8 +1644,8 @@ impl Into<model::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 	fn into(self) -> model::LinearMulticlassClassifier {
 		model::LinearMulticlassClassifier {
 			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			n_features: self.model.weights.nrows().to_u64().unwrap(),
-			n_classes: self.model.weights.ncols().to_u64().unwrap(),
+			n_features: self.model.weights.nrows(),
+			n_classes: self.model.weights.ncols(),
 			weights: self.model.weights.into_raw_vec(),
 			biases: self.model.biases.into_raw_vec(),
 			losses: self.model.losses,
@@ -1669,8 +1674,8 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 	fn into(self) -> model::TreeMulticlassClassifier {
 		model::TreeMulticlassClassifier {
-			n_rounds: self.model.n_rounds.to_u64().unwrap(),
-			n_classes: self.model.n_classes.to_u64().unwrap(),
+			n_rounds: self.model.n_rounds,
+			n_classes: self.model.n_classes,
 			biases: self.model.biases,
 			trees: self.model.trees.into_iter().map(|t| t.into()).collect(),
 			feature_groups: self.feature_groups.into_iter().map(|t| t.into()).collect(),
@@ -1775,12 +1780,14 @@ impl Into<model::TreeModelTrainOptions> for tangram_tree::TrainOptions {
 			compute_loss: self.compute_loss,
 			l2_regularization: self.l2_regularization,
 			learning_rate: self.learning_rate,
-			max_depth: self.max_depth.map(|d| d.to_u64().unwrap()),
+			max_depth: self.max_depth.map(|max_depth| max_depth.to_u64().unwrap()),
 			max_rounds: self.max_rounds.to_u64().unwrap(),
 			early_stopping_options: self.early_stopping_options.map(Into::into),
 			max_examples_for_computing_bin_thresholds: self
-				.max_examples_for_computing_bin_thresholds,
-			max_leaf_nodes: self.max_leaf_nodes,
+				.max_examples_for_computing_bin_thresholds
+				.to_u64()
+				.unwrap(),
+			max_leaf_nodes: self.max_leaf_nodes.to_u64().unwrap(),
 			max_valid_bins_for_number_features: self.max_valid_bins_for_number_features,
 			min_examples_per_node: self.min_examples_per_node.to_u64().unwrap(),
 			min_gain_to_split: self.min_gain_to_split,
@@ -1793,22 +1800,28 @@ impl Into<model::TreeModelTrainOptions> for tangram_tree::TrainOptions {
 	}
 }
 
-impl Into<model::EarlyStoppingOptions> for tangram_linear::EarlyStoppingOptions {
-	fn into(self) -> model::EarlyStoppingOptions {
-		model::EarlyStoppingOptions {
+impl Into<model::LinearEarlyStoppingOptions> for tangram_linear::EarlyStoppingOptions {
+	fn into(self) -> model::LinearEarlyStoppingOptions {
+		model::LinearEarlyStoppingOptions {
 			early_stopping_fraction: self.early_stopping_fraction,
-			n_epochs_without_improvement_to_stop: self.n_epochs_without_improvement_to_stop,
+			n_epochs_without_improvement_to_stop: self
+				.n_epochs_without_improvement_to_stop
+				.to_u64()
+				.unwrap(),
 			min_decrease_in_loss_for_significant_change: self
 				.min_decrease_in_loss_for_significant_change,
 		}
 	}
 }
 
-impl Into<model::EarlyStoppingOptions> for tangram_tree::EarlyStoppingOptions {
-	fn into(self) -> model::EarlyStoppingOptions {
-		model::EarlyStoppingOptions {
+impl Into<model::TreeEarlyStoppingOptions> for tangram_tree::EarlyStoppingOptions {
+	fn into(self) -> model::TreeEarlyStoppingOptions {
+		model::TreeEarlyStoppingOptions {
 			early_stopping_fraction: self.early_stopping_fraction,
-			n_epochs_without_improvement_to_stop: self.n_epochs_without_improvement_to_stop,
+			n_epochs_without_improvement_to_stop: self
+				.n_epochs_without_improvement_to_stop
+				.to_u64()
+				.unwrap(),
 			min_decrease_in_loss_for_significant_change: self
 				.min_decrease_in_loss_for_significant_change,
 		}

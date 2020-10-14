@@ -429,23 +429,25 @@ pub fn compute_features_dataframe(
 					.unwrap();
 				let column = match column {
 					DataFrameColumnView::Unknown(c) => {
-						DataFrameColumn::Unknown(UnknownDataFrameColumn::new(c.name.to_owned()))
+						let column = UnknownDataFrameColumn::new(c.name.to_owned());
+						DataFrameColumn::Unknown(column)
 					}
 					DataFrameColumnView::Number(c) => {
-						DataFrameColumn::Number(NumberDataFrameColumn {
-							name: c.name.to_owned(),
-							data: c.data.to_owned(),
-						})
+						let mut column = NumberDataFrameColumn::new(c.name.to_owned());
+						column.data = c.data.to_owned();
+						DataFrameColumn::Number(column)
 					}
-					DataFrameColumnView::Enum(c) => DataFrameColumn::Enum(EnumDataFrameColumn {
-						name: c.name.to_owned(),
-						data: c.data.to_owned(),
-						options: c.options.to_owned(),
-					}),
-					DataFrameColumnView::Text(c) => DataFrameColumn::Text(TextDataFrameColumn {
-						name: c.name.to_owned(),
-						data: c.data.to_owned(),
-					}),
+					DataFrameColumnView::Enum(c) => {
+						let mut column =
+							EnumDataFrameColumn::new(c.name.to_owned(), c.options().to_owned());
+						column.data = c.data.to_owned();
+						DataFrameColumn::Enum(column)
+					}
+					DataFrameColumnView::Text(c) => {
+						let mut column = TextDataFrameColumn::new(c.name.to_owned());
+						column.data = c.data.to_owned();
+						DataFrameColumn::Text(column)
+					}
 				};
 				result.columns.push(column);
 			}

@@ -2,10 +2,11 @@
 This crate provides a basic implementation of dataframes, which are two dimensional arrays of data where each column can have a different data type, like a spreadsheet. This crate is similar to Python's Pandas library, but at present is incredibly limited, because it only implements the features needed to support Tangram.
 */
 
+use fnv::FnvBuildHasher;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use std::num::NonZeroUsize;
+use std::{collections::HashMap, num::NonZeroUsize};
 
 mod load;
 
@@ -61,6 +62,7 @@ pub struct EnumDataFrameColumn {
 	pub name: String,
 	pub options: Vec<String>,
 	pub data: Vec<Option<NonZeroUsize>>,
+	options_map: HashMap<String, NonZeroUsize, FnvBuildHasher>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -349,11 +351,22 @@ impl NumberDataFrameColumn {
 
 impl EnumDataFrameColumn {
 	pub fn new(name: String, options: Vec<String>) -> Self {
+		let options_map = options
+			.iter()
+			.cloned()
+			.enumerate()
+			.map(|(i, option)| (option, NonZeroUsize::new(i + 1).unwrap()))
+			.collect();
 		Self {
 			name,
 			options,
 			data: Vec::new(),
+			options_map,
 		}
+	}
+
+	pub fn options(&self) -> &[String] {
+		&self.options
 	}
 
 	pub fn view(&self) -> EnumDataFrameColumnView {
@@ -362,6 +375,10 @@ impl EnumDataFrameColumn {
 			data: &self.data,
 			options: &self.options,
 		}
+	}
+
+	pub fn value_for_option(&self, option: &str) -> Option<NonZeroUsize> {
+		self.options_map.get(option).cloned()
 	}
 }
 
@@ -605,6 +622,10 @@ impl<'a> NumberDataFrameColumnView<'a> {
 }
 
 impl<'a> EnumDataFrameColumnView<'a> {
+	pub fn options(&self) -> &[String] {
+		&self.options
+	}
+
 	pub fn view(&self) -> Self {
 		self.clone()
 	}

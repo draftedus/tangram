@@ -119,6 +119,7 @@ fn main() {
 	let labels_test = features_test.columns.remove(target_column_index);
 	let labels_test = labels_test.as_enum().unwrap();
 	let load_duration = start.elapsed();
+	println!("load duration {:?}", load_duration);
 
 	// Train the model.
 	let start = std::time::Instant::now();
@@ -162,7 +163,6 @@ fn main() {
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 	let metrics_duration = start.elapsed();
-	println!("load duration {:?}", load_duration);
 	println!("train duration {:?}", duration);
 	println!("metrics duration: {:?}", metrics_duration);
 	println!("auc: {}", auc_roc);

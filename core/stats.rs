@@ -116,7 +116,7 @@ pub struct UnknownColumnStatsOutput {
 	/// This is the name of the column as it appears in the csv.
 	pub column_name: String,
 	/// This is the total number of examples that these stats were computed on.
-	pub count: u64,
+	pub count: usize,
 }
 
 /// This struct contains stats for number columns.
@@ -125,11 +125,11 @@ pub struct NumberColumnStatsOutput {
 	/// This is the name of the column as it appears in the csv.
 	pub column_name: String,
 	/// This is the total number of examples that these stats were computed on.
-	pub count: u64,
+	pub count: usize,
 	/// This is a histogram mapping unique values to their counts. It is `None` if the number of unique values exceeds [`number_histogram_max_size`](struct.StatsSettings.html#structfield.number_histogram_max_size).
-	pub histogram: Option<Vec<(f32, u64)>>,
+	pub histogram: Option<Vec<(Finite<f32>, usize)>>,
 	/// This is the total number of unique values.
-	pub unique_count: u64,
+	pub unique_count: usize,
 	/// This is the max of the values in the column.
 	pub max: f32,
 	/// This is the mean of the values in the column.
@@ -137,7 +137,7 @@ pub struct NumberColumnStatsOutput {
 	/// This is the min of the values in the column.
 	pub min: f32,
 	/// This is the total number of invalid values. Invalid values are values that fail to parse as floating point numbers.
-	pub invalid_count: u64,
+	pub invalid_count: usize,
 	/// This is the variance of the values in the column.
 	pub variance: f32,
 	/// This is the standard deviation of the values in the column. It is equal to the square root of the variance.
@@ -181,9 +181,9 @@ pub struct TextColumnStatsOutput {
 pub struct TokenStats {
 	pub token: String,
 	/// This is the total number of occurrences of this token.
-	pub count: u64,
+	pub count: usize,
 	/// This is the total number of examples that contain this token.
-	pub examples_count: u64,
+	pub examples_count: usize,
 	/// This is the inverse document frequency. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 	pub idf: f32,
 }
@@ -256,7 +256,7 @@ impl ColumnStats {
 		match self {
 			Self::Unknown(s) => ColumnStatsOutput::Unknown(stats::UnknownColumnStatsOutput {
 				column_name: s.column_name,
-				count: s.count.to_u64().unwrap(),
+				count: s.count,
 			}),
 			Self::Number(s) => ColumnStatsOutput::Number(s.finalize(settings)),
 			Self::Enum(s) => ColumnStatsOutput::Enum(s.finalize(settings)),
@@ -297,15 +297,10 @@ impl NumberColumnStats {
 	}
 
 	fn finalize(self, settings: &StatsSettings) -> NumberColumnStatsOutput {
-		let unique_values_count = self.histogram.len().to_u64().unwrap();
-		let invalid_count = self.invalid_count.to_u64().unwrap();
+		let unique_values_count = self.histogram.len();
+		let invalid_count = self.invalid_count;
 		let histogram = if self.histogram.len() <= settings.number_histogram_max_size {
-			Some(
-				self.histogram
-					.iter()
-					.map(|(value, count)| (value.get(), count.to_u64().unwrap()))
-					.collect(),
-			)
+			Some(self.histogram.iter().map(|(k, v)| (*k, *v)).collect())
 		} else {
 			None
 		};
@@ -372,7 +367,7 @@ impl NumberColumnStats {
 		);
 		NumberColumnStatsOutput {
 			column_name: self.column_name,
-			count: self.count.to_u64().unwrap(),
+			count: self.count,
 			histogram,
 			unique_count: unique_values_count,
 			max,
@@ -483,7 +478,7 @@ impl TextColumnStats {
 
 	fn finalize(self, settings: &StatsSettings) -> TextColumnStatsOutput {
 		#[derive(Clone, Debug, Eq)]
-		struct TokenEntry(String, u64);
+		struct TokenEntry(String, usize);
 		impl std::cmp::Ord for TokenEntry {
 			fn cmp(&self, other: &Self) -> std::cmp::Ordering {
 				self.1.cmp(&other.1)
@@ -501,22 +496,17 @@ impl TextColumnStats {
 		}
 		let mut top_tokens = std::collections::BinaryHeap::new();
 		for (token, count) in self.unigram_histogram.iter() {
-			top_tokens.push(TokenEntry(token.clone(), count.to_u64().unwrap()));
+			top_tokens.push(TokenEntry(token.clone(), *count));
 		}
 		for (token, count) in self.bigram_histogram.iter() {
-			top_tokens.push(TokenEntry(token.clone(), count.to_u64().unwrap()));
+			top_tokens.push(TokenEntry(token.clone(), *count));
 		}
 		let n_examples = self.count.to_u64().unwrap();
 		let top_tokens = (0..settings.top_tokens_count)
 			.map(|_| top_tokens.pop())
 			.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
 			.map(|(token, count)| {
-				let examples_count = self
-					.per_example_histogram
-					.get(&token)
-					.unwrap()
-					.to_u64()
-					.unwrap();
+				let examples_count = self.per_example_histogram[&token];
 				// This is the "inverse document frequency smooth" form of the IDF. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 				let idf = (n_examples.to_f32().unwrap() / (1.0 + examples_count.to_f32().unwrap()))
 					.ln() + 1.0;

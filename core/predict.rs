@@ -6,7 +6,6 @@ use num_traits::ToPrimitive;
 use std::{
 	collections::BTreeMap,
 	convert::{TryFrom, TryInto},
-	num::NonZeroUsize,
 };
 
 #[derive(serde::Deserialize, Debug)]
@@ -221,13 +220,7 @@ pub fn predict(
 				}
 				tangram_dataframe::DataFrameColumn::Enum(column) => {
 					let value = input.get(&column.name).and_then(|value| value.as_str());
-					let value = value.and_then(|value| {
-						column
-							.options
-							.iter()
-							.position(|option| *option == value)
-							.map(|position| NonZeroUsize::new(position + 1).unwrap())
-					});
+					let value = value.and_then(|value| column.value_for_option(value));
 					column.data.push(value);
 				}
 				tangram_dataframe::DataFrameColumn::Text(column) => {

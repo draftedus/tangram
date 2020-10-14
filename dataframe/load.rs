@@ -179,14 +179,9 @@ impl DataFrame {
 						column.data.push(value);
 					}
 					DataFrameColumn::Enum(column) => {
-						let value = std::str::from_utf8(value).ok().and_then(|value| {
-							column
-								.options
-								.iter()
-								.position(|option| *option == value)
-								.map(|position| Some(NonZeroUsize::new(position + 1).unwrap()))
-								.unwrap_or(None)
-						});
+						let value = std::str::from_utf8(value)
+							.ok()
+							.and_then(|value| column.value_for_option(value));
 						column.data.push(value);
 					}
 					DataFrameColumn::Text(column) => {

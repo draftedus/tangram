@@ -158,7 +158,7 @@ async fn props(
 				.into_iter()
 				.map(|token| TokenStats {
 					token: token.token,
-					count: token.count,
+					count: token.occurrence_count,
 					examples_count: token.examples_count,
 				})
 				.collect(),
