@@ -9,10 +9,6 @@ import { h } from 'preact'
 export type Props = {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
-	mse: {
-		production: number | null
-		training: number
-	}
 	mseChart: {
 		data: Array<{
 			label: string
@@ -20,11 +16,18 @@ export type Props = {
 		}>
 		trainingMse: number
 	}
-	rmse: {
-		production: number | null
-		training: number
+	overall: {
+		mse: {
+			production: number | null
+			training: number
+		}
+		rmse: {
+			production: number | null
+			training: number
+		}
+		trueValuesCount: number
 	}
-	trueValuesCount: number
+	true_values_count_chart: Array<{ count: number; label: string }>
 }
 
 export function RegressorProductionMetricsPage(props: Props) {
@@ -69,7 +72,7 @@ export function RegressorProductionMetricsPage(props: Props) {
 				</ui.Form>
 				<ui.P>
 					{'You have logged '}
-					<b>{props.trueValuesCount}</b>
+					<b>{props.overall.trueValuesCount}</b>
 					{' true values for this date range.'}
 				</ui.P>
 				{mseData && (
@@ -88,7 +91,7 @@ export function RegressorProductionMetricsPage(props: Props) {
 					<ui.Card>
 						<ui.NumberChart
 							title="True Value Count"
-							value={props.trueValuesCount.toString()}
+							value={props.overall.trueValuesCount.toString()}
 						/>
 					</ui.Card>
 				</MetricsRow>
@@ -98,9 +101,9 @@ export function RegressorProductionMetricsPage(props: Props) {
 							colorA={trainingColor}
 							colorB={productionColor}
 							title="Root Mean Squared Error"
-							valueA={props.rmse?.training}
+							valueA={props.overall.rmse?.training}
 							valueATitle="Training"
-							valueB={props.rmse?.production}
+							valueB={props.overall.rmse?.production}
 							valueBTitle="Production"
 							valueFormatter={value => ui.formatNumber(value)}
 						/>
@@ -110,9 +113,9 @@ export function RegressorProductionMetricsPage(props: Props) {
 							colorA={trainingColor}
 							colorB={productionColor}
 							title="Mean Squared Error"
-							valueA={props.mse?.training}
+							valueA={props.overall.mse?.training}
 							valueATitle="Training"
-							valueB={props.mse?.production}
+							valueB={props.overall.mse?.production}
 							valueBTitle="Production"
 							valueFormatter={value => ui.formatNumber(value)}
 						/>

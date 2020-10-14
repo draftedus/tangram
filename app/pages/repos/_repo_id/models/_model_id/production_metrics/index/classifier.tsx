@@ -36,6 +36,7 @@ export type Props = {
 		}>
 		trueValuesCount: number
 	}
+	true_values_count_chart: Array<{ count: number; label: string }>
 }
 
 export function ClassifierProductionMetricsIndexPage(props: Props) {
