@@ -18,5 +18,4 @@ lexical = "5"
 ndarray = "0.13"
 tangram_util = { path = "../util" }
 num-traits = "0.2"
-rayon = "1.4"
 fnv = "1.0.7"

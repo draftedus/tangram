@@ -2166,7 +2166,6 @@ dependencies = [
  "lexical",
  "ndarray",
  "num-traits",
- "rayon",
  "tangram_util",
 ]
 
