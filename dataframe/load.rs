@@ -179,12 +179,15 @@ impl DataFrame {
 						column.data.push(value);
 					}
 					DataFrameColumn::Enum(column) => {
-						let value = column
-							.options
-							.iter()
-							.position(|option| option.as_bytes() == value)
-							.map(|position| Some(NonZeroUsize::new(position + 1).unwrap()))
-							.unwrap_or(None);
+						let value = if let Ok(value) = std::str::from_utf8(value) {
+							column
+								.options
+								.get(value)
+								.map(|position| Some(NonZeroUsize::new(*position + 1).unwrap()))
+								.unwrap_or(None)
+						} else {
+							None
+						};
 						column.data.push(value);
 					}
 					DataFrameColumn::Text(column) => {

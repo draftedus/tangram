@@ -2160,11 +2160,13 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "csv",
+ "fnv",
  "insta",
  "itertools",
  "lexical",
  "ndarray",
  "num-traits",
+ "rayon",
  "tangram_util",
 ]
 

@@ -10,10 +10,12 @@ parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost
 args = parser.parse_args()
 library = args.library
 
+import time
 # Load the data.
 # path = 'data/higgs-small.csv'
 # nrows_train = 450_000
 # nrows_test = 50_000
+start = time.time()
 path = 'data/higgs.csv'
 nrows_train = 10_500_000
 nrows_test = 500_000
@@ -61,6 +63,7 @@ labels = data[target_column_name]
 	train_size=nrows_train,
 	shuffle=False
 )
+print('load: ', time.time() - start)
 
 # Train the model.
 if library == 'h2o':
@@ -117,10 +120,12 @@ elif library == 'xgboost':
   )
   model.fit(features_train, labels_train)
 
+start = time.time()
 # Compute metrics.
 if library == 'h2o':
   predictions_proba = model.predict(data_test).as_data_frame()['True']
 else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
 auc = roc_auc_score(labels_test, predictions_proba)
+print('metrics: ', time.time() - start)
 print('auc: ', auc)

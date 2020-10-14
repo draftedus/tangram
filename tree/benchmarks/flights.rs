@@ -7,6 +7,7 @@ use tangram_metrics::Metric;
 use tangram_util::pzip;
 
 fn main() {
+	let start = std::time::Instant::now();
 	// Load the data.
 	// let csv_file_path_train = Path::new("data/flights-100k.csv");
 	// let csv_file_path_test = Path::new("data/flights-test.csv");
@@ -117,6 +118,7 @@ fn main() {
 	let mut features_test = DataFrame::from_path(csv_file_path_test, options, |_| {}).unwrap();
 	let labels_test = features_test.columns.remove(target_column_index);
 	let labels_test = labels_test.as_enum().unwrap();
+	let load_duration = start.elapsed();
 
 	// Train the model.
 	let start = std::time::Instant::now();
@@ -150,6 +152,7 @@ fn main() {
 	});
 
 	// Compute metrics.
+	let start = std::time::Instant::now();
 	let labels = labels_test;
 	let input = probabilities
 		.column(1)
@@ -158,6 +161,9 @@ fn main() {
 		.zip(labels.data.iter().map(|d| d.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
-	println!("duration {}", duration.as_secs_f32());
+	let metrics_duration = start.elapsed();
+	println!("load duration {:?}", load_duration);
+	println!("train duration {:?}", duration);
+	println!("metrics duration: {:?}", metrics_duration);
 	println!("auc: {}", auc_roc);
 }

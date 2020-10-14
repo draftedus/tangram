@@ -404,7 +404,7 @@ impl EnumColumnStats {
 		Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),
-			options: column.options.to_owned(),
+			options: column.options.keys().cloned().collect(),
 			histogram,
 			invalid_count,
 			valid_count: 0,

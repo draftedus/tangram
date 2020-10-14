@@ -34,7 +34,7 @@ impl MulticlassClassifier {
 	) -> MulticlassClassifier {
 		let n_classes = labels.options.len();
 		let n_features = features.ncols();
-		let classes: Vec<String> = labels.options.to_vec();
+		let classes: Vec<String> = labels.options.keys().cloned().collect();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
 				features,

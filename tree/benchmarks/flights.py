@@ -10,18 +10,21 @@ parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost
 args = parser.parse_args()
 library = args.library
 
+import time
+start = time.time()
 # Load the data.
-path_train = 'data/flights-100k.csv'
-path_test = 'data/flights-test.csv'
-nrows_train=100_000
-nrows_test=100_000
+# path_train = 'data/flights-100k.csv'
+# path_test = 'data/flights-test.csv'
+# nrows_train=100_000
+# nrows_test=100_000
 # path_train = 'data/flights-1m.csv'
 # path_test = 'data/flights-test.csv'
 # nrows_train=1_000_000
 # nrows_test=100_000
-# path_test = 'data/flights-test.csv'
-# nrows_train=10_000_000
-# nrows_test=100_000
+path_train = 'data/flights-10m.csv'
+path_test = 'data/flights-test.csv'
+nrows_train=10_000_000
+nrows_test=100_000
 month_options = [
 	"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 ]
@@ -128,6 +131,7 @@ if library == 'xgboost' or library == 'sklearn':
 	train_size=nrows_train,
 	shuffle=False
 )
+print('load duration: ', time.time() - start)
 
 # Train the model.
 if library == 'h2o':
@@ -153,6 +157,8 @@ if library == 'h2o':
 	)
 elif library == 'lightgbm':
 	import lightgbm as lgb
+	import time
+	start = time.time()
 	model = lgb.LGBMClassifier(
 		force_row_wise=True,
 		learning_rate=0.1,
@@ -163,13 +169,14 @@ elif library == 'lightgbm':
 		features_train,
 		labels_train,
 	)
+	print('train duration: ', time.time() - start)
 elif library == 'sklearn':
 	from sklearn.experimental import enable_hist_gradient_boosting
 	from sklearn.ensemble import HistGradientBoostingClassifier
 	model = HistGradientBoostingClassifier(
 		learning_rate=0.1,
 		max_iter=100,
-		max_leaf_nodes=512,
+		max_leaf_nodes=255,
 	)
 	model.fit(features_train, labels_train)
 elif library == 'xgboost':
@@ -182,7 +189,7 @@ elif library == 'xgboost':
 		tree_method = 'hist',
 	)
 	model.fit(features_train, labels_train)
-
+start = time.time()
 # Compute metrics.
 if library == 'h2o':
   predictions_proba = model.predict(data_test).as_data_frame()['True']
@@ -190,3 +197,4 @@ else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
 auc = roc_auc_score(labels_test, predictions_proba)
 print('auc: ', auc)
+print('metrics duration: ', time.time() - start)

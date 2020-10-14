@@ -7,6 +7,7 @@ use tangram_metrics::Metric;
 use tangram_util::pzip;
 
 fn main() {
+	let start = std::time::Instant::now();
 	// Load the data.
 	let csv_file_path = Path::new("data/higgs.csv");
 	let (nrows_train, _) = (10_500_000, 500_000);
@@ -53,6 +54,7 @@ fn main() {
 	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
 	let labels_train = labels_train.as_enum().unwrap();
 	let labels_test = labels_test.as_enum().unwrap();
+	let load_duration = start.elapsed();
 
 	// Train the model.
 	let start = std::time::Instant::now();
@@ -72,6 +74,7 @@ fn main() {
 	let duration = start.elapsed();
 
 	// Make predictions on the test data.
+	let start = std::time::Instant::now();
 	let features_test = features_test.to_rows();
 	let chunk_size =
 		(features_test.nrows() + rayon::current_num_threads() - 1) / rayon::current_num_threads();
@@ -94,6 +97,9 @@ fn main() {
 		.zip(labels.data.iter().map(|d| d.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
+	let metrics_duration = start.elapsed();
+	println!("load duration {:?}", load_duration);
 	println!("duration {}", duration.as_secs_f32());
+	println!("metrics duration {:?}", metrics_duration);
 	println!("auc: {}", auc_roc);
 }

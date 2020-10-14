@@ -224,8 +224,7 @@ pub fn predict(
 					let value = value.and_then(|value| {
 						column
 							.options
-							.iter()
-							.position(|option| option == value)
+							.get(value)
 							.map(|position| NonZeroUsize::new(position + 1).unwrap())
 					});
 					column.data.push(value);
