@@ -186,10 +186,10 @@ pub fn predict(
 	let column_names = columns
 		.iter()
 		.map(|c| match c {
-			Column::Unknown(c) => c.name.clone(),
-			Column::Number(c) => c.name.clone(),
-			Column::Enum(c) => c.name.clone(),
-			Column::Text(c) => c.name.clone(),
+			Column::Unknown(c) => Some(c.name.clone()),
+			Column::Number(c) => Some(c.name.clone()),
+			Column::Enum(c) => Some(c.name.clone()),
+			Column::Text(c) => Some(c.name.clone()),
 		})
 		.collect();
 	let column_types = columns
@@ -210,7 +210,7 @@ pub fn predict(
 			match column {
 				tangram_dataframe::DataFrameColumn::Unknown(column) => column.len += 1,
 				tangram_dataframe::DataFrameColumn::Number(column) => {
-					let value = match input.get(&column.name) {
+					let value = match input.get(column.name.as_ref().unwrap()) {
 						Some(serde_json::Value::Number(value)) => {
 							value.as_f64().unwrap().to_f32().unwrap()
 						}
@@ -219,13 +219,15 @@ pub fn predict(
 					column.data.push(value);
 				}
 				tangram_dataframe::DataFrameColumn::Enum(column) => {
-					let value = input.get(&column.name).and_then(|value| value.as_str());
+					let value = input
+						.get(column.name.as_ref().unwrap())
+						.and_then(|value| value.as_str());
 					let value = value.and_then(|value| column.value_for_option(value));
 					column.data.push(value);
 				}
 				tangram_dataframe::DataFrameColumn::Text(column) => {
 					let value = input
-						.get(&column.name)
+						.get(column.name.as_ref().unwrap())
 						.and_then(|value| value.as_str())
 						.unwrap_or("")
 						.to_owned();

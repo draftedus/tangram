@@ -47,19 +47,19 @@ pub enum DataFrameColumn {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnknownDataFrameColumn {
-	pub name: String,
+	pub name: Option<String>,
 	pub len: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NumberDataFrameColumn {
-	pub name: String,
+	pub name: Option<String>,
 	pub data: Vec<f32>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumDataFrameColumn {
-	pub name: String,
+	pub name: Option<String>,
 	pub options: Vec<String>,
 	pub data: Vec<Option<NonZeroUsize>>,
 	options_map: HashMap<String, NonZeroUsize, FnvBuildHasher>,
@@ -67,7 +67,7 @@ pub struct EnumDataFrameColumn {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextDataFrameColumn {
-	pub name: String,
+	pub name: Option<String>,
 	pub data: Vec<String>,
 }
 
@@ -81,26 +81,26 @@ pub enum DataFrameColumnView<'a> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnknownDataFrameColumnView<'a> {
-	pub name: &'a str,
+	pub name: Option<&'a str>,
 	pub len: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NumberDataFrameColumnView<'a> {
-	pub name: &'a str,
+	pub name: Option<&'a str>,
 	pub data: &'a [f32],
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumDataFrameColumnView<'a> {
-	pub name: &'a str,
+	pub name: Option<&'a str>,
 	pub options: &'a [String],
 	pub data: &'a [Option<NonZeroUsize>],
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextDataFrameColumnView<'a> {
-	pub name: &'a str,
+	pub name: Option<&'a str>,
 	pub data: &'a [String],
 }
 
@@ -113,20 +113,20 @@ pub enum DataFrameColumnViewMut<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct NumberDataFrameColumnViewMut<'a> {
-	pub name: &'a mut str,
+	pub name: Option<&'a mut str>,
 	pub data: &'a mut [f32],
 }
 
 #[derive(Debug, PartialEq)]
 pub struct EnumDataFrameColumnViewMut<'a> {
-	pub name: &'a mut str,
+	pub name: Option<&'a mut str>,
 	pub options: &'a mut [String],
 	pub data: &'a mut [usize],
 }
 
 #[derive(Debug, PartialEq)]
 pub struct TextDataFrameColumnViewMut<'a> {
-	pub name: &'a mut str,
+	pub name: Option<&'a mut str>,
 	pub data: &'a mut [String],
 }
 
@@ -155,7 +155,7 @@ pub enum DataFrameValue<'a> {
 }
 
 impl DataFrame {
-	pub fn new(column_names: Vec<String>, column_types: Vec<DataFrameColumnType>) -> Self {
+	pub fn new(column_names: Vec<Option<String>>, column_types: Vec<DataFrameColumnType>) -> Self {
 		let columns = column_names
 			.into_iter()
 			.zip(column_types.into_iter())
@@ -259,12 +259,12 @@ impl DataFrameColumn {
 		}
 	}
 
-	pub fn name(&self) -> &str {
+	pub fn name(&self) -> Option<&str> {
 		match self {
-			Self::Unknown(s) => s.name.as_str(),
-			Self::Number(s) => s.name.as_str(),
-			Self::Enum(s) => s.name.as_str(),
-			Self::Text(s) => s.name.as_str(),
+			Self::Unknown(s) => s.name.as_deref(),
+			Self::Number(s) => s.name.as_deref(),
+			Self::Enum(s) => s.name.as_deref(),
+			Self::Text(s) => s.name.as_deref(),
 		}
 	}
 
@@ -321,20 +321,20 @@ impl DataFrameColumn {
 }
 
 impl UnknownDataFrameColumn {
-	pub fn new(name: String) -> Self {
+	pub fn new(name: Option<String>) -> Self {
 		Self { name, len: 0 }
 	}
 
 	pub fn view(&self) -> UnknownDataFrameColumnView {
 		UnknownDataFrameColumnView {
-			name: &self.name,
+			name: self.name.as_deref(),
 			len: self.len,
 		}
 	}
 }
 
 impl NumberDataFrameColumn {
-	pub fn new(name: String) -> Self {
+	pub fn new(name: Option<String>) -> Self {
 		Self {
 			name,
 			data: Vec::new(),
@@ -343,14 +343,14 @@ impl NumberDataFrameColumn {
 
 	pub fn view(&self) -> NumberDataFrameColumnView {
 		NumberDataFrameColumnView {
-			name: &self.name,
+			name: self.name.as_deref(),
 			data: &self.data,
 		}
 	}
 }
 
 impl EnumDataFrameColumn {
-	pub fn new(name: String, options: Vec<String>) -> Self {
+	pub fn new(name: Option<String>, options: Vec<String>) -> Self {
 		let options_map = options
 			.iter()
 			.cloned()
@@ -371,7 +371,7 @@ impl EnumDataFrameColumn {
 
 	pub fn view(&self) -> EnumDataFrameColumnView {
 		EnumDataFrameColumnView {
-			name: &self.name,
+			name: self.name.as_deref(),
 			data: &self.data,
 			options: &self.options,
 		}
@@ -383,7 +383,7 @@ impl EnumDataFrameColumn {
 }
 
 impl TextDataFrameColumn {
-	pub fn new(name: String) -> Self {
+	pub fn new(name: Option<String>) -> Self {
 		Self {
 			name,
 			data: Vec::new(),
@@ -392,7 +392,7 @@ impl TextDataFrameColumn {
 
 	pub fn view(&self) -> TextDataFrameColumnView {
 		TextDataFrameColumnView {
-			name: &self.name,
+			name: self.name.as_deref(),
 			data: &self.data,
 		}
 	}
@@ -502,7 +502,7 @@ impl<'a> DataFrameColumnView<'a> {
 		}
 	}
 
-	pub fn name(&self) -> &str {
+	pub fn name(&self) -> Option<&str> {
 		match self {
 			Self::Unknown(s) => s.name,
 			Self::Number(s) => s.name,

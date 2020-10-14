@@ -150,6 +150,7 @@ impl DataFrame {
 		};
 
 		// Create the dataframe.
+		let column_names = column_names.into_iter().map(Some).collect();
 		let mut dataframe = Self::new(column_names, column_types);
 		// If an inference pass was done, reserve storage for the values because we know how many rows are in the csv.
 		if let Some(n_rows) = n_rows {

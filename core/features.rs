@@ -329,7 +329,7 @@ fn compute_features_normalized_array_f32(
 	let data = dataframe
 		.columns
 		.iter()
-		.find(|column| column.name() == feature_group.source_column_name)
+		.find(|column| column.name() == Some(&feature_group.source_column_name))
 		.unwrap()
 		.as_number()
 		.unwrap()
@@ -353,7 +353,7 @@ fn compute_features_one_hot_encoded_array_f32(
 	let data = dataframe
 		.columns
 		.iter()
-		.find(|column| column.name() == feature_group.source_column_name)
+		.find(|column| column.name() == Some(&feature_group.source_column_name))
 		.unwrap()
 		.as_enum()
 		.unwrap()
@@ -376,7 +376,7 @@ fn compute_features_bag_of_words_array_f32(
 	let source_column_data = dataframe
 		.columns
 		.iter()
-		.find(|column| column.name() == feature_group.source_column_name)
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap()
 		.as_text()
 		.unwrap()
@@ -425,26 +425,31 @@ pub fn compute_features_dataframe(
 				let column = dataframe
 					.columns
 					.iter()
-					.find(|column| column.name() == feature_group.source_column_name)
+					.find(|column| column.name().unwrap() == feature_group.source_column_name)
 					.unwrap();
 				let column = match column {
 					DataFrameColumnView::Unknown(c) => {
-						let column = UnknownDataFrameColumn::new(c.name.to_owned());
+						let column =
+							UnknownDataFrameColumn::new(c.name.map(|name| name.to_owned()));
 						DataFrameColumn::Unknown(column)
 					}
 					DataFrameColumnView::Number(c) => {
-						let mut column = NumberDataFrameColumn::new(c.name.to_owned());
+						let mut column =
+							NumberDataFrameColumn::new(c.name.map(|name| name.to_owned()));
 						column.data = c.data.to_owned();
 						DataFrameColumn::Number(column)
 					}
 					DataFrameColumnView::Enum(c) => {
-						let mut column =
-							EnumDataFrameColumn::new(c.name.to_owned(), c.options().to_owned());
+						let mut column = EnumDataFrameColumn::new(
+							c.name.map(|name| name.to_owned()),
+							c.options().to_owned(),
+						);
 						column.data = c.data.to_owned();
 						DataFrameColumn::Enum(column)
 					}
 					DataFrameColumnView::Text(c) => {
-						let mut column = TextDataFrameColumn::new(c.name.to_owned());
+						let mut column =
+							TextDataFrameColumn::new(c.name.map(|name| name.to_owned()));
 						column.data = c.data.to_owned();
 						DataFrameColumn::Text(column)
 					}
@@ -474,7 +479,7 @@ fn compute_features_bag_of_words_dataframe(
 	let source_column_data = dataframe
 		.columns
 		.iter()
-		.find(|column| column.name() == feature_group.source_column_name)
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap()
 		.as_text()
 		.unwrap()
@@ -482,7 +487,7 @@ fn compute_features_bag_of_words_dataframe(
 	let mut feature_columns: Vec<DataFrameColumn> = (0..feature_group.tokens.len())
 		.map(|_| {
 			DataFrameColumn::Number(NumberDataFrameColumn {
-				name: "".to_string(),
+				name: None,
 				data: vec![0.0; source_column_data.len()],
 			})
 		})
@@ -557,7 +562,7 @@ fn compute_features_identity_array_value(
 	let column = dataframe
 		.columns
 		.iter()
-		.find(|column| column.name() == feature_group.source_column_name)
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap();
 	match column {
 		DataFrameColumnView::Unknown(_) => unimplemented!(),
@@ -588,7 +593,7 @@ fn compute_features_bag_of_words_array_value(
 	let source_column_data = dataframe
 		.columns
 		.iter()
-		.find(|column| column.name() == feature_group.source_column_name)
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap()
 		.as_text()
 		.unwrap()

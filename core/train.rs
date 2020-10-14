@@ -34,7 +34,7 @@ pub fn train(
 	let column_names: Vec<String> = dataframe
 		.columns
 		.iter()
-		.map(|column| column.name().to_owned())
+		.map(|column| column.name().unwrap().to_owned())
 		.collect();
 
 	// Shuffle the dataframe if enabled.

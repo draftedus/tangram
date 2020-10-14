@@ -222,7 +222,7 @@ impl ColumnStats {
 	fn compute(column: DataFrameColumnView, settings: &StatsSettings) -> Self {
 		match column {
 			DataFrameColumnView::Unknown(column) => Self::Unknown(UnknownColumnStats {
-				column_name: column.name.to_owned(),
+				column_name: column.name.unwrap().to_owned(),
 				count: column.len,
 				invalid_count: column.len,
 			}),
@@ -268,7 +268,7 @@ impl ColumnStats {
 impl NumberColumnStats {
 	fn compute(column: NumberDataFrameColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
-			column_name: column.name.to_owned(),
+			column_name: column.name.unwrap().to_owned(),
 			count: column.data.len(),
 			histogram: BTreeMap::new(),
 			invalid_count: 0,
@@ -392,7 +392,7 @@ impl EnumColumnStats {
 		}
 		let invalid_count = histogram[0];
 		Self {
-			column_name: column.name.to_owned(),
+			column_name: column.name.unwrap().to_owned(),
 			count: column.data.len(),
 			options: column.options.to_owned(),
 			histogram,
@@ -430,7 +430,7 @@ impl EnumColumnStats {
 impl TextColumnStats {
 	fn compute(column: TextDataFrameColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
-			column_name: column.name.to_owned(),
+			column_name: column.name.unwrap().to_owned(),
 			count: column.data.len(),
 			unigram_histogram: BTreeMap::new(),
 			bigram_histogram: BTreeMap::new(),
