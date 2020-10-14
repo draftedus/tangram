@@ -354,13 +354,7 @@ pub fn train(
 			losses,
 		}),
 		Task::BinaryClassification => {
-			let classes = labels_train
-				.as_enum()
-				.unwrap()
-				.options
-				.keys()
-				.cloned()
-				.collect();
+			let classes = labels_train.as_enum().unwrap().options.to_owned();
 			Model::BinaryClassifier(BinaryClassifier {
 				bias: *biases.get(0).unwrap(),
 				trees,
@@ -370,13 +364,7 @@ pub fn train(
 			})
 		}
 		Task::MulticlassClassification { .. } => {
-			let classes = labels_train
-				.as_enum()
-				.unwrap()
-				.options
-				.keys()
-				.cloned()
-				.collect();
+			let classes = labels_train.as_enum().unwrap().options.to_owned();
 			Model::MulticlassClassifier(MulticlassClassifier {
 				n_rounds: n_rounds_trained,
 				n_classes: n_trees_per_round,

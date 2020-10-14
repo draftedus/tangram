@@ -99,14 +99,14 @@ fn main() {
 	.collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-		  "Month".into() => DataFrameColumnType::Enum {options: month_options },
-		  "DayOfWeek".into() => DataFrameColumnType::Enum {options: day_of_week_options },
-		  "DayofMonth".into() => DataFrameColumnType::Enum {options: day_of_month_options },
-		  "DepTime".into() => DataFrameColumnType::Number,
-		  "UniqueCarrier".into() => DataFrameColumnType::Enum { options: carrier_options },
-		  "Origin".into() => DataFrameColumnType::Enum { options: origin_options },
-		  "Dest".into() => DataFrameColumnType::Enum { options: dest_options },
-		  "Distance".into() => DataFrameColumnType::Number,
+		  "month".into() => DataFrameColumnType::Enum {options: month_options },
+		  "day_of_week".into() => DataFrameColumnType::Enum {options: day_of_week_options },
+		  "day_of_month".into() => DataFrameColumnType::Enum {options: day_of_month_options },
+		  "dep_time".into() => DataFrameColumnType::Number,
+		  "unique_carrier".into() => DataFrameColumnType::Enum { options: carrier_options },
+		  "origin".into() => DataFrameColumnType::Enum { options: origin_options },
+		  "dest".into() => DataFrameColumnType::Enum { options: dest_options },
+		  "distance".into() => DataFrameColumnType::Number,
 		  "dep_delayed_15min".into() => DataFrameColumnType::Enum { options: vec!["N".into(), "Y".into()] }
 		}),
 		..Default::default()

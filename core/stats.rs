@@ -399,7 +399,7 @@ impl EnumColumnStats {
 		Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),
-			options: column.options.keys().cloned().collect(),
+			options: column.options.to_owned(),
 			histogram,
 			invalid_count,
 			valid_count: 0,

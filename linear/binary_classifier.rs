@@ -33,7 +33,7 @@ impl BinaryClassifier {
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> BinaryClassifier {
 		let n_features = features.ncols();
-		let classes: Vec<String> = labels.options.keys().cloned().collect();
+		let classes = labels.options.to_owned();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
 				features,

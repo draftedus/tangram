@@ -105,14 +105,14 @@ data_train = pd.read_csv(
 data_test = pd.read_csv(
 	path_test,
 	dtype={
-		'Month': CategoricalDtype(categories=month_options) ,
-		'DayofMonth': CategoricalDtype(categories=day_of_month_options),
-		'DayOfWeek': CategoricalDtype(categories=day_of_week_options),
-		'DepTime': np.int64,
-		'UniqueCarrier': CategoricalDtype(categories=carrier_options),
-		'Origin': CategoricalDtype(categories=origin_options),
-		'Dest': CategoricalDtype(categories=origin_options),
-		'Distance': np.int64,
+		'month': CategoricalDtype(categories=month_options) ,
+		'day_of_month': CategoricalDtype(categories=day_of_month_options),
+		'day_of_week': CategoricalDtype(categories=day_of_week_options),
+		'dep_time': np.int64,
+		'unique_carrier': CategoricalDtype(categories=carrier_options),
+		'origin': CategoricalDtype(categories=origin_options),
+		'dest': CategoricalDtype(categories=origin_options),
+		'distance': np.int64,
 		'dep_delayed_15min': CategoricalDtype(categories=['N','Y']),
 	}
 )

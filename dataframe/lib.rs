@@ -2,7 +2,6 @@
 This crate provides a basic implementation of dataframes, which are two dimensional arrays of data where each column can have a different data type, like a spreadsheet. This crate is similar to Python's Pandas library, but at present is incredibly limited, because it only implements the features needed to support Tangram.
 */
 
-use fnv::FnvHashMap;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -60,7 +59,7 @@ pub struct NumberDataFrameColumn {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumDataFrameColumn {
 	pub name: String,
-	pub options: FnvHashMap<String, usize>,
+	pub options: Vec<String>,
 	pub data: Vec<Option<NonZeroUsize>>,
 }
 
@@ -93,7 +92,7 @@ pub struct NumberDataFrameColumnView<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumDataFrameColumnView<'a> {
 	pub name: &'a str,
-	pub options: &'a FnvHashMap<String, usize>,
+	pub options: &'a [String],
 	pub data: &'a [Option<NonZeroUsize>],
 }
 
@@ -141,9 +140,7 @@ pub enum DataFrameColumnType {
 pub enum DataFrameColumnTypeView<'a> {
 	Unknown,
 	Number,
-	Enum {
-		options: &'a FnvHashMap<String, usize>,
-	},
+	Enum { options: &'a [String] },
 	Text,
 }
 
@@ -352,13 +349,9 @@ impl NumberDataFrameColumn {
 
 impl EnumDataFrameColumn {
 	pub fn new(name: String, options: Vec<String>) -> Self {
-		let mut options_map = FnvHashMap::default();
-		options.into_iter().enumerate().for_each(|(i, option)| {
-			options_map.insert(option, i);
-		});
 		Self {
 			name,
-			options: options_map,
+			options,
 			data: Vec::new(),
 		}
 	}
