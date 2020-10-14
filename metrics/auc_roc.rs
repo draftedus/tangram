@@ -11,8 +11,7 @@ impl<'a> Metric<'a> for AUCROC {
 
 	fn compute(mut input: Self::Input) -> Self::Output {
 		// Sort by probabilities in descending order.
-		input.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-		input.reverse();
+		input.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap().reverse());
 		// Collect the true_positives and false_positives counts for each unique probability.
 		let mut true_positives_false_positives: Vec<TruePositivesFalsePositivesPoint> = Vec::new();
 		for (probability, label) in input.iter() {

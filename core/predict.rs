@@ -247,7 +247,7 @@ pub fn predict(
 			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 			let mut features = unsafe { Array2::uninitialized((n_examples, n_features)) };
 			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
-			features::compute_features_ndarray(
+			features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),
@@ -290,7 +290,7 @@ pub fn predict(
 				.map(|g| g.n_features())
 				.sum::<usize>();
 			let mut features = unsafe { Array2::uninitialized((dataframe.nrows(), n_features)) };
-			features::compute_features_ndarray_value(
+			features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),
@@ -337,7 +337,7 @@ pub fn predict(
 			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 			let mut features = unsafe { Array2::uninitialized((n_examples, n_features)) };
 			let mut probabilities = unsafe { Array2::uninitialized((n_examples, 2)) };
-			features::compute_features_ndarray(
+			features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),
@@ -383,7 +383,7 @@ pub fn predict(
 				.map(|g| g.n_features())
 				.sum::<usize>();
 			let mut features = unsafe { Array2::uninitialized((dataframe.nrows(), n_features)) };
-			features::compute_features_ndarray_value(
+			features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),
@@ -428,7 +428,7 @@ pub fn predict(
 			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 			let mut features = unsafe { Array2::uninitialized((n_examples, n_features)) };
 			let mut probabilities = unsafe { Array2::uninitialized((n_examples, n_classes)) };
-			features::compute_features_ndarray(
+			features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),
@@ -469,7 +469,7 @@ pub fn predict(
 				.map(|g| g.n_features())
 				.sum::<usize>();
 			let mut features = unsafe { Array2::uninitialized((dataframe.nrows(), n_features)) };
-			features::compute_features_ndarray_value(
+			features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),

@@ -290,6 +290,27 @@ impl DataFrameColumn {
 		}
 	}
 
+	pub fn as_number_mut(&mut self) -> Option<&mut NumberDataFrameColumn> {
+		match self {
+			Self::Number(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_enum_mut(&mut self) -> Option<&mut EnumDataFrameColumn> {
+		match self {
+			Self::Enum(s) => Some(s),
+			_ => None,
+		}
+	}
+
+	pub fn as_text_mut(&mut self) -> Option<&mut TextDataFrameColumn> {
+		match self {
+			Self::Text(s) => Some(s),
+			_ => None,
+		}
+	}
+
 	pub fn view(&self) -> DataFrameColumnView {
 		match self {
 			Self::Unknown(column) => DataFrameColumnView::Unknown(column.view()),

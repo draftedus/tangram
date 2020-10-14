@@ -678,7 +678,7 @@ fn train_linear_regressor(
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
 	let mut features = unsafe { Array2::uninitialized((dataframe_train.nrows(), n_features)) };
-	features::compute_features_ndarray(
+	features::compute_features_array_f32(
 		dataframe_train,
 		&feature_groups,
 		features.view_mut(),
@@ -754,7 +754,7 @@ fn train_linear_binary_classifier(
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
 	let mut features = unsafe { Array2::uninitialized((dataframe_train.nrows(), n_features)) };
-	features::compute_features_ndarray(
+	features::compute_features_array_f32(
 		dataframe_train,
 		&feature_groups,
 		features.view_mut(),
@@ -834,7 +834,7 @@ fn train_linear_multiclass_classifier(
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
 	let mut features = unsafe { Array2::uninitialized((dataframe_train.nrows(), n_features)) };
-	features::compute_features_ndarray(
+	features::compute_features_array_f32(
 		dataframe_train,
 		&feature_groups,
 		features.view_mut(),

@@ -6,7 +6,7 @@ use crate::stats;
 use itertools::izip;
 use ndarray::{prelude::*, s};
 use tangram_dataframe::prelude::*;
-use tangram_util::text::{bigrams, AlphanumericTokenizer};
+use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
 
 /// This struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
 #[derive(Debug)]
@@ -21,7 +21,7 @@ pub enum FeatureGroup {
 An `IdentityFeatureGroup` describes the simplest possible feature engineering, which passes a single column from the input dataframe to the output features untouched.
 
 # Example
-1. **Source Column Type**: [NumberColumn](../dataframe/struct.NumberColumn.html).
+For a number column:
 
 | dataframe value | feature value |
 |-----------------|---------------|
@@ -29,7 +29,7 @@ An `IdentityFeatureGroup` describes the simplest possible feature engineering, w
 | 3.0             | 3.0           |
 | 2.1             | 2.1           |
 
-2. **Source Column Type**: [EnumColumn](../dataframe/struct.EnumColumn.html).
+For an enum column:
 
 ```
 use std::num::NonZeroUsize;
@@ -117,13 +117,12 @@ pub struct OneHotEncodedFeatureGroup {
 }
 
 /**
-A BagOfWordsFeatureGroup creates features for a text column using the *bag-of-words* method.
+A BagOfWordsFeatureGroup creates features for a text column using the [Bag of Words](https://en.wikipedia.org/wiki/Bag-of-words_model) method.
 
-The raw text value is tokenized. There are `n` features, one for each token found in the training dataset.
-A feature will have a value of `count * idf` if it appears in the raw text and 0 otherwise, where *count* is the number of times the token appears in the raw text and *idf* is the inverse document frequency. See [tf-idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
+First, during training all the values for the text column are tokenized. Then, [IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) values are computed for each token. One feature is created for each token. For each example, the feature for each token will have a value equal to the number of occurrences of the token in the text column's value multiplied by the IDF computed for the token during training.
 
 # Example
-**Source Column Type**: [TextColumn](../dataframe/struct.TextColumn.html).
+
 ```
 use tangram_dataframe::TextColumn;
 TextColumn {
@@ -132,29 +131,17 @@ TextColumn {
 };
 ```
 
-In computing stats, we computed the [idf](https://en.wikipedia.org/wiki/Tf%E2%80%93idf#Inverse_document_frequency) score for each token and assigned it a unique index:
+| token    |  idf      |
+|----------|-----------|
+| "cat"    |  log(1/3) |
+| "hat"    |  log(1/3) |
+| "in"     |  log(1/3) |
+| "little" |  log(2/3) |
+| "prince" |  log(1/3) |
+| "stuart" |  log(1/3) |
+| "the"    |  log(2/3) |
 
-| token    | index | idf      |
-|----------|-------|----------|
-| "cat"    | 0     | log(1/3) |
-| "hat"    | 1     | log(1/3) |
-| "in"     | 2     | log(1/3) |
-| "little" | 3     | log(2/3) |
-| "prince" | 4     | log(1/3) |
-| "stuart" | 5     | log(1/3) |
-| "the"    | 6     | log(2/3) |
-
-We generated one feature for every token in the vocabulary where the feature index corresponds to the index of the token in the previous map. E.g. the bag of words feature at index 1 corresponds to the token "cat", and the bag of words feature at index 5 corresponds to the token "prince".
-
-The feature value is computed using the tf-idf formula: `value = tf * idf`.
-
-**Term Frequency (tf)**
-The term frequency, `tf` is 1 if the token appears in the data for this example and 0 otherwise.
-
-**Inverse Document Frequency (idf)**
-The idf was computed during stats and is a score that downweights frequently occurring terms. It is computed for each term by taking the log of the ratio of the total number of *documents*, which in our case is the number of training examples and the number of *documents* that contain our particular term. For example, the token "little" appears in 2 example rows and there are 3 total examples in our dataset so its idf score is log(3/2).
-
-| dataframe data       | tokens                             | features (6)                 |
+| dataframe value      | tokens                             | features values                                   |
 |----------------------|------------------------------------|---------------------------------------------------|
 | "The Little Prince"  | ["the", "little", "prince"]        | [0, 0, 0, log(3/2), log(3/1), 0, log(3/2)]        |
 | "Stuart Little"      | ["stuart", "little"]               | [0, 0, 0, log(3/2), 0, log(3/1), 0]               |
@@ -165,7 +152,7 @@ pub struct BagOfWordsFeatureGroup {
 	pub source_column_name: String,
 	/// This is the tokenizer used to split the text into tokens.
 	pub tokenizer: Tokenizer,
-	/// These are the tokens that were produced for the source column.
+	/// These are the tokens that were produced for the source column in training.
 	pub tokens: Vec<BagOfWordsFeatureGroupToken>,
 }
 
@@ -178,7 +165,7 @@ pub struct BagOfWordsFeatureGroupToken {
 /// A Tokenizer describes how raw text is transformed into tokens.
 #[derive(Debug)]
 pub enum Tokenizer {
-	/// See [AlphanumericTokenizer](../util/text/struct.AlphanumericTokenizer.html).
+	/// This specifies that an [AlphanumericTokenizer](../util/text/struct.AlphanumericTokenizer.html) should be used.
 	Alphanumeric,
 }
 
@@ -194,10 +181,8 @@ impl FeatureGroup {
 	}
 }
 
-/// Compute feature groups for [linear](../linear/index.html) models.
-///
-/// The difference between this function and [compute_feature_groups_tree](fn.compute_feature_groups_tree.html) is that tree models have native support for enum columns and they do not require that number columns are normalized.
-pub fn compute_feature_groups_linear(
+/// Choose feature groups for linear models based on the column stats.
+pub fn choose_feature_groups_linear(
 	column_stats: &[stats::ColumnStatsOutput],
 ) -> Vec<FeatureGroup> {
 	let mut result = Vec::new();
@@ -205,53 +190,46 @@ pub fn compute_feature_groups_linear(
 		match column_stats {
 			stats::ColumnStatsOutput::Unknown(_) => {}
 			stats::ColumnStatsOutput::Number(_) => {
-				result.push(compute_normalized_feature_group(column_stats));
+				result.push(normalized_feature_group_for_column(column_stats));
 			}
 			stats::ColumnStatsOutput::Enum(_) => {
-				result.push(compute_one_hot_encoded_feature_group(column_stats));
+				result.push(one_hot_encoded_feature_group_for_column(column_stats));
 			}
 			stats::ColumnStatsOutput::Text(_) => {
-				result.push(compute_bag_of_words_feature_group(column_stats))
+				result.push(bag_of_words_feature_group_for_column(column_stats))
 			}
 		};
 	}
 	result
 }
 
-/// Compute feature groups for [tree](../tree/index.html) models.
-///
-/// The difference between this function and [compute_feature_groups_linear](fn.compute_feature_groups_linear.html) is that tree models have native support for enum columns and they do not require that number columns are normalized.
-/// The [FeatureGroups](enum.FeatureGroup.html) for enum and number columns are [IdentityFeatureGroups](struct.IdentityFeatureGroup.html).
-pub fn compute_feature_groups_tree(column_stats: &[stats::ColumnStatsOutput]) -> Vec<FeatureGroup> {
+/// Choose feature groups for tree models based on the column stats.
+pub fn choose_feature_groups_tree(column_stats: &[stats::ColumnStatsOutput]) -> Vec<FeatureGroup> {
 	let mut result = Vec::new();
 	for column_stats in column_stats.iter() {
 		match column_stats {
 			stats::ColumnStatsOutput::Unknown(_) => {}
 			stats::ColumnStatsOutput::Number(_) => {
-				result.push(compute_identity_feature_group(
-					column_stats.column_name().to_owned(),
-				));
+				result.push(identity_feature_group_for_column(column_stats));
 			}
 			stats::ColumnStatsOutput::Enum(_) => {
-				result.push(compute_identity_feature_group(
-					column_stats.column_name().to_owned(),
-				));
+				result.push(identity_feature_group_for_column(column_stats));
 			}
 			stats::ColumnStatsOutput::Text(_) => {
-				result.push(compute_bag_of_words_feature_group(column_stats))
+				result.push(bag_of_words_feature_group_for_column(column_stats))
 			}
 		};
 	}
 	result
 }
 
-/// Create an IdentifyFeatureGroup.
-fn compute_identity_feature_group(source_column_name: String) -> FeatureGroup {
-	FeatureGroup::Identity(IdentityFeatureGroup { source_column_name })
+fn identity_feature_group_for_column(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
+	FeatureGroup::Identity(IdentityFeatureGroup {
+		source_column_name: column_stats.column_name().to_owned(),
+	})
 }
 
-/// Create a NormalizedFeatureGroup. This function uses the mean and variance from the [ColumnStats](../stats/struct.ColumnStats.html).
-fn compute_normalized_feature_group(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
+fn normalized_feature_group_for_column(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
 	let column_stats = match &column_stats {
 		stats::ColumnStatsOutput::Number(column_stats) => column_stats,
 		_ => unreachable!(),
@@ -263,8 +241,9 @@ fn compute_normalized_feature_group(column_stats: &stats::ColumnStatsOutput) -> 
 	})
 }
 
-/// Create a OneHotEncodedFeatureGroup.
-fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
+fn one_hot_encoded_feature_group_for_column(
+	column_stats: &stats::ColumnStatsOutput,
+) -> FeatureGroup {
 	let options = match column_stats {
 		stats::ColumnStatsOutput::Enum(stats) => {
 			let mut unique_values: Vec<_> = stats
@@ -283,8 +262,7 @@ fn compute_one_hot_encoded_feature_group(column_stats: &stats::ColumnStatsOutput
 	})
 }
 
-/// Create a BagOfWordsFeatureGroup.
-fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
+fn bag_of_words_feature_group_for_column(column_stats: &stats::ColumnStatsOutput) -> FeatureGroup {
 	let column_stats = match &column_stats {
 		stats::ColumnStatsOutput::Text(column_stats) => column_stats,
 		_ => unreachable!(),
@@ -306,8 +284,8 @@ fn compute_bag_of_words_feature_group(column_stats: &stats::ColumnStatsOutput) -
 	})
 }
 
-/// Compute features given the original data `dataframe` and a slice of [FeatureGroup](enum.FeatureGroup.html) one for each column in the dataframe. The resulting features are placed into the passed in `features` array. `progress` is used to keep track of the progress of this function. This function is used to compute features for **training** [linear](../linear/index.html) models.
-pub fn compute_features_ndarray(
+/// Compute features as an `Array` of `f32`s.
+pub fn compute_features_array_f32(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
 	mut features: ArrayViewMut2<f32>,
@@ -321,24 +299,28 @@ pub fn compute_features_ndarray(
 		match &feature_group {
 			FeatureGroup::Identity(_) => unimplemented!(),
 			FeatureGroup::Normalized(feature_group) => {
-				compute_features_normalized_ndarray(dataframe, feature_group, features, progress)
+				compute_features_normalized_array_f32(dataframe, feature_group, features, progress)
 			}
-			FeatureGroup::OneHotEncoded(feature_group) => compute_features_one_hot_encoded_ndarray(
+			FeatureGroup::OneHotEncoded(feature_group) => {
+				compute_features_one_hot_encoded_array_f32(
+					dataframe,
+					feature_group,
+					features,
+					progress,
+				)
+			}
+			FeatureGroup::BagOfWords(feature_group) => compute_features_bag_of_words_array_f32(
 				dataframe,
 				feature_group,
 				features,
 				progress,
 			),
-			FeatureGroup::BagOfWords(feature_group) => {
-				compute_features_bag_of_words_ndarray(dataframe, feature_group, features, progress)
-			}
 		};
 		feature_index += n_features_in_group;
 	}
 }
 
-/// Compute normalized features given a NormalizedFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
-fn compute_features_normalized_ndarray(
+fn compute_features_normalized_array_f32(
 	dataframe: &DataFrameView,
 	feature_group: &NormalizedFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
@@ -362,8 +344,7 @@ fn compute_features_normalized_ndarray(
 	}
 }
 
-/// Compute one hot encoded features given a OneHotEncodedFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
-fn compute_features_one_hot_encoded_ndarray(
+fn compute_features_one_hot_encoded_array_f32(
 	dataframe: &DataFrameView,
 	feature_group: &OneHotEncodedFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
@@ -385,15 +366,14 @@ fn compute_features_one_hot_encoded_ndarray(
 	}
 }
 
-/// Compute bag of words encoded features given a BagOfWordsFeatureGroup and `dataframe` with the original data. The result is placed into the passed in `features`.
-fn compute_features_bag_of_words_ndarray(
+fn compute_features_bag_of_words_array_f32(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
 	mut features: ArrayViewMut2<f32>,
 	progress: &impl Fn(),
 ) {
-	features.fill(0.0);
-	let data = dataframe
+	// Get the data for the source column.
+	let source_column_data = dataframe
 		.columns
 		.iter()
 		.find(|column| column.name() == feature_group.source_column_name)
@@ -401,26 +381,30 @@ fn compute_features_bag_of_words_ndarray(
 		.as_text()
 		.unwrap()
 		.data;
-	for (mut features, value) in features.axis_iter_mut(Axis(0)).zip(data.iter()) {
+	// Fill the features with zeros.
+	features.fill(0.0);
+	// Compute the feature values for each example.
+	for (example_index, value) in source_column_data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = AlphanumericTokenizer;
-				let tokens = tokenizer.tokenize(value);
-				let bigrams = bigrams(&tokens);
-				let mut total = 0.0;
-				for token_text in tokens.iter().chain(bigrams.iter()) {
-					if let Ok(index) = feature_group
+				let mut feature_values_sum_of_squares = 0.0;
+				// Set the feature value for each token for this example.
+				for token in AlphanumericTokenizer::new(value) {
+					let token_index = feature_group
 						.tokens
-						.binary_search_by(|token| token.token.cmp(&token_text))
-					{
-						let value = 1.0 * feature_group.tokens.get(index).unwrap().idf;
-						features[index] += value;
-						total += value.powi(2);
+						.binary_search_by(|t| t.token.as_str().cmp(token.as_ref()));
+					if let Ok(token_index) = token_index {
+						let token = &feature_group.tokens[token_index];
+						let feature_value = 1.0 * token.idf;
+						feature_values_sum_of_squares += feature_value * feature_value;
+						*features.get_mut([example_index, token_index]).unwrap() += feature_value;
 					}
 				}
-				if total > 0.0 {
-					let norm = total.sqrt();
-					features /= norm;
+				// Normalize the feature values for this example.
+				if feature_values_sum_of_squares > 0.0 {
+					for feature in features.row_mut(example_index).iter_mut() {
+						*feature /= feature_values_sum_of_squares;
+					}
 				}
 			}
 		}
@@ -428,7 +412,7 @@ fn compute_features_bag_of_words_ndarray(
 	}
 }
 
-/// Compute features given the original data `dataframe` and a slice of [FeatureGroup](enum.FeatureGroup.html) one for each column in the dataframe. The function returns a new DataFrame with the computed features. A `progress` function is passed in and called to track progress of the function. This function is used to compute features for training [tree](../tree/index.html) models.
+/// Compute features as a `DataFrame`.
 pub fn compute_features_dataframe(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
@@ -479,13 +463,13 @@ pub fn compute_features_dataframe(
 	result
 }
 
-/// Compute bag of words encoded features given a BagOfWordsFeatureGroup, `dataframe` with the original data. The returned Vec<Column> has length equal to the number of tokens in the original column for which the feature group is for.
 fn compute_features_bag_of_words_dataframe(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
 	progress: &impl Fn(),
 ) -> Vec<DataFrameColumn> {
-	let data = dataframe
+	// Get the data for the source column.
+	let source_column_data = dataframe
 		.columns
 		.iter()
 		.find(|column| column.name() == feature_group.source_column_name)
@@ -493,46 +477,48 @@ fn compute_features_bag_of_words_dataframe(
 		.as_text()
 		.unwrap()
 		.data;
-	let mut columns: Vec<NumberDataFrameColumn> = feature_group
-		.tokens
-		.iter()
-		.map(|token| NumberDataFrameColumn {
-			name: token.token.clone(),
-			data: vec![0.0; data.len()],
+	let mut feature_columns: Vec<DataFrameColumn> = (0..feature_group.tokens.len())
+		.map(|_| {
+			DataFrameColumn::Number(NumberDataFrameColumn {
+				name: "".to_string(),
+				data: vec![0.0; source_column_data.len()],
+			})
 		})
 		.collect();
-	for (example_index, value) in data.iter().enumerate() {
+	// Compute the feature values for each example.
+	for (example_index, value) in source_column_data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = AlphanumericTokenizer;
-				let tokens = tokenizer.tokenize(value);
-				let bigrams = bigrams(&tokens);
-				let mut total = 0.0;
-				for token_text in tokens.iter().chain(bigrams.iter()) {
-					if let Ok(index) = feature_group
+				let mut feature_values_sum_of_squares = 0.0;
+				// Set the feature value for each token for this example.
+				for token in AlphanumericTokenizer::new(value) {
+					let token_index = feature_group
 						.tokens
-						.binary_search_by(|token| token.token.cmp(&token_text))
-					{
-						let idf = feature_group.tokens[index].idf;
-						let feature_value = 1.0 * idf;
-						total += feature_value.powi(2);
-						columns[index].data[example_index] += feature_value;
+						.binary_search_by(|t| t.token.as_str().cmp(token.as_ref()));
+					if let Ok(token_index) = token_index {
+						let token = &feature_group.tokens[token_index];
+						let feature_value = 1.0 * token.idf;
+						feature_values_sum_of_squares += feature_value * feature_value;
+						let feature_column = feature_columns[token_index].as_number_mut().unwrap();
+						feature_column.data[example_index] += feature_value;
 					}
 				}
-				if total > 0.0 {
-					for column in columns.iter_mut() {
-						column.data[example_index] /= total;
+				// Normalize the feature values for this example.
+				if feature_values_sum_of_squares > 0.0 {
+					for feature_column in feature_columns.iter_mut() {
+						let feature_column = feature_column.as_number_mut().unwrap();
+						feature_column.data[example_index] /= feature_values_sum_of_squares;
 					}
 				}
 			}
 		}
 		progress();
 	}
-	columns.into_iter().map(DataFrameColumn::Number).collect()
+	feature_columns
 }
 
-/// Compute features given the original data `dataframe` and a slice of [FeatureGroup](enum.FeatureGroup.html) one for each column in the dataframe. The function returns an Array of [Value](../dataframe/enum.Value.html). The `progress` closure is called to track progress through the function. This function is used to compute features for making **predictions** with [tree](../tree/index.html) models.
-pub fn compute_features_ndarray_value(
+/// Compute features as an `Array` of `DataFrameValue`s.
+pub fn compute_features_array_value(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
 	mut features: ArrayViewMut2<DataFrameValue>,
@@ -544,15 +530,12 @@ pub fn compute_features_ndarray_value(
 		let slice = s![.., feature_index..feature_index + n_features_in_group];
 		let features = features.slice_mut(slice);
 		match &feature_group {
-			FeatureGroup::Identity(feature_group) => compute_features_identity_ndarray_value(
-				dataframe,
-				feature_group,
-				features,
-				progress,
-			),
+			FeatureGroup::Identity(feature_group) => {
+				compute_features_identity_array_value(dataframe, feature_group, features, progress)
+			}
 			FeatureGroup::Normalized(_) => unimplemented!(),
 			FeatureGroup::OneHotEncoded(_) => unimplemented!(),
-			FeatureGroup::BagOfWords(feature_group) => compute_features_bag_of_words_ndarray_value(
+			FeatureGroup::BagOfWords(feature_group) => compute_features_bag_of_words_array_value(
 				dataframe,
 				feature_group,
 				features,
@@ -563,8 +546,7 @@ pub fn compute_features_ndarray_value(
 	}
 }
 
-/// Compute the feature values for an `IdentitifyFeatureGroup` from `dataframe` and write them to `features`.
-fn compute_features_identity_ndarray_value(
+fn compute_features_identity_array_value(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
 	mut features: ArrayViewMut2<DataFrameValue>,
@@ -578,29 +560,30 @@ fn compute_features_identity_ndarray_value(
 	match column {
 		DataFrameColumnView::Unknown(_) => unimplemented!(),
 		DataFrameColumnView::Number(c) => {
-			izip!(features.column_mut(0), c.data).for_each(|(feature_column, column_value)| {
+			for (feature_column, column_value) in izip!(features.column_mut(0), c.data) {
 				*feature_column = DataFrameValue::Number(*column_value);
 				progress()
-			});
+			}
 		}
 		DataFrameColumnView::Enum(c) => {
-			izip!(features.column_mut(0), c.data).for_each(|(feature_column, column_value)| {
+			for (feature_column, column_value) in izip!(features.column_mut(0), c.data) {
 				*feature_column = DataFrameValue::Enum(*column_value);
 				progress()
-			});
+			}
 		}
 		DataFrameColumnView::Text(_) => unimplemented!(),
 	}
 }
 
 /// Compute the feature values for a `BagOfWordsFeatureGroup` from `dataframe` and write them to `features`.
-fn compute_features_bag_of_words_ndarray_value(
+fn compute_features_bag_of_words_array_value(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
 	mut features: ArrayViewMut2<DataFrameValue>,
 	progress: &impl Fn(),
 ) {
-	let data = dataframe
+	// Get the data for the source column.
+	let source_column_data = dataframe
 		.columns
 		.iter()
 		.find(|column| column.name() == feature_group.source_column_name)
@@ -608,40 +591,39 @@ fn compute_features_bag_of_words_ndarray_value(
 		.as_text()
 		.unwrap()
 		.data;
+	// Fill the features with zeros.
 	features
 		.iter_mut()
 		.for_each(|feature| *feature = DataFrameValue::Number(0.0));
-	for (example_index, value) in data.iter().enumerate() {
+	// Compute the feature values for each example.
+	for (example_index, value) in source_column_data.iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
-				let tokenizer = AlphanumericTokenizer;
-				let tokens = tokenizer.tokenize(value);
-				let bigrams = bigrams(&tokens);
-				let mut total = 0.0;
-				for token_text in tokens.iter().chain(bigrams.iter()) {
-					if let Ok(index) = feature_group
+				let mut feature_values_sum_of_squares = 0.0;
+				// Set the feature value for each token for this example.
+				for token in AlphanumericTokenizer::new(value) {
+					let token_index = feature_group
 						.tokens
-						.binary_search_by(|token| token.token.cmp(&token_text))
-					{
-						let value = features
-							.get_mut([example_index, index])
+						.binary_search_by(|t| t.token.as_str().cmp(token.as_ref()));
+					if let Ok(token_index) = token_index {
+						let token = &feature_group.tokens[token_index];
+						let feature_value = 1.0 * token.idf;
+						feature_values_sum_of_squares += feature_value * feature_value;
+						*features
+							.get_mut([example_index, token_index])
 							.unwrap()
 							.as_number_mut()
-							.unwrap();
-						let idf = feature_group.tokens[index].idf;
-						let feature_value = 1.0 * idf;
-						total += feature_value.powi(2);
-						*value += 1.0 * idf;
+							.unwrap() += feature_value;
 					}
 				}
-				if total > 0.0 {
-					let mut feature_row = features.slice_mut(s![example_index, ..]);
-					for f in feature_row.iter_mut() {
-						*f.as_number_mut().unwrap() /= total;
+				// Normalize the feature values for this example.
+				if feature_values_sum_of_squares > 0.0 {
+					for feature in features.row_mut(example_index).iter_mut() {
+						*feature.as_number_mut().unwrap() /= feature_values_sum_of_squares;
 					}
 				}
 			}
 		}
-		progress()
+		progress();
 	}
 }

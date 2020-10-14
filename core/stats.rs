@@ -7,10 +7,7 @@ use std::{
 };
 use tangram_dataframe::prelude::*;
 use tangram_metrics as metrics;
-use tangram_util::{
-	finite::Finite,
-	text::{bigrams, compute_idf, AlphanumericTokenizer},
-};
+use tangram_util::{alphanumeric_tokenizer::AlphanumericTokenizer, finite::Finite};
 
 /// This struct holds column stats.
 #[derive(Clone, Debug)]
@@ -73,8 +70,6 @@ pub struct TextColumnStats {
 	pub column_name: String,
 	/// The total number of values.
 	pub count: usize,
-	/// The tokenizer is used to split text into tokens.
-	pub tokenizer: AlphanumericTokenizer,
 	/// A map from unigram tokens to the total number of occurrences across all examples.
 	pub unigram_histogram: BTreeMap<String, usize>,
 	/// A map from bigram tokens to the total number of occurrences across all examples.
@@ -442,22 +437,16 @@ impl TextColumnStats {
 		let mut stats = Self {
 			column_name: column.name.to_owned(),
 			count: column.data.len(),
-			tokenizer: AlphanumericTokenizer {},
 			unigram_histogram: BTreeMap::new(),
 			bigram_histogram: BTreeMap::new(),
 			per_example_histogram: BTreeMap::new(),
 		};
 		for value in column.data {
 			let mut token_set = BTreeSet::new();
-			let tokens = stats.tokenizer.tokenize(value);
-			let bigrams = bigrams(&tokens);
-			for token in tokens.into_iter() {
+			for token in AlphanumericTokenizer::new(value) {
+				let token = token.to_string();
 				token_set.insert(token.clone());
 				*stats.unigram_histogram.entry(token).or_insert(0) += 1;
-			}
-			for bigram in bigrams.into_iter() {
-				token_set.insert(bigram.clone());
-				*stats.bigram_histogram.entry(bigram).or_insert(0) += 1;
 			}
 			for token in token_set.into_iter() {
 				*stats.per_example_histogram.entry(token).or_insert(0) += 1;
@@ -528,7 +517,9 @@ impl TextColumnStats {
 					.unwrap()
 					.to_u64()
 					.unwrap();
-				let idf = compute_idf(examples_count, n_examples);
+				// This is the "inverse document frequency smooth" form of the IDF. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
+				let idf = (n_examples.to_f32().unwrap() / (1.0 + examples_count.to_f32().unwrap()))
+					.ln() + 1.0;
 				TokenStats {
 					token,
 					count,

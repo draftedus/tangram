@@ -19,7 +19,7 @@ pub fn test_linear_regressor(
 		progress_counter.clone(),
 	));
 	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	features::compute_features_ndarray(
+	features::compute_features_array_f32(
 		dataframe_test,
 		&feature_groups,
 		features.view_mut(),
@@ -78,7 +78,7 @@ pub fn test_tree_regressor(
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	features::compute_features_ndarray_value(
+	features::compute_features_array_value(
 		dataframe_test,
 		feature_groups,
 		features.view_mut(),
@@ -118,7 +118,7 @@ pub fn test_linear_binary_classifier(
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	features::compute_features_ndarray(
+	features::compute_features_array_f32(
 		dataframe_test,
 		&feature_groups,
 		features.view_mut(),
@@ -194,7 +194,7 @@ pub fn test_tree_binary_classifier(
 		progress_counter.clone(),
 	));
 	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
-	features::compute_features_ndarray_value(
+	features::compute_features_array_value(
 		dataframe_test,
 		feature_groups,
 		features.view_mut(),
@@ -238,7 +238,7 @@ pub fn test_linear_multiclass_classifier(
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	features::compute_features_ndarray(
+	features::compute_features_array_f32(
 		dataframe_test,
 		&feature_groups,
 		features.view_mut(),
@@ -300,7 +300,7 @@ pub fn test_tree_multiclass_classifier(
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	features::compute_features_ndarray_value(
+	features::compute_features_array_value(
 		dataframe_test,
 		feature_groups,
 		features.view_mut(),

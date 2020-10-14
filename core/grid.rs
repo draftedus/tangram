@@ -106,7 +106,7 @@ pub fn compute_regression_hyperparameter_grid(
 		.map(|item| match item {
 			config::GridItem::Linear(item) => GridItem::LinearRegressor {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_linear(column_stats),
+				feature_groups: features::choose_feature_groups_linear(column_stats),
 				options: LinearModelTrainOptions {
 					l2_regularization: item.l2_regularization,
 					learning_rate: item.learning_rate,
@@ -124,7 +124,7 @@ pub fn compute_regression_hyperparameter_grid(
 			},
 			config::GridItem::Tree(item) => GridItem::TreeRegressor {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_tree(column_stats),
+				feature_groups: features::choose_feature_groups_tree(column_stats),
 				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
 					learning_rate: item.learning_rate,
@@ -164,7 +164,7 @@ pub fn compute_binary_classification_hyperparameter_grid(
 		.map(|item| match item {
 			config::GridItem::Linear(item) => GridItem::LinearBinaryClassifier {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_linear(column_stats),
+				feature_groups: features::choose_feature_groups_linear(column_stats),
 				options: LinearModelTrainOptions {
 					l2_regularization: item.l2_regularization,
 					learning_rate: item.learning_rate,
@@ -182,7 +182,7 @@ pub fn compute_binary_classification_hyperparameter_grid(
 			},
 			config::GridItem::Tree(item) => GridItem::TreeBinaryClassifier {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_tree(column_stats),
+				feature_groups: features::choose_feature_groups_tree(column_stats),
 				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
 					learning_rate: item.learning_rate,
@@ -222,7 +222,7 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 		.map(|item| match item {
 			config::GridItem::Linear(item) => GridItem::LinearMulticlassClassifier {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_linear(column_stats),
+				feature_groups: features::choose_feature_groups_linear(column_stats),
 				options: LinearModelTrainOptions {
 					l2_regularization: item.l2_regularization,
 					learning_rate: item.learning_rate,
@@ -240,7 +240,7 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 			},
 			config::GridItem::Tree(item) => GridItem::TreeMulticlassClassifier {
 				target_column_index,
-				feature_groups: features::compute_feature_groups_tree(column_stats),
+				feature_groups: features::choose_feature_groups_tree(column_stats),
 				options: TreeModelTrainOptions {
 					max_depth: item.max_depth,
 					learning_rate: item.learning_rate,
@@ -307,7 +307,7 @@ pub fn default_regression_hyperparameter_grid(
 	) {
 		grid.push(GridItem::LinearRegressor {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_linear(column_stats),
+			feature_groups: features::choose_feature_groups_linear(column_stats),
 			options: LinearModelTrainOptions {
 				l2_regularization: Some(l2_regularization),
 				learning_rate: Some(learning_rate),
@@ -326,7 +326,7 @@ pub fn default_regression_hyperparameter_grid(
 	) {
 		grid.push(GridItem::TreeRegressor {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_tree(column_stats),
+			feature_groups: features::choose_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
 				max_depth: Some(max_depth),
 				learning_rate: Some(learning_rate),
@@ -354,7 +354,7 @@ pub fn default_binary_classification_hyperparameter_grid(
 	) {
 		grid.push(GridItem::LinearBinaryClassifier {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_linear(column_stats),
+			feature_groups: features::choose_feature_groups_linear(column_stats),
 			options: LinearModelTrainOptions {
 				l2_regularization: Some(l2_regularization),
 				learning_rate: Some(learning_rate),
@@ -373,7 +373,7 @@ pub fn default_binary_classification_hyperparameter_grid(
 	) {
 		grid.push(GridItem::TreeBinaryClassifier {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_tree(column_stats),
+			feature_groups: features::choose_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
 				max_depth: Some(max_depth),
 				learning_rate: Some(learning_rate),
@@ -401,7 +401,7 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 	) {
 		grid.push(GridItem::LinearMulticlassClassifier {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_linear(column_stats),
+			feature_groups: features::choose_feature_groups_linear(column_stats),
 			options: LinearModelTrainOptions {
 				l2_regularization: Some(l2_regularization),
 				learning_rate: Some(learning_rate),
@@ -420,7 +420,7 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 	) {
 		grid.push(GridItem::TreeMulticlassClassifier {
 			target_column_index,
-			feature_groups: features::compute_feature_groups_tree(column_stats),
+			feature_groups: features::choose_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
 				max_depth: Some(max_depth),
 				learning_rate: Some(learning_rate),
