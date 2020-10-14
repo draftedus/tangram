@@ -11,6 +11,7 @@ export function Document(props: DocumentProps) {
 		<html lang="en">
 			<head>
 				<Head pinwheelInfo={props.pinwheelInfo} />
+				<link href="/favicon.png" rel="icon" type="image/png" />
 				<link
 					as="font"
 					crossOrigin="true"
@@ -22,7 +23,6 @@ export function Document(props: DocumentProps) {
 				<link href="/charts.css" rel="stylesheet" />
 				<link href="/www.css" rel="stylesheet" />
 				<link href="/app.css" rel="stylesheet" />
-				<link href="/favicon.png" rel="icon" type="image/png" />
 				<title>{'Tangram'}</title>
 				<meta
 					content="All-In-One Machine Learning Toolkit for Developers"

@@ -300,8 +300,10 @@ fn test_infer() {
  DataFrame {
      columns: [
          Number(
-             NumberColumn {
-                 name: "number",
+             NumberDataFrameColumn {
+                 name: Some(
+                     "number",
+                 ),
                  data: [
                      1.0,
                      2.0,
@@ -309,8 +311,10 @@ fn test_infer() {
              },
          ),
          Enum(
-             EnumColumn {
-                 name: "enum",
+             EnumDataFrameColumn {
+                 name: Some(
+                     "enum",
+                 ),
                  options: [
                      "test",
                  ],
@@ -322,11 +326,16 @@ fn test_infer() {
                          1,
                      ),
                  ],
+                 options_map: {
+                     "test": 1,
+                 },
              },
          ),
          Text(
-             TextColumn {
-                 name: "text",
+             TextDataFrameColumn {
+                 name: Some(
+                     "text",
+                 ),
                  data: [
                      "hello",
                      "world",
@@ -368,8 +377,10 @@ fn test_column_types() {
  DataFrame {
      columns: [
          Number(
-             NumberColumn {
-                 name: "number",
+             NumberDataFrameColumn {
+                 name: Some(
+                     "number",
+                 ),
                  data: [
                      1.0,
                      2.0,
@@ -377,8 +388,10 @@ fn test_column_types() {
              },
          ),
          Text(
-             TextColumn {
-                 name: "text",
+             TextDataFrameColumn {
+                 name: Some(
+                     "text",
+                 ),
                  data: [
                      "test",
                      "test",
@@ -386,8 +399,10 @@ fn test_column_types() {
              },
          ),
          Enum(
-             EnumColumn {
-                 name: "enum",
+             EnumDataFrameColumn {
+                 name: Some(
+                     "enum",
+                 ),
                  options: [
                      "hello",
                      "world",
@@ -400,6 +415,10 @@ fn test_column_types() {
                          2,
                      ),
                  ],
+                 options_map: {
+                     "hello": 1,
+                     "world": 2,
+                 },
              },
          ),
      ],

@@ -35,7 +35,7 @@ However, because the work done in each loop iteration is small, a large portion 
 
 ```
 use rayon::prelude::*;
-use tangram_util::progress::ProgressCounter;
+use tangram_util::progress_counter::ProgressCounter;
 
 let mut v: Vec<usize> = (0..1_000).collect();
 let progress_counter = ProgressCounter::new(v.len() as u64);

@@ -8,7 +8,7 @@ use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{MeanSquaredError, StreamingMetric};
-use tangram_util::{progress::ProgressCounter, pzip, super_unsafe::SuperUnsafe};
+use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperUnsafe};
 
 /// This struct describes a linear regressor model. You can train one by calling `Regressor::train`.
 #[derive(Debug)]

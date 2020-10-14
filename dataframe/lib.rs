@@ -164,13 +164,13 @@ impl DataFrame {
 					DataFrameColumn::Unknown(UnknownDataFrameColumn::new(column_name))
 				}
 				DataFrameColumnType::Number => {
-					DataFrameColumn::Number(NumberDataFrameColumn::new(column_name))
+					DataFrameColumn::Number(NumberDataFrameColumn::new(column_name, Vec::new()))
 				}
-				DataFrameColumnType::Enum { options } => {
-					DataFrameColumn::Enum(EnumDataFrameColumn::new(column_name, options))
-				}
+				DataFrameColumnType::Enum { options } => DataFrameColumn::Enum(
+					EnumDataFrameColumn::new(column_name, options, Vec::new()),
+				),
 				DataFrameColumnType::Text => {
-					DataFrameColumn::Text(TextDataFrameColumn::new(column_name))
+					DataFrameColumn::Text(TextDataFrameColumn::new(column_name, Vec::new()))
 				}
 			})
 			.collect();
@@ -334,11 +334,8 @@ impl UnknownDataFrameColumn {
 }
 
 impl NumberDataFrameColumn {
-	pub fn new(name: Option<String>) -> Self {
-		Self {
-			name,
-			data: Vec::new(),
-		}
+	pub fn new(name: Option<String>, data: Vec<f32>) -> Self {
+		Self { name, data }
 	}
 
 	pub fn view(&self) -> NumberDataFrameColumnView {
@@ -350,7 +347,11 @@ impl NumberDataFrameColumn {
 }
 
 impl EnumDataFrameColumn {
-	pub fn new(name: Option<String>, options: Vec<String>) -> Self {
+	pub fn new(
+		name: Option<String>,
+		options: Vec<String>,
+		data: Vec<Option<NonZeroUsize>>,
+	) -> Self {
 		let options_map = options
 			.iter()
 			.cloned()
@@ -360,7 +361,7 @@ impl EnumDataFrameColumn {
 		Self {
 			name,
 			options,
-			data: Vec::new(),
+			data,
 			options_map,
 		}
 	}
@@ -383,11 +384,8 @@ impl EnumDataFrameColumn {
 }
 
 impl TextDataFrameColumn {
-	pub fn new(name: Option<String>) -> Self {
-		Self {
-			name,
-			data: Vec::new(),
-		}
+	pub fn new(name: Option<String>, data: Vec<String>) -> Self {
+		Self { name, data }
 	}
 
 	pub fn view(&self) -> TextDataFrameColumnView {

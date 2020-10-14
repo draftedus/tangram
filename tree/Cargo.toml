@@ -12,27 +12,27 @@ default = []
 timing = []
 
 [[bin]]
-name = "boston-tree"
+name = "tangram_tree_benchmark_boston"
 path = "benchmarks/boston.rs"
 
 [[bin]]
-name = "census-tree"
+name = "tangram_tree_benchmark_census"
 path = "benchmarks/census.rs"
 
 [[bin]]
-name = "flights-tree"
+name = "tangram_tree_benchmark_flights"
 path = "benchmarks/flights.rs"
 
 [[bin]]
-name = "heart-disease-tree"
-path = "benchmarks/heart-disease.rs"
+name = "tangram_tree_benchmark_heart_disease"
+path = "benchmarks/heart_disease.rs"
 
 [[bin]]
-name = "higgs-tree"
+name = "tangram_tree_benchmark_higgs"
 path = "benchmarks/higgs.rs"
 
 [[bin]]
-name = "iris-tree"
+name = "tangram_tree_benchmark_iris"
 path = "benchmarks/iris.rs"
 
 [dependencies]
@@ -40,7 +40,6 @@ itertools = "0.9"
 maplit = "1"
 ndarray = { version = "0.13", features = ["rayon"] }
 num-traits = "0.2"
-once_cell = "1"
 rayon = "1.4"
 tangram_dataframe = { path = "../dataframe" }
 tangram_metrics = { path = "../metrics" }

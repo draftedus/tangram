@@ -9,7 +9,7 @@ use rayon::prelude::*;
 use std::{num::NonZeroUsize, ops::Neg};
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{BinaryCrossEntropy, BinaryCrossEntropyInput, StreamingMetric};
-use tangram_util::{progress::ProgressCounter, pzip, super_unsafe::SuperUnsafe};
+use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperUnsafe};
 
 /// This struct describes a linear binary classifier model. You can train one by calling `BinaryClassifier::train`.
 #[derive(Debug)]

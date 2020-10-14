@@ -9,7 +9,6 @@ from time import time
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
 args = parser.parse_args()
-library = args.library
 
 # Load the data.
 # path_train = 'data/flights-100k.csv'
@@ -120,7 +119,7 @@ data = pd.concat([data_train, data_test])
 features = data.loc[:, data.columns != target_column_name]
 labels = data[target_column_name]
 
-if library == 'xgboost' or library == 'sklearn':
+if args.library == 'xgboost' or args.library == 'sklearn':
 	features = pd.get_dummies(features)
 
 (features_train, features_test, labels_train, labels_test) = train_test_split(
@@ -133,7 +132,7 @@ if library == 'xgboost' or library == 'sklearn':
 
 # Train the model.
 start = time()
-if library == 'h2o':
+if args.library == 'h2o':
 	import h2o
 	from h2o.estimators import H2OGradientBoostingEstimator
 	h2o.init()
@@ -144,17 +143,16 @@ if library == 'h2o':
 	feature_column_names = [column for column in data_train.columns if column != target_column_name]
 	model = H2OGradientBoostingEstimator(
 		distribution="bernoulli",
-		learn_rate = 0.1,
-		max_depth = 10,
-		nbins = 255,
-		ntrees = 100,
+		learn_rate=0.1,
+		nbins=255,
+		ntrees=100,
 	)
 	model.train(
 		training_frame=data_train,
 		x=feature_column_names,
 		y=target_column_name,
 	)
-elif library == 'lightgbm':
+elif args.library == 'lightgbm':
 	import lightgbm as lgb
 	model = lgb.LGBMClassifier(
 		force_row_wise=True,
@@ -166,7 +164,7 @@ elif library == 'lightgbm':
 		features_train,
 		labels_train,
 	)
-elif library == 'sklearn':
+elif args.library == 'sklearn':
 	from sklearn.experimental import enable_hist_gradient_boosting
 	from sklearn.ensemble import HistGradientBoostingClassifier
 	model = HistGradientBoostingClassifier(
@@ -175,20 +173,19 @@ elif library == 'sklearn':
 		max_leaf_nodes=255,
 	)
 	model.fit(features_train, labels_train)
-elif library == 'xgboost':
+elif args.library == 'xgboost':
 	import xgboost as xgb
 	model = xgb.XGBClassifier(
-		eta = 0.1,
-		grow_policy = 'lossguide',
-		max_depth = 9,
-		n_estimators = 100,
-		tree_method = 'hist',
+		eta=0.1,
+		grow_policy='lossguide',
+		n_estimators=100,
+		tree_method='hist',
 	)
 	model.fit(features_train, labels_train)
 print('duration',  time() - start)
 
 # Make predictions on the test data.
-if library == 'h2o':
+if args.library == 'h2o':
   predictions_proba = model.predict(data_test).as_data_frame()['True']
 else:
   predictions_proba = model.predict_proba(features_test)[:, 1]

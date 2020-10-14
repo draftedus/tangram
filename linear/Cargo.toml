@@ -7,18 +7,6 @@ version = "0.0.0"
 [lib]
 path = "lib.rs"
 
-[[bin]]
-name = "boston-linear"
-path = "benchmarks/boston.rs"
-
-[[bin]]
-name = "heart-disease-linear"
-path = "benchmarks/heart-disease.rs"
-
-[[bin]]
-name = "iris-linear"
-path = "benchmarks/iris.rs"
-
 [dependencies]
 itertools = "0.9"
 ndarray = "0.13"

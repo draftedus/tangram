@@ -100,8 +100,8 @@ pub struct EarlyStoppingOptions {
 /// This struct reports the training progress.
 #[derive(Debug)]
 pub enum TrainProgress {
-	Initializing(tangram_util::progress::ProgressCounter),
-	Training(tangram_util::progress::ProgressCounter),
+	Initializing(tangram_util::progress_counter::ProgressCounter),
+	Training(tangram_util::progress_counter::ProgressCounter),
 }
 
 /// Trees are stored as a `Vec` of `Node`s. Each branch in the tree has two indexes into the `Vec`, one for each of its children.

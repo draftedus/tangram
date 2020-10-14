@@ -4,7 +4,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{self as metrics, StreamingMetric};
-use tangram_util::progress::ProgressCounter;
+use tangram_util::progress_counter::ProgressCounter;
 
 pub fn test_linear_regressor(
 	dataframe_test: &DataFrameView,

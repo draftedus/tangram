@@ -21,7 +21,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_dataframe::prelude::*;
-use tangram_util::{pool::Pool, progress::ProgressCounter, super_unsafe::SuperUnsafe};
+use tangram_util::{pool::Pool, progress_counter::ProgressCounter, super_unsafe::SuperUnsafe};
 
 /// This enum is used by the common `train` function below to customize the training code slightly for each task.
 #[derive(Clone, Copy, Debug)]

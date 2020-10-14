@@ -7,8 +7,10 @@ version = "0.0.0"
 [lib]
 path = "lib.rs"
 
+[dev-dependencies]
+rayon = "1.4"
+
 [dependencies]
 num-traits = "0.2"
 rand = "0.7"
-rayon = "1.4"
 serde = "1"

@@ -33,12 +33,13 @@ For an enum column:
 
 ```
 use std::num::NonZeroUsize;
-use tangram_dataframe::EnumColumn;
-EnumColumn {
-  name: "color".to_string(),
-  options: vec!["red".to_string(), "green".to_string(), "blue".to_string()],
-  data: vec![None, Some(NonZeroUsize::new(1)), Some(NonZeroUsize::new(2)), Some(NonZeroUsize::new(3))],
-};
+use tangram_dataframe::prelude::*;
+
+EnumDataFrameColumn::new(
+  Some("color".to_string()),
+  vec!["red".to_string(), "green".to_string(), "blue".to_string()],
+  vec![None, Some(NonZeroUsize::new(1).unwrap()), Some(NonZeroUsize::new(2).unwrap()), Some(NonZeroUsize::new(3).unwrap())],
+);
 ```
 
 | value       | encoding |
@@ -64,11 +65,15 @@ pub struct IdentityFeatureGroup {
 A `NormalizedFeatureGroup` transforms a number column to zero mean and unit variance. [Learn more](https://en.wikipedia.org/wiki/Feature_scaling#Standardization_(Z-score_Normalization).
 
 # Example
-use tangram_dataframe::NumberColumn;
-NumberColumn {
-	name: "values".to_string(),
-	data: vec![0.0, 5.2, 1.3, 10.0],
-};
+
+```
+use tangram_dataframe::prelude::*;
+
+NumberDataFrameColumn::new(
+	Some("values".to_string()),
+	vec![0.0, 5.2, 1.3, 10.0],
+);
+```
 
 Mean: 2.16667
 
@@ -93,14 +98,16 @@ pub struct NormalizedFeatureGroup {
 A `OneHotEncodedFeatureGroup` creates one number feature for each option in an enum column, plus one number feature for invalid values. For each example, all of the features will have the value 0.0, except the feature corresponding to the column's value, which will have the value 1.0.
 
 # Example
+
 ```
-use tangram_dataframe::EnumColumn;
 use std::num::NonZeroUsize;
-EnumColumn {
-  name: "color".to_string(),
-  options: vec!["red".to_string(), "green".to_string(), "blue".to_string()],
-  data: vec![None, NonZeroUsize::new(1), NonZeroUsize::new(2), NonZeroUsize::new(3)]
-};
+use tangram_dataframe::prelude::*;
+
+EnumDataFrameColumn::new(
+	Some("color".to_string()),
+	vec!["red".to_string(), "green".to_string(), "blue".to_string()],
+	vec![None, Some(NonZeroUsize::new(1).unwrap()), Some(NonZeroUsize::new(2).unwrap()), Some(NonZeroUsize::new(3).unwrap())],
+);
 ```
 
 | dataframe value | feature values |
@@ -124,11 +131,12 @@ First, during training all the values for the text column are tokenized. Then, [
 # Example
 
 ```
-use tangram_dataframe::TextColumn;
-TextColumn {
-  name: "book_titles".to_string(),
-  data: vec!["The Little Prince".to_string(), "Stuart Little".to_string(), "The Cat in the Hat".to_string()]
-};
+use tangram_dataframe::prelude::*;
+
+TextDataFrameColumn::new(
+  Some("book_titles".to_string()),
+  vec!["The Little Prince".to_string(), "Stuart Little".to_string(), "The Cat in the Hat".to_string()]
+);
 ```
 
 | token    |  idf      |
@@ -434,24 +442,23 @@ pub fn compute_features_dataframe(
 						DataFrameColumn::Unknown(column)
 					}
 					DataFrameColumnView::Number(c) => {
-						let mut column =
-							NumberDataFrameColumn::new(c.name.map(|name| name.to_owned()));
-						column.data = c.data.to_owned();
-						DataFrameColumn::Number(column)
+						DataFrameColumn::Number(NumberDataFrameColumn::new(
+							c.name.map(|name| name.to_owned()),
+							c.data.to_owned(),
+						))
 					}
 					DataFrameColumnView::Enum(c) => {
-						let mut column = EnumDataFrameColumn::new(
+						DataFrameColumn::Enum(EnumDataFrameColumn::new(
 							c.name.map(|name| name.to_owned()),
 							c.options().to_owned(),
-						);
-						column.data = c.data.to_owned();
-						DataFrameColumn::Enum(column)
+							c.data.to_owned(),
+						))
 					}
 					DataFrameColumnView::Text(c) => {
-						let mut column =
-							TextDataFrameColumn::new(c.name.map(|name| name.to_owned()));
-						column.data = c.data.to_owned();
-						DataFrameColumn::Text(column)
+						DataFrameColumn::Text(TextDataFrameColumn::new(
+							c.name.map(|name| name.to_owned()),
+							c.data.to_owned(),
+						))
 					}
 				};
 				result.columns.push(column);

@@ -7,7 +7,6 @@ import pandas as pd
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
 args = parser.parse_args()
-library = args.library
 
 # Load the data.
 path = 'data/iris.csv'
@@ -27,7 +26,7 @@ labels = data[target_column_name]
 )
 
 # Train the model.
-if library == 'h2o':
+if args.library == 'h2o':
   import h2o
   from h2o.estimators import H2OGradientBoostingEstimator
   h2o.init()
@@ -37,49 +36,45 @@ if library == 'h2o':
   data_test = h2o.H2OFrame(python_obj=data_test)
   feature_column_names = [column for column in data_train.columns if column != target_column_name]
   model = H2OGradientBoostingEstimator(
-    learn_rate = 0.1,
-    max_depth = 9,
-    nbins = 255,
-    ntrees = 100,
+    learn_rate=0.1,
+    nbins=255,
+    ntrees=100,
   )
   model.train(
     training_frame=data_train,
     x=feature_column_names,
     y=target_column_name,
   )
-elif library == 'lightgbm':
+elif args.library == 'lightgbm':
   import lightgbm as lgb
   model = lgb.LGBMClassifier(
     learning_rate=0.1,
-    max_depth=9,
     n_estimators=100,
     num_leaves=255,
   )
   model.fit(features_train, labels_train)
-elif library == 'sklearn':
+elif args.library == 'sklearn':
   from sklearn.experimental import enable_hist_gradient_boosting
   from sklearn.ensemble import HistGradientBoostingClassifier
   model = HistGradientBoostingClassifier(
     learning_rate=0.1,
-    max_depth=9,
     max_iter=100,
     max_leaf_nodes=255,
     min_samples_leaf=1,
   )
   model.fit(features_train, labels_train)
-elif library == 'xgboost':
+elif args.library == 'xgboost':
   import xgboost as xgb
   model = xgb.XGBClassifier(
-    eta = 0.1,
-    grow_policy = 'lossguide',
-    max_depth = 9,
-    n_estimators = 100,
-    tree_method = 'hist'
+    eta=0.1,
+    grow_policy='lossguide',
+    n_estimators=100,
+    tree_method='hist'
   )
   model.fit(features_train, labels_train)
 
 # Make predictions on the test data.
-if library == 'h2o':
+if args.library == 'h2o':
   predictions = model.predict(data_test).as_data_frame()['predict']
 else:
   predictions = model.predict(features_test)

@@ -21,7 +21,9 @@ fn main() {
 		features_train,
 		labels_train.clone(),
 		&tangram_tree::TrainOptions {
+			learning_rate: 0.1,
 			max_leaf_nodes: 255,
+			max_rounds: 100,
 			..Default::default()
 		},
 		&mut |_| {},

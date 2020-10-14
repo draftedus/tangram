@@ -7,13 +7,10 @@ version = "0.2.0-dev"
 [lib]
 path = "lib.rs"
 
-[dev-dependencies]
-insta = "1"
-
 [dependencies]
 anyhow = "1"
 itertools = "0.9"
-ndarray = { version = "0.13", features = ["serde"] }
+ndarray = { version = "0.13" }
 num-traits = "0.2"
 rand = "0.7"
 rand_xoshiro = "0.4"

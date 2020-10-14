@@ -26,7 +26,7 @@ itertools = "0.9"
 lexical = "5"
 maplit = "1"
 multer = "1.2"
-ndarray = { version = "0.13" }
+ndarray = { version = "0.13", features = ["serde"] }
 num-traits = "0.2"
 pinwheel = { path = "../pinwheel" }
 rand = "0.7"
@@ -40,5 +40,5 @@ sqlx = { git = "https://github.com/nitsky/sqlx", branch = "master", default-feat
 tangram_core = { path = "../core" }
 tangram_metrics = { path = "../metrics" }
 tangram_util = { path = "../util" }
-tokio = { version = "0.2", features = ["rt-threaded"] }
+tokio = "0.2"
 url = "2"
