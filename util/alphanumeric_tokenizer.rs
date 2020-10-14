@@ -20,12 +20,15 @@ An `AlphanumericTokenizer` splits text into tokens of adjacent alphanumeric char
 #[derive(Clone, Debug)]
 pub struct AlphanumericTokenizer<'a> {
 	text: &'a str,
-	i: usize,
+	byte_index: usize,
 }
 
 impl<'a> AlphanumericTokenizer<'a> {
 	pub fn new(text: &'a str) -> Self {
-		Self { text, i: 0 }
+		Self {
+			text,
+			byte_index: 0,
+		}
 	}
 }
 
@@ -35,12 +38,15 @@ impl<'a> Iterator for AlphanumericTokenizer<'a> {
 		// Find the next pair of two non-alphanumeric chars.
 		loop {
 			// Get the next char.
-			let next_char = match self.text[self.i..].chars().next() {
+			let next_char = match self.text[self.byte_index..].chars().next() {
 				Some(c) => c,
 				None => return None,
 			};
 			// Get the next next char.
-			let next_next_char = match self.text[self.i + next_char.len_utf8()..].chars().next() {
+			let next_next_char = match self.text[self.byte_index + next_char.len_utf8()..]
+				.chars()
+				.next()
+			{
 				Some(c) => c,
 				None => return None,
 			};
@@ -48,25 +54,25 @@ impl<'a> Iterator for AlphanumericTokenizer<'a> {
 			if next_char.is_alphanumeric() && next_next_char.is_alphanumeric() {
 				break;
 			} else {
-				self.i += next_char.len_utf8();
+				self.byte_index += next_char.len_utf8();
 			}
 		}
 		// This token will start at the current index.
-		let start = self.i;
+		let start = self.byte_index;
 		let mut contains_capital_letter = false;
 		// Pass over as many adjacent alphanumeric characters as we can.
-		while let Some(next_char) = self.text[self.i..].chars().next() {
+		while let Some(next_char) = self.text[self.byte_index..].chars().next() {
 			if next_char.is_alphanumeric() {
 				if next_char.is_uppercase() {
 					contains_capital_letter = true;
 				}
-				self.i += next_char.len_utf8();
+				self.byte_index += next_char.len_utf8();
 				continue;
 			} else {
 				break;
 			}
 		}
-		let end = self.i;
+		let end = self.byte_index;
 		let token = &self.text[start..end];
 		// Convert to lowercase only if the token contained any uppercase letters.
 		let token = if contains_capital_letter {
