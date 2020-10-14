@@ -1,7 +1,8 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
 use num_traits::ToPrimitive;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use tangram_metrics::StreamingMetric;
+use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum ProductionColumnStats {
@@ -45,7 +46,8 @@ pub struct TextProductionColumnStats {
 	pub invalid_count: u64,
 	pub count: u64,
 	pub token_histogram: BTreeMap<String, u64>,
-	// pub tokenizer: Tokenizer,
+	pub per_example_histogram: BTreeMap<String, u64>,
+	pub tokenizer: Tokenizer,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
@@ -91,6 +93,7 @@ pub struct TextProductionColumnStatsOutput {
 	pub absent_count: u64,
 	pub invalid_count: u64,
 	pub token_histogram: Vec<(String, u64)>,
+	pub per_example_histogram: Vec<(String, u64)>,
 }
 
 impl ProductionColumnStats {
@@ -408,24 +411,17 @@ impl<'a> StreamingMetric<'a> for EnumProductionColumnStats {
 
 impl TextProductionColumnStats {
 	fn new(column_stats: &tangram_core::model::TextColumnStats) -> Self {
-		// let tokenizer = match feature_group {
-		// 	tangram_core::model::FeatureGroup::BagOfWords(feature_group) => {
-		// 		match feature_group.tokenizer {
-		// 			tangram_core::model::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
-		// 		}
-		// 	}
-		// 	tangram_core::model::FeatureGroup::Identity(_) => unreachable!(),
-		// 	tangram_core::model::FeatureGroup::Normalized(_) => unreachable!(),
-		// 	tangram_core::model::FeatureGroup::OneHotEncoded(_) => unreachable!(),
-		// 	_ => unimplemented!(),
-		// };
+		let tokenizer = match column_stats.tokenizer {
+			tangram_core::model::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
+		};
 		Self {
 			column_name: column_stats.column_name.clone(),
 			absent_count: 0,
 			invalid_count: 0,
 			count: 0,
 			token_histogram: BTreeMap::new(),
-			// tokenizer,
+			per_example_histogram: BTreeMap::new(),
+			tokenizer,
 		}
 	}
 }
@@ -445,25 +441,23 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 				self.invalid_count += 1;
 			}
 		};
-		// TODO collect production token stats
-		// if let Some(serde_json::Value::String(value)) = value {
-		// match self.tokenizer {
-		// 	Tokenizer::Alphanumeric => {
-		// 		let tokenizer = tangram_core::util::text::AlphanumericTokenizer;
-		// 		let tokens = tokenizer.tokenize(value);
-		// 		let bigrams = tangram_core::util::text::bigrams(&tokens);
-		// 		for token in tokens.iter().chain(bigrams.iter()) {
-		// 			// Insert the token into the histogram.
-		// 			match self.token_histogram.get_mut(token) {
-		// 				Some(count) => *count += 1,
-		// 				None => {
-		// 					self.token_histogram.insert(value.into(), 1);
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// }
+
+		// Tokenize the value.
+		if let Some(serde_json::Value::String(value)) = value {
+			match self.tokenizer {
+				Tokenizer::Alphanumeric => {
+					let mut token_set = BTreeSet::new();
+					for token in AlphanumericTokenizer::new(value) {
+						let token = token.to_string();
+						token_set.insert(token.clone());
+						*self.token_histogram.entry(token).or_insert(0) += 1;
+					}
+					for token in token_set.into_iter() {
+						*self.per_example_histogram.entry(token).or_insert(0) += 1;
+					}
+				}
+			}
+		}
 	}
 
 	fn merge(&mut self, other: Self) {
@@ -471,7 +465,18 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 		self.absent_count += other.absent_count;
 		self.count += other.count;
 		for (value, count) in other.token_histogram.into_iter() {
-			*self.token_histogram.entry(value).or_insert(0) += count;
+			if let Some(entry) = self.token_histogram.get_mut(&value) {
+				*entry += count;
+			} else {
+				self.token_histogram.insert(value, count);
+			}
+		}
+		for (value, count) in other.per_example_histogram.into_iter() {
+			if let Some(entry) = self.per_example_histogram.get_mut(&value) {
+				*entry += count;
+			} else {
+				self.per_example_histogram.insert(value, count);
+			}
 		}
 	}
 
@@ -481,6 +486,7 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
 			token_histogram: self.token_histogram.into_iter().collect(),
+			per_example_histogram: self.per_example_histogram.into_iter().collect(),
 		}
 	}
 }

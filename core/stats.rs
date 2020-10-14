@@ -76,6 +76,12 @@ pub struct TextColumnStats {
 	pub bigram_histogram: BTreeMap<String, usize>,
 	/// A map from ngrams to the number of examples with at least one occurrence.
 	pub per_example_histogram: BTreeMap<String, usize>,
+	pub tokenizer: Tokenizer,
+}
+
+#[derive(Clone, Debug)]
+pub enum Tokenizer {
+	Alphanumeric,
 }
 
 /// This struct contains settings used to compute stats.
@@ -174,6 +180,8 @@ pub struct TextColumnStatsOutput {
 	pub count: u64,
 	/// This contains stats for the top [`top_tokens_count`](struct.StatsSettings.html#top_tokens_count) tokens in the column.
 	pub top_tokens: Vec<TokenStats>,
+	// This enum is used to determine the method to split text into tokens.
+	pub tokenizer: Tokenizer,
 }
 
 /// This struct contains stats for individual tokens
@@ -435,6 +443,7 @@ impl TextColumnStats {
 			unigram_histogram: BTreeMap::new(),
 			bigram_histogram: BTreeMap::new(),
 			per_example_histogram: BTreeMap::new(),
+			tokenizer: Tokenizer::Alphanumeric,
 		};
 		for value in column.data {
 			let mut token_set = BTreeSet::new();
@@ -522,6 +531,7 @@ impl TextColumnStats {
 			column_name: self.column_name,
 			count: self.count.to_u64().unwrap(),
 			top_tokens,
+			tokenizer: Tokenizer::Alphanumeric,
 		}
 	}
 }

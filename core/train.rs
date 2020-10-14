@@ -1480,6 +1480,15 @@ impl Into<model::TextColumnStats> for stats::TextColumnStatsOutput {
 		model::TextColumnStats {
 			column_name: self.column_name,
 			top_tokens: self.top_tokens.into_iter().map(Into::into).collect(),
+			tokenizer: self.tokenizer.into(),
+		}
+	}
+}
+
+impl Into<model::Tokenizer> for stats::Tokenizer {
+	fn into(self) -> model::Tokenizer {
+		match self {
+			stats::Tokenizer::Alphanumeric => model::Tokenizer::Alphanumeric,
 		}
 	}
 }

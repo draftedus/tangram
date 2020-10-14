@@ -285,9 +285,12 @@ fn bag_of_words_feature_group_for_column(column_stats: &stats::ColumnStatsOutput
 		.collect::<Vec<_>>();
 	// Tokens must be sorted because we perform a binary search through them later.
 	tokens.sort_by(|a, b| a.token.cmp(&b.token));
+	let tokenizer = match column_stats.tokenizer {
+		stats::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
+	};
 	FeatureGroup::BagOfWords(BagOfWordsFeatureGroup {
 		source_column_name: column_stats.column_name.to_owned(),
-		tokenizer: Tokenizer::Alphanumeric,
+		tokenizer,
 		tokens,
 	})
 }
