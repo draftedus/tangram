@@ -1117,7 +1117,8 @@ fn fill_gradients_and_hessians_ordered_buffers(
 				},
 			);
 		} else {
-			let chunk_size = smaller_child_examples_index.len() / rayon::current_num_threads();
+			let chunk_size = (smaller_child_examples_index.len() + rayon::current_num_threads()
+				- 1) / rayon::current_num_threads();
 			pzip!(
 				smaller_child_examples_index.par_chunks(chunk_size),
 				gradients_ordered_buffer.par_chunks_mut(chunk_size),
