@@ -1,9 +1,9 @@
+from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
+import argparse
 import numpy as np
 import pandas as pd
-from pandas.api.types import CategoricalDtype
-import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
@@ -100,10 +100,12 @@ elif library == 'xgboost':
   )
   model.fit(features_train, labels_train)
 
-# Compute metrics.
+# Make predictions on the test data.
 if library == 'h2o':
   predictions_proba = model.predict(data_test).as_data_frame()['True']
 else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
+
+# Compute metrics.
 auc = roc_auc_score(labels_test, predictions_proba)
-print('auc: ', auc)
+print('auc', auc)

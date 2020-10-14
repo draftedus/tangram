@@ -7,7 +7,6 @@ use tangram_metrics::Metric;
 use tangram_util::pzip;
 
 fn main() {
-	let start = std::time::Instant::now();
 	// Load the data.
 	// let csv_file_path_train = Path::new("data/flights-100k.csv");
 	// let csv_file_path_test = Path::new("data/flights-test.csv");
@@ -118,25 +117,23 @@ fn main() {
 	let mut features_test = DataFrame::from_path(csv_file_path_test, options, |_| {}).unwrap();
 	let labels_test = features_test.columns.remove(target_column_index);
 	let labels_test = labels_test.as_enum().unwrap();
-	let load_duration = start.elapsed();
-	println!("load duration {:?}", load_duration);
 
 	// Train the model.
 	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
 		binned_features_layout: tangram_tree::BinnedFeaturesLayout::RowMajor,
 		learning_rate: 0.1,
-		max_rounds: 100,
 		max_leaf_nodes: 255,
+		max_rounds: 100,
 		..Default::default()
 	};
 	let model = tangram_tree::BinaryClassifier::train(
-		features_train.view().clone(),
+		features_train.view(),
 		labels_train.view(),
 		&train_options,
 		&mut |_| {},
 	);
-	let duration = start.elapsed();
+	println!("duration {}", start.elapsed().as_secs_f32());
 
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
@@ -153,7 +150,6 @@ fn main() {
 	});
 
 	// Compute metrics.
-	let start = std::time::Instant::now();
 	let labels = labels_test;
 	let input = probabilities
 		.column(1)
@@ -162,8 +158,5 @@ fn main() {
 		.zip(labels.data.iter().map(|d| d.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
-	let metrics_duration = start.elapsed();
-	println!("train duration {:?}", duration);
-	println!("metrics duration: {:?}", metrics_duration);
-	println!("auc: {}", auc_roc);
+	println!("auc {}", auc_roc);
 }

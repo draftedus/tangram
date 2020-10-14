@@ -1,21 +1,20 @@
+from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
+from time import time
+import argparse
 import numpy as np
 import pandas as pd
-from pandas.api.types import CategoricalDtype
-import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
 args = parser.parse_args()
 library = args.library
 
-import time
 # Load the data.
 # path = 'data/higgs-small.csv'
 # nrows_train = 450_000
 # nrows_test = 50_000
-start = time.time()
 path = 'data/higgs.csv'
 nrows_train = 10_500_000
 nrows_test = 500_000
@@ -63,9 +62,9 @@ labels = data[target_column_name]
 	train_size=nrows_train,
 	shuffle=False
 )
-print('load: ', time.time() - start)
 
 # Train the model.
+start = time()
 if library == 'h2o':
   import h2o
   from h2o.estimators import H2OGradientBoostingEstimator
@@ -89,8 +88,6 @@ if library == 'h2o':
   )
 elif library == 'lightgbm':
   import lightgbm as lgb
-  import time
-  start = time.time()
   model = lgb.LGBMClassifier(
     force_row_wise=True,
     learning_rate=0.1,
@@ -98,7 +95,6 @@ elif library == 'lightgbm':
     num_leaves=255,
   )
   model.fit(features_train, labels_train)
-  print('duration: ', time.time() - start)
 elif library == 'sklearn':
   from sklearn.experimental import enable_hist_gradient_boosting
   from sklearn.ensemble import HistGradientBoostingClassifier
@@ -119,13 +115,14 @@ elif library == 'xgboost':
     tree_method = 'hist',
   )
   model.fit(features_train, labels_train)
+print('duration',  time() - start)
 
-start = time.time()
-# Compute metrics.
+# Make predictions on the test data.
 if library == 'h2o':
   predictions_proba = model.predict(data_test).as_data_frame()['True']
 else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
+
+# Compute metrics.
 auc = roc_auc_score(labels_test, predictions_proba)
-print('metrics: ', time.time() - start)
-print('auc: ', auc)
+print('auc', auc)

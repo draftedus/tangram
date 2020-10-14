@@ -37,5 +37,5 @@ fn main() {
 		labels: labels_test.data.into(),
 	});
 	let metrics = metrics.finalize();
-	println!("{}", metrics.accuracy);
+	println!("accuracy {}", metrics.accuracy);
 }

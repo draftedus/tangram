@@ -1,17 +1,16 @@
+from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
+import argparse
 import numpy as np
 import pandas as pd
-from pandas.api.types import CategoricalDtype
-import argparse
+from time import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
 args = parser.parse_args()
 library = args.library
 
-import time
-start = time.time()
 # Load the data.
 # path_train = 'data/flights-100k.csv'
 # path_test = 'data/flights-test.csv'
@@ -91,14 +90,14 @@ dest_options= [
 data_train = pd.read_csv(
 	path_train,
 	dtype={
-		'Month': CategoricalDtype(categories=month_options) ,
-		'DayofMonth': CategoricalDtype(categories=day_of_month_options),
-		'DayOfWeek': CategoricalDtype(categories=day_of_week_options),
-		'DepTime': np.int64,
-		'UniqueCarrier': CategoricalDtype(categories=carrier_options),
-		'Origin': CategoricalDtype(categories=origin_options),
-		'Dest': CategoricalDtype(categories=origin_options),
-		'Distance': np.int64,
+		'month': CategoricalDtype(categories=month_options) ,
+		'day_of_month': CategoricalDtype(categories=day_of_month_options),
+		'day_of_week': CategoricalDtype(categories=day_of_week_options),
+		'dep_time': np.int64,
+		'unique_carrier': CategoricalDtype(categories=carrier_options),
+		'origin': CategoricalDtype(categories=origin_options),
+		'dest': CategoricalDtype(categories=origin_options),
+		'distance': np.int64,
 		'dep_delayed_15min': CategoricalDtype(categories=['N','Y']),
 	}
 )
@@ -131,9 +130,9 @@ if library == 'xgboost' or library == 'sklearn':
 	train_size=nrows_train,
 	shuffle=False
 )
-print('load duration: ', time.time() - start)
 
 # Train the model.
+start = time()
 if library == 'h2o':
 	import h2o
 	from h2o.estimators import H2OGradientBoostingEstimator
@@ -157,8 +156,6 @@ if library == 'h2o':
 	)
 elif library == 'lightgbm':
 	import lightgbm as lgb
-	import time
-	start = time.time()
 	model = lgb.LGBMClassifier(
 		force_row_wise=True,
 		learning_rate=0.1,
@@ -169,7 +166,6 @@ elif library == 'lightgbm':
 		features_train,
 		labels_train,
 	)
-	print('train duration: ', time.time() - start)
 elif library == 'sklearn':
 	from sklearn.experimental import enable_hist_gradient_boosting
 	from sklearn.ensemble import HistGradientBoostingClassifier
@@ -189,12 +185,14 @@ elif library == 'xgboost':
 		tree_method = 'hist',
 	)
 	model.fit(features_train, labels_train)
-start = time.time()
-# Compute metrics.
+print('duration',  time() - start)
+
+# Make predictions on the test data.
 if library == 'h2o':
   predictions_proba = model.predict(data_test).as_data_frame()['True']
 else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
+
+# Compute metrics.
 auc = roc_auc_score(labels_test, predictions_proba)
-print('auc: ', auc)
-print('metrics duration: ', time.time() - start)
+print('auc', auc)

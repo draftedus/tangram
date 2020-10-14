@@ -2,7 +2,6 @@ use ndarray::prelude::*;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::Metric;
-use tangram_metrics::StreamingMetric;
 
 fn main() {
 	// Load the data.
@@ -44,12 +43,5 @@ fn main() {
 		.zip(labels_test.data.iter().map(|d| d.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
-	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-		probabilities: probabilities.view(),
-		labels: labels_test.data.into(),
-	});
-	let metrics = metrics.finalize();
-	println!("accuracy: {}", metrics.thresholds[1].accuracy);
-	println!("auc: {}", auc_roc);
+	println!("auc {}", auc_roc);
 }

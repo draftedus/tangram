@@ -1,8 +1,8 @@
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
+import argparse
 import numpy as np
 import pandas as pd
-import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
@@ -86,7 +86,7 @@ elif library == 'sklearn':
   from sklearn.ensemble import HistGradientBoostingClassifier
   model = HistGradientBoostingClassifier(
     learning_rate=0.1,
-    max_depth=8,
+    max_depth=9,
     max_iter=100,
     max_leaf_nodes=255,
     min_samples_leaf=100,
@@ -103,10 +103,12 @@ elif library == 'xgboost':
   )
   model.fit(features_train, labels_train)
 
-# Compute metrics.
+# Make predictions on the test data.
 if library == 'h2o':
   predictions_proba = model.predict(data_test).as_data_frame()['True']
 else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
+
+# Compute metrics.
 auc = roc_auc_score(labels_test, predictions_proba)
-print('auc: ', auc)
+print('auc', auc)

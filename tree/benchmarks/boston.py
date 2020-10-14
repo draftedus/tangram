@@ -1,8 +1,8 @@
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
+import argparse
 import numpy as np
 import pandas as pd
-import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
@@ -75,10 +75,12 @@ elif library == 'xgboost':
   )
   model.fit(features_train, labels_train)
 
-# Compute metrics.
+# Make predictions on the test data.
 if library == 'h2o':
   predictions = model.predict(data_test).as_data_frame()
 else:
   predictions = model.predict(features_test)
+
+# Compute metrics.
 mse = mean_squared_error(predictions, labels_test)
-print('mse: ', mse)
+print('mse', mse)
