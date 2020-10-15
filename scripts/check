@@ -1,1 +1,3 @@
 cargo clippy --all-targets --all-features
+yarn run tsc -b
+yarn run eslint --ext ts,tsx app charts pinwheel ui www

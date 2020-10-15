@@ -156,12 +156,12 @@ fn cli_app(options: AppOptions) -> Result<()> {
 	let mut runtime = tokio::runtime::Builder::new()
 		.threaded_scheduler()
 		.enable_all()
-		.build()?;
-	let database_url = options.database_url.unwrap_or_else(default_database_url);
+		.build()
+		.unwrap();
 	runtime.block_on(tangram_app::run(tangram_app::Options {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
-		database_url,
+		database_url: options.database_url.unwrap_or_else(default_database_url),
 		host: options.host,
 		model: options.model,
 		port: options.port,

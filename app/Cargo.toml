@@ -22,23 +22,19 @@ chrono-tz = { version = "0.5", features = ["serde"] }
 futures = "0.3"
 hyper = { version = "0.13", features = ["stream"] }
 include_dir = "0.6"
-itertools = "0.9"
 lexical = "5"
-maplit = "1"
 multer = "1.2"
 ndarray = { version = "0.13", features = ["serde"] }
 num-traits = "0.2"
 pinwheel = { path = "../pinwheel" }
 rand = "0.7"
-rand_xoshiro = "0.4"
 reqwest = { version = "0.10", default-features = false, features = ["json", "rustls-tls"] }
 rmp-serde = "0.14"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_urlencoded = "0.7"
-sqlx = { git = "https://github.com/nitsky/sqlx", branch = "master", default-features = false, features = ["any", "chrono", "postgres", "runtime-tokio", "sqlite"] }
+sqlx = { git = "https://github.com/launchbadge/sqlx", branch = "master", default-features = false, features = ["any", "chrono", "postgres", "runtime-tokio", "sqlite"] }
 tangram_core = { path = "../core" }
 tangram_metrics = { path = "../metrics" }
 tangram_util = { path = "../util" }
-tokio = "0.2"
 url = "2"

@@ -12,9 +12,9 @@ members = [
 	"util",
 ]
 
-[profile.release]
-codegen-units = 1
-lto = true
+# [profile.release]
+# codegen-units = 1
+# lto = true
 
 # [patch.'https://github.com/tangram-hq/term-ui']
 # term-ui = { path = "../term-ui" }

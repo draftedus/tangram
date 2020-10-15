@@ -1,2 +1,2 @@
-yarn run -s tsc
-yarn run -s eslint --ext ts,tsx .
+yarn run tsc
+yarn run eslint --ext ts,tsx .

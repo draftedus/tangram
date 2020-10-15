@@ -17,9 +17,9 @@ checksum = "ee2a4ec343196209d6594e19543ae87a39f96d5534d7174822a3ad825dd6ed7e"
 
 [[package]]
 name = "ahash"
-version = "0.3.8"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8fd72866655d1904d6b0997d0b07ba561047d070fbe29de039031c641b61217"
+checksum = "f6789e291be47ace86a60303502173d84af8327e3627ecf334356ee0f87a164c"
 
 [[package]]
 name = "aho-corasick"
@@ -371,9 +371,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-mac"
-version = "0.8.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b584a330336237c1eecd3e94266efb216c56ed91225d634cb2991c5f3fd1aeab"
+checksum = "58bcd97a54c7ca5ce2f6eb16f6bede5b0ab5f0055fedc17d2f0b4466e21671ca"
 dependencies = [
  "generic-array",
  "subtle",
@@ -676,19 +676,12 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e91b62f79061a0bc2e046024cb7ba44b08419ed238ecbd9adbd787434b9e8c25"
-dependencies = [
- "ahash",
- "autocfg",
-]
-
-[[package]]
-name = "hashbrown"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
+dependencies = [
+ "ahash",
+]
 
 [[package]]
 name = "heck"
@@ -716,9 +709,9 @@ checksum = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
 
 [[package]]
 name = "hmac"
-version = "0.8.1"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "126888268dcc288495a26bf004b38c5fdbb31682f992c84ceb046a1f0fe38840"
+checksum = "deae6d9dbb35ec2c502d62b8f7b1c000a0822c3b0794ba36b3149c0a1c840dff"
 dependencies = [
  "crypto-mac",
  "digest",
@@ -845,7 +838,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55e2e4c765aa53a0424761bf9f41aa7a6ac1efa87238f59560640e27fca028f2"
 dependencies = [
  "autocfg",
- "hashbrown 0.9.1",
+ "hashbrown",
 ]
 
 [[package]]
@@ -1978,7 +1971,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/nitsky/sqlx#44594e2e036854e777b7ccaf0a86a154c25eb249"
+source = "git+https://github.com/launchbadge/sqlx?branch=master#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -1987,10 +1980,10 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/nitsky/sqlx#44594e2e036854e777b7ccaf0a86a154c25eb249"
+source = "git+https://github.com/launchbadge/sqlx?branch=master#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
 dependencies = [
  "atoi",
- "base64 0.12.3",
+ "base64 0.13.0",
  "bitflags",
  "byteorder",
  "bytes",
@@ -2002,7 +1995,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "hashbrown 0.8.2",
+ "hashbrown",
  "hex",
  "hmac",
  "itoa",
@@ -2030,7 +2023,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/nitsky/sqlx#44594e2e036854e777b7ccaf0a86a154c25eb249"
+source = "git+https://github.com/launchbadge/sqlx?branch=master#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
 dependencies = [
  "dotenv",
  "either",
@@ -2047,7 +2040,7 @@ dependencies = [
 [[package]]
 name = "sqlx-rt"
 version = "0.1.1"
-source = "git+https://github.com/nitsky/sqlx#44594e2e036854e777b7ccaf0a86a154c25eb249"
+source = "git+https://github.com/launchbadge/sqlx?branch=master#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
 dependencies = [
  "native-tls",
  "once_cell",
@@ -2107,15 +2100,12 @@ dependencies = [
  "hyper",
  "include_dir",
  "insta",
- "itertools",
  "lexical",
- "maplit",
  "multer",
  "ndarray",
  "num-traits",
  "pinwheel",
  "rand",
- "rand_xoshiro",
  "reqwest",
  "rmp-serde",
  "serde",
@@ -2125,7 +2115,6 @@ dependencies = [
  "tangram_core",
  "tangram_metrics",
  "tangram_util",
- "tokio",
  "url",
 ]
 
@@ -2138,6 +2127,7 @@ dependencies = [
  "clap",
  "colored",
  "dirs",
+ "hyper",
  "once_cell",
  "tangram_app",
  "tangram_core",

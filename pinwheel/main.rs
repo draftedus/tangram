@@ -36,7 +36,11 @@ struct BuildOptions {
 
 pub fn main() {
 	let options = Options::parse();
-	let mut runtime = tokio::runtime::Runtime::new().unwrap();
+	let mut runtime = tokio::runtime::Builder::new()
+		.threaded_scheduler()
+		.enable_all()
+		.build()
+		.unwrap();
 	match options {
 		Options::Dev(options) => runtime.block_on(dev(options)).unwrap(),
 		Options::Build(options) => runtime.block_on(build(options)).unwrap(),
