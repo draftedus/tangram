@@ -98,7 +98,7 @@ fn compute_binned_features_row_major_u16(
 				BinningInstruction::Number { thresholds } => {
 					pzip!(
 						binned_features_column.axis_iter_mut(Axis(0)),
-						feature.as_number().unwrap().data
+						feature.as_number().unwrap().data()
 					)
 					.for_each(|(binned_feature_value, feature_value)| {
 						// Invalid values go to the first bin.
@@ -120,7 +120,7 @@ fn compute_binned_features_row_major_u16(
 				BinningInstruction::Enum { .. } => {
 					pzip!(
 						binned_features_column.axis_iter_mut(Axis(0)),
-						feature.as_enum().unwrap().data
+						feature.as_enum().unwrap().data()
 					)
 					.for_each(|(binned_feature_value, feature_value)| {
 						*binned_feature_value.into_scalar() = offset
@@ -148,7 +148,7 @@ fn compute_binned_features_for_number_feature(
 	let binned_feature_column = feature
 		.as_number()
 		.unwrap()
-		.data
+		.data()
 		.par_iter()
 		.map(|feature_value| {
 			// Invalid values go to the first bin.
@@ -173,7 +173,7 @@ fn compute_binned_features_for_enum_feature_u8(
 	let binned_feature_column = feature
 		.as_enum()
 		.unwrap()
-		.data
+		.data()
 		.par_iter()
 		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
 		.collect::<Vec<u8>>();
@@ -187,7 +187,7 @@ fn compute_binned_features_for_enum_feature_u16(
 	let binned_feature_column = feature
 		.as_enum()
 		.unwrap()
-		.data
+		.data()
 		.par_iter()
 		.map(|feature_value| {
 			feature_value

@@ -228,9 +228,9 @@ impl ColumnStats {
 	fn compute(column: DataFrameColumnView, settings: &StatsSettings) -> Self {
 		match column {
 			DataFrameColumnView::Unknown(column) => Self::Unknown(UnknownColumnStats {
-				column_name: column.name.unwrap().to_owned(),
-				count: column.len,
-				invalid_count: column.len,
+				column_name: column.name().unwrap().to_owned(),
+				count: column.len(),
+				invalid_count: column.len(),
 			}),
 			DataFrameColumnView::Number(column) => {
 				Self::Number(NumberColumnStats::compute(column.view(), settings))
@@ -274,13 +274,13 @@ impl ColumnStats {
 impl NumberColumnStats {
 	fn compute(column: NumberDataFrameColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
-			column_name: column.name.unwrap().to_owned(),
-			count: column.data.len(),
+			column_name: column.name().unwrap().to_owned(),
+			count: column.data().len(),
 			histogram: BTreeMap::new(),
 			invalid_count: 0,
 			valid_count: 0,
 		};
-		for value in column.data {
+		for value in column.data() {
 			// If the value parses as a finite f32, add it to the histogram. Otherwise, increment the invalid count.
 			if let Ok(value) = <Finite<f32>>::new(*value) {
 				*stats.histogram.entry(value).or_insert(0) += 1;
@@ -391,16 +391,16 @@ impl NumberColumnStats {
 
 impl EnumColumnStats {
 	fn compute(column: EnumDataFrameColumnView, _settings: &StatsSettings) -> Self {
-		let mut histogram = vec![0; column.options.len() + 1];
-		for value in column.data {
+		let mut histogram = vec![0; column.options().len() + 1];
+		for value in column.data() {
 			let index = value.map(|v| v.get()).unwrap_or(0);
 			histogram[index] += 1;
 		}
 		let invalid_count = histogram[0];
 		Self {
-			column_name: column.name.unwrap().to_owned(),
-			count: column.data.len(),
-			options: column.options.to_owned(),
+			column_name: column.name().unwrap().to_owned(),
+			count: column.data().len(),
+			options: column.options().to_owned(),
 			histogram,
 			invalid_count,
 			valid_count: 0,
@@ -436,13 +436,13 @@ impl EnumColumnStats {
 impl TextColumnStats {
 	fn compute(column: TextDataFrameColumnView, _settings: &StatsSettings) -> Self {
 		let mut stats = Self {
-			column_name: column.name.unwrap().to_owned(),
-			count: column.data.len(),
+			column_name: column.name().unwrap().to_owned(),
+			count: column.data().len(),
 			token_occurrence_histogram: BTreeMap::new(),
 			token_example_histogram: BTreeMap::new(),
 			tokenizer: Tokenizer::Alphanumeric,
 		};
-		for value in column.data {
+		for value in column.data() {
 			let mut token_set = BTreeSet::new();
 			for token in AlphanumericTokenizer::new(value) {
 				let token = token.to_string();

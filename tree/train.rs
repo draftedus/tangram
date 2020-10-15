@@ -125,17 +125,20 @@ pub fn train(
 	let biases = match task {
 		// For regression, the bias is the mean of the labels.
 		Task::Regression => {
-			let labels_train = labels_train.as_number().unwrap().data.into();
+			let labels_train = labels_train.as_number().unwrap();
+			let labels_train = labels_train.data().into();
 			crate::regressor::compute_biases(labels_train)
 		}
 		// For binary classification, the bias is the log of the ratio of positive examples to negative examples in the training set, so the baseline prediction is the majority class.
 		Task::BinaryClassification => {
-			let labels_train = labels_train.as_enum().unwrap().data.into();
+			let labels_train = labels_train.as_enum().unwrap();
+			let labels_train = labels_train.data().into();
 			crate::binary_classifier::compute_biases(labels_train)
 		}
 		// For multiclass classification the biases are the logs of each class's proporation in the training set, so the baseline prediction is the majority class.
 		Task::MulticlassClassification { .. } => {
-			let labels_train = labels_train.as_enum().unwrap().data.into();
+			let labels_train = labels_train.as_enum().unwrap();
+			let labels_train = labels_train.data().into();
 			crate::multiclass_classifier::compute_biases(labels_train, n_trees_per_round)
 		}
 	};
@@ -227,7 +230,7 @@ pub fn train(
 					crate::regressor::compute_gradients_and_hessians(
 						gradients.as_slice_mut().unwrap(),
 						hessians.as_slice_mut().unwrap(),
-						labels_train.data,
+						labels_train.data(),
 						predictions.column(0).as_slice().unwrap(),
 					);
 				}
@@ -236,7 +239,7 @@ pub fn train(
 					crate::binary_classifier::compute_gradients_and_hessians(
 						gradients.as_slice_mut().unwrap(),
 						hessians.as_slice_mut().unwrap(),
-						labels_train.data,
+						labels_train.data(),
 						predictions.column(0).as_slice().unwrap(),
 					);
 				}
@@ -246,7 +249,7 @@ pub fn train(
 						tree_per_round_index,
 						gradients.as_slice_mut().unwrap(),
 						hessians.as_slice_mut().unwrap(),
-						labels_train.data,
+						labels_train.data(),
 						predictions.view(),
 					);
 				}
@@ -297,15 +300,18 @@ pub fn train(
 		if let Some(losses) = losses.as_mut() {
 			let loss = match task {
 				Task::Regression => {
-					let labels_train = labels_train.as_number().unwrap().data.into();
+					let labels_train = labels_train.as_number().unwrap();
+					let labels_train = labels_train.data().into();
 					crate::regressor::compute_loss(labels_train, predictions.view())
 				}
 				Task::BinaryClassification => {
-					let labels_train = labels_train.as_enum().unwrap().data.into();
+					let labels_train = labels_train.as_enum().unwrap();
+					let labels_train = labels_train.data().into();
 					crate::binary_classifier::compute_loss(labels_train, predictions.view())
 				}
 				Task::MulticlassClassification { .. } => {
-					let labels_train = labels_train.as_enum().unwrap().data.into();
+					let labels_train = labels_train.as_enum().unwrap();
+					let labels_train = labels_train.data().into();
 					crate::multiclass_classifier::compute_loss(labels_train, predictions.view())
 				}
 			};
@@ -354,7 +360,7 @@ pub fn train(
 			losses,
 		}),
 		Task::BinaryClassification => {
-			let classes = labels_train.as_enum().unwrap().options.to_owned();
+			let classes = labels_train.as_enum().unwrap().options().to_owned();
 			Model::BinaryClassifier(BinaryClassifier {
 				bias: *biases.get(0).unwrap(),
 				trees,
@@ -364,7 +370,7 @@ pub fn train(
 			})
 		}
 		Task::MulticlassClassification { .. } => {
-			let classes = labels_train.as_enum().unwrap().options.to_owned();
+			let classes = labels_train.as_enum().unwrap().options().to_owned();
 			Model::MulticlassClassifier(MulticlassClassifier {
 				n_rounds: n_rounds_trained,
 				n_classes: n_trees_per_round,
@@ -474,7 +480,8 @@ fn compute_early_stopping_metric(
 ) -> f32 {
 	match task {
 		Task::Regression => {
-			let labels = labels.as_number().unwrap().data.into();
+			let labels = labels.as_number().unwrap();
+			let labels = labels.data().into();
 			crate::regressor::update_logits(
 				trees_for_round,
 				features.view(),
@@ -483,7 +490,8 @@ fn compute_early_stopping_metric(
 			crate::regressor::compute_loss(labels, predictions.view())
 		}
 		Task::BinaryClassification => {
-			let labels = labels.as_enum().unwrap().data.into();
+			let labels = labels.as_enum().unwrap();
+			let labels = labels.data().into();
 			crate::binary_classifier::update_logits(
 				trees_for_round,
 				features.view(),
@@ -492,7 +500,8 @@ fn compute_early_stopping_metric(
 			crate::binary_classifier::compute_loss(labels, predictions.view())
 		}
 		Task::MulticlassClassification { .. } => {
-			let labels = labels.as_enum().unwrap().data.into();
+			let labels = labels.as_enum().unwrap();
+			let labels = labels.data().into();
 			crate::multiclass_classifier::update_logits(
 				trees_for_round,
 				features.view(),

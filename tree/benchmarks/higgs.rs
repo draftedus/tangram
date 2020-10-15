@@ -91,7 +91,7 @@ fn main() {
 		.column(1)
 		.iter()
 		.cloned()
-		.zip(labels.data.iter().map(|d| d.unwrap()))
+		.zip(labels.data().iter().map(|d| d.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 	println!("auc {}", auc_roc);

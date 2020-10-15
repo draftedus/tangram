@@ -47,28 +47,28 @@ pub enum DataFrameColumn {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnknownDataFrameColumn {
-	pub name: Option<String>,
-	pub len: usize,
+	name: Option<String>,
+	len: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NumberDataFrameColumn {
-	pub name: Option<String>,
-	pub data: Vec<f32>,
+	name: Option<String>,
+	data: Vec<f32>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumDataFrameColumn {
-	pub name: Option<String>,
-	pub options: Vec<String>,
-	pub data: Vec<Option<NonZeroUsize>>,
+	name: Option<String>,
+	options: Vec<String>,
+	data: Vec<Option<NonZeroUsize>>,
 	options_map: HashMap<String, NonZeroUsize, FnvBuildHasher>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextDataFrameColumn {
-	pub name: Option<String>,
-	pub data: Vec<String>,
+	name: Option<String>,
+	data: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -81,27 +81,27 @@ pub enum DataFrameColumnView<'a> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnknownDataFrameColumnView<'a> {
-	pub name: Option<&'a str>,
-	pub len: usize,
+	name: Option<&'a str>,
+	len: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NumberDataFrameColumnView<'a> {
-	pub name: Option<&'a str>,
-	pub data: &'a [f32],
+	name: Option<&'a str>,
+	data: &'a [f32],
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumDataFrameColumnView<'a> {
-	pub name: Option<&'a str>,
-	pub options: &'a [String],
-	pub data: &'a [Option<NonZeroUsize>],
+	name: Option<&'a str>,
+	options: &'a [String],
+	data: &'a [Option<NonZeroUsize>],
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextDataFrameColumnView<'a> {
-	pub name: Option<&'a str>,
-	pub data: &'a [String],
+	name: Option<&'a str>,
+	data: &'a [String],
 }
 
 #[derive(Debug, PartialEq)]
@@ -113,21 +113,21 @@ pub enum DataFrameColumnViewMut<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct NumberDataFrameColumnViewMut<'a> {
-	pub name: Option<&'a mut str>,
-	pub data: &'a mut [f32],
+	name: Option<&'a mut str>,
+	data: &'a mut [f32],
 }
 
 #[derive(Debug, PartialEq)]
 pub struct EnumDataFrameColumnViewMut<'a> {
-	pub name: Option<&'a mut str>,
-	pub options: &'a mut [String],
-	pub data: &'a mut [usize],
+	name: Option<&'a mut str>,
+	options: &'a mut [String],
+	data: &'a mut [usize],
 }
 
 #[derive(Debug, PartialEq)]
 pub struct TextDataFrameColumnViewMut<'a> {
-	pub name: Option<&'a mut str>,
-	pub data: &'a mut [String],
+	name: Option<&'a mut str>,
+	data: &'a mut [String],
 }
 
 #[derive(Debug, Clone)]
@@ -333,6 +333,22 @@ impl UnknownDataFrameColumn {
 		Self { name, len: 0 }
 	}
 
+	pub fn name(&self) -> &Option<String> {
+		&self.name
+	}
+
+	pub fn is_empty(&self) -> bool {
+		self.len == 0
+	}
+
+	pub fn len(&self) -> usize {
+		self.len
+	}
+
+	pub fn len_mut(&mut self) -> &mut usize {
+		&mut self.len
+	}
+
 	pub fn view(&self) -> UnknownDataFrameColumnView {
 		UnknownDataFrameColumnView {
 			name: self.name.as_deref(),
@@ -344,6 +360,18 @@ impl UnknownDataFrameColumn {
 impl NumberDataFrameColumn {
 	pub fn new(name: Option<String>, data: Vec<f32>) -> Self {
 		Self { name, data }
+	}
+
+	pub fn name(&self) -> &Option<String> {
+		&self.name
+	}
+
+	pub fn data(&self) -> &Vec<f32> {
+		&self.data
+	}
+
+	pub fn data_mut(&mut self) -> &mut Vec<f32> {
+		&mut self.data
 	}
 
 	pub fn view(&self) -> NumberDataFrameColumnView {
@@ -374,8 +402,20 @@ impl EnumDataFrameColumn {
 		}
 	}
 
+	pub fn name(&self) -> &Option<String> {
+		&self.name
+	}
+
 	pub fn options(&self) -> &[String] {
 		&self.options
+	}
+
+	pub fn data(&self) -> &Vec<Option<NonZeroUsize>> {
+		&self.data
+	}
+
+	pub fn data_mut(&mut self) -> &mut Vec<Option<NonZeroUsize>> {
+		&mut self.data
 	}
 
 	pub fn view(&self) -> EnumDataFrameColumnView {
@@ -394,6 +434,18 @@ impl EnumDataFrameColumn {
 impl TextDataFrameColumn {
 	pub fn new(name: Option<String>, data: Vec<String>) -> Self {
 		Self { name, data }
+	}
+
+	pub fn name(&self) -> &Option<String> {
+		&self.name
+	}
+
+	pub fn data(&self) -> &Vec<String> {
+		&self.data
+	}
+
+	pub fn data_mut(&mut self) -> &mut Vec<String> {
+		&mut self.data
 	}
 
 	pub fn view(&self) -> TextDataFrameColumnView {
@@ -620,20 +672,48 @@ impl<'a> DataFrameColumnView<'a> {
 }
 
 impl<'a> UnknownDataFrameColumnView<'a> {
+	pub fn name(&self) -> Option<&str> {
+		self.name
+	}
+
+	pub fn is_empty(&self) -> bool {
+		self.len == 0
+	}
+
+	pub fn len(&self) -> usize {
+		self.len
+	}
+
 	pub fn view(&self) -> Self {
 		self.clone()
 	}
 }
 
 impl<'a> NumberDataFrameColumnView<'a> {
+	pub fn name(&self) -> Option<&str> {
+		self.name
+	}
+
+	pub fn data(&self) -> &[f32] {
+		&self.data
+	}
+
 	pub fn view(&self) -> Self {
 		self.clone()
 	}
 }
 
 impl<'a> EnumDataFrameColumnView<'a> {
+	pub fn name(&self) -> Option<&str> {
+		self.name
+	}
+
 	pub fn options(&self) -> &[String] {
 		&self.options
+	}
+
+	pub fn data(&self) -> &[Option<NonZeroUsize>] {
+		&self.data
 	}
 
 	pub fn view(&self) -> Self {
@@ -642,6 +722,14 @@ impl<'a> EnumDataFrameColumnView<'a> {
 }
 
 impl<'a> TextDataFrameColumnView<'a> {
+	pub fn name(&self) -> Option<&str> {
+		self.name
+	}
+
+	pub fn data(&self) -> &[String] {
+		&self.data
+	}
+
 	pub fn view(&self) -> Self {
 		self.clone()
 	}

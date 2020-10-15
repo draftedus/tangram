@@ -55,7 +55,7 @@ pub fn compute_binning_instructions(
 				compute_binning_instructions_for_number_feature(column, &train_options)
 			}
 			DataFrameColumnView::Enum(column) => BinningInstruction::Enum {
-				n_options: column.options.len(),
+				n_options: column.options().len(),
 			},
 			_ => unreachable!(),
 		})
@@ -70,11 +70,11 @@ fn compute_binning_instructions_for_number_feature(
 	// Create a histogram of values in the number feature.
 	let mut histogram: BTreeMap<Finite<f32>, usize> = BTreeMap::new();
 	let mut histogram_values_count = 0;
-	for value in &column.data[0..column
-		.data
-		.len()
-		.min(train_options.max_examples_for_computing_bin_thresholds)]
-	{
+	let max = usize::min(
+		column.data().len(),
+		train_options.max_examples_for_computing_bin_thresholds,
+	);
+	for value in &column.data()[0..max] {
 		if let Ok(value) = Finite::new(*value) {
 			*histogram.entry(value).or_insert(0) += 1;
 			histogram_values_count += 1;

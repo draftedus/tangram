@@ -487,9 +487,9 @@ fn shuffle(
 			let mut rng = Xoshiro256Plus::seed_from_u64(seed);
 			match column {
 				DataFrameColumn::Unknown(_) => {}
-				DataFrameColumn::Number(column) => column.data.shuffle(&mut rng),
-				DataFrameColumn::Enum(column) => column.data.shuffle(&mut rng),
-				DataFrameColumn::Text(column) => column.data.shuffle(&mut rng),
+				DataFrameColumn::Number(column) => column.data_mut().shuffle(&mut rng),
+				DataFrameColumn::Enum(column) => column.data_mut().shuffle(&mut rng),
+				DataFrameColumn::Text(column) => column.data_mut().shuffle(&mut rng),
 			}
 		});
 	}

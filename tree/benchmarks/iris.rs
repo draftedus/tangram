@@ -34,7 +34,7 @@ fn main() {
 	let mut metrics = tangram_metrics::ClassificationMetrics::new(n_classes);
 	metrics.update(tangram_metrics::ClassificationMetricsInput {
 		probabilities: probabilities.view(),
-		labels: labels_test.data.into(),
+		labels: labels_test.data().into(),
 	});
 	let metrics = metrics.finalize();
 	println!("accuracy {}", metrics.accuracy);

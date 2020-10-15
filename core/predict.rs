@@ -208,30 +208,30 @@ pub fn predict(
 	for input in input.0 {
 		for column in dataframe.columns_mut().iter_mut() {
 			match column {
-				tangram_dataframe::DataFrameColumn::Unknown(column) => column.len += 1,
+				tangram_dataframe::DataFrameColumn::Unknown(column) => *column.len_mut() += 1,
 				tangram_dataframe::DataFrameColumn::Number(column) => {
-					let value = match input.get(column.name.as_ref().unwrap()) {
+					let value = match input.get(column.name().as_ref().unwrap()) {
 						Some(serde_json::Value::Number(value)) => {
 							value.as_f64().unwrap().to_f32().unwrap()
 						}
 						_ => std::f32::NAN,
 					};
-					column.data.push(value);
+					column.data_mut().push(value);
 				}
 				tangram_dataframe::DataFrameColumn::Enum(column) => {
 					let value = input
-						.get(column.name.as_ref().unwrap())
+						.get(column.name().as_ref().unwrap())
 						.and_then(|value| value.as_str());
 					let value = value.and_then(|value| column.value_for_option(value));
-					column.data.push(value);
+					column.data_mut().push(value);
 				}
 				tangram_dataframe::DataFrameColumn::Text(column) => {
 					let value = input
-						.get(column.name.as_ref().unwrap())
+						.get(column.name().as_ref().unwrap())
 						.and_then(|value| value.as_str())
 						.unwrap_or("")
 						.to_owned();
-					column.data.push(value);
+					column.data_mut().push(value);
 				}
 			}
 		}

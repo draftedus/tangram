@@ -337,15 +337,15 @@ fn compute_features_normalized_array_f32(
 	mut features: ArrayViewMut2<f32>,
 	progress: &impl Fn(),
 ) {
-	let data = dataframe
+	// Get the source column.
+	let source_column = dataframe
 		.columns()
 		.iter()
 		.find(|column| column.name() == Some(&feature_group.source_column_name))
-		.unwrap()
-		.as_number()
-		.unwrap()
-		.data;
-	for (feature, value) in features.iter_mut().zip(data.iter()) {
+		.unwrap();
+	let source_column = source_column.as_number().unwrap();
+	// Set the feature values to the normalized source column values.
+	for (feature, value) in features.iter_mut().zip(source_column.data().iter()) {
 		*feature = if value.is_nan() || feature_group.variance == 0.0 {
 			0.0
 		} else {
@@ -361,16 +361,20 @@ fn compute_features_one_hot_encoded_array_f32(
 	mut features: ArrayViewMut2<f32>,
 	progress: &impl Fn(),
 ) {
-	let data = dataframe
+	// Get the source column.
+	let source_column = dataframe
 		.columns()
 		.iter()
 		.find(|column| column.name() == Some(&feature_group.source_column_name))
-		.unwrap()
-		.as_enum()
-		.unwrap()
-		.data;
+		.unwrap();
+	let source_column = source_column.as_enum().unwrap();
+	// Fill the features with zeros.
 	features.fill(0.0);
-	for (mut features, value) in features.axis_iter_mut(Axis(0)).zip(data.iter()) {
+	// For each example, set the features corresponding to the enum value to one.
+	for (mut features, value) in features
+		.axis_iter_mut(Axis(0))
+		.zip(source_column.data().iter())
+	{
 		let feature_index = value.map(|v| v.get()).unwrap_or(0);
 		features[feature_index] = 1.0;
 		progress();
@@ -383,19 +387,17 @@ fn compute_features_bag_of_words_array_f32(
 	mut features: ArrayViewMut2<f32>,
 	progress: &impl Fn(),
 ) {
-	// Get the data for the source column.
-	let source_column_data = dataframe
+	// Get the source column.
+	let source_column = dataframe
 		.columns()
 		.iter()
-		.find(|column| column.name().unwrap() == feature_group.source_column_name)
-		.unwrap()
-		.as_text()
-		.unwrap()
-		.data;
+		.find(|column| column.name() == Some(&feature_group.source_column_name))
+		.unwrap();
+	let source_column = source_column.as_text().unwrap();
 	// Fill the features with zeros.
 	features.fill(0.0);
 	// Compute the feature values for each example.
-	for (example_index, value) in source_column_data.iter().enumerate() {
+	for (example_index, value) in source_column.data().iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
 				let mut feature_values_sum_of_squares = 0.0;
@@ -441,26 +443,26 @@ pub fn compute_features_dataframe(
 				let column = match column {
 					DataFrameColumnView::Unknown(c) => {
 						let column =
-							UnknownDataFrameColumn::new(c.name.map(|name| name.to_owned()));
+							UnknownDataFrameColumn::new(c.name().map(|name| name.to_owned()));
 						DataFrameColumn::Unknown(column)
 					}
 					DataFrameColumnView::Number(c) => {
 						DataFrameColumn::Number(NumberDataFrameColumn::new(
-							c.name.map(|name| name.to_owned()),
-							c.data.to_owned(),
+							c.name().map(|name| name.to_owned()),
+							c.data().to_owned(),
 						))
 					}
 					DataFrameColumnView::Enum(c) => {
 						DataFrameColumn::Enum(EnumDataFrameColumn::new(
-							c.name.map(|name| name.to_owned()),
+							c.name().map(|name| name.to_owned()),
 							c.options().to_owned(),
-							c.data.to_owned(),
+							c.data().to_owned(),
 						))
 					}
 					DataFrameColumnView::Text(c) => {
 						DataFrameColumn::Text(TextDataFrameColumn::new(
-							c.name.map(|name| name.to_owned()),
-							c.data.to_owned(),
+							c.name().map(|name| name.to_owned()),
+							c.data().to_owned(),
 						))
 					}
 				};
@@ -486,24 +488,22 @@ fn compute_features_bag_of_words_dataframe(
 	progress: &impl Fn(),
 ) -> Vec<DataFrameColumn> {
 	// Get the data for the source column.
-	let source_column_data = dataframe
+	let source_column = dataframe
 		.columns()
 		.iter()
 		.find(|column| column.name().unwrap() == feature_group.source_column_name)
-		.unwrap()
-		.as_text()
-		.unwrap()
-		.data;
+		.unwrap();
+	let source_column = source_column.as_text().unwrap();
 	let mut feature_columns: Vec<DataFrameColumn> = (0..feature_group.tokens.len())
 		.map(|_| {
-			DataFrameColumn::Number(NumberDataFrameColumn {
-				name: None,
-				data: vec![0.0; source_column_data.len()],
-			})
+			DataFrameColumn::Number(NumberDataFrameColumn::new(
+				None,
+				vec![0.0; source_column.data().len()],
+			))
 		})
 		.collect();
 	// Compute the feature values for each example.
-	for (example_index, value) in source_column_data.iter().enumerate() {
+	for (example_index, value) in source_column.data().iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
 				let mut feature_values_sum_of_squares = 0.0;
@@ -517,14 +517,14 @@ fn compute_features_bag_of_words_dataframe(
 						let feature_value = 1.0 * token.idf;
 						feature_values_sum_of_squares += feature_value * feature_value;
 						let feature_column = feature_columns[token_index].as_number_mut().unwrap();
-						feature_column.data[example_index] += feature_value;
+						feature_column.data_mut()[example_index] += feature_value;
 					}
 				}
 				// Normalize the feature values for this example.
 				if feature_values_sum_of_squares > 0.0 {
 					for feature_column in feature_columns.iter_mut() {
 						let feature_column = feature_column.as_number_mut().unwrap();
-						feature_column.data[example_index] /= feature_values_sum_of_squares;
+						feature_column.data_mut()[example_index] /= feature_values_sum_of_squares;
 					}
 				}
 			}
@@ -577,13 +577,13 @@ fn compute_features_identity_array_value(
 	match column {
 		DataFrameColumnView::Unknown(_) => unimplemented!(),
 		DataFrameColumnView::Number(c) => {
-			for (feature_column, column_value) in izip!(features.column_mut(0), c.data) {
+			for (feature_column, column_value) in izip!(features.column_mut(0), c.data()) {
 				*feature_column = DataFrameValue::Number(*column_value);
 				progress()
 			}
 		}
 		DataFrameColumnView::Enum(c) => {
-			for (feature_column, column_value) in izip!(features.column_mut(0), c.data) {
+			for (feature_column, column_value) in izip!(features.column_mut(0), c.data()) {
 				*feature_column = DataFrameValue::Enum(*column_value);
 				progress()
 			}
@@ -600,20 +600,18 @@ fn compute_features_bag_of_words_array_value(
 	progress: &impl Fn(),
 ) {
 	// Get the data for the source column.
-	let source_column_data = dataframe
+	let source_column = dataframe
 		.columns()
 		.iter()
 		.find(|column| column.name().unwrap() == feature_group.source_column_name)
-		.unwrap()
-		.as_text()
-		.unwrap()
-		.data;
+		.unwrap();
+	let source_column = source_column.as_text().unwrap();
 	// Fill the features with zeros.
 	features
 		.iter_mut()
 		.for_each(|feature| *feature = DataFrameValue::Number(0.0));
 	// Compute the feature values for each example.
-	for (example_index, value) in source_column_data.iter().enumerate() {
+	for (example_index, value) in source_column.data().iter().enumerate() {
 		match feature_group.tokenizer {
 			Tokenizer::Alphanumeric => {
 				let mut feature_values_sum_of_squares = 0.0;

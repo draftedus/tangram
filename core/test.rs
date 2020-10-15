@@ -26,13 +26,8 @@ pub fn test_linear_regressor(
 		&|| progress_counter.inc(1),
 	);
 	update_progress(ModelTestProgress::Testing);
-	let labels = dataframe_test
-		.columns()
-		.get(target_column_index)
-		.unwrap()
-		.as_number()
-		.unwrap()
-		.data;
+	let labels = dataframe_test.columns().get(target_column_index).unwrap();
+	let labels = labels.as_number().unwrap();
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array1<f32>,
@@ -40,7 +35,7 @@ pub fn test_linear_regressor(
 	}
 	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
-		labels.chunks(n_examples_per_batch),
+		labels.data().chunks(n_examples_per_batch),
 	)
 	.fold(
 		{
@@ -84,20 +79,15 @@ pub fn test_tree_regressor(
 		features.view_mut(),
 		&|| progress_counter.inc(1),
 	);
-	let labels = dataframe_test
-		.columns()
-		.get(target_column_index)
-		.unwrap()
-		.as_number()
-		.unwrap()
-		.data;
+	let labels = dataframe_test.columns().get(target_column_index).unwrap();
+	let labels = labels.as_number().unwrap();
 	let mut metrics = metrics::RegressionMetrics::default();
 	let mut predictions = unsafe { Array1::uninitialized(features.nrows()) };
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
 	metrics.update(metrics::RegressionMetricsInput {
 		predictions: predictions.as_slice().unwrap(),
-		labels,
+		labels: labels.data(),
 	});
 	metrics.finalize()
 }
@@ -130,7 +120,7 @@ pub fn test_linear_binary_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let n_classes = labels.options.len();
+	let n_classes = labels.options().len();
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array2<f32>,
@@ -140,7 +130,7 @@ pub fn test_linear_binary_classifier(
 	update_progress(ModelTestProgress::Testing);
 	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
-		ArrayView1::from(labels.data).axis_chunks_iter(Axis(0), n_examples_per_batch),
+		ArrayView1::from(labels.data()).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
 	.fold(
 		{
@@ -206,7 +196,7 @@ pub fn test_tree_binary_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let n_classes = labels.options.len();
+	let n_classes = labels.options().len();
 	let mut metrics = (
 		metrics::ClassificationMetrics::new(n_classes),
 		metrics::BinaryClassificationMetrics::new(100),
@@ -216,11 +206,11 @@ pub fn test_tree_binary_classifier(
 	model.predict(features.view(), predictions.view_mut());
 	metrics.0.update(metrics::ClassificationMetricsInput {
 		probabilities: predictions.view(),
-		labels: labels.data.into(),
+		labels: labels.data().into(),
 	});
 	metrics.1.update(metrics::BinaryClassificationMetricsInput {
 		probabilities: predictions.view(),
-		labels: labels.data.into(),
+		labels: labels.data().into(),
 	});
 	(metrics.0.finalize(), metrics.1.finalize())
 }
@@ -250,7 +240,7 @@ pub fn test_linear_multiclass_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let n_classes = labels.options.len();
+	let n_classes = labels.options().len();
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array2<f32>,
@@ -259,7 +249,7 @@ pub fn test_linear_multiclass_classifier(
 	update_progress(ModelTestProgress::Testing);
 	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
-		ArrayView1::from(labels.data).axis_chunks_iter(Axis(0), n_examples_per_batch),
+		ArrayView1::from(labels.data()).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
 	.fold(
 		{
@@ -312,14 +302,14 @@ pub fn test_tree_multiclass_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let n_classes = labels.options.len();
+	let n_classes = labels.options().len();
 	let mut metrics = metrics::ClassificationMetrics::new(n_classes);
 	let mut predictions = unsafe { Array2::uninitialized((features.nrows(), n_classes)) };
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
 	metrics.update(metrics::ClassificationMetricsInput {
 		probabilities: predictions.view(),
-		labels: labels.data.into(),
+		labels: labels.data().into(),
 	});
 	metrics.finalize()
 }

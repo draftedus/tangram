@@ -32,13 +32,13 @@ impl MulticlassClassifier {
 		options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> MulticlassClassifier {
-		let n_classes = labels.options.len();
+		let n_classes = labels.options().len();
 		let n_features = features.ncols();
-		let classes = labels.options.to_owned();
+		let classes = labels.options().to_owned();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
 				features,
-				labels.data.into(),
+				labels.data().into(),
 				options
 					.early_stopping_options
 					.as_ref()
