@@ -1,5 +1,5 @@
 /*!
-This crate provides a basic implementation of dataframes, which are two dimensional arrays of data where each column can have a different data type, like a spreadsheet. This crate is similar to Python's Pandas library, but at present is incredibly limited, because it only implements the features needed to support Tangram.
+This crate provides a basic implementation of dataframes, which are two dimensional arrays of data where each column can have a different data type, like a spreadsheet. This crate is similar to Python's Pandas library, but at present it is very limited, because it only implements the features needed to support Tangram.
 */
 
 use fnv::FnvBuildHasher;
@@ -199,7 +199,7 @@ impl DataFrame {
 	}
 
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
-		let mut features_train = unsafe { Array::uninitialized((self.nrows(), self.ncols())) };
+		let mut features_train = Array::zeros((self.nrows(), self.ncols()));
 		for (mut ndarray_column, dataframe_column) in
 			izip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
@@ -221,7 +221,7 @@ impl DataFrame {
 	}
 
 	pub fn to_rows(&self) -> Array2<DataFrameValue> {
-		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
+		let mut rows = Array::from_elem((self.nrows(), self.ncols()), DataFrameValue::Unknown);
 		for (mut ndarray_column, dataframe_column) in
 			izip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
@@ -520,7 +520,7 @@ impl<'a> DataFrameView<'a> {
 	}
 
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
-		let mut features_train = unsafe { Array::uninitialized((self.nrows(), self.ncols())) };
+		let mut features_train = Array::zeros((self.nrows(), self.ncols()));
 		for (mut ndarray_column, dataframe_column) in
 			izip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
@@ -542,7 +542,7 @@ impl<'a> DataFrameView<'a> {
 	}
 
 	pub fn to_rows(&self) -> Array2<DataFrameValue<'a>> {
-		let mut rows = unsafe { Array2::uninitialized((self.nrows(), self.ncols())) };
+		let mut rows = Array::from_elem((self.nrows(), self.ncols()), DataFrameValue::Unknown);
 		for (mut ndarray_column, dataframe_column) in
 			izip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
@@ -738,14 +738,6 @@ impl<'a> NumberDataFrameColumnView<'a> {
 		self.clone()
 	}
 }
-
-// impl<'a> IntoIterator for NumberDataFrameColumnView<'a> {
-// 	type Item = &'a f32;
-// 	type IntoIter = std::slice::Iter<'a, f32>;
-// 	fn into_iter(self) -> Self::IntoIter {
-// 		self.data.iter()
-// 	}
-// }
 
 impl<'a> EnumDataFrameColumnView<'a> {
 	pub fn name(&self) -> Option<&str> {

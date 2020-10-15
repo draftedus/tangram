@@ -26,7 +26,7 @@ fn main() {
 	);
 
 	// Make predictions on the test data.
-	let mut probabilities: Array2<f32> = unsafe { Array::uninitialized((n_rows_test, 3)) };
+	let mut probabilities = Array::zeros((n_rows_test, 3));
 	let features_test = features_test.to_rows();
 	model.predict(features_test.view(), probabilities.view_mut());
 

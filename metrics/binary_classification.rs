@@ -67,7 +67,7 @@ impl BinaryClassificationMetrics {
 		//                  v           v         v
 		let shape = (n_thresholds + 1, n_classes, n_classes);
 		Self {
-			confusion_matrices: Array3::zeros(shape),
+			confusion_matrices: Array::zeros(shape),
 			thresholds,
 		}
 	}

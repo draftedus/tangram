@@ -31,7 +31,7 @@ fn main() {
 
 	// Make predictions on the test data.
 	let features = features_test.to_rows();
-	let mut predictions: Array1<f32> = unsafe { Array::uninitialized(n_rows_test) };
+	let mut predictions = Array::zeros(n_rows_test);
 	model.predict(features.view(), predictions.view_mut());
 
 	// Compute metrics.

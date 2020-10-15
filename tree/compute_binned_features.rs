@@ -79,7 +79,7 @@ fn compute_binned_features_row_major_u16(
 	let n_features = features.ncols();
 	let n_examples = features.nrows();
 	let mut values_with_offsets: Array2<u16> =
-		unsafe { Array2::uninitialized((n_examples, n_features)) };
+		unsafe { Array::uninitialized((n_examples, n_features)) };
 	let mut offsets: Vec<u16> = Vec::with_capacity(n_features);
 	let mut current_offset: u16 = 0;
 	for binning_instruction in binning_instructions.iter() {

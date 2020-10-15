@@ -75,8 +75,7 @@ fn main() {
 	let features_test = features_test.to_rows();
 	let chunk_size =
 		(features_test.nrows() + rayon::current_num_threads() - 1) / rayon::current_num_threads();
-	let mut probabilities: Array2<f32> =
-		unsafe { Array2::uninitialized((features_test.nrows(), 2)) };
+	let mut probabilities = Array::zeros((features_test.nrows(), 2));
 	pzip!(
 		features_test.axis_chunks_iter(Axis(0), chunk_size),
 		probabilities.axis_chunks_iter_mut(Axis(0), chunk_size),

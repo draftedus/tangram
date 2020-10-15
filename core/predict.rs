@@ -7,6 +7,7 @@ use std::{
 	collections::BTreeMap,
 	convert::{TryFrom, TryInto},
 };
+use tangram_dataframe::prelude::*;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct PredictOptions {
@@ -241,8 +242,8 @@ pub fn predict(
 		PredictModel::LinearRegressor(model) => {
 			let n_examples = dataframe.nrows();
 			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
-			let mut features = unsafe { Array2::uninitialized((n_examples, n_features)) };
-			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
+			let mut features = Array::zeros((n_examples, n_features));
+			let mut predictions = Array::zeros(n_examples);
 			features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
@@ -285,14 +286,15 @@ pub fn predict(
 				.iter()
 				.map(|g| g.n_features())
 				.sum::<usize>();
-			let mut features = unsafe { Array2::uninitialized((dataframe.nrows(), n_features)) };
+			let mut features =
+				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
 			features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),
 				&|| {},
 			);
-			let mut predictions = unsafe { Array1::uninitialized(n_examples) };
+			let mut predictions = Array::zeros(n_examples);
 			model.model.predict(features.view(), predictions.view_mut());
 			let feature_contributions = model.model.compute_feature_contributions(features.view());
 			let output = izip!(
@@ -331,8 +333,8 @@ pub fn predict(
 		PredictModel::LinearBinaryClassifier(model) => {
 			let n_examples = dataframe.nrows();
 			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
-			let mut features = unsafe { Array2::uninitialized((n_examples, n_features)) };
-			let mut probabilities = unsafe { Array2::uninitialized((n_examples, 2)) };
+			let mut features = Array::zeros((n_examples, n_features));
+			let mut probabilities = Array::zeros((n_examples, 2));
 			features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
@@ -378,14 +380,15 @@ pub fn predict(
 				.iter()
 				.map(|g| g.n_features())
 				.sum::<usize>();
-			let mut features = unsafe { Array2::uninitialized((dataframe.nrows(), n_features)) };
+			let mut features =
+				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
 			features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),
 				&|| {},
 			);
-			let mut probabilities = unsafe { Array2::uninitialized((n_examples, 2)) };
+			let mut probabilities = Array::zeros((n_examples, 2));
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
@@ -422,8 +425,8 @@ pub fn predict(
 			let n_examples = dataframe.nrows();
 			let n_classes = model.model.classes.len();
 			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
-			let mut features = unsafe { Array2::uninitialized((n_examples, n_features)) };
-			let mut probabilities = unsafe { Array2::uninitialized((n_examples, n_classes)) };
+			let mut features = Array::zeros((n_examples, n_features));
+			let mut probabilities = Array::zeros((n_examples, n_classes));
 			features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
@@ -464,14 +467,15 @@ pub fn predict(
 				.iter()
 				.map(|g| g.n_features())
 				.sum::<usize>();
-			let mut features = unsafe { Array2::uninitialized((dataframe.nrows(), n_features)) };
+			let mut features =
+				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
 			features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
 				features.view_mut(),
 				&|| {},
 			);
-			let mut probabilities = unsafe { Array2::uninitialized((n_examples, n_classes)) };
+			let mut probabilities = Array::zeros((n_examples, n_classes));
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
@@ -674,7 +678,7 @@ impl TryFrom<model::Model> for PredictModel {
 						let n_classes = model.n_classes.to_usize().unwrap();
 						let n_features = model.n_features.to_usize().unwrap();
 						let weights =
-							Array2::from_shape_vec((n_features, n_classes), model.weights).unwrap();
+							Array::from_shape_vec((n_features, n_classes), model.weights).unwrap();
 						let feature_groups = model
 							.feature_groups
 							.into_iter()

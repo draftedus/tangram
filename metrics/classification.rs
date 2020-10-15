@@ -62,7 +62,7 @@ impl ClassificationMetrics {
 		//                                           prediction    label
 		//                                               |           |
 		//                                               v           v
-		let confusion_matrix = Array2::zeros((n_classes, n_classes));
+		let confusion_matrix = Array::zeros((n_classes, n_classes));
 		Self { confusion_matrix }
 	}
 }

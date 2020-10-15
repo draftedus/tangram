@@ -18,7 +18,7 @@ pub fn test_linear_regressor(
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
+	let mut features = Array::zeros((dataframe_test.nrows(), n_features));
 	features::compute_features_array_f32(
 		dataframe_test,
 		&feature_groups,
@@ -39,7 +39,7 @@ pub fn test_linear_regressor(
 	)
 	.fold(
 		{
-			let predictions = unsafe { Array1::uninitialized(n_examples_per_batch) };
+			let predictions = Array::zeros(n_examples_per_batch);
 			let metrics = metrics::RegressionMetrics::default();
 			State {
 				predictions,
@@ -68,7 +68,10 @@ pub fn test_tree_regressor(
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::RegressionMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
+	let mut features = Array::from_elem(
+		(dataframe_test.nrows(), n_features),
+		DataFrameValue::Unknown,
+	);
 	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
@@ -82,7 +85,7 @@ pub fn test_tree_regressor(
 	let labels = dataframe_test.columns().get(target_column_index).unwrap();
 	let labels = labels.as_number().unwrap();
 	let mut metrics = metrics::RegressionMetrics::default();
-	let mut predictions = unsafe { Array1::uninitialized(features.nrows()) };
+	let mut predictions = Array::zeros(features.nrows());
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
 	metrics.update(metrics::RegressionMetricsInput {
@@ -103,7 +106,7 @@ pub fn test_linear_binary_classifier(
 	metrics::BinaryClassificationMetricsOutput,
 ) {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
+	let mut features = Array::zeros((dataframe_test.nrows(), n_features));
 	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
@@ -134,7 +137,7 @@ pub fn test_linear_binary_classifier(
 	)
 	.fold(
 		{
-			let predictions = unsafe { Array2::uninitialized((n_examples_per_batch, n_classes)) };
+			let predictions = Array::zeros((n_examples_per_batch, n_classes));
 			State {
 				predictions,
 				classification_metrics: metrics::ClassificationMetrics::new(n_classes),
@@ -183,7 +186,10 @@ pub fn test_tree_binary_classifier(
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
+	let mut features = Array::from_elem(
+		(dataframe_test.nrows(), n_features),
+		DataFrameValue::Unknown,
+	);
 	features::compute_features_array_value(
 		dataframe_test,
 		feature_groups,
@@ -201,7 +207,7 @@ pub fn test_tree_binary_classifier(
 		metrics::ClassificationMetrics::new(n_classes),
 		metrics::BinaryClassificationMetrics::new(100),
 	);
-	let mut predictions = unsafe { Array2::uninitialized((features.nrows(), n_classes)) };
+	let mut predictions = Array::zeros((features.nrows(), n_classes));
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
 	metrics.0.update(metrics::ClassificationMetricsInput {
@@ -223,7 +229,7 @@ pub fn test_linear_multiclass_classifier(
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::ClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
+	let mut features = Array::zeros((dataframe_test.nrows(), n_features));
 	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
@@ -253,7 +259,7 @@ pub fn test_linear_multiclass_classifier(
 	)
 	.fold(
 		{
-			let predictions = unsafe { Array2::uninitialized((n_examples_per_batch, n_classes)) };
+			let predictions = Array::zeros((n_examples_per_batch, n_classes));
 			let metrics = metrics::ClassificationMetrics::new(n_classes);
 			State {
 				predictions,
@@ -285,7 +291,10 @@ pub fn test_tree_multiclass_classifier(
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::ClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let mut features = unsafe { Array2::uninitialized((dataframe_test.nrows(), n_features)) };
+	let mut features = Array::from_elem(
+		(dataframe_test.nrows(), n_features),
+		DataFrameValue::Unknown,
+	);
 	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
@@ -304,7 +313,7 @@ pub fn test_tree_multiclass_classifier(
 		.unwrap();
 	let n_classes = labels.options().len();
 	let mut metrics = metrics::ClassificationMetrics::new(n_classes);
-	let mut predictions = unsafe { Array2::uninitialized((features.nrows(), n_classes)) };
+	let mut predictions = Array::zeros((features.nrows(), n_classes));
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
 	metrics.update(metrics::ClassificationMetricsInput {

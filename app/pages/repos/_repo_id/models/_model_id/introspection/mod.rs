@@ -136,7 +136,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					let n_classes = inner_model.n_classes.to_usize().unwrap();
 					let n_features = inner_model.n_features.to_usize().unwrap();
 					let weights =
-						Array2::from_shape_vec((n_classes, n_features), inner_model.weights)
+						Array::from_shape_vec((n_classes, n_features), inner_model.weights)
 							.unwrap();
 					let feature_names = compute_feature_names(&feature_groups);
 					let weights: Vec<Vec<(String, f32)>> = weights
