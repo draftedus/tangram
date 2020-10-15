@@ -10,29 +10,44 @@ parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost
 args = parser.parse_args()
 
 # Load the data.
-path = 'data/heart-disease.csv'
+path_train = 'data/heart_disease_train.csv'
+path_test = 'data/heart_disease_test.csv'
 nrows_train = 242
 nrows_test = 61
 target_column_name = "diagnosis"
-data = pd.read_csv(
-	path,
-	dtype={
-		'age': np.float64,
-		'gender': 'category',
-		'chest_pain': 'category',
-		'resting_blood_pressure': np.float64,
-		'cholesterol': np.float64,
-		'fasting_blood_sugar_greater_than_120': 'category',
-		'resting_ecg_result': 'category',
-		'exercise_max_heart_rate': np.float64,
-		'exercise_induced_angina': 'category',
-		'exercise_st_depression': np.float64,
-		'exercise_st_slope': 'category',
-		'fluoroscopy_vessels_colored': np.float64,
-		'thallium_stress_test': 'category',
-		'diagnosis': 'category'
-	}
+gender_options = ['male', 'female']
+chest_pain_options = ['typical angina', 'asymptomatic', 'non-angina pain', 'atypical angina']
+fasting_blood_sugar_greater_than_120_options = ['True', 'False']
+resting_ecg_result_options = ['probable or definite left ventricular hypertrophy', 'normal', 'ST-T wave abnormality']
+exercise_induced_angina_options = ['no', 'yes']
+exercise_st_slope_options = ['downsloping', 'flat', 'upsloping']
+thallium_stress_test_options = ['fixed defect', 'normal', 'reversible defect']
+diagnosis_options = ['Negative', 'Positive']
+dtype = {
+  'age': np.float64,
+  'gender': CategoricalDtype(categories=gender_options),
+  'chest_pain': CategoricalDtype(categories=chest_pain_options),
+  'resting_blood_pressure': np.float64,
+  'cholesterol': np.float64,
+  'fasting_blood_sugar_greater_than_120': CategoricalDtype(categories=fasting_blood_sugar_greater_than_120_options),
+  'resting_ecg_result': CategoricalDtype(categories=resting_ecg_result_options),
+  'exercise_max_heart_rate': np.float64,
+  'exercise_induced_angina': CategoricalDtype(categories=exercise_induced_angina_options),
+  'exercise_st_depression': np.float64,
+  'exercise_st_slope': CategoricalDtype(categories=exercise_st_slope_options),
+  'fluoroscopy_vessels_colored': np.float64,
+  'thallium_stress_test': CategoricalDtype(categories=thallium_stress_test_options),
+  'diagnosis': CategoricalDtype(categories=diagnosis_options)
+}
+data_train = pd.read_csv(
+	path_train,
+	dtype=dtype
 )
+data_test = pd.read_csv(
+	path_test,
+	dtype=dtype
+)
+data = pd.concat([data_train, data_test])
 features = data.loc[:, data.columns != target_column_name]
 labels = data[target_column_name]
 

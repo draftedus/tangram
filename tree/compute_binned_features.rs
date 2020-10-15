@@ -167,16 +167,17 @@ fn compute_binned_features_row_major_u16(
 						let binned_feature_value = binned_feature_value.into_scalar();
 						if !feature_value.is_finite() {
 							*binned_feature_value = *offset;
+						} else {
+							// Use binary search on the thresholds to find the bin for the feature value.
+							*binned_feature_value = offset
+								+ thresholds
+									.binary_search_by(|threshold| {
+										threshold.partial_cmp(feature_value).unwrap()
+									})
+									.unwrap_or_else(|bin| bin)
+									.to_u16()
+									.unwrap() + 1;
 						}
-						// Use binary search on the thresholds to find the bin for the feature value.
-						*binned_feature_value = offset
-							+ thresholds
-								.binary_search_by(|threshold| {
-									threshold.partial_cmp(feature_value).unwrap()
-								})
-								.unwrap_or_else(|bin| bin)
-								.to_u16()
-								.unwrap() + 1;
 					});
 				}
 				BinningInstruction::Enum { .. } => {

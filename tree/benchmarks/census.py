@@ -42,7 +42,7 @@ dtype = {
   'income': CategoricalDtype(categories=income_options),
 }
 data_train = pd.read_csv(path_train, dtype=dtype)
-data_test = pd.read_csv(path_test, dtype=dtype)
+data_test = pd.read_csv(path_test, dtype = dtype)
 data = pd.concat([data_train, data_test])
 features = data.loc[:, data.columns != target_column_name]
 labels = data[target_column_name]
