@@ -40,7 +40,7 @@ fn main() {
 		.column(1)
 		.iter()
 		.cloned()
-		.zip(labels_test.data().iter().map(|d| d.unwrap()))
+		.zip(labels_test.iter().map(|d| d.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 	println!("auc {}", auc_roc);

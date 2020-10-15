@@ -38,7 +38,7 @@ fn main() {
 	let mut metrics = tangram_metrics::RegressionMetrics::new();
 	metrics.update(tangram_metrics::RegressionMetricsInput {
 		predictions: predictions.as_slice().unwrap(),
-		labels: labels_test.data(),
+		labels: labels_test.as_slice(),
 	});
 	let metrics = metrics.finalize();
 	println!("mse {}", metrics.mse);

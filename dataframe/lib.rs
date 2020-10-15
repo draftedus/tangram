@@ -251,10 +251,10 @@ impl DataFrame {
 impl DataFrameColumn {
 	pub fn len(&self) -> usize {
 		match self {
-			Self::Unknown(s) => s.len,
-			Self::Number(s) => s.data.len(),
-			Self::Enum(s) => s.data.len(),
-			Self::Text(s) => s.data.len(),
+			Self::Unknown(s) => s.len(),
+			Self::Number(s) => s.len(),
+			Self::Enum(s) => s.len(),
+			Self::Text(s) => s.len(),
 		}
 	}
 
@@ -366,8 +366,16 @@ impl NumberDataFrameColumn {
 		&self.name
 	}
 
-	pub fn data(&self) -> &Vec<f32> {
-		&self.data
+	pub fn is_empty(&self) -> bool {
+		self.data.len() == 0
+	}
+
+	pub fn len(&self) -> usize {
+		self.data.len()
+	}
+
+	pub fn iter(&self) -> impl Iterator<Item = &f32> {
+		self.data.iter()
 	}
 
 	pub fn data_mut(&mut self) -> &mut Vec<f32> {
@@ -410,8 +418,16 @@ impl EnumDataFrameColumn {
 		&self.options
 	}
 
-	pub fn data(&self) -> &Vec<Option<NonZeroUsize>> {
-		&self.data
+	pub fn is_empty(&self) -> bool {
+		self.data.len() == 0
+	}
+
+	pub fn len(&self) -> usize {
+		self.data.len()
+	}
+
+	pub fn iter(&self) -> impl Iterator<Item = &Option<NonZeroUsize>> {
+		self.data.iter()
 	}
 
 	pub fn data_mut(&mut self) -> &mut Vec<Option<NonZeroUsize>> {
@@ -440,8 +456,16 @@ impl TextDataFrameColumn {
 		&self.name
 	}
 
-	pub fn data(&self) -> &Vec<String> {
-		&self.data
+	pub fn is_empty(&self) -> bool {
+		self.data.len() == 0
+	}
+
+	pub fn len(&self) -> usize {
+		self.data.len()
+	}
+
+	pub fn iter(&self) -> impl Iterator<Item = &String> {
+		self.data.iter()
 	}
 
 	pub fn data_mut(&mut self) -> &mut Vec<String> {
@@ -694,14 +718,34 @@ impl<'a> NumberDataFrameColumnView<'a> {
 		self.name
 	}
 
-	pub fn data(&self) -> &[f32] {
-		&self.data
+	pub fn is_empty(&self) -> bool {
+		self.data.len() == 0
+	}
+
+	pub fn len(&self) -> usize {
+		self.data.len()
+	}
+
+	pub fn iter(&self) -> impl Iterator<Item = &f32> {
+		self.data.iter()
+	}
+
+	pub fn as_slice(&self) -> &[f32] {
+		self.data
 	}
 
 	pub fn view(&self) -> Self {
 		self.clone()
 	}
 }
+
+// impl<'a> IntoIterator for NumberDataFrameColumnView<'a> {
+// 	type Item = &'a f32;
+// 	type IntoIter = std::slice::Iter<'a, f32>;
+// 	fn into_iter(self) -> Self::IntoIter {
+// 		self.data.iter()
+// 	}
+// }
 
 impl<'a> EnumDataFrameColumnView<'a> {
 	pub fn name(&self) -> Option<&str> {
@@ -712,8 +756,20 @@ impl<'a> EnumDataFrameColumnView<'a> {
 		&self.options
 	}
 
-	pub fn data(&self) -> &[Option<NonZeroUsize>] {
-		&self.data
+	pub fn is_empty(&self) -> bool {
+		self.data.len() == 0
+	}
+
+	pub fn len(&self) -> usize {
+		self.data.len()
+	}
+
+	pub fn iter(&self) -> impl Iterator<Item = &Option<NonZeroUsize>> {
+		self.data.iter()
+	}
+
+	pub fn as_slice(&self) -> &[Option<NonZeroUsize>] {
+		self.data
 	}
 
 	pub fn view(&self) -> Self {
@@ -726,8 +782,20 @@ impl<'a> TextDataFrameColumnView<'a> {
 		self.name
 	}
 
-	pub fn data(&self) -> &[String] {
-		&self.data
+	pub fn is_empty(&self) -> bool {
+		self.data.len() == 0
+	}
+
+	pub fn len(&self) -> usize {
+		self.data.len()
+	}
+
+	pub fn iter(&self) -> impl Iterator<Item = &String> {
+		self.data.iter()
+	}
+
+	pub fn as_slice(&self) -> &[String] {
+		self.data
 	}
 
 	pub fn view(&self) -> Self {

@@ -35,7 +35,7 @@ pub fn test_linear_regressor(
 	}
 	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
-		labels.data().chunks(n_examples_per_batch),
+		labels.as_slice().chunks(n_examples_per_batch),
 	)
 	.fold(
 		{
@@ -87,7 +87,7 @@ pub fn test_tree_regressor(
 	model.predict(features.view(), predictions.view_mut());
 	metrics.update(metrics::RegressionMetricsInput {
 		predictions: predictions.as_slice().unwrap(),
-		labels: labels.data(),
+		labels: labels.as_slice(),
 	});
 	metrics.finalize()
 }
@@ -130,7 +130,7 @@ pub fn test_linear_binary_classifier(
 	update_progress(ModelTestProgress::Testing);
 	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
-		ArrayView1::from(labels.data()).axis_chunks_iter(Axis(0), n_examples_per_batch),
+		ArrayView1::from(labels.as_slice()).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
 	.fold(
 		{
@@ -206,11 +206,11 @@ pub fn test_tree_binary_classifier(
 	model.predict(features.view(), predictions.view_mut());
 	metrics.0.update(metrics::ClassificationMetricsInput {
 		probabilities: predictions.view(),
-		labels: labels.data().into(),
+		labels: labels.as_slice().into(),
 	});
 	metrics.1.update(metrics::BinaryClassificationMetricsInput {
 		probabilities: predictions.view(),
-		labels: labels.data().into(),
+		labels: labels.as_slice().into(),
 	});
 	(metrics.0.finalize(), metrics.1.finalize())
 }
@@ -249,7 +249,7 @@ pub fn test_linear_multiclass_classifier(
 	update_progress(ModelTestProgress::Testing);
 	let metrics = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
-		ArrayView1::from(labels.data()).axis_chunks_iter(Axis(0), n_examples_per_batch),
+		ArrayView1::from(labels.as_slice()).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
 	.fold(
 		{
@@ -309,7 +309,7 @@ pub fn test_tree_multiclass_classifier(
 	model.predict(features.view(), predictions.view_mut());
 	metrics.update(metrics::ClassificationMetricsInput {
 		probabilities: predictions.view(),
-		labels: labels.data().into(),
+		labels: labels.as_slice().into(),
 	});
 	metrics.finalize()
 }
