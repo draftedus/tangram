@@ -86,33 +86,24 @@ dest_options= [
 	"TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF", "TXK", "TYR", "TYS", "VCT", "VIS", "VLD",
 	"VPS", "WRG", "WYS", "XNA", "YAK", "YUM",
 ]
+dtype =
+	'month': CategoricalDtype(categories=month_options) ,
+	'day_of_month': CategoricalDtype(categories=day_of_month_options),
+	'day_of_week': CategoricalDtype(categories=day_of_week_options),
+	'dep_time': np.int64,
+	'unique_carrier': CategoricalDtype(categories=carrier_options),
+	'origin': CategoricalDtype(categories=origin_options),
+	'dest': CategoricalDtype(categories=origin_options),
+	'distance': np.int64,
+	'dep_delayed_15min': CategoricalDtype(categories=['N','Y']),
+}
 data_train = pd.read_csv(
 	path_train,
-	dtype={
-		'month': CategoricalDtype(categories=month_options) ,
-		'day_of_month': CategoricalDtype(categories=day_of_month_options),
-		'day_of_week': CategoricalDtype(categories=day_of_week_options),
-		'dep_time': np.int64,
-		'unique_carrier': CategoricalDtype(categories=carrier_options),
-		'origin': CategoricalDtype(categories=origin_options),
-		'dest': CategoricalDtype(categories=origin_options),
-		'distance': np.int64,
-		'dep_delayed_15min': CategoricalDtype(categories=['N','Y']),
-	}
+	dtype=dtype,
 )
 data_test = pd.read_csv(
 	path_test,
-	dtype={
-		'month': CategoricalDtype(categories=month_options) ,
-		'day_of_month': CategoricalDtype(categories=day_of_month_options),
-		'day_of_week': CategoricalDtype(categories=day_of_week_options),
-		'dep_time': np.int64,
-		'unique_carrier': CategoricalDtype(categories=carrier_options),
-		'origin': CategoricalDtype(categories=origin_options),
-		'dest': CategoricalDtype(categories=origin_options),
-		'distance': np.int64,
-		'dep_delayed_15min': CategoricalDtype(categories=['N','Y']),
-	}
+	dtype=dtype,
 )
 target_column_name = "dep_delayed_15min"
 data = pd.concat([data_train, data_test])

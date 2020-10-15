@@ -5,21 +5,24 @@ use tangram_metrics::StreamingMetric;
 
 fn main() {
 	// Load the data.
-	let csv_file_path = Path::new("data/boston.csv");
-	let n_rows_train = 405;
+	let csv_file_path_train = Path::new("data/boston_train.csv");
+	let csv_file_path_test = Path::new("data/boston_test.csv");
+	let _n_rows_train = 405;
 	let n_rows_test = 101;
 	let target_column_index = 13;
-	let mut features = DataFrame::from_path(csv_file_path, Default::default(), |_| {}).unwrap();
-	let labels = features.columns_mut().remove(target_column_index);
-	let (features_train, features_test) = features.view().split_at_row(n_rows_train);
-	let (labels_train, labels_test) = labels.view().split_at_row(n_rows_train);
+	let mut features_train =
+		DataFrame::from_path(csv_file_path_train, Default::default(), |_| {}).unwrap();
+	let labels_train = features_train.columns_mut().remove(target_column_index);
+	let mut features_test =
+		DataFrame::from_path(csv_file_path_test, Default::default(), |_| {}).unwrap();
+	let labels_test = features_test.columns_mut().remove(target_column_index);
 	let labels_train = labels_train.as_number().unwrap();
 	let labels_test = labels_test.as_number().unwrap();
 
 	// Train the model.
 	let model = tangram_tree::Regressor::train(
-		features_train,
-		labels_train.clone(),
+		features_train.view(),
+		labels_train.view(),
 		&tangram_tree::TrainOptions {
 			learning_rate: 0.1,
 			max_leaf_nodes: 255,
@@ -38,7 +41,7 @@ fn main() {
 	let mut metrics = tangram_metrics::RegressionMetrics::new();
 	metrics.update(tangram_metrics::RegressionMetricsInput {
 		predictions: predictions.as_slice().unwrap(),
-		labels: labels_test.as_slice(),
+		labels: labels_test.view().as_slice(),
 	});
 	let metrics = metrics.finalize();
 	println!("mse {}", metrics.mse);

@@ -19,11 +19,11 @@ fn main() {
 		"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 	]
 	.iter()
-	.map(|m| m.to_string())
+	.map(ToString::to_string)
 	.collect();
 	let day_of_week_options = vec!["c-1", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7"]
 		.iter()
-		.map(|m| m.to_string())
+		.map(ToString::to_string)
 		.collect();
 	let day_of_month_options = vec![
 		"c-1", "c-10", "c-11", "c-12", "c-13", "c-14", "c-15", "c-16", "c-17", "c-18", "c-19",
@@ -31,14 +31,14 @@ fn main() {
 		"c-3", "c-30", "c-31", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 	]
 	.iter()
-	.map(|m| m.to_string())
+	.map(ToString::to_string)
 	.collect();
 	let carrier_options = vec![
 		"AA", "AQ", "AS", "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH",
 		"OO", "TZ", "UA", "US", "WN", "XE", "YV",
 	]
 	.iter()
-	.map(|m| m.to_string())
+	.map(ToString::to_string)
 	.collect();
 	let origin_options: Vec<String> = vec![
 		"ABE", "ABI", "ABQ", "ABY", "ACK", "ACT", "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN",
@@ -66,7 +66,7 @@ fn main() {
 		"WRG", "WYS", "XNA", "YAK", "YUM",
 	]
 	.iter()
-	.map(|m| m.to_string())
+	.map(ToString::to_string)
 	.collect();
 	let dest_options: Vec<String> = vec![
 		"ABE", "ABI", "ABQ", "ABY", "ACK", "ACT", "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN",
@@ -94,7 +94,7 @@ fn main() {
 		"VPS", "WRG", "WYS", "XNA", "YAK", "YUM",
 	]
 	.iter()
-	.map(|m| m.to_string())
+	.map(ToString::to_string)
 	.collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {

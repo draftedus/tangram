@@ -9,11 +9,14 @@ parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost
 args = parser.parse_args()
 
 # Load the data.
-path = 'data/boston.csv'
+path_train = 'data/boston_train.csv'
+path_test = 'data/boston_test.csv'
 nrows_train = 405
 nrows_test = 101
 target_column_name = "medv"
-data = pd.read_csv(path)
+data_test = pd.read_csv(path_test)
+data_train = pd.read_csv(path_train)
+data = pd.concat([data_train, data_test])
 features = data.loc[:, data.columns != target_column_name]
 labels = data[target_column_name]
 (features_train, features_test, labels_train, labels_test) = train_test_split(

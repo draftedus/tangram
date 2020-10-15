@@ -1,3 +1,4 @@
+from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 import argparse
@@ -9,30 +10,40 @@ parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost
 args = parser.parse_args()
 
 # Load the data.
-path = 'data/census.csv'
+path_train = 'data/census_train.csv'
+path_test = 'data/census_test.csv'
 nrows_train = 26049
 nrows_test = 6512
 target_column_name = "income"
-data = pd.read_csv(
-	path,
-	dtype={
-		'age': np.float64,
-		'workclass': 'category',
-		'fnlwgt': np.float64,
-		'education': 'category',
-		'education_num': np.float64,
-		'marital_status': 'category',
-		'occupation': 'category',
-		'relationship': 'category',
-		'race': 'category',
-		'sex': 'category',
-		'captial_gain': np.float64,
-		'captial_loss': np.float64,
-		'hours_per_week': np.float64,
-		'native_country': 'category',
-		'income': 'category',
-	}
-)
+workclass_options = ['State-gov', 'Self-emp-not-inc', 'Private', 'Federal-gov', 'Local-gov', '?', 'Self-emp-inc', 'Without-pay', 'Never-worked']
+education_options = ['Bachelors', 'HS-grad', '11th', 'Masters', '9th', 'Some-college', 'Assoc-acdm', 'Assoc-voc', '7th-8th', 'Doctorate', 'Prof-school', '5th-6th', '10th', '1st-4th', 'Preschool', '12th']
+marital_status_options = ['Never-married', 'Married-civ-spouse', 'Divorced', 'Married-spouse-absent', 'Separated', 'Married-AF-spouse', 'Widowed']
+occupation_options = ['Adm-clerical', 'Exec-managerial', 'Handlers-cleaners','Prof-specialty', 'Other-service', 'Sales', 'Craft-repair', 'Transport-moving', 'Farming-fishing', 'Machine-op-inspct','Tech-support', '?', 'Protective-serv', 'Armed-Forces','Priv-house-serv']
+relationship_options = ['Not-in-family', 'Husband', 'Wife', 'Own-child', 'Unmarried', 'Other-relative']
+race_options = ['White', 'Black', 'Asian-Pac-Islander', 'Amer-Indian-Eskimo', 'Other']
+sex_options = ['Male', 'Female']
+native_country_options = ['United-States', 'Cuba', 'Jamaica', 'India', '?', 'Mexico', 'South', 'Puerto-Rico', 'Honduras', 'England', 'Canada', 'Germany', 'Iran', 'Philippines','Italy', 'Poland', 'Columbia', 'Cambodia', 'Thailand', 'Ecuador', 'Laos', 'Taiwan', 'Haiti', 'Portugal', 'Dominican-Republic', 'El-Salvador', 'France', 'Guatemala', 'China', 'Japan', 'Yugoslavia', 'Peru', 'Outlying-US(Guam-USVI-etc)', 'Scotland', 'Trinadad&Tobago', 'Greece', 'Nicaragua', 'Vietnam', 'Hong', 'Ireland', 'Hungary', 'Holand-Netherlands']
+income_options = ['<=50K', '>50K']
+dtype = {
+  'age': np.float64,
+  'workclass': CategoricalDtype(categories=workclass_options),
+  'fnlwgt': np.float64,
+  'education': CategoricalDtype(categories=education_options),
+  'education_num': np.float64,
+  'marital_status': CategoricalDtype(categories=marital_status_options),
+  'occupation': CategoricalDtype(categories=occupation_options),
+  'relationship': CategoricalDtype(categories=relationship_options),
+  'race': CategoricalDtype(categories=race_options),
+  'sex': CategoricalDtype(categories=sex_options),
+  'captial_gain': np.float64,
+  'captial_loss': np.float64,
+  'hours_per_week': np.float64,
+  'native_country': CategoricalDtype(categories=native_country_options),
+  'income': CategoricalDtype(categories=income_options),
+}
+data_train = pd.read_csv(path_train, dtype=dtype)
+data_test = pd.read_csv(path_test, dtype=dtype)
+data = pd.concat([data_train, data_test])
 features = data.loc[:, data.columns != target_column_name]
 labels = data[target_column_name]
 
