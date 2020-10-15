@@ -40,18 +40,80 @@ pub fn compute_binned_features_column_major(
 	let columns = pzip!(features.columns().as_slice(), binning_instructions)
 		.map(|(feature, binning_instruction)| match binning_instruction {
 			BinningInstruction::Number { thresholds } => {
-				compute_binned_features_for_number_feature(feature, thresholds, progress)
+				compute_binned_features_column_major_for_number_feature(
+					feature, thresholds, progress,
+				)
 			}
 			BinningInstruction::Enum { n_options } => {
 				if *n_options <= 255 {
-					compute_binned_features_for_enum_feature_u8(feature, progress)
+					compute_binned_features_column_major_for_enum_feature_u8(feature, progress)
 				} else {
-					compute_binned_features_for_enum_feature_u16(feature, progress)
+					compute_binned_features_column_major_for_enum_feature_u16(feature, progress)
 				}
 			}
 		})
 		.collect();
 	BinnedFeaturesColumnMajor { columns }
+}
+
+fn compute_binned_features_column_major_for_number_feature(
+	feature: &DataFrameColumnView,
+	thresholds: &[f32],
+	_progress: &(impl Fn() + Sync),
+) -> BinnedFeaturesColumnMajorColumn {
+	let binned_feature_column = feature
+		.as_number()
+		.unwrap()
+		.as_slice()
+		.par_iter()
+		.map(|feature_value| {
+			// Invalid values go to the first bin.
+			if !feature_value.is_finite() {
+				return 0;
+			}
+			// Use binary search on the thresholds to find the bin for the feature value.
+			thresholds
+				.binary_search_by(|threshold| threshold.partial_cmp(feature_value).unwrap())
+				.unwrap_or_else(|bin| bin)
+				.to_u8()
+				.unwrap() + 1
+		})
+		.collect();
+	BinnedFeaturesColumnMajorColumn::U8(binned_feature_column)
+}
+
+fn compute_binned_features_column_major_for_enum_feature_u8(
+	feature: &DataFrameColumnView,
+	_progress: &(impl Fn() + Sync),
+) -> BinnedFeaturesColumnMajorColumn {
+	let binned_feature_column = feature
+		.as_enum()
+		.unwrap()
+		.as_slice()
+		.par_iter()
+		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
+		.collect();
+	BinnedFeaturesColumnMajorColumn::U8(binned_feature_column)
+}
+
+fn compute_binned_features_column_major_for_enum_feature_u16(
+	feature: &DataFrameColumnView,
+	_progress: &(impl Fn() + Sync),
+) -> BinnedFeaturesColumnMajorColumn {
+	let binned_feature_column = feature
+		.as_enum()
+		.unwrap()
+		.as_slice()
+		.par_iter()
+		.map(|feature_value| {
+			feature_value
+				.map(|v| v.get())
+				.unwrap_or(0)
+				.to_u16()
+				.unwrap()
+		})
+		.collect();
+	BinnedFeaturesColumnMajorColumn::U16(binned_feature_column)
 }
 
 pub fn compute_binned_features_row_major(
@@ -138,64 +200,4 @@ fn compute_binned_features_row_major_u16(
 		values_with_offsets,
 		offsets,
 	}
-}
-
-fn compute_binned_features_for_number_feature(
-	feature: &DataFrameColumnView,
-	thresholds: &[f32],
-	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumnMajorColumn {
-	let binned_feature_column = feature
-		.as_number()
-		.unwrap()
-		.as_slice()
-		.par_iter()
-		.map(|feature_value| {
-			// Invalid values go to the first bin.
-			if !feature_value.is_finite() {
-				return 0;
-			}
-			// Use binary search on the thresholds to find the bin for the feature value.
-			thresholds
-				.binary_search_by(|threshold| threshold.partial_cmp(feature_value).unwrap())
-				.unwrap_or_else(|bin| bin)
-				.to_u8()
-				.unwrap() + 1
-		})
-		.collect::<Vec<u8>>();
-	BinnedFeaturesColumnMajorColumn::U8(binned_feature_column)
-}
-
-fn compute_binned_features_for_enum_feature_u8(
-	feature: &DataFrameColumnView,
-	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumnMajorColumn {
-	let binned_feature_column = feature
-		.as_enum()
-		.unwrap()
-		.as_slice()
-		.par_iter()
-		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
-		.collect::<Vec<u8>>();
-	BinnedFeaturesColumnMajorColumn::U8(binned_feature_column)
-}
-
-fn compute_binned_features_for_enum_feature_u16(
-	feature: &DataFrameColumnView,
-	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumnMajorColumn {
-	let binned_feature_column = feature
-		.as_enum()
-		.unwrap()
-		.as_slice()
-		.par_iter()
-		.map(|feature_value| {
-			feature_value
-				.map(|v| v.get())
-				.unwrap_or(0)
-				.to_u16()
-				.unwrap()
-		})
-		.collect::<Vec<u16>>();
-	BinnedFeaturesColumnMajorColumn::U16(binned_feature_column)
 }
