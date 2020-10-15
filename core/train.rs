@@ -32,7 +32,7 @@ pub fn train(
 
 	// Retrieve the column names.
 	let column_names: Vec<String> = dataframe
-		.columns
+		.columns()
 		.iter()
 		.map(|column| column.name().unwrap().to_owned())
 		.collect();
@@ -483,7 +483,7 @@ fn shuffle(
 	// Shuffle the dataframe.
 	if let Some(seed) = shuffle_options {
 		update_progress(Progress::Shuffling);
-		dataframe.columns.iter_mut().for_each(|column| {
+		dataframe.columns_mut().iter_mut().for_each(|column| {
 			let mut rng = Xoshiro256Plus::seed_from_u64(seed);
 			match column {
 				DataFrameColumn::Unknown(_) => {}
@@ -685,7 +685,7 @@ fn train_linear_regressor(
 		&|| progress_counter.inc(1),
 	);
 	let labels = dataframe_train
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_number()
@@ -722,7 +722,7 @@ fn train_tree_regressor(
 		progress_counter.inc(1)
 	});
 	let labels = dataframe_train
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_number()
@@ -761,7 +761,7 @@ fn train_linear_binary_classifier(
 		&|| progress_counter.inc(1),
 	);
 	let labels = dataframe_train
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_enum()
@@ -798,7 +798,7 @@ fn train_tree_binary_classifier(
 		progress_counter.inc(1)
 	});
 	let labels = dataframe_train
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_enum()
@@ -841,7 +841,7 @@ fn train_linear_multiclass_classifier(
 		&|| progress_counter.inc(1),
 	);
 	let labels = dataframe_train
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_enum()
@@ -878,7 +878,7 @@ fn train_tree_multiclass_classifier(
 		progress_counter.inc(1)
 	});
 	let labels = dataframe_train
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_enum()

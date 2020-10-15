@@ -37,7 +37,7 @@ pub fn compute_binned_features_column_major(
 	binning_instructions: &[BinningInstruction],
 	progress: &(impl Fn() + Sync),
 ) -> BinnedFeaturesColumnMajor {
-	let columns = pzip!(&features.columns, binning_instructions)
+	let columns = pzip!(features.columns().as_slice(), binning_instructions)
 		.map(|(feature, binning_instruction)| match binning_instruction {
 			BinningInstruction::Number { thresholds } => {
 				compute_binned_features_for_number_feature(feature, thresholds, progress)
@@ -88,7 +88,7 @@ fn compute_binned_features_row_major_u16(
 	}
 	pzip!(
 		values_with_offsets.axis_iter_mut(Axis(1)),
-		&features.columns,
+		features.columns().as_slice(),
 		binning_instructions,
 		&offsets,
 	)

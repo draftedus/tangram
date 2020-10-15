@@ -206,7 +206,7 @@ pub fn predict(
 	let mut dataframe = tangram_dataframe::DataFrame::new(column_names, column_types);
 	// Fill the dataframe with the input.
 	for input in input.0 {
-		for column in dataframe.columns.iter_mut() {
+		for column in dataframe.columns_mut().iter_mut() {
 			match column {
 				tangram_dataframe::DataFrameColumn::Unknown(column) => column.len += 1,
 				tangram_dataframe::DataFrameColumn::Number(column) => {

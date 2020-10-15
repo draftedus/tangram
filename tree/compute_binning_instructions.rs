@@ -48,7 +48,7 @@ pub fn compute_binning_instructions(
 	train_options: &TrainOptions,
 ) -> Vec<BinningInstruction> {
 	features
-		.columns
+		.columns()
 		.par_iter()
 		.map(|column| match column.view() {
 			DataFrameColumnView::Number(column) => {

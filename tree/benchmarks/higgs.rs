@@ -48,7 +48,7 @@ fn main() {
 		..Default::default()
 	};
 	let mut features = DataFrame::from_path(csv_file_path, options, |_| {}).unwrap();
-	let labels = features.columns.remove(target_column_index);
+	let labels = features.columns_mut().remove(target_column_index);
 	let (features_train, features_test) = features.view().split_at_row(nrows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
 	let labels_train = labels_train.as_enum().unwrap();

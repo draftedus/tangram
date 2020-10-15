@@ -27,7 +27,7 @@ pub fn test_linear_regressor(
 	);
 	update_progress(ModelTestProgress::Testing);
 	let labels = dataframe_test
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_number()
@@ -85,7 +85,7 @@ pub fn test_tree_regressor(
 		&|| progress_counter.inc(1),
 	);
 	let labels = dataframe_test
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_number()
@@ -125,7 +125,7 @@ pub fn test_linear_binary_classifier(
 		&|| progress_counter.inc(1),
 	);
 	let labels = dataframe_test
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_enum()
@@ -201,7 +201,7 @@ pub fn test_tree_binary_classifier(
 		&|| progress_counter.inc(1),
 	);
 	let labels = dataframe_test
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_enum()
@@ -245,7 +245,7 @@ pub fn test_linear_multiclass_classifier(
 		&|| progress_counter.inc(1),
 	);
 	let labels = dataframe_test
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_enum()
@@ -307,7 +307,7 @@ pub fn test_tree_multiclass_classifier(
 		&|| progress_counter.inc(1),
 	);
 	let labels = dataframe_test
-		.columns
+		.columns()
 		.get(target_column_index)
 		.unwrap()
 		.as_enum()

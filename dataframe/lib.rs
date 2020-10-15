@@ -24,17 +24,17 @@ pub mod prelude {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataFrame {
-	pub columns: Vec<DataFrameColumn>,
+	columns: Vec<DataFrameColumn>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataFrameView<'a> {
-	pub columns: Vec<DataFrameColumnView<'a>>,
+	columns: Vec<DataFrameColumnView<'a>>,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct DataFrameViewMut<'a> {
-	pub columns: Vec<DataFrameColumnViewMut<'a>>,
+	columns: Vec<DataFrameColumnViewMut<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -175,6 +175,14 @@ impl DataFrame {
 			})
 			.collect();
 		Self { columns }
+	}
+
+	pub fn columns(&self) -> &Vec<DataFrameColumn> {
+		&self.columns
+	}
+
+	pub fn columns_mut(&mut self) -> &mut Vec<DataFrameColumn> {
+		&mut self.columns
 	}
 
 	pub fn ncols(&self) -> usize {
@@ -397,6 +405,10 @@ impl TextDataFrameColumn {
 }
 
 impl<'a> DataFrameView<'a> {
+	pub fn columns(&self) -> &Vec<DataFrameColumnView<'a>> {
+		&self.columns
+	}
+
 	pub fn ncols(&self) -> usize {
 		self.columns.len()
 	}

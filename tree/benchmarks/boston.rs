@@ -10,7 +10,7 @@ fn main() {
 	let n_rows_test = 101;
 	let target_column_index = 13;
 	let mut features = DataFrame::from_path(csv_file_path, Default::default(), |_| {}).unwrap();
-	let labels = features.columns.remove(target_column_index);
+	let labels = features.columns_mut().remove(target_column_index);
 	let (features_train, features_test) = features.view().split_at_row(n_rows_train);
 	let (labels_train, labels_test) = labels.view().split_at_row(n_rows_train);
 	let labels_train = labels_train.as_number().unwrap();

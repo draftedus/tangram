@@ -112,10 +112,10 @@ fn main() {
 	};
 	let mut features_train =
 		DataFrame::from_path(csv_file_path_train, options.clone(), |_| {}).unwrap();
-	let labels_train = features_train.columns.remove(target_column_index);
+	let labels_train = features_train.columns_mut().remove(target_column_index);
 	let labels_train = labels_train.as_enum().unwrap();
 	let mut features_test = DataFrame::from_path(csv_file_path_test, options, |_| {}).unwrap();
-	let labels_test = features_test.columns.remove(target_column_index);
+	let labels_test = features_test.columns_mut().remove(target_column_index);
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.

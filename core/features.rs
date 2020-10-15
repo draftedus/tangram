@@ -338,7 +338,7 @@ fn compute_features_normalized_array_f32(
 	progress: &impl Fn(),
 ) {
 	let data = dataframe
-		.columns
+		.columns()
 		.iter()
 		.find(|column| column.name() == Some(&feature_group.source_column_name))
 		.unwrap()
@@ -362,7 +362,7 @@ fn compute_features_one_hot_encoded_array_f32(
 	progress: &impl Fn(),
 ) {
 	let data = dataframe
-		.columns
+		.columns()
 		.iter()
 		.find(|column| column.name() == Some(&feature_group.source_column_name))
 		.unwrap()
@@ -385,7 +385,7 @@ fn compute_features_bag_of_words_array_f32(
 ) {
 	// Get the data for the source column.
 	let source_column_data = dataframe
-		.columns
+		.columns()
 		.iter()
 		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap()
@@ -429,12 +429,12 @@ pub fn compute_features_dataframe(
 	feature_groups: &[FeatureGroup],
 	progress: &impl Fn(),
 ) -> DataFrame {
-	let mut result = DataFrame { columns: vec![] };
+	let mut result = DataFrame::new(Vec::new(), Vec::new());
 	for feature_group in feature_groups.iter() {
 		match &feature_group {
 			FeatureGroup::Identity(feature_group) => {
 				let column = dataframe
-					.columns
+					.columns()
 					.iter()
 					.find(|column| column.name().unwrap() == feature_group.source_column_name)
 					.unwrap();
@@ -464,7 +464,7 @@ pub fn compute_features_dataframe(
 						))
 					}
 				};
-				result.columns.push(column);
+				result.columns_mut().push(column);
 			}
 			FeatureGroup::Normalized(_) => unimplemented!(),
 			FeatureGroup::OneHotEncoded(_) => unimplemented!(),
@@ -472,7 +472,7 @@ pub fn compute_features_dataframe(
 				let columns =
 					compute_features_bag_of_words_dataframe(dataframe, feature_group, progress);
 				for column in columns {
-					result.columns.push(column);
+					result.columns_mut().push(column);
 				}
 			}
 		};
@@ -487,7 +487,7 @@ fn compute_features_bag_of_words_dataframe(
 ) -> Vec<DataFrameColumn> {
 	// Get the data for the source column.
 	let source_column_data = dataframe
-		.columns
+		.columns()
 		.iter()
 		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap()
@@ -570,7 +570,7 @@ fn compute_features_identity_array_value(
 	progress: &impl Fn(),
 ) {
 	let column = dataframe
-		.columns
+		.columns()
 		.iter()
 		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap();
@@ -601,7 +601,7 @@ fn compute_features_bag_of_words_array_value(
 ) {
 	// Get the data for the source column.
 	let source_column_data = dataframe
-		.columns
+		.columns()
 		.iter()
 		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap()

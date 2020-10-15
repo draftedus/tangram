@@ -197,7 +197,7 @@ pub struct TokenStats {
 impl Stats {
 	pub fn compute(dataframe: &DataFrameView, settings: &StatsSettings) -> Self {
 		let column_stats = dataframe
-			.columns
+			.columns()
 			.iter()
 			.map(|column| ColumnStats::compute(column.view(), &settings))
 			.collect();
