@@ -8,10 +8,14 @@ use tangram_util::pzip;
 
 fn main() {
 	// Load the data.
-	let csv_file_path = Path::new("data/higgs.csv");
-	let (nrows_train, _) = (10_500_000, 500_000);
-	// let csv_file_path = Path::new("data/higgs-small.csv");
-	// let (nrows_train, _) = (450_000, 50_000);
+	// let csv_file_path_train = Path::new("data/higgs_500k_train.csv");
+	// let csv_file_path_test = Path::new("data/higgs_500k_test.csv");
+	// let nrows_train = 450_000
+	// let n_rows_test = 50_000;
+	let csv_file_path_train = Path::new("data/higgs_train.csv");
+	let csv_file_path_test = Path::new("data/higgs_test.csv");
+	let _nrows_train = 10_500_000;
+	let _nrows_test = 500_000;
 	let target_column_index = 0;
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
@@ -47,10 +51,12 @@ fn main() {
 		}),
 		..Default::default()
 	};
-	let mut features = DataFrame::from_path(csv_file_path, options, |_| {}).unwrap();
-	let labels = features.columns_mut().remove(target_column_index);
-	let (features_train, features_test) = features.view().split_at_row(nrows_train);
-	let (labels_train, labels_test) = labels.view().split_at_row(nrows_train);
+	let mut features_train =
+		DataFrame::from_path(csv_file_path_train, options.clone(), |_| {}).unwrap();
+	let labels_train = features_train.columns_mut().remove(target_column_index);
+	let mut features_test =
+		DataFrame::from_path(csv_file_path_test, options.clone(), |_| {}).unwrap();
+	let labels_test = features_test.columns_mut().remove(target_column_index);
 	let labels_train = labels_train.as_enum().unwrap();
 	let labels_test = labels_test.as_enum().unwrap();
 
@@ -64,8 +70,8 @@ fn main() {
 		..Default::default()
 	};
 	let model = tangram_tree::BinaryClassifier::train(
-		features_train,
-		labels_train,
+		features_train.view(),
+		labels_train.view(),
 		&train_options,
 		&mut |_| {},
 	);

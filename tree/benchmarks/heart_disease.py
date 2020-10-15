@@ -39,28 +39,15 @@ dtype = {
   'thallium_stress_test': CategoricalDtype(categories=thallium_stress_test_options),
   'diagnosis': CategoricalDtype(categories=diagnosis_options)
 }
-data_train = pd.read_csv(
-	path_train,
-	dtype=dtype
-)
-data_test = pd.read_csv(
-	path_test,
-	dtype=dtype
-)
-data = pd.concat([data_train, data_test])
-features = data.loc[:, data.columns != target_column_name]
-labels = data[target_column_name]
-
+data_train = pd.read_csv(path_train, dtype=dtype)
+data_test = pd.read_csv(path_test, dtype=dtype)
+features_train = data_train.loc[:, data_train.columns != target_column_name]
+labels_train = data_train[target_column_name]
+features_test = data_test.loc[:, data_test.columns != target_column_name]
+labels_test = data_test[target_column_name]
 if args.library == 'xgboost' or args.library == 'sklearn':
-	features = pd.get_dummies(features)
-
-(features_train, features_test, labels_train, labels_test) = train_test_split(
-	features,
-	labels,
-	test_size=nrows_test,
-	train_size=nrows_train,
-	shuffle=False
-)
+	features_train = pd.get_dummies(features_train)
+	features_test = pd.get_dummies(features_test)
 
 # Train the model.
 if args.library == 'h2o':
@@ -112,7 +99,7 @@ elif args.library == 'xgboost':
 
 # Make predictions on the test data.
 if args.library == 'h2o':
-  predictions_proba = model.predict(data_test).as_data_frame()['True']
+  predictions_proba = model.predict(data_test).as_data_frame()['Positive']
 else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
 

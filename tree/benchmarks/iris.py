@@ -1,5 +1,4 @@
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
 import argparse
 import numpy as np
 import pandas as pd
@@ -16,17 +15,10 @@ nrows_test = 30
 target_column_name = "species"
 data_train = pd.read_csv(path_train)
 data_test = pd.read_csv(path_test)
-data = pd.concat([data_train, data_test])
-features = data.loc[:, data.columns != target_column_name]
-labels = data[target_column_name]
-
-(features_train, features_test, labels_train, labels_test) = train_test_split(
-	features,
-	labels,
-	test_size=nrows_test,
-	train_size=nrows_train,
-	shuffle=False
-)
+features_train = data_train.loc[:, data_train.columns != target_column_name]
+labels_train = data_train[target_column_name]
+features_test = data_test.loc[:, data_test.columns != target_column_name]
+labels_test = data_test[target_column_name]
 
 # Train the model.
 if args.library == 'h2o':

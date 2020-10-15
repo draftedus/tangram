@@ -1,6 +1,5 @@
 from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import train_test_split
 from time import time
 import argparse
 import numpy as np
@@ -11,56 +10,52 @@ parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost
 args = parser.parse_args()
 
 # Load the data.
-# path = 'data/higgs-small.csv'
+# path_train = 'data/higgs_500k_train.csv'
+# path_test = 'data/higgs_500k_test.csv'
 # nrows_train = 450_000
 # nrows_test = 50_000
-path = 'data/higgs.csv'
+path_train = 'data/higgs_train.csv'
+path_test = 'data/higgs_test.csv'
 nrows_train = 10_500_000
 nrows_test = 500_000
 target_column_name = "signal"
-data = pd.read_csv(
-	path,
-	dtype={
-		'signal': np.bool,
-		'lepton_pt': np.float64,
-		'lepton_eta': np.float64,
-		'lepton_phi': np.float64,
-		'missing_energy_magnitude': np.float64,
-		'missing_energy_phi': np.float64,
-		'jet_1_pt': np.float64,
-		'jet_1_eta': np.float64,
-		'jet_1_phi': np.float64,
-		'jet_1_b_tag': np.float64,
-		'jet_2_pt': np.float64,
-		'jet_2_eta': np.float64,
-		'jet_2_phi': np.float64,
-		'jet_2_b_tag': np.float64,
-		'jet_3_pt': np.float64,
-		'jet_3_eta': np.float64,
-		'jet_3_phi': np.float64,
-		'jet_3_b_tag': np.float64,
-		'jet_4_pt': np.float64,
-		'jet_4_eta': np.float64,
-		'jet_4_phi': np.float64,
-		'jet_4_b_tag': np.float64,
-		'm_jj': np.float64,
-		'm_jjj': np.float64,
-		'm_lv': np.float64,
-		'm_jlv': np.float64,
-		'm_bb': np.float64,
-		'm_wbb': np.float64,
-		'm_wwbb': np.float64,
-	}
-)
-features = data.loc[:, data.columns != target_column_name]
-labels = data[target_column_name]
-(features_train, features_test, labels_train, labels_test) = train_test_split(
-	features,
-	labels,
-	test_size=nrows_test,
-	train_size=nrows_train,
-	shuffle=False
-)
+dtype = {
+  'signal': np.bool,
+  'lepton_pt': np.float64,
+  'lepton_eta': np.float64,
+  'lepton_phi': np.float64,
+  'missing_energy_magnitude': np.float64,
+  'missing_energy_phi': np.float64,
+  'jet_1_pt': np.float64,
+  'jet_1_eta': np.float64,
+  'jet_1_phi': np.float64,
+  'jet_1_b_tag': np.float64,
+  'jet_2_pt': np.float64,
+  'jet_2_eta': np.float64,
+  'jet_2_phi': np.float64,
+  'jet_2_b_tag': np.float64,
+  'jet_3_pt': np.float64,
+  'jet_3_eta': np.float64,
+  'jet_3_phi': np.float64,
+  'jet_3_b_tag': np.float64,
+  'jet_4_pt': np.float64,
+  'jet_4_eta': np.float64,
+  'jet_4_phi': np.float64,
+  'jet_4_b_tag': np.float64,
+  'm_jj': np.float64,
+  'm_jjj': np.float64,
+  'm_lv': np.float64,
+  'm_jlv': np.float64,
+  'm_bb': np.float64,
+  'm_wbb': np.float64,
+  'm_wwbb': np.float64,
+}
+data_train = pd.read_csv(path_train, dtype=dtype)
+data_test = pd.read_csv(path_test, dtype=dtype)
+features_train = data_train.loc[:, data_train.columns != target_column_name]
+labels_train = data_train[target_column_name]
+features_test = data_test.loc[:, data_test.columns != target_column_name]
+labels_test = data_test[target_column_name]
 
 # Train the model.
 start = time()

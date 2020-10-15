@@ -1,6 +1,5 @@
 from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import train_test_split
 import argparse
 import numpy as np
 import pandas as pd
@@ -11,18 +10,19 @@ parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost
 args = parser.parse_args()
 
 # Load the data.
-# path_train = 'data/flights-100k.csv'
-# path_test = 'data/flights-test.csv'
+# path_train = 'data/flights_100k_train.csv'
+# path_test = 'data/flights_test.csv'
 # nrows_train=100_000
 # nrows_test=100_000
-# path_train = 'data/flights-1m.csv'
-# path_test = 'data/flights-test.csv'
+# path_train = 'data/flights_1m_train.csv'
+# path_test = 'data/flights_test.csv'
 # nrows_train=1_000_000
 # nrows_test=100_000
-path_train = 'data/flights-10m.csv'
-path_test = 'data/flights-test.csv'
+path_train = 'data/flights_10m_train.csv'
+path_test = 'data/flights_test.csv'
 nrows_train=10_000_000
 nrows_test=100_000
+target_column_name = "dep_delayed_15min"
 month_options = [
 	"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 ]
@@ -86,7 +86,7 @@ dest_options= [
 	"TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF", "TXK", "TYR", "TYS", "VCT", "VIS", "VLD",
 	"VPS", "WRG", "WYS", "XNA", "YAK", "YUM",
 ]
-dtype =
+dtype = {
 	'month': CategoricalDtype(categories=month_options) ,
 	'day_of_month': CategoricalDtype(categories=day_of_month_options),
 	'day_of_week': CategoricalDtype(categories=day_of_week_options),
@@ -97,29 +97,15 @@ dtype =
 	'distance': np.int64,
 	'dep_delayed_15min': CategoricalDtype(categories=['N','Y']),
 }
-data_train = pd.read_csv(
-	path_train,
-	dtype=dtype,
-)
-data_test = pd.read_csv(
-	path_test,
-	dtype=dtype,
-)
-target_column_name = "dep_delayed_15min"
-data = pd.concat([data_train, data_test])
-features = data.loc[:, data.columns != target_column_name]
-labels = data[target_column_name]
-
+data_train = pd.read_csv(path_train, dtype=dtype)
+data_test = pd.read_csv(path_test, dtype=dtype)
+features_train = data_train.loc[:, data_train.columns != target_column_name]
+labels_train = data_train[target_column_name]
+features_test = data_test.loc[:, data_test.columns != target_column_name]
+labels_test = data_test[target_column_name]
 if args.library == 'xgboost' or args.library == 'sklearn':
-	features = pd.get_dummies(features)
-
-(features_train, features_test, labels_train, labels_test) = train_test_split(
-	features,
-	labels,
-	test_size=nrows_test,
-	train_size=nrows_train,
-	shuffle=False
-)
+	features_train = pd.get_dummies(features_train)
+	features_test = pd.get_dummies(features_test)
 
 # Train the model.
 start = time()
@@ -177,7 +163,7 @@ print('duration',  time() - start)
 
 # Make predictions on the test data.
 if args.library == 'h2o':
-  predictions_proba = model.predict(data_test).as_data_frame()['True']
+  predictions_proba = model.predict(data_test).as_data_frame()['Y']
 else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
 
