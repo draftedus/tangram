@@ -9,11 +9,14 @@ parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost
 args = parser.parse_args()
 
 # Load the data.
-path = 'data/iris.csv'
+path_train = 'data/iris_train.csv'
+path_test = 'data/iris_test.csv'
 nrows_train = 120
 nrows_test = 30
 target_column_name = "species"
-data = pd.read_csv(path)
+data_train = pd.read_csv(path_train)
+data_test = pd.read_csv(path_test)
+data = pd.concat([data_train, data_test])
 features = data.loc[:, data.columns != target_column_name]
 labels = data[target_column_name]
 

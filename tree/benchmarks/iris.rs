@@ -5,22 +5,25 @@ use tangram_metrics::StreamingMetric;
 
 fn main() {
 	// Load the data.
-	let csv_file_path = Path::new("data/iris.csv");
-	let n_rows_train = 120;
+	let csv_file_path_train = Path::new("data/iris_train.csv");
+	let csv_file_path_test = Path::new("data/iris_test.csv");
+	let _n_rows_train = 120;
 	let n_rows_test = 30;
 	let target_column_index = 4;
 	let n_classes = 3;
-	let mut features = DataFrame::from_path(csv_file_path, Default::default(), |_| {}).unwrap();
-	let labels = features.columns_mut().remove(target_column_index);
-	let (features_train, features_test) = features.view().split_at_row(n_rows_train);
-	let (labels_train, labels_test) = labels.view().split_at_row(n_rows_train);
+	let mut features_train =
+		DataFrame::from_path(csv_file_path_train, Default::default(), |_| {}).unwrap();
+	let labels_train = features_train.columns_mut().remove(target_column_index);
+	let mut features_test =
+		DataFrame::from_path(csv_file_path_test, Default::default(), |_| {}).unwrap();
+	let labels_test = features_test.columns_mut().remove(target_column_index);
 	let labels_train = labels_train.as_enum().unwrap();
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
 	let model = tangram_tree::MulticlassClassifier::train(
-		features_train,
-		labels_train.clone(),
+		features_train.view(),
+		labels_train.view(),
 		&Default::default(),
 		&mut |_| {},
 	);
@@ -34,7 +37,7 @@ fn main() {
 	let mut metrics = tangram_metrics::ClassificationMetrics::new(n_classes);
 	metrics.update(tangram_metrics::ClassificationMetricsInput {
 		probabilities: probabilities.view(),
-		labels: labels_test.as_slice().into(),
+		labels: labels_test.view().as_slice().into(),
 	});
 	let metrics = metrics.finalize();
 	println!("accuracy {}", metrics.accuracy);
