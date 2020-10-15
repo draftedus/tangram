@@ -1971,7 +1971,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
+source = "git+https://github.com/launchbadge/sqlx#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -1980,7 +1980,7 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
+source = "git+https://github.com/launchbadge/sqlx#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
 dependencies = [
  "atoi",
  "base64 0.13.0",
@@ -2023,7 +2023,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
+source = "git+https://github.com/launchbadge/sqlx#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
 dependencies = [
  "dotenv",
  "either",
@@ -2040,7 +2040,7 @@ dependencies = [
 [[package]]
 name = "sqlx-rt"
 version = "0.1.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
+source = "git+https://github.com/launchbadge/sqlx#fa7981f68a95d4cddbb07843af62b41c730ee0a3"
 dependencies = [
  "native-tls",
  "once_cell",

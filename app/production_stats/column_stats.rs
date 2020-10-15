@@ -1,6 +1,6 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
 use num_traits::ToPrimitive;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use tangram_metrics::StreamingMetric;
 use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
 
@@ -45,8 +45,8 @@ pub struct TextProductionColumnStats {
 	pub column_name: String,
 	pub invalid_count: u64,
 	pub count: u64,
-	pub token_histogram: BTreeMap<String, u64>,
-	pub per_example_histogram: BTreeMap<String, u64>,
+	pub token_histogram: HashMap<String, u64>,
+	pub per_example_histogram: HashMap<String, u64>,
 	pub tokenizer: Tokenizer,
 }
 
@@ -414,13 +414,23 @@ impl TextProductionColumnStats {
 		let tokenizer = match column_stats.tokenizer {
 			tangram_core::model::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
 		};
+		let token_histogram = column_stats
+			.top_tokens
+			.iter()
+			.map(|value| (value.token.clone(), 0))
+			.collect();
+		let per_example_histogram = column_stats
+			.top_tokens
+			.iter()
+			.map(|value| (value.token.clone(), 0))
+			.collect();
 		Self {
 			column_name: column_stats.column_name.clone(),
 			absent_count: 0,
 			invalid_count: 0,
 			count: 0,
-			token_histogram: BTreeMap::new(),
-			per_example_histogram: BTreeMap::new(),
+			token_histogram,
+			per_example_histogram,
 			tokenizer,
 		}
 	}
@@ -432,28 +442,33 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 
 	fn update(&mut self, value: Self::Input) {
 		self.count += 1;
-		match value {
+		let value = match value {
 			None => {
 				self.absent_count += 1;
+				return;
 			}
-			Some(serde_json::Value::String(_)) => {}
+			Some(serde_json::Value::String(value)) => value,
 			_ => {
 				self.invalid_count += 1;
+				return;
 			}
 		};
-
 		// Tokenize the value.
-		if let Some(serde_json::Value::String(value)) = value {
-			match self.tokenizer {
-				Tokenizer::Alphanumeric => {
-					let mut token_set = BTreeSet::new();
-					for token in AlphanumericTokenizer::new(value) {
-						let token = token.to_string();
-						token_set.insert(token.clone());
-						*self.token_histogram.entry(token).or_insert(0) += 1;
-					}
-					for token in token_set.into_iter() {
-						*self.per_example_histogram.entry(token).or_insert(0) += 1;
+		match self.tokenizer {
+			Tokenizer::Alphanumeric => {
+				let mut token_set = HashSet::new();
+				for token in AlphanumericTokenizer::new(value) {
+					match self.token_histogram.get_mut(token.as_ref()) {
+						Some(count) => *count += 1,
+						None => {
+							self.invalid_count += 1;
+						}
+					};
+					token_set.insert(token);
+				}
+				for token in token_set.iter() {
+					if let Some(count) = self.per_example_histogram.get_mut(token.as_ref()) {
+						*count += 1;
 					}
 				}
 			}

@@ -70,12 +70,10 @@ pub struct TextColumnStats {
 	pub column_name: String,
 	/// The total number of values.
 	pub count: usize,
-	/// A map from unigram tokens to the total number of occurrences across all examples.
-	pub unigram_histogram: BTreeMap<String, usize>,
-	/// A map from bigram tokens to the total number of occurrences across all examples.
-	pub bigram_histogram: BTreeMap<String, usize>,
-	/// A map from ngrams to the number of examples with at least one occurrence.
-	pub per_example_histogram: BTreeMap<String, usize>,
+	/// A map from tokens to the total number of occurrences of that token across all examples.
+	pub token_occurrence_histogram: BTreeMap<String, usize>,
+	/// A map from token to the number of examples with at least one occurrence.
+	pub token_example_histogram: BTreeMap<String, usize>,
 	pub tokenizer: Tokenizer,
 }
 
@@ -440,9 +438,8 @@ impl TextColumnStats {
 		let mut stats = Self {
 			column_name: column.name.unwrap().to_owned(),
 			count: column.data.len(),
-			unigram_histogram: BTreeMap::new(),
-			bigram_histogram: BTreeMap::new(),
-			per_example_histogram: BTreeMap::new(),
+			token_occurrence_histogram: BTreeMap::new(),
+			token_example_histogram: BTreeMap::new(),
 			tokenizer: Tokenizer::Alphanumeric,
 		};
 		for value in column.data {
@@ -450,10 +447,10 @@ impl TextColumnStats {
 			for token in AlphanumericTokenizer::new(value) {
 				let token = token.to_string();
 				token_set.insert(token.clone());
-				*stats.unigram_histogram.entry(token).or_insert(0) += 1;
+				*stats.token_occurrence_histogram.entry(token).or_insert(0) += 1;
 			}
 			for token in token_set.into_iter() {
-				*stats.per_example_histogram.entry(token).or_insert(0) += 1;
+				*stats.token_example_histogram.entry(token).or_insert(0) += 1;
 			}
 		}
 		stats
@@ -461,25 +458,18 @@ impl TextColumnStats {
 
 	fn merge(mut self, other: Self) -> Self {
 		self.count += other.count;
-		for (value, count) in other.unigram_histogram.into_iter() {
-			if let Some(entry) = self.unigram_histogram.get_mut(&value) {
+		for (value, count) in other.token_occurrence_histogram.into_iter() {
+			if let Some(entry) = self.token_occurrence_histogram.get_mut(&value) {
 				*entry += count;
 			} else {
-				self.unigram_histogram.insert(value, count);
+				self.token_occurrence_histogram.insert(value, count);
 			}
 		}
-		for (value, count) in other.bigram_histogram.into_iter() {
-			if let Some(entry) = self.bigram_histogram.get_mut(&value) {
+		for (value, count) in other.token_example_histogram.into_iter() {
+			if let Some(entry) = self.token_example_histogram.get_mut(&value) {
 				*entry += count;
 			} else {
-				self.bigram_histogram.insert(value, count);
-			}
-		}
-		for (value, count) in other.per_example_histogram.into_iter() {
-			if let Some(entry) = self.per_example_histogram.get_mut(&value) {
-				*entry += count;
-			} else {
-				self.per_example_histogram.insert(value, count);
+				self.token_example_histogram.insert(value, count);
 			}
 		}
 		self
@@ -504,10 +494,7 @@ impl TextColumnStats {
 			}
 		}
 		let mut top_tokens = std::collections::BinaryHeap::new();
-		for (token, count) in self.unigram_histogram.iter() {
-			top_tokens.push(TokenEntry(token.clone(), *count));
-		}
-		for (token, count) in self.bigram_histogram.iter() {
+		for (token, count) in self.token_occurrence_histogram.iter() {
 			top_tokens.push(TokenEntry(token.clone(), *count));
 		}
 		let n_examples = self.count.to_u64().unwrap();
@@ -515,7 +502,7 @@ impl TextColumnStats {
 			.map(|_| top_tokens.pop())
 			.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
 			.map(|(token, count)| {
-				let examples_count = self.per_example_histogram[&token];
+				let examples_count = self.token_example_histogram[&token];
 				// This is the "inverse document frequency smooth" form of the IDF. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 				let idf = (n_examples.to_f32().unwrap() / (1.0 + examples_count.to_f32().unwrap()))
 					.ln() + 1.0;
