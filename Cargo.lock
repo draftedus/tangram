@@ -2142,6 +2142,7 @@ name = "tangram_core"
 version = "0.2.0-dev"
 dependencies = [
  "anyhow",
+ "fnv",
  "itertools",
  "ndarray",
  "num-traits",

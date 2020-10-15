@@ -827,38 +827,47 @@ impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
 	type Error = anyhow::Error;
 	fn try_from(value: model::FeatureGroup) -> Result<Self> {
 		match value {
-			model::FeatureGroup::Identity(f) => Ok(features::FeatureGroup::Identity(
+			model::FeatureGroup::Identity(feature_group) => Ok(features::FeatureGroup::Identity(
 				features::IdentityFeatureGroup {
-					source_column_name: f.source_column_name,
+					source_column_name: feature_group.source_column_name,
 				},
 			)),
-			model::FeatureGroup::Normalized(f) => Ok(features::FeatureGroup::Normalized(
-				features::NormalizedFeatureGroup {
-					source_column_name: f.source_column_name,
-					mean: f.mean,
-					variance: f.variance,
-				},
-			)),
-			model::FeatureGroup::OneHotEncoded(f) => Ok(features::FeatureGroup::OneHotEncoded(
-				features::OneHotEncodedFeatureGroup {
-					source_column_name: f.source_column_name,
-					options: f.options,
-				},
-			)),
-			model::FeatureGroup::BagOfWords(f) => Ok(features::FeatureGroup::BagOfWords(
-				features::BagOfWordsFeatureGroup {
-					source_column_name: f.source_column_name,
-					tokenizer: f.tokenizer.try_into()?,
-					tokens: f
-						.tokens
-						.into_iter()
-						.map(|token| features::BagOfWordsFeatureGroupToken {
-							token: token.token,
-							idf: token.idf,
-						})
-						.collect(),
-				},
-			)),
+			model::FeatureGroup::Normalized(feature_group) => Ok(
+				features::FeatureGroup::Normalized(features::NormalizedFeatureGroup {
+					source_column_name: feature_group.source_column_name,
+					mean: feature_group.mean,
+					variance: feature_group.variance,
+				}),
+			),
+			model::FeatureGroup::OneHotEncoded(feature_group) => Ok(
+				features::FeatureGroup::OneHotEncoded(features::OneHotEncodedFeatureGroup {
+					source_column_name: feature_group.source_column_name,
+					options: feature_group.options,
+				}),
+			),
+			model::FeatureGroup::BagOfWords(feature_group) => {
+				let tokens = feature_group
+					.tokens
+					.into_iter()
+					.map(|token| features::BagOfWordsFeatureGroupToken {
+						token: token.token,
+						idf: token.idf,
+					})
+					.collect::<Vec<_>>();
+				let tokens_map = tokens
+					.iter()
+					.enumerate()
+					.map(|(i, token)| (token.token.clone(), i))
+					.collect();
+				Ok(features::FeatureGroup::BagOfWords(
+					features::BagOfWordsFeatureGroup {
+						source_column_name: feature_group.source_column_name,
+						tokenizer: feature_group.tokenizer.try_into()?,
+						tokens,
+						tokens_map,
+					},
+				))
+			}
 		}
 	}
 }

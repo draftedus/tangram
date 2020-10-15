@@ -3,8 +3,10 @@ This module implements Tangram's feature engineering that prepares datasets for 
 */
 
 use crate::stats;
+use fnv::FnvBuildHasher;
 use itertools::izip;
 use ndarray::{prelude::*, s};
+use std::collections::HashMap;
 use tangram_dataframe::prelude::*;
 use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
 
@@ -162,6 +164,8 @@ pub struct BagOfWordsFeatureGroup {
 	pub tokenizer: Tokenizer,
 	/// These are the tokens that were produced for the source column in training.
 	pub tokens: Vec<BagOfWordsFeatureGroupToken>,
+	/// These are the tokens that were produced for the source column in training.
+	pub tokens_map: HashMap<String, usize, FnvBuildHasher>,
 }
 
 #[derive(Debug)]
@@ -288,10 +292,16 @@ fn bag_of_words_feature_group_for_column(column_stats: &stats::ColumnStatsOutput
 	let tokenizer = match column_stats.tokenizer {
 		stats::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
 	};
+	let tokens_map = tokens
+		.iter()
+		.enumerate()
+		.map(|(i, token)| (token.token.clone(), i))
+		.collect();
 	FeatureGroup::BagOfWords(BagOfWordsFeatureGroup {
 		source_column_name: column_stats.column_name.to_owned(),
 		tokenizer,
 		tokens,
+		tokens_map,
 	})
 }
 
@@ -400,14 +410,12 @@ fn compute_features_bag_of_words_array_f32(
 				let mut feature_values_sum_of_squares = 0.0;
 				// Set the feature value for each token for this example.
 				for token in AlphanumericTokenizer::new(value) {
-					let token_index = feature_group
-						.tokens
-						.binary_search_by(|t| t.token.as_str().cmp(token.as_ref()));
-					if let Ok(token_index) = token_index {
-						let token = &feature_group.tokens[token_index];
+					let token_index = feature_group.tokens_map.get(token.as_ref());
+					if let Some(token_index) = token_index {
+						let token = &feature_group.tokens[*token_index];
 						let feature_value = 1.0 * token.idf;
 						feature_values_sum_of_squares += feature_value * feature_value;
-						*features.get_mut([example_index, token_index]).unwrap() += feature_value;
+						*features.get_mut([example_index, *token_index]).unwrap() += feature_value;
 					}
 				}
 				// Normalize the feature values for this example.
@@ -499,14 +507,12 @@ fn compute_features_bag_of_words_dataframe(
 				let mut feature_values_sum_of_squares = 0.0;
 				// Set the feature value for each token for this example.
 				for token in AlphanumericTokenizer::new(value) {
-					let token_index = feature_group
-						.tokens
-						.binary_search_by(|t| t.token.as_str().cmp(token.as_ref()));
-					if let Ok(token_index) = token_index {
-						let token = &feature_group.tokens[token_index];
+					let token_index = feature_group.tokens_map.get(token.as_ref());
+					if let Some(token_index) = token_index {
+						let token = &feature_group.tokens[*token_index];
 						let feature_value = 1.0 * token.idf;
 						feature_values_sum_of_squares += feature_value * feature_value;
-						feature_columns[token_index][example_index] += feature_value;
+						feature_columns[*token_index][example_index] += feature_value;
 					}
 				}
 				// Normalize the feature values for this example.
@@ -610,15 +616,13 @@ fn compute_features_bag_of_words_array_value(
 				let mut feature_values_sum_of_squares = 0.0;
 				// Set the feature value for each token for this example.
 				for token in AlphanumericTokenizer::new(value) {
-					let token_index = feature_group
-						.tokens
-						.binary_search_by(|t| t.token.as_str().cmp(token.as_ref()));
-					if let Ok(token_index) = token_index {
-						let token = &feature_group.tokens[token_index];
+					let token_index = feature_group.tokens_map.get(token.as_ref());
+					if let Some(token_index) = token_index {
+						let token = &feature_group.tokens[*token_index];
 						let feature_value = 1.0 * token.idf;
 						feature_values_sum_of_squares += feature_value * feature_value;
 						*features
-							.get_mut([example_index, token_index])
+							.get_mut([example_index, *token_index])
 							.unwrap()
 							.as_number_mut()
 							.unwrap() += feature_value;
