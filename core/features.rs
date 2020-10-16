@@ -165,13 +165,19 @@ pub struct BagOfWordsFeatureGroup {
 	/// These are the tokens that were produced for the source column in training.
 	pub tokens: Vec<BagOfWordsFeatureGroupToken>,
 	/// These are the tokens that were produced for the source column in training.
-	pub tokens_map: HashMap<String, usize, FnvBuildHasher>,
+	pub tokens_map: HashMap<Token, usize, FnvBuildHasher>,
 }
 
 #[derive(Debug)]
 pub struct BagOfWordsFeatureGroupToken {
-	pub token: String,
+	pub token: Token,
 	pub idf: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Token {
+	Unigram(String),
+	Bigram(String, String),
 }
 
 /// A Tokenizer describes how raw text is transformed into tokens.
@@ -282,9 +288,15 @@ fn bag_of_words_feature_group_for_column(column_stats: &stats::ColumnStatsOutput
 	let mut tokens = column_stats
 		.top_tokens
 		.iter()
-		.map(|token| BagOfWordsFeatureGroupToken {
-			token: token.token.to_owned(),
-			idf: token.idf,
+		.map(|token_stats| {
+			let token = match token_stats.token.to_owned() {
+				stats::Token::Unigram(token) => Token::Unigram(token),
+				stats::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
+			};
+			BagOfWordsFeatureGroupToken {
+				token,
+				idf: token_stats.idf,
+			}
 		})
 		.collect::<Vec<_>>();
 	// Tokens must be sorted because we perform a binary search through them later.
@@ -410,7 +422,8 @@ fn compute_features_bag_of_words_array_f32(
 				let mut feature_values_sum_of_squares = 0.0;
 				// Set the feature value for each token for this example.
 				for token in AlphanumericTokenizer::new(value) {
-					let token_index = feature_group.tokens_map.get(token.as_ref());
+					let token = Token::Unigram(token.into_owned());
+					let token_index = feature_group.tokens_map.get(&token);
 					if let Some(token_index) = token_index {
 						let token = &feature_group.tokens[*token_index];
 						let feature_value = 1.0 * token.idf;
@@ -507,7 +520,8 @@ fn compute_features_bag_of_words_dataframe(
 				let mut feature_values_sum_of_squares = 0.0;
 				// Set the feature value for each token for this example.
 				for token in AlphanumericTokenizer::new(value) {
-					let token_index = feature_group.tokens_map.get(token.as_ref());
+					let token = Token::Unigram(token.into_owned());
+					let token_index = feature_group.tokens_map.get(&token);
 					if let Some(token_index) = token_index {
 						let token = &feature_group.tokens[*token_index];
 						let feature_value = 1.0 * token.idf;
@@ -616,7 +630,8 @@ fn compute_features_bag_of_words_array_value(
 				let mut feature_values_sum_of_squares = 0.0;
 				// Set the feature value for each token for this example.
 				for token in AlphanumericTokenizer::new(value) {
-					let token_index = feature_group.tokens_map.get(token.as_ref());
+					let token = Token::Unigram(token.into_owned());
+					let token_index = feature_group.tokens_map.get(&token);
 					if let Some(token_index) = token_index {
 						let token = &feature_group.tokens[*token_index];
 						let feature_value = 1.0 * token.idf;

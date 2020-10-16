@@ -55,17 +55,17 @@ struct Enum {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct TokenStats {
-	token: String,
-	count: u64,
-	examples_count: u64,
+struct Text {
+	name: String,
+	tokens: Vec<TokenStats>,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Text {
-	name: String,
-	tokens: Vec<TokenStats>,
+struct TokenStats {
+	token: String,
+	count: u64,
+	examples_count: u64,
 }
 
 pub async fn get(
@@ -157,7 +157,7 @@ async fn props(
 				.top_tokens
 				.into_iter()
 				.map(|token| TokenStats {
-					token: token.token,
+					token: token.token.to_string(),
 					count: token.occurrence_count,
 					examples_count: token.examples_count,
 				})

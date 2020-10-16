@@ -89,10 +89,26 @@ pub enum FeatureContribution {
 	#[serde(rename = "bag_of_words")]
 	BagOfWords {
 		column_name: String,
-		token: String,
+		token: Token,
 		feature_value: bool,
 		feature_contribution_value: f32,
 	},
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(untagged)]
+pub enum Token {
+	Unigram(String),
+	Bigram(String, String),
+}
+
+impl std::fmt::Display for Token {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Token::Unigram(token) => write!(f, "{}", token),
+			Token::Bigram(token_a, token_b) => write!(f, "{} {}", token_a, token_b),
+		}
+	}
 }
 
 #[derive(Debug)]
@@ -653,7 +669,12 @@ fn compute_feature_contributions<'a>(
 					let feature_contribution_value = feature_contribution_values.next().unwrap();
 					feature_contributions.push(FeatureContribution::BagOfWords {
 						column_name: feature_group.source_column_name.to_owned(),
-						token: token.token.to_owned(),
+						token: match token.token.to_owned() {
+							features::Token::Unigram(token) => Token::Unigram(token),
+							features::Token::Bigram(token_a, token_b) => {
+								Token::Bigram(token_a, token_b)
+							}
+						},
 						feature_value: feature_value > 0.0,
 						feature_contribution_value,
 					});
@@ -948,7 +969,12 @@ impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
 					.tokens
 					.into_iter()
 					.map(|token| features::BagOfWordsFeatureGroupToken {
-						token: token.token,
+						token: match token.token {
+							model::Token::Unigram(token) => features::Token::Unigram(token),
+							model::Token::Bigram(token_a, token_b) => {
+								features::Token::Bigram(token_a, token_b)
+							}
+						},
 						idf: token.idf,
 					})
 					.collect::<Vec<_>>();

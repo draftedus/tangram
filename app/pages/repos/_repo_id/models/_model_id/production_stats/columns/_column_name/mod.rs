@@ -411,6 +411,11 @@ fn text_props(
 		ProductionColumnStatsOutput::Text(s) => s,
 		_ => unreachable!(),
 	};
+	let overall_token_histogram = overall
+		.token_histogram
+		.iter()
+		.map(|(token, count)| (token.to_string(), *count))
+		.collect();
 	TextProps {
 		alert: None,
 		row_count: get_production_stats_output.overall.row_count,
@@ -419,6 +424,6 @@ fn text_props(
 		column_name: overall.column_name.clone(),
 		date_window,
 		date_window_interval,
-		overall_token_histogram: overall.token_histogram.clone(),
+		overall_token_histogram,
 	}
 }

@@ -383,9 +383,15 @@ pub struct TextColumnStats {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TokenStats {
-	pub token: String,
+	pub token: Token,
 	pub occurrence_count: u64,
 	pub examples_count: u64,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+pub enum Token {
+	Unigram(String),
+	Bigram(String, String),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -423,7 +429,7 @@ pub struct BagOfWordsFeatureGroup {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BagOfWordsFeatureGroupToken {
-	pub token: String,
+	pub token: Token,
 	pub idf: f32,
 }
 
@@ -480,4 +486,13 @@ pub enum SplitDirection {
 pub struct LeafNode {
 	pub value: f32,
 	pub examples_fraction: f32,
+}
+
+impl std::fmt::Display for Token {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Token::Unigram(token) => write!(f, "{}", token),
+			Token::Bigram(token_a, token_b) => write!(f, "{} {}", token_a, token_b),
+		}
+	}
 }

@@ -71,10 +71,16 @@ pub struct TextColumnStats {
 	/// The total number of values.
 	pub count: usize,
 	/// A map from tokens to the total number of occurrences of that token across all examples.
-	pub token_occurrence_histogram: BTreeMap<String, usize>,
+	pub token_occurrence_histogram: BTreeMap<Token, usize>,
 	/// A map from token to the number of examples with at least one occurrence.
-	pub token_example_histogram: BTreeMap<String, usize>,
+	pub token_example_histogram: BTreeMap<Token, usize>,
 	pub tokenizer: Tokenizer,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Token {
+	Unigram(String),
+	Bigram(String, String),
 }
 
 #[derive(Clone, Debug)]
@@ -185,7 +191,7 @@ pub struct TextColumnStatsOutput {
 /// This struct contains stats for individual tokens
 #[derive(Debug)]
 pub struct TokenStats {
-	pub token: String,
+	pub token: Token,
 	/// This is the total number of occurrences of this token.
 	pub count: usize,
 	/// This is the total number of examples that contain this token.
@@ -447,10 +453,16 @@ impl TextColumnStats {
 			for token in AlphanumericTokenizer::new(value) {
 				let token = token.to_string();
 				token_set.insert(token.clone());
-				*stats.token_occurrence_histogram.entry(token).or_insert(0) += 1;
+				*stats
+					.token_occurrence_histogram
+					.entry(Token::Unigram(token))
+					.or_insert(0) += 1;
 			}
 			for token in token_set.into_iter() {
-				*stats.token_example_histogram.entry(token).or_insert(0) += 1;
+				*stats
+					.token_example_histogram
+					.entry(Token::Unigram(token))
+					.or_insert(0) += 1;
 			}
 		}
 		stats
@@ -477,7 +489,7 @@ impl TextColumnStats {
 
 	fn finalize(self, settings: &StatsSettings) -> TextColumnStatsOutput {
 		#[derive(Clone, Debug, Eq)]
-		struct TokenEntry(String, usize);
+		struct TokenEntry(Token, usize);
 		impl std::cmp::Ord for TokenEntry {
 			fn cmp(&self, other: &Self) -> std::cmp::Ordering {
 				self.1.cmp(&other.1)
