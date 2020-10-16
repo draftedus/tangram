@@ -89,7 +89,6 @@ elif args.library == 'sklearn':
     learning_rate=0.1,
     max_iter=100,
     max_leaf_nodes=255,
-    min_samples_leaf=100,
   )
   model.fit(features_train, labels_train)
 elif args.library == 'xgboost':
