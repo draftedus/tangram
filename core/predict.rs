@@ -27,7 +27,8 @@ pub struct PredictInput(pub Vec<serde_json::Map<String, serde_json::Value>>);
 #[serde(untagged)]
 pub enum PredictOutput {
 	Regression(Vec<RegressionPredictOutput>),
-	Classification(Vec<ClassificationPredictOutput>),
+	BinaryClassification(Vec<BinaryClassificationPredictOutput>),
+	MulticlassClassification(Vec<MulticlassClassificationPredictOutput>),
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -39,7 +40,15 @@ pub struct RegressionPredictOutput {
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ClassificationPredictOutput {
+pub struct BinaryClassificationPredictOutput {
+	pub class_name: String,
+	pub probability: f32,
+	pub feature_contributions: Option<FeatureContributions>,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct MulticlassClassificationPredictOutput {
 	pub class_name: String,
 	pub probability: f32,
 	pub probabilities: BTreeMap<String, f32>,
@@ -257,18 +266,20 @@ pub fn predict(
 				predictions.iter(),
 				feature_contributions
 			)
-			.map(|(features, prediction, feature_contributiuons)| {
+			.map(|(features, prediction, feature_contributions)| {
+				let baseline_value = feature_contributions.baseline_value;
+				let output_value = feature_contributions.output_value;
 				let feature_contributions = compute_feature_contributions(
-					&model.feature_groups,
+					model.feature_groups.iter(),
 					features.iter().cloned(),
-					feature_contributiuons
+					feature_contributions
 						.feature_contribution_values
 						.iter()
 						.cloned(),
 				);
 				let feature_contributions = FeatureContributions {
-					baseline_value: feature_contributiuons.baseline_value,
-					output_value: feature_contributiuons.output_value,
+					baseline_value,
+					output_value,
 					feature_contributions,
 				};
 				RegressionPredictOutput {
@@ -302,9 +313,11 @@ pub fn predict(
 				predictions.iter(),
 				feature_contributions
 			)
-			.map(|(features, prediction, raw_feature_contributions)| {
+			.map(|(features, prediction, feature_contributions)| {
+				let baseline_value = feature_contributions.baseline_value;
+				let output_value = feature_contributions.output_value;
 				let feature_contributions = compute_feature_contributions(
-					&model.feature_groups,
+					model.feature_groups.iter(),
 					features.iter().map(|v| match v {
 						tangram_dataframe::DataFrameValue::Number(value) => *value,
 						tangram_dataframe::DataFrameValue::Enum(value) => {
@@ -312,14 +325,14 @@ pub fn predict(
 						}
 						_ => unreachable!(),
 					}),
-					raw_feature_contributions
+					feature_contributions
 						.feature_contribution_values
 						.iter()
 						.cloned(),
 				);
 				let feature_contributions = FeatureContributions {
-					baseline_value: raw_feature_contributions.baseline_value,
-					output_value: raw_feature_contributions.output_value,
+					baseline_value,
+					output_value,
 					feature_contributions,
 				};
 				RegressionPredictOutput {
@@ -352,26 +365,35 @@ pub fn predict(
 			let output = probabilities
 				.axis_iter(Axis(0))
 				.zip(feature_contributions.iter())
-				.map(|(probabilities, _feature_contributions)| {
+				.map(|(probabilities, feature_contributions)| {
 					let (probability, class_name) = if probabilities[1] >= threshold {
 						(probabilities[1], model.model.classes[1].clone())
 					} else {
 						(probabilities[0], model.model.classes[0].clone())
 					};
-					let probabilities = probabilities
-						.iter()
-						.zip(model.model.classes.iter())
-						.map(|(p, c)| (c.clone(), *p))
-						.collect::<BTreeMap<String, f32>>();
-					ClassificationPredictOutput {
+					let baseline_value = feature_contributions.baseline_value;
+					let output_value = feature_contributions.output_value;
+					let feature_contributions = compute_feature_contributions(
+						model.feature_groups.iter(),
+						features.iter().cloned(),
+						feature_contributions
+							.feature_contribution_values
+							.iter()
+							.cloned(),
+					);
+					let feature_contributions = FeatureContributions {
+						baseline_value,
+						output_value,
+						feature_contributions,
+					};
+					BinaryClassificationPredictOutput {
 						class_name,
 						probability,
-						probabilities,
-						feature_contributions: None,
+						feature_contributions: Some(feature_contributions),
 					}
 				})
 				.collect();
-			PredictOutput::Classification(output)
+			PredictOutput::BinaryClassification(output)
 		}
 		PredictModel::TreeBinaryClassifier(model) => {
 			let n_examples = dataframe.nrows();
@@ -400,26 +422,41 @@ pub fn predict(
 			let output = probabilities
 				.axis_iter(Axis(0))
 				.zip(feature_contributions.iter())
-				.map(|(probabilities, _feature_contributions)| {
+				.map(|(probabilities, feature_contributions)| {
 					let (probability, class_name) = if probabilities[1] >= threshold {
 						(probabilities[1], model.model.classes[1].clone())
 					} else {
 						(probabilities[0], model.model.classes[0].clone())
 					};
-					let probabilities = probabilities
-						.iter()
-						.zip(model.model.classes.iter())
-						.map(|(p, c)| (c.clone(), *p))
-						.collect::<BTreeMap<String, f32>>();
-					ClassificationPredictOutput {
+					let baseline_value = feature_contributions.baseline_value;
+					let output_value = feature_contributions.output_value;
+					let feature_contributions = compute_feature_contributions(
+						model.feature_groups.iter(),
+						features.iter().map(|v| match v {
+							tangram_dataframe::DataFrameValue::Number(value) => *value,
+							tangram_dataframe::DataFrameValue::Enum(value) => {
+								value.map(|v| v.get()).unwrap_or(0).to_f32().unwrap()
+							}
+							_ => unreachable!(),
+						}),
+						feature_contributions
+							.feature_contribution_values
+							.iter()
+							.cloned(),
+					);
+					let feature_contributions = FeatureContributions {
+						baseline_value,
+						output_value,
+						feature_contributions,
+					};
+					BinaryClassificationPredictOutput {
 						class_name,
 						probability,
-						probabilities,
-						feature_contributions: None,
+						feature_contributions: Some(feature_contributions),
 					}
 				})
 				.collect();
-			PredictOutput::Classification(output)
+			PredictOutput::BinaryClassification(output)
 		}
 		PredictModel::LinearMulticlassClassifier(model) => {
 			let n_examples = dataframe.nrows();
@@ -449,7 +486,7 @@ pub fn predict(
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
-					ClassificationPredictOutput {
+					MulticlassClassificationPredictOutput {
 						class_name: class_name.to_owned(),
 						probability: *probability,
 						probabilities,
@@ -457,7 +494,7 @@ pub fn predict(
 					}
 				})
 				.collect();
-			PredictOutput::Classification(output)
+			PredictOutput::MulticlassClassification(output)
 		}
 		PredictModel::TreeMulticlassClassifier(model) => {
 			let n_examples = dataframe.nrows();
@@ -492,7 +529,7 @@ pub fn predict(
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
-					ClassificationPredictOutput {
+					MulticlassClassificationPredictOutput {
 						class_name: class_name.to_owned(),
 						probability: *probability,
 						probabilities,
@@ -500,13 +537,13 @@ pub fn predict(
 					}
 				})
 				.collect();
-			PredictOutput::Classification(output)
+			PredictOutput::MulticlassClassification(output)
 		}
 	}
 }
 
-fn compute_feature_contributions(
-	feature_groups: &[features::FeatureGroup],
+fn compute_feature_contributions<'a>(
+	feature_groups: impl Iterator<Item = &'a features::FeatureGroup>,
 	mut features: impl Iterator<Item = f32>,
 	mut feature_contribution_values: impl Iterator<Item = f32>,
 ) -> Vec<FeatureContribution> {

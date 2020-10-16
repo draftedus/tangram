@@ -69,7 +69,8 @@ struct Text {
 #[serde(rename_all = "camelCase", tag = "type", content = "value")]
 enum Prediction {
 	Regression(RegressionPrediction),
-	Classification(ClassificationPrediction),
+	BinaryClassification(BinaryClassificationPrediction),
+	MulticlassClassification(MulticlassClassificationPrediction),
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -81,7 +82,15 @@ struct RegressionPrediction {
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct ClassificationPrediction {
+struct BinaryClassificationPrediction {
+	class_name: String,
+	probability: f32,
+	feature_contributions_chart_data: FeatureContributionsChartData,
+}
+
+#[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct MulticlassClassificationPrediction {
 	class_name: String,
 	probability: f32,
 	probabilities: Vec<(String, f32)>,
@@ -286,24 +295,47 @@ fn predict(
 		tangram_core::predict::PredictOutput::Regression(mut output) => {
 			let output = output.remove(0);
 			let feature_contributions = output.feature_contributions.unwrap();
+			let feature_contributions_chart_data = vec![FeatureContributionsChartSeries {
+				baseline: feature_contributions.baseline_value,
+				baseline_label: format!("{}", feature_contributions.baseline_value),
+				label: "output".to_owned(),
+				output: feature_contributions.output_value,
+				output_label: format!("{}", feature_contributions.output_value),
+				values: feature_contributions
+					.feature_contributions
+					.into_iter()
+					.map(compute_feature_contributions_chart_value)
+					.collect(),
+			}];
 			let prediction = RegressionPrediction {
-				feature_contributions_chart_data: vec![FeatureContributionsChartSeries {
-					baseline: feature_contributions.baseline_value,
-					baseline_label: format!("{}", feature_contributions.baseline_value),
-					label: "output".to_owned(),
-					output: feature_contributions.output_value,
-					output_label: format!("{}", feature_contributions.output_value),
-					values: feature_contributions
-						.feature_contributions
-						.into_iter()
-						.map(compute_feature_contributions_chart_value)
-						.collect(),
-				}],
+				feature_contributions_chart_data,
 				value: output.value,
 			};
 			Prediction::Regression(prediction)
 		}
-		tangram_core::predict::PredictOutput::Classification(mut output) => {
+		tangram_core::predict::PredictOutput::BinaryClassification(mut output) => {
+			let output = output.remove(0);
+			let feature_contributions = output.feature_contributions.unwrap();
+			let feature_contributions_chart_data = vec![FeatureContributionsChartSeries {
+				baseline: feature_contributions.baseline_value,
+				baseline_label: format!("{}", feature_contributions.baseline_value),
+				label: "output".to_owned(),
+				output: feature_contributions.output_value,
+				output_label: format!("{}", feature_contributions.output_value),
+				values: feature_contributions
+					.feature_contributions
+					.into_iter()
+					.map(compute_feature_contributions_chart_value)
+					.collect(),
+			}];
+			let prediction = BinaryClassificationPrediction {
+				class_name: output.class_name,
+				probability: output.probability,
+				feature_contributions_chart_data,
+			};
+			Prediction::BinaryClassification(prediction)
+		}
+		tangram_core::predict::PredictOutput::MulticlassClassification(mut output) => {
 			let output = output.remove(0);
 			let feature_contributions_chart_data = output
 				.feature_contributions
@@ -324,13 +356,13 @@ fn predict(
 					},
 				)
 				.collect::<Vec<_>>();
-			let prediction = ClassificationPrediction {
+			let prediction = MulticlassClassificationPrediction {
 				class_name: output.class_name,
 				probability: output.probability,
 				probabilities: output.probabilities.into_iter().collect(),
 				feature_contributions_chart_data,
 			};
-			Prediction::Classification(prediction)
+			Prediction::MulticlassClassification(prediction)
 		}
 	};
 	predict_output
