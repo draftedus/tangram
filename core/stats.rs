@@ -342,7 +342,7 @@ impl NumberColumnStats {
 				mean,
 				m2,
 				count.to_u64().unwrap(),
-				value.to_f64().unwrap(),
+				value as f64,
 				0.0,
 			);
 			mean = new_mean;

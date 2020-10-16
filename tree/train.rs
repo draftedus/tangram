@@ -403,9 +403,8 @@ fn update_predictions_with_tree(
 		examples_index[range.clone()]
 			.iter()
 			.for_each(|&example_index| unsafe {
-				*predictions_cell
-					.get()
-					.get_unchecked_mut(example_index.to_usize().unwrap()) += value;
+				let example_index = example_index.to_usize().unwrap();
+				*predictions_cell.get().get_unchecked_mut(example_index) += value;
 			});
 	});
 	#[cfg(feature = "timing")]

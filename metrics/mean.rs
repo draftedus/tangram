@@ -29,7 +29,7 @@ impl StreamingMetric<'_> for Mean {
 	type Output = Option<f32>;
 
 	fn update(&mut self, value: f32) {
-		let value = value.to_f64().unwrap();
+		let value = value as f64;
 		let one = NonZeroU64::new(1u64).unwrap();
 		self.0 = match self.0 {
 			None => Some((one, value)),

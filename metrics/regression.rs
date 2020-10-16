@@ -72,7 +72,7 @@ impl<'a> StreamingMetric<'a> for RegressionMetrics {
 						mean_variance.mean,
 						mean_variance.m2,
 						1,
-						label.to_f64().unwrap(),
+						*label as f64,
 						0.0,
 					);
 					mean_variance.n = NonZeroU64::new(mean_variance.n.get() + 1).unwrap();
@@ -82,15 +82,15 @@ impl<'a> StreamingMetric<'a> for RegressionMetrics {
 				None => {
 					self.mean_variance = Some(MeanVariance {
 						n: NonZeroU64::new(1).unwrap(),
-						mean: label.to_f64().unwrap(),
+						mean: *label as f64,
 						m2: 0.0,
 					})
 				}
 			}
 			let absolute_error = prediction - label;
 			let squared_error = absolute_error * absolute_error;
-			self.absolute_error += absolute_error.to_f64().unwrap();
-			self.squared_error += squared_error.to_f64().unwrap();
+			self.absolute_error += absolute_error as f64;
+			self.squared_error += squared_error as f64;
 		}
 	}
 

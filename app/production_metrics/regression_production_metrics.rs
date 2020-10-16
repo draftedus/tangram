@@ -50,8 +50,8 @@ impl StreamingMetric<'_> for RegressionProductionPredictionMetrics {
 				self.stats.replace(NumberStats::new(prediction));
 			}
 		};
-		self.absolute_error += absolute_error.to_f64().unwrap();
-		self.squared_error += squared_error.to_f64().unwrap();
+		self.absolute_error += absolute_error as f64;
+		self.squared_error += squared_error as f64;
 	}
 
 	fn merge(&mut self, other: Self) {

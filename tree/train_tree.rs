@@ -500,8 +500,8 @@ fn add_leaf(options: AddLeafOptions) {
 	// This is the index this leaf will have in the `nodes` array.
 	let leaf_index = nodes.len();
 	// Compute the leaf's value.
-	let value = (-train_options.learning_rate.to_f64().unwrap() * sum_gradients
-		/ (sum_hessians + train_options.l2_regularization.to_f64().unwrap() + std::f64::EPSILON))
+	let value = (-train_options.learning_rate as f64 * sum_gradients
+		/ (sum_hessians + train_options.l2_regularization as f64 + std::f64::EPSILON))
 		.to_f32()
 		.unwrap();
 	let examples_fraction =

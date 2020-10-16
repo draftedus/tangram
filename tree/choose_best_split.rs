@@ -115,14 +115,14 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 	let start = std::time::Instant::now();
 	let sum_gradients = gradients
 		.par_iter()
-		.map(|gradient| gradient.to_f64().unwrap())
+		.map(|gradient| *gradient as f64)
 		.sum::<f64>();
 	let sum_hessians = if hessians_are_constant {
 		hessians.len().to_f64().unwrap()
 	} else {
 		hessians
 			.par_iter()
-			.map(|hessian| hessian.to_f64().unwrap())
+			.map(|hessian| *hessian as f64)
 			.sum::<f64>()
 	};
 	#[cfg(feature = "timing")]
@@ -130,7 +130,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 
 	// Determine if we should try to split the root.
 	let should_try_to_split_root = gradients.len() >= 2 * train_options.min_examples_per_node
-		&& sum_hessians >= 2.0 * train_options.min_sum_hessians_per_node.to_f64().unwrap();
+		&& sum_hessians >= 2.0 * train_options.min_sum_hessians_per_node as f64;
 	if !should_try_to_split_root {
 		return ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 			sum_gradients,
@@ -904,11 +904,11 @@ fn choose_best_split_for_continuous_feature(
 			break;
 		}
 		// Check if the sum of hessians for examples that would be sent to the left child by this split falls below `min_sum_hessians_per_node`.
-		if left_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
+		if left_sum_hessians < train_options.min_sum_hessians_per_node as f64 {
 			continue;
 		}
 		// Check if the sum of hessians for examples that would be sent to the right child by this split falls below `min_sum_hessians_per_node`. If true, then splitting by the thresholds for all subsequent bins will also fail, so we can exit the loop. This is true because hessians are always positive.
-		if right_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
+		if right_sum_hessians < train_options.min_sum_hessians_per_node as f64 {
 			break;
 		}
 		// Compute the gain for this candidate split.
@@ -967,10 +967,7 @@ fn choose_best_split_for_discrete_feature(
 	let mut left_sum_gradients = 0.0;
 	let mut left_sum_hessians = 0.0;
 	// Sort the bin stats using a scoring function.
-	let smoothing_factor = train_options
-		.smoothing_factor_for_discrete_bin_sorting
-		.to_f64()
-		.unwrap();
+	let smoothing_factor = train_options.smoothing_factor_for_discrete_bin_sorting as f64;
 	let mut sorted_bin_stats_for_feature: Vec<(usize, &BinStatsEntry)> =
 		bin_stats_for_feature.iter().enumerate().collect();
 	sorted_bin_stats_for_feature.sort_by(|(_, a), (_, b)| {
@@ -1011,11 +1008,11 @@ fn choose_best_split_for_discrete_feature(
 			break;
 		}
 		// Check if the sum of hessians for examples that would be sent to the left child by this split falls below `min_sum_hessians_per_node`.
-		if left_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
+		if left_sum_hessians < train_options.min_sum_hessians_per_node as f64 {
 			continue;
 		}
 		// Check if the sum of hessians for examples that would be sent to the right child by this split falls below `min_sum_hessians_per_node`. If true, then splitting by the thresholds for all subsequent bins will also fail, so we can exit the loop. This is true because hessians are always positive.
-		if right_sum_hessians < train_options.min_sum_hessians_per_node.to_f64().unwrap() {
+		if right_sum_hessians < train_options.min_sum_hessians_per_node as f64 {
 			break;
 		}
 		// Compute the gain for this candidate split.
@@ -1068,7 +1065,7 @@ fn compute_gain(
 
 /// The negative loss is used to compute the gain of a given split.
 fn compute_negative_loss(sum_gradients: f64, sum_hessians: f64, l2_regularization: f32) -> f32 {
-	((sum_gradients * sum_gradients) / (sum_hessians + l2_regularization.to_f64().unwrap()))
+	((sum_gradients * sum_gradients) / (sum_hessians + l2_regularization as f64))
 		.to_f32()
 		.unwrap()
 }
@@ -1091,8 +1088,9 @@ fn fill_gradients_and_hessians_ordered_buffers(
 			)
 			.for_each(
 				|(example_index, ordered_gradient, ordered_hessian)| unsafe {
-					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
-					*ordered_hessian = *hessians.get_unchecked(example_index.to_usize().unwrap());
+					let example_index = example_index.to_usize().unwrap();
+					*ordered_gradient = *gradients.get_unchecked(example_index);
+					*ordered_hessian = *hessians.get_unchecked(example_index);
 				},
 			);
 		} else {
@@ -1107,10 +1105,9 @@ fn fill_gradients_and_hessians_ordered_buffers(
 				|(example_index_for_node, ordered_gradients, ordered_hessians)| {
 					izip!(example_index_for_node, ordered_gradients, ordered_hessians).for_each(
 						|(example_index, ordered_gradient, ordered_hessian)| unsafe {
-							*ordered_gradient =
-								*gradients.get_unchecked(example_index.to_usize().unwrap());
-							*ordered_hessian =
-								*hessians.get_unchecked(example_index.to_usize().unwrap());
+							let example_index = example_index.to_usize().unwrap();
+							*ordered_gradient = *gradients.get_unchecked(example_index);
+							*ordered_hessian = *hessians.get_unchecked(example_index);
 						},
 					);
 				},
@@ -1120,7 +1117,8 @@ fn fill_gradients_and_hessians_ordered_buffers(
 		if smaller_child_examples_index.len() < 1024 {
 			izip!(smaller_child_examples_index, &mut *gradients_ordered_buffer,).for_each(
 				|(example_index, ordered_gradient)| unsafe {
-					*ordered_gradient = *gradients.get_unchecked(example_index.to_usize().unwrap());
+					let example_index = example_index.to_usize().unwrap();
+					*ordered_gradient = *gradients.get_unchecked(example_index);
 				},
 			);
 		} else {
@@ -1133,8 +1131,8 @@ fn fill_gradients_and_hessians_ordered_buffers(
 			.for_each(|(example_index_for_node, ordered_gradients)| unsafe {
 				izip!(example_index_for_node, ordered_gradients,).for_each(
 					|(example_index, ordered_gradient)| {
-						*ordered_gradient =
-							*gradients.get_unchecked(example_index.to_usize().unwrap());
+						let example_index = example_index.to_usize().unwrap();
+						*ordered_gradient = *gradients.get_unchecked(example_index);
 					},
 				);
 			});

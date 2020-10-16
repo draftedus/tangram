@@ -34,7 +34,7 @@ impl NumberStats {
 			n: 1,
 			min: value,
 			max: value,
-			mean: value.to_f64().unwrap(),
+			mean: value as f64,
 			m2: 0.0,
 			reservoir: vec![value],
 			reservoir_max_size: 100,
@@ -47,14 +47,8 @@ impl StreamingMetric<'_> for NumberStats {
 	type Output = NumberStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
-		let (new_mean, new_m2) = tangram_metrics::merge_mean_m2(
-			self.n,
-			self.mean,
-			self.m2,
-			1,
-			value.to_f64().unwrap(),
-			0.0,
-		);
+		let (new_mean, new_m2) =
+			tangram_metrics::merge_mean_m2(self.n, self.mean, self.m2, 1, value as f64, 0.0);
 		self.n += 1;
 		self.mean = new_mean;
 		self.m2 = new_m2;
