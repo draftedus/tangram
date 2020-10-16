@@ -102,6 +102,15 @@ pub enum Token {
 	Bigram(String, String),
 }
 
+impl From<features::Token> for Token {
+	fn from(value: features::Token) -> Self {
+		match value {
+			features::Token::Unigram(token) => Token::Unigram(token),
+			features::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
+		}
+	}
+}
+
 impl std::fmt::Display for Token {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
@@ -669,12 +678,7 @@ fn compute_feature_contributions<'a>(
 					let feature_contribution_value = feature_contribution_values.next().unwrap();
 					feature_contributions.push(FeatureContribution::BagOfWords {
 						column_name: feature_group.source_column_name.to_owned(),
-						token: match token.token.to_owned() {
-							features::Token::Unigram(token) => Token::Unigram(token),
-							features::Token::Bigram(token_a, token_b) => {
-								Token::Bigram(token_a, token_b)
-							}
-						},
+						token: token.token.clone().into(),
 						feature_value: feature_value > 0.0,
 						feature_contribution_value,
 					});
@@ -969,12 +973,7 @@ impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
 					.tokens
 					.into_iter()
 					.map(|token| features::BagOfWordsFeatureGroupToken {
-						token: match token.token {
-							model::Token::Unigram(token) => features::Token::Unigram(token),
-							model::Token::Bigram(token_a, token_b) => {
-								features::Token::Bigram(token_a, token_b)
-							}
-						},
+						token: token.token.into(),
 						idf: token.idf,
 					})
 					.collect::<Vec<_>>();

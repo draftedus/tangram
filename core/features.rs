@@ -2,7 +2,7 @@
 This module implements Tangram's feature engineering that prepares datasets for machine learning.
 */
 
-use crate::stats;
+use crate::{model, stats};
 use fnv::FnvBuildHasher;
 use itertools::izip;
 use ndarray::{prelude::*, s};
@@ -180,6 +180,33 @@ pub enum Token {
 	Bigram(String, String),
 }
 
+impl From<stats::Token> for Token {
+	fn from(value: stats::Token) -> Self {
+		match value {
+			stats::Token::Unigram(token) => Token::Unigram(token),
+			stats::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
+		}
+	}
+}
+
+impl From<model::Token> for Token {
+	fn from(value: model::Token) -> Self {
+		match value {
+			model::Token::Unigram(token) => Token::Unigram(token),
+			model::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
+		}
+	}
+}
+
+impl Into<model::Token> for Token {
+	fn into(self) -> model::Token {
+		match self {
+			Self::Unigram(token) => model::Token::Unigram(token),
+			Self::Bigram(token_a, token_b) => model::Token::Bigram(token_a, token_b),
+		}
+	}
+}
+
 /// A Tokenizer describes how raw text is transformed into tokens.
 #[derive(Debug)]
 pub enum Tokenizer {
@@ -288,15 +315,9 @@ fn bag_of_words_feature_group_for_column(column_stats: &stats::ColumnStatsOutput
 	let mut tokens = column_stats
 		.top_tokens
 		.iter()
-		.map(|token_stats| {
-			let token = match token_stats.token.to_owned() {
-				stats::Token::Unigram(token) => Token::Unigram(token),
-				stats::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
-			};
-			BagOfWordsFeatureGroupToken {
-				token,
-				idf: token_stats.idf,
-			}
+		.map(|token_stats| BagOfWordsFeatureGroupToken {
+			token: token_stats.token.clone().into(),
+			idf: token_stats.idf,
 		})
 		.collect::<Vec<_>>();
 	// Tokens must be sorted because we perform a binary search through them later.

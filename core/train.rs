@@ -1390,12 +1390,7 @@ impl Into<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
 				.tokens
 				.into_iter()
 				.map(|token| model::BagOfWordsFeatureGroupToken {
-					token: match token.token {
-						features::Token::Unigram(token) => model::Token::Unigram(token),
-						features::Token::Bigram(token_a, token_b) => {
-							model::Token::Bigram(token_a, token_b)
-						}
-					},
+					token: token.token.into(),
 					idf: token.idf,
 				})
 				.collect(),
