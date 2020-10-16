@@ -1,7 +1,6 @@
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
-import { ClassSelectField } from 'common/class_select_field'
 import * as definitions from 'common/definitions'
 import { renderPage } from 'common/render'
 import {
@@ -12,30 +11,26 @@ import {
 import { h } from 'preact'
 
 export type Props = {
-	aucRoc: number[]
+	aucRoc: number
 	class: string
-	classes: string[]
 	modelId: string
 	modelLayoutInfo: ModelLayoutInfo
 	pinwheelInfo: PinwheelInfo
-	rocCurveData: Array<
-		Array<{
-			falsePositiveRate: number
-			truePositiveRate: number
-		}>
-	>
+	rocCurveData: Array<{
+		falsePositiveRate: number
+		truePositiveRate: number
+	}>
 	title: string
 }
 
 export default function TrainingMetricsIndexPage(props: Props) {
-	let selectedClassIndex = props.classes.indexOf(props.class)
-	let rocData = props.rocCurveData[selectedClassIndex].map(
+	let rocData = props.rocCurveData.map(
 		({ falsePositiveRate, truePositiveRate }) => ({
 			x: falsePositiveRate,
 			y: truePositiveRate,
 		}),
 	)
-	let aucRoc = props.aucRoc[selectedClassIndex]
+	let aucRoc = props.aucRoc
 	let data = [
 		{
 			color: ui.colors.blue,
@@ -69,12 +64,6 @@ export default function TrainingMetricsIndexPage(props: Props) {
 						{'ROC Curve'}
 					</ui.TabLink>
 				</ui.TabBar>
-				<ui.Form>
-					<ClassSelectField class={props.class} classes={props.classes} />
-					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
-					</noscript>
-				</ui.Form>
 				<ui.S2>
 					<ui.H2>{'Area Under the Receiver Operating Characteristic'}</ui.H2>
 					<ui.P>{definitions.aucRoc}</ui.P>

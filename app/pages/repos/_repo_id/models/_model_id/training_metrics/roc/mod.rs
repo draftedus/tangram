@@ -9,7 +9,6 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
-use std::collections::BTreeMap;
 use tangram_util::id::Id;
 
 #[derive(serde::Serialize)]
@@ -17,7 +16,6 @@ use tangram_util::id::Id;
 struct Props {
 	id: String,
 	roc_curve_data: Vec<ROCCurveData>,
-	classes: Vec<String>,
 	model_layout_info: ModelLayoutInfo,
 	class: String,
 	auc_roc: f32,
@@ -34,10 +32,8 @@ pub async fn get(
 	request: Request<Body>,
 	context: &Context,
 	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
-	let props = props(request, context, model_id, class).await?;
+	let props = props(request, context, model_id).await?;
 	let html = context.pinwheel.render_with(
 		"/repos/_repo_id/models/_model_id/training_metrics/roc",
 		props,
@@ -49,12 +45,7 @@ pub async fn get(
 	Ok(response)
 }
 
-async fn props(
-	request: Request<Body>,
-	context: &Context,
-	model_id: &str,
-	class: Option<String>,
-) -> Result<Props> {
+async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
 	let mut db = context
 		.pool
 		.begin()
@@ -82,7 +73,7 @@ async fn props(
 				_ => return Err(Error::BadRequest.into()),
 			};
 			let classes = model.classes().to_owned();
-			let class = class.unwrap_or_else(|| classes[1].to_owned());
+			let class = classes[1].to_owned();
 			let roc_curve_data = metrics
 				.thresholds
 				.iter()
@@ -96,7 +87,6 @@ async fn props(
 			db.commit().await?;
 			Ok(Props {
 				id: model_id.to_string(),
-				classes,
 				class,
 				roc_curve_data,
 				auc_roc,

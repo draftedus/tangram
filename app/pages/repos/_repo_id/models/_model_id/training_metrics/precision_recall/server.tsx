@@ -1,7 +1,6 @@
 import { LineChart } from '@tangramhq/charts'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
-import { ClassSelectField } from 'common/class_select_field'
 import * as definitions from 'common/definitions'
 import { renderPage } from 'common/render'
 import {
@@ -13,36 +12,35 @@ import { h } from 'preact'
 
 export type Props = {
 	class: string
-	classes: string[]
-	data: Array<{
+	modelId: string
+	modelLayoutInfo: ModelLayoutInfo
+	pinwheelInfo: PinwheelInfo
+	precisionRecallCurveData: Array<{
 		precision: number
 		recall: number
 		threshold: number
 	}>
-	modelId: string
-	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
 }
 
 export default function TrainingMetricsIndexPage(props: Props) {
 	let prData = ui
 		.zip(
-			props.data.map(threshold => threshold.recall),
-			props.data.map(threshold => threshold.precision),
+			props.precisionRecallCurveData.map(threshold => threshold.recall),
+			props.precisionRecallCurveData.map(threshold => threshold.precision),
 		)
 		.map(([recall, precision]) => ({ x: recall, y: precision }))
 		.filter(v => v.x !== null && v.y !== null)
 	let precisionData = ui
 		.zip(
-			props.data.map(threshold => threshold.threshold),
-			props.data.map(threshold => threshold.precision),
+			props.precisionRecallCurveData.map(threshold => threshold.threshold),
+			props.precisionRecallCurveData.map(threshold => threshold.precision),
 		)
 		.map(([threshold, precision]) => ({ x: threshold, y: precision }))
 		.filter(v => v.x !== null && v.y !== null)
 	let recallData = ui
 		.zip(
-			props.data.map(threshold => threshold.threshold),
-			props.data.map(threshold => threshold.recall),
+			props.precisionRecallCurveData.map(threshold => threshold.threshold),
+			props.precisionRecallCurveData.map(threshold => threshold.recall),
 		)
 		.map(([threshold, recall]) => ({ x: threshold, y: recall }))
 		.filter(v => v.x !== null && v.y !== null)
@@ -81,12 +79,6 @@ export default function TrainingMetricsIndexPage(props: Props) {
 					</ui.TabLink>
 					<ui.TabLink href="roc">{'ROC Curve'}</ui.TabLink>
 				</ui.TabBar>
-				<ui.Form>
-					<ClassSelectField class={props.class} classes={props.classes} />
-					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
-					</noscript>
-				</ui.Form>
 				<ui.S2>
 					<ui.H2>{'Parametric Precision Recall Curve'}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>

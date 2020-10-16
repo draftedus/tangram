@@ -165,7 +165,6 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 				request,
 				&context,
 				model_id,
-				search_params,
 			)
 			.await
 		}
@@ -174,7 +173,6 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 				request,
 				&context,
 				model_id,
-				search_params,
 			)
 			.await
 		}
