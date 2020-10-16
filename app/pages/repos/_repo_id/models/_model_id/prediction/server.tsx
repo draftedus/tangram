@@ -70,6 +70,7 @@ type TextColumn = {
 
 enum PredictionType {
 	Regression = 'regression',
+	BinaryClassification = 'binary_classification',
 	MulticlassClassification = 'multiclass_classification',
 }
 
@@ -79,14 +80,13 @@ type Prediction =
 			value: RegressionPrediction
 	  }
 	| {
-			type: PredictionType.MulticlassClassification
+			type: PredictionType.BinaryClassification
 			value: BinaryClassificationPrediction
 	  }
 	| {
 			type: PredictionType.MulticlassClassification
 			value: MulticlassClassificationPrediction
 	  }
-	| null
 
 type RegressionPrediction = {
 	featureContributionsChartData: FeatureContributionsChartData
@@ -117,15 +117,22 @@ export default function PredictPage(props: Props) {
 			selectedItem={ModelSideNavItem.Prediction}
 		>
 			{props.prediction === null ? (
-				<PredictionForm {...props} />
+				<PredictionForm columns={props.columns} />
 			) : (
-				<PredictionResult {...props} />
+				<PredictionResult
+					columns={props.columns}
+					prediction={props.prediction}
+				/>
 			)}
 		</ModelLayout>,
 	)
 }
 
-function PredictionForm(props: Props) {
+type PredictionFormProps = {
+	columns: Column[]
+}
+
+function PredictionForm(props: PredictionFormProps) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Prediction'}</ui.H1>
@@ -295,7 +302,33 @@ function TextField(props: TextFieldProps) {
 	)
 }
 
-function PredictionResult(props: Props) {
+export type PredictionResultProps = {
+	columns: Column[]
+	prediction: Prediction
+}
+
+function PredictionResult(props: PredictionResultProps) {
+	let inner
+	console.log(JSON.stringify(props, null, 2))
+	switch (props.prediction.type) {
+		case PredictionType.Regression:
+			inner = <RegressionPredictionResult prediction={props.prediction.value} />
+			break
+		case PredictionType.BinaryClassification:
+			inner = (
+				<BinaryClassificationPredictionResult
+					prediction={props.prediction.value}
+				/>
+			)
+			break
+		case PredictionType.MulticlassClassification:
+			inner = (
+				<MulticlassClassificationPredictionResult
+					prediction={props.prediction.value}
+				/>
+			)
+			break
+	}
 	return (
 		<ui.S1>
 			<ui.H1>{'Prediction'}</ui.H1>
@@ -308,29 +341,25 @@ function PredictionResult(props: Props) {
 						<span style="color: var(--text-color)">{column.value}</span>
 					</div>
 				))}
+				{inner}
 			</div>
-			{props.prediction &&
-				(props.prediction.type === PredictionType.Regression ? (
-					<RegressionOutput {...props.prediction.value} />
-				) : props.prediction.type ===
-				  PredictionType.MulticlassClassification ? (
-					<MulticlassClassificationOutput {...props.prediction.value} />
-				) : null)}
 		</ui.S1>
 	)
 }
 
-type RegressionPredictionOutputProps = {
-	featureContributionsChartData: FeatureContributionsChartData
-	value: number
+type RegressionPredictionResultProps = {
+	prediction: RegressionPrediction
 }
 
-function RegressionOutput(props: RegressionPredictionOutputProps) {
+function RegressionPredictionResult(props: RegressionPredictionResultProps) {
 	return (
 		<ui.S2>
 			<ui.H2>{'Output'}</ui.H2>
 			<ui.Card>
-				<ui.NumberChart title="Predicted" value={props.value.toString()} />
+				<ui.NumberChart
+					title="Predicted"
+					value={props.prediction.value.toString()}
+				/>
 			</ui.Card>
 			<ui.H2>{'Explanation'}</ui.H2>
 			<ui.P>
@@ -338,7 +367,7 @@ function RegressionOutput(props: RegressionPredictionOutputProps) {
 			</ui.P>
 			<ui.Card>
 				<FeatureContributionsChart
-					data={props.featureContributionsChartData}
+					data={props.prediction.featureContributionsChartData}
 					id="regression_feature_contributions"
 					includeXAxisTitle={true}
 					includeYAxisLabels={false}
@@ -351,15 +380,55 @@ function RegressionOutput(props: RegressionPredictionOutputProps) {
 	)
 }
 
-type MulticlassClassificationPredictionOutputProps = MulticlassClassificationPrediction
+type BinaryClassificationPredictionResultProps = {
+	prediction: BinaryClassificationPrediction
+}
 
-function MulticlassClassificationOutput(
-	props: MulticlassClassificationPredictionOutputProps,
+function BinaryClassificationPredictionResult(
+	props: BinaryClassificationPredictionResultProps,
+) {
+	return (
+		<ui.S2>
+			<ui.H2>{'Output'}</ui.H2>
+			<ui.Card>
+				<ui.NumberChart title="Prediction" value={props.prediction.className} />
+			</ui.Card>
+			<ui.Card>
+				<ui.NumberChart
+					title="Probability"
+					value={ui.formatPercent(props.prediction.probability, 2)}
+				/>
+			</ui.Card>
+			<ui.H2>{'Explanation'}</ui.H2>
+			<ui.P>
+				{"This chart shows how the input values influenced the model's output."}
+			</ui.P>
+			<ui.Card>
+				<FeatureContributionsChart
+					data={props.prediction.featureContributionsChartData}
+					id="binary_classification_feature_contributions"
+					includeXAxisTitle={true}
+					includeYAxisLabels={true}
+					includeYAxisTitle={true}
+					negativeColor={ui.colors.red}
+					positiveColor={ui.colors.green}
+				/>
+			</ui.Card>
+		</ui.S2>
+	)
+}
+
+type MulticlassClassificationPredictionResultProps = {
+	prediction: MulticlassClassificationPrediction
+}
+
+function MulticlassClassificationPredictionResult(
+	props: MulticlassClassificationPredictionResultProps,
 ) {
 	let probabilityData = [
 		{
 			color: ui.colors.blue,
-			data: props.probabilities.map(([label, probability], i) => ({
+			data: props.prediction.probabilities.map(([label, probability], i) => ({
 				label,
 				x: i,
 				y: probability,
@@ -371,12 +440,12 @@ function MulticlassClassificationOutput(
 		<ui.S2>
 			<ui.H2>{'Output'}</ui.H2>
 			<ui.Card>
-				<ui.NumberChart title="Prediction" value={props.className} />
+				<ui.NumberChart title="Prediction" value={props.prediction.className} />
 			</ui.Card>
 			<ui.Card>
 				<ui.NumberChart
 					title="Probability"
-					value={ui.formatPercent(props.probability, 2)}
+					value={ui.formatPercent(props.prediction.probability, 2)}
 				/>
 			</ui.Card>
 			<BarChart
@@ -390,8 +459,8 @@ function MulticlassClassificationOutput(
 			</ui.P>
 			<ui.Card>
 				<FeatureContributionsChart
-					data={props.featureContributionsChartData}
-					id="classification_feature_contributions"
+					data={props.prediction.featureContributionsChartData}
+					id="multiclass_classification_feature_contributions"
 					includeXAxisTitle={true}
 					includeYAxisLabels={true}
 					includeYAxisTitle={true}
