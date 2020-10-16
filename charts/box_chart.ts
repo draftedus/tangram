@@ -342,6 +342,18 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 		strokeWidth: chartConfig.barStrokeWidth,
 	})
 
+	// Create a clip path so the median line will not overflow the box.
+	ctx.save()
+	drawRoundedRect({
+		box,
+		ctx,
+		radius: Math.min(
+			Math.abs(box.h / 2),
+			Math.abs(box.w / 6),
+			chartConfig.maxCornerRadius,
+		),
+	})
+	ctx.clip()
 	// Draw the median line.
 	let medianBox = {
 		h: lineWidth,
@@ -366,6 +378,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 			value: point.y.p50,
 		}),
 	)
+	ctx.restore()
 
 	// Draw the min line.
 	drawLine({
