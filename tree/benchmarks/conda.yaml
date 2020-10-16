@@ -1,4 +1,4 @@
-name: benchmarks
+name: tangram_tree_benchmarks
 channels:
   - conda-forge
   - h2oai
