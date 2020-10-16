@@ -473,9 +473,11 @@ pub fn predict(
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
+			let feature_contributions = model.model.compute_feature_contributions(features.view());
 			let output = probabilities
 				.axis_iter(Axis(0))
-				.map(|probabilities| {
+				.zip(feature_contributions)
+				.map(|(probabilities, feature_contributions)| {
 					let (probability, class_name) = probabilities
 						.iter()
 						.zip(model.model.classes.iter())
@@ -486,11 +488,35 @@ pub fn predict(
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
+					let feature_contributions = model
+						.model
+						.classes
+						.iter()
+						.zip(feature_contributions.iter())
+						.map(|(class, feature_contributions)| {
+							let baseline_value = feature_contributions.baseline_value;
+							let output_value = feature_contributions.output_value;
+							let feature_contributions = compute_feature_contributions(
+								model.feature_groups.iter(),
+								features.iter().cloned(),
+								feature_contributions
+									.feature_contribution_values
+									.iter()
+									.cloned(),
+							);
+							let feature_contributions = FeatureContributions {
+								baseline_value,
+								output_value,
+								feature_contributions,
+							};
+							(class.to_owned(), feature_contributions)
+						})
+						.collect();
 					MulticlassClassificationPredictOutput {
 						class_name: class_name.to_owned(),
 						probability: *probability,
 						probabilities,
-						feature_contributions: None,
+						feature_contributions: Some(feature_contributions),
 					}
 				})
 				.collect();
@@ -516,9 +542,11 @@ pub fn predict(
 			model
 				.model
 				.predict(features.view(), probabilities.view_mut());
+			let feature_contributions = model.model.compute_feature_contributions(features.view());
 			let output = probabilities
 				.axis_iter(Axis(0))
-				.map(|probabilities| {
+				.zip(feature_contributions)
+				.map(|(probabilities, feature_contributions)| {
 					let (probability, class_name) = probabilities
 						.iter()
 						.zip(model.model.classes.iter())
@@ -529,11 +557,41 @@ pub fn predict(
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect::<BTreeMap<String, f32>>();
+					let feature_contributions = model
+						.model
+						.classes
+						.iter()
+						.zip(feature_contributions.iter())
+						.map(|(class, feature_contributions)| {
+							let baseline_value = feature_contributions.baseline_value;
+							let output_value = feature_contributions.output_value;
+							let feature_contributions = compute_feature_contributions(
+								model.feature_groups.iter(),
+								features.iter().map(|v| match v {
+									tangram_dataframe::DataFrameValue::Number(value) => *value,
+									tangram_dataframe::DataFrameValue::Enum(value) => {
+										value.map(|v| v.get()).unwrap_or(0).to_f32().unwrap()
+									}
+									_ => unreachable!(),
+								}),
+								feature_contributions
+									.feature_contribution_values
+									.iter()
+									.cloned(),
+							);
+							let feature_contributions = FeatureContributions {
+								baseline_value,
+								output_value,
+								feature_contributions,
+							};
+							(class.to_owned(), feature_contributions)
+						})
+						.collect();
 					MulticlassClassificationPredictOutput {
 						class_name: class_name.to_owned(),
 						probability: *probability,
 						probabilities,
-						feature_contributions: None,
+						feature_contributions: Some(feature_contributions),
 					}
 				})
 				.collect();
