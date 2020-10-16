@@ -6,6 +6,9 @@ use fnv::FnvBuildHasher;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
+use rand::seq::SliceRandom;
+use rand::SeedableRng;
+use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::HashMap, num::NonZeroUsize};
 
 mod load;
@@ -196,6 +199,18 @@ impl DataFrame {
 	pub fn view(&self) -> DataFrameView {
 		let columns = self.columns.iter().map(|column| column.view()).collect();
 		DataFrameView { columns }
+	}
+
+	pub fn shuffle(&mut self, seed: u64) {
+		self.columns_mut().iter_mut().for_each(|column| {
+			let mut rng = Xoshiro256Plus::seed_from_u64(seed);
+			match column {
+				DataFrameColumn::Unknown(_) => {}
+				DataFrameColumn::Number(column) => column.data_mut().shuffle(&mut rng),
+				DataFrameColumn::Enum(column) => column.data_mut().shuffle(&mut rng),
+				DataFrameColumn::Text(column) => column.data_mut().shuffle(&mut rng),
+			}
+		});
 	}
 
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {

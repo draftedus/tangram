@@ -5,9 +5,6 @@ use crate::{
 use anyhow::{format_err, Context, Result};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use rand::seq::SliceRandom;
-use rand::SeedableRng;
-use rand_xoshiro::Xoshiro256Plus;
 use std::{collections::BTreeMap, path::Path};
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{self as metrics};
@@ -483,15 +480,7 @@ fn shuffle(
 	// Shuffle the dataframe.
 	if let Some(seed) = shuffle_options {
 		update_progress(Progress::Shuffling);
-		dataframe.columns_mut().iter_mut().for_each(|column| {
-			let mut rng = Xoshiro256Plus::seed_from_u64(seed);
-			match column {
-				DataFrameColumn::Unknown(_) => {}
-				DataFrameColumn::Number(column) => column.data_mut().shuffle(&mut rng),
-				DataFrameColumn::Enum(column) => column.data_mut().shuffle(&mut rng),
-				DataFrameColumn::Text(column) => column.data_mut().shuffle(&mut rng),
-			}
-		});
+		dataframe.shuffle(seed)
 	}
 }
 

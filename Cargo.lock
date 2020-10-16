@@ -2146,8 +2146,6 @@ dependencies = [
  "itertools",
  "ndarray",
  "num-traits",
- "rand",
- "rand_xoshiro",
  "rmp-serde",
  "serde",
  "serde_json",
@@ -2171,6 +2169,8 @@ dependencies = [
  "lexical",
  "ndarray",
  "num-traits",
+ "rand",
+ "rand_xoshiro",
 ]
 
 [[package]]
