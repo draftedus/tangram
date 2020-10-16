@@ -3,26 +3,6 @@ use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 
-// #[derive(Clone)]
-// pub struct SumGradientsSumHessiansForFeatures {
-// 	pub features: Vec<SumGradientsSumHessiansForFeature>,
-// }
-
-// #[derive(Clone)]
-// pub struct SumGradientsSumHessiansForFeature {
-// 	invalid_bin: SumGradientsSumHessiansForBin,
-// 	bins: Vec<SumGradientsSumHessiansForBin>,
-// }
-
-// #[derive(Clone, Default)]
-// pub struct SumGradientsSumHessiansForBin {
-// 	pub sum_gradients: f64,
-// 	pub sum_hessians: f64,
-// }
-
-// #[derive(Clone)]
-// pub struct BinStats(pub Vec<Vec<BinStatsEntry>>);
-
 /// This struct tracks the sum of gradients and hessians for all examples across all bins for all features.
 #[derive(Clone, Debug)]
 pub enum BinStats {
@@ -233,15 +213,14 @@ unsafe fn compute_bin_stats_column_major_not_root_no_hessians<T>(
 	for i in 0..prefetch_len {
 		#[cfg(target_arch = "x86_64")]
 		{
-			let prefetch_index = examples_index
-				.get_unchecked(i + PREFETCH_OFFSET)
-				.to_usize()
-				.unwrap();
+			let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
+			let prefetch_index = prefetch_index.to_usize().unwrap();
 			let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
 			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
 		}
 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
-		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(i);
+		let example_index = example_index.to_usize().unwrap();
 		let bin_index = binned_feature_values
 			.get_unchecked(example_index)
 			.to_usize()
@@ -252,7 +231,8 @@ unsafe fn compute_bin_stats_column_major_not_root_no_hessians<T>(
 	}
 	for i in prefetch_len..len {
 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
-		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(i);
+		let example_index = example_index.to_usize().unwrap();
 		let bin_index = binned_feature_values
 			.get_unchecked(example_index)
 			.to_usize()
@@ -277,16 +257,15 @@ pub unsafe fn compute_bin_stats_column_major_not_root_yes_hessians<T>(
 	for i in 0..prefetch_len {
 		#[cfg(target_arch = "x86_64")]
 		{
-			let prefetch_index = examples_index
-				.get_unchecked(i + PREFETCH_OFFSET)
-				.to_usize()
-				.unwrap();
+			let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
+			let prefetch_index = prefetch_index.to_usize().unwrap();
 			let prefetch_ptr = binned_feature_values.as_ptr().add(prefetch_index) as *const i8;
 			core::arch::x86_64::_mm_prefetch(prefetch_ptr, core::arch::x86_64::_MM_HINT_T0);
 		}
 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
 		let ordered_hessian = *ordered_hessians.get_unchecked(i);
-		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(i);
+		let example_index = example_index.to_usize().unwrap();
 		let bin_index = binned_feature_values
 			.get_unchecked(example_index)
 			.to_usize()
@@ -298,7 +277,8 @@ pub unsafe fn compute_bin_stats_column_major_not_root_yes_hessians<T>(
 	for i in prefetch_len..len {
 		let ordered_gradient = *ordered_gradients.get_unchecked(i);
 		let ordered_hessian = *ordered_hessians.get_unchecked(i);
-		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(i);
+		let example_index = example_index.to_usize().unwrap();
 		let bin_index = binned_feature_values
 			.get_unchecked(example_index)
 			.to_usize()
@@ -388,7 +368,8 @@ pub unsafe fn compute_bin_stats_row_major_root_no_hessians<T>(
 		let row = binned_feature_values.row(i);
 		let ordered_gradient = *gradients.get_unchecked(i);
 		row.iter().for_each(|bin_index| {
-			let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index.to_usize().unwrap());
+			let bin_index = bin_index.to_usize().unwrap();
+			let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
 			bin_stats.sum_gradients += ordered_gradient as f64;
 			bin_stats.sum_hessians += 1.0;
 		});
@@ -409,7 +390,8 @@ pub unsafe fn compute_bin_stats_row_major_root_yes_hessians<T>(
 		let ordered_gradient = *gradients.get_unchecked(i);
 		let ordered_hessian = *hessians.get_unchecked(i);
 		row.iter().for_each(|bin_index| {
-			let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index.to_usize().unwrap());
+			let bin_index = bin_index.to_usize().unwrap();
+			let bin_stats = bin_stats_for_feature.get_unchecked_mut(bin_index);
 			bin_stats.sum_gradients += ordered_gradient as f64;
 			bin_stats.sum_hessians += ordered_hessian as f64;
 		});
@@ -430,10 +412,8 @@ pub unsafe fn compute_bin_stats_row_major_not_root_no_hessians<T>(
 	for i in 0..prefetch_len {
 		#[cfg(target_arch = "x86_64")]
 		{
-			let prefetch_index = examples_index
-				.get_unchecked(i + PREFETCH_OFFSET)
-				.to_usize()
-				.unwrap();
+			let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
+			let prefetch_index = prefetch_index.to_usize().unwrap();
 			let prefetch_ptr = binned_feature_values
 				.as_ptr()
 				.add(prefetch_index * n_features) as *const i8;
@@ -443,21 +423,25 @@ pub unsafe fn compute_bin_stats_row_major_not_root_no_hessians<T>(
 				core::arch::x86_64::_MM_HINT_T0,
 			);
 		}
-		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(i);
+		let example_index = example_index.to_usize().unwrap();
 		let ordered_gradient = *gradients.get_unchecked(example_index);
 		let row = binned_feature_values.row(example_index);
 		row.iter().for_each(|bin_index| {
-			let bin_stats = bin_stats.get_unchecked_mut(bin_index.to_usize().unwrap());
+			let bin_index = bin_index.to_usize().unwrap();
+			let bin_stats = bin_stats.get_unchecked_mut(bin_index);
 			bin_stats.sum_gradients += ordered_gradient as f64;
 			bin_stats.sum_hessians += 1.0;
 		});
 	}
 	for i in prefetch_len..len {
-		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(i);
+		let example_index = example_index.to_usize().unwrap();
 		let ordered_gradient = *gradients.get_unchecked(example_index);
 		let row = binned_feature_values.row(example_index);
 		row.iter().for_each(|bin_index| {
-			let bin_stats = bin_stats.get_unchecked_mut(bin_index.to_usize().unwrap());
+			let bin_index = bin_index.to_usize().unwrap();
+			let bin_stats = bin_stats.get_unchecked_mut(bin_index);
 			bin_stats.sum_gradients += ordered_gradient as f64;
 			bin_stats.sum_hessians += 1.0;
 		});
@@ -479,10 +463,8 @@ pub unsafe fn compute_bin_stats_row_major_not_root_yes_hessians<T>(
 	for i in 0..prefetch_len {
 		#[cfg(target_arch = "x86_64")]
 		{
-			let prefetch_index = examples_index
-				.get_unchecked(i + PREFETCH_OFFSET)
-				.to_usize()
-				.unwrap();
+			let prefetch_index = *examples_index.get_unchecked(i + PREFETCH_OFFSET);
+			let prefetch_index = prefetch_index.to_usize().unwrap();
 			let prefetch_ptr = binned_feature_values
 				.as_ptr()
 				.add(prefetch_index * n_features) as *const i8;
@@ -500,7 +482,8 @@ pub unsafe fn compute_bin_stats_row_major_not_root_yes_hessians<T>(
 				core::arch::x86_64::_MM_HINT_T0,
 			);
 		}
-		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(i);
+		let example_index = example_index.to_usize().unwrap();
 		let ordered_gradient = *gradients.get_unchecked(example_index);
 		let ordered_hessian = *hessians.get_unchecked(example_index);
 		let binned_feature_row_start = example_index * n_features;
@@ -515,7 +498,8 @@ pub unsafe fn compute_bin_stats_row_major_not_root_yes_hessians<T>(
 		}
 	}
 	for i in prefetch_len..len {
-		let example_index = examples_index.get_unchecked(i).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(i);
+		let example_index = example_index.to_usize().unwrap();
 		let ordered_gradient = *gradients.get_unchecked(example_index);
 		let ordered_hessian = *hessians.get_unchecked(example_index);
 		let binned_feature_row_start = example_index * n_features;

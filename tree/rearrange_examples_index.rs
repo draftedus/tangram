@@ -107,7 +107,8 @@ unsafe fn rearrange_examples_index_serial_continuous<T>(
 	T: ToPrimitive,
 {
 	while left < right {
-		let example_index = examples_index.get_unchecked(*left).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(*left);
+		let example_index = example_index.to_usize().unwrap();
 		let binned_feature_value = binned_feature_values
 			.get_unchecked(example_index)
 			.to_usize()
@@ -135,7 +136,8 @@ unsafe fn rearrange_examples_index_serial_discrete<T>(
 	T: ToPrimitive,
 {
 	while left < right {
-		let example_index = examples_index.get_unchecked(*left).to_usize().unwrap();
+		let example_index = *examples_index.get_unchecked(*left);
+		let example_index = example_index.to_usize().unwrap();
 		let binned_feature_value = binned_feature_values
 			.get_unchecked(example_index)
 			.to_usize()
@@ -298,7 +300,7 @@ unsafe fn rearrange_examples_index_parallel_step_one_continuous<T>(
 	n_left: &mut usize,
 	n_right: &mut usize,
 	bin_index: usize,
-	examples_index: &mut [u32],
+	examples_index: &[u32],
 	examples_index_left_buffer: &mut [u32],
 	examples_index_right_buffer: &mut [u32],
 	binned_feature_values: &[T],
@@ -324,7 +326,7 @@ unsafe fn rearrange_examples_index_parallel_step_one_discrete<T>(
 	n_left: &mut usize,
 	n_right: &mut usize,
 	directions: &[SplitDirection],
-	examples_index: &mut [u32],
+	examples_index: &[u32],
 	examples_index_left_buffer: &mut [u32],
 	examples_index_right_buffer: &mut [u32],
 	binned_feature_values: &[T],
