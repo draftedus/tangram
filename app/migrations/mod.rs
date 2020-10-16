@@ -6,7 +6,7 @@ fn migrations() -> BTreeMap<&'static str, &'static str> {
 	let mut migrations: BTreeMap<&str, &str> = BTreeMap::new();
 	migrations.insert(
 		"2020-01-01-000000-init.sql",
-		include_str!("./2020-01-01-000000-init.sql"),
+		include_str!("./2020_01_01_000000_init.sql"),
 	);
 	migrations
 }
