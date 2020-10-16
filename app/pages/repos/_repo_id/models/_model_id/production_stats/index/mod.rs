@@ -44,25 +44,32 @@ struct OverallColumnStats {
 }
 
 #[derive(serde::Serialize)]
-#[serde(tag = "type", content = "data", rename_all = "camelCase")]
+#[serde(tag = "type", content = "data")]
 enum PredictionStatsChart {
+	#[serde(rename = "regression")]
 	Regression(RegressionChartEntry),
+	#[serde(rename = "classification")]
 	Classification(ClassificationChartEntry),
 }
 
 #[derive(serde::Serialize)]
-#[serde(tag = "type", content = "data", rename_all = "camelCase")]
+#[serde(tag = "type", content = "data")]
 enum PredictionStatsIntervalChart {
+	#[serde(rename = "regression")]
 	Regression(Vec<RegressionChartEntry>),
+	#[serde(rename = "classification")]
 	Classification(Vec<ClassificationChartEntry>),
 }
 
 #[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
 enum ColumnType {
+	#[serde(rename = "unknown")]
 	Unknown,
+	#[serde(rename = "number")]
 	Number,
+	#[serde(rename = "enum")]
 	Enum,
+	#[serde(rename = "text")]
 	Text,
 }
 

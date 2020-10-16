@@ -4,26 +4,36 @@ import {
 	hydrateFeatureContributionsChart,
 } from '@tangramhq/charts'
 
-if (document.getElementById('probabilities')) {
-	hydrateBarChart('probabilities')
-}
-if (document.getElementById('regression_feature_contributions')) {
-	hydrateFeatureContributionsChart('regression_feature_contributions')
-}
-if (document.getElementById('classification_feature_contributions')) {
-	hydrateFeatureContributionsChart('classification_feature_contributions')
-}
-
-let barCharts = document.querySelectorAll(
+let inputFieldBarCharts = document.querySelectorAll(
 	'.column-chart[data-chart-type="bar"]',
 )
-barCharts.forEach(barChart => {
+inputFieldBarCharts.forEach(barChart => {
 	hydrateBarChart(barChart.id)
 })
 
-let boxCharts = document.querySelectorAll(
+let inputFieldBoxCharts = document.querySelectorAll(
 	'.column-chart[data-chart-type="box"]',
 )
-boxCharts.forEach(boxChart => {
+inputFieldBoxCharts.forEach(boxChart => {
 	hydrateBoxChart(boxChart.id)
 })
+
+if (document.getElementById('probabilities')) {
+	hydrateBarChart('probabilities')
+}
+
+if (document.getElementById('regression_feature_contributions')) {
+	hydrateFeatureContributionsChart('regression_feature_contributions')
+}
+if (document.getElementById('binary_classification_feature_contributions')) {
+	hydrateFeatureContributionsChart(
+		'binary_classification_feature_contributions',
+	)
+}
+if (
+	document.getElementById('multiclass_classification_feature_contributions')
+) {
+	hydrateFeatureContributionsChart(
+		'multiclass_classification_feature_contributions',
+	)
+}

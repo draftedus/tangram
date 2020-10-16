@@ -21,10 +21,11 @@ struct Props {
 }
 
 #[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 enum Inner {
+	#[serde(rename = "regressor")]
 	Regressor(Regressor),
+	#[serde(rename = "classifier")]
 	Classifier(Classifier),
 }
 

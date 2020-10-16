@@ -31,7 +31,7 @@ pub struct TrueValueMonitorEvent {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", untagged)]
+#[serde(untagged)]
 pub enum Output {
 	Regression(RegressionOutput),
 	Classification(ClassificationOutput),

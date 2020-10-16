@@ -67,23 +67,26 @@ pub struct FeatureContributions {
 }
 
 #[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
 #[serde(tag = "feature_type")]
 pub enum FeatureContribution {
+	#[serde(rename = "identity")]
 	Identity {
 		column_name: String,
 		feature_contribution_value: f32,
 	},
+	#[serde(rename = "normalized")]
 	Normalized {
 		column_name: String,
 		feature_contribution_value: f32,
 	},
+	#[serde(rename = "one_hot_encoded")]
 	OneHotEncoded {
 		column_name: String,
 		option: Option<String>,
 		feature_value: bool,
 		feature_contribution_value: f32,
 	},
+	#[serde(rename = "bag_of_words")]
 	BagOfWords {
 		column_name: String,
 		token: String,

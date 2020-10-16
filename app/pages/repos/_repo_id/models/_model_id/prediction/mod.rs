@@ -23,11 +23,15 @@ struct Props {
 }
 
 #[derive(serde::Serialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type")]
 enum Column {
+	#[serde(rename = "unknown")]
 	Unknown(Unknown),
+	#[serde(rename = "number")]
 	Number(Number),
+	#[serde(rename = "enum")]
 	Enum(Enum),
+	#[serde(rename = "text")]
 	Text(Text),
 }
 
@@ -66,10 +70,13 @@ struct Text {
 }
 
 #[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase", tag = "type", content = "value")]
+#[serde(tag = "type", content = "value")]
 enum Prediction {
+	#[serde(rename = "regression")]
 	Regression(RegressionPrediction),
+	#[serde(rename = "binary_classification")]
 	BinaryClassification(BinaryClassificationPrediction),
+	#[serde(rename = "multiclass_classification")]
 	MulticlassClassification(MulticlassClassificationPrediction),
 }
 

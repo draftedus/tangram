@@ -38,11 +38,14 @@ struct ColumnStats {
 }
 
 #[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
 enum ColumnType {
+	#[serde(rename = "unknown")]
 	Unknown,
+	#[serde(rename = "number")]
 	Number,
+	#[serde(rename = "enum")]
 	Enum,
+	#[serde(rename = "text")]
 	Text,
 }
 

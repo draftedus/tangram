@@ -13,10 +13,12 @@ pub enum DateWindow {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Copy, Debug)]
-#[serde(rename_all = "camelCase")]
 pub enum DateWindowInterval {
+	#[serde(rename = "hourly")]
 	Hourly,
+	#[serde(rename = "daily")]
 	Daily,
+	#[serde(rename = "monthly")]
 	Monthly,
 }
 

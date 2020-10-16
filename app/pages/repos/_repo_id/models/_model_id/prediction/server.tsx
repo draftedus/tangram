@@ -70,7 +70,7 @@ type TextColumn = {
 
 enum PredictionType {
 	Regression = 'regression',
-	Classification = 'classification',
+	MulticlassClassification = 'multiclass_classification',
 }
 
 type Prediction =
@@ -79,8 +79,12 @@ type Prediction =
 			value: RegressionPrediction
 	  }
 	| {
-			type: PredictionType.Classification
-			value: ClassificationPrediction
+			type: PredictionType.MulticlassClassification
+			value: BinaryClassificationPrediction
+	  }
+	| {
+			type: PredictionType.MulticlassClassification
+			value: MulticlassClassificationPrediction
 	  }
 	| null
 
@@ -89,7 +93,15 @@ type RegressionPrediction = {
 	value: number
 }
 
-type ClassificationPrediction = {
+type BinaryClassificationPrediction = {
+	className: string
+	classes: string[]
+	featureContributionsChartData: FeatureContributionsChartData
+	probabilities: Array<[string, number]>
+	probability: number
+}
+
+type MulticlassClassificationPrediction = {
 	className: string
 	classes: string[]
 	featureContributionsChartData: FeatureContributionsChartData
@@ -300,8 +312,9 @@ function PredictionResult(props: Props) {
 			{props.prediction &&
 				(props.prediction.type === PredictionType.Regression ? (
 					<RegressionOutput {...props.prediction.value} />
-				) : props.prediction.type === PredictionType.Classification ? (
-					<ClassificationOutput {...props.prediction.value} />
+				) : props.prediction.type ===
+				  PredictionType.MulticlassClassification ? (
+					<MulticlassClassificationOutput {...props.prediction.value} />
 				) : null)}
 		</ui.S1>
 	)
@@ -338,9 +351,11 @@ function RegressionOutput(props: RegressionPredictionOutputProps) {
 	)
 }
 
-type ClassificationPredictionOutputProps = ClassificationPrediction
+type MulticlassClassificationPredictionOutputProps = MulticlassClassificationPrediction
 
-function ClassificationOutput(props: ClassificationPredictionOutputProps) {
+function MulticlassClassificationOutput(
+	props: MulticlassClassificationPredictionOutputProps,
+) {
 	let probabilityData = [
 		{
 			color: ui.colors.blue,

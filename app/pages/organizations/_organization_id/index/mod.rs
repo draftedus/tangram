@@ -59,20 +59,20 @@ enum Action {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(rename = "camelCase")]
+#[serde(rename_all = "camelCase")]
 struct ChangePlanAction {
 	plan: Plan,
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct DeleteMemberAction {
-	#[serde(rename = "memberId")]
 	member_id: String,
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct FinishStripeCheckoutAction {
-	#[serde(rename = "stripeCheckoutSessionId")]
 	stripe_checkout_session_id: String,
 }
 

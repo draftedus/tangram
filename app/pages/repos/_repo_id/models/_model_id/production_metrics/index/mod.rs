@@ -26,9 +26,11 @@ struct Props {
 }
 
 #[derive(serde::Serialize)]
-#[serde(tag = "type", content = "value", rename_all = "camelCase")]
+#[serde(tag = "type", content = "value")]
 enum Inner {
+	#[serde(rename = "regressor")]
 	Regressor(RegressorProductionMetricsOverview),
+	#[serde(rename = "classifier")]
 	Classifier(ClassifierProductionMetricsOverview),
 }
 

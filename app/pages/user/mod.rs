@@ -49,8 +49,9 @@ struct Repo {
 }
 
 #[derive(serde::Deserialize, Debug)]
-#[serde(tag = "action", rename_all = "camelCase")]
+#[serde(tag = "action")]
 enum Action {
+	#[serde(rename = "logout")]
 	Logout,
 }
 
