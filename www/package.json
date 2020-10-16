@@ -6,10 +6,6 @@
 		"preact": "10.5.4",
 		"preact-render-to-string": "5.1.10"
 	},
-	"files": [
-		"**/*.ts",
-		"**/*.tsx"
-	],
 	"license": "UNLICENSED",
 	"main": "mod.ts",
 	"name": "@tangramhq/www",
