@@ -97,9 +97,15 @@ pub fn train(
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
 	let binned_features_row_major =
-		compute_binned_features_row_major(&features_train, &binning_instructions, &|| {
-			progress_counter.inc(1)
-		});
+		if let BinnedFeaturesLayout::RowMajor = train_options.binned_features_layout {
+			Some(compute_binned_features_row_major(
+				&features_train,
+				&binning_instructions,
+				&|| progress_counter.inc(1),
+			))
+		} else {
+			None
+		};
 	let binned_features_column_major =
 		compute_binned_features_column_major(&features_train, &binning_instructions, &|| {
 			progress_counter.inc(1)

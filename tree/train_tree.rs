@@ -180,7 +180,7 @@ impl std::cmp::Ord for QueueItem {
 
 pub struct TrainTreeOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
-	pub binned_features_row_major: &'a BinnedFeaturesRowMajor,
+	pub binned_features_row_major: &'a Option<BinnedFeaturesRowMajor>,
 	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub examples_index_left_buffer: &'a mut [u32],
@@ -229,12 +229,12 @@ pub fn train_tree(options: TrainTreeOptions) -> TrainTree {
 	// Choose the best split for the root node.
 	let choose_best_split_output_root = choose_best_split_root(ChooseBestSplitRootOptions {
 		bin_stats_pool,
-		binning_instructions,
 		binned_features_column_major,
+		binned_features_row_major,
+		binning_instructions,
 		gradients,
 		hessians_are_constant,
 		hessians,
-		binned_features_row_major,
 		#[cfg(feature = "timing")]
 		timing,
 		train_options,

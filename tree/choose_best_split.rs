@@ -24,7 +24,7 @@ use tangram_util::{
 pub struct ChooseBestSplitRootOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
 	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
-	pub binned_features_row_major: &'a BinnedFeaturesRowMajor,
+	pub binned_features_row_major: &'a Option<BinnedFeaturesRowMajor>,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub gradients: &'a [f32],
 	pub hessians_are_constant: bool,
@@ -37,7 +37,7 @@ pub struct ChooseBestSplitRootOptions<'a> {
 pub struct ChooseBestSplitsNotRootOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
 	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
-	pub binned_features_row_major: &'a BinnedFeaturesRowMajor,
+	pub binned_features_row_major: &'a Option<BinnedFeaturesRowMajor>,
 	pub binning_instructions: &'a [BinningInstruction],
 	pub gradients_ordered_buffer: &'a mut [f32],
 	pub gradients: &'a [f32],
@@ -162,7 +162,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 				let bin_stats = bin_stats.as_row_major_mut().unwrap();
 				choose_best_split_root_row_major(ChooseBestSplitRootRowMajorOptions {
 					bin_stats,
-					binned_features_row_major,
+					binned_features_row_major: binned_features_row_major.as_ref().unwrap(),
 					binning_instructions,
 					gradients,
 					hessians_are_constant,
@@ -426,7 +426,7 @@ pub fn choose_best_splits_not_root(
 				should_try_to_split_right_child,
 				smaller_child_bin_stats,
 				larger_child_bin_stats,
-				binned_features_row_major,
+				binned_features_row_major: binned_features_row_major.as_ref().unwrap(),
 				binning_instructions,
 				gradients,
 				hessians_are_constant,
