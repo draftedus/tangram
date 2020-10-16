@@ -61,24 +61,13 @@ function Hero() {
 }
 
 function Video() {
-	let videoStyle = {
-		border: 'none',
-		bottom: '0',
-		height: '100%',
-		left: '0',
-		outline: 'none',
-		position: 'absolute',
-		right: '0',
-		top: '0',
-		width: '100%',
-	}
 	return (
 		<div class="index-wrapper">
 			<div class="index-placeholder">
 				<iframe
 					allowFullScreen={true}
+					class="index-video"
 					src="https://player.vimeo.com/video/385352664"
-					style={videoStyle}
 					title="tangram video"
 				/>
 			</div>

@@ -33,7 +33,7 @@ type CodeProps = {
 export function Code(props: CodeProps) {
 	return (
 		<div class="code">
-			<div class="code-inner-wrapper" style={{ display: 'grid' }}>
+			<div class="code-inner-wrapper">
 				{!props.hideLineNumbers && (
 					<LineNumbers count={countLines(props.code)} />
 				)}

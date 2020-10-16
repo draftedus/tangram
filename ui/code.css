@@ -23,7 +23,7 @@
 
 .code-inner-wrapper {
 	color: var(--text-color);
-	display: none;
+	display: grid;
 	grid: auto / auto minmax(0, 1fr);
 	grid-area: code;
 	overflow: auto;

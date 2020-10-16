@@ -28,7 +28,7 @@ export default function Login(props: LoginProps) {
 				{props.code && <ui.TextField name="code" placeholder="Code" />}
 				<ui.Button type="submit">{'Login'}</ui.Button>
 				{props.code && (
-					<div style={{ lineHeight: '1.5', textAlign: 'center' }}>
+					<div class="login-code-message">
 						{'We emailed you a code. Copy and paste it above to log in.'}
 					</div>
 				)}

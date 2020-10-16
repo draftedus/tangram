@@ -43,7 +43,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 	return (
 		<Layout pinwheelInfo={props.pinwheelInfo}>
 			<div class="model-layout">
-				<div class="model-layout-topbar" style={{ gridArea: 'topbar' }}>
+				<div class="model-layout-topbar">
 					<div class="model-layout-owner-slash-repo-slash-model-wrapper">
 						<div class="model-layout-owner-slash-repo-wrapper">
 							{props.info.owner && (
@@ -91,20 +91,15 @@ export function ModelLayout(props: ModelLayoutProps) {
 						</ui.Button>
 					</div>
 				</div>
-				<div class="model-layout-grid" style={{ gridArea: 'model' }}>
-					<div
-						class="model-layout-sidenav-wrapper"
-						style={{ gridArea: 'side-nav' }}
-					>
+				<div class="model-layout-grid">
+					<div class="model-layout-side-nav-wrapper">
 						<ModelSideNav
 							id={props.info.modelId}
 							selectedItem={props.selectedItem}
 							title={props.info.modelTitle}
 						/>
 					</div>
-					<div class="model-layout-content" style={{ gridArea: 'content' }}>
-						{props.children}
-					</div>
+					<div class="model-layout-content">{props.children}</div>
 				</div>
 			</div>
 		</Layout>

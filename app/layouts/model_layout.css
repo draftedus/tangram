@@ -19,6 +19,7 @@
 .model-layout-grid {
 	display: grid;
 	gap: 2rem;
+	grid-area: model;
 	height: 100%;
 	overflow: hidden;
 }
@@ -41,6 +42,7 @@
 	display: grid;
 	gap: 1rem;
 	grid: auto / auto auto;
+	grid-area: topbar;
 	justify-content: space-between;
 	padding: 2rem 1rem;
 }
@@ -106,8 +108,13 @@
 	}
 }
 
+.model-layout-side-nav-wrapper {
+	grid-area: side-nav;
+}
+
 .model-layout-content {
 	box-sizing: border-box;
+	grid-area: content;
 	margin: 0 auto;
 	max-width: var(--max-width);
 	padding: 2rem 2rem;
