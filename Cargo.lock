@@ -2112,6 +2112,7 @@ dependencies = [
  "hyper",
  "include_dir",
  "insta",
+ "itertools",
  "lexical",
  "multer",
  "ndarray",

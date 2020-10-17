@@ -1,4 +1,5 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
+use itertools::Itertools;
 use num_traits::ToPrimitive;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use tangram_metrics::StreamingMetric;
@@ -481,15 +482,25 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 		match self.tokenizer {
 			Tokenizer::Alphanumeric => {
 				let mut token_set = HashSet::new();
-				for token in AlphanumericTokenizer::new(value) {
-					let token = Token::Unigram(token.into_owned());
-					match self.token_histogram.get_mut(&token) {
+				for unigram in AlphanumericTokenizer::new(value) {
+					let unigram = Token::Unigram(unigram.into_owned());
+					match self.token_histogram.get_mut(&unigram) {
 						Some(count) => *count += 1,
 						None => {
 							self.invalid_count += 1;
 						}
 					};
-					token_set.insert(token);
+					token_set.insert(unigram);
+				}
+				for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
+					let bigram = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
+					match self.token_histogram.get_mut(&bigram) {
+						Some(count) => *count += 1,
+						None => {
+							self.invalid_count += 1;
+						}
+					};
+					token_set.insert(bigram);
 				}
 				for token in token_set.iter() {
 					if let Some(count) = self.per_example_histogram.get_mut(token) {

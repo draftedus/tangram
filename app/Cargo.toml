@@ -21,6 +21,7 @@ chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.5", features = ["serde"] }
 futures = "0.3"
 hyper = { version = "0.13", features = ["stream"] }
+itertools = "0.9"
 include_dir = "0.6"
 lexical = "5"
 multer = "1.2"

@@ -1,4 +1,5 @@
 use crate::stats;
+use itertools::Itertools;
 use num_traits::ToPrimitive;
 use std::{
 	cmp::Ordering,
@@ -454,19 +455,18 @@ impl TextColumnStats {
 		};
 		for value in column.iter() {
 			let mut token_set = BTreeSet::new();
-			for token in AlphanumericTokenizer::new(value) {
-				let token = token.to_string();
-				token_set.insert(token.clone());
-				*stats
-					.token_occurrence_histogram
-					.entry(Token::Unigram(token))
-					.or_insert(0) += 1;
+			for unigram in AlphanumericTokenizer::new(value) {
+				let unigram = Token::Unigram(unigram.into_owned());
+				token_set.insert(unigram.clone());
+				*stats.token_occurrence_histogram.entry(unigram).or_insert(0) += 1;
+			}
+			for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
+				let bigram = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
+				token_set.insert(bigram.clone());
+				*stats.token_occurrence_histogram.entry(bigram).or_insert(0) += 1;
 			}
 			for token in token_set.into_iter() {
-				*stats
-					.token_example_histogram
-					.entry(Token::Unigram(token))
-					.or_insert(0) += 1;
+				*stats.token_example_histogram.entry(token).or_insert(0) += 1;
 			}
 		}
 		stats
