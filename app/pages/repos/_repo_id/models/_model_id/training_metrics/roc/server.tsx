@@ -58,7 +58,6 @@ export default function TrainingMetricsIndexPage(props: Props) {
 				<ui.H1>{'Training Metrics'}</ui.H1>
 				<ui.TabBar>
 					<ui.TabLink href="./">{'Overview'}</ui.TabLink>
-					<ui.TabLink href="class_metrics">{'Class Metrics'}</ui.TabLink>
 					<ui.TabLink href="precision_recall">{'PR Curve'}</ui.TabLink>
 					<ui.TabLink href="roc" selected={true}>
 						{'ROC Curve'}

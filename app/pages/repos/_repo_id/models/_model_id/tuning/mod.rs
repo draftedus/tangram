@@ -99,16 +99,16 @@ fn build_threshold_metrics(
 	metrics
 		.thresholds
 		.iter()
-		.map(|class_metrics| Metrics {
-			threshold: class_metrics.threshold,
-			precision: class_metrics.precision,
-			recall: class_metrics.recall,
-			accuracy: class_metrics.accuracy,
-			f1_score: class_metrics.f1_score,
-			false_negatives: class_metrics.false_negatives,
-			false_positives: class_metrics.false_positives,
-			true_negatives: class_metrics.true_negatives,
-			true_positives: class_metrics.true_positives,
+		.map(|metrics| Metrics {
+			threshold: metrics.threshold,
+			precision: metrics.precision,
+			recall: metrics.recall,
+			accuracy: metrics.accuracy,
+			f1_score: metrics.f1_score,
+			false_negatives: metrics.false_negatives,
+			false_positives: metrics.false_positives,
+			true_negatives: metrics.true_negatives,
+			true_positives: metrics.true_positives,
 		})
 		.collect::<Vec<Metrics>>()
 }

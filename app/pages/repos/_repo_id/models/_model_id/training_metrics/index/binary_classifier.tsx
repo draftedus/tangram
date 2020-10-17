@@ -1,18 +1,18 @@
 import * as ui from '@tangramhq/ui'
 import * as definitions from 'common/definitions'
+import { MetricsRow } from 'common/metrics_row'
 import { baselineColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
 
 export type Props = {
 	accuracy: number
+	aucRoc: number
 	baselineAccuracy: number
-	classMetrics: Array<{
-		precision: number
-		recall: number
-	}>
 	classes: string[]
 	id: string
 	losses: number[] | null
+	precision: number
+	recall: number
 }
 
 export function BinaryClassifierTrainingMetricsIndexPage(props: Props) {
@@ -24,7 +24,6 @@ export function BinaryClassifierTrainingMetricsIndexPage(props: Props) {
 				<ui.TabLink href="./" selected={true}>
 					{'Overview'}
 				</ui.TabLink>
-				<ui.TabLink href="class_metrics">{'Class Metrics'}</ui.TabLink>
 				<ui.TabLink href="precision_recall">{'PR Curve'}</ui.TabLink>
 				<ui.TabLink href="roc">{'ROC Curve'}</ui.TabLink>
 			</ui.TabBar>
@@ -51,32 +50,23 @@ export function BinaryClassifierTrainingMetricsIndexPage(props: Props) {
 					/>
 				</ui.Card>
 			</ui.S2>
-			<ui.S2>
-				<ui.H2>{'Precision and Recall'}</ui.H2>
-				<ui.P>{definitions.precisionRecall}</ui.P>
-				<ui.Table width="100%">
-					<ui.TableHeader>
-						<ui.TableRow>
-							<ui.TableHeaderCell>{'Class'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Precision'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Recall'}</ui.TableHeaderCell>
-						</ui.TableRow>
-					</ui.TableHeader>
-					<ui.TableBody>
-						{props.classes.map((className, i) => (
-							<ui.TableRow key={className}>
-								<ui.TableCell>{className}</ui.TableCell>
-								<ui.TableCell>
-									{ui.formatPercent(props.classMetrics[i].precision, 2)}
-								</ui.TableCell>
-								<ui.TableCell>
-									{ui.formatPercent(props.classMetrics[i].recall, 2)}
-								</ui.TableCell>
-							</ui.TableRow>
-						))}
-					</ui.TableBody>
-				</ui.Table>
-			</ui.S2>
+			<ui.Card>
+				<ui.NumberChart title="AUC ROC" value={ui.formatNumber(props.aucRoc)} />
+			</ui.Card>
+			<MetricsRow>
+				<ui.Card>
+					<ui.NumberChart
+						title="Precision"
+						value={ui.formatNumber(props.precision)}
+					/>
+				</ui.Card>
+				<ui.Card>
+					<ui.NumberChart
+						title="Recall"
+						value={ui.formatNumber(props.recall)}
+					/>
+				</ui.Card>
+			</MetricsRow>
 			{loss !== undefined && (
 				<ui.S2>
 					<ui.H2>{'Loss'}</ui.H2>

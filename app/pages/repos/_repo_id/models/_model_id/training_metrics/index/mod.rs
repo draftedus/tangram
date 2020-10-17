@@ -42,6 +42,9 @@ struct RegressorInner {
 #[serde(rename_all = "camelCase")]
 struct BinaryClassifierInner {
 	auc_roc: f32,
+	precision: f32,
+	recall: f32,
+	accuracy: f32,
 	id: String,
 	losses: Option<Vec<f32>>,
 }
@@ -136,6 +139,9 @@ fn build_inner_binary_classifier(
 	BinaryClassifierInner {
 		id: model.id,
 		auc_roc: model.test_metrics.auc_roc,
+		accuracy: model.test_metrics.accuracy,
+		precision: model.test_metrics.precision,
+		recall: model.test_metrics.recall,
 		losses,
 	}
 }
