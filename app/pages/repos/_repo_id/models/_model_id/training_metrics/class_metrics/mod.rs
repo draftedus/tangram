@@ -15,47 +15,17 @@ use tangram_util::id::Id;
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Props {
-	id: String,
-	inner: Inner,
-	model_layout_info: ModelLayoutInfo,
-}
-
-#[derive(serde::Serialize)]
-#[serde(tag = "type", content = "value")]
-enum Inner {
-	#[serde(rename = "BinaryClassifier")]
-	BinaryClassifier(BinaryClassifierInner),
-	#[serde(rename = "MulticlassClassifier")]
-	MulticlassClassifier(MulticlassClassifierInner),
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct BinaryClassifierInner {
 	class: String,
 	classes: Vec<String>,
-	id: String,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ClassMetrics {
-	precision: f32,
-	recall: f32,
 	f1_score: f32,
 	false_negatives: u64,
 	false_positives: u64,
-	true_positives: u64,
-	true_negatives: u64,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct MulticlassClassifierInner {
-	class_metrics: ClassMetrics,
-	classes: Vec<String>,
 	id: String,
-	class: String,
+	model_layout_info: ModelLayoutInfo,
+	precision: f32,
+	recall: f32,
+	true_negatives: u64,
+	true_positives: u64,
 }
 
 pub async fn get(
@@ -97,80 +67,39 @@ async fn props(
 		}
 	}
 	let model = get_model(&mut db, model_id).await?;
-	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
-	let inner = match model {
-		tangram_core::model::Model::BinaryClassifier(model) => match model.model {
-			tangram_core::model::BinaryClassificationModel::Linear(_) => {
-				Inner::BinaryClassifier(build_inner_binary(model, class))
-			}
-			tangram_core::model::BinaryClassificationModel::Tree(_) => {
-				Inner::BinaryClassifier(build_inner_binary(model, class))
-			}
-		},
-		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
-			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
-				Inner::MulticlassClassifier(build_inner_multiclass(model, class))
-			}
-			tangram_core::model::MulticlassClassificationModel::Tree(_) => {
-				Inner::MulticlassClassifier(build_inner_multiclass(model, class))
-			}
-		},
+	let model = match model {
+		tangram_core::model::Model::MulticlassClassifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-	db.commit().await?;
-	Ok(Props {
-		id: model_id.to_string(),
-		inner,
-		model_layout_info,
-	})
-}
-
-fn build_inner_binary(
-	model: tangram_core::model::BinaryClassifier,
-	class: Option<String>,
-) -> BinaryClassifierInner {
+	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let classes = model.classes().to_owned();
-	let class_index = if let Some(class) = &class {
-		classes.iter().position(|c| c == class).unwrap()
-	} else {
-		1
-	};
-	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
-	BinaryClassifierInner {
-		id: model.id,
-		classes,
-		class,
-	}
-}
-
-fn build_inner_multiclass(
-	model: tangram_core::model::MulticlassClassifier,
-	class: Option<String>,
-) -> MulticlassClassifierInner {
-	let test_metrics = &model.test_metrics;
-	let classes = model.classes().to_owned();
-	let class_metrics = &test_metrics.class_metrics;
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {
 		0
 	};
 	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
-	let class_metrics = &class_metrics[class_index];
-	let class_metrics = ClassMetrics {
-		precision: class_metrics.precision,
-		recall: class_metrics.recall,
-		f1_score: class_metrics.f1_score,
-		true_negatives: class_metrics.true_negatives,
-		true_positives: class_metrics.true_positives,
-		false_negatives: class_metrics.false_negatives,
-		false_positives: class_metrics.false_positives,
-	};
-	MulticlassClassifierInner {
-		id: model.id.to_string(),
-		class_metrics,
-		classes,
+	let class_metrics = &model.test_metrics.class_metrics[class_index];
+	let precision = class_metrics.precision;
+	let recall = class_metrics.recall;
+	let f1_score = class_metrics.f1_score;
+	let true_negatives = class_metrics.true_negatives;
+	let true_positives = class_metrics.true_positives;
+	let false_negatives = class_metrics.false_negatives;
+	let false_positives = class_metrics.false_positives;
+	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	db.commit().await?;
+	Ok(Props {
+		id: model_id.to_string(),
+		model_layout_info,
 		class,
-	}
+		classes,
+		f1_score,
+		false_negatives,
+		false_positives,
+		precision,
+		recall,
+		true_negatives,
+		true_positives,
+	})
 }
