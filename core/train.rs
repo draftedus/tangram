@@ -124,7 +124,7 @@ pub fn train(
 
 	// Create the hyperparameter grid.
 	let grid =
-		compute_hyperparameter_grid(&config, &task, target_column_index, &overall_column_stats);
+		compute_hyperparameter_grid(&config, &task, target_column_index, &train_column_stats);
 
 	// Train each model in the grid and compute model comparison metrics.
 	let num_models = grid.len();
