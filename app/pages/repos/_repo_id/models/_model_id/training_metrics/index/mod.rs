@@ -101,14 +101,14 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let model = get_model(&mut db, model_id).await?;
 	let inner = match model {
 		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
-			tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
-				Inner::BinaryClassifier(build_inner_binary(model, model_id))
-			}
+			// tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
+			// 	Inner::BinaryClassifier(build_inner_binary(model, model_id))
+			// }
+			// tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
+			// 	Inner::BinaryClassifier(build_inner_binary(model, model_id))
+			// }
 			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id))
-			}
-			tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
-				Inner::BinaryClassifier(build_inner_binary(model, model_id))
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id))
@@ -149,12 +149,12 @@ fn build_inner_binary(
 		})
 		.collect::<Vec<ClassMetrics>>();
 	let losses = match model.model {
-		tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
-			inner_model.losses
-		}
-		tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
-			inner_model.losses
-		}
+		// tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
+		// 	inner_model.losses
+		// }
+		// tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
+		// 	inner_model.losses
+		// }
 		_ => unreachable!(),
 	};
 	BinaryClassifier {

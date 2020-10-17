@@ -233,13 +233,14 @@ pub fn train(
 						..
 					},
 				) => {
-					let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
-					MulticlassClassificationModel::LinearBinary(LinearBinaryClassifier {
-						metrics: binary_classifier_model_test_metrics,
-						feature_groups,
-						model,
-						options,
-					})
+					todo!()
+					// let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
+					// MulticlassClassificationModel::LinearBinary(LinearBinaryClassifier {
+					// 	metrics: binary_classifier_model_test_metrics,
+					// 	feature_groups,
+					// 	model,
+					// 	options,
+					// })
 				}
 				TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 					model,
@@ -247,13 +248,14 @@ pub fn train(
 					options,
 					..
 				}) => {
-					let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
-					MulticlassClassificationModel::TreeBinary(TreeBinaryClassifier {
-						metrics: binary_classifier_model_test_metrics,
-						feature_groups,
-						model,
-						options,
-					})
+					todo!()
+					// let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
+					// MulticlassClassificationModel::TreeBinary(TreeBinaryClassifier {
+					// 	metrics: binary_classifier_model_test_metrics,
+					// 	feature_groups,
+					// 	model,
+					// 	options,
+					// })
 				}
 				TrainModelOutput::LinearMulticlassClassifier(
 					LinearMulticlassClassifierTrainModelOutput {
@@ -262,7 +264,7 @@ pub fn train(
 						options,
 						..
 					},
-				) => MulticlassClassificationModel::LinearMulticlass(LinearMulticlassClassifier {
+				) => MulticlassClassificationModel::Linear(LinearMulticlassClassifier {
 					model,
 					feature_groups,
 					options,
@@ -274,7 +276,7 @@ pub fn train(
 						options,
 						..
 					},
-				) => MulticlassClassificationModel::TreeMulticlass(TreeMulticlassClassifier {
+				) => MulticlassClassificationModel::Tree(TreeMulticlassClassifier {
 					model,
 					feature_groups,
 					options,
@@ -340,10 +342,8 @@ enum RegressionComparisonMetric {
 }
 
 enum MulticlassClassificationModel {
-	LinearBinary(LinearBinaryClassifier),
-	LinearMulticlass(LinearMulticlassClassifier),
-	TreeBinary(TreeBinaryClassifier),
-	TreeMulticlass(TreeMulticlassClassifier),
+	Linear(LinearMulticlassClassifier),
+	Tree(TreeMulticlassClassifier),
 }
 
 struct LinearBinaryClassifier {
@@ -1663,16 +1663,10 @@ impl Into<model::LeafNode> for tangram_tree::LeafNode {
 impl Into<model::MulticlassClassificationModel> for MulticlassClassificationModel {
 	fn into(self) -> model::MulticlassClassificationModel {
 		match self {
-			MulticlassClassificationModel::LinearBinary(m) => {
-				model::MulticlassClassificationModel::LinearBinary(m.into())
-			}
-			MulticlassClassificationModel::LinearMulticlass(m) => {
+			MulticlassClassificationModel::Linear(m) => {
 				model::MulticlassClassificationModel::Linear(m.into())
 			}
-			MulticlassClassificationModel::TreeBinary(m) => {
-				model::MulticlassClassificationModel::TreeBinary(m.into())
-			}
-			MulticlassClassificationModel::TreeMulticlass(m) => {
+			MulticlassClassificationModel::Tree(m) => {
 				model::MulticlassClassificationModel::Tree(m.into())
 			}
 		}

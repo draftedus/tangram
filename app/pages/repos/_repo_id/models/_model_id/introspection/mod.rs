@@ -114,23 +114,38 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			let target_column_name = model.target_column_name.to_owned();
 			let classes = model.classes().to_owned();
 			match model.model {
-				tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
-					let feature_groups = inner_model.feature_groups;
-					let feature_names = compute_feature_names(&feature_groups);
-					let weights = inner_model.weights;
-					let mut weights = feature_names
-						.into_iter()
-						.zip(weights)
-						.map(|(f, w)| (f, w))
-						.collect::<Vec<(String, f32)>>();
-					weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-					Inner::LinearBinaryClassifier(LinearBinaryClassifier {
-						bias: inner_model.bias,
-						target_column_name,
-						positive_class_name: classes[1].clone(),
-						weights,
-					})
-				}
+				// tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
+				// 	let feature_groups = inner_model.feature_groups;
+				// 	let feature_names = compute_feature_names(&feature_groups);
+				// 	let weights = inner_model.weights;
+				// 	let mut weights = feature_names
+				// 		.into_iter()
+				// 		.zip(weights)
+				// 		.map(|(f, w)| (f, w))
+				// 		.collect::<Vec<(String, f32)>>();
+				// 	weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+				// 	Inner::LinearBinaryClassifier(LinearBinaryClassifier {
+				// 		bias: inner_model.bias,
+				// 		target_column_name,
+				// 		positive_class_name: classes[1].clone(),
+				// 		weights,
+				// 	})
+				// }
+				// tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
+				// 	let feature_groups = inner_model.feature_groups;
+				// 	let feature_importances = inner_model.feature_importances.as_slice();
+				// 	let feature_names = compute_feature_names(&feature_groups);
+				// 	let mut feature_importances: Vec<(String, f32)> = feature_names
+				// 		.into_iter()
+				// 		.zip(feature_importances)
+				// 		.map(|(f, w)| (f, *w))
+				// 		.collect();
+				// 	feature_importances
+				// 		.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+				// 	Inner::TreeBinaryClassifier(TreeBinaryClassifier {
+				// 		feature_importances,
+				// 	})
+				// }
 				tangram_core::model::MulticlassClassificationModel::Linear(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let n_classes = inner_model.n_classes.to_usize().unwrap();
@@ -156,21 +171,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						target_column_name,
 						classes,
 						weights,
-					})
-				}
-				tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
-					let feature_groups = inner_model.feature_groups;
-					let feature_importances = inner_model.feature_importances.as_slice();
-					let feature_names = compute_feature_names(&feature_groups);
-					let mut feature_importances: Vec<(String, f32)> = feature_names
-						.into_iter()
-						.zip(feature_importances)
-						.map(|(f, w)| (f, *w))
-						.collect();
-					feature_importances
-						.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-					Inner::TreeBinaryClassifier(TreeBinaryClassifier {
-						feature_importances,
 					})
 				}
 				tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {

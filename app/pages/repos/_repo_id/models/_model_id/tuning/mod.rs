@@ -76,23 +76,23 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let classes = model.classes().to_owned();
 			match model.model {
-				tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
-					let metrics = build_threshold_metrics(inner_model.metrics);
-					Some(Inner {
-						baseline_threshold: 0.5,
-						metrics,
-						class: classes[1].to_owned(),
-					})
-				}
+				// tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
+				// 	let metrics = build_threshold_metrics(inner_model.metrics);
+				// 	Some(Inner {
+				// 		baseline_threshold: 0.5,
+				// 		metrics,
+				// 		class: classes[1].to_owned(),
+				// 	})
+				// }
+				// tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
+				// 	let metrics = build_threshold_metrics(inner_model.metrics);
+				// 	Some(Inner {
+				// 		baseline_threshold: 0.5,
+				// 		metrics,
+				// 		class: classes[1].to_owned(),
+				// 	})
+				// }
 				tangram_core::model::MulticlassClassificationModel::Linear(_) => None,
-				tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
-					let metrics = build_threshold_metrics(inner_model.metrics);
-					Some(Inner {
-						baseline_threshold: 0.5,
-						metrics,
-						class: classes[1].to_owned(),
-					})
-				}
 				tangram_core::model::MulticlassClassificationModel::Tree(_) => None,
 			}
 		}

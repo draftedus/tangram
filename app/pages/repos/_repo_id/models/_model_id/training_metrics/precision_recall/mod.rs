@@ -66,31 +66,32 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let metrics = match &model.model {
-		tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
-			&inner_model.metrics
-		}
-		tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
-			&inner_model.metrics
-		}
+		// tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
+		// 	&inner_model.metrics
+		// }
+		// tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
+		// 	&inner_model.metrics
+		// }
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let classes = model.classes().to_owned();
-	let class = classes[1].to_owned();
-	let precision_recall_curve_data = metrics
-		.thresholds
-		.iter()
-		.map(|class_metrics| PrecisionRecallPoint {
-			precision: class_metrics.precision,
-			recall: class_metrics.recall,
-			threshold: class_metrics.threshold,
-		})
-		.collect();
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-	db.commit().await?;
-	Ok(Props {
-		class,
-		precision_recall_curve_data,
-		id: model_id.to_string(),
-		model_layout_info,
-	})
+	todo!()
+	// let classes = model.classes().to_owned();
+	// let class = classes[1].to_owned();
+	// let precision_recall_curve_data = metrics
+	// 	.thresholds
+	// 	.iter()
+	// 	.map(|class_metrics| PrecisionRecallPoint {
+	// 		precision: class_metrics.precision,
+	// 		recall: class_metrics.recall,
+	// 		threshold: class_metrics.threshold,
+	// 	})
+	// 	.collect();
+	// let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	// db.commit().await?;
+	// Ok(Props {
+	// 	class,
+	// 	precision_recall_curve_data,
+	// 	id: model_id.to_string(),
+	// 	model_layout_info,
+	// })
 }

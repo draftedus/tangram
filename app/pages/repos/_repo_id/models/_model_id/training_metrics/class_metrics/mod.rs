@@ -101,14 +101,14 @@ async fn props(
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let inner = match model {
 		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
-			tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
-				Inner::BinaryClassifier(build_inner_binary(model, model_id, class))
-			}
+			// tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
+			// 	Inner::BinaryClassifier(build_inner_binary(model, model_id, class))
+			// }
+			// tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
+			// 	Inner::BinaryClassifier(build_inner_binary(model, model_id, class))
+			// }
 			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id, class))
-			}
-			tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
-				Inner::BinaryClassifier(build_inner_binary(model, model_id, class))
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(_) => {
 				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id, class))

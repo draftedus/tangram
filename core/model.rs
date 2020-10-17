@@ -182,8 +182,6 @@ pub struct MulticlassClassifier {
 impl MulticlassClassifier {
 	pub fn classes(&self) -> &[String] {
 		match &self.model {
-			MulticlassClassificationModel::LinearBinary(model) => model.classes.as_slice(),
-			MulticlassClassificationModel::TreeBinary(model) => model.classes.as_slice(),
 			MulticlassClassificationModel::Linear(model) => model.classes.as_slice(),
 			MulticlassClassificationModel::Tree(model) => model.classes.as_slice(),
 		}
@@ -217,8 +215,6 @@ pub struct ClassMetrics {
 pub enum MulticlassClassificationModel {
 	Linear(LinearMulticlassClassifier),
 	Tree(TreeMulticlassClassifier),
-	LinearBinary(LinearBinaryClassifier),
-	TreeBinary(TreeBinaryClassifier),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

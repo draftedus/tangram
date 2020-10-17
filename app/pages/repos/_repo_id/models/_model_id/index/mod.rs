@@ -222,12 +222,12 @@ fn model_type_name(model: &tangram_core::model::Model) -> String {
 			}
 		},
 		tangram_core::model::Model::MulticlassClassifier(model) => match &model.model {
-			tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
-				"Linear Binary Classifier".into()
-			}
-			tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
-				"Gradient Boosted Tree Binary Classifier".into()
-			}
+			// tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
+			// 	"Linear Binary Classifier".into()
+			// }
+			// tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
+			// 	"Gradient Boosted Tree Binary Classifier".into()
+			// }
 			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
 				"Linear Multiclass Classifier".into()
 			}
