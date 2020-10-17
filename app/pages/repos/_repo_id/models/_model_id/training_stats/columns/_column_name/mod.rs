@@ -31,7 +31,6 @@ enum Inner {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Number {
-	histogram: Option<Vec<(f32, u64)>>,
 	invalid_count: u64,
 	max: f32,
 	mean: f32,
@@ -137,7 +136,6 @@ async fn props(
 	let inner = match column {
 		tangram_core::model::ColumnStats::Unknown(_) => unimplemented!(),
 		tangram_core::model::ColumnStats::Number(column) => Inner::Number(Number {
-			histogram: column.histogram,
 			invalid_count: column.invalid_count.to_owned(),
 			min: column.min,
 			max: column.max,

@@ -105,7 +105,6 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 		let value = (panic_info.to_string(), Backtrace::new());
 		PANIC_INFO.lock().unwrap().replace(value);
 	}));
-	println!("{:?}", &options);
 	let result = std::panic::catch_unwind(|| {
 		let mut progress_view = if options.progress {
 			ProgressView::new().ok()

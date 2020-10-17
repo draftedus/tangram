@@ -52,13 +52,22 @@ let iris: Config = {
 	targetValues: ['Iris Setosa', 'Iris Virginica', 'Iris Versicolor'],
 }
 
+let mpg: Config = {
+	csvPath: 'data/mpg.csv',
+	name: 'mpg',
+	target: 'mpg',
+}
+
 let config
 switch (modelName) {
-	case 'heart-disease':
-		config = heartDisease
-		break
 	case 'boston':
 		config = boston
+		break
+	case 'mpg':
+		config = mpg
+		break
+	case 'heart-disease':
+		config = heartDisease
 		break
 	case 'iris':
 		config = iris
@@ -72,9 +81,12 @@ let networkConfig: NetworkConfig = {
 }
 
 let csvData = await Deno.readFile(config.csvPath)
-let rows = (await csv.parse(utf8.decode(csvData))) as Array<{
+let rows = (await csv.parse(utf8.decode(csvData), {
+	skipFirstRow: true,
+})) as Array<{
 	[key: string]: string
 }>
+console.log(rows)
 
 let nRows = rows.length
 
@@ -96,7 +108,13 @@ for (let i = 0; i < 1000; i++) {
 	let time = Math.random() * (endTime - startTime) + startTime
 	let date = new Date(time)
 	let output
-	if (config.name == 'heart-disease') {
+	if (config.name === 'boston') {
+		let value = parseFloat(input[config.target]) + Math.random() * 5
+		output = { value }
+	} else if (config.name === 'mpg') {
+		let value = parseFloat(input[config.target]) + Math.random() * 5
+		output = { value }
+	} else if (config.name == 'heart-disease') {
 		if (!config.targetValues) {
 			throw Error()
 		}
@@ -116,9 +134,6 @@ for (let i = 0; i < 1000; i++) {
 				['Positive']: className === 'Positive' ? 0.95 : 0.05,
 			},
 		}
-	} else if (config.name === 'boston') {
-		let value = parseFloat(input[config.target]) + Math.random() * 5
-		output = { value }
 	} else if (config.name === 'iris') {
 		if (!config.targetValues) {
 			throw Error()
@@ -147,19 +162,21 @@ for (let i = 0; i < 1000; i++) {
 		output,
 		type: 'prediction',
 	}
+	console.log(prediction)
 
 	// Track the prediction.
 	await track(prediction)
+	break
 
-	// For about 60% of predictions, track the true value.
-	if (Math.random() > 0.4) {
-		let trueValue: TrueValue = {
-			date: date.toISOString(),
-			identifier: i,
-			modelId,
-			trueValue: input[config.target],
-			type: 'true_value',
-		}
-		await track(trueValue)
-	}
+	// // For about 60% of predictions, track the true value.
+	// if (Math.random() > 0.4) {
+	// 	let trueValue: TrueValue = {
+	// 		date: date.toISOString(),
+	// 		identifier: i.toString(),
+	// 		modelId,
+	// 		trueValue: input[config.target],
+	// 		type: 'true_value',
+	// 	}
+	// 	await track(trueValue)
+	// }
 }

@@ -20,8 +20,7 @@ struct Props {
 	id: String,
 	model_layout_info: ModelLayoutInfo,
 	target_column_stats: ColumnStats,
-	test_row_count: usize,
-	train_row_count: usize,
+	row_count: usize,
 }
 
 #[derive(serde::Serialize)]
@@ -94,8 +93,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				id: model.id.to_owned(),
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
-				test_row_count: model.test_row_count.to_usize().unwrap(),
-				train_row_count: model.train_row_count.to_usize().unwrap(),
+				row_count: model.test_row_count.to_usize().unwrap()
+					+ model.train_row_count.to_usize().unwrap(),
 			}
 		}
 		tangram_core::model::Model::BinaryClassifier(model) => {
@@ -109,8 +108,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				id: model.id.to_owned(),
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
-				train_row_count: model.train_row_count.to_usize().unwrap(),
-				test_row_count: model.test_row_count.to_usize().unwrap(),
+				row_count: model.test_row_count.to_usize().unwrap()
+					+ model.train_row_count.to_usize().unwrap(),
 			}
 		}
 		tangram_core::model::Model::MulticlassClassifier(model) => {
@@ -124,8 +123,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				id: model.id.to_owned(),
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
-				train_row_count: model.train_row_count.to_usize().unwrap(),
-				test_row_count: model.test_row_count.to_usize().unwrap(),
+				row_count: model.test_row_count.to_usize().unwrap()
+					+ model.train_row_count.to_usize().unwrap(),
 			}
 		}
 	};

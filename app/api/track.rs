@@ -202,6 +202,7 @@ async fn insert_or_update_production_stats_for_monitor_event(
 		let data: String = row.get(0);
 		let data: Vec<u8> = base64::decode(data)?;
 		let mut production_stats: ProductionStats = serde_json::from_slice(&data)?;
+		println!("pstats{:?}", production_stats);
 		production_stats.update(monitor_event);
 		let data = serde_json::to_vec(&production_stats)?;
 		sqlx::query(
@@ -226,7 +227,15 @@ async fn insert_or_update_production_stats_for_monitor_event(
 		let end_date = hour + chrono::Duration::hours(1);
 		let mut production_stats = ProductionStats::new(&model, start_date, end_date);
 		production_stats.update(monitor_event);
-		let data = serde_json::to_vec(&production_stats)?;
+		let data = match serde_json::to_vec(&production_stats) {
+			Ok(data) => data,
+			Err(e) => {
+				println!("e: {:?}", e);
+				return Err(e.into());
+			}
+		};
+
+		println!("serialized");
 		sqlx::query(
 			"
 				insert into production_stats

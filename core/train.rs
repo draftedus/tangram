@@ -25,22 +25,79 @@ pub fn train(
 	// Load the config from the config file, if provided.
 	let config: Option<Config> = load_config(config_path)?;
 
+	// Get the column types from the config, if set.
+	let column_types: Option<BTreeMap<String, DataFrameColumnType>> = config
+		.as_ref()
+		.and_then(|config| config.column_types.as_ref())
+		.map(|column_types| {
+			column_types
+				.iter()
+				.map(|(column_name, column_type)| {
+					let column_type = match column_type {
+						config::ColumnType::Unknown => DataFrameColumnType::Unknown,
+						config::ColumnType::Number => DataFrameColumnType::Number,
+						config::ColumnType::Enum { options } => DataFrameColumnType::Enum {
+							options: options.clone(),
+						},
+						config::ColumnType::Text => DataFrameColumnType::Text,
+					};
+					(column_name.clone(), column_type)
+				})
+				.collect()
+		});
 	// Load the dataframe from the csv file.
 	let mut dataframe = if let Some(file_path) = file_path {
-		Some(load_dataframe(file_path, &config, update_progress)?)
+		Some(load_dataframe(
+			file_path,
+			column_types.clone(),
+			update_progress,
+		)?)
 	} else {
 		None
 	};
 	let dataframe_train = if let Some(file_path_train) = file_path_train {
-		Some(load_dataframe(file_path_train, &config, update_progress)?)
+		Some(load_dataframe(
+			file_path_train,
+			column_types,
+			update_progress,
+		)?)
 	} else {
 		None
 	};
 	let dataframe_test = if let Some(file_path_test) = file_path_test {
-		Some(load_dataframe(file_path_test, &config, update_progress)?)
+		// If the config has no column types set, force the column types based on the types inferred in dataframe_train.
+		let column_types = dataframe_train
+			.as_ref()
+			.unwrap()
+			.columns()
+			.iter()
+			.map(|column| match column {
+				DataFrameColumn::Unknown(c) => {
+					(c.name().to_owned().unwrap(), DataFrameColumnType::Unknown)
+				}
+				DataFrameColumn::Enum(c) => (
+					c.name().to_owned().unwrap(),
+					DataFrameColumnType::Enum {
+						options: c.options().to_owned(),
+					},
+				),
+				DataFrameColumn::Number(c) => {
+					(c.name().to_owned().unwrap(), DataFrameColumnType::Number)
+				}
+				DataFrameColumn::Text(c) => {
+					(c.name().to_owned().unwrap(), DataFrameColumnType::Text)
+				}
+			})
+			.collect();
+		Some(load_dataframe(
+			file_path_test,
+			Some(column_types),
+			update_progress,
+		)?)
 	} else {
 		None
 	};
+
 	let (dataframe_train, dataframe_test) = if let Some(dataframe) = dataframe.as_mut() {
 		// Shuffle the dataframe if enabled.
 		shuffle(dataframe, &config, update_progress);
@@ -455,31 +512,13 @@ fn load_config(config_path: Option<&Path>) -> Result<Option<Config>> {
 
 fn load_dataframe(
 	file_path: &Path,
-	config: &Option<Config>,
+	column_types: Option<BTreeMap<String, DataFrameColumnType>>,
 	update_progress: &mut dyn FnMut(Progress),
 ) -> Result<DataFrame> {
 	let len = std::fs::metadata(file_path)?.len();
 	let progress_counter = ProgressCounter::new(len);
 	update_progress(Progress::Loading(progress_counter.clone()));
-	let column_types: Option<BTreeMap<String, DataFrameColumnType>> = config
-		.as_ref()
-		.and_then(|config| config.column_types.as_ref())
-		.map(|column_types| {
-			column_types
-				.iter()
-				.map(|(column_name, column_type)| {
-					let column_type = match column_type {
-						config::ColumnType::Unknown => DataFrameColumnType::Unknown,
-						config::ColumnType::Number => DataFrameColumnType::Number,
-						config::ColumnType::Enum { options } => DataFrameColumnType::Enum {
-							options: options.clone(),
-						},
-						config::ColumnType::Text => DataFrameColumnType::Text,
-					};
-					(column_name.clone(), column_type)
-				})
-				.collect()
-		});
+
 	let dataframe = DataFrame::from_path(
 		file_path,
 		tangram_dataframe::FromCsvOptions {
@@ -522,6 +561,7 @@ fn shuffle(
 
 fn compute_hyperparameter_grid(
 	config: &Option<Config>,
+
 	task: &Task,
 	target_column_index: usize,
 	train_column_stats: &[stats::ColumnStatsOutput],

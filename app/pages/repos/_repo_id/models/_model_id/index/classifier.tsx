@@ -40,7 +40,7 @@ export function MulticlassClassifierIndexPage(props: Props) {
 					{' columns. '}
 					<b>{props.trainingSummary.trainRowCount}</b>
 					{' of the rows were used in training and '}
-					<b>{ui.formatPercent(props.trainingSummary.testRowCount)}</b>
+					<b>{props.trainingSummary.testRowCount}</b>
 					{' were used in testing. The model with the highest '}
 					<b>{props.trainingSummary.modelComparisonMetricTypeName}</b>
 					{' was chosen. The best model is a '}

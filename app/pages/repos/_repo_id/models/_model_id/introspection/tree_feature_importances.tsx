@@ -28,6 +28,7 @@ export function TreeFeatureImportances(props: Props) {
 				<BarChart
 					data={data}
 					id="feature_importances"
+					shouldDrawXAxisLabels={false}
 					title="Feature Importances"
 					xAxisTitle="Feature Name"
 					yAxisTitle="Importance Score"

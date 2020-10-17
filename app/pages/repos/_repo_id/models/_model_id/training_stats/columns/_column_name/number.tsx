@@ -1,10 +1,9 @@
-import { BarChart, BoxChart } from '@tangramhq/charts'
+import { BoxChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { h } from 'preact'
 
 export type Props = {
-	histogram: Array<[number, number]> | null
 	invalidCount: number
 	max: number
 	mean: number
@@ -35,17 +34,6 @@ export function NumberColumnDetail(props: Props) {
 				},
 			],
 			title: 'quartiles',
-		},
-	]
-	let histogramData = props.histogram && [
-		{
-			color: ui.colors.blue,
-			data: props.histogram.map(([label, count], i) => ({
-				label: ui.formatNumber(label),
-				x: i,
-				y: count,
-			})),
-			title: 'Unique Values',
 		},
 	]
 	return (
@@ -105,36 +93,6 @@ export function NumberColumnDetail(props: Props) {
 							title={`Distribution of Values for ${props.name}`}
 						/>
 					</ui.Card>
-				)}
-				{histogramData && (
-					<ui.Card>
-						<BarChart
-							data={histogramData}
-							id="number_histogram"
-							shouldDrawXAxisLabels={true}
-							title={`Histogram of Unique Values for ${props.name}`}
-							xAxisTitle={props.name}
-							yAxisTitle="Count"
-						/>
-					</ui.Card>
-				)}
-				{props.histogram && (
-					<ui.Table width="100%">
-						<ui.TableHeader>
-							<ui.TableRow>
-								<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
-							</ui.TableRow>
-						</ui.TableHeader>
-						<ui.TableBody>
-							{props.histogram.map(([value, count], i) => (
-								<ui.TableRow key={i}>
-									<ui.TableCell>{ui.formatNumber(value)}</ui.TableCell>
-									<ui.TableCell>{count}</ui.TableCell>
-								</ui.TableRow>
-							))}
-						</ui.TableBody>
-					</ui.Table>
 				)}
 			</ui.S2>
 		</ui.S1>

@@ -195,13 +195,9 @@ export default function ProductionStatsIndexPage(props: Props) {
 									)}
 								</ui.TableCell>
 								<ui.TableCell>
-									{column.columnType === ColumnType.Text ? (
-										<div>{column.name}</div>
-									) : (
-										<ui.Link href={`./columns/${column.name}`}>
-											{column.name}
-										</ui.Link>
-									)}
+									<ui.Link href={`./columns/${column.name}`}>
+										{column.name}
+									</ui.Link>
 								</ui.TableCell>
 								<ui.TableCell>
 									{column.columnType === ColumnType.Number ? (
