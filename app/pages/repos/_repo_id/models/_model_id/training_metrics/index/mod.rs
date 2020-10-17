@@ -134,21 +134,7 @@ fn build_inner_regressor(model: tangram_core::model::Regressor) -> RegressorInne
 fn build_inner_binary_classifier(
 	_model: tangram_core::model::BinaryClassifier,
 ) -> BinaryClassifierInner {
-	// let classes = model.classes().to_owned();
-	// let losses = match model.model {
-	// 	tangram_core::model::BinaryClassificationModel::Linear(inner_model) => inner_model.losses,
-	// 	tangram_core::model::BinaryClassificationModel::Tree(inner_model) => inner_model.losses,
-	// };
 	todo!()
-	// BinaryClassifierInner {
-	// 	id: model.id,
-	// 	classes,
-	// 	losses,
-	// 	accuracy: todo!(),
-	// 	baseline_accuracy: todo!(),
-	// 	precision: todo!(),
-	// 	recall: todo!(),
-	// }
 }
 
 fn build_inner_multiclass_classifier(

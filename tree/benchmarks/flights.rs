@@ -8,10 +8,6 @@ use tangram_util::pzip;
 
 fn main() {
 	// Load the data.
-	// let csv_file_path_train = Path::new("data/flights_100k_train.csv");
-	// let csv_file_path_test = Path::new("data/flights_test.csv");
-	// let csv_file_path_train = Path::new("data/flights_1m_train.csv");
-	// let csv_file_path_test = Path::new("data/flights_test.csv");
 	let csv_file_path_train = Path::new("data/flights_10m_train.csv");
 	let csv_file_path_test = Path::new("data/flights_test.csv");
 	let target_column_index = 8;

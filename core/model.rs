@@ -75,7 +75,6 @@ pub struct Regressor {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: RegressionMetrics,
 	pub model: RegressionModel,
-	pub comparison_fraction: f32,
 	pub comparison_metric: RegressionComparisonMetric,
 }
 
@@ -186,7 +185,6 @@ pub struct BinaryClassifier {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: BinaryClassificationMetrics,
 	pub model: BinaryClassificationModel,
-	pub comparison_fraction: f32,
 	pub comparison_metric: BinaryClassificationComparisonMetric,
 }
 
@@ -275,7 +273,6 @@ pub struct MulticlassClassifier {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: MulticlassClassificationMetrics,
 	pub model: MulticlassClassificationModel,
-	pub comparison_fraction: f32,
 	pub comparison_metric: MulticlassClassificationComparisonMetric,
 }
 

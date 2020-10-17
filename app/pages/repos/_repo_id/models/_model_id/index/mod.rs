@@ -24,22 +24,22 @@ struct Props {
 #[serde(tag = "type", content = "value")]
 enum Inner {
 	#[serde(rename = "regressor")]
-	Regressor(Regressor),
+	Regressor(RegressorInner),
 	#[serde(rename = "classifier")]
-	MulticlassClassifier(MulticlassClassifier),
+	MulticlassClassifier(MulticlassClassifierInner),
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Regressor {
+struct RegressorInner {
 	id: String,
-	metrics: RegressorMetrics,
+	metrics: RegressorInnerMetrics,
 	training_summary: TrainingSummary,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct RegressorMetrics {
+struct RegressorInnerMetrics {
 	baseline_mse: f32,
 	baseline_rmse: f32,
 	mse: f32,
@@ -48,20 +48,10 @@ struct RegressorMetrics {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct MulticlassClassifier {
+struct MulticlassClassifierInner {
 	id: String,
 	metrics: MulticlassClassificationMetrics,
 	training_summary: TrainingSummary,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct TrainingSummary {
-	chosen_model_type_name: String,
-	column_count: usize,
-	model_comparison_metric_type_name: String,
-	train_row_count: usize,
-	test_row_count: usize,
 }
 
 #[derive(serde::Serialize)]
@@ -78,6 +68,16 @@ struct MulticlassClassificationMetrics {
 struct ClassMetrics {
 	precision: f32,
 	recall: f32,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TrainingSummary {
+	chosen_model_type_name: String,
+	column_count: usize,
+	model_comparison_metric_type_name: String,
+	train_row_count: usize,
+	test_row_count: usize,
 }
 
 pub async fn get(
@@ -116,9 +116,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let inner = match &model {
 		tangram_core::model::Model::Regressor(model) => {
 			let test_metrics = &model.test_metrics;
-			Inner::Regressor(Regressor {
+			Inner::Regressor(RegressorInner {
 				id: model_id.to_string(),
-				metrics: RegressorMetrics {
+				metrics: RegressorInnerMetrics {
 					rmse: test_metrics.rmse,
 					baseline_rmse: test_metrics.baseline_rmse,
 					mse: test_metrics.mse,
@@ -138,7 +138,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					recall: class_metrics.recall,
 				})
 				.collect::<Vec<ClassMetrics>>();
-			Inner::MulticlassClassifier(MulticlassClassifier {
+			Inner::MulticlassClassifier(MulticlassClassifierInner {
 				id: model_id.to_string(),
 				metrics: MulticlassClassificationMetrics {
 					accuracy: test_metrics.accuracy,

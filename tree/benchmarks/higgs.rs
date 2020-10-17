@@ -8,10 +8,6 @@ use tangram_util::pzip;
 
 fn main() {
 	// Load the data.
-	// let csv_file_path_train = Path::new("data/higgs_500k_train.csv");
-	// let csv_file_path_test = Path::new("data/higgs_500k_test.csv");
-	// let _nrows_train = 450_000;
-	// let _n_rows_test = 50_000;
 	let csv_file_path_train = Path::new("data/higgs_train.csv");
 	let csv_file_path_test = Path::new("data/higgs_test.csv");
 	let _nrows_train = 10_500_000;

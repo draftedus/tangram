@@ -208,7 +208,6 @@ pub fn train(
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
 				model: model.into(),
-				comparison_fraction,
 				comparison_metric: comparison_metric.into(),
 			})
 		}
@@ -260,7 +259,6 @@ pub fn train(
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
 				model: model.into(),
-				comparison_fraction,
 				comparison_metric: comparison_metric.into(),
 			})
 		}
@@ -314,7 +312,6 @@ pub fn train(
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
 				model: model.into(),
-				comparison_fraction,
 				comparison_metric: comparison_metric.into(),
 			})
 		}
