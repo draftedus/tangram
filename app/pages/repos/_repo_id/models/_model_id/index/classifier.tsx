@@ -18,8 +18,8 @@ export type Props = {
 		chosenModelTypeName: string
 		columnCount: number
 		modelComparisonMetricTypeName: string
-		rowCount: number
-		testFraction: number
+		testRowCount: number
+		trainRowCount: number
 	}
 }
 
@@ -31,13 +31,16 @@ export function ClassifierIndexPage(props: Props) {
 				<ui.H2>{'Training Summary'}</ui.H2>
 				<ui.P>
 					{'Your dataset contained '}
-					<b>{props.trainingSummary.rowCount}</b>
+					<b>
+						{props.trainingSummary.trainRowCount +
+							props.trainingSummary.testRowCount}
+					</b>
 					{' rows and '}
 					<b>{props.trainingSummary.columnCount}</b>
 					{' columns. '}
-					<b>{ui.formatPercent(1 - props.trainingSummary.testFraction)}</b>
+					<b>{props.trainingSummary.trainRowCount}</b>
 					{' of the rows were used in training and '}
-					<b>{ui.formatPercent(props.trainingSummary.testFraction)}</b>
+					<b>{ui.formatPercent(props.trainingSummary.testRowCount)}</b>
 					{' were used in testing. The model with the highest '}
 					<b>{props.trainingSummary.modelComparisonMetricTypeName}</b>
 					{' was chosen. The best model is a '}

@@ -14,9 +14,10 @@ export type Props = {
 		chosenModelTypeName: string
 		columnCount: number
 		modelComparisonMetricTypeName: string
-		rowCount: number
 		targetColumn: string
 		testFraction: number
+		testRowCount: number
+		trainRowCount: number
 	}
 }
 
@@ -29,17 +30,20 @@ export function RegressorIndexPage(props: Props) {
 			<ui.S2>
 				<ui.H2>{'Training Summary'}</ui.H2>
 				<ui.P>
-					{'Your dataset included '}
-					<b>{props.trainingSummary.rowCount}</b>
+					{'Your dataset contained '}
+					<b>
+						{props.trainingSummary.trainRowCount +
+							props.trainingSummary.testRowCount}
+					</b>
 					{' rows and '}
 					<b>{props.trainingSummary.columnCount}</b>
 					{' columns. '}
-					<b>{ui.formatPercent(1 - props.trainingSummary.testFraction)}</b>
+					<b>{props.trainingSummary.trainRowCount}</b>
 					{' of the rows were used in training and '}
-					<b>{ui.formatPercent(props.trainingSummary.testFraction)}</b>
+					<b>{ui.formatPercent(props.trainingSummary.testRowCount)}</b>
 					{' were used in testing. The model with the highest '}
 					<b>{props.trainingSummary.modelComparisonMetricTypeName}</b>
-					{' was chosen. The model is a '}
+					{' was chosen. The best model is a '}
 					<b>{props.trainingSummary.chosenModelTypeName}</b>
 					{'.'}
 				</ui.P>
