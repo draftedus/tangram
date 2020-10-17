@@ -85,7 +85,7 @@ impl StreamingMetric<'_> for ProductionStats {
 		self.prediction_stats.merge(other.prediction_stats);
 	}
 
-	fn finalize(self) -> Self::Output {
+	fn finalize(self) -> ProductionStatsOutput {
 		ProductionStatsOutput {
 			start_date: self.start_date,
 			end_date: self.end_date,
