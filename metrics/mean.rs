@@ -7,14 +7,15 @@ use std::num::NonZeroU64;
 pub struct Mean(Option<(NonZeroU64, f64)>);
 
 impl Mean {
-	pub fn new() -> Self {
-		Self::default()
+	pub fn new() -> Mean {
+		Mean::default()
 	}
 }
 
 impl<'a> Metric<'a> for Mean {
 	type Input = &'a [f32];
 	type Output = Option<f32>;
+
 	fn compute(input: Self::Input) -> Self::Output {
 		let mut mean = Mean::new();
 		for input in input.iter() {

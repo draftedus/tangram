@@ -3,23 +3,23 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
 
-/// ClassificationMetrics computes common metrics used to evaluate classifiers.
-pub struct ClassificationMetrics {
+/// MulticlassClassificationMetrics computes common metrics used to evaluate multiclass classifiers.
+pub struct MulticlassClassificationMetrics {
 	/// The shape of the confusion matrix is (n_classes x n_classes).
 	confusion_matrix: Array2<u64>,
 }
 
-/// The input to [ClassificationMetrics](struct.ClassificationMetrics.html).
-pub struct ClassificationMetricsInput<'a> {
+/// The input to [MulticlassClassificationMetrics](struct.MulticlassClassificationMetrics.html).
+pub struct MulticlassClassificationMetricsInput<'a> {
 	/// (n_examples, n_classes)
 	pub probabilities: ArrayView2<'a, f32>,
 	// (n_examples), 1-indexed
 	pub labels: ArrayView1<'a, Option<NonZeroUsize>>,
 }
 
-/// The output from [ClassificationMetrics](struct.ClassificationMetrics.html).
+/// The output from [MulticlassClassificationMetrics](struct.MulticlassClassificationMetrics.html).
 #[derive(Debug)]
-pub struct ClassificationMetricsOutput {
+pub struct MulticlassClassificationMetricsOutput {
 	/// The class metrics contain class specific metrics.
 	pub class_metrics: Vec<ClassMetrics>,
 	/// The accuracy is the fraction of all of the predictions that are correct.
@@ -57,21 +57,21 @@ pub struct ClassMetrics {
 	pub f1_score: f32,
 }
 
-impl ClassificationMetrics {
-	pub fn new(n_classes: usize) -> Self {
+impl MulticlassClassificationMetrics {
+	pub fn new(n_classes: usize) -> MulticlassClassificationMetrics {
 		//                                           prediction    label
 		//                                               |           |
 		//                                               v           v
 		let confusion_matrix = Array::zeros((n_classes, n_classes));
-		Self { confusion_matrix }
+		MulticlassClassificationMetrics { confusion_matrix }
 	}
 }
 
-impl<'a> StreamingMetric<'a> for ClassificationMetrics {
-	type Input = ClassificationMetricsInput<'a>;
-	type Output = ClassificationMetricsOutput;
+impl<'a> StreamingMetric<'a> for MulticlassClassificationMetrics {
+	type Input = MulticlassClassificationMetricsInput<'a>;
+	type Output = MulticlassClassificationMetricsOutput;
 
-	fn update(&mut self, value: ClassificationMetricsInput) {
+	fn update(&mut self, value: Self::Input) {
 		for (label, probabilities) in value
 			.labels
 			.iter()
@@ -93,7 +93,7 @@ impl<'a> StreamingMetric<'a> for ClassificationMetrics {
 		self.confusion_matrix += &other.confusion_matrix;
 	}
 
-	fn finalize(self) -> ClassificationMetricsOutput {
+	fn finalize(self) -> Self::Output {
 		let n_classes = self.confusion_matrix.nrows();
 		let n_examples = self.confusion_matrix.sum();
 		let confusion_matrix = self.confusion_matrix;
@@ -157,7 +157,7 @@ impl<'a> StreamingMetric<'a> for ClassificationMetrics {
 				Some(a) => Some(f32::max(a, b)),
 			})
 			.unwrap() / n_examples.to_f32().unwrap();
-		ClassificationMetricsOutput {
+		MulticlassClassificationMetricsOutput {
 			accuracy,
 			baseline_accuracy,
 			class_metrics,
@@ -170,9 +170,9 @@ impl<'a> StreamingMetric<'a> for ClassificationMetrics {
 }
 
 #[test]
-fn test_binary() {
+fn test_two() {
 	let classes = vec![String::from("Cat"), String::from("Dog")];
-	let mut metrics = ClassificationMetrics::new(classes.len());
+	let mut metrics = MulticlassClassificationMetrics::new(classes.len());
 	let labels = arr1(&[
 		Some(NonZeroUsize::new(1).unwrap()),
 		Some(NonZeroUsize::new(1).unwrap()),
@@ -203,13 +203,13 @@ fn test_binary() {
 		[1.0, 0.0], // incorrect
 		[1.0, 0.0], // incorrect
 	]);
-	metrics.update(ClassificationMetricsInput {
+	metrics.update(MulticlassClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels.view(),
 	});
 	let metrics = metrics.finalize();
 	insta::assert_debug_snapshot!(metrics, @r###"
- ClassificationMetricsOutput {
+ MulticlassClassificationMetricsOutput {
      class_metrics: [
          ClassMetrics {
              true_positives: 5,
@@ -243,14 +243,14 @@ fn test_binary() {
 }
 
 #[test]
-fn test_multiclass() {
+fn test_three() {
 	// This example was taken from https://en.wikipedia.org/wiki/Confusion_matrix.
 	let classes = vec![
 		String::from("Cat"),
 		String::from("Dog"),
 		String::from("Rabbit"),
 	];
-	let mut metrics = ClassificationMetrics::new(classes.len());
+	let mut metrics = MulticlassClassificationMetrics::new(classes.len());
 	let labels = arr1(&[
 		Some(NonZeroUsize::new(1).unwrap()),
 		Some(NonZeroUsize::new(1).unwrap()),
@@ -309,13 +309,13 @@ fn test_multiclass() {
 		[0.0, 0.0, 1.0], // correct
 		[0.0, 0.0, 1.0], // correct
 	]);
-	metrics.update(ClassificationMetricsInput {
+	metrics.update(MulticlassClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels.view(),
 	});
 	let metrics = metrics.finalize();
 	insta::assert_debug_snapshot!(metrics, @r###"
- ClassificationMetricsOutput {
+ MulticlassClassificationMetricsOutput {
      class_metrics: [
          ClassMetrics {
              true_positives: 5,

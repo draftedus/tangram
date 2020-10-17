@@ -162,7 +162,7 @@ async fn props(
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let column_stats = match &model {
-		tangram_core::model::Model::Classifier(model) => &model.overall_column_stats,
+		tangram_core::model::Model::MulticlassClassifier(model) => &model.overall_column_stats,
 		tangram_core::model::Model::Regressor(model) => &model.overall_column_stats,
 	};
 	let columns: Vec<Column> = column_stats

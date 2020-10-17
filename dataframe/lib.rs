@@ -158,7 +158,10 @@ pub enum DataFrameValue<'a> {
 }
 
 impl DataFrame {
-	pub fn new(column_names: Vec<Option<String>>, column_types: Vec<DataFrameColumnType>) -> Self {
+	pub fn new(
+		column_names: Vec<Option<String>>,
+		column_types: Vec<DataFrameColumnType>,
+	) -> DataFrame {
 		let columns = column_names
 			.into_iter()
 			.zip(column_types.into_iter())
@@ -177,7 +180,7 @@ impl DataFrame {
 				}
 			})
 			.collect();
-		Self { columns }
+		DataFrame { columns }
 	}
 
 	pub fn columns(&self) -> &Vec<DataFrameColumn> {
@@ -266,86 +269,86 @@ impl DataFrame {
 impl DataFrameColumn {
 	pub fn len(&self) -> usize {
 		match self {
-			Self::Unknown(s) => s.len(),
-			Self::Number(s) => s.len(),
-			Self::Enum(s) => s.len(),
-			Self::Text(s) => s.len(),
+			DataFrameColumn::Unknown(s) => s.len(),
+			DataFrameColumn::Number(s) => s.len(),
+			DataFrameColumn::Enum(s) => s.len(),
+			DataFrameColumn::Text(s) => s.len(),
 		}
 	}
 
 	pub fn is_empty(&self) -> bool {
 		match self {
-			Self::Unknown(s) => s.len == 0,
-			Self::Number(s) => s.data.is_empty(),
-			Self::Enum(s) => s.data.is_empty(),
-			Self::Text(s) => s.data.is_empty(),
+			DataFrameColumn::Unknown(s) => s.len == 0,
+			DataFrameColumn::Number(s) => s.data.is_empty(),
+			DataFrameColumn::Enum(s) => s.data.is_empty(),
+			DataFrameColumn::Text(s) => s.data.is_empty(),
 		}
 	}
 
 	pub fn name(&self) -> Option<&str> {
 		match self {
-			Self::Unknown(s) => s.name.as_deref(),
-			Self::Number(s) => s.name.as_deref(),
-			Self::Enum(s) => s.name.as_deref(),
-			Self::Text(s) => s.name.as_deref(),
+			DataFrameColumn::Unknown(s) => s.name.as_deref(),
+			DataFrameColumn::Number(s) => s.name.as_deref(),
+			DataFrameColumn::Enum(s) => s.name.as_deref(),
+			DataFrameColumn::Text(s) => s.name.as_deref(),
 		}
 	}
 
 	pub fn as_number(&self) -> Option<&NumberDataFrameColumn> {
 		match self {
-			Self::Number(s) => Some(s),
+			DataFrameColumn::Number(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_enum(&self) -> Option<&EnumDataFrameColumn> {
 		match self {
-			Self::Enum(s) => Some(s),
+			DataFrameColumn::Enum(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_text(&self) -> Option<&TextDataFrameColumn> {
 		match self {
-			Self::Text(s) => Some(s),
+			DataFrameColumn::Text(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_number_mut(&mut self) -> Option<&mut NumberDataFrameColumn> {
 		match self {
-			Self::Number(s) => Some(s),
+			DataFrameColumn::Number(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_enum_mut(&mut self) -> Option<&mut EnumDataFrameColumn> {
 		match self {
-			Self::Enum(s) => Some(s),
+			DataFrameColumn::Enum(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_text_mut(&mut self) -> Option<&mut TextDataFrameColumn> {
 		match self {
-			Self::Text(s) => Some(s),
+			DataFrameColumn::Text(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn view(&self) -> DataFrameColumnView {
 		match self {
-			Self::Unknown(column) => DataFrameColumnView::Unknown(column.view()),
-			Self::Number(column) => DataFrameColumnView::Number(column.view()),
-			Self::Enum(column) => DataFrameColumnView::Enum(column.view()),
-			Self::Text(column) => DataFrameColumnView::Text(column.view()),
+			DataFrameColumn::Unknown(column) => DataFrameColumnView::Unknown(column.view()),
+			DataFrameColumn::Number(column) => DataFrameColumnView::Number(column.view()),
+			DataFrameColumn::Enum(column) => DataFrameColumnView::Enum(column.view()),
+			DataFrameColumn::Text(column) => DataFrameColumnView::Text(column.view()),
 		}
 	}
 }
 
 impl UnknownDataFrameColumn {
-	pub fn new(name: Option<String>) -> Self {
-		Self { name, len: 0 }
+	pub fn new(name: Option<String>) -> UnknownDataFrameColumn {
+		UnknownDataFrameColumn { name, len: 0 }
 	}
 
 	pub fn name(&self) -> &Option<String> {
@@ -373,8 +376,8 @@ impl UnknownDataFrameColumn {
 }
 
 impl NumberDataFrameColumn {
-	pub fn new(name: Option<String>, data: Vec<f32>) -> Self {
-		Self { name, data }
+	pub fn new(name: Option<String>, data: Vec<f32>) -> NumberDataFrameColumn {
+		NumberDataFrameColumn { name, data }
 	}
 
 	pub fn name(&self) -> &Option<String> {
@@ -410,14 +413,14 @@ impl EnumDataFrameColumn {
 		name: Option<String>,
 		options: Vec<String>,
 		data: Vec<Option<NonZeroUsize>>,
-	) -> Self {
+	) -> EnumDataFrameColumn {
 		let options_map = options
 			.iter()
 			.cloned()
 			.enumerate()
 			.map(|(i, option)| (option, NonZeroUsize::new(i + 1).unwrap()))
 			.collect();
-		Self {
+		EnumDataFrameColumn {
 			name,
 			options,
 			data,
@@ -463,8 +466,8 @@ impl EnumDataFrameColumn {
 }
 
 impl TextDataFrameColumn {
-	pub fn new(name: Option<String>, data: Vec<String>) -> Self {
-		Self { name, data }
+	pub fn new(name: Option<String>, data: Vec<String>) -> TextDataFrameColumn {
+		TextDataFrameColumn { name, data }
 	}
 
 	pub fn name(&self) -> &Option<String> {
@@ -508,7 +511,7 @@ impl<'a> DataFrameView<'a> {
 		self.columns.first().map(|column| column.len()).unwrap_or(0)
 	}
 
-	pub fn view(&self) -> Self {
+	pub fn view(&self) -> DataFrameView {
 		self.clone()
 	}
 
@@ -523,7 +526,7 @@ impl<'a> DataFrameView<'a> {
 		}
 	}
 
-	pub fn split_at_row(&self, index: usize) -> (Self, Self) {
+	pub fn split_at_row(&self, index: usize) -> (DataFrameView<'a>, DataFrameView<'a>) {
 		let iter = self.columns.iter().map(|column| column.split_at_row(index));
 		let mut columns_a = Vec::with_capacity(self.columns.len());
 		let mut columns_b = Vec::with_capacity(self.columns.len());
@@ -531,7 +534,10 @@ impl<'a> DataFrameView<'a> {
 			columns_a.push(column_a);
 			columns_b.push(column_b);
 		}
-		(Self { columns: columns_a }, Self { columns: columns_b })
+		(
+			DataFrameView { columns: columns_a },
+			DataFrameView { columns: columns_b },
+		)
 	}
 
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
@@ -587,64 +593,64 @@ impl<'a> DataFrameView<'a> {
 impl<'a> DataFrameColumnView<'a> {
 	pub fn len(&self) -> usize {
 		match self {
-			Self::Unknown(s) => s.len,
-			Self::Number(s) => s.data.len(),
-			Self::Enum(s) => s.data.len(),
-			Self::Text(s) => s.data.len(),
+			DataFrameColumnView::Unknown(s) => s.len,
+			DataFrameColumnView::Number(s) => s.data.len(),
+			DataFrameColumnView::Enum(s) => s.data.len(),
+			DataFrameColumnView::Text(s) => s.data.len(),
 		}
 	}
 
 	pub fn is_empty(&self) -> bool {
 		match self {
-			Self::Unknown(s) => s.len == 0,
-			Self::Number(s) => s.data.is_empty(),
-			Self::Enum(s) => s.data.is_empty(),
-			Self::Text(s) => s.data.is_empty(),
+			DataFrameColumnView::Unknown(s) => s.len == 0,
+			DataFrameColumnView::Number(s) => s.data.is_empty(),
+			DataFrameColumnView::Enum(s) => s.data.is_empty(),
+			DataFrameColumnView::Text(s) => s.data.is_empty(),
 		}
 	}
 
 	pub fn name(&self) -> Option<&str> {
 		match self {
-			Self::Unknown(s) => s.name,
-			Self::Number(s) => s.name,
-			Self::Enum(s) => s.name,
-			Self::Text(s) => s.name,
+			DataFrameColumnView::Unknown(s) => s.name,
+			DataFrameColumnView::Number(s) => s.name,
+			DataFrameColumnView::Enum(s) => s.name,
+			DataFrameColumnView::Text(s) => s.name,
 		}
 	}
 
 	pub fn column_type(&self) -> DataFrameColumnTypeView {
 		match self {
-			Self::Unknown(_) => DataFrameColumnTypeView::Unknown,
-			Self::Number(_) => DataFrameColumnTypeView::Number,
-			Self::Enum(column) => DataFrameColumnTypeView::Enum {
+			DataFrameColumnView::Unknown(_) => DataFrameColumnTypeView::Unknown,
+			DataFrameColumnView::Number(_) => DataFrameColumnTypeView::Number,
+			DataFrameColumnView::Enum(column) => DataFrameColumnTypeView::Enum {
 				options: column.options,
 			},
-			Self::Text(_) => DataFrameColumnTypeView::Text,
+			DataFrameColumnView::Text(_) => DataFrameColumnTypeView::Text,
 		}
 	}
 
 	pub fn as_number(&self) -> Option<NumberDataFrameColumnView> {
 		match self {
-			Self::Number(s) => Some(s.clone()),
+			DataFrameColumnView::Number(s) => Some(s.clone()),
 			_ => None,
 		}
 	}
 
 	pub fn as_enum(&self) -> Option<EnumDataFrameColumnView> {
 		match self {
-			Self::Enum(s) => Some(s.clone()),
+			DataFrameColumnView::Enum(s) => Some(s.clone()),
 			_ => None,
 		}
 	}
 
 	pub fn as_text(&self) -> Option<TextDataFrameColumnView> {
 		match self {
-			Self::Text(s) => Some(s.clone()),
+			DataFrameColumnView::Text(s) => Some(s.clone()),
 			_ => None,
 		}
 	}
 
-	pub fn split_at_row(&self, index: usize) -> (Self, Self) {
+	pub fn split_at_row(&self, index: usize) -> (DataFrameColumnView<'a>, DataFrameColumnView<'a>) {
 		match self {
 			DataFrameColumnView::Unknown(column) => (
 				DataFrameColumnView::Unknown(UnknownDataFrameColumnView {
@@ -700,7 +706,7 @@ impl<'a> DataFrameColumnView<'a> {
 		}
 	}
 
-	pub fn view(&self) -> Self {
+	pub fn view(&self) -> DataFrameColumnView {
 		match self {
 			DataFrameColumnView::Unknown(s) => DataFrameColumnView::Unknown(s.view()),
 			DataFrameColumnView::Number(s) => DataFrameColumnView::Number(s.view()),
@@ -723,7 +729,7 @@ impl<'a> UnknownDataFrameColumnView<'a> {
 		self.len
 	}
 
-	pub fn view(&self) -> Self {
+	pub fn view(&self) -> UnknownDataFrameColumnView {
 		self.clone()
 	}
 }
@@ -749,7 +755,7 @@ impl<'a> NumberDataFrameColumnView<'a> {
 		self.data
 	}
 
-	pub fn view(&self) -> Self {
+	pub fn view(&self) -> NumberDataFrameColumnView {
 		self.clone()
 	}
 }
@@ -779,7 +785,7 @@ impl<'a> EnumDataFrameColumnView<'a> {
 		self.data
 	}
 
-	pub fn view(&self) -> Self {
+	pub fn view(&self) -> EnumDataFrameColumnView {
 		self.clone()
 	}
 }
@@ -805,7 +811,7 @@ impl<'a> TextDataFrameColumnView<'a> {
 		self.data
 	}
 
-	pub fn view(&self) -> Self {
+	pub fn view(&self) -> TextDataFrameColumnView {
 		self.clone()
 	}
 }
@@ -813,42 +819,42 @@ impl<'a> TextDataFrameColumnView<'a> {
 impl<'a> DataFrameValue<'a> {
 	pub fn as_number(&self) -> Option<&f32> {
 		match self {
-			Self::Number(s) => Some(s),
+			DataFrameValue::Number(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_number_mut(&mut self) -> Option<&mut f32> {
 		match self {
-			Self::Number(s) => Some(s),
+			DataFrameValue::Number(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_enum(&self) -> Option<&Option<NonZeroUsize>> {
 		match self {
-			Self::Enum(s) => Some(s),
+			DataFrameValue::Enum(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_enum_mut(&mut self) -> Option<&mut Option<NonZeroUsize>> {
 		match self {
-			Self::Enum(s) => Some(s),
+			DataFrameValue::Enum(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_text(&self) -> Option<&str> {
 		match self {
-			Self::Text(s) => Some(s),
+			DataFrameValue::Text(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_text_mut(&mut self) -> Option<&mut &'a str> {
 		match self {
-			Self::Text(s) => Some(s),
+			DataFrameValue::Text(s) => Some(s),
 			_ => None,
 		}
 	}

@@ -34,8 +34,8 @@ fn main() {
 	model.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute Metrics.
-	let mut metrics = tangram_metrics::ClassificationMetrics::new(n_classes);
-	metrics.update(tangram_metrics::ClassificationMetricsInput {
+	let mut metrics = tangram_metrics::MulticlassClassificationMetrics::new(n_classes);
+	metrics.update(tangram_metrics::MulticlassClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels_test.view().as_slice().into(),
 	});

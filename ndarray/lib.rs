@@ -57,20 +57,6 @@ impl Dimension for Dim<[usize; 2]> {
 	}
 }
 
-// impl<T, S> Array<T, S>
-// where
-// 	T: Num,
-// 	S: Dimension,
-// {
-// 	pub fn zeros(shape: S) -> Self {
-// 		Self {
-// 			data: vec![],
-// 			shape,
-// 			strides: shape.row_major_strides(),
-// 		}
-// 	}
-// }
-
 impl<T, D> std::ops::Index<D> for Array<T, D>
 where
 	D: Dimension,

@@ -13,13 +13,13 @@ export type RegressionOutput = {
 	value: number
 }
 
-export type ClassificationOutput<Input = string, Classes = string> = {
+export type MulticlassClassificationOutput<Input = string, Classes = string> = {
 	className: Classes
 	probabilities: { [K in keyof Classes]: number }
 	probability: number
 }
 
-export type Output = RegressionOutput | ClassificationOutput
+export type Output = RegressionOutput | MulticlassClassificationOutput
 
 export type MonitorEvent = PredictionMonitorEvent | TrueValueMonitorEvent
 
@@ -27,7 +27,7 @@ export type PredictionMonitorEvent = {
 	identifier?: number | string
 	input: { [key: string]: string | number | boolean | null | undefined }
 	modelId: string
-	output: ClassificationOutput | RegressionOutput
+	output: MulticlassClassificationOutput | RegressionOutput
 	type: 'prediction'
 }
 

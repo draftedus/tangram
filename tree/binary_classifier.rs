@@ -35,7 +35,7 @@ impl BinaryClassifier {
 		labels: EnumDataFrameColumnView,
 		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
-	) -> Self {
+	) -> BinaryClassifier {
 		let task = Task::BinaryClassification;
 		let model = train(
 			task,

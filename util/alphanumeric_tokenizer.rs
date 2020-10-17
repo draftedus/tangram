@@ -24,8 +24,8 @@ pub struct AlphanumericTokenizer<'a> {
 }
 
 impl<'a> AlphanumericTokenizer<'a> {
-	pub fn new(text: &'a str) -> Self {
-		Self {
+	pub fn new(text: &'a str) -> AlphanumericTokenizer<'a> {
+		AlphanumericTokenizer {
 			text,
 			byte_index: 0,
 		}

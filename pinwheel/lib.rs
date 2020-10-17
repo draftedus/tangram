@@ -36,16 +36,16 @@ impl std::fmt::Display for JSError {
 impl std::error::Error for JSError {}
 
 impl Pinwheel {
-	pub fn dev(src_dir: PathBuf, dst_dir: PathBuf) -> Self {
-		Self {
+	pub fn dev(src_dir: PathBuf, dst_dir: PathBuf) -> Pinwheel {
+		Pinwheel {
 			src_dir: Some(src_dir),
 			dst_dir: Some(dst_dir.clone()),
 			fs: Box::new(RealFileSystem { dst_dir }),
 		}
 	}
 
-	pub fn prod(dir: include_dir::Dir<'static>) -> Self {
-		Self {
+	pub fn prod(dir: include_dir::Dir<'static>) -> Pinwheel {
+		Pinwheel {
 			src_dir: None,
 			dst_dir: None,
 			fs: Box::new(IncludedFileSystem { dir }),

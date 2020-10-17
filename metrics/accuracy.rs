@@ -5,8 +5,8 @@ use super::{mean::Mean, StreamingMetric};
 pub struct Accuracy(Mean);
 
 impl Accuracy {
-	pub fn new() -> Self {
-		Self::default()
+	pub fn new() -> Accuracy {
+		Accuracy::default()
 	}
 }
 

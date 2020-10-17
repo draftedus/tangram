@@ -100,8 +100,8 @@ pub struct StatsSettings {
 }
 
 impl Default for StatsSettings {
-	fn default() -> Self {
-		Self {
+	fn default() -> StatsSettings {
+		StatsSettings {
 			text_histogram_max_size: 100,
 			number_histogram_max_size: 100,
 			top_tokens_count: 20_000,
@@ -201,23 +201,23 @@ pub struct TokenStats {
 }
 
 impl Stats {
-	pub fn compute(dataframe: &DataFrameView, settings: &StatsSettings) -> Self {
+	pub fn compute(dataframe: &DataFrameView, settings: &StatsSettings) -> Stats {
 		let column_stats = dataframe
 			.columns()
 			.iter()
 			.map(|column| ColumnStats::compute(column.view(), &settings))
 			.collect();
-		Self(column_stats)
+		Stats(column_stats)
 	}
 
-	pub fn merge(self, other: Stats) -> Self {
+	pub fn merge(self, other: Stats) -> Stats {
 		let column_stats: Vec<ColumnStats> = self
 			.0
 			.into_iter()
 			.zip(other.0.into_iter())
 			.map(|(a, b)| a.merge(b))
 			.collect();
-		Self(column_stats)
+		Stats(column_stats)
 	}
 
 	pub fn finalize(self, settings: &StatsSettings) -> StatsOutput {
@@ -231,55 +231,59 @@ impl Stats {
 }
 
 impl ColumnStats {
-	fn compute(column: DataFrameColumnView, settings: &StatsSettings) -> Self {
+	fn compute(column: DataFrameColumnView, settings: &StatsSettings) -> ColumnStats {
 		match column {
-			DataFrameColumnView::Unknown(column) => Self::Unknown(UnknownColumnStats {
+			DataFrameColumnView::Unknown(column) => ColumnStats::Unknown(UnknownColumnStats {
 				column_name: column.name().unwrap().to_owned(),
 				count: column.len(),
 				invalid_count: column.len(),
 			}),
 			DataFrameColumnView::Number(column) => {
-				Self::Number(NumberColumnStats::compute(column.view(), settings))
+				ColumnStats::Number(NumberColumnStats::compute(column.view(), settings))
 			}
 			DataFrameColumnView::Enum(column) => {
-				Self::Enum(EnumColumnStats::compute(column, settings))
+				ColumnStats::Enum(EnumColumnStats::compute(column, settings))
 			}
 			DataFrameColumnView::Text(column) => {
-				Self::Text(TextColumnStats::compute(column, settings))
+				ColumnStats::Text(TextColumnStats::compute(column, settings))
 			}
 		}
 	}
 
-	fn merge(self, other: Self) -> Self {
+	fn merge(self, other: ColumnStats) -> ColumnStats {
 		match (self, other) {
-			(Self::Unknown(a), Self::Unknown(b)) => Self::Unknown(UnknownColumnStats {
-				column_name: a.column_name.to_owned(),
-				count: a.count + b.count,
-				invalid_count: a.invalid_count + b.invalid_count,
-			}),
-			(Self::Number(a), Self::Number(b)) => Self::Number(a.merge(b)),
-			(Self::Enum(a), Self::Enum(b)) => Self::Enum(a.merge(b)),
-			(Self::Text(a), Self::Text(b)) => Self::Text(a.merge(b)),
+			(ColumnStats::Unknown(a), ColumnStats::Unknown(b)) => {
+				ColumnStats::Unknown(UnknownColumnStats {
+					column_name: a.column_name.to_owned(),
+					count: a.count + b.count,
+					invalid_count: a.invalid_count + b.invalid_count,
+				})
+			}
+			(ColumnStats::Number(a), ColumnStats::Number(b)) => ColumnStats::Number(a.merge(b)),
+			(ColumnStats::Enum(a), ColumnStats::Enum(b)) => ColumnStats::Enum(a.merge(b)),
+			(ColumnStats::Text(a), ColumnStats::Text(b)) => ColumnStats::Text(a.merge(b)),
 			_ => unreachable!(),
 		}
 	}
 
 	fn finalize(self, settings: &StatsSettings) -> ColumnStatsOutput {
 		match self {
-			Self::Unknown(s) => ColumnStatsOutput::Unknown(stats::UnknownColumnStatsOutput {
-				column_name: s.column_name,
-				count: s.count,
-			}),
-			Self::Number(s) => ColumnStatsOutput::Number(s.finalize(settings)),
-			Self::Enum(s) => ColumnStatsOutput::Enum(s.finalize(settings)),
-			Self::Text(s) => ColumnStatsOutput::Text(s.finalize(settings)),
+			ColumnStats::Unknown(s) => {
+				ColumnStatsOutput::Unknown(stats::UnknownColumnStatsOutput {
+					column_name: s.column_name,
+					count: s.count,
+				})
+			}
+			ColumnStats::Number(s) => ColumnStatsOutput::Number(s.finalize(settings)),
+			ColumnStats::Enum(s) => ColumnStatsOutput::Enum(s.finalize(settings)),
+			ColumnStats::Text(s) => ColumnStatsOutput::Text(s.finalize(settings)),
 		}
 	}
 }
 
 impl NumberColumnStats {
-	fn compute(column: NumberDataFrameColumnView, _settings: &StatsSettings) -> Self {
-		let mut stats = Self {
+	fn compute(column: NumberDataFrameColumnView, _settings: &StatsSettings) -> NumberColumnStats {
+		let mut stats = NumberColumnStats {
 			column_name: column.name().unwrap().to_owned(),
 			count: column.len(),
 			histogram: BTreeMap::new(),
@@ -298,7 +302,7 @@ impl NumberColumnStats {
 		stats
 	}
 
-	fn merge(mut self, other: Self) -> Self {
+	fn merge(mut self, other: NumberColumnStats) -> NumberColumnStats {
 		for (value, count) in other.histogram.iter() {
 			*self.histogram.entry(*value).or_insert(0) += count;
 		}
@@ -396,14 +400,14 @@ impl NumberColumnStats {
 }
 
 impl EnumColumnStats {
-	fn compute(column: EnumDataFrameColumnView, _settings: &StatsSettings) -> Self {
+	fn compute(column: EnumDataFrameColumnView, _settings: &StatsSettings) -> EnumColumnStats {
 		let mut histogram = vec![0; column.options().len() + 1];
 		for value in column.iter() {
 			let index = value.map(|v| v.get()).unwrap_or(0);
 			histogram[index] += 1;
 		}
 		let invalid_count = histogram[0];
-		Self {
+		EnumColumnStats {
 			column_name: column.name().unwrap().to_owned(),
 			count: column.len(),
 			options: column.options().to_owned(),
@@ -413,7 +417,7 @@ impl EnumColumnStats {
 		}
 	}
 
-	fn merge(mut self, other: Self) -> Self {
+	fn merge(mut self, other: EnumColumnStats) -> EnumColumnStats {
 		for (a, b) in self.histogram.iter_mut().zip(other.histogram.iter()) {
 			*a += b;
 		}
@@ -440,8 +444,8 @@ impl EnumColumnStats {
 }
 
 impl TextColumnStats {
-	fn compute(column: TextDataFrameColumnView, _settings: &StatsSettings) -> Self {
-		let mut stats = Self {
+	fn compute(column: TextDataFrameColumnView, _settings: &StatsSettings) -> TextColumnStats {
+		let mut stats = TextColumnStats {
 			column_name: column.name().unwrap().to_owned(),
 			count: column.len(),
 			token_occurrence_histogram: BTreeMap::new(),
@@ -468,7 +472,7 @@ impl TextColumnStats {
 		stats
 	}
 
-	fn merge(mut self, other: Self) -> Self {
+	fn merge(mut self, other: TextColumnStats) -> TextColumnStats {
 		self.count += other.count;
 		for (value, count) in other.token_occurrence_histogram.into_iter() {
 			if let Some(entry) = self.token_occurrence_histogram.get_mut(&value) {
@@ -539,10 +543,10 @@ impl ColumnStatsOutput {
 	/// Return the name of the source column.
 	pub fn column_name(&self) -> &str {
 		match self {
-			Self::Unknown(value) => &value.column_name,
-			Self::Number(value) => &value.column_name,
-			Self::Enum(value) => &value.column_name,
-			Self::Text(value) => &value.column_name,
+			ColumnStatsOutput::Unknown(value) => &value.column_name,
+			ColumnStatsOutput::Number(value) => &value.column_name,
+			ColumnStatsOutput::Enum(value) => &value.column_name,
+			ColumnStatsOutput::Text(value) => &value.column_name,
 		}
 	}
 }

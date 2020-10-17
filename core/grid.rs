@@ -44,8 +44,8 @@ pub struct LinearModelTrainOptions {
 }
 
 impl Default for LinearModelTrainOptions {
-	fn default() -> Self {
-		Self {
+	fn default() -> LinearModelTrainOptions {
+		LinearModelTrainOptions {
 			l2_regularization: None,
 			learning_rate: None,
 			max_epochs: None,
@@ -72,8 +72,8 @@ pub struct TreeModelTrainOptions {
 }
 
 impl Default for TreeModelTrainOptions {
-	fn default() -> Self {
-		Self {
+	fn default() -> TreeModelTrainOptions {
+		TreeModelTrainOptions {
 			early_stopping_options: None,
 			l2_regularization: None,
 			learning_rate: None,

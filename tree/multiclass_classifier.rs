@@ -38,7 +38,7 @@ impl MulticlassClassifier {
 		labels: EnumDataFrameColumnView,
 		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
-	) -> Self {
+	) -> MulticlassClassifier {
 		let task = crate::train::Task::MulticlassClassification {
 			n_classes: labels.options().len(),
 		};

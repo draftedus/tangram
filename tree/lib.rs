@@ -61,8 +61,8 @@ pub struct TrainOptions {
 }
 
 impl Default for TrainOptions {
-	fn default() -> Self {
-		Self {
+	fn default() -> TrainOptions {
+		TrainOptions {
 			binned_features_layout: BinnedFeaturesLayout::ColumnMajor,
 			compute_loss: false,
 			early_stopping_options: None,
@@ -177,24 +177,24 @@ pub enum Node {
 impl Node {
 	pub fn as_branch(&self) -> Option<&BranchNode> {
 		match self {
-			Self::Branch(branch) => Some(branch),
+			Node::Branch(branch) => Some(branch),
 			_ => None,
 		}
 	}
 
 	pub fn as_leaf(&self) -> Option<&LeafNode> {
 		match self {
-			Self::Leaf(leaf) => Some(leaf),
+			Node::Leaf(leaf) => Some(leaf),
 			_ => None,
 		}
 	}
 
 	pub fn examples_fraction(&self) -> f32 {
 		match self {
-			Self::Leaf(LeafNode {
+			Node::Leaf(LeafNode {
 				examples_fraction, ..
 			}) => *examples_fraction,
-			Self::Branch(BranchNode {
+			Node::Branch(BranchNode {
 				examples_fraction, ..
 			}) => *examples_fraction,
 		}
@@ -259,8 +259,8 @@ pub struct LeafNode {
 impl BranchSplit {
 	pub fn feature_index(&self) -> usize {
 		match self {
-			Self::Continuous(b) => b.feature_index,
-			Self::Discrete(b) => b.feature_index,
+			BranchSplit::Continuous(b) => b.feature_index,
+			BranchSplit::Discrete(b) => b.feature_index,
 		}
 	}
 }

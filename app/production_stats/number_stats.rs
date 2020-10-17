@@ -29,8 +29,8 @@ pub struct NumberStatsOutput {
 }
 
 impl NumberStats {
-	pub fn new(value: f32) -> Self {
-		Self {
+	pub fn new(value: f32) -> NumberStats {
+		NumberStats {
 			n: 1,
 			min: value,
 			max: value,
@@ -108,7 +108,7 @@ impl StreamingMetric<'_> for NumberStats {
 				*quantile = value;
 			}
 		}
-		Self::Output {
+		NumberStatsOutput {
 			n: self.n,
 			p25: quantiles[0],
 			p50: quantiles[1],

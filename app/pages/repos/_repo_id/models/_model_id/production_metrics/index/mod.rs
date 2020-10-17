@@ -30,8 +30,8 @@ struct Props {
 enum Inner {
 	#[serde(rename = "regressor")]
 	Regressor(RegressorProductionMetricsOverview),
-	#[serde(rename = "classifier")]
-	Classifier(ClassifierProductionMetricsOverview),
+	#[serde(rename = "multiclass_classifier")]
+	MulticlassClassifier(MulticlassClassifierProductionMetricsOverview),
 }
 
 #[derive(serde::Serialize)]
@@ -82,11 +82,11 @@ struct TrainingProductionMetrics {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ClassifierProductionMetricsOverview {
+struct MulticlassClassifierProductionMetricsOverview {
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	true_values_count_chart: Vec<TrueValuesCountChartEntry>,
-	overall: ClassificationOverallProductionMetrics,
+	overall: MulticlassClassificationOverallProductionMetrics,
 	id: String,
 	accuracy_chart: AccuracyChart,
 }
@@ -107,7 +107,7 @@ struct AccuracyChartEntry {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ClassificationOverallProductionMetrics {
+struct MulticlassClassificationOverallProductionMetrics {
 	accuracy: TrainingProductionMetrics,
 	class_metrics_table: Vec<ClassMetricsTableEntry>,
 	true_values_count: u64,
@@ -247,14 +247,16 @@ async fn props(
 				true_values_count_chart,
 			})
 		}
-		tangram_core::model::Model::Classifier(model) => {
+		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let training_metrics = &model.test_metrics;
 			let overall_production_metrics =
 				production_metrics
 					.overall
 					.prediction_metrics
 					.map(|metrics| match metrics {
-						ProductionPredictionMetricsOutput::Classification(metrics) => metrics,
+						ProductionPredictionMetricsOutput::MulticlassClassification(metrics) => {
+							metrics
+						}
 						_ => unreachable!(),
 					});
 			let true_values_count_chart = production_metrics
@@ -284,7 +286,7 @@ async fn props(
 								.prediction_metrics
 								.as_ref()
 								.map(|prediction_metrics| {
-									if let ProductionPredictionMetricsOutput::Classification(
+									if let ProductionPredictionMetricsOutput::MulticlassClassification(
 										predicion_metrics,
 									) = prediction_metrics
 									{
@@ -333,7 +335,7 @@ async fn props(
 					}
 				})
 				.collect();
-			let overall = ClassificationOverallProductionMetrics {
+			let overall = MulticlassClassificationOverallProductionMetrics {
 				accuracy: TrainingProductionMetrics {
 					production: production_accuracy,
 					training: training_metrics.accuracy,
@@ -341,7 +343,7 @@ async fn props(
 				class_metrics_table,
 				true_values_count,
 			};
-			Inner::Classifier(ClassifierProductionMetricsOverview {
+			Inner::MulticlassClassifier(MulticlassClassifierProductionMetricsOverview {
 				date_window,
 				date_window_interval,
 				true_values_count_chart,

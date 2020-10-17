@@ -53,8 +53,8 @@ pub struct ProgressCounter {
 
 impl ProgressCounter {
 	/// Create a new `ProgressCounter` that will count from 0 up to the specified `total`.
-	pub fn new(total: u64) -> Self {
-		Self {
+	pub fn new(total: u64) -> ProgressCounter {
+		ProgressCounter {
 			current: Arc::new(AtomicU64::new(0)),
 			total,
 		}

@@ -48,8 +48,8 @@ export type PredictionStatsChart =
 			type: Task.Regression
 	  }
 	| {
-			data: ClassificationChartEntry
-			type: Task.Classification
+			data: MulticlassClassificationChartEntry
+			type: Task.MulticlassClassification
 	  }
 
 export type PredictionStatsIntervalChart =
@@ -58,13 +58,13 @@ export type PredictionStatsIntervalChart =
 			type: Task.Regression
 	  }
 	| {
-			data: ClassificationChartEntry[]
-			type: Task.Classification
+			data: MulticlassClassificationChartEntry[]
+			type: Task.MulticlassClassification
 	  }
 
 export enum Task {
 	Regression = 'regression',
-	Classification = 'classification',
+	MulticlassClassification = 'multiclass_classification',
 }
 
 export type RegressionChartEntry = {
@@ -87,7 +87,7 @@ export type RegressionChartEntry = {
 	}
 }
 
-export type ClassificationChartEntry = {
+export type MulticlassClassificationChartEntry = {
 	histogram: {
 		production: Array<[string, number]>
 		training: Array<[string, number]>
@@ -141,7 +141,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 					</ui.Card>
 				) : (
 					<ui.Card>
-						<ClassificationProductionStatsIntervalChart
+						<MulticlassClassificationProductionStatsIntervalChart
 							chartData={props.predictionStatsIntervalChart.data}
 							dateWindow={props.dateWindow}
 							dateWindowInterval={props.dateWindowInterval}
@@ -164,7 +164,7 @@ export default function ProductionStatsIndexPage(props: Props) {
 					</ui.Card>
 				) : (
 					<ui.Card>
-						<ClassificationProductionStatsChart
+						<MulticlassClassificationProductionStatsChart
 							chartData={props.predictionStatsChart.data}
 							dateWindow={props.dateWindow}
 						/>
@@ -305,8 +305,8 @@ function RegressionProductionStatsIntervalChart(props: {
 	return <BoxChart data={data} id="quantiles_intervals" title={title} />
 }
 
-function ClassificationProductionStatsChart(props: {
-	chartData: ClassificationChartEntry
+function MulticlassClassificationProductionStatsChart(props: {
+	chartData: MulticlassClassificationChartEntry
 	dateWindow: DateWindow
 }) {
 	let options = props.chartData.histogram.production.map(x => x[0])
@@ -339,8 +339,8 @@ function ClassificationProductionStatsChart(props: {
 	return <BarChart data={data} id="histogram_overall" title={title} />
 }
 
-function ClassificationProductionStatsIntervalChart(props: {
-	chartData: ClassificationChartEntry[]
+function MulticlassClassificationProductionStatsIntervalChart(props: {
+	chartData: MulticlassClassificationChartEntry[]
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 }) {

@@ -136,7 +136,7 @@ async fn props(
 		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
 			.await?;
 	let model = match model {
-		tangram_core::model::Model::Classifier(model) => model,
+		tangram_core::model::Model::MulticlassClassifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let classes = model.classes();
@@ -148,7 +148,7 @@ async fn props(
 			.prediction_metrics
 			.map(|prediction_metrics| match prediction_metrics {
 				ProductionPredictionMetricsOutput::Regression(_) => unreachable!(),
-				ProductionPredictionMetricsOutput::Classification(prediction_metrics) => {
+				ProductionPredictionMetricsOutput::MulticlassClassification(prediction_metrics) => {
 					prediction_metrics
 				}
 			});
@@ -249,7 +249,7 @@ async fn props(
 							.as_ref()
 							.map(|metrics| match metrics {
 								ProductionPredictionMetricsOutput::Regression(_) => unreachable!(),
-								ProductionPredictionMetricsOutput::Classification(
+								ProductionPredictionMetricsOutput::MulticlassClassification(
 									prediction_metrics,
 								) => prediction_metrics,
 							});

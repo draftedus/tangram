@@ -66,7 +66,7 @@ impl std::fmt::Display for Token {
 }
 
 impl From<tangram_core::model::Token> for Token {
-	fn from(value: tangram_core::model::Token) -> Self {
+	fn from(value: tangram_core::model::Token) -> Token {
 		match value {
 			tangram_core::model::Token::Unigram(token) => Token::Unigram(token),
 			tangram_core::model::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
@@ -121,7 +121,7 @@ pub struct TextProductionColumnStatsOutput {
 }
 
 impl ProductionColumnStats {
-	pub fn new(column_stats: &tangram_core::model::ColumnStats) -> Self {
+	pub fn new(column_stats: &tangram_core::model::ColumnStats) -> ProductionColumnStats {
 		match column_stats {
 			tangram_core::model::ColumnStats::Unknown(stats) => {
 				ProductionColumnStats::Unknown(UnknownProductionColumnStats::new(stats))
@@ -140,10 +140,10 @@ impl ProductionColumnStats {
 
 	pub fn column_name(&self) -> &str {
 		match self {
-			Self::Unknown(s) => s.column_name.as_str(),
-			Self::Text(s) => s.column_name.as_str(),
-			Self::Number(s) => s.column_name.as_str(),
-			Self::Enum(s) => s.column_name.as_str(),
+			ProductionColumnStats::Unknown(s) => s.column_name.as_str(),
+			ProductionColumnStats::Text(s) => s.column_name.as_str(),
+			ProductionColumnStats::Number(s) => s.column_name.as_str(),
+			ProductionColumnStats::Enum(s) => s.column_name.as_str(),
 		}
 	}
 }
@@ -154,31 +154,31 @@ impl<'a> StreamingMetric<'a> for ProductionColumnStats {
 
 	fn update(&mut self, value: Self::Input) {
 		match self {
-			Self::Unknown(stats) => stats.update(value),
-			Self::Text(stats) => stats.update(value),
-			Self::Number(stats) => stats.update(value),
-			Self::Enum(stats) => stats.update(value),
+			ProductionColumnStats::Unknown(stats) => stats.update(value),
+			ProductionColumnStats::Text(stats) => stats.update(value),
+			ProductionColumnStats::Number(stats) => stats.update(value),
+			ProductionColumnStats::Enum(stats) => stats.update(value),
 		}
 	}
 
 	fn merge(&mut self, other: Self) {
 		match self {
-			Self::Unknown(stats) => {
+			ProductionColumnStats::Unknown(stats) => {
 				if let ProductionColumnStats::Unknown(other) = other {
 					stats.merge(other)
 				}
 			}
-			Self::Text(stats) => {
+			ProductionColumnStats::Text(stats) => {
 				if let ProductionColumnStats::Text(other) = other {
 					stats.merge(other)
 				}
 			}
-			Self::Number(stats) => {
+			ProductionColumnStats::Number(stats) => {
 				if let ProductionColumnStats::Number(other) = other {
 					stats.merge(other)
 				}
 			}
-			Self::Enum(stats) => {
+			ProductionColumnStats::Enum(stats) => {
 				if let ProductionColumnStats::Enum(other) = other {
 					stats.merge(other)
 				}
@@ -205,8 +205,8 @@ impl<'a> StreamingMetric<'a> for ProductionColumnStats {
 }
 
 impl UnknownProductionColumnStats {
-	fn new(column_stats: &tangram_core::model::UnknownColumnStats) -> Self {
-		Self {
+	fn new(column_stats: &tangram_core::model::UnknownColumnStats) -> UnknownProductionColumnStats {
+		UnknownProductionColumnStats {
 			column_name: column_stats.column_name.clone(),
 			invalid_count: 0,
 			absent_count: 0,
@@ -242,7 +242,7 @@ impl<'a> StreamingMetric<'a> for UnknownProductionColumnStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		Self::Output {
+		UnknownProductionColumnStatsOutput {
 			column_name: self.column_name,
 			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
@@ -251,8 +251,8 @@ impl<'a> StreamingMetric<'a> for UnknownProductionColumnStats {
 }
 
 impl NumberProductionColumnStats {
-	fn new(column_stats: &tangram_core::model::NumberColumnStats) -> Self {
-		Self {
+	fn new(column_stats: &tangram_core::model::NumberColumnStats) -> NumberProductionColumnStats {
+		NumberProductionColumnStats {
 			column_name: column_stats.column_name.clone(),
 			absent_count: 0,
 			invalid_count: 0,
@@ -323,7 +323,7 @@ impl<'a> StreamingMetric<'a> for NumberProductionColumnStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		Self::Output {
+		NumberProductionColumnStatsOutput {
 			column_name: self.column_name,
 			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
@@ -333,14 +333,14 @@ impl<'a> StreamingMetric<'a> for NumberProductionColumnStats {
 }
 
 impl EnumProductionColumnStats {
-	fn new(column_stats: &tangram_core::model::EnumColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::model::EnumColumnStats) -> EnumProductionColumnStats {
 		let column_name = &column_stats.column_name;
 		let histogram = column_stats
 			.histogram
 			.iter()
 			.map(|(value, _)| (value.clone(), 0))
 			.collect();
-		Self {
+		EnumProductionColumnStats {
 			column_name: column_name.clone(),
 			invalid_count: 0,
 			absent_count: 0,
@@ -423,7 +423,7 @@ impl<'a> StreamingMetric<'a> for EnumProductionColumnStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		Self::Output {
+		EnumProductionColumnStatsOutput {
 			column_name: self.column_name,
 			histogram: self.histogram.into_iter().collect(),
 			absent_count: self.absent_count,
@@ -434,7 +434,7 @@ impl<'a> StreamingMetric<'a> for EnumProductionColumnStats {
 }
 
 impl TextProductionColumnStats {
-	fn new(column_stats: &tangram_core::model::TextColumnStats) -> Self {
+	fn new(column_stats: &tangram_core::model::TextColumnStats) -> TextProductionColumnStats {
 		let tokenizer = match column_stats.tokenizer {
 			tangram_core::model::Tokenizer::Alphanumeric => Tokenizer::Alphanumeric,
 		};
@@ -448,7 +448,7 @@ impl TextProductionColumnStats {
 			.iter()
 			.map(|value| (value.token.clone().into(), 0))
 			.collect();
-		Self {
+		TextProductionColumnStats {
 			column_name: column_stats.column_name.clone(),
 			absent_count: 0,
 			invalid_count: 0,
@@ -521,7 +521,7 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		Self::Output {
+		TextProductionColumnStatsOutput {
 			column_name: self.column_name,
 			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
@@ -534,10 +534,10 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 impl ProductionColumnStatsOutput {
 	pub fn column_name(&self) -> &str {
 		match self {
-			Self::Unknown(s) => s.column_name.as_str(),
-			Self::Text(s) => s.column_name.as_str(),
-			Self::Number(s) => s.column_name.as_str(),
-			Self::Enum(s) => s.column_name.as_str(),
+			ProductionColumnStatsOutput::Unknown(s) => s.column_name.as_str(),
+			ProductionColumnStatsOutput::Text(s) => s.column_name.as_str(),
+			ProductionColumnStatsOutput::Number(s) => s.column_name.as_str(),
+			ProductionColumnStatsOutput::Enum(s) => s.column_name.as_str(),
 		}
 	}
 }

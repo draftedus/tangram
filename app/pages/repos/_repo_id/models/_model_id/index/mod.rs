@@ -26,7 +26,7 @@ enum Inner {
 	#[serde(rename = "regressor")]
 	Regressor(Regressor),
 	#[serde(rename = "classifier")]
-	Classifier(Classifier),
+	MulticlassClassifier(MulticlassClassifier),
 }
 
 #[derive(serde::Serialize)]
@@ -48,9 +48,9 @@ struct RegressorMetrics {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Classifier {
+struct MulticlassClassifier {
 	id: String,
-	metrics: ClassifierMetrics,
+	metrics: MulticlassClassificationMetrics,
 	training_summary: TrainingSummary,
 }
 
@@ -66,7 +66,7 @@ struct TrainingSummary {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ClassifierMetrics {
+struct MulticlassClassificationMetrics {
 	accuracy: f32,
 	baseline_accuracy: f32,
 	class_metrics: Vec<ClassMetrics>,
@@ -114,7 +114,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let model = get_model(&mut db, model_id).await?;
 	let training_summary = training_summary(&model);
 	let inner = match &model {
-		tangram_core::model::Model::Classifier(model) => {
+		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let test_metrics = &model.test_metrics;
 			let class_metrics = &test_metrics.class_metrics;
 			let class_metrics = class_metrics
@@ -124,9 +124,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					recall: class_metrics.recall,
 				})
 				.collect::<Vec<ClassMetrics>>();
-			Inner::Classifier(Classifier {
+			Inner::MulticlassClassifier(MulticlassClassifier {
 				id: model_id.to_string(),
-				metrics: ClassifierMetrics {
+				metrics: MulticlassClassificationMetrics {
 					accuracy: test_metrics.accuracy,
 					baseline_accuracy: test_metrics.baseline_accuracy,
 					class_metrics,
@@ -170,7 +170,7 @@ fn training_summary(model: &tangram_core::model::Model) -> TrainingSummary {
 			train_row_count: model.train_row_count.to_usize().unwrap(),
 			test_row_count: model.test_row_count.to_usize().unwrap(),
 		},
-		tangram_core::model::Model::Classifier(model) => TrainingSummary {
+		tangram_core::model::Model::MulticlassClassifier(model) => TrainingSummary {
 			chosen_model_type_name,
 			column_count: model.overall_column_stats.len() + 1,
 			model_comparison_metric_type_name: classification_model_comparison_type_name(
@@ -200,14 +200,16 @@ fn regression_model_comparison_type_name(
 }
 
 fn classification_model_comparison_type_name(
-	comparison_metric: &tangram_core::model::ClassificationComparisonMetric,
+	comparison_metric: &tangram_core::model::MulticlassClassificationComparisonMetric,
 ) -> String {
 	match comparison_metric {
-		tangram_core::model::ClassificationComparisonMetric::Accuracy => "Accuracy".into(),
-		tangram_core::model::ClassificationComparisonMetric::Aucroc => {
+		tangram_core::model::MulticlassClassificationComparisonMetric::Accuracy => {
+			"Accuracy".into()
+		}
+		tangram_core::model::MulticlassClassificationComparisonMetric::Aucroc => {
 			"Area Under the Receiver Operating Characteristic".into()
 		}
-		tangram_core::model::ClassificationComparisonMetric::F1 => "F1 Score".into(),
+		tangram_core::model::MulticlassClassificationComparisonMetric::F1 => "F1 Score".into(),
 	}
 }
 
@@ -219,17 +221,17 @@ fn model_type_name(model: &tangram_core::model::Model) -> String {
 				"Gradient Boosted Tree Regressor".into()
 			}
 		},
-		tangram_core::model::Model::Classifier(model) => match &model.model {
-			tangram_core::model::ClassificationModel::LinearBinary(_) => {
+		tangram_core::model::Model::MulticlassClassifier(model) => match &model.model {
+			tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
 				"Linear Binary Classifier".into()
 			}
-			tangram_core::model::ClassificationModel::TreeBinary(_) => {
+			tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
 				"Gradient Boosted Tree Binary Classifier".into()
 			}
-			tangram_core::model::ClassificationModel::LinearMulticlass(_) => {
+			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
 				"Linear Multiclass Classifier".into()
 			}
-			tangram_core::model::ClassificationModel::TreeMulticlass(_) => {
+			tangram_core::model::MulticlassClassificationModel::Tree(_) => {
 				"Gradient Boosted Tree Multiclass Classifier".into()
 			}
 		},

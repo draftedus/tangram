@@ -75,16 +75,17 @@ impl BinaryClassifier {
 			)
 			.for_each(|(features, labels)| {
 				let model = unsafe { model_cell.get() };
-				Self::train_batch(model, features, labels, options);
+				BinaryClassifier::train_batch(model, features, labels, options);
 			});
 			model = model_cell.into_inner();
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
-				let early_stopping_metric_value = Self::compute_early_stopping_metric_value(
-					&model,
-					features_early_stopping,
-					labels_early_stopping,
-					options,
-				);
+				let early_stopping_metric_value =
+					BinaryClassifier::compute_early_stopping_metric_value(
+						&model,
+						features_early_stopping,
+						labels_early_stopping,
+						options,
+					);
 				let should_stop = early_stopping_monitor.update(early_stopping_metric_value);
 				if should_stop {
 					break;

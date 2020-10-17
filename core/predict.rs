@@ -15,8 +15,8 @@ pub struct PredictOptions {
 }
 
 impl Default for PredictOptions {
-	fn default() -> Self {
-		Self { threshold: 0.5 }
+	fn default() -> PredictOptions {
+		PredictOptions { threshold: 0.5 }
 	}
 }
 
@@ -103,7 +103,7 @@ pub enum Token {
 }
 
 impl From<features::Token> for Token {
-	fn from(value: features::Token) -> Self {
+	fn from(value: features::Token) -> Token {
 		match value {
 			features::Token::Unigram(token) => Token::Unigram(token),
 			features::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
@@ -691,7 +691,7 @@ fn compute_feature_contributions<'a>(
 
 impl TryFrom<model::Model> for PredictModel {
 	type Error = anyhow::Error;
-	fn try_from(value: model::Model) -> Result<Self> {
+	fn try_from(value: model::Model) -> Result<PredictModel> {
 		match value {
 			model::Model::Regressor(model) => {
 				let id = model.id;
@@ -707,7 +707,7 @@ impl TryFrom<model::Model> for PredictModel {
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::LinearRegressor(LinearRegressorPredictModel {
+						Ok(PredictModel::LinearRegressor(LinearRegressorPredictModel {
 							id,
 							columns,
 							feature_groups,
@@ -725,7 +725,7 @@ impl TryFrom<model::Model> for PredictModel {
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::TreeRegressor(TreeRegressorPredictModel {
+						Ok(PredictModel::TreeRegressor(TreeRegressorPredictModel {
 							id,
 							columns,
 							feature_groups,
@@ -743,7 +743,7 @@ impl TryFrom<model::Model> for PredictModel {
 					}
 				}
 			}
-			model::Model::Classifier(model) => {
+			model::Model::MulticlassClassifier(model) => {
 				let id = model.id;
 				let columns = model
 					.overall_column_stats
@@ -751,13 +751,13 @@ impl TryFrom<model::Model> for PredictModel {
 					.map(TryFrom::try_from)
 					.collect::<Result<Vec<_>>>()?;
 				match model.model {
-					model::ClassificationModel::LinearBinary(model) => {
+					model::MulticlassClassificationModel::LinearBinary(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::LinearBinaryClassifier(
+						Ok(PredictModel::LinearBinaryClassifier(
 							LinearBinaryClassifierPredictModel {
 								id,
 								columns,
@@ -772,13 +772,13 @@ impl TryFrom<model::Model> for PredictModel {
 							},
 						))
 					}
-					model::ClassificationModel::TreeBinary(model) => {
+					model::MulticlassClassificationModel::TreeBinary(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::TreeBinaryClassifier(
+						Ok(PredictModel::TreeBinaryClassifier(
 							TreeBinaryClassifierPredictModel {
 								id,
 								columns,
@@ -797,7 +797,7 @@ impl TryFrom<model::Model> for PredictModel {
 							},
 						))
 					}
-					model::ClassificationModel::LinearMulticlass(model) => {
+					model::MulticlassClassificationModel::Linear(model) => {
 						let n_classes = model.n_classes.to_usize().unwrap();
 						let n_features = model.n_features.to_usize().unwrap();
 						let weights =
@@ -807,7 +807,7 @@ impl TryFrom<model::Model> for PredictModel {
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::LinearMulticlassClassifier(
+						Ok(PredictModel::LinearMulticlassClassifier(
 							LinearMulticlassClassifierPredictModel {
 								id,
 								columns,
@@ -822,13 +822,13 @@ impl TryFrom<model::Model> for PredictModel {
 							},
 						))
 					}
-					model::ClassificationModel::TreeMulticlass(model) => {
+					model::MulticlassClassificationModel::Tree(model) => {
 						let feature_groups = model
 							.feature_groups
 							.into_iter()
 							.map(TryFrom::try_from)
 							.collect::<Result<Vec<_>>>()?;
-						Ok(Self::TreeMulticlassClassifier(
+						Ok(PredictModel::TreeMulticlassClassifier(
 							TreeMulticlassClassifierPredictModel {
 								id,
 								columns,
@@ -857,8 +857,8 @@ impl TryFrom<model::Model> for PredictModel {
 
 impl TryFrom<model::Tree> for tangram_tree::Tree {
 	type Error = anyhow::Error;
-	fn try_from(value: model::Tree) -> Result<Self> {
-		Ok(Self {
+	fn try_from(value: model::Tree) -> Result<tangram_tree::Tree> {
+		Ok(tangram_tree::Tree {
 			nodes: value
 				.nodes
 				.into_iter()
@@ -870,15 +870,17 @@ impl TryFrom<model::Tree> for tangram_tree::Tree {
 
 impl TryFrom<model::Node> for tangram_tree::Node {
 	type Error = anyhow::Error;
-	fn try_from(value: model::Node) -> Result<Self> {
+	fn try_from(value: model::Node) -> Result<tangram_tree::Node> {
 		match value {
-			model::Node::Branch(value) => Ok(Self::Branch(tangram_tree::BranchNode {
-				left_child_index: value.left_child_index.to_usize().unwrap(),
-				right_child_index: value.right_child_index.to_usize().unwrap(),
-				split: value.split.try_into()?,
-				examples_fraction: value.examples_fraction,
-			})),
-			model::Node::Leaf(value) => Ok(Self::Leaf(tangram_tree::LeafNode {
+			model::Node::Branch(value) => {
+				Ok(tangram_tree::Node::Branch(tangram_tree::BranchNode {
+					left_child_index: value.left_child_index.to_usize().unwrap(),
+					right_child_index: value.right_child_index.to_usize().unwrap(),
+					split: value.split.try_into()?,
+					examples_fraction: value.examples_fraction,
+				}))
+			}
+			model::Node::Leaf(value) => Ok(tangram_tree::Node::Leaf(tangram_tree::LeafNode {
 				value: value.value,
 				examples_fraction: value.examples_fraction,
 			})),
@@ -888,10 +890,10 @@ impl TryFrom<model::Node> for tangram_tree::Node {
 
 impl TryFrom<model::BranchSplit> for tangram_tree::BranchSplit {
 	type Error = anyhow::Error;
-	fn try_from(value: model::BranchSplit) -> Result<Self> {
+	fn try_from(value: model::BranchSplit) -> Result<tangram_tree::BranchSplit> {
 		match value {
-			model::BranchSplit::Continuous(s) => {
-				Ok(Self::Continuous(tangram_tree::BranchSplitContinuous {
+			model::BranchSplit::Continuous(s) => Ok(tangram_tree::BranchSplit::Continuous(
+				tangram_tree::BranchSplitContinuous {
 					feature_index: s.feature_index.to_usize().unwrap(),
 					split_value: s.split_value,
 					invalid_values_direction: if s.invalid_values_direction {
@@ -899,28 +901,28 @@ impl TryFrom<model::BranchSplit> for tangram_tree::BranchSplit {
 					} else {
 						tangram_tree::SplitDirection::Left
 					},
-				}))
-			}
-			model::BranchSplit::Discrete(s) => {
-				Ok(Self::Discrete(tangram_tree::BranchSplitDiscrete {
+				},
+			)),
+			model::BranchSplit::Discrete(s) => Ok(tangram_tree::BranchSplit::Discrete(
+				tangram_tree::BranchSplitDiscrete {
 					feature_index: s.feature_index.to_usize().unwrap(),
 					directions: s
 						.directions
 						.into_iter()
 						.map(TryInto::try_into)
 						.collect::<Result<_, _>>()?,
-				}))
-			}
+				},
+			)),
 		}
 	}
 }
 
 impl TryFrom<model::SplitDirection> for tangram_tree::SplitDirection {
 	type Error = anyhow::Error;
-	fn try_from(value: model::SplitDirection) -> Result<Self> {
+	fn try_from(value: model::SplitDirection) -> Result<tangram_tree::SplitDirection> {
 		Ok(match value {
-			model::SplitDirection::Left => Self::Left,
-			model::SplitDirection::Right => Self::Right,
+			model::SplitDirection::Left => tangram_tree::SplitDirection::Left,
+			model::SplitDirection::Right => tangram_tree::SplitDirection::Right,
 		})
 	}
 }
@@ -948,7 +950,7 @@ impl TryFrom<model::ColumnStats> for Column {
 
 impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
 	type Error = anyhow::Error;
-	fn try_from(value: model::FeatureGroup) -> Result<Self> {
+	fn try_from(value: model::FeatureGroup) -> Result<features::FeatureGroup> {
 		match value {
 			model::FeatureGroup::Identity(feature_group) => Ok(features::FeatureGroup::Identity(
 				features::IdentityFeatureGroup {

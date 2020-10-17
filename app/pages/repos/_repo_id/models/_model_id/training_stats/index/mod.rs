@@ -83,7 +83,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let props = match model {
-		tangram_core::model::Model::Classifier(model) => {
+		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
 				column_count: column_stats.len(),

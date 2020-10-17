@@ -34,8 +34,8 @@ pub struct TrainOptions {
 }
 
 impl Default for TrainOptions {
-	fn default() -> Self {
-		Self {
+	fn default() -> TrainOptions {
+		TrainOptions {
 			compute_loss: false,
 			l2_regularization: 0.0,
 			learning_rate: 0.1,
@@ -101,7 +101,7 @@ struct EarlyStoppingMonitor {
 
 impl EarlyStoppingMonitor {
 	// Create a new `EarlyStoppingMonitor`.
-	pub fn new(threshold: f32, epochs: usize) -> Self {
+	pub fn new(threshold: f32, epochs: usize) -> EarlyStoppingMonitor {
 		EarlyStoppingMonitor {
 			threshold,
 			epochs,

@@ -49,7 +49,7 @@ enum PredictionStatsChart {
 	#[serde(rename = "regression")]
 	Regression(RegressionChartEntry),
 	#[serde(rename = "classification")]
-	Classification(ClassificationChartEntry),
+	MulticlassClassification(MulticlassClassificationChartEntry),
 }
 
 #[derive(serde::Serialize)]
@@ -58,7 +58,7 @@ enum PredictionStatsIntervalChart {
 	#[serde(rename = "regression")]
 	Regression(Vec<RegressionChartEntry>),
 	#[serde(rename = "classification")]
-	Classification(Vec<ClassificationChartEntry>),
+	MulticlassClassification(Vec<MulticlassClassificationChartEntry>),
 }
 
 #[derive(serde::Serialize)]
@@ -89,7 +89,7 @@ struct RegressionChartEntry {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ClassificationChartEntry {
+struct MulticlassClassificationChartEntry {
 	label: String,
 	histogram: ProductionTrainingHistogram,
 }
@@ -161,7 +161,9 @@ async fn props(
 	let production_stats =
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let target_column_stats = match model {
-		tangram_core::model::Model::Classifier(model) => model.overall_target_column_stats,
+		tangram_core::model::Model::MulticlassClassifier(model) => {
+			model.overall_target_column_stats
+		}
 		tangram_core::model::Model::Regressor(model) => model.overall_target_column_stats,
 	};
 	let overall_column_stats_table = production_stats
@@ -223,9 +225,9 @@ async fn props(
 				),
 			})
 		}
-		ProductionPredictionStatsOutput::Classification(prediction_stats) => {
+		ProductionPredictionStatsOutput::MulticlassClassification(prediction_stats) => {
 			let target_column_stats = target_column_stats.as_enum().unwrap();
-			PredictionStatsChart::Classification(ClassificationChartEntry {
+			PredictionStatsChart::MulticlassClassification(MulticlassClassificationChartEntry {
 				label: format_date_window(
 					overall_production_stats.start_date,
 					date_window,
@@ -264,15 +266,17 @@ async fn props(
 				})
 				.collect(),
 		),
-		ProductionPredictionStatsOutput::Classification(_) => {
-			PredictionStatsIntervalChart::Classification(
+		ProductionPredictionStatsOutput::MulticlassClassification(_) => {
+			PredictionStatsIntervalChart::MulticlassClassification(
 				interval_production_stats
 					.into_iter()
 					.map(|interval_production_stats| {
 						match interval_production_stats.prediction_stats {
-							ProductionPredictionStatsOutput::Classification(prediction_stats) => {
+							ProductionPredictionStatsOutput::MulticlassClassification(
+								prediction_stats,
+							) => {
 								let target_column_stats = target_column_stats.as_enum().unwrap();
-								ClassificationChartEntry {
+								MulticlassClassificationChartEntry {
 									label: format_date_window_interval(
 										interval_production_stats.start_date,
 										date_window_interval,

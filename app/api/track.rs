@@ -3,8 +3,8 @@ use crate::{
 		error::Error,
 		model::get_model,
 		monitor_event::{
-			ClassificationOutput, MonitorEvent, NumberOrString, Output, PredictionMonitorEvent,
-			RegressionOutput, TrueValueMonitorEvent,
+			MonitorEvent, MulticlassClassificationOutput, NumberOrString, PredictOutput,
+			PredictionMonitorEvent, RegressionOutput, TrueValueMonitorEvent,
 		},
 	},
 	production_metrics::ProductionMetrics,
@@ -280,12 +280,13 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 		.ok_or_else(|| format_err!("no prediction with identifier {}", identifier))?;
 	let output: String = row.get(0);
 	let output: Vec<u8> = base64::decode(output)?;
-	let output: Output = serde_json::from_slice(output.as_slice())?;
+	let output: PredictOutput = serde_json::from_slice(output.as_slice())?;
 	let prediction = match output {
-		Output::Regression(RegressionOutput { value }) => NumberOrString::Number(value),
-		Output::Classification(ClassificationOutput { class_name, .. }) => {
-			NumberOrString::String(class_name)
-		}
+		PredictOutput::Regression(RegressionOutput { value }) => NumberOrString::Number(value),
+		PredictOutput::MulticlassClassification(MulticlassClassificationOutput {
+			class_name,
+			..
+		}) => NumberOrString::String(class_name),
 	};
 	let rows = sqlx::query(
 		"

@@ -33,10 +33,12 @@ impl ProductionStats {
 		model: &tangram_core::model::Model,
 		start_date: DateTime<Utc>,
 		end_date: DateTime<Utc>,
-	) -> Self {
+	) -> ProductionStats {
 		let train_column_stats = match &model {
 			tangram_core::model::Model::Regressor(model) => model.train_column_stats.as_slice(),
-			tangram_core::model::Model::Classifier(model) => model.train_column_stats.as_slice(),
+			tangram_core::model::Model::MulticlassClassifier(model) => {
+				model.train_column_stats.as_slice()
+			}
 		};
 		let column_stats = train_column_stats
 			.iter()
@@ -81,7 +83,7 @@ impl StreamingMetric<'_> for ProductionStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		Self::Output {
+		ProductionStatsOutput {
 			start_date: self.start_date,
 			end_date: self.end_date,
 			row_count: self.row_count,

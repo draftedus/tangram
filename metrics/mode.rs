@@ -7,6 +7,7 @@ pub struct Mode(Option<(usize, usize)>);
 impl<'a> Metric<'a> for Mode {
 	type Input = &'a [usize];
 	type Output = Option<usize>;
+
 	fn compute(input: Self::Input) -> Self::Output {
 		let mut histogram = BTreeMap::new();
 		for value in input.iter() {

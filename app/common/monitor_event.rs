@@ -17,7 +17,7 @@ pub struct PredictionMonitorEvent {
 	pub model_id: Id,
 	pub identifier: NumberOrString,
 	pub input: BTreeMap<String, serde_json::Value>,
-	pub output: Output,
+	pub output: PredictOutput,
 	pub date: chrono::DateTime<chrono::Utc>,
 }
 
@@ -32,9 +32,9 @@ pub struct TrueValueMonitorEvent {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
-pub enum Output {
+pub enum PredictOutput {
 	Regression(RegressionOutput),
-	Classification(ClassificationOutput),
+	MulticlassClassification(MulticlassClassificationOutput),
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -45,7 +45,7 @@ pub struct RegressionOutput {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ClassificationOutput {
+pub struct MulticlassClassificationOutput {
 	pub class_name: String,
 	pub probabilities: Option<BTreeMap<String, f32>>,
 }
@@ -60,8 +60,8 @@ pub enum NumberOrString {
 impl NumberOrString {
 	pub fn as_number(&self) -> Result<f32, NotFiniteError> {
 		match self {
-			Self::Number(n) => Ok(*n),
-			Self::String(s) => match lexical::parse::<f32, _>(s) {
+			NumberOrString::Number(n) => Ok(*n),
+			NumberOrString::String(s) => match lexical::parse::<f32, _>(s) {
 				Ok(value) => Ok(value),
 				Err(_) => Err(NotFiniteError),
 			},
@@ -69,8 +69,8 @@ impl NumberOrString {
 	}
 	pub fn as_string(&self) -> Cow<str> {
 		match self {
-			Self::Number(n) => n.to_string().into(),
-			Self::String(s) => s.into(),
+			NumberOrString::Number(n) => n.to_string().into(),
+			NumberOrString::String(s) => s.into(),
 		}
 	}
 }

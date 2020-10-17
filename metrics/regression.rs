@@ -40,14 +40,14 @@ pub struct RegressionMetricsOutput {
 }
 
 impl RegressionMetrics {
-	pub fn new() -> Self {
-		Self::default()
+	pub fn new() -> RegressionMetrics {
+		RegressionMetrics::default()
 	}
 }
 
 impl Default for RegressionMetrics {
-	fn default() -> Self {
-		Self {
+	fn default() -> RegressionMetrics {
+		RegressionMetrics {
 			mean_variance: None,
 			absolute_error: 0.0,
 			squared_error: 0.0,

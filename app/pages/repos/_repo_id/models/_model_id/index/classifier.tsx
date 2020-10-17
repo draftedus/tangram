@@ -23,7 +23,7 @@ export type Props = {
 	}
 }
 
-export function ClassifierIndexPage(props: Props) {
+export function MulticlassClassifierIndexPage(props: Props) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Overview'}</ui.H1>

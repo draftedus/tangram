@@ -31,7 +31,7 @@ impl Regressor {
 		labels: NumberDataFrameColumnView,
 		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
-	) -> Self {
+	) -> Regressor {
 		let task = Task::Regression;
 		let model = train(
 			task,

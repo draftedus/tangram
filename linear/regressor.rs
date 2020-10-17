@@ -28,7 +28,7 @@ impl Regressor {
 		labels: NumberDataFrameColumnView,
 		options: &TrainOptions,
 		update_progress: &mut dyn FnMut(super::TrainProgress),
-	) -> Self {
+	) -> Regressor {
 		let n_features = features.ncols();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
@@ -44,7 +44,7 @@ impl Regressor {
 			.axis_iter(Axis(1))
 			.map(|column| column.mean().unwrap())
 			.collect();
-		let mut model = Self {
+		let mut model = Regressor {
 			bias: 0.0,
 			weights: <Array1<f32>>::zeros(n_features),
 			means,
@@ -70,11 +70,11 @@ impl Regressor {
 			)
 			.for_each(|(features, labels)| {
 				let model = unsafe { model_cell.get() };
-				Self::train_batch(model, features, labels, options);
+				Regressor::train_batch(model, features, labels, options);
 			});
 			model = model_cell.into_inner();
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
-				let early_stopping_metric_value = Self::compute_early_stopping_metric_value(
+				let early_stopping_metric_value = Regressor::compute_early_stopping_metric_value(
 					&model,
 					features_early_stopping,
 					labels_early_stopping,

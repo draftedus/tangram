@@ -20,8 +20,8 @@ pub struct RegressionProductionPredictionMetricsOutput {
 }
 
 impl RegressionProductionPredictionMetrics {
-	pub fn new() -> Self {
-		Self {
+	pub fn new() -> RegressionProductionPredictionMetrics {
+		RegressionProductionPredictionMetrics {
 			stats: None,
 			absolute_error: 0.0,
 			squared_error: 0.0,

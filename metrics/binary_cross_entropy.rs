@@ -8,8 +8,8 @@ use std::num::NonZeroUsize;
 pub struct BinaryCrossEntropy(Mean);
 
 impl BinaryCrossEntropy {
-	pub fn new() -> Self {
-		Self::default()
+	pub fn new() -> BinaryCrossEntropy {
+		BinaryCrossEntropy::default()
 	}
 }
 

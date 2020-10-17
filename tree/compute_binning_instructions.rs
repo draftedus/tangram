@@ -36,8 +36,8 @@ impl BinningInstruction {
 	}
 	pub fn n_valid_bins(&self) -> usize {
 		match self {
-			Self::Number { thresholds } => thresholds.len() + 1,
-			Self::Enum { n_options } => *n_options,
+			BinningInstruction::Number { thresholds } => thresholds.len() + 1,
+			BinningInstruction::Enum { n_options } => *n_options,
 		}
 	}
 }

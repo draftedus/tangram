@@ -8,23 +8,23 @@ use tangram_util::id::Id;
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Model {
 	Regressor(Regressor),
-	Classifier(Classifier),
+	MulticlassClassifier(MulticlassClassifier),
 }
 
 impl Model {
 	/// Deserialize a `Model` from a slice.
-	pub fn from_slice(slice: &[u8]) -> Result<Self> {
+	pub fn from_slice(slice: &[u8]) -> Result<Model> {
 		let major_version = slice[0];
 		if major_version != 0 {
 			return Err(format_err!("unknown major version {}", major_version));
 		}
 		let slice = &slice[1..];
-		let model: Self = rmp_serde::from_slice(slice)?;
+		let model = rmp_serde::from_slice(slice)?;
 		Ok(model)
 	}
 
 	/// Deserialize a `Model` by reading the file at `path`.
-	pub fn from_path(path: &Path) -> Result<Self> {
+	pub fn from_path(path: &Path) -> Result<Model> {
 		let file = std::fs::File::open(path)?;
 		let mut reader = std::io::BufReader::new(file);
 		let mut major_version = [0u8; 1];
@@ -33,7 +33,7 @@ impl Model {
 		if major_version != 0 {
 			return Err(format_err!("unknown major version {}", major_version));
 		}
-		let model: Model = rmp_serde::from_read(&mut reader)?;
+		let model = rmp_serde::from_read(&mut reader)?;
 		Ok(model)
 	}
 
@@ -49,8 +49,8 @@ impl Model {
 	/// Retrieve this `Model`'s `Id`.
 	pub fn id(&self) -> Id {
 		match self {
-			Self::Regressor(s) => s.id.parse().unwrap(),
-			Self::Classifier(s) => s.id.parse().unwrap(),
+			Model::Regressor(s) => s.id.parse().unwrap(),
+			Model::MulticlassClassifier(s) => s.id.parse().unwrap(),
 		}
 	}
 }
@@ -161,7 +161,7 @@ pub enum RegressionComparisonMetric {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Classifier {
+pub struct MulticlassClassifier {
 	pub id: String,
 	pub target_column_name: String,
 	pub train_row_count: u64,
@@ -173,25 +173,25 @@ pub struct Classifier {
 	pub train_target_column_stats: ColumnStats,
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
-	pub test_metrics: ClassificationMetrics,
-	pub model: ClassificationModel,
+	pub test_metrics: MulticlassClassificationMetrics,
+	pub model: MulticlassClassificationModel,
 	pub comparison_fraction: f32,
-	pub comparison_metric: ClassificationComparisonMetric,
+	pub comparison_metric: MulticlassClassificationComparisonMetric,
 }
 
-impl Classifier {
+impl MulticlassClassifier {
 	pub fn classes(&self) -> &[String] {
 		match &self.model {
-			ClassificationModel::LinearBinary(model) => model.classes.as_slice(),
-			ClassificationModel::TreeBinary(model) => model.classes.as_slice(),
-			ClassificationModel::LinearMulticlass(model) => model.classes.as_slice(),
-			ClassificationModel::TreeMulticlass(model) => model.classes.as_slice(),
+			MulticlassClassificationModel::LinearBinary(model) => model.classes.as_slice(),
+			MulticlassClassificationModel::TreeBinary(model) => model.classes.as_slice(),
+			MulticlassClassificationModel::Linear(model) => model.classes.as_slice(),
+			MulticlassClassificationModel::Tree(model) => model.classes.as_slice(),
 		}
 	}
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct ClassificationMetrics {
+pub struct MulticlassClassificationMetrics {
 	pub class_metrics: Vec<ClassMetrics>,
 	pub accuracy: f32,
 	pub precision_unweighted: f32,
@@ -214,11 +214,11 @@ pub struct ClassMetrics {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub enum ClassificationModel {
+pub enum MulticlassClassificationModel {
+	Linear(LinearMulticlassClassifier),
+	Tree(TreeMulticlassClassifier),
 	LinearBinary(LinearBinaryClassifier),
-	LinearMulticlass(LinearMulticlassClassifier),
 	TreeBinary(TreeBinaryClassifier),
-	TreeMulticlass(TreeMulticlassClassifier),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -293,7 +293,7 @@ pub struct ThresholdMetrics {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub enum ClassificationComparisonMetric {
+pub enum MulticlassClassificationComparisonMetric {
 	Accuracy,
 	Aucroc,
 	F1,
@@ -316,30 +316,30 @@ pub enum ColumnStats {
 impl ColumnStats {
 	pub fn column_name(&self) -> String {
 		match &self {
-			Self::Unknown(c) => c.column_name.to_owned(),
-			Self::Number(c) => c.column_name.to_owned(),
-			Self::Enum(c) => c.column_name.to_owned(),
-			Self::Text(c) => c.column_name.to_owned(),
+			ColumnStats::Unknown(c) => c.column_name.to_owned(),
+			ColumnStats::Number(c) => c.column_name.to_owned(),
+			ColumnStats::Enum(c) => c.column_name.to_owned(),
+			ColumnStats::Text(c) => c.column_name.to_owned(),
 		}
 	}
 
 	pub fn as_number(&self) -> Option<&NumberColumnStats> {
 		match self {
-			Self::Number(s) => Some(s),
+			ColumnStats::Number(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_enum(&self) -> Option<&EnumColumnStats> {
 		match self {
-			Self::Enum(s) => Some(s),
+			ColumnStats::Enum(s) => Some(s),
 			_ => None,
 		}
 	}
 
 	pub fn as_text(&self) -> Option<&TextColumnStats> {
 		match self {
-			Self::Text(s) => Some(s),
+			ColumnStats::Text(s) => Some(s),
 			_ => None,
 		}
 	}

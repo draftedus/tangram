@@ -13,13 +13,13 @@ pub struct ProgressView {
 }
 
 impl ProgressView {
-	pub fn new() -> Result<Self> {
+	pub fn new() -> Result<ProgressView> {
 		let (sender, receiver) = channel::<Option<Progress>>();
 		let mut screen = Screen::open()?;
 		screen.hide_cursor().unwrap();
 		screen.flush().unwrap();
 		let thread = Some(spawn(move || thread_main(screen, receiver)));
-		Ok(Self {
+		Ok(ProgressView {
 			thread,
 			sender: Some(sender),
 		})

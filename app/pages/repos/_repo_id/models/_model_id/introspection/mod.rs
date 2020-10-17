@@ -110,11 +110,11 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let inner = match model {
-		tangram_core::model::Model::Classifier(model) => {
+		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let target_column_name = model.target_column_name.to_owned();
 			let classes = model.classes().to_owned();
 			match model.model {
-				tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
+				tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let feature_names = compute_feature_names(&feature_groups);
 					let weights = inner_model.weights;
@@ -131,7 +131,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						weights,
 					})
 				}
-				tangram_core::model::ClassificationModel::LinearMulticlass(inner_model) => {
+				tangram_core::model::MulticlassClassificationModel::Linear(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let n_classes = inner_model.n_classes.to_usize().unwrap();
 					let n_features = inner_model.n_features.to_usize().unwrap();
@@ -158,7 +158,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						weights,
 					})
 				}
-				tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
+				tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let feature_importances = inner_model.feature_importances.as_slice();
 					let feature_names = compute_feature_names(&feature_groups);
@@ -173,7 +173,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 						feature_importances,
 					})
 				}
-				tangram_core::model::ClassificationModel::TreeMulticlass(inner_model) => {
+				tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
 					let feature_importances = inner_model.feature_importances.as_slice();
 					let feature_names = compute_feature_names(&feature_groups);

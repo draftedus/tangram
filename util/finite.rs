@@ -36,9 +36,9 @@ impl<T> Finite<T>
 where
 	T: Float,
 {
-	pub fn new(value: T) -> Result<Self, NotFiniteError> {
+	pub fn new(value: T) -> Result<Finite<T>, NotFiniteError> {
 		if value.is_finite() {
-			Ok(Self(value))
+			Ok(Finite(value))
 		} else {
 			Err(NotFiniteError)
 		}

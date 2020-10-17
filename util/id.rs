@@ -6,14 +6,14 @@ Tangram uses the `Id` type to uniquely identify models, users, and anything that
 pub struct Id(u128);
 
 impl Id {
-	pub fn new() -> Self {
-		Self::default()
+	pub fn new() -> Id {
+		Id::default()
 	}
 }
 
 impl Default for Id {
-	fn default() -> Self {
-		Self(rand::random())
+	fn default() -> Id {
+		Id(rand::random())
 	}
 }
 
@@ -31,7 +31,7 @@ impl std::error::Error for ParseIdError {}
 impl std::str::FromStr for Id {
 	type Err = ParseIdError;
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(Self(u128::from_str_radix(s, 16).map_err(|_| ParseIdError)?))
+		Ok(Id(u128::from_str_radix(s, 16).map_err(|_| ParseIdError)?))
 	}
 }
 
@@ -66,7 +66,7 @@ impl<'de> serde::de::Visitor<'de> for IdVisitor {
 }
 
 impl<'de> serde::Deserialize<'de> for Id {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	fn deserialize<D>(deserializer: D) -> Result<Id, D::Error>
 	where
 		D: serde::Deserializer<'de>,
 	{

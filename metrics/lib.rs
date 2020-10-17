@@ -8,11 +8,11 @@ mod accuracy;
 mod auc_roc;
 mod binary_classification;
 mod binary_cross_entropy;
-mod classification;
 mod cross_entropy;
 mod mean;
 mod mean_squared_error;
 mod mode;
+mod multiclass_classification;
 mod regression;
 
 pub use self::accuracy::Accuracy;
@@ -22,13 +22,14 @@ pub use self::binary_classification::{
 	BinaryClassificationMetricsOutput, BinaryClassificationThresholdMetricsOutput,
 };
 pub use self::binary_cross_entropy::{BinaryCrossEntropy, BinaryCrossEntropyInput};
-pub use self::classification::{
-	ClassMetrics, ClassificationMetrics, ClassificationMetricsInput, ClassificationMetricsOutput,
-};
 pub use self::cross_entropy::{CrossEntropy, CrossEntropyInput, CrossEntropyOutput};
 pub use self::mean::Mean;
 pub use self::mean_squared_error::MeanSquaredError;
 pub use self::mode::Mode;
+pub use self::multiclass_classification::{
+	ClassMetrics, MulticlassClassificationMetrics, MulticlassClassificationMetricsInput,
+	MulticlassClassificationMetricsOutput,
+};
 pub use self::regression::{
 	m2_to_variance, merge_mean_m2, RegressionMetrics, RegressionMetricsInput,
 	RegressionMetricsOutput,

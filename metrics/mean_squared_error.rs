@@ -5,8 +5,8 @@ use super::{mean::Mean, StreamingMetric};
 pub struct MeanSquaredError(Mean);
 
 impl MeanSquaredError {
-	pub fn new() -> Self {
-		Self::default()
+	pub fn new() -> MeanSquaredError {
+		MeanSquaredError::default()
 	}
 }
 

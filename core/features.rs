@@ -181,7 +181,7 @@ pub enum Token {
 }
 
 impl From<stats::Token> for Token {
-	fn from(value: stats::Token) -> Self {
+	fn from(value: stats::Token) -> Token {
 		match value {
 			stats::Token::Unigram(token) => Token::Unigram(token),
 			stats::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
@@ -190,7 +190,7 @@ impl From<stats::Token> for Token {
 }
 
 impl From<model::Token> for Token {
-	fn from(value: model::Token) -> Self {
+	fn from(value: model::Token) -> Token {
 		match value {
 			model::Token::Unigram(token) => Token::Unigram(token),
 			model::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
@@ -201,8 +201,8 @@ impl From<model::Token> for Token {
 impl Into<model::Token> for Token {
 	fn into(self) -> model::Token {
 		match self {
-			Self::Unigram(token) => model::Token::Unigram(token),
-			Self::Bigram(token_a, token_b) => model::Token::Bigram(token_a, token_b),
+			Token::Unigram(token) => model::Token::Unigram(token),
+			Token::Bigram(token_a, token_b) => model::Token::Bigram(token_a, token_b),
 		}
 	}
 }
@@ -218,10 +218,10 @@ impl FeatureGroup {
 	/// Return the number of features this feature group will produce.
 	pub fn n_features(&self) -> usize {
 		match self {
-			Self::Identity(_) => 1,
-			Self::Normalized(_) => 1,
-			Self::OneHotEncoded(f) => f.options.len() + 1,
-			Self::BagOfWords(f) => f.tokens.len(),
+			FeatureGroup::Identity(_) => 1,
+			FeatureGroup::Normalized(_) => 1,
+			FeatureGroup::OneHotEncoded(f) => f.options.len() + 1,
+			FeatureGroup::BagOfWords(f) => f.tokens.len(),
 		}
 	}
 }

@@ -102,7 +102,7 @@ pub fn test_linear_binary_classifier(
 	model: &tangram_linear::BinaryClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> (
-	metrics::ClassificationMetricsOutput,
+	metrics::MulticlassClassificationMetricsOutput,
 	metrics::BinaryClassificationMetricsOutput,
 ) {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -127,7 +127,7 @@ pub fn test_linear_binary_classifier(
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array2<f32>,
-		classification_metrics: metrics::ClassificationMetrics,
+		classification_metrics: metrics::MulticlassClassificationMetrics,
 		binary_classifier_metrics: metrics::BinaryClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
@@ -140,7 +140,7 @@ pub fn test_linear_binary_classifier(
 			let predictions = Array::zeros((n_examples_per_batch, n_classes));
 			State {
 				predictions,
-				classification_metrics: metrics::ClassificationMetrics::new(n_classes),
+				classification_metrics: metrics::MulticlassClassificationMetrics::new(n_classes),
 				binary_classifier_metrics: metrics::BinaryClassificationMetrics::new(100),
 			}
 		},
@@ -152,7 +152,7 @@ pub fn test_linear_binary_classifier(
 			let labels = labels.view();
 			state
 				.classification_metrics
-				.update(metrics::ClassificationMetricsInput {
+				.update(metrics::MulticlassClassificationMetricsInput {
 					probabilities: predictions,
 					labels,
 				});
@@ -178,7 +178,7 @@ pub fn test_tree_binary_classifier(
 	model: &tangram_tree::BinaryClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> (
-	metrics::ClassificationMetricsOutput,
+	metrics::MulticlassClassificationMetricsOutput,
 	metrics::BinaryClassificationMetricsOutput,
 ) {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
@@ -204,16 +204,18 @@ pub fn test_tree_binary_classifier(
 		.unwrap();
 	let n_classes = labels.options().len();
 	let mut metrics = (
-		metrics::ClassificationMetrics::new(n_classes),
+		metrics::MulticlassClassificationMetrics::new(n_classes),
 		metrics::BinaryClassificationMetrics::new(100),
 	);
 	let mut predictions = Array::zeros((features.nrows(), n_classes));
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
-	metrics.0.update(metrics::ClassificationMetricsInput {
-		probabilities: predictions.view(),
-		labels: labels.as_slice().into(),
-	});
+	metrics
+		.0
+		.update(metrics::MulticlassClassificationMetricsInput {
+			probabilities: predictions.view(),
+			labels: labels.as_slice().into(),
+		});
 	metrics.1.update(metrics::BinaryClassificationMetricsInput {
 		probabilities: predictions.view(),
 		labels: labels.as_slice().into(),
@@ -227,7 +229,7 @@ pub fn test_linear_multiclass_classifier(
 	feature_groups: &[features::FeatureGroup],
 	model: &tangram_linear::MulticlassClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
-) -> metrics::ClassificationMetricsOutput {
+) -> metrics::MulticlassClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let mut features = Array::zeros((dataframe_test.nrows(), n_features));
 	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
@@ -250,7 +252,7 @@ pub fn test_linear_multiclass_classifier(
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array2<f32>,
-		metrics: metrics::ClassificationMetrics,
+		metrics: metrics::MulticlassClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
 	let metrics = izip!(
@@ -260,7 +262,7 @@ pub fn test_linear_multiclass_classifier(
 	.fold(
 		{
 			let predictions = Array::zeros((n_examples_per_batch, n_classes));
-			let metrics = metrics::ClassificationMetrics::new(n_classes);
+			let metrics = metrics::MulticlassClassificationMetrics::new(n_classes);
 			State {
 				predictions,
 				metrics,
@@ -272,10 +274,12 @@ pub fn test_linear_multiclass_classifier(
 			model.predict(features, predictions);
 			let predictions = state.predictions.slice(slice);
 			let labels = labels.view();
-			state.metrics.update(metrics::ClassificationMetricsInput {
-				probabilities: predictions,
-				labels,
-			});
+			state
+				.metrics
+				.update(metrics::MulticlassClassificationMetricsInput {
+					probabilities: predictions,
+					labels,
+				});
 			state
 		},
 	)
@@ -289,7 +293,7 @@ pub fn test_tree_multiclass_classifier(
 	feature_groups: &[features::FeatureGroup],
 	model: &tangram_tree::MulticlassClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
-) -> metrics::ClassificationMetricsOutput {
+) -> metrics::MulticlassClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let mut features = Array::from_elem(
 		(dataframe_test.nrows(), n_features),
@@ -312,11 +316,11 @@ pub fn test_tree_multiclass_classifier(
 		.as_enum()
 		.unwrap();
 	let n_classes = labels.options().len();
-	let mut metrics = metrics::ClassificationMetrics::new(n_classes);
+	let mut metrics = metrics::MulticlassClassificationMetrics::new(n_classes);
 	let mut predictions = Array::zeros((features.nrows(), n_classes));
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
-	metrics.update(metrics::ClassificationMetricsInput {
+	metrics.update(metrics::MulticlassClassificationMetricsInput {
 		probabilities: predictions.view(),
 		labels: labels.as_slice().into(),
 	});

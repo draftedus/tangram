@@ -12,8 +12,8 @@ struct State<T> {
 }
 
 impl<T> Pool<T> {
-	pub fn new(max_items: usize, create_item: Box<dyn Fn() -> T>) -> Self {
-		Self {
+	pub fn new(max_items: usize, create_item: Box<dyn Fn() -> T>) -> Pool<T> {
+		Pool {
 			create_item,
 			max_items,
 			state: Arc::new(Mutex::new(State {

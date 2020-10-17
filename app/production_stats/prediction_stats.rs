@@ -1,12 +1,12 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
-use crate::common::monitor_event::Output;
+use crate::common::monitor_event::PredictOutput;
 use std::collections::BTreeMap;
 use tangram_metrics::StreamingMetric;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum ProductionPredictionStats {
 	Regression(RegressionProductionPredictionStats),
-	Classification(ClassificationProductionPredictionStats),
+	MulticlassClassification(MulticlassClassificationProductionPredictionStats),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
@@ -15,14 +15,14 @@ pub struct RegressionProductionPredictionStats {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-pub struct ClassificationProductionPredictionStats {
+pub struct MulticlassClassificationProductionPredictionStats {
 	pub histogram: BTreeMap<String, u64>,
 }
 
 #[derive(Debug)]
 pub enum ProductionPredictionStatsOutput {
 	Regression(RegressionProductionPredictionStatsOutput),
-	Classification(ClassificationProductionPredictionStatsOutput),
+	MulticlassClassification(MulticlassClassificationProductionPredictionStatsOutput),
 }
 
 #[derive(Debug)]
@@ -31,20 +31,20 @@ pub struct RegressionProductionPredictionStatsOutput {
 }
 
 #[derive(serde::Serialize, Debug)]
-pub struct ClassificationProductionPredictionStatsOutput {
+pub struct MulticlassClassificationProductionPredictionStatsOutput {
 	pub histogram: Vec<(String, u64)>,
 }
 
 impl ProductionPredictionStats {
-	pub fn new(model: &tangram_core::model::Model) -> Self {
+	pub fn new(model: &tangram_core::model::Model) -> ProductionPredictionStats {
 		match &model {
 			tangram_core::model::Model::Regressor(_) => {
 				ProductionPredictionStats::Regression(RegressionProductionPredictionStats::new())
 			}
-			tangram_core::model::Model::Classifier(model) => {
+			tangram_core::model::Model::MulticlassClassifier(model) => {
 				let classes = model.classes();
-				ProductionPredictionStats::Classification(
-					ClassificationProductionPredictionStats::new(classes),
+				ProductionPredictionStats::MulticlassClassification(
+					MulticlassClassificationProductionPredictionStats::new(classes),
 				)
 			}
 		}
@@ -52,25 +52,25 @@ impl ProductionPredictionStats {
 }
 
 impl StreamingMetric<'_> for ProductionPredictionStats {
-	type Input = Output;
+	type Input = PredictOutput;
 	type Output = ProductionPredictionStatsOutput;
 
 	fn update(&mut self, value: Self::Input) {
 		match self {
 			ProductionPredictionStats::Regression(stats) => stats.update(value),
-			ProductionPredictionStats::Classification(stats) => stats.update(value),
+			ProductionPredictionStats::MulticlassClassification(stats) => stats.update(value),
 		}
 	}
 
 	fn merge(&mut self, other: Self) {
 		match self {
-			Self::Regression(this) => {
-				if let Self::Regression(other) = other {
+			ProductionPredictionStats::Regression(this) => {
+				if let ProductionPredictionStats::Regression(other) = other {
 					this.merge(other)
 				}
 			}
-			Self::Classification(this) => {
-				if let Self::Classification(other) = other {
+			ProductionPredictionStats::MulticlassClassification(this) => {
+				if let ProductionPredictionStats::MulticlassClassification(other) = other {
 					this.merge(other)
 				}
 			}
@@ -82,26 +82,26 @@ impl StreamingMetric<'_> for ProductionPredictionStats {
 			ProductionPredictionStats::Regression(stats) => {
 				ProductionPredictionStatsOutput::Regression(stats.finalize())
 			}
-			ProductionPredictionStats::Classification(stats) => {
-				ProductionPredictionStatsOutput::Classification(stats.finalize())
+			ProductionPredictionStats::MulticlassClassification(stats) => {
+				ProductionPredictionStatsOutput::MulticlassClassification(stats.finalize())
 			}
 		}
 	}
 }
 
 impl RegressionProductionPredictionStats {
-	fn new() -> Self {
-		Self { stats: None }
+	fn new() -> RegressionProductionPredictionStats {
+		RegressionProductionPredictionStats { stats: None }
 	}
 }
 
 impl StreamingMetric<'_> for RegressionProductionPredictionStats {
-	type Input = Output;
+	type Input = PredictOutput;
 	type Output = RegressionProductionPredictionStatsOutput;
 
-	fn update(&mut self, value: Output) {
+	fn update(&mut self, value: PredictOutput) {
 		let value = match value {
-			Output::Regression(value) => value,
+			PredictOutput::Regression(value) => value,
 			_ => unreachable!(),
 		};
 		match &mut self.stats {
@@ -125,24 +125,24 @@ impl StreamingMetric<'_> for RegressionProductionPredictionStats {
 
 	fn finalize(self) -> Self::Output {
 		let stats = self.stats.map(|s| s.finalize());
-		Self::Output { stats }
+		RegressionProductionPredictionStatsOutput { stats }
 	}
 }
 
-impl ClassificationProductionPredictionStats {
-	fn new(classes: &[String]) -> ClassificationProductionPredictionStats {
+impl MulticlassClassificationProductionPredictionStats {
+	fn new(classes: &[String]) -> MulticlassClassificationProductionPredictionStats {
 		let histogram = classes.iter().cloned().map(|class| (class, 0)).collect();
-		ClassificationProductionPredictionStats { histogram }
+		MulticlassClassificationProductionPredictionStats { histogram }
 	}
 }
 
-impl StreamingMetric<'_> for ClassificationProductionPredictionStats {
-	type Input = Output;
-	type Output = ClassificationProductionPredictionStatsOutput;
+impl StreamingMetric<'_> for MulticlassClassificationProductionPredictionStats {
+	type Input = PredictOutput;
+	type Output = MulticlassClassificationProductionPredictionStatsOutput;
 
-	fn update(&mut self, value: Output) {
+	fn update(&mut self, value: PredictOutput) {
 		let value = match value {
-			Output::Classification(value) => value,
+			PredictOutput::MulticlassClassification(value) => value,
 			_ => unreachable!(),
 		};
 		if let Some(count) = self.histogram.get_mut(&value.class_name) {
@@ -157,7 +157,7 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		Self::Output {
+		MulticlassClassificationProductionPredictionStatsOutput {
 			histogram: self.histogram.into_iter().collect(),
 		}
 	}

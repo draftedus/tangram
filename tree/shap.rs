@@ -58,8 +58,8 @@ struct PathItem {
 }
 
 impl PathItem {
-	fn new() -> Self {
-		Self {
+	fn new() -> PathItem {
+		PathItem {
 			feature_index: None,
 			zero_fraction: 0.0,
 			one_fraction: 0.0,

@@ -39,7 +39,7 @@ export type Props = {
 	true_values_count_chart: Array<{ count: number; label: string }>
 }
 
-export function ClassifierProductionMetricsIndexPage(props: Props) {
+export function MulticlassClassifierProductionMetricsIndexPage(props: Props) {
 	let chartLabels = props.accuracyChart.data.map(entry => entry.label)
 	let accuracyData = [
 		{

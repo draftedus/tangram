@@ -62,12 +62,12 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 	let model = get_model(&mut db, model_id).await?;
 	match model {
-		tangram_core::model::Model::Classifier(model) => {
+		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let metrics = match &model.model {
-				tangram_core::model::ClassificationModel::LinearBinary(inner_model) => {
+				tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
 					&inner_model.metrics
 				}
-				tangram_core::model::ClassificationModel::TreeBinary(inner_model) => {
+				tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
 					&inner_model.metrics
 				}
 				_ => return Err(Error::BadRequest.into()),

@@ -1,4 +1,7 @@
-import { ClassifierIndexPage, Props as ClassifierProps } from './classifier'
+import {
+	MulticlassClassifierIndexPage,
+	Props as MulticlassClassifierProps,
+} from './classifier'
 import { RegressorIndexPage, Props as RegressorProps } from './regressor'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
@@ -17,12 +20,12 @@ export type Props = {
 
 export enum Type {
 	Regressor = 'regressor',
-	Classifier = 'classifier',
+	MulticlassClassifier = 'multiclass_classifier',
 }
 
 export type Inner =
 	| { type: Type.Regressor; value: RegressorProps }
-	| { type: Type.Classifier; value: ClassifierProps }
+	| { type: Type.MulticlassClassifier; value: MulticlassClassifierProps }
 
 export default function ModelIndexPage(props: Props) {
 	let inner
@@ -31,8 +34,8 @@ export default function ModelIndexPage(props: Props) {
 			inner = <RegressorIndexPage {...props.inner.value} />
 			break
 		}
-		case Type.Classifier: {
-			inner = <ClassifierIndexPage {...props.inner.value} />
+		case Type.MulticlassClassifier: {
+			inner = <MulticlassClassifierIndexPage {...props.inner.value} />
 			break
 		}
 	}

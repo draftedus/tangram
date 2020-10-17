@@ -32,8 +32,8 @@ impl Timing {
 }
 
 impl TimingDuration {
-	pub fn new() -> Self {
-		Self(AtomicU64::new(0))
+	pub fn new() -> TimingDuration {
+		TimingDuration(AtomicU64::new(0))
 	}
 	pub fn get(&self) -> Duration {
 		Duration::from_nanos(self.0.load(Ordering::Relaxed))

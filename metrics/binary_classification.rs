@@ -57,7 +57,7 @@ pub struct BinaryClassificationThresholdMetricsOutput {
 }
 
 impl BinaryClassificationMetrics {
-	pub fn new(n_thresholds: usize) -> Self {
+	pub fn new(n_thresholds: usize) -> BinaryClassificationMetrics {
 		let thresholds = (0..n_thresholds)
 			.map(|i| i.to_f32().unwrap() * (1.0 / (n_thresholds.to_f32().unwrap() - 1.0)))
 			.collect();
@@ -66,7 +66,7 @@ impl BinaryClassificationMetrics {
 		//                  |           |          /
 		//                  v           v         v
 		let shape = (n_thresholds + 1, n_classes, n_classes);
-		Self {
+		BinaryClassificationMetrics {
 			confusion_matrices: Array::zeros(shape),
 			thresholds,
 		}

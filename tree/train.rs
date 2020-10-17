@@ -421,7 +421,7 @@ pub struct EarlyStoppingMonitor {
 
 impl EarlyStoppingMonitor {
 	/// Create a train stop monitor,
-	pub fn new(tolerance: f32, max_rounds_no_improve: usize) -> Self {
+	pub fn new(tolerance: f32, max_rounds_no_improve: usize) -> EarlyStoppingMonitor {
 		EarlyStoppingMonitor {
 			tolerance,
 			max_rounds_no_improve,

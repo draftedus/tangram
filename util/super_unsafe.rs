@@ -10,8 +10,8 @@ unsafe impl<T> Sync for SuperUnsafe<T> {}
 
 impl<T> SuperUnsafe<T> {
 	/// Wrap a value with `SuperUnsafe` in preparation to acquire multiple mutable references to it.
-	pub fn new(value: T) -> Self {
-		Self(UnsafeCell::new(value))
+	pub fn new(value: T) -> SuperUnsafe<T> {
+		SuperUnsafe(UnsafeCell::new(value))
 	}
 
 	/// Get a mutable reference to your value with absolutely no borrow checking. Make sure you know what you are doing!

@@ -4,14 +4,14 @@ use num_traits::ToPrimitive;
 use tangram_metrics::StreamingMetric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
-pub struct ClassificationProductionPredictionMetrics {
+pub struct MulticlassClassificationProductionPredictionMetrics {
 	classes: Vec<String>,
 	confusion_matrix: Array2<u64>,
 }
 
 #[derive(Debug)]
-pub struct ClassificationProductionPredictionMetricsOutput {
-	pub class_metrics: Vec<ClassificationProductionPredictionClassMetricsOutput>,
+pub struct MulticlassClassificationProductionPredictionMetricsOutput {
+	pub class_metrics: Vec<MulticlassClassificationProductionPredictionClassMetricsOutput>,
 	pub accuracy: f32,
 	pub baseline_accuracy: f32,
 	pub precision_unweighted: f32,
@@ -21,7 +21,7 @@ pub struct ClassificationProductionPredictionMetricsOutput {
 }
 
 #[derive(Debug)]
-pub struct ClassificationProductionPredictionClassMetricsOutput {
+pub struct MulticlassClassificationProductionPredictionClassMetricsOutput {
 	pub class_name: String,
 	pub true_positives: u64,
 	pub false_positives: u64,
@@ -33,20 +33,20 @@ pub struct ClassificationProductionPredictionClassMetricsOutput {
 	pub f1_score: f32,
 }
 
-impl ClassificationProductionPredictionMetrics {
-	pub fn new(classes: Vec<String>) -> Self {
+impl MulticlassClassificationProductionPredictionMetrics {
+	pub fn new(classes: Vec<String>) -> MulticlassClassificationProductionPredictionMetrics {
 		let n_classes = classes.len();
 		let confusion_matrix = <Array2<u64>>::zeros((n_classes, n_classes));
-		Self {
+		MulticlassClassificationProductionPredictionMetrics {
 			classes,
 			confusion_matrix,
 		}
 	}
 }
 
-impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
+impl StreamingMetric<'_> for MulticlassClassificationProductionPredictionMetrics {
 	type Input = (NumberOrString, NumberOrString);
-	type Output = Option<ClassificationProductionPredictionMetricsOutput>;
+	type Output = Option<MulticlassClassificationProductionPredictionMetricsOutput>;
 
 	fn update(&mut self, value: Self::Input) {
 		let label = match value.1 {
@@ -91,7 +91,7 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 				let recall = true_positives.to_f32().unwrap()
 					/ (true_positives + false_negatives).to_f32().unwrap();
 				let f1_score = 2.0 * (precision * recall) / (precision + recall);
-				ClassificationProductionPredictionClassMetricsOutput {
+				MulticlassClassificationProductionPredictionClassMetricsOutput {
 					class_name,
 					true_positives,
 					false_positives,
@@ -141,7 +141,7 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 		if n_examples == 0 {
 			None
 		} else {
-			Some(ClassificationProductionPredictionMetricsOutput {
+			Some(MulticlassClassificationProductionPredictionMetricsOutput {
 				accuracy,
 				baseline_accuracy,
 				class_metrics,
@@ -157,7 +157,7 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionMetrics {
 #[test]
 fn test_binary() {
 	let classes = vec!["Cat".into(), "Dog".into()];
-	let mut metrics = ClassificationProductionPredictionMetrics::new(classes);
+	let mut metrics = MulticlassClassificationProductionPredictionMetrics::new(classes);
 	metrics.update((
 		NumberOrString::String("Cat".into()),
 		NumberOrString::String("Cat".into()),
@@ -177,9 +177,9 @@ fn test_binary() {
 	let metrics = metrics.finalize();
 	insta::assert_debug_snapshot!(metrics, @r###"
  Some(
-     ClassificationProductionPredictionMetricsOutput {
+     MulticlassClassificationProductionPredictionMetricsOutput {
          class_metrics: [
-             ClassificationProductionPredictionClassMetricsOutput {
+             MulticlassClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Cat",
                  true_positives: 5,
                  false_positives: 2,
@@ -190,7 +190,7 @@ fn test_binary() {
                  recall: 0.625,
                  f1_score: 0.6666667,
              },
-             ClassificationProductionPredictionClassMetricsOutput {
+             MulticlassClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Dog",
                  true_positives: 3,
                  false_positives: 3,
@@ -217,7 +217,7 @@ fn test_binary() {
 fn test_multiclass() {
 	// This example is taken from https://en.wikipedia.org/wiki/Confusion_matrix.
 	let classes = vec!["Cat".into(), "Dog".into(), "Rabbit".into()];
-	let mut metrics = ClassificationProductionPredictionMetrics::new(classes);
+	let mut metrics = MulticlassClassificationProductionPredictionMetrics::new(classes);
 	metrics.update((
 		NumberOrString::String("Cat".into()),
 		NumberOrString::String("Cat".into()),
@@ -241,9 +241,9 @@ fn test_multiclass() {
 	let metrics = metrics.finalize();
 	insta::assert_debug_snapshot!(metrics, @r###"
  Some(
-     ClassificationProductionPredictionMetricsOutput {
+     MulticlassClassificationProductionPredictionMetricsOutput {
          class_metrics: [
-             ClassificationProductionPredictionClassMetricsOutput {
+             MulticlassClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Cat",
                  true_positives: 5,
                  false_positives: 2,
@@ -254,7 +254,7 @@ fn test_multiclass() {
                  recall: 0.625,
                  f1_score: 0.6666667,
              },
-             ClassificationProductionPredictionClassMetricsOutput {
+             MulticlassClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Dog",
                  true_positives: 3,
                  false_positives: 5,
@@ -265,7 +265,7 @@ fn test_multiclass() {
                  recall: 0.5,
                  f1_score: 0.42857143,
              },
-             ClassificationProductionPredictionClassMetricsOutput {
+             MulticlassClassificationProductionPredictionClassMetricsOutput {
                  class_name: "Rabbit",
                  true_positives: 11,
                  false_positives: 1,

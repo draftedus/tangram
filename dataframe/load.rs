@@ -13,8 +13,8 @@ pub struct FromCsvOptions<'a> {
 }
 
 impl<'a> Default for FromCsvOptions<'a> {
-	fn default() -> Self {
-		Self {
+	fn default() -> FromCsvOptions<'a> {
+		FromCsvOptions {
 			column_types: None,
 			infer_options: InferOptions::default(),
 			invalid_values: DEFAULT_INVALID_VALUES,
@@ -28,8 +28,8 @@ pub struct InferOptions {
 }
 
 impl Default for InferOptions {
-	fn default() -> Self {
-		Self {
+	fn default() -> InferOptions {
+		InferOptions {
 			enum_max_unique_values: 100,
 		}
 	}
@@ -41,15 +41,19 @@ const DEFAULT_INVALID_VALUES: &[&str] = &[
 ];
 
 impl DataFrame {
-	pub fn from_path(path: &Path, options: FromCsvOptions, progress: impl Fn(u64)) -> Result<Self> {
-		Self::from_csv(&mut csv::Reader::from_path(path)?, options, progress)
+	pub fn from_path(
+		path: &Path,
+		options: FromCsvOptions,
+		progress: impl Fn(u64),
+	) -> Result<DataFrame> {
+		DataFrame::from_csv(&mut csv::Reader::from_path(path)?, options, progress)
 	}
 
 	pub fn from_csv<R>(
 		reader: &mut csv::Reader<R>,
 		options: FromCsvOptions,
 		progress: impl Fn(u64),
-	) -> Result<Self>
+	) -> Result<DataFrame>
 	where
 		R: std::io::Read + std::io::Seek,
 	{
@@ -151,7 +155,7 @@ impl DataFrame {
 
 		// Create the dataframe.
 		let column_names = column_names.into_iter().map(Some).collect();
-		let mut dataframe = Self::new(column_names, column_types);
+		let mut dataframe = DataFrame::new(column_names, column_types);
 		// If an inference pass was done, reserve storage for the values because we know how many rows are in the csv.
 		if let Some(n_rows) = n_rows {
 			for column in dataframe.columns.iter_mut() {
@@ -211,8 +215,8 @@ enum InferColumnType {
 }
 
 impl<'a> InferStats<'a> {
-	pub fn new(infer_options: &'a InferOptions) -> Self {
-		Self {
+	pub fn new(infer_options: &'a InferOptions) -> InferStats<'a> {
+		InferStats {
 			infer_options,
 			column_type: InferColumnType::Unknown,
 			unique_values: Some(BTreeSet::new()),
