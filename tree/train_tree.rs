@@ -232,6 +232,7 @@ pub fn train_tree(options: TrainTreeOptions) -> TrainTree {
 		binned_features_column_major,
 		binned_features_row_major,
 		binning_instructions,
+		examples_index,
 		gradients,
 		hessians_are_constant,
 		hessians,

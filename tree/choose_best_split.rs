@@ -12,7 +12,6 @@ use crate::{
 	BinnedFeaturesLayout, SplitDirection, TrainOptions,
 };
 use itertools::izip;
-use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_util::{
@@ -26,6 +25,7 @@ pub struct ChooseBestSplitRootOptions<'a> {
 	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
 	pub binned_features_row_major: &'a Option<BinnedFeaturesRowMajor>,
 	pub binning_instructions: &'a [BinningInstruction],
+	pub examples_index: &'a [u32],
 	pub gradients: &'a [f32],
 	pub hessians_are_constant: bool,
 	pub hessians: &'a [f32],
@@ -102,6 +102,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 		binned_features_column_major,
 		binned_features_row_major,
 		binning_instructions,
+		examples_index,
 		gradients,
 		hessians_are_constant,
 		hessians,
@@ -164,6 +165,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 					bin_stats,
 					binned_features_row_major: binned_features_row_major.as_ref().unwrap(),
 					binning_instructions,
+					examples_index,
 					gradients,
 					hessians_are_constant,
 					hessians,
@@ -260,6 +262,7 @@ struct ChooseBestSplitRootRowMajorOptions<'a> {
 	bin_stats: &'a mut Vec<BinStatsEntry>,
 	binned_features_row_major: &'a BinnedFeaturesRowMajor,
 	binning_instructions: &'a [BinningInstruction],
+	examples_index: &'a [u32],
 	gradients: &'a [f32],
 	hessians_are_constant: bool,
 	hessians: &'a [f32],
@@ -275,6 +278,7 @@ fn choose_best_split_root_row_major(
 		bin_stats,
 		binned_features_row_major,
 		binning_instructions,
+		examples_index,
 		gradients,
 		hessians_are_constant,
 		hessians,
@@ -286,35 +290,32 @@ fn choose_best_split_root_row_major(
 	let n_examples = binned_features_row_major.values_with_offsets.nrows();
 	let n_threads = rayon::current_num_threads();
 	let chunk_size = (n_examples + n_threads - 1) / n_threads;
-	*bin_stats = pzip!(
-		binned_features_row_major
-			.values_with_offsets
-			.axis_chunks_iter(Axis(0), chunk_size),
-		gradients.par_chunks(chunk_size),
-		hessians.par_chunks(chunk_size)
-	)
-	.map(|(binned_features_chunk, gradients_chunk, hessians_chunk)| {
-		let mut bin_stats_chunk: Vec<BinStatsEntry> =
-			bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
-		compute_bin_stats_row_major_root(
-			bin_stats_chunk.as_mut_slice(),
-			binned_features_chunk,
-			gradients_chunk,
-			hessians_chunk,
-			hessians_are_constant,
+	*bin_stats = examples_index
+		.par_chunks(chunk_size)
+		.into_par_iter()
+		.map(|examples_index_chunk| {
+			let mut bin_stats_chunk: Vec<BinStatsEntry> =
+				bin_stats.iter().map(|_| BinStatsEntry::default()).collect();
+			compute_bin_stats_row_major_root(
+				bin_stats_chunk.as_mut_slice(),
+				examples_index_chunk,
+				binned_features_row_major,
+				gradients,
+				hessians,
+				hessians_are_constant,
+			);
+			bin_stats_chunk
+		})
+		.reduce(
+			|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
+			|mut res, chunk| {
+				res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
+					res.sum_gradients += chunk.sum_gradients;
+					res.sum_hessians += chunk.sum_hessians;
+				});
+				res
+			},
 		);
-		bin_stats_chunk
-	})
-	.reduce(
-		|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
-		|mut res, chunk| {
-			res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
-				res.sum_gradients += chunk.sum_gradients;
-				res.sum_hessians += chunk.sum_hessians;
-			});
-			res
-		},
-	);
 	// Choose the best split for each featue.
 	let bin_stats = SuperUnsafe::new(bin_stats);
 	pzip!(binning_instructions, &binned_features_row_major.offsets)
