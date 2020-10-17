@@ -48,7 +48,9 @@ struct OverallColumnStats {
 enum PredictionStatsChart {
 	#[serde(rename = "regression")]
 	Regression(RegressionChartEntry),
-	#[serde(rename = "classification")]
+	#[serde(rename = "binary_classification")]
+	BinaryClassification(BinaryClassificationChartEntry),
+	#[serde(rename = "multiclass_classification")]
 	MulticlassClassification(MulticlassClassificationChartEntry),
 }
 
@@ -57,6 +59,8 @@ enum PredictionStatsChart {
 enum PredictionStatsIntervalChart {
 	#[serde(rename = "regression")]
 	Regression(Vec<RegressionChartEntry>),
+	#[serde(rename = "classification")]
+	BinaryClassification(Vec<BinaryClassificationChartEntry>),
 	#[serde(rename = "classification")]
 	MulticlassClassification(Vec<MulticlassClassificationChartEntry>),
 }
@@ -85,6 +89,13 @@ struct PredictionCountChartEntry {
 struct RegressionChartEntry {
 	label: String,
 	quantiles: ProductionTrainingQuantiles,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct BinaryClassificationChartEntry {
+	label: String,
+	histogram: ProductionTrainingHistogram,
 }
 
 #[derive(serde::Serialize)]
@@ -226,8 +237,21 @@ async fn props(
 				),
 			})
 		}
-		ProductionPredictionStatsOutput::BinaryClassification(prediction_stats)
-		| ProductionPredictionStatsOutput::MulticlassClassification(prediction_stats) => {
+		ProductionPredictionStatsOutput::BinaryClassification(prediction_stats) => {
+			let target_column_stats = target_column_stats.as_enum().unwrap();
+			PredictionStatsChart::BinaryClassification(BinaryClassificationChartEntry {
+				label: format_date_window(
+					overall_production_stats.start_date,
+					date_window,
+					timezone,
+				),
+				histogram: ProductionTrainingHistogram {
+					production: prediction_stats.histogram,
+					training: target_column_stats.histogram.clone(),
+				},
+			})
+		}
+		ProductionPredictionStatsOutput::MulticlassClassification(prediction_stats) => {
 			let target_column_stats = target_column_stats.as_enum().unwrap();
 			PredictionStatsChart::MulticlassClassification(MulticlassClassificationChartEntry {
 				label: format_date_window(
@@ -268,8 +292,35 @@ async fn props(
 				})
 				.collect(),
 		),
-		ProductionPredictionStatsOutput::BinaryClassification(_)
-		| ProductionPredictionStatsOutput::MulticlassClassification(_) => {
+		ProductionPredictionStatsOutput::BinaryClassification(_) => {
+			PredictionStatsIntervalChart::BinaryClassification(
+				interval_production_stats
+					.into_iter()
+					.map(|interval_production_stats| {
+						match interval_production_stats.prediction_stats {
+							ProductionPredictionStatsOutput::BinaryClassification(
+								prediction_stats,
+							) => {
+								let target_column_stats = target_column_stats.as_enum().unwrap();
+								BinaryClassificationChartEntry {
+									label: format_date_window_interval(
+										interval_production_stats.start_date,
+										date_window_interval,
+										timezone,
+									),
+									histogram: ProductionTrainingHistogram {
+										production: prediction_stats.histogram,
+										training: target_column_stats.histogram.clone(),
+									},
+								}
+							}
+							_ => unreachable!(),
+						}
+					})
+					.collect(),
+			)
+		}
+		ProductionPredictionStatsOutput::MulticlassClassification(_) => {
 			PredictionStatsIntervalChart::MulticlassClassification(
 				interval_production_stats
 					.into_iter()
