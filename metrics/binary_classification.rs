@@ -1,17 +1,42 @@
 use super::StreamingMetric;
 use itertools::Itertools;
 use ndarray::prelude::*;
-use ndarray::s;
 use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
 
 /// `BinaryClassificationMetrics` computes common metrics used to evaluate binary classifiers at various classification thresholds. Instead of computing threshold metrics for each prediction probability, we instead compute metrics for a fixed number of threshold values given by `n_thresholds` passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new). This is an approximation but is more memory efficient.
 pub struct BinaryClassificationMetrics {
-	/// The confusion matrices is an array of shape n_thresholds x (n_classes x n_classes).
-	/// The inner `Array2<u64>` is a per-threshold [Confusion Matrix](https://en.wikipedia.org/wiki/Confusion_matrix).
-	pub confusion_matrices: Array3<u64>,
+	/// There is one confusion matrix per threshold.
+	confusion_matrices: Vec<BinaryConfusionMatrix>,
+	/// The confusion matrix for the default threshold of 0.5.
+	default_threshold_confusion_matrix: BinaryConfusionMatrix,
 	/// The thresholds are evenly-spaced between 0 and 1 based on the total number of thresholds: `n_thresholds`, passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
-	pub thresholds: Vec<f32>,
+	thresholds: Vec<f32>,
+}
+
+#[derive(Clone)]
+struct BinaryConfusionMatrix {
+	false_negatives: u64,
+	false_positives: u64,
+	true_negatives: u64,
+	true_positives: u64,
+}
+
+impl BinaryConfusionMatrix {
+	fn new() -> Self {
+		Self {
+			false_positives: 0,
+			false_negatives: 0,
+			true_negatives: 0,
+			true_positives: 0,
+		}
+	}
+	fn n_examples(&self) -> u64 {
+		self.false_negatives + self.false_positives + self.true_negatives + self.true_positives
+	}
+	fn n_correct(&self) -> u64 {
+		self.true_positives + self.true_negatives
+	}
 }
 
 /// The input to [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
@@ -27,6 +52,12 @@ pub struct BinaryClassificationMetricsOutput {
 	pub thresholds: Vec<BinaryClassificationMetricsOutputForThreshold>,
 	/// The area under the receiver operating characteristic curve is computed using a fixed number of thresholds equal to `n_thresholds` which is passed to[BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
 	pub auc_roc: f32,
+	/// The accuracy is the fraction of all of the predictions that are correct.
+	pub accuracy: f32,
+	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class. `precision = true_positives / (true_positives + false_positives)`. See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
+	pub precision: f32,
+	/// The recall is the fraction of examples in the dataset whose label is equal to this class that the model predicted as equal to this class. `recall = true_positives / (true_positives + false_negatives)`.
+	pub recall: f32,
 }
 
 /// The output from [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
@@ -61,13 +92,9 @@ impl BinaryClassificationMetrics {
 		let thresholds = (0..n_thresholds)
 			.map(|i| i.to_f32().unwrap() * (1.0 / (n_thresholds.to_f32().unwrap() - 1.0)))
 			.collect();
-		let n_classes = 2;
-		//            threshold_index  prediction  label
-		//                  |           |          /
-		//                  v           v         v
-		let shape = (n_thresholds + 1, n_classes, n_classes);
 		BinaryClassificationMetrics {
-			confusion_matrices: Array::zeros(shape),
+			confusion_matrices: vec![BinaryConfusionMatrix::new(); n_thresholds + 1],
+			default_threshold_confusion_matrix: BinaryConfusionMatrix::new(),
 			thresholds,
 		}
 	}
@@ -91,21 +118,44 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				} else {
 					0
 				};
-				/*
-				This is the position to update in the confusion matrix given the prediction and label.
-										actual
-										0		1
-				predicted	0	tn	fn
-									1	fp	tp
-				*/
-				let position = (threshold_index, predicted_label_id, actual_label_id);
-				self.confusion_matrices[position] += 1;
+				let confusion_matrix_for_threshold = &mut self.confusion_matrices[threshold_index];
+				match (predicted_label_id, actual_label_id) {
+					(0, 0) => confusion_matrix_for_threshold.true_negatives += 1,
+					(1, 1) => confusion_matrix_for_threshold.true_positives += 1,
+					(1, 0) => confusion_matrix_for_threshold.false_positives += 1,
+					(0, 1) => confusion_matrix_for_threshold.false_negatives += 1,
+					_ => panic!(),
+				};
 			}
+		}
+		for (label, probabilities) in value
+			.labels
+			.iter()
+			.zip(value.probabilities.axis_iter(Axis(0)))
+		{
+			let probability = probabilities[1];
+			let predicted_label_id = if probability >= 0.5 { 1 } else { 0 };
+			let actual_label_id = label.unwrap().get() - 1;
+			match (predicted_label_id, actual_label_id) {
+				(0, 0) => self.default_threshold_confusion_matrix.true_negatives += 1,
+				(1, 1) => self.default_threshold_confusion_matrix.true_positives += 1,
+				(1, 0) => self.default_threshold_confusion_matrix.false_positives += 1,
+				(0, 1) => self.default_threshold_confusion_matrix.false_negatives += 1,
+				_ => panic!(),
+			};
 		}
 	}
 
 	fn merge(&mut self, other: Self) {
-		self.confusion_matrices += &other.confusion_matrices;
+		self.confusion_matrices
+			.iter_mut()
+			.zip(other.confusion_matrices)
+			.for_each(|(confusion_matrix_a, confusion_matrix_b)| {
+				confusion_matrix_a.true_positives += confusion_matrix_b.true_positives;
+				confusion_matrix_a.false_negatives += confusion_matrix_b.false_negatives;
+				confusion_matrix_a.true_negatives += confusion_matrix_b.true_negatives;
+				confusion_matrix_a.false_positives += confusion_matrix_b.false_positives;
+			});
 	}
 
 	fn finalize(self) -> BinaryClassificationMetricsOutput {
@@ -114,24 +164,12 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 			.iter()
 			.enumerate()
 			.map(|(threshold_index, &threshold)| {
-				/*
-										actual
-										0		1
-				predicted	0	tn	fn
-									1	fp	tp
-				*/
-				let slice = s![threshold_index, .., ..];
-				let confusion_matrix = self.confusion_matrices.slice(slice);
-				let n_examples = confusion_matrix.sum();
-				// This is true positives for a given class are when the predicted == actual == 1
-				let true_positives = confusion_matrix[(1, 1)];
-				// This is false positives are computed by taking the total predicted positives and subtracting the true positives.
-				let false_positives = confusion_matrix.row(1).sum() - true_positives;
-				// This is false negatives are computed by taking the total actual positives and subtracting the true positives.
-				let false_negatives = confusion_matrix.column(1).sum() - true_positives;
-				// This is true negatives are computed by subtracting false_positives, false_negatives, and true_positives from the total number of examples.
-				let true_negatives =
-					n_examples - false_positives - false_negatives - true_positives;
+				let confusion_matrix = &self.confusion_matrices[threshold_index];
+				let n_examples = confusion_matrix.n_examples();
+				let true_positives = confusion_matrix.true_positives;
+				let false_positives = confusion_matrix.false_positives;
+				let false_negatives = confusion_matrix.false_negatives;
+				let true_negatives = confusion_matrix.true_negatives;
 				// This is the fraction of the total predictions that are correct.
 				let accuracy = (true_positives + true_negatives).to_f32().unwrap()
 					/ n_examples.to_f32().unwrap();
@@ -175,10 +213,41 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				y_avg * dx
 			})
 			.sum::<f32>();
-		// The AUC needs to be negated for the positive class.
+		let n_correct = self.default_threshold_confusion_matrix.n_correct();
+		let n_examples = self.default_threshold_confusion_matrix.n_examples();
+		let accuracy = n_correct.to_f32().unwrap() / n_examples.to_f32().unwrap();
+		let precision = self
+			.default_threshold_confusion_matrix
+			.true_positives
+			.to_f32()
+			.unwrap() / (self
+			.default_threshold_confusion_matrix
+			.true_positives
+			.to_f32()
+			.unwrap() + self
+			.default_threshold_confusion_matrix
+			.false_positives
+			.to_f32()
+			.unwrap());
+		let recall = self
+			.default_threshold_confusion_matrix
+			.true_positives
+			.to_f32()
+			.unwrap() / (self
+			.default_threshold_confusion_matrix
+			.true_positives
+			.to_f32()
+			.unwrap() + self
+			.default_threshold_confusion_matrix
+			.false_negatives
+			.to_f32()
+			.unwrap());
 		BinaryClassificationMetricsOutput {
 			thresholds,
 			auc_roc,
+			accuracy,
+			precision,
+			recall,
 		}
 	}
 }

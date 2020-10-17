@@ -25,9 +25,9 @@ struct Props {
 enum Inner {
 	#[serde(rename = "regressor")]
 	Regressor(RegressorInner),
-	#[serde(rename = "classifier")]
+	#[serde(rename = "binary_classifier")]
 	BinaryClassifier(BinaryClassifierInner),
-	#[serde(rename = "classifier")]
+	#[serde(rename = "multiclass_classifier")]
 	MulticlassClassifier(MulticlassClassifierInner),
 }
 
@@ -60,6 +60,9 @@ struct BinaryClassifierInner {
 #[serde(rename_all = "camelCase")]
 struct BinaryClassifierInnerMetrics {
 	auc_roc: f32,
+	accuracy: f32,
+	precision: f32,
+	recall: f32,
 }
 
 #[derive(serde::Serialize)]
@@ -145,6 +148,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				id: model_id.to_string(),
 				metrics: BinaryClassifierInnerMetrics {
 					auc_roc: model.test_metrics.auc_roc,
+					accuracy: model.test_metrics.accuracy,
+					precision: model.test_metrics.precision,
+					recall: model.test_metrics.recall,
 				},
 				training_summary,
 			})

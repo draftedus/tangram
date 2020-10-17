@@ -1,7 +1,11 @@
 import {
+	BinaryClassifierIndexPage,
+	Props as BinaryClassifierProps,
+} from './binary_classifier'
+import {
 	MulticlassClassifierIndexPage,
 	Props as MulticlassClassifierProps,
-} from './classifier'
+} from './multiclass_classifier'
 import { RegressorIndexPage, Props as RegressorProps } from './regressor'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
@@ -20,11 +24,13 @@ export type Props = {
 
 export enum Type {
 	Regressor = 'regressor',
+	BinaryClassifier = 'binary_classifier',
 	MulticlassClassifier = 'multiclass_classifier',
 }
 
 export type Inner =
 	| { type: Type.Regressor; value: RegressorProps }
+	| { type: Type.BinaryClassifier; value: BinaryClassifierProps }
 	| { type: Type.MulticlassClassifier; value: MulticlassClassifierProps }
 
 export default function ModelIndexPage(props: Props) {
@@ -32,6 +38,10 @@ export default function ModelIndexPage(props: Props) {
 	switch (props.inner.type) {
 		case Type.Regressor: {
 			inner = <RegressorIndexPage {...props.inner.value} />
+			break
+		}
+		case Type.BinaryClassifier: {
+			inner = <BinaryClassifierIndexPage {...props.inner.value} />
 			break
 		}
 		case Type.MulticlassClassifier: {

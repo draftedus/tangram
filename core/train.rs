@@ -1631,6 +1631,9 @@ impl Into<model::BinaryClassificationMetrics> for metrics::BinaryClassificationM
 		model::BinaryClassificationMetrics {
 			thresholds: self.thresholds.into_iter().map(Into::into).collect(),
 			auc_roc: self.auc_roc,
+			accuracy: self.accuracy,
+			precision: self.precision,
+			recall: self.recall,
 		}
 	}
 }

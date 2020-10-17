@@ -39,15 +39,15 @@ pub struct MulticlassClassificationMetricsOutput {
 /// ClassMetrics are class specific metrics used to evaluate the model's performance on each individual class.
 #[derive(Debug)]
 pub struct ClassMetrics {
-	/// The total number of examples whose label is equal to this class that the model predicted as belonging to this class.
+	/// This is the total number of examples whose label is equal to this class that the model predicted as belonging to this class.
 	pub true_positives: u64,
-	/// The total number of examples whose label is *not* equal to this class that the model predicted as belonging to this class.
+	/// This is the total number of examples whose label is *not* equal to this class that the model predicted as belonging to this class.
 	pub false_positives: u64,
-	/// The total number of examples whose label is *not* equal to this class that the model predicted as *not* belonging to this class.
+	/// This is the total number of examples whose label is *not* equal to this class that the model predicted as *not* belonging to this class.
 	pub true_negatives: u64,
-	/// The total number of examples whose label is equal to this class that the model predicted as *not* belonging to this class.
+	/// This is the total number of examples whose label is equal to this class that the model predicted as *not* belonging to this class.
 	pub false_negatives: u64,
-	/// The fraction of examples of this class that were correctly classified.
+	/// The accuracy is the fraction of examples of this class that were correctly classified.
 	pub accuracy: f32,
 	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class. `precision = true_positives / (true_positives + false_positives)`. See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
 	pub precision: f32,
@@ -59,9 +59,9 @@ pub struct ClassMetrics {
 
 impl MulticlassClassificationMetrics {
 	pub fn new(n_classes: usize) -> MulticlassClassificationMetrics {
-		//                                           prediction    label
-		//                                               |           |
-		//                                               v           v
+		//                                 prediction     label
+		//                                      |           |
+		//                                      v           v
 		let confusion_matrix = Array::zeros((n_classes, n_classes));
 		MulticlassClassificationMetrics { confusion_matrix }
 	}
