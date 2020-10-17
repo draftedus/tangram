@@ -15,7 +15,9 @@ Train a model.
 */
 pub fn train(
 	model_id: Id,
-	file_path: &Path,
+	file_path: Option<&Path>,
+	file_path_train: Option<&Path>,
+	file_path_test: Option<&Path>,
 	target_column_name: &str,
 	config_path: Option<&Path>,
 	update_progress: &mut dyn FnMut(Progress),
@@ -24,29 +26,50 @@ pub fn train(
 	let config: Option<Config> = load_config(config_path)?;
 
 	// Load the dataframe from the csv file.
-	let mut dataframe = load_dataframe(file_path, &config, update_progress)?;
-	let row_count = dataframe.nrows();
+	let mut dataframe = if let Some(file_path) = file_path {
+		Some(load_dataframe(file_path, &config, update_progress)?)
+	} else {
+		None
+	};
+	let dataframe_train = if let Some(file_path_train) = file_path_train {
+		Some(load_dataframe(file_path_train, &config, update_progress)?)
+	} else {
+		None
+	};
+	let dataframe_test = if let Some(file_path_test) = file_path_test {
+		Some(load_dataframe(file_path_test, &config, update_progress)?)
+	} else {
+		None
+	};
+	let (dataframe_train, dataframe_test) = if let Some(dataframe) = dataframe.as_mut() {
+		// Shuffle the dataframe if enabled.
+		shuffle(dataframe, &config, update_progress);
+		// Split the dataframe into train and test dataframes.
+		let test_fraction = config
+			.as_ref()
+			.and_then(|config| config.test_fraction)
+			.unwrap_or(0.2);
+		let n_records_train = ((1.0 - test_fraction) * dataframe.nrows().to_f32().unwrap())
+			.to_usize()
+			.unwrap();
+		let split_index = n_records_train;
+		dataframe.view().split_at_row(split_index)
+	} else {
+		(
+			dataframe_train.as_ref().unwrap().view(),
+			dataframe_test.as_ref().unwrap().view(),
+		)
+	};
 
 	// Retrieve the column names.
-	let column_names: Vec<String> = dataframe
+	let column_names: Vec<String> = dataframe_train
 		.columns()
 		.iter()
 		.map(|column| column.name().unwrap().to_owned())
 		.collect();
 
-	// Shuffle the dataframe if enabled.
-	shuffle(&mut dataframe, &config, update_progress);
-
-	// Split the dataframe into train and test dataframes.
-	let test_fraction = config
-		.as_ref()
-		.and_then(|config| config.test_fraction)
-		.unwrap_or(0.2);
-	let n_records_train = ((1.0 - test_fraction) * dataframe.nrows().to_f32().unwrap())
-		.to_usize()
-		.unwrap();
-	let split_index = n_records_train;
-	let (dataframe_train, dataframe_test) = dataframe.view().split_at_row(split_index);
+	let train_row_count = dataframe_train.nrows();
+	let test_row_count = dataframe_test.nrows();
 
 	// Compute stats.
 	let stats_settings = stats::StatsSettings {
@@ -177,7 +200,8 @@ pub fn train(
 			model::Model::Regressor(model::Regressor {
 				id: model_id.to_string(),
 				target_column_name: target_column_name.to_owned(),
-				row_count: row_count.to_u64().unwrap(),
+				test_row_count: test_row_count.to_u64().unwrap(),
+				train_row_count: train_row_count.to_u64().unwrap(),
 				stats_settings: stats_settings.into(),
 				overall_column_stats: overall_column_stats.into_iter().map(Into::into).collect(),
 				overall_target_column_stats: overall_target_column_stats.into(),
@@ -185,7 +209,6 @@ pub fn train(
 				train_target_column_stats: train_target_column_stats.into(),
 				test_column_stats: test_column_stats.into_iter().map(Into::into).collect(),
 				test_target_column_stats: test_target_column_stats.into(),
-				test_fraction,
 				test_metrics: test_metrics.into(),
 				model: model.into(),
 				comparison_fraction,
@@ -261,7 +284,8 @@ pub fn train(
 			model::Model::Classifier(model::Classifier {
 				id: model_id.to_string(),
 				target_column_name: target_column_name.to_owned(),
-				row_count: row_count.to_u64().unwrap(),
+				test_row_count: test_row_count.to_u64().unwrap(),
+				train_row_count: train_row_count.to_u64().unwrap(),
 				stats_settings: stats_settings.into(),
 				overall_column_stats: overall_column_stats.into_iter().map(Into::into).collect(),
 				overall_target_column_stats: overall_target_column_stats.into(),
@@ -269,7 +293,6 @@ pub fn train(
 				train_target_column_stats: train_target_column_stats.into(),
 				test_column_stats: test_column_stats.into_iter().map(Into::into).collect(),
 				test_target_column_stats: test_target_column_stats.into(),
-				test_fraction,
 				test_metrics: test_metrics.into(),
 				model: model.into(),
 				comparison_fraction,

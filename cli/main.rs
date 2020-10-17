@@ -27,12 +27,24 @@ enum Options {
 	App(Box<AppOptions>),
 }
 
-#[derive(Clap)]
+#[derive(Clap, Debug)]
 #[clap(about = "train a model")]
 #[clap(long_about = "train a model from a csv file")]
 struct TrainOptions {
-	#[clap(short, long, about = "the path to your .csv file")]
-	file: PathBuf,
+	#[clap(short, long, about = "the path to your .csv file", conflicts_with_all=&["file-train", "file-test"])]
+	file: Option<PathBuf>,
+	#[clap(
+		long,
+		about = "the path to your .csv file used for training",
+		requires = "file-test"
+	)]
+	file_train: Option<PathBuf>,
+	#[clap(
+		long,
+		about = "the path to your .csv file used for testing",
+		requires = "file-train"
+	)]
+	file_test: Option<PathBuf>,
 	#[clap(short, long, about = "the name of the column to predict")]
 	target: String,
 	#[clap(short, long, about = "the path to a config file")]
@@ -93,6 +105,7 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 		let value = (panic_info.to_string(), Backtrace::new());
 		PANIC_INFO.lock().unwrap().replace(value);
 	}));
+	println!("{:?}", &options);
 	let result = std::panic::catch_unwind(|| {
 		let mut progress_view = if options.progress {
 			ProgressView::new().ok()
@@ -101,7 +114,9 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 		};
 		tangram_core::train(
 			tangram_util::id::Id::new(),
-			&options.file,
+			options.file.as_deref(),
+			options.file_train.as_deref(),
+			options.file_test.as_deref(),
 			&options.target,
 			options.config.as_deref(),
 			&mut |progress| {
@@ -125,7 +140,14 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 	let output_path = match options.output.as_deref() {
 		None => {
 			let dir = std::env::current_dir()?;
-			let csv_file_name = options.file.file_stem().unwrap().to_str().unwrap();
+			let csv_file_name = options
+				.file
+				.as_ref()
+				.unwrap()
+				.file_stem()
+				.unwrap()
+				.to_str()
+				.unwrap();
 			Cow::Owned(available_path(&dir, csv_file_name, "tangram"))
 		}
 		Some(path) => Cow::Borrowed(path),

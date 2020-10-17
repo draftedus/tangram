@@ -18,9 +18,10 @@ struct Props {
 	column_count: usize,
 	column_stats: Vec<ColumnStats>,
 	id: String,
-	row_count: usize,
-	target_column_stats: ColumnStats,
 	model_layout_info: ModelLayoutInfo,
+	target_column_stats: ColumnStats,
+	test_row_count: usize,
+	train_row_count: usize,
 }
 
 #[derive(serde::Serialize)]
@@ -85,29 +86,31 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		tangram_core::model::Model::Classifier(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
-				id: model.id.to_owned(),
-				row_count: model.row_count.to_usize().unwrap(),
-				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				column_count: column_stats.len(),
 				column_stats: column_stats
 					.iter()
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
+				id: model.id.to_owned(),
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
+				target_column_stats: build_column_stats(&model.overall_target_column_stats),
+				train_row_count: model.train_row_count.to_usize().unwrap(),
+				test_row_count: model.test_row_count.to_usize().unwrap(),
 			}
 		}
 		tangram_core::model::Model::Regressor(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
-				id: model.id.to_owned(),
-				row_count: model.row_count.to_usize().unwrap(),
-				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				column_count: column_stats.len(),
 				column_stats: column_stats
 					.iter()
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
+				id: model.id.to_owned(),
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
+				target_column_stats: build_column_stats(&model.overall_target_column_stats),
+				test_row_count: model.test_row_count.to_usize().unwrap(),
+				train_row_count: model.train_row_count.to_usize().unwrap(),
 			}
 		}
 	};

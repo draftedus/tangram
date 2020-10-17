@@ -186,8 +186,8 @@ async fn props(
 	let get_production_stats_output =
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let train_row_count = match &model {
-		tangram_core::model::Model::Regressor(model) => model.row_count,
-		tangram_core::model::Model::Classifier(model) => model.row_count,
+		tangram_core::model::Model::Regressor(model) => model.train_row_count,
+		tangram_core::model::Model::Classifier(model) => model.train_row_count,
 	};
 	let overall_column_stats = match &model {
 		tangram_core::model::Model::Classifier(model) => &model.overall_column_stats,

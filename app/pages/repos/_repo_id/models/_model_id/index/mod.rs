@@ -60,8 +60,8 @@ struct TrainingSummary {
 	chosen_model_type_name: String,
 	column_count: usize,
 	model_comparison_metric_type_name: String,
-	row_count: usize,
-	test_fraction: f32,
+	train_row_count: usize,
+	test_row_count: usize,
 }
 
 #[derive(serde::Serialize)]
@@ -167,8 +167,8 @@ fn training_summary(model: &tangram_core::model::Model) -> TrainingSummary {
 			model_comparison_metric_type_name: regression_model_comparison_type_name(
 				&model.comparison_metric,
 			),
-			row_count: model.row_count.to_usize().unwrap(),
-			test_fraction: model.test_fraction,
+			train_row_count: model.train_row_count.to_usize().unwrap(),
+			test_row_count: model.test_row_count.to_usize().unwrap(),
 		},
 		tangram_core::model::Model::Classifier(model) => TrainingSummary {
 			chosen_model_type_name,
@@ -176,8 +176,8 @@ fn training_summary(model: &tangram_core::model::Model) -> TrainingSummary {
 			model_comparison_metric_type_name: classification_model_comparison_type_name(
 				&model.comparison_metric,
 			),
-			row_count: model.row_count.to_usize().unwrap(),
-			test_fraction: model.test_fraction,
+			train_row_count: model.train_row_count.to_usize().unwrap(),
+			test_row_count: model.test_row_count.to_usize().unwrap(),
 		},
 	}
 }
