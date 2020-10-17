@@ -250,12 +250,8 @@ pub struct TreeBinaryClassifier {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum BinaryClassificationComparisonMetric {
-	#[serde(rename = "accuracy")]
-	Accuracy,
-	#[serde(rename = "aucroc")]
-	Aucroc,
-	#[serde(rename = "f1")]
-	F1,
+	#[serde(rename = "auc_roc")]
+	AUCROC,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

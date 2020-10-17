@@ -270,7 +270,7 @@ pub fn train(
 		}
 		Task::BinaryClassification => {
 			let comparison_metric = match comparison_metric {
-				ComparisonMetric::MulticlassClassification(m) => m,
+				ComparisonMetric::BinaryClassification(m) => m,
 				_ => unreachable!(),
 			};
 			let test_metrics = match test_metrics {
@@ -383,7 +383,11 @@ enum Task {
 	MulticlassClassification,
 }
 
-enum ClassificationComparisonMetric {
+enum BinaryClassificationComparisonMetric {
+	AUCROC,
+}
+
+enum MulticlassClassificationComparisonMetric {
 	Accuracy,
 }
 
@@ -447,8 +451,8 @@ struct TreeMulticlassClassifier {
 
 enum ComparisonMetric {
 	Regression(RegressionComparisonMetric),
-	BinaryClassification(ClassificationComparisonMetric),
-	MulticlassClassification(ClassificationComparisonMetric),
+	BinaryClassification(BinaryClassificationComparisonMetric),
+	MulticlassClassification(MulticlassClassificationComparisonMetric),
 }
 
 enum TestMetrics {
@@ -1096,7 +1100,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 				match metric {
 					config::ComparisonMetric::Accuracy => {
 						Ok(ComparisonMetric::BinaryClassification(
-							ClassificationComparisonMetric::Accuracy,
+							BinaryClassificationComparisonMetric::AUCROC,
 						))
 					}
 					metric => Err(format_err!(
@@ -1106,7 +1110,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 				}
 			} else {
 				Ok(ComparisonMetric::BinaryClassification(
-					ClassificationComparisonMetric::Accuracy,
+					BinaryClassificationComparisonMetric::AUCROC,
 				))
 			}
 		}
@@ -1118,7 +1122,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 				match metric {
 					config::ComparisonMetric::Accuracy => {
 						Ok(ComparisonMetric::MulticlassClassification(
-							ClassificationComparisonMetric::Accuracy,
+							MulticlassClassificationComparisonMetric::Accuracy,
 						))
 					}
 					metric => Err(format_err!(
@@ -1128,7 +1132,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 				}
 			} else {
 				Ok(ComparisonMetric::MulticlassClassification(
-					ClassificationComparisonMetric::Accuracy,
+					MulticlassClassificationComparisonMetric::Accuracy,
 				))
 			}
 		}
@@ -1244,9 +1248,11 @@ fn choose_best_model(
 		ComparisonMetric::Regression(comparison_metric) => {
 			choose_best_model_regression(outputs, comparison_metric)
 		}
-		ComparisonMetric::BinaryClassification(comparison_metric)
-		| ComparisonMetric::MulticlassClassification(comparison_metric) => {
-			choose_best_model_classification(outputs, comparison_metric)
+		ComparisonMetric::BinaryClassification(comparison_metric) => {
+			choose_best_model_binary_classification(outputs, comparison_metric)
+		}
+		ComparisonMetric::MulticlassClassification(comparison_metric) => {
+			choose_best_model_multiclass_classification(outputs, comparison_metric)
 		}
 	}
 }
@@ -1283,9 +1289,35 @@ fn choose_best_model_regression(
 		.unwrap()
 }
 
-fn choose_best_model_classification(
+fn choose_best_model_binary_classification(
 	outputs: Vec<(TrainModelOutput, TestMetrics)>,
-	comparison_metric: &ClassificationComparisonMetric,
+	comparison_metric: &BinaryClassificationComparisonMetric,
+) -> TrainModelOutput {
+	outputs
+		.into_iter()
+		.max_by(|(_, metrics_a), (_, metrics_b)| {
+			let task_metrics_a = match metrics_a {
+				TestMetrics::BinaryClassification(m) => m,
+				_ => unreachable!(),
+			};
+			let task_metrics_b = match metrics_b {
+				TestMetrics::BinaryClassification(m) => m,
+				_ => unreachable!(),
+			};
+			match comparison_metric {
+				BinaryClassificationComparisonMetric::AUCROC => task_metrics_a
+					.auc_roc
+					.partial_cmp(&task_metrics_b.auc_roc)
+					.unwrap(),
+			}
+		})
+		.map(|(model, _)| model)
+		.unwrap()
+}
+
+fn choose_best_model_multiclass_classification(
+	outputs: Vec<(TrainModelOutput, TestMetrics)>,
+	comparison_metric: &MulticlassClassificationComparisonMetric,
 ) -> TrainModelOutput {
 	outputs
 		.into_iter()
@@ -1299,7 +1331,7 @@ fn choose_best_model_classification(
 				_ => unreachable!(),
 			};
 			match comparison_metric {
-				ClassificationComparisonMetric::Accuracy => task_metrics_a
+				MulticlassClassificationComparisonMetric::Accuracy => task_metrics_a
 					.accuracy
 					.partial_cmp(&task_metrics_b.accuracy)
 					.unwrap(),
@@ -1941,21 +1973,23 @@ impl Into<model::RegressionComparisonMetric> for RegressionComparisonMetric {
 	}
 }
 
-impl Into<model::MulticlassClassificationComparisonMetric> for ClassificationComparisonMetric {
+impl Into<model::MulticlassClassificationComparisonMetric>
+	for MulticlassClassificationComparisonMetric
+{
 	fn into(self) -> model::MulticlassClassificationComparisonMetric {
 		match self {
-			ClassificationComparisonMetric::Accuracy => {
+			MulticlassClassificationComparisonMetric::Accuracy => {
 				model::MulticlassClassificationComparisonMetric::Accuracy
 			}
 		}
 	}
 }
 
-impl Into<model::BinaryClassificationComparisonMetric> for ClassificationComparisonMetric {
+impl Into<model::BinaryClassificationComparisonMetric> for BinaryClassificationComparisonMetric {
 	fn into(self) -> model::BinaryClassificationComparisonMetric {
 		match self {
-			ClassificationComparisonMetric::Accuracy => {
-				model::BinaryClassificationComparisonMetric::Accuracy
+			BinaryClassificationComparisonMetric::AUCROC => {
+				model::BinaryClassificationComparisonMetric::AUCROC
 			}
 		}
 	}

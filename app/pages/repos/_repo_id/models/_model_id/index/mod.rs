@@ -213,11 +213,9 @@ fn binary_classification_model_comparison_type_name(
 	comparison_metric: &tangram_core::model::BinaryClassificationComparisonMetric,
 ) -> String {
 	match comparison_metric {
-		tangram_core::model::BinaryClassificationComparisonMetric::Accuracy => "Accuracy".into(),
-		tangram_core::model::BinaryClassificationComparisonMetric::Aucroc => {
+		tangram_core::model::BinaryClassificationComparisonMetric::AUCROC => {
 			"Area Under the Receiver Operating Characteristic Curve".into()
 		}
-		tangram_core::model::BinaryClassificationComparisonMetric::F1 => "F1 Score".into(),
 	}
 }
 

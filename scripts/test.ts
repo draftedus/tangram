@@ -1,8 +1,6 @@
 let datasets = [
 	{ name: 'boston', target: 'medv' },
-	{ name: 'heart-disease', target: 'diagnosis' },
-	{ name: 'titanic', target: 'survived' },
-	{ name: 'census', target: 'income' },
+	{ name: 'heart_disease', target: 'diagnosis' },
 	{ name: 'iris', target: 'species' },
 ]
 
