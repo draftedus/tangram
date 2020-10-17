@@ -7,7 +7,11 @@ use tangram_util::id::Id;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Model {
+	#[serde(rename = "regressor")]
 	Regressor(Regressor),
+	#[serde(rename = "binary_classifier")]
+	BinaryClassifier(BinaryClassifier),
+	#[serde(rename = "multiclass_classifier")]
 	MulticlassClassifier(MulticlassClassifier),
 }
 
@@ -50,6 +54,7 @@ impl Model {
 	pub fn id(&self) -> Id {
 		match self {
 			Model::Regressor(s) => s.id.parse().unwrap(),
+			Model::BinaryClassifier(s) => s.id.parse().unwrap(),
 			Model::MulticlassClassifier(s) => s.id.parse().unwrap(),
 		}
 	}
@@ -86,7 +91,9 @@ pub struct RegressionMetrics {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum RegressionModel {
+	#[serde(rename = "linear")]
 	Linear(LinearRegressor),
+	#[serde(rename = "tree")]
 	Tree(TreeRegressor),
 }
 
@@ -154,10 +161,103 @@ pub struct TreeEarlyStoppingOptions {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum RegressionComparisonMetric {
+	#[serde(rename = "mean_absolute_error")]
 	MeanAbsoluteError,
+	#[serde(rename = "mean_squared_error")]
 	MeanSquaredError,
+	#[serde(rename = "root_mean_squared_error")]
 	RootMeanSquaredError,
+	#[serde(rename = "r2")]
 	R2,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct BinaryClassifier {
+	pub id: String,
+	pub target_column_name: String,
+	pub train_row_count: u64,
+	pub test_row_count: u64,
+	pub stats_settings: StatsSettings,
+	pub overall_column_stats: Vec<ColumnStats>,
+	pub overall_target_column_stats: ColumnStats,
+	pub train_column_stats: Vec<ColumnStats>,
+	pub train_target_column_stats: ColumnStats,
+	pub test_column_stats: Vec<ColumnStats>,
+	pub test_target_column_stats: ColumnStats,
+	pub test_metrics: BinaryClassificationMetrics,
+	pub model: BinaryClassificationModel,
+	pub comparison_fraction: f32,
+	pub comparison_metric: BinaryClassificationComparisonMetric,
+}
+
+impl BinaryClassifier {
+	pub fn classes(&self) -> &[String] {
+		match &self.model {
+			BinaryClassificationModel::Linear(model) => model.classes.as_slice(),
+			BinaryClassificationModel::Tree(model) => model.classes.as_slice(),
+		}
+	}
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct BinaryClassificationMetrics {
+	pub thresholds: Vec<BinaryClassificationMetricsForThreshold>,
+	pub auc_roc: f32,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct BinaryClassificationMetricsForThreshold {
+	pub threshold: f32,
+	pub true_positives: u64,
+	pub false_positives: u64,
+	pub true_negatives: u64,
+	pub false_negatives: u64,
+	pub accuracy: f32,
+	pub precision: f32,
+	pub recall: f32,
+	pub f1_score: f32,
+	pub true_positive_rate: f32,
+	pub false_positive_rate: f32,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub enum BinaryClassificationModel {
+	#[serde(rename = "linear")]
+	Linear(LinearBinaryClassifier),
+	#[serde(rename = "tree")]
+	Tree(TreeBinaryClassifier),
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct LinearBinaryClassifier {
+	pub feature_groups: Vec<FeatureGroup>,
+	pub weights: Vec<f32>,
+	pub bias: f32,
+	pub classes: Vec<String>,
+	pub losses: Option<Vec<f32>>,
+	pub means: Vec<f32>,
+	pub train_options: LinearModelTrainOptions,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct TreeBinaryClassifier {
+	pub feature_groups: Vec<FeatureGroup>,
+	pub bias: f32,
+	pub trees: Vec<Tree>,
+	pub classes: Vec<String>,
+	pub losses: Option<Vec<f32>>,
+	pub feature_importances: Vec<f32>,
+	pub train_options: TreeModelTrainOptions,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub enum BinaryClassificationComparisonMetric {
+	#[serde(rename = "accuracy")]
+	Accuracy,
+	#[serde(rename = "aucroc")]
+	Aucroc,
+	#[serde(rename = "f1")]
+	F1,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -213,20 +313,10 @@ pub struct ClassMetrics {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum MulticlassClassificationModel {
+	#[serde(rename = "linear")]
 	Linear(LinearMulticlassClassifier),
+	#[serde(rename = "tree")]
 	Tree(TreeMulticlassClassifier),
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct LinearBinaryClassifier {
-	pub feature_groups: Vec<FeatureGroup>,
-	pub weights: Vec<f32>,
-	pub bias: f32,
-	pub classes: Vec<String>,
-	pub losses: Option<Vec<f32>>,
-	pub metrics: BinaryClassifierMetrics,
-	pub means: Vec<f32>,
-	pub train_options: LinearModelTrainOptions,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -243,18 +333,6 @@ pub struct LinearMulticlassClassifier {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct TreeBinaryClassifier {
-	pub feature_groups: Vec<FeatureGroup>,
-	pub bias: f32,
-	pub trees: Vec<Tree>,
-	pub classes: Vec<String>,
-	pub losses: Option<Vec<f32>>,
-	pub feature_importances: Vec<f32>,
-	pub metrics: BinaryClassifierMetrics,
-	pub train_options: TreeModelTrainOptions,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeMulticlassClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub n_classes: usize,
@@ -268,31 +346,9 @@ pub struct TreeMulticlassClassifier {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct BinaryClassifierMetrics {
-	pub thresholds: Vec<ThresholdMetrics>,
-	pub auc_roc: f32,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct ThresholdMetrics {
-	pub threshold: f32,
-	pub true_positives: u64,
-	pub false_positives: u64,
-	pub true_negatives: u64,
-	pub false_negatives: u64,
-	pub accuracy: f32,
-	pub precision: f32,
-	pub recall: f32,
-	pub f1_score: f32,
-	pub true_positive_rate: f32,
-	pub false_positive_rate: f32,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum MulticlassClassificationComparisonMetric {
+	#[serde(rename = "accuracy")]
 	Accuracy,
-	Aucroc,
-	F1,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -303,9 +359,13 @@ pub struct StatsSettings {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum ColumnStats {
+	#[serde(rename = "unknown")]
 	Unknown(UnknownColumnStats),
+	#[serde(rename = "number")]
 	Number(NumberColumnStats),
+	#[serde(rename = "enum")]
 	Enum(EnumColumnStats),
+	#[serde(rename = "text")]
 	Text(TextColumnStats),
 }
 
@@ -386,15 +446,21 @@ pub struct TokenStats {
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum Token {
+	#[serde(rename = "unigram")]
 	Unigram(String),
+	#[serde(rename = "bigram")]
 	Bigram(String, String),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum FeatureGroup {
+	#[serde(rename = "identity")]
 	Identity(IdentityFeatureGroup),
+	#[serde(rename = "normalized")]
 	Normalized(NormalizedFeatureGroup),
+	#[serde(rename = "one_hot_encoded")]
 	OneHotEncoded(OneHotEncodedFeatureGroup),
+	#[serde(rename = "bag_of_words")]
 	BagOfWords(BagOfWordsFeatureGroup),
 }
 
@@ -431,6 +497,7 @@ pub struct BagOfWordsFeatureGroupToken {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Tokenizer {
+	#[serde(rename = "alphanumeric")]
 	Alphanumeric,
 }
 
@@ -441,7 +508,9 @@ pub struct Tree {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Node {
+	#[serde(rename = "branch")]
 	Branch(BranchNode),
+	#[serde(rename = "leaf")]
 	Leaf(LeafNode),
 }
 
@@ -455,7 +524,9 @@ pub struct BranchNode {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum BranchSplit {
+	#[serde(rename = "continuous")]
 	Continuous(BranchSplitContinuous),
+	#[serde(rename = "discrete")]
 	Discrete(BranchSplitDiscrete),
 }
 
@@ -474,7 +545,9 @@ pub struct BranchSplitDiscrete {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum SplitDirection {
+	#[serde(rename = "left")]
 	Left,
+	#[serde(rename = "right")]
 	Right,
 }
 

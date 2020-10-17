@@ -24,14 +24,14 @@ pub struct BinaryClassificationMetricsInput<'a> {
 #[derive(Debug)]
 pub struct BinaryClassificationMetricsOutput {
 	/// This contains metrics specific to each classification threshold.
-	pub thresholds: Vec<BinaryClassificationThresholdMetricsOutput>,
+	pub thresholds: Vec<BinaryClassificationMetricsOutputForThreshold>,
 	/// The area under the receiver operating characteristic curve is computed using a fixed number of thresholds equal to `n_thresholds` which is passed to[BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
 	pub auc_roc: f32,
 }
 
 /// The output from [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
 #[derive(Debug)]
-pub struct BinaryClassificationThresholdMetricsOutput {
+pub struct BinaryClassificationMetricsOutputForThreshold {
 	/// The classification threshold.
 	pub threshold: f32,
 	/// The total number of examples whose label is equal to the positive class that the model predicted as belonging to the positive class.
@@ -148,7 +148,7 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				// This is false_positive_rate = false_positives / negatives.
 				let false_positive_rate = false_positives.to_f32().unwrap()
 					/ (true_negatives.to_f32().unwrap() + false_positives.to_f32().unwrap());
-				BinaryClassificationThresholdMetricsOutput {
+				BinaryClassificationMetricsOutputForThreshold {
 					threshold,
 					false_negatives,
 					false_positives,

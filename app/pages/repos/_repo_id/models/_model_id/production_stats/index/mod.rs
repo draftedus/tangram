@@ -161,10 +161,11 @@ async fn props(
 	let production_stats =
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let target_column_stats = match model {
+		tangram_core::model::Model::Regressor(model) => model.overall_target_column_stats,
+		tangram_core::model::Model::BinaryClassifier(model) => model.overall_target_column_stats,
 		tangram_core::model::Model::MulticlassClassifier(model) => {
 			model.overall_target_column_stats
 		}
-		tangram_core::model::Model::Regressor(model) => model.overall_target_column_stats,
 	};
 	let overall_column_stats_table = production_stats
 		.overall
@@ -225,7 +226,8 @@ async fn props(
 				),
 			})
 		}
-		ProductionPredictionStatsOutput::MulticlassClassification(prediction_stats) => {
+		ProductionPredictionStatsOutput::BinaryClassification(prediction_stats)
+		| ProductionPredictionStatsOutput::MulticlassClassification(prediction_stats) => {
 			let target_column_stats = target_column_stats.as_enum().unwrap();
 			PredictionStatsChart::MulticlassClassification(MulticlassClassificationChartEntry {
 				label: format_date_window(
@@ -266,7 +268,8 @@ async fn props(
 				})
 				.collect(),
 		),
-		ProductionPredictionStatsOutput::MulticlassClassification(_) => {
+		ProductionPredictionStatsOutput::BinaryClassification(_)
+		| ProductionPredictionStatsOutput::MulticlassClassification(_) => {
 			PredictionStatsIntervalChart::MulticlassClassification(
 				interval_production_stats
 					.into_iter()

@@ -36,6 +36,9 @@ impl ProductionStats {
 	) -> ProductionStats {
 		let train_column_stats = match &model {
 			tangram_core::model::Model::Regressor(model) => model.train_column_stats.as_slice(),
+			tangram_core::model::Model::BinaryClassifier(model) => {
+				model.train_column_stats.as_slice()
+			}
 			tangram_core::model::Model::MulticlassClassifier(model) => {
 				model.train_column_stats.as_slice()
 			}

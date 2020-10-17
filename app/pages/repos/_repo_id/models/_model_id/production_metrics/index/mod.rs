@@ -247,6 +247,7 @@ async fn props(
 				true_values_count_chart,
 			})
 		}
+		tangram_core::model::Model::BinaryClassifier(_) => todo!(),
 		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let training_metrics = &model.test_metrics;
 			let overall_production_metrics =

@@ -19,7 +19,7 @@ pub use self::accuracy::Accuracy;
 pub use self::auc_roc::*;
 pub use self::binary_classification::{
 	BinaryClassificationMetrics, BinaryClassificationMetricsInput,
-	BinaryClassificationMetricsOutput, BinaryClassificationThresholdMetricsOutput,
+	BinaryClassificationMetricsOutput, BinaryClassificationMetricsOutputForThreshold,
 };
 pub use self::binary_cross_entropy::{BinaryCrossEntropy, BinaryCrossEntropyInput};
 pub use self::cross_entropy::{CrossEntropy, CrossEntropyInput, CrossEntropyOutput};

@@ -6,7 +6,8 @@ use tangram_metrics::StreamingMetric;
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum ProductionPredictionStats {
 	Regression(RegressionProductionPredictionStats),
-	MulticlassClassification(MulticlassClassificationProductionPredictionStats),
+	BinaryClassification(ClassificationProductionPredictionStats),
+	MulticlassClassification(ClassificationProductionPredictionStats),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
@@ -15,14 +16,15 @@ pub struct RegressionProductionPredictionStats {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
-pub struct MulticlassClassificationProductionPredictionStats {
+pub struct ClassificationProductionPredictionStats {
 	pub histogram: BTreeMap<String, u64>,
 }
 
 #[derive(Debug)]
 pub enum ProductionPredictionStatsOutput {
 	Regression(RegressionProductionPredictionStatsOutput),
-	MulticlassClassification(MulticlassClassificationProductionPredictionStatsOutput),
+	BinaryClassification(ClassificationProductionPredictionStatsOutput),
+	MulticlassClassification(ClassificationProductionPredictionStatsOutput),
 }
 
 #[derive(Debug)]
@@ -31,20 +33,26 @@ pub struct RegressionProductionPredictionStatsOutput {
 }
 
 #[derive(serde::Serialize, Debug)]
-pub struct MulticlassClassificationProductionPredictionStatsOutput {
+pub struct ClassificationProductionPredictionStatsOutput {
 	pub histogram: Vec<(String, u64)>,
 }
 
 impl ProductionPredictionStats {
 	pub fn new(model: &tangram_core::model::Model) -> ProductionPredictionStats {
-		match &model {
+		match model {
 			tangram_core::model::Model::Regressor(_) => {
 				ProductionPredictionStats::Regression(RegressionProductionPredictionStats::new())
+			}
+			tangram_core::model::Model::BinaryClassifier(model) => {
+				let classes = model.classes();
+				ProductionPredictionStats::BinaryClassification(
+					ClassificationProductionPredictionStats::new(classes),
+				)
 			}
 			tangram_core::model::Model::MulticlassClassifier(model) => {
 				let classes = model.classes();
 				ProductionPredictionStats::MulticlassClassification(
-					MulticlassClassificationProductionPredictionStats::new(classes),
+					ClassificationProductionPredictionStats::new(classes),
 				)
 			}
 		}
@@ -58,6 +66,7 @@ impl StreamingMetric<'_> for ProductionPredictionStats {
 	fn update(&mut self, value: Self::Input) {
 		match self {
 			ProductionPredictionStats::Regression(stats) => stats.update(value),
+			ProductionPredictionStats::BinaryClassification(stats) => stats.update(value),
 			ProductionPredictionStats::MulticlassClassification(stats) => stats.update(value),
 		}
 	}
@@ -66,6 +75,11 @@ impl StreamingMetric<'_> for ProductionPredictionStats {
 		match self {
 			ProductionPredictionStats::Regression(this) => {
 				if let ProductionPredictionStats::Regression(other) = other {
+					this.merge(other)
+				}
+			}
+			ProductionPredictionStats::BinaryClassification(this) => {
+				if let ProductionPredictionStats::BinaryClassification(other) = other {
 					this.merge(other)
 				}
 			}
@@ -81,6 +95,9 @@ impl StreamingMetric<'_> for ProductionPredictionStats {
 		match self {
 			ProductionPredictionStats::Regression(stats) => {
 				ProductionPredictionStatsOutput::Regression(stats.finalize())
+			}
+			ProductionPredictionStats::BinaryClassification(stats) => {
+				ProductionPredictionStatsOutput::BinaryClassification(stats.finalize())
 			}
 			ProductionPredictionStats::MulticlassClassification(stats) => {
 				ProductionPredictionStatsOutput::MulticlassClassification(stats.finalize())
@@ -129,16 +146,16 @@ impl StreamingMetric<'_> for RegressionProductionPredictionStats {
 	}
 }
 
-impl MulticlassClassificationProductionPredictionStats {
-	fn new(classes: &[String]) -> MulticlassClassificationProductionPredictionStats {
+impl ClassificationProductionPredictionStats {
+	fn new(classes: &[String]) -> ClassificationProductionPredictionStats {
 		let histogram = classes.iter().cloned().map(|class| (class, 0)).collect();
-		MulticlassClassificationProductionPredictionStats { histogram }
+		ClassificationProductionPredictionStats { histogram }
 	}
 }
 
-impl StreamingMetric<'_> for MulticlassClassificationProductionPredictionStats {
+impl StreamingMetric<'_> for ClassificationProductionPredictionStats {
 	type Input = PredictOutput;
-	type Output = MulticlassClassificationProductionPredictionStatsOutput;
+	type Output = ClassificationProductionPredictionStatsOutput;
 
 	fn update(&mut self, value: PredictOutput) {
 		let value = match value {
@@ -157,7 +174,7 @@ impl StreamingMetric<'_> for MulticlassClassificationProductionPredictionStats {
 	}
 
 	fn finalize(self) -> Self::Output {
-		MulticlassClassificationProductionPredictionStatsOutput {
+		ClassificationProductionPredictionStatsOutput {
 			histogram: self.histogram.into_iter().collect(),
 		}
 	}

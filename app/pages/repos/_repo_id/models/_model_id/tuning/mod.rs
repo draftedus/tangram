@@ -73,30 +73,17 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let tuning = match model {
-		tangram_core::model::Model::MulticlassClassifier(model) => {
-			let classes = model.classes().to_owned();
-			match model.model {
-				// tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
-				// 	let metrics = build_threshold_metrics(inner_model.metrics);
-				// 	Some(Inner {
-				// 		baseline_threshold: 0.5,
-				// 		metrics,
-				// 		class: classes[1].to_owned(),
-				// 	})
-				// }
-				// tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
-				// 	let metrics = build_threshold_metrics(inner_model.metrics);
-				// 	Some(Inner {
-				// 		baseline_threshold: 0.5,
-				// 		metrics,
-				// 		class: classes[1].to_owned(),
-				// 	})
-				// }
-				tangram_core::model::MulticlassClassificationModel::Linear(_) => None,
-				tangram_core::model::MulticlassClassificationModel::Tree(_) => None,
-			}
-		}
 		tangram_core::model::Model::Regressor(_) => None,
+		tangram_core::model::Model::MulticlassClassifier(_) => None,
+		tangram_core::model::Model::BinaryClassifier(model) => {
+			let classes = model.classes().to_owned();
+			let metrics = build_threshold_metrics(model.test_metrics);
+			Some(Inner {
+				baseline_threshold: 0.5,
+				metrics,
+				class: classes[1].to_owned(),
+			})
+		}
 	};
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
@@ -106,7 +93,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	})
 }
 
-fn build_threshold_metrics(metrics: tangram_core::model::BinaryClassifierMetrics) -> Vec<Metrics> {
+fn build_threshold_metrics(
+	metrics: tangram_core::model::BinaryClassificationMetrics,
+) -> Vec<Metrics> {
 	metrics
 		.thresholds
 		.iter()

@@ -24,15 +24,14 @@ struct Props {
 #[serde(tag = "type", content = "value")]
 enum Inner {
 	#[serde(rename = "BinaryClassifier")]
-	BinaryClassifier(BinaryClassifier),
+	BinaryClassifier(BinaryClassifierInner),
 	#[serde(rename = "MulticlassClassifier")]
-	MulticlassClassifier(MulticlassClassifier),
+	MulticlassClassifier(MulticlassClassifierInner),
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct BinaryClassifier {
-	class_metrics: ClassMetrics,
+struct BinaryClassifierInner {
 	class: String,
 	classes: Vec<String>,
 	id: String,
@@ -52,7 +51,7 @@ struct ClassMetrics {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct MulticlassClassifier {
+struct MulticlassClassifierInner {
 	class_metrics: ClassMetrics,
 	classes: Vec<String>,
 	id: String,
@@ -100,18 +99,20 @@ async fn props(
 	let model = get_model(&mut db, model_id).await?;
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
 	let inner = match model {
+		tangram_core::model::Model::BinaryClassifier(model) => match model.model {
+			tangram_core::model::BinaryClassificationModel::Linear(_) => {
+				Inner::BinaryClassifier(build_inner_binary(model, class))
+			}
+			tangram_core::model::BinaryClassificationModel::Tree(_) => {
+				Inner::BinaryClassifier(build_inner_binary(model, class))
+			}
+		},
 		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
-			// tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
-			// 	Inner::BinaryClassifier(build_inner_binary(model, model_id, class))
-			// }
-			// tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
-			// 	Inner::BinaryClassifier(build_inner_binary(model, model_id, class))
-			// }
 			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
-				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id, class))
+				Inner::MulticlassClassifier(build_inner_multiclass(model, class))
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(_) => {
-				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id, class))
+				Inner::MulticlassClassifier(build_inner_multiclass(model, class))
 			}
 		},
 		_ => return Err(Error::BadRequest.into()),
@@ -126,12 +127,9 @@ async fn props(
 }
 
 fn build_inner_binary(
-	model: tangram_core::model::MulticlassClassifier,
-	id: Id,
+	model: tangram_core::model::BinaryClassifier,
 	class: Option<String>,
-) -> BinaryClassifier {
-	let test_metrics = &model.test_metrics;
-	let class_metrics = &test_metrics.class_metrics;
+) -> BinaryClassifierInner {
 	let classes = model.classes().to_owned();
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
@@ -139,19 +137,8 @@ fn build_inner_binary(
 		1
 	};
 	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
-	let class_metrics = &class_metrics[class_index];
-	let class_metrics = ClassMetrics {
-		precision: class_metrics.precision,
-		recall: class_metrics.recall,
-		f1_score: class_metrics.f1_score,
-		true_negatives: class_metrics.true_negatives,
-		true_positives: class_metrics.true_positives,
-		false_negatives: class_metrics.false_negatives,
-		false_positives: class_metrics.false_positives,
-	};
-	BinaryClassifier {
-		id: id.to_string(),
-		class_metrics,
+	BinaryClassifierInner {
+		id: model.id,
 		classes,
 		class,
 	}
@@ -159,9 +146,8 @@ fn build_inner_binary(
 
 fn build_inner_multiclass(
 	model: tangram_core::model::MulticlassClassifier,
-	id: Id,
 	class: Option<String>,
-) -> MulticlassClassifier {
+) -> MulticlassClassifierInner {
 	let test_metrics = &model.test_metrics;
 	let classes = model.classes().to_owned();
 	let class_metrics = &test_metrics.class_metrics;
@@ -181,8 +167,8 @@ fn build_inner_multiclass(
 		false_negatives: class_metrics.false_negatives,
 		false_positives: class_metrics.false_positives,
 	};
-	MulticlassClassifier {
-		id: id.to_string(),
+	MulticlassClassifierInner {
+		id: model.id.to_string(),
 		class_metrics,
 		classes,
 		class,

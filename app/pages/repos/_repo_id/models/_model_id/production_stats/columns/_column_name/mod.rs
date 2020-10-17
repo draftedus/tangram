@@ -187,11 +187,13 @@ async fn props(
 		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
 	let train_row_count = match &model {
 		tangram_core::model::Model::Regressor(model) => model.train_row_count,
+		tangram_core::model::Model::BinaryClassifier(model) => model.train_row_count,
 		tangram_core::model::Model::MulticlassClassifier(model) => model.train_row_count,
 	};
 	let overall_column_stats = match &model {
-		tangram_core::model::Model::MulticlassClassifier(model) => &model.overall_column_stats,
 		tangram_core::model::Model::Regressor(model) => &model.overall_column_stats,
+		tangram_core::model::Model::BinaryClassifier(model) => &model.overall_column_stats,
+		tangram_core::model::Model::MulticlassClassifier(model) => &model.overall_column_stats,
 	};
 	let train_column_stats = overall_column_stats
 		.iter()

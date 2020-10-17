@@ -108,11 +108,15 @@ async fn props(
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let (mut column_stats, target_column_stats) = match model {
-		tangram_core::model::Model::MulticlassClassifier(model) => (
+		tangram_core::model::Model::Regressor(model) => (
 			model.overall_column_stats,
 			model.overall_target_column_stats,
 		),
-		tangram_core::model::Model::Regressor(model) => (
+		tangram_core::model::Model::BinaryClassifier(model) => (
+			model.overall_column_stats,
+			model.overall_target_column_stats,
+		),
+		tangram_core::model::Model::MulticlassClassifier(model) => (
 			model.overall_column_stats,
 			model.overall_target_column_stats,
 		),

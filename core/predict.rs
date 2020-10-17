@@ -743,6 +743,62 @@ impl TryFrom<model::Model> for PredictModel {
 					}
 				}
 			}
+			model::Model::BinaryClassifier(model) => {
+				let id = model.id;
+				let columns = model
+					.overall_column_stats
+					.into_iter()
+					.map(TryFrom::try_from)
+					.collect::<Result<Vec<_>>>()?;
+				match model.model {
+					model::BinaryClassificationModel::Linear(model) => {
+						let feature_groups = model
+							.feature_groups
+							.into_iter()
+							.map(TryFrom::try_from)
+							.collect::<Result<Vec<_>>>()?;
+						Ok(PredictModel::LinearBinaryClassifier(
+							LinearBinaryClassifierPredictModel {
+								id,
+								columns,
+								feature_groups,
+								model: tangram_linear::BinaryClassifier {
+									weights: model.weights.into(),
+									bias: model.bias,
+									means: model.means,
+									losses: model.losses,
+									classes: model.classes,
+								},
+							},
+						))
+					}
+					model::BinaryClassificationModel::Tree(model) => {
+						let feature_groups = model
+							.feature_groups
+							.into_iter()
+							.map(TryFrom::try_from)
+							.collect::<Result<Vec<_>>>()?;
+						Ok(PredictModel::TreeBinaryClassifier(
+							TreeBinaryClassifierPredictModel {
+								id,
+								columns,
+								feature_groups,
+								model: tangram_tree::BinaryClassifier {
+									bias: model.bias,
+									trees: model
+										.trees
+										.into_iter()
+										.map(TryInto::try_into)
+										.collect::<Result<Vec<_>>>()?,
+									feature_importances: Some(model.feature_importances),
+									losses: model.losses,
+									classes: model.classes,
+								},
+							},
+						))
+					}
+				}
+			}
 			model::Model::MulticlassClassifier(model) => {
 				let id = model.id;
 				let columns = model
@@ -751,52 +807,6 @@ impl TryFrom<model::Model> for PredictModel {
 					.map(TryFrom::try_from)
 					.collect::<Result<Vec<_>>>()?;
 				match model.model {
-					// model::MulticlassClassificationModel::LinearBinary(model) => {
-					// 	let feature_groups = model
-					// 		.feature_groups
-					// 		.into_iter()
-					// 		.map(TryFrom::try_from)
-					// 		.collect::<Result<Vec<_>>>()?;
-					// 	Ok(PredictModel::LinearBinaryClassifier(
-					// 		LinearBinaryClassifierPredictModel {
-					// 			id,
-					// 			columns,
-					// 			feature_groups,
-					// 			model: tangram_linear::BinaryClassifier {
-					// 				weights: model.weights.into(),
-					// 				bias: model.bias,
-					// 				means: model.means,
-					// 				losses: model.losses,
-					// 				classes: model.classes,
-					// 			},
-					// 		},
-					// 	))
-					// }
-					// model::MulticlassClassificationModel::TreeBinary(model) => {
-					// 	let feature_groups = model
-					// 		.feature_groups
-					// 		.into_iter()
-					// 		.map(TryFrom::try_from)
-					// 		.collect::<Result<Vec<_>>>()?;
-					// 	Ok(PredictModel::TreeBinaryClassifier(
-					// 		TreeBinaryClassifierPredictModel {
-					// 			id,
-					// 			columns,
-					// 			feature_groups,
-					// 			model: tangram_tree::BinaryClassifier {
-					// 				bias: model.bias,
-					// 				trees: model
-					// 					.trees
-					// 					.into_iter()
-					// 					.map(TryInto::try_into)
-					// 					.collect::<Result<Vec<_>>>()?,
-					// 				feature_importances: Some(model.feature_importances),
-					// 				losses: model.losses,
-					// 				classes: model.classes,
-					// 			},
-					// 		},
-					// 	))
-					// }
 					model::MulticlassClassificationModel::Linear(model) => {
 						let n_classes = model.n_classes.to_usize().unwrap();
 						let n_features = model.n_features.to_usize().unwrap();

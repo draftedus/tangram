@@ -102,12 +102,9 @@ pub fn train(
 	// Determine the task.
 	let task = match &overall_target_column_stats {
 		stats::ColumnStatsOutput::Number(_) => Task::Regression,
-		stats::ColumnStatsOutput::Enum(target_column) => Task::MulticlassClassification {
-			classes: target_column
-				.histogram
-				.iter()
-				.map(|(option, _)| option.clone())
-				.collect(),
+		stats::ColumnStatsOutput::Enum(target_column) => match target_column.unique_count {
+			2 => Task::BinaryClassification,
+			_ => Task::MulticlassClassification,
 		},
 		_ => return Err(format_err!("invalid target column type")),
 	};
@@ -215,13 +212,13 @@ pub fn train(
 				comparison_metric: comparison_metric.into(),
 			})
 		}
-		Task::MulticlassClassification { .. } => {
-			let (test_metrics, model_test_metrics) = match test_metrics {
-				TestMetrics::MulticlassClassification(m) => m,
-				_ => unreachable!(),
-			};
+		Task::BinaryClassification => {
 			let comparison_metric = match comparison_metric {
 				ComparisonMetric::MulticlassClassification(m) => m,
+				_ => unreachable!(),
+			};
+			let test_metrics = match test_metrics {
+				TestMetrics::BinaryClassification(m) => m,
 				_ => unreachable!(),
 			};
 			let model = match train_model_output {
@@ -232,31 +229,51 @@ pub fn train(
 						options,
 						..
 					},
-				) => {
-					todo!()
-					// let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
-					// MulticlassClassificationModel::LinearBinary(LinearBinaryClassifier {
-					// 	metrics: binary_classifier_model_test_metrics,
-					// 	feature_groups,
-					// 	model,
-					// 	options,
-					// })
-				}
+				) => BinaryClassificationModel::Linear(LinearBinaryClassifier {
+					feature_groups,
+					model,
+					options,
+				}),
 				TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 					model,
 					feature_groups,
 					options,
 					..
-				}) => {
-					todo!()
-					// let binary_classifier_model_test_metrics = model_test_metrics.unwrap();
-					// MulticlassClassificationModel::TreeBinary(TreeBinaryClassifier {
-					// 	metrics: binary_classifier_model_test_metrics,
-					// 	feature_groups,
-					// 	model,
-					// 	options,
-					// })
-				}
+				}) => BinaryClassificationModel::Tree(TreeBinaryClassifier {
+					feature_groups,
+					model,
+					options,
+				}),
+				_ => unreachable!(),
+			};
+			model::Model::BinaryClassifier(model::BinaryClassifier {
+				id: model_id.to_string(),
+				target_column_name: target_column_name.to_owned(),
+				test_row_count: test_row_count.to_u64().unwrap(),
+				train_row_count: train_row_count.to_u64().unwrap(),
+				stats_settings: stats_settings.into(),
+				overall_column_stats: overall_column_stats.into_iter().map(Into::into).collect(),
+				overall_target_column_stats: overall_target_column_stats.into(),
+				train_column_stats: train_column_stats.into_iter().map(Into::into).collect(),
+				train_target_column_stats: train_target_column_stats.into(),
+				test_column_stats: test_column_stats.into_iter().map(Into::into).collect(),
+				test_target_column_stats: test_target_column_stats.into(),
+				test_metrics: test_metrics.into(),
+				model: model.into(),
+				comparison_fraction,
+				comparison_metric: comparison_metric.into(),
+			})
+		}
+		Task::MulticlassClassification { .. } => {
+			let comparison_metric = match comparison_metric {
+				ComparisonMetric::MulticlassClassification(m) => m,
+				_ => unreachable!(),
+			};
+			let test_metrics = match test_metrics {
+				TestMetrics::MulticlassClassification(m) => m,
+				_ => unreachable!(),
+			};
+			let model = match train_model_output {
 				TrainModelOutput::LinearMulticlassClassifier(
 					LinearMulticlassClassifierTrainModelOutput {
 						model,
@@ -308,13 +325,12 @@ pub fn train(
 
 enum Task {
 	Regression,
-	MulticlassClassification { classes: Vec<String> },
+	BinaryClassification,
+	MulticlassClassification,
 }
 
-enum MulticlassClassificationComparisonMetric {
+enum ClassificationComparisonMetric {
 	Accuracy,
-	Aucroc,
-	F1,
 }
 
 enum RegressionModel {
@@ -341,29 +357,32 @@ enum RegressionComparisonMetric {
 	R2,
 }
 
-enum MulticlassClassificationModel {
-	Linear(LinearMulticlassClassifier),
-	Tree(TreeMulticlassClassifier),
+enum BinaryClassificationModel {
+	Linear(LinearBinaryClassifier),
+	Tree(TreeBinaryClassifier),
 }
 
 struct LinearBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: tangram_linear::BinaryClassifier,
-	pub metrics: metrics::BinaryClassificationMetricsOutput,
-	pub options: tangram_linear::TrainOptions,
-}
-
-struct LinearMulticlassClassifier {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_linear::MulticlassClassifier,
 	pub options: tangram_linear::TrainOptions,
 }
 
 struct TreeBinaryClassifier {
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: tangram_tree::BinaryClassifier,
-	pub metrics: metrics::BinaryClassificationMetricsOutput,
 	pub options: tangram_tree::TrainOptions,
+}
+
+enum MulticlassClassificationModel {
+	Linear(LinearMulticlassClassifier),
+	Tree(TreeMulticlassClassifier),
+}
+
+struct LinearMulticlassClassifier {
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub model: tangram_linear::MulticlassClassifier,
+	pub options: tangram_linear::TrainOptions,
 }
 
 struct TreeMulticlassClassifier {
@@ -374,17 +393,14 @@ struct TreeMulticlassClassifier {
 
 enum ComparisonMetric {
 	Regression(RegressionComparisonMetric),
-	MulticlassClassification(MulticlassClassificationComparisonMetric),
+	BinaryClassification(ClassificationComparisonMetric),
+	MulticlassClassification(ClassificationComparisonMetric),
 }
 
 enum TestMetrics {
 	Regression(metrics::RegressionMetricsOutput),
-	MulticlassClassification(
-		(
-			metrics::MulticlassClassificationMetricsOutput,
-			Option<metrics::BinaryClassificationMetricsOutput>,
-		),
-	),
+	BinaryClassification(metrics::BinaryClassificationMetricsOutput),
+	MulticlassClassification(metrics::MulticlassClassificationMetricsOutput),
 }
 
 #[derive(Debug)]
@@ -522,34 +538,34 @@ fn compute_hyperparameter_grid(
 				target_column_index,
 				&train_column_stats,
 			),
-			Task::MulticlassClassification { classes } => match classes.len() {
-				2 => grid::compute_binary_classification_hyperparameter_grid(
+			Task::BinaryClassification => grid::compute_binary_classification_hyperparameter_grid(
+				grid,
+				target_column_index,
+				&train_column_stats,
+			),
+			Task::MulticlassClassification { .. } => {
+				grid::compute_multiclass_classification_hyperparameter_grid(
 					grid,
 					target_column_index,
 					&train_column_stats,
-				),
-				_ => grid::compute_multiclass_classification_hyperparameter_grid(
-					grid,
-					target_column_index,
-					&train_column_stats,
-				),
-			},
+				)
+			}
 		})
 		.unwrap_or_else(|| match &task {
 			Task::Regression => grid::default_regression_hyperparameter_grid(
 				target_column_index,
 				&train_column_stats,
 			),
-			Task::MulticlassClassification { classes } => match classes.len() {
-				2 => grid::default_binary_classification_hyperparameter_grid(
+			Task::BinaryClassification => grid::default_binary_classification_hyperparameter_grid(
+				target_column_index,
+				&train_column_stats,
+			),
+			Task::MulticlassClassification { .. } => {
+				grid::default_multiclass_classification_hyperparameter_grid(
 					target_column_index,
 					&train_column_stats,
-				),
-				_ => grid::default_multiclass_classification_hyperparameter_grid(
-					target_column_index,
-					&train_column_stats,
-				),
-			},
+				)
+			}
 		})
 }
 
@@ -1035,41 +1051,47 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 				))
 			}
 		}
-		Task::MulticlassClassification { classes } => {
+		Task::BinaryClassification => {
 			if let Some(metric) = config
 				.as_ref()
 				.and_then(|config| config.comparison_metric.as_ref())
 			{
-				let n_classes = classes.len();
-				match (metric, n_classes) {
-					(config::ComparisonMetric::Accuracy, 2) => {
-						Ok(ComparisonMetric::MulticlassClassification(
-							MulticlassClassificationComparisonMetric::Accuracy,
+				match metric {
+					config::ComparisonMetric::Accuracy => {
+						Ok(ComparisonMetric::BinaryClassification(
+							ClassificationComparisonMetric::Accuracy,
 						))
 					}
-					(config::ComparisonMetric::AUC, 2) => {
+					metric => Err(format_err!(
+						"{} is an invalid model comparison metric for binary classification",
+						metric,
+					)),
+				}
+			} else {
+				Ok(ComparisonMetric::BinaryClassification(
+					ClassificationComparisonMetric::Accuracy,
+				))
+			}
+		}
+		Task::MulticlassClassification { .. } => {
+			if let Some(metric) = config
+				.as_ref()
+				.and_then(|config| config.comparison_metric.as_ref())
+			{
+				match metric {
+					config::ComparisonMetric::Accuracy => {
 						Ok(ComparisonMetric::MulticlassClassification(
-							MulticlassClassificationComparisonMetric::Aucroc,
+							ClassificationComparisonMetric::Accuracy,
 						))
 					}
-					(config::ComparisonMetric::F1, 2) => {
-						Ok(ComparisonMetric::MulticlassClassification(
-							MulticlassClassificationComparisonMetric::F1,
-						))
-					}
-					(config::ComparisonMetric::Accuracy, _) => {
-						Ok(ComparisonMetric::MulticlassClassification(
-							MulticlassClassificationComparisonMetric::Accuracy,
-						))
-					}
-					(metric, n_classes) => Err(format_err!(
-						"{} is an invalid model comparison metric for classification with {} classes",
-						metric, n_classes
+					metric => Err(format_err!(
+						"{} is an invalid model comparison metric for multiclass classification",
+						metric,
 					)),
 				}
 			} else {
 				Ok(ComparisonMetric::MulticlassClassification(
-					MulticlassClassificationComparisonMetric::Accuracy,
+					ClassificationComparisonMetric::Accuracy,
 				))
 			}
 		}
@@ -1119,14 +1141,14 @@ fn compute_model_comparison_metrics(
 				model,
 				..
 			} = &train_model_output;
-			let (metrics, model_metrics) = test::test_linear_binary_classifier(
+			let metrics = test::test_linear_binary_classifier(
 				&dataframe_comparison,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
 			);
-			TestMetrics::MulticlassClassification((metrics, Some(model_metrics)))
+			TestMetrics::BinaryClassification(metrics)
 		}
 		TrainModelOutput::TreeBinaryClassifier(train_model_output) => {
 			let TreeBinaryClassifierTrainModelOutput {
@@ -1135,14 +1157,14 @@ fn compute_model_comparison_metrics(
 				model,
 				..
 			} = &train_model_output;
-			let (metrics, model_metrics) = test::test_tree_binary_classifier(
+			let metrics = test::test_tree_binary_classifier(
 				&dataframe_comparison,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
 			);
-			TestMetrics::MulticlassClassification((metrics, Some(model_metrics)))
+			TestMetrics::BinaryClassification(metrics)
 		}
 		TrainModelOutput::LinearMulticlassClassifier(train_model_output) => {
 			let LinearMulticlassClassifierTrainModelOutput {
@@ -1151,15 +1173,12 @@ fn compute_model_comparison_metrics(
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::MulticlassClassification((
-				test::test_linear_multiclass_classifier(
-					&dataframe_comparison,
-					*target_column_index,
-					feature_groups,
-					model,
-					update_progress,
-				),
-				None,
+			TestMetrics::MulticlassClassification(test::test_linear_multiclass_classifier(
+				&dataframe_comparison,
+				*target_column_index,
+				feature_groups,
+				model,
+				update_progress,
 			))
 		}
 		TrainModelOutput::TreeMulticlassClassifier(train_model_output) => {
@@ -1169,15 +1188,12 @@ fn compute_model_comparison_metrics(
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::MulticlassClassification((
-				test::test_tree_multiclass_classifier(
-					&dataframe_comparison,
-					*target_column_index,
-					feature_groups,
-					model,
-					update_progress,
-				),
-				None,
+			TestMetrics::MulticlassClassification(test::test_tree_multiclass_classifier(
+				&dataframe_comparison,
+				*target_column_index,
+				feature_groups,
+				model,
+				update_progress,
 			))
 		}
 	}
@@ -1191,7 +1207,8 @@ fn choose_best_model(
 		ComparisonMetric::Regression(comparison_metric) => {
 			choose_best_model_regression(outputs, comparison_metric)
 		}
-		ComparisonMetric::MulticlassClassification(comparison_metric) => {
+		ComparisonMetric::BinaryClassification(comparison_metric)
+		| ComparisonMetric::MulticlassClassification(comparison_metric) => {
 			choose_best_model_classification(outputs, comparison_metric)
 		}
 	}
@@ -1231,31 +1248,24 @@ fn choose_best_model_regression(
 
 fn choose_best_model_classification(
 	outputs: Vec<(TrainModelOutput, TestMetrics)>,
-	comparison_metric: &MulticlassClassificationComparisonMetric,
+	comparison_metric: &ClassificationComparisonMetric,
 ) -> TrainModelOutput {
 	outputs
 		.into_iter()
 		.max_by(|(_, metrics_a), (_, metrics_b)| {
-			let (task_metrics_a, model_metrics_a) = match metrics_a {
+			let task_metrics_a = match metrics_a {
 				TestMetrics::MulticlassClassification(m) => m,
 				_ => unreachable!(),
 			};
-			let (task_metrics_b, model_metrics_b) = match metrics_b {
+			let task_metrics_b = match metrics_b {
 				TestMetrics::MulticlassClassification(m) => m,
 				_ => unreachable!(),
 			};
 			match comparison_metric {
-				MulticlassClassificationComparisonMetric::Accuracy => task_metrics_a
+				ClassificationComparisonMetric::Accuracy => task_metrics_a
 					.accuracy
 					.partial_cmp(&task_metrics_b.accuracy)
 					.unwrap(),
-				MulticlassClassificationComparisonMetric::Aucroc => model_metrics_a
-					.as_ref()
-					.unwrap()
-					.auc_roc
-					.partial_cmp(&model_metrics_b.as_ref().unwrap().auc_roc)
-					.unwrap(),
-				MulticlassClassificationComparisonMetric::F1 => todo!(),
 			}
 		})
 		.map(|(model, _)| model)
@@ -1305,14 +1315,14 @@ fn test_model(
 				model,
 				..
 			} = &train_model_output;
-			let (metrics, model_metrics) = test::test_linear_binary_classifier(
+			let metrics = test::test_linear_binary_classifier(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
 			);
-			TestMetrics::MulticlassClassification((metrics, Some(model_metrics)))
+			TestMetrics::BinaryClassification(metrics)
 		}
 		TrainModelOutput::TreeBinaryClassifier(train_model_output) => {
 			let TreeBinaryClassifierTrainModelOutput {
@@ -1321,14 +1331,14 @@ fn test_model(
 				model,
 				..
 			} = &train_model_output;
-			let (metrics, model_metrics) = test::test_tree_binary_classifier(
+			let metrics = test::test_tree_binary_classifier(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
 			);
-			TestMetrics::MulticlassClassification((metrics, Some(model_metrics)))
+			TestMetrics::BinaryClassification(metrics)
 		}
 		TrainModelOutput::LinearMulticlassClassifier(train_model_output) => {
 			let LinearMulticlassClassifierTrainModelOutput {
@@ -1344,7 +1354,7 @@ fn test_model(
 				model,
 				update_progress,
 			);
-			TestMetrics::MulticlassClassification((metrics, None))
+			TestMetrics::MulticlassClassification(metrics)
 		}
 		TrainModelOutput::TreeMulticlassClassifier(train_model_output) => {
 			let TreeMulticlassClassifierTrainModelOutput {
@@ -1360,7 +1370,7 @@ fn test_model(
 				model,
 				update_progress,
 			);
-			TestMetrics::MulticlassClassification((metrics, None))
+			TestMetrics::MulticlassClassification(metrics)
 		}
 	}
 }
@@ -1547,6 +1557,35 @@ impl Into<model::RegressionMetrics> for metrics::RegressionMetricsOutput {
 	}
 }
 
+impl Into<model::BinaryClassificationMetrics> for metrics::BinaryClassificationMetricsOutput {
+	fn into(self) -> model::BinaryClassificationMetrics {
+		model::BinaryClassificationMetrics {
+			thresholds: self.thresholds.into_iter().map(Into::into).collect(),
+			auc_roc: self.auc_roc,
+		}
+	}
+}
+
+impl Into<model::BinaryClassificationMetricsForThreshold>
+	for metrics::BinaryClassificationMetricsOutputForThreshold
+{
+	fn into(self) -> model::BinaryClassificationMetricsForThreshold {
+		model::BinaryClassificationMetricsForThreshold {
+			threshold: self.threshold,
+			true_positives: self.true_negatives,
+			false_positives: self.false_negatives,
+			true_negatives: self.true_negatives,
+			false_negatives: self.false_negatives,
+			accuracy: self.accuracy,
+			precision: self.precision,
+			recall: self.recall,
+			f1_score: self.f1_score,
+			true_positive_rate: self.true_positive_rate,
+			false_positive_rate: self.false_positive_rate,
+		}
+	}
+}
+
 impl Into<model::MulticlassClassificationMetrics>
 	for metrics::MulticlassClassificationMetricsOutput
 {
@@ -1660,6 +1699,45 @@ impl Into<model::LeafNode> for tangram_tree::LeafNode {
 	}
 }
 
+impl Into<model::BinaryClassificationModel> for BinaryClassificationModel {
+	fn into(self) -> model::BinaryClassificationModel {
+		match self {
+			BinaryClassificationModel::Linear(m) => {
+				model::BinaryClassificationModel::Linear(m.into())
+			}
+			BinaryClassificationModel::Tree(m) => model::BinaryClassificationModel::Tree(m.into()),
+		}
+	}
+}
+
+impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
+	fn into(self) -> model::LinearBinaryClassifier {
+		model::LinearBinaryClassifier {
+			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
+			means: self.model.means,
+			weights: self.model.weights.into_raw_vec(),
+			bias: self.model.bias,
+			losses: self.model.losses,
+			classes: self.model.classes,
+			train_options: self.options.into(),
+		}
+	}
+}
+
+impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
+	fn into(self) -> model::TreeBinaryClassifier {
+		model::TreeBinaryClassifier {
+			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
+			trees: self.model.trees.into_iter().map(Into::into).collect(),
+			bias: self.model.bias,
+			losses: self.model.losses,
+			classes: self.model.classes,
+			feature_importances: self.model.feature_importances.unwrap(),
+			train_options: self.options.into(),
+		}
+	}
+}
+
 impl Into<model::MulticlassClassificationModel> for MulticlassClassificationModel {
 	fn into(self) -> model::MulticlassClassificationModel {
 		match self {
@@ -1669,21 +1747,6 @@ impl Into<model::MulticlassClassificationModel> for MulticlassClassificationMode
 			MulticlassClassificationModel::Tree(m) => {
 				model::MulticlassClassificationModel::Tree(m.into())
 			}
-		}
-	}
-}
-
-impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
-	fn into(self) -> model::LinearBinaryClassifier {
-		model::LinearBinaryClassifier {
-			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			metrics: self.metrics.into(),
-			means: self.model.means,
-			weights: self.model.weights.into_raw_vec(),
-			bias: self.model.bias,
-			losses: self.model.losses,
-			classes: self.model.classes,
-			train_options: self.options.into(),
 		}
 	}
 }
@@ -1704,21 +1767,6 @@ impl Into<model::LinearMulticlassClassifier> for LinearMulticlassClassifier {
 	}
 }
 
-impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
-	fn into(self) -> model::TreeBinaryClassifier {
-		model::TreeBinaryClassifier {
-			feature_groups: self.feature_groups.into_iter().map(|f| f.into()).collect(),
-			trees: self.model.trees.into_iter().map(Into::into).collect(),
-			metrics: self.metrics.into(),
-			bias: self.model.bias,
-			losses: self.model.losses,
-			classes: self.model.classes,
-			feature_importances: self.model.feature_importances.unwrap(),
-			train_options: self.options.into(),
-		}
-	}
-}
-
 impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 	fn into(self) -> model::TreeMulticlassClassifier {
 		model::TreeMulticlassClassifier {
@@ -1731,51 +1779,6 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 			classes: self.model.classes,
 			feature_importances: self.model.feature_importances.unwrap(),
 			train_options: self.options.into(),
-		}
-	}
-}
-
-impl Into<model::BinaryClassifierMetrics> for metrics::BinaryClassificationMetricsOutput {
-	fn into(self) -> model::BinaryClassifierMetrics {
-		model::BinaryClassifierMetrics {
-			thresholds: self.thresholds.into_iter().map(Into::into).collect(),
-			auc_roc: self.auc_roc,
-		}
-	}
-}
-
-impl Into<model::ThresholdMetrics> for metrics::BinaryClassificationThresholdMetricsOutput {
-	fn into(self) -> model::ThresholdMetrics {
-		model::ThresholdMetrics {
-			threshold: self.threshold,
-			true_positives: self.true_positives,
-			false_positives: self.false_positives,
-			true_negatives: self.true_negatives,
-			false_negatives: self.false_negatives,
-			accuracy: self.accuracy,
-			precision: self.precision,
-			recall: self.recall,
-			f1_score: self.f1_score,
-			true_positive_rate: self.true_positive_rate,
-			false_positive_rate: self.false_positive_rate,
-		}
-	}
-}
-
-impl Into<model::MulticlassClassificationComparisonMetric>
-	for MulticlassClassificationComparisonMetric
-{
-	fn into(self) -> model::MulticlassClassificationComparisonMetric {
-		match self {
-			MulticlassClassificationComparisonMetric::Accuracy => {
-				model::MulticlassClassificationComparisonMetric::Accuracy
-			}
-			MulticlassClassificationComparisonMetric::Aucroc => {
-				model::MulticlassClassificationComparisonMetric::Aucroc
-			}
-			MulticlassClassificationComparisonMetric::F1 => {
-				model::MulticlassClassificationComparisonMetric::F1
-			}
 		}
 	}
 }
@@ -1897,6 +1900,26 @@ impl Into<model::RegressionComparisonMetric> for RegressionComparisonMetric {
 				model::RegressionComparisonMetric::RootMeanSquaredError
 			}
 			RegressionComparisonMetric::R2 => model::RegressionComparisonMetric::R2,
+		}
+	}
+}
+
+impl Into<model::MulticlassClassificationComparisonMetric> for ClassificationComparisonMetric {
+	fn into(self) -> model::MulticlassClassificationComparisonMetric {
+		match self {
+			ClassificationComparisonMetric::Accuracy => {
+				model::MulticlassClassificationComparisonMetric::Accuracy
+			}
+		}
+	}
+}
+
+impl Into<model::BinaryClassificationComparisonMetric> for ClassificationComparisonMetric {
+	fn into(self) -> model::BinaryClassificationComparisonMetric {
+		match self {
+			ClassificationComparisonMetric::Accuracy => {
+				model::BinaryClassificationComparisonMetric::Accuracy
+			}
 		}
 	}
 }

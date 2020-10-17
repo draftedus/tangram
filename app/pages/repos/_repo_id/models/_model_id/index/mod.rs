@@ -114,6 +114,20 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let model = get_model(&mut db, model_id).await?;
 	let training_summary = training_summary(&model);
 	let inner = match &model {
+		tangram_core::model::Model::Regressor(model) => {
+			let test_metrics = &model.test_metrics;
+			Inner::Regressor(Regressor {
+				id: model_id.to_string(),
+				metrics: RegressorMetrics {
+					rmse: test_metrics.rmse,
+					baseline_rmse: test_metrics.baseline_rmse,
+					mse: test_metrics.mse,
+					baseline_mse: test_metrics.baseline_mse,
+				},
+				training_summary,
+			})
+		}
+		tangram_core::model::Model::BinaryClassifier(_) => todo!(),
 		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let test_metrics = &model.test_metrics;
 			let class_metrics = &test_metrics.class_metrics;
@@ -131,19 +145,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					baseline_accuracy: test_metrics.baseline_accuracy,
 					class_metrics,
 					classes: model.classes().to_owned(),
-				},
-				training_summary,
-			})
-		}
-		tangram_core::model::Model::Regressor(model) => {
-			let test_metrics = &model.test_metrics;
-			Inner::Regressor(Regressor {
-				id: model_id.to_string(),
-				metrics: RegressorMetrics {
-					rmse: test_metrics.rmse,
-					baseline_rmse: test_metrics.baseline_rmse,
-					mse: test_metrics.mse,
-					baseline_mse: test_metrics.baseline_mse,
 				},
 				training_summary,
 			})
@@ -170,10 +171,19 @@ fn training_summary(model: &tangram_core::model::Model) -> TrainingSummary {
 			train_row_count: model.train_row_count.to_usize().unwrap(),
 			test_row_count: model.test_row_count.to_usize().unwrap(),
 		},
+		tangram_core::model::Model::BinaryClassifier(model) => TrainingSummary {
+			chosen_model_type_name,
+			column_count: model.overall_column_stats.len() + 1,
+			model_comparison_metric_type_name: binary_classification_model_comparison_type_name(
+				&model.comparison_metric,
+			),
+			train_row_count: model.train_row_count.to_usize().unwrap(),
+			test_row_count: model.test_row_count.to_usize().unwrap(),
+		},
 		tangram_core::model::Model::MulticlassClassifier(model) => TrainingSummary {
 			chosen_model_type_name,
 			column_count: model.overall_column_stats.len() + 1,
-			model_comparison_metric_type_name: classification_model_comparison_type_name(
+			model_comparison_metric_type_name: multiclass_classification_model_comparison_type_name(
 				&model.comparison_metric,
 			),
 			train_row_count: model.train_row_count.to_usize().unwrap(),
@@ -199,17 +209,25 @@ fn regression_model_comparison_type_name(
 	}
 }
 
-fn classification_model_comparison_type_name(
+fn binary_classification_model_comparison_type_name(
+	comparison_metric: &tangram_core::model::BinaryClassificationComparisonMetric,
+) -> String {
+	match comparison_metric {
+		tangram_core::model::BinaryClassificationComparisonMetric::Accuracy => "Accuracy".into(),
+		tangram_core::model::BinaryClassificationComparisonMetric::Aucroc => {
+			"Area Under the Receiver Operating Characteristic Curve".into()
+		}
+		tangram_core::model::BinaryClassificationComparisonMetric::F1 => "F1 Score".into(),
+	}
+}
+
+fn multiclass_classification_model_comparison_type_name(
 	comparison_metric: &tangram_core::model::MulticlassClassificationComparisonMetric,
 ) -> String {
 	match comparison_metric {
 		tangram_core::model::MulticlassClassificationComparisonMetric::Accuracy => {
 			"Accuracy".into()
 		}
-		tangram_core::model::MulticlassClassificationComparisonMetric::Aucroc => {
-			"Area Under the Receiver Operating Characteristic".into()
-		}
-		tangram_core::model::MulticlassClassificationComparisonMetric::F1 => "F1 Score".into(),
 	}
 }
 
@@ -221,13 +239,15 @@ fn model_type_name(model: &tangram_core::model::Model) -> String {
 				"Gradient Boosted Tree Regressor".into()
 			}
 		},
+		tangram_core::model::Model::BinaryClassifier(model) => match &model.model {
+			tangram_core::model::BinaryClassificationModel::Linear(_) => {
+				"Linear Binary Classifier".into()
+			}
+			tangram_core::model::BinaryClassificationModel::Tree(_) => {
+				"Gradient Boosted Tree Binary Classifier".into()
+			}
+		},
 		tangram_core::model::Model::MulticlassClassifier(model) => match &model.model {
-			// tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
-			// 	"Linear Binary Classifier".into()
-			// }
-			// tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
-			// 	"Gradient Boosted Tree Binary Classifier".into()
-			// }
 			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
 				"Linear Multiclass Classifier".into()
 			}

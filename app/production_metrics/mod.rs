@@ -90,6 +90,7 @@ impl ProductionPredictionMetrics {
 			tangram_core::model::Model::Regressor(_) => {
 				ProductionPredictionMetrics::Regression(RegressionProductionPredictionMetrics::new())
 			}
+			tangram_core::model::Model::BinaryClassifier(_) => todo!(),
 			tangram_core::model::Model::MulticlassClassifier(model) => {
 				ProductionPredictionMetrics::MulticlassClassification(
 					MulticlassClassificationProductionPredictionMetrics::new(

@@ -23,14 +23,14 @@ struct Props {
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 enum Inner {
-	Regressor(Regressor),
-	BinaryClassifier(BinaryClassifier),
-	MulticlassClassifier(MulticlassClassifier),
+	Regressor(RegressorInner),
+	BinaryClassifier(BinaryClassifierInner),
+	MulticlassClassifier(MulticlassClassifierInner),
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Regressor {
+struct RegressorInner {
 	baseline_mse: f32,
 	baseline_rmse: f32,
 	mse: f32,
@@ -40,13 +40,25 @@ struct Regressor {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct BinaryClassifier {
+struct BinaryClassifierInner {
+	accuracy: f32,
+	baseline_accuracy: f32,
+	classes: Vec<String>,
+	id: String,
+	losses: Option<Vec<f32>>,
+	precision: f32,
+	recall: f32,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MulticlassClassifierInner {
 	accuracy: f32,
 	baseline_accuracy: f32,
 	class_metrics: Vec<ClassMetrics>,
 	classes: Vec<String>,
-	losses: Option<Vec<f32>>,
 	id: String,
+	losses: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize)]
@@ -54,17 +66,6 @@ struct BinaryClassifier {
 struct ClassMetrics {
 	precision: f32,
 	recall: f32,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct MulticlassClassifier {
-	accuracy: f32,
-	baseline_accuracy: f32,
-	class_metrics: Vec<ClassMetrics>,
-	classes: Vec<String>,
-	losses: Option<Vec<f32>>,
-	id: String,
 }
 
 pub async fn get(
@@ -100,29 +101,14 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let inner = match model {
-		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
-			// tangram_core::model::MulticlassClassificationModel::LinearBinary(_) => {
-			// 	Inner::BinaryClassifier(build_inner_binary(model, model_id))
-			// }
-			// tangram_core::model::MulticlassClassificationModel::TreeBinary(_) => {
-			// 	Inner::BinaryClassifier(build_inner_binary(model, model_id))
-			// }
-			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
-				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id))
-			}
-			tangram_core::model::MulticlassClassificationModel::Tree(_) => {
-				Inner::MulticlassClassifier(build_inner_multiclass(model, model_id))
-			}
-		},
 		tangram_core::model::Model::Regressor(model) => {
-			let test_metrics = model.test_metrics;
-			Inner::Regressor(Regressor {
-				id: model_id.to_string(),
-				rmse: test_metrics.rmse,
-				baseline_rmse: test_metrics.baseline_rmse,
-				mse: test_metrics.mse,
-				baseline_mse: test_metrics.baseline_mse,
-			})
+			Inner::Regressor(build_inner_regressor(model))
+		}
+		tangram_core::model::Model::BinaryClassifier(model) => {
+			Inner::BinaryClassifier(build_inner_binary_classifier(model))
+		}
+		tangram_core::model::Model::MulticlassClassifier(model) => {
+			Inner::MulticlassClassifier(build_inner_multiclass_classifier(model))
 		}
 	};
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
@@ -134,43 +120,40 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	})
 }
 
-fn build_inner_binary(
-	model: tangram_core::model::MulticlassClassifier,
-	id: Id,
-) -> BinaryClassifier {
-	let test_metrics = &model.test_metrics;
-	let class_metrics = &test_metrics.class_metrics;
-	let classes = model.classes().to_owned();
-	let class_metrics = class_metrics
-		.iter()
-		.map(|class_metrics| ClassMetrics {
-			precision: class_metrics.precision,
-			recall: class_metrics.recall,
-		})
-		.collect::<Vec<ClassMetrics>>();
-	let losses = match model.model {
-		// tangram_core::model::MulticlassClassificationModel::LinearBinary(inner_model) => {
-		// 	inner_model.losses
-		// }
-		// tangram_core::model::MulticlassClassificationModel::TreeBinary(inner_model) => {
-		// 	inner_model.losses
-		// }
-		_ => unreachable!(),
-	};
-	BinaryClassifier {
-		id: id.to_string(),
-		accuracy: test_metrics.accuracy,
-		baseline_accuracy: test_metrics.baseline_accuracy,
-		class_metrics,
-		classes,
-		losses,
+fn build_inner_regressor(model: tangram_core::model::Regressor) -> RegressorInner {
+	let test_metrics = model.test_metrics;
+	RegressorInner {
+		id: model.id,
+		rmse: test_metrics.rmse,
+		baseline_rmse: test_metrics.baseline_rmse,
+		mse: test_metrics.mse,
+		baseline_mse: test_metrics.baseline_mse,
 	}
 }
 
-fn build_inner_multiclass(
+fn build_inner_binary_classifier(
+	_model: tangram_core::model::BinaryClassifier,
+) -> BinaryClassifierInner {
+	// let classes = model.classes().to_owned();
+	// let losses = match model.model {
+	// 	tangram_core::model::BinaryClassificationModel::Linear(inner_model) => inner_model.losses,
+	// 	tangram_core::model::BinaryClassificationModel::Tree(inner_model) => inner_model.losses,
+	// };
+	todo!()
+	// BinaryClassifierInner {
+	// 	id: model.id,
+	// 	classes,
+	// 	losses,
+	// 	accuracy: todo!(),
+	// 	baseline_accuracy: todo!(),
+	// 	precision: todo!(),
+	// 	recall: todo!(),
+	// }
+}
+
+fn build_inner_multiclass_classifier(
 	model: tangram_core::model::MulticlassClassifier,
-	id: Id,
-) -> MulticlassClassifier {
+) -> MulticlassClassifierInner {
 	let test_metrics = &model.test_metrics;
 	let classes = model.classes().to_owned();
 	let class_metrics = &test_metrics.class_metrics;
@@ -186,10 +169,9 @@ fn build_inner_multiclass(
 			inner_model.losses
 		}
 		tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => inner_model.losses,
-		_ => unreachable!(),
 	};
-	MulticlassClassifier {
-		id: id.to_string(),
+	MulticlassClassifierInner {
+		id: model.id.to_string(),
 		accuracy: test_metrics.accuracy,
 		baseline_accuracy: test_metrics.baseline_accuracy,
 		class_metrics,

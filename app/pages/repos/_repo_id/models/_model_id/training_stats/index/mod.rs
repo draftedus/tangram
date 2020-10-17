@@ -83,7 +83,22 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let props = match model {
-		tangram_core::model::Model::MulticlassClassifier(model) => {
+		tangram_core::model::Model::Regressor(model) => {
+			let column_stats = model.overall_column_stats;
+			Props {
+				column_count: column_stats.len(),
+				column_stats: column_stats
+					.iter()
+					.map(|column_stats| build_column_stats(column_stats))
+					.collect(),
+				id: model.id.to_owned(),
+				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
+				target_column_stats: build_column_stats(&model.overall_target_column_stats),
+				test_row_count: model.test_row_count.to_usize().unwrap(),
+				train_row_count: model.train_row_count.to_usize().unwrap(),
+			}
+		}
+		tangram_core::model::Model::BinaryClassifier(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
 				column_count: column_stats.len(),
@@ -98,7 +113,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				test_row_count: model.test_row_count.to_usize().unwrap(),
 			}
 		}
-		tangram_core::model::Model::Regressor(model) => {
+		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
 				column_count: column_stats.len(),
@@ -109,8 +124,8 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				id: model.id.to_owned(),
 				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
-				test_row_count: model.test_row_count.to_usize().unwrap(),
 				train_row_count: model.train_row_count.to_usize().unwrap(),
+				test_row_count: model.test_row_count.to_usize().unwrap(),
 			}
 		}
 	};
