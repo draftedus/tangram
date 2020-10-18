@@ -199,11 +199,8 @@ impl BinaryClassifier {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BinaryClassificationMetrics {
-	pub thresholds: Vec<BinaryClassificationMetricsForThreshold>,
 	pub auc_roc: f32,
-	pub accuracy: f32,
-	pub precision: f32,
-	pub recall: f32,
+	pub thresholds: Vec<BinaryClassificationMetricsForThreshold>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

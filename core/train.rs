@@ -1629,11 +1629,8 @@ impl Into<model::RegressionMetrics> for metrics::RegressionMetricsOutput {
 impl Into<model::BinaryClassificationMetrics> for metrics::BinaryClassificationMetricsOutput {
 	fn into(self) -> model::BinaryClassificationMetrics {
 		model::BinaryClassificationMetrics {
-			thresholds: self.thresholds.into_iter().map(Into::into).collect(),
 			auc_roc: self.auc_roc,
-			accuracy: self.accuracy,
-			precision: self.precision,
-			recall: self.recall,
+			thresholds: self.thresholds.into_iter().map(Into::into).collect(),
 		}
 	}
 }

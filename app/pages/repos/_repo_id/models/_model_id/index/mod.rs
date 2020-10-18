@@ -144,13 +144,18 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			training_summary,
 		}),
 		tangram_core::model::Model::BinaryClassifier(model) => {
+			let default_threshold_test_metrics = model
+				.test_metrics
+				.thresholds
+				.get(model.test_metrics.thresholds.len() / 2)
+				.unwrap();
 			Inner::BinaryClassifier(BinaryClassifierInner {
 				id: model_id.to_string(),
 				metrics: BinaryClassifierInnerMetrics {
 					auc_roc: model.test_metrics.auc_roc,
-					accuracy: model.test_metrics.accuracy,
-					precision: model.test_metrics.precision,
-					recall: model.test_metrics.recall,
+					accuracy: default_threshold_test_metrics.accuracy,
+					precision: default_threshold_test_metrics.precision,
+					recall: default_threshold_test_metrics.recall,
 				},
 				training_summary,
 			})

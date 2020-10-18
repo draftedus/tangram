@@ -270,7 +270,6 @@ async fn props(
 			})
 		}
 		tangram_core::model::Model::BinaryClassifier(model) => {
-			let training_metrics = &model.test_metrics;
 			let overall_production_metrics =
 				production_metrics
 					.overall
@@ -318,9 +317,15 @@ async fn props(
 						AccuracyChartEntry { label, accuracy }
 					})
 					.collect();
+				let default_threshold_test_metrics = model
+					.test_metrics
+					.thresholds
+					.get(model.test_metrics.thresholds.len() / 2)
+					.unwrap();
+				let training_accuracy = default_threshold_test_metrics.accuracy;
 				AccuracyChart {
 					data,
-					training_accuracy: training_metrics.accuracy,
+					training_accuracy,
 				}
 			};
 			let true_values_count = production_metrics.overall.true_values_count;
@@ -333,18 +338,23 @@ async fn props(
 			let production_recall = overall_production_metrics
 				.as_ref()
 				.map(|metrics| metrics.recall);
+			let default_threshold_test_metrics = model
+				.test_metrics
+				.thresholds
+				.get(model.test_metrics.thresholds.len() / 2)
+				.unwrap();
 			let overall = BinaryClassificationOverallProductionMetrics {
 				accuracy: TrainingProductionMetrics {
 					production: production_accuracy,
-					training: training_metrics.accuracy,
+					training: default_threshold_test_metrics.accuracy,
 				},
 				precision: TrainingProductionMetrics {
 					production: production_precision,
-					training: training_metrics.precision,
+					training: default_threshold_test_metrics.precision,
 				},
 				recall: TrainingProductionMetrics {
 					production: production_recall,
-					training: training_metrics.recall,
+					training: default_threshold_test_metrics.recall,
 				},
 				true_values_count,
 			};

@@ -41,12 +41,12 @@ struct RegressorInner {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BinaryClassifierInner {
-	auc_roc: f32,
-	precision: f32,
-	recall: f32,
 	accuracy: f32,
+	auc_roc: f32,
 	id: String,
 	losses: Option<Vec<f32>>,
+	precision: f32,
+	recall: f32,
 }
 
 #[derive(serde::Serialize)]
@@ -132,17 +132,22 @@ fn build_inner_regressor(model: tangram_core::model::Regressor) -> RegressorInne
 fn build_inner_binary_classifier(
 	model: tangram_core::model::BinaryClassifier,
 ) -> BinaryClassifierInner {
+	let default_threshold_test_metrics = model
+		.test_metrics
+		.thresholds
+		.get(model.test_metrics.thresholds.len() / 2)
+		.unwrap();
 	let losses = match model.model {
 		tangram_core::model::BinaryClassificationModel::Linear(model) => model.losses,
 		tangram_core::model::BinaryClassificationModel::Tree(model) => model.losses,
 	};
 	BinaryClassifierInner {
-		id: model.id,
+		accuracy: default_threshold_test_metrics.accuracy,
 		auc_roc: model.test_metrics.auc_roc,
-		accuracy: model.test_metrics.accuracy,
-		precision: model.test_metrics.precision,
-		recall: model.test_metrics.recall,
+		id: model.id,
 		losses,
+		precision: default_threshold_test_metrics.precision,
+		recall: default_threshold_test_metrics.recall,
 	}
 }
 

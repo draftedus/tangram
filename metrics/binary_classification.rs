@@ -8,8 +8,6 @@ use std::num::NonZeroUsize;
 pub struct BinaryClassificationMetrics {
 	/// There is one confusion matrix per threshold.
 	confusion_matrices: Vec<BinaryConfusionMatrix>,
-	/// The confusion matrix for the default threshold of 0.5.
-	default_threshold_confusion_matrix: BinaryConfusionMatrix,
 	/// The thresholds are evenly-spaced between 0 and 1 based on the total number of thresholds: `n_thresholds`, passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
 	thresholds: Vec<f32>,
 }
@@ -45,18 +43,10 @@ pub struct BinaryClassificationMetricsInput<'a> {
 /// BinaryClassificationMetrics contains common metrics used to evaluate binary classifiers.
 #[derive(Debug)]
 pub struct BinaryClassificationMetricsOutput {
-	/// This contains metrics specific to each classification threshold.
-	pub thresholds: Vec<BinaryClassificationMetricsOutputForThreshold>,
 	/// The area under the receiver operating characteristic curve is computed using a fixed number of thresholds equal to `n_thresholds` which is passed to[BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
 	pub auc_roc: f32,
-	/// The accuracy is the fraction of all of the predictions that are correct.
-	pub accuracy: f32,
-	/// The precision is the fraction of examples the model predicted as belonging to this class whose label is actually equal to this class. `precision = true_positives / (true_positives + false_positives)`. See [Precision and Recall](https://en.wikipedia.org/wiki/Precision_and_recall).
-	pub precision: f32,
-	/// The recall is the fraction of examples in the dataset whose label is equal to this class that the model predicted as equal to this class. `recall = true_positives / (true_positives + false_negatives)`.
-	pub recall: f32,
-	/// The f1 score is the harmonic mean of the precision and the recall. See [F1 Score](https://en.wikipedia.org/wiki/F1_score).
-	pub f1_score: f32,
+	/// This contains metrics specific to each classification threshold.
+	pub thresholds: Vec<BinaryClassificationMetricsOutputForThreshold>,
 }
 
 /// The output from [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
@@ -87,13 +77,15 @@ pub struct BinaryClassificationMetricsOutputForThreshold {
 }
 
 impl BinaryClassificationMetrics {
+	/// Create a new `BinaryClassificationMetrics` with the specified number of thresholds. The thresholds will be centered at 0.5 and evenly spaced between 0 and 1 such that 0 and 1 will never be threshold values.
 	pub fn new(n_thresholds: usize) -> BinaryClassificationMetrics {
+		// The number of thresholds must be odd so that 0.5 is the middle threshold.
+		assert!(n_thresholds % 2 == 1);
 		let thresholds = (0..n_thresholds)
-			.map(|i| i.to_f32().unwrap() * (1.0 / (n_thresholds.to_f32().unwrap() - 1.0)))
+			.map(|i| (i + 1).to_f32().unwrap() * (1.0 / (n_thresholds.to_f32().unwrap() + 1.0)))
 			.collect();
 		BinaryClassificationMetrics {
 			confusion_matrices: vec![BinaryConfusionMatrix::new(); n_thresholds + 1],
-			default_threshold_confusion_matrix: BinaryConfusionMatrix::new(),
 			thresholds,
 		}
 	}
@@ -126,22 +118,6 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 					_ => panic!(),
 				};
 			}
-		}
-		for (label, probabilities) in value
-			.labels
-			.iter()
-			.zip(value.probabilities.axis_iter(Axis(0)))
-		{
-			let probability = probabilities[1];
-			let predicted_label_id = if probability >= 0.5 { 1 } else { 0 };
-			let actual_label_id = label.unwrap().get() - 1;
-			match (predicted_label_id, actual_label_id) {
-				(0, 0) => self.default_threshold_confusion_matrix.true_negatives += 1,
-				(1, 1) => self.default_threshold_confusion_matrix.true_positives += 1,
-				(1, 0) => self.default_threshold_confusion_matrix.false_positives += 1,
-				(0, 1) => self.default_threshold_confusion_matrix.false_negatives += 1,
-				_ => panic!(),
-			};
 		}
 	}
 
@@ -212,35 +188,16 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				y_avg * dx
 			})
 			.sum::<f32>();
-		let n_examples = self.default_threshold_confusion_matrix.n_examples();
-		let true_positives = self.default_threshold_confusion_matrix.true_positives;
-		let false_positives = self.default_threshold_confusion_matrix.false_positives;
-		let false_negatives = self.default_threshold_confusion_matrix.false_negatives;
-		let true_negatives = self.default_threshold_confusion_matrix.true_negatives;
-		// This is the fraction of the total predictions that are correct.
-		let accuracy =
-			(true_positives + true_negatives).to_f32().unwrap() / n_examples.to_f32().unwrap();
-		// This is the fraction of the total predictive positive examples that are actually positive.
-		let precision =
-			true_positives.to_f32().unwrap() / (true_positives + false_positives).to_f32().unwrap();
-		// This is the fraction of the total positive examples that are correctly predicted as positive.
-		let recall =
-			true_positives.to_f32().unwrap() / (true_positives + false_negatives).to_f32().unwrap();
-		let f1_score = 2.0 * (precision * recall) / (precision + recall);
 		BinaryClassificationMetricsOutput {
-			thresholds,
 			auc_roc,
-			accuracy,
-			precision,
-			recall,
-			f1_score,
+			thresholds,
 		}
 	}
 }
 
 #[test]
 fn test() {
-	let mut metrics = BinaryClassificationMetrics::new(8);
+	let mut metrics = BinaryClassificationMetrics::new(3);
 	let labels = arr1(&[
 		Some(NonZeroUsize::new(1).unwrap()),
 		Some(NonZeroUsize::new(1).unwrap()),
