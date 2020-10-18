@@ -41,7 +41,7 @@ export type Inner =
 
 export enum Type {
 	Regressor = 'regressor',
-	BinaryClassifier = 'binary_classifier',
+	BinaryClassifier = 'binary_classifer',
 	MulticlassClassifier = 'multiclass_classifier',
 }
 

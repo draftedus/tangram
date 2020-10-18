@@ -122,6 +122,8 @@ struct AccuracyChartEntry {
 #[serde(rename_all = "camelCase")]
 struct BinaryClassificationOverallProductionMetrics {
 	accuracy: TrainingProductionMetrics,
+	precision: TrainingProductionMetrics,
+	recall: TrainingProductionMetrics,
 	true_values_count: u64,
 }
 
@@ -325,10 +327,24 @@ async fn props(
 			let production_accuracy = overall_production_metrics
 				.as_ref()
 				.map(|metrics| metrics.accuracy);
+			let production_precision = overall_production_metrics
+				.as_ref()
+				.map(|metrics| metrics.precision);
+			let production_recall = overall_production_metrics
+				.as_ref()
+				.map(|metrics| metrics.recall);
 			let overall = BinaryClassificationOverallProductionMetrics {
 				accuracy: TrainingProductionMetrics {
 					production: production_accuracy,
 					training: training_metrics.accuracy,
+				},
+				precision: TrainingProductionMetrics {
+					production: production_precision,
+					training: training_metrics.precision,
+				},
+				recall: TrainingProductionMetrics {
+					production: production_recall,
+					training: training_metrics.recall,
 				},
 				true_values_count,
 			};

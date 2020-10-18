@@ -23,17 +23,14 @@ export type Props = {
 			production: number | null
 			training: number
 		}
-		classMetricsTable: Array<{
-			className: string
-			precision: {
-				production: number | null
-				training: number
-			}
-			recall: {
-				production: number | null
-				training: number
-			}
-		}>
+		precision: {
+			production: number | null
+			training: number
+		}
+		recall: {
+			production: number | null
+			training: number
+		}
 		trueValuesCount: number
 	}
 	true_values_count_chart: Array<{ count: number; label: string }>
@@ -68,14 +65,6 @@ export function BinaryClassifierProductionMetricsIndexPage(props: Props) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Production Metrics'}</ui.H1>
-			<ui.TabBar>
-				<ui.TabLink href="" selected={true}>
-					{'Overview'}
-				</ui.TabLink>
-				<ui.TabLink href={`class_metrics?date_window=${props.dateWindow}`}>
-					{'Class Metrics'}
-				</ui.TabLink>
-			</ui.TabBar>
 			<ui.S2>
 				<ui.Form>
 					<DateWindowSelectField dateWindow={props.dateWindow} />
@@ -124,50 +113,6 @@ export function BinaryClassifierProductionMetricsIndexPage(props: Props) {
 					/>
 				</ui.Card>
 			</ui.S2>
-			{props.overall.classMetricsTable !== null ? (
-				<ui.S2>
-					<ui.H2>{'Precision and Recall'}</ui.H2>
-					<ui.P>{definitions.precisionRecall}</ui.P>
-					<ui.Table width="100%">
-						<ui.TableHeader>
-							<ui.TableRow>
-								<ui.TableHeaderCell>{'Class'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Training Precision'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Training Recall'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>
-									{'Production Precision'}
-								</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Production Recall'}</ui.TableHeaderCell>
-							</ui.TableRow>
-						</ui.TableHeader>
-						<ui.TableBody>
-							{props.overall.classMetricsTable.map(c => {
-								return (
-									<ui.TableRow key={c.className}>
-										<ui.TableCell>{c.className}</ui.TableCell>
-										<ui.TableCell>
-											{ui.formatPercent(c.precision.training, 2)}
-										</ui.TableCell>
-										<ui.TableCell>
-											{ui.formatPercent(c.recall.training, 2)}
-										</ui.TableCell>
-										<ui.TableCell>
-											{c.precision.production
-												? ui.formatPercent(c.precision.production, 2)
-												: 'N/A'}
-										</ui.TableCell>
-										<ui.TableCell>
-											{c.recall.production
-												? ui.formatPercent(c.recall.production, 2)
-												: 'N/A'}
-										</ui.TableCell>
-									</ui.TableRow>
-								)
-							})}
-						</ui.TableBody>
-					</ui.Table>
-				</ui.S2>
-			) : null}
 		</ui.S1>
 	)
 }
