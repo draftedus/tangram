@@ -4,6 +4,7 @@ use tangram_metrics::StreamingMetric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 pub struct BinaryClassificationProductionPredictionMetrics {
+	classes: Vec<String>,
 	confusion_matrix: BinaryConfusionMatrix,
 }
 
@@ -42,9 +43,12 @@ pub struct BinaryClassificationProductionPredictionMetricsOutput {
 }
 
 impl BinaryClassificationProductionPredictionMetrics {
-	pub fn new() -> BinaryClassificationProductionPredictionMetrics {
+	pub fn new(classes: Vec<String>) -> BinaryClassificationProductionPredictionMetrics {
 		let confusion_matrix = BinaryConfusionMatrix::new();
-		BinaryClassificationProductionPredictionMetrics { confusion_matrix }
+		BinaryClassificationProductionPredictionMetrics {
+			confusion_matrix,
+			classes,
+		}
 	}
 }
 
@@ -62,17 +66,25 @@ impl StreamingMetric<'_> for BinaryClassificationProductionPredictionMetrics {
 			NumberOrString::String(s) => s,
 		};
 		let confusion_matrix = &mut self.confusion_matrix;
-		match (label.as_str(), prediction.as_str()) {
-			("1", "0") => {
+		let actual_label_id = match self.classes.iter().position(|c| *c == label) {
+			Some(position) => position,
+			None => return,
+		};
+		let predicted_label_id = match self.classes.iter().position(|c| *c == prediction) {
+			Some(position) => position,
+			None => return,
+		};
+		match (actual_label_id, predicted_label_id) {
+			(1, 0) => {
 				confusion_matrix.false_negatives += 1;
 			}
-			("0", "1") => {
+			(0, 1) => {
 				confusion_matrix.false_positives += 1;
 			}
-			("0", "0") => {
+			(0, 0) => {
 				confusion_matrix.true_negatives += 1;
 			}
-			("1", "1") => {
+			(1, 1) => {
 				confusion_matrix.true_positives += 1;
 			}
 			_ => todo!(),
@@ -121,7 +133,8 @@ impl StreamingMetric<'_> for BinaryClassificationProductionPredictionMetrics {
 
 #[test]
 fn test_binary() {
-	let mut metrics = BinaryClassificationProductionPredictionMetrics::new();
+	let mut metrics =
+		BinaryClassificationProductionPredictionMetrics::new(vec!["Cat".into(), "Dog".into()]);
 	metrics.update((
 		NumberOrString::String("Cat".into()),
 		NumberOrString::String("Cat".into()),
