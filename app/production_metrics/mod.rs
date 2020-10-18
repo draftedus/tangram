@@ -1,4 +1,8 @@
 use self::{
+	binary_classification_production_metrics::{
+		BinaryClassificationProductionPredictionMetrics,
+		BinaryClassificationProductionPredictionMetricsOutput,
+	},
 	multiclass_classification_production_metrics::{
 		MulticlassClassificationProductionPredictionMetrics,
 		MulticlassClassificationProductionPredictionMetricsOutput,
@@ -11,6 +15,7 @@ use crate::common::monitor_event::NumberOrString;
 use chrono::prelude::*;
 use tangram_metrics::StreamingMetric;
 
+mod binary_classification_production_metrics;
 mod multiclass_classification_production_metrics;
 mod regression_production_metrics;
 
@@ -25,6 +30,7 @@ pub struct ProductionMetrics {
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub enum ProductionPredictionMetrics {
 	Regression(RegressionProductionPredictionMetrics),
+	BinaryClassification(BinaryClassificationProductionPredictionMetrics),
 	MulticlassClassification(MulticlassClassificationProductionPredictionMetrics),
 }
 
@@ -39,6 +45,7 @@ pub struct ProductionMetricsOutput {
 #[derive(Debug)]
 pub enum ProductionPredictionMetricsOutput {
 	Regression(RegressionProductionPredictionMetricsOutput),
+	BinaryClassification(BinaryClassificationProductionPredictionMetricsOutput),
 	MulticlassClassification(MulticlassClassificationProductionPredictionMetricsOutput),
 }
 
@@ -90,7 +97,11 @@ impl ProductionPredictionMetrics {
 			tangram_core::model::Model::Regressor(_) => {
 				ProductionPredictionMetrics::Regression(RegressionProductionPredictionMetrics::new())
 			}
-			tangram_core::model::Model::BinaryClassifier(_) => todo!(),
+			tangram_core::model::Model::BinaryClassifier(_) => {
+				ProductionPredictionMetrics::BinaryClassification(
+					BinaryClassificationProductionPredictionMetrics::new(),
+				)
+			}
 			tangram_core::model::Model::MulticlassClassifier(model) => {
 				ProductionPredictionMetrics::MulticlassClassification(
 					MulticlassClassificationProductionPredictionMetrics::new(
@@ -108,8 +119,9 @@ impl StreamingMetric<'_> for ProductionPredictionMetrics {
 
 	fn update(&mut self, value: (NumberOrString, NumberOrString)) {
 		match self {
-			ProductionPredictionMetrics::MulticlassClassification(s) => s.update(value),
 			ProductionPredictionMetrics::Regression(s) => s.update(value),
+			ProductionPredictionMetrics::BinaryClassification(s) => s.update(value),
+			ProductionPredictionMetrics::MulticlassClassification(s) => s.update(value),
 		}
 	}
 
@@ -117,6 +129,11 @@ impl StreamingMetric<'_> for ProductionPredictionMetrics {
 		match self {
 			ProductionPredictionMetrics::Regression(s) => {
 				if let ProductionPredictionMetrics::Regression(other) = other {
+					s.merge(other)
+				}
+			}
+			ProductionPredictionMetrics::BinaryClassification(s) => {
+				if let ProductionPredictionMetrics::BinaryClassification(other) = other {
 					s.merge(other)
 				}
 			}
@@ -130,14 +147,18 @@ impl StreamingMetric<'_> for ProductionPredictionMetrics {
 
 	fn finalize(self) -> Self::Output {
 		match self {
+			ProductionPredictionMetrics::Regression(s) => match s.finalize() {
+				Some(s) => Some(ProductionPredictionMetricsOutput::Regression(s)),
+				None => None,
+			},
+			ProductionPredictionMetrics::BinaryClassification(s) => match s.finalize() {
+				Some(s) => Some(ProductionPredictionMetricsOutput::BinaryClassification(s)),
+				None => None,
+			},
 			ProductionPredictionMetrics::MulticlassClassification(s) => match s.finalize() {
 				Some(s) => Some(ProductionPredictionMetricsOutput::MulticlassClassification(
 					s,
 				)),
-				None => None,
-			},
-			ProductionPredictionMetrics::Regression(s) => match s.finalize() {
-				Some(s) => Some(ProductionPredictionMetricsOutput::Regression(s)),
 				None => None,
 			},
 		}

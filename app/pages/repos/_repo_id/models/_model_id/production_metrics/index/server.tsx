@@ -1,7 +1,11 @@
 import {
+	BinaryClassifierProductionMetricsIndexPage,
+	Props as BinaryClassifierProps,
+} from './binary_classifier'
+import {
 	MulticlassClassifierProductionMetricsIndexPage,
 	Props as MulticlassClassifierProps,
-} from './classifier'
+} from './multiclass_classifier'
 import {
 	RegressorProductionMetricsPage,
 	Props as RegresssorProps,
@@ -14,8 +18,6 @@ import {
 	ModelSideNavItem,
 } from 'layouts/model_layout'
 import { h } from 'preact'
-export type { Props as RegressorProps } from './regressor'
-export type { Props as MulticlassClassifierProps } from './classifier'
 
 export type Props = {
 	inner: Inner
@@ -29,12 +31,17 @@ export type Inner =
 			value: RegresssorProps
 	  }
 	| {
+			type: Type.BinaryClassifier
+			value: BinaryClassifierProps
+	  }
+	| {
 			type: Type.MulticlassClassifier
 			value: MulticlassClassifierProps
 	  }
 
 export enum Type {
 	Regressor = 'regressor',
+	BinaryClassifier = 'binary_classifier',
 	MulticlassClassifier = 'multiclass_classifier',
 }
 
@@ -43,6 +50,12 @@ export default function ProductionMetricsPage(props: Props) {
 	switch (props.inner.type) {
 		case Type.Regressor: {
 			inner = <RegressorProductionMetricsPage {...props.inner.value} />
+			break
+		}
+		case Type.BinaryClassifier: {
+			inner = (
+				<BinaryClassifierProductionMetricsIndexPage {...props.inner.value} />
+			)
 			break
 		}
 		case Type.MulticlassClassifier: {

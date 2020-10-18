@@ -34,9 +34,6 @@ impl BinaryConfusionMatrix {
 	fn n_examples(&self) -> u64 {
 		self.false_negatives + self.false_positives + self.true_negatives + self.true_positives
 	}
-	fn n_correct(&self) -> u64 {
-		self.true_positives + self.true_negatives
-	}
 }
 
 /// The input to [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
@@ -58,6 +55,8 @@ pub struct BinaryClassificationMetricsOutput {
 	pub precision: f32,
 	/// The recall is the fraction of examples in the dataset whose label is equal to this class that the model predicted as equal to this class. `recall = true_positives / (true_positives + false_negatives)`.
 	pub recall: f32,
+	/// The f1 score is the harmonic mean of the precision and the recall. See [F1 Score](https://en.wikipedia.org/wiki/F1_score).
+	pub f1_score: f32,
 }
 
 /// The output from [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
@@ -213,41 +212,28 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				y_avg * dx
 			})
 			.sum::<f32>();
-		let n_correct = self.default_threshold_confusion_matrix.n_correct();
 		let n_examples = self.default_threshold_confusion_matrix.n_examples();
-		let accuracy = n_correct.to_f32().unwrap() / n_examples.to_f32().unwrap();
-		let precision = self
-			.default_threshold_confusion_matrix
-			.true_positives
-			.to_f32()
-			.unwrap() / (self
-			.default_threshold_confusion_matrix
-			.true_positives
-			.to_f32()
-			.unwrap() + self
-			.default_threshold_confusion_matrix
-			.false_positives
-			.to_f32()
-			.unwrap());
-		let recall = self
-			.default_threshold_confusion_matrix
-			.true_positives
-			.to_f32()
-			.unwrap() / (self
-			.default_threshold_confusion_matrix
-			.true_positives
-			.to_f32()
-			.unwrap() + self
-			.default_threshold_confusion_matrix
-			.false_negatives
-			.to_f32()
-			.unwrap());
+		let true_positives = self.default_threshold_confusion_matrix.true_positives;
+		let false_positives = self.default_threshold_confusion_matrix.false_positives;
+		let false_negatives = self.default_threshold_confusion_matrix.false_negatives;
+		let true_negatives = self.default_threshold_confusion_matrix.true_negatives;
+		// This is the fraction of the total predictions that are correct.
+		let accuracy =
+			(true_positives + true_negatives).to_f32().unwrap() / n_examples.to_f32().unwrap();
+		// This is the fraction of the total predictive positive examples that are actually positive.
+		let precision =
+			true_positives.to_f32().unwrap() / (true_positives + false_positives).to_f32().unwrap();
+		// This is the fraction of the total positive examples that are correctly predicted as positive.
+		let recall =
+			true_positives.to_f32().unwrap() / (true_positives + false_negatives).to_f32().unwrap();
+		let f1_score = 2.0 * (precision * recall) / (precision + recall);
 		BinaryClassificationMetricsOutput {
 			thresholds,
 			auc_roc,
 			accuracy,
 			precision,
 			recall,
+			f1_score,
 		}
 	}
 }

@@ -30,6 +30,8 @@ struct Props {
 enum Inner {
 	#[serde(rename = "regressor")]
 	Regressor(RegressorProductionMetricsOverview),
+	#[serde(rename = "binary_classifer")]
+	BinaryClassifier(BinaryClassifierProductionMetricsOverview),
 	#[serde(rename = "multiclass_classifier")]
 	MulticlassClassifier(MulticlassClassifierProductionMetricsOverview),
 }
@@ -82,6 +84,17 @@ struct TrainingProductionMetrics {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
+struct BinaryClassifierProductionMetricsOverview {
+	date_window: DateWindow,
+	date_window_interval: DateWindowInterval,
+	true_values_count_chart: Vec<TrueValuesCountChartEntry>,
+	overall: BinaryClassificationOverallProductionMetrics,
+	id: String,
+	accuracy_chart: AccuracyChart,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct MulticlassClassifierProductionMetricsOverview {
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
@@ -103,6 +116,13 @@ struct AccuracyChart {
 struct AccuracyChartEntry {
 	accuracy: Option<f32>,
 	label: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct BinaryClassificationOverallProductionMetrics {
+	accuracy: TrainingProductionMetrics,
+	true_values_count: u64,
 }
 
 #[derive(serde::Serialize)]
@@ -247,7 +267,80 @@ async fn props(
 				true_values_count_chart,
 			})
 		}
-		tangram_core::model::Model::BinaryClassifier(_) => todo!(),
+		tangram_core::model::Model::BinaryClassifier(model) => {
+			let training_metrics = &model.test_metrics;
+			let overall_production_metrics =
+				production_metrics
+					.overall
+					.prediction_metrics
+					.map(|metrics| match metrics {
+						ProductionPredictionMetricsOutput::BinaryClassification(metrics) => metrics,
+						_ => unreachable!(),
+					});
+			let true_values_count_chart = production_metrics
+				.intervals
+				.iter()
+				.map(|interval| TrueValuesCountChartEntry {
+					count: interval.true_values_count,
+					label: format_date_window_interval(
+						interval.start_date,
+						date_window_interval,
+						timezone,
+					),
+				})
+				.collect();
+			let accuracy_chart = {
+				let data = production_metrics
+					.intervals
+					.iter()
+					.map(|interval| {
+						let label = format_date_window_interval(
+							interval.start_date,
+							date_window_interval,
+							timezone,
+						);
+						let accuracy =
+							interval
+								.prediction_metrics
+								.as_ref()
+								.map(|prediction_metrics| {
+									if let ProductionPredictionMetricsOutput::BinaryClassification(
+										predicion_metrics,
+									) = prediction_metrics
+									{
+										predicion_metrics.accuracy
+									} else {
+										unreachable!()
+									}
+								});
+						AccuracyChartEntry { label, accuracy }
+					})
+					.collect();
+				AccuracyChart {
+					data,
+					training_accuracy: training_metrics.accuracy,
+				}
+			};
+			let true_values_count = production_metrics.overall.true_values_count;
+			let production_accuracy = overall_production_metrics
+				.as_ref()
+				.map(|metrics| metrics.accuracy);
+			let overall = BinaryClassificationOverallProductionMetrics {
+				accuracy: TrainingProductionMetrics {
+					production: production_accuracy,
+					training: training_metrics.accuracy,
+				},
+				true_values_count,
+			};
+			Inner::BinaryClassifier(BinaryClassifierProductionMetricsOverview {
+				date_window,
+				date_window_interval,
+				true_values_count_chart,
+				id: model_id.to_string(),
+				accuracy_chart,
+				overall,
+			})
+		}
 		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let training_metrics = &model.test_metrics;
 			let overall_production_metrics =

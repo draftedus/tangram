@@ -148,6 +148,7 @@ async fn props(
 			.prediction_metrics
 			.map(|prediction_metrics| match prediction_metrics {
 				ProductionPredictionMetricsOutput::Regression(_) => unreachable!(),
+				ProductionPredictionMetricsOutput::BinaryClassification(_) => unreachable!(),
 				ProductionPredictionMetricsOutput::MulticlassClassification(prediction_metrics) => {
 					prediction_metrics
 				}
@@ -249,6 +250,9 @@ async fn props(
 							.as_ref()
 							.map(|metrics| match metrics {
 								ProductionPredictionMetricsOutput::Regression(_) => unreachable!(),
+								ProductionPredictionMetricsOutput::BinaryClassification(_) => {
+									unreachable!()
+								}
 								ProductionPredictionMetricsOutput::MulticlassClassification(
 									prediction_metrics,
 								) => prediction_metrics,
