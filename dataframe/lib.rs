@@ -2,14 +2,14 @@
 This crate provides a basic implementation of dataframes, which are two dimensional arrays of data where each column can have a different data type, like a spreadsheet. This crate is similar to Python's Pandas library, but at present it is very limited, because it only implements the features needed to support Tangram.
 */
 
-use fnv::FnvBuildHasher;
+use fnv::FnvHashMap;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256Plus;
-use std::{collections::HashMap, num::NonZeroUsize};
+use std::num::NonZeroUsize;
 
 mod load;
 
@@ -65,7 +65,7 @@ pub struct EnumDataFrameColumn {
 	name: Option<String>,
 	options: Vec<String>,
 	data: Vec<Option<NonZeroUsize>>,
-	options_map: HashMap<String, NonZeroUsize, FnvBuildHasher>,
+	options_map: FnvHashMap<String, NonZeroUsize>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -515,7 +515,7 @@ pub fn predict(
 						.iter()
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
-						.collect::<BTreeMap<String, f32>>();
+						.collect();
 					let feature_contributions = model
 						.model
 						.classes
@@ -584,7 +584,7 @@ pub fn predict(
 						.iter()
 						.zip(model.model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
-						.collect::<BTreeMap<String, f32>>();
+						.collect();
 					let feature_contributions = model
 						.model
 						.classes

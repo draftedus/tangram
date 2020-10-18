@@ -1,11 +1,8 @@
 use crate::stats;
+use fnv::{FnvHashMap, FnvHashSet};
 use itertools::Itertools;
 use num_traits::ToPrimitive;
-use std::{
-	cmp::Ordering,
-	collections::{BTreeMap, BTreeSet},
-	num::NonZeroU64,
-};
+use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
 use tangram_dataframe::prelude::*;
 use tangram_metrics as metrics;
 use tangram_util::{alphanumeric_tokenizer::AlphanumericTokenizer, finite::Finite};
@@ -72,13 +69,13 @@ pub struct TextColumnStats {
 	/// The total number of values.
 	pub count: usize,
 	/// A map from tokens to the total number of occurrences of that token across all examples.
-	pub token_occurrence_histogram: BTreeMap<Token, usize>,
+	pub token_occurrence_histogram: FnvHashMap<Token, usize>,
 	/// A map from token to the number of examples with at least one occurrence.
-	pub token_example_histogram: BTreeMap<Token, usize>,
+	pub token_example_histogram: FnvHashMap<Token, usize>,
 	pub tokenizer: Tokenizer,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Token {
 	Unigram(String),
 	Bigram(String, String),
@@ -449,12 +446,12 @@ impl TextColumnStats {
 		let mut stats = TextColumnStats {
 			column_name: column.name().unwrap().to_owned(),
 			count: column.len(),
-			token_occurrence_histogram: BTreeMap::new(),
-			token_example_histogram: BTreeMap::new(),
+			token_occurrence_histogram: FnvHashMap::default(),
+			token_example_histogram: FnvHashMap::default(),
 			tokenizer: Tokenizer::Alphanumeric,
 		};
 		for value in column.iter() {
-			let mut token_set = BTreeSet::new();
+			let mut token_set = FnvHashSet::default();
 			for unigram in AlphanumericTokenizer::new(value) {
 				let unigram = Token::Unigram(unigram.into_owned());
 				token_set.insert(unigram.clone());
