@@ -1,8 +1,6 @@
 import { hydrateBarChart, hydrateBoxChart } from '@tangramhq/charts'
-import { bootClassSelect } from 'common/class_select_field'
 import { bootDateWindowSelect } from 'common/date_window_select_field'
 
-bootClassSelect()
 bootDateWindowSelect()
 if (document.getElementById('number_intervals')) {
 	hydrateBoxChart('number_intervals')

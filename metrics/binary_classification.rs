@@ -23,8 +23,8 @@ struct BinaryConfusionMatrix {
 impl BinaryConfusionMatrix {
 	fn new() -> Self {
 		Self {
-			false_positives: 0,
 			false_negatives: 0,
+			false_positives: 0,
 			true_negatives: 0,
 			true_positives: 0,
 		}

@@ -33,8 +33,8 @@ type NetworkConfig = {
 }
 
 let heartDisease: Config = {
-	csvPath: 'data/heart-disease.csv',
-	name: 'heart-disease',
+	csvPath: 'data/heart_disease.csv',
+	name: 'heart_disease',
 	target: 'diagnosis',
 	targetValues: ['Positive', 'Negative'],
 }
@@ -66,7 +66,7 @@ switch (modelName) {
 	case 'mpg':
 		config = mpg
 		break
-	case 'heart-disease':
+	case 'heart_disease':
 		config = heartDisease
 		break
 	case 'iris':
@@ -86,7 +86,6 @@ let rows = (await csv.parse(utf8.decode(csvData), {
 })) as Array<{
 	[key: string]: string
 }>
-console.log(rows)
 
 let nRows = rows.length
 
@@ -114,7 +113,7 @@ for (let i = 0; i < 1000; i++) {
 	} else if (config.name === 'mpg') {
 		let value = parseFloat(input[config.target]) + Math.random() * 5
 		output = { value }
-	} else if (config.name == 'heart-disease') {
+	} else if (config.name == 'heart_disease') {
 		if (!config.targetValues) {
 			throw Error()
 		}
@@ -162,21 +161,19 @@ for (let i = 0; i < 1000; i++) {
 		output,
 		type: 'prediction',
 	}
-	console.log(prediction)
 
 	// Track the prediction.
 	await track(prediction)
-	break
 
-	// // For about 60% of predictions, track the true value.
-	// if (Math.random() > 0.4) {
-	// 	let trueValue: TrueValue = {
-	// 		date: date.toISOString(),
-	// 		identifier: i.toString(),
-	// 		modelId,
-	// 		trueValue: input[config.target],
-	// 		type: 'true_value',
-	// 	}
-	// 	await track(trueValue)
-	// }
+	// For about 60% of predictions, track the true value.
+	if (Math.random() > 0.4) {
+		let trueValue: TrueValue = {
+			date: date.toISOString(),
+			identifier: i.toString(),
+			modelId,
+			trueValue: input[config.target],
+			type: 'true_value',
+		}
+		await track(trueValue)
+	}
 }
