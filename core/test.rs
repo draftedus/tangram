@@ -136,7 +136,7 @@ pub fn test_linear_binary_classifier(
 			let predictions = Array::zeros((n_examples_per_batch, n_classes));
 			State {
 				predictions,
-				metrics: metrics::BinaryClassificationMetrics::new(100),
+				metrics: metrics::BinaryClassificationMetrics::new(101),
 			}
 		},
 		|mut state, (features, labels)| {
@@ -187,7 +187,7 @@ pub fn test_tree_binary_classifier(
 		.as_enum()
 		.unwrap();
 	let n_classes = labels.options().len();
-	let mut metrics = metrics::BinaryClassificationMetrics::new(100);
+	let mut metrics = metrics::BinaryClassificationMetrics::new(101);
 	let mut predictions = Array::zeros((features.nrows(), n_classes));
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());

@@ -47,7 +47,7 @@ export function Tuning(props: TuningProps) {
 				<ui.Slider
 					color="var(--accent-color)"
 					max={thresholds.length - 1}
-					min={1}
+					min={0}
 					onChange={setSelectedThresholdIndex}
 					step={1}
 					value={selectedThresholdIndex}
