@@ -2,6 +2,7 @@ from sklearn.metrics import accuracy_score
 import argparse
 import numpy as np
 import pandas as pd
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
@@ -76,4 +77,6 @@ else:
 
 # Compute metrics.
 accuracy = accuracy_score(predictions, labels_test)
-print('accuracy', accuracy)
+print(json.dumps({
+  'accuracy': accuracy
+}))

@@ -4,6 +4,7 @@ from time import time
 import argparse
 import numpy as np
 import pandas as pd
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
@@ -100,13 +101,14 @@ elif args.library == 'sklearn':
 elif args.library == 'xgboost':
   import xgboost as xgb
   model = xgb.XGBClassifier(
+		max_leaves=255,
     eta=0.1,
     grow_policy='lossguide',
     n_estimators=100,
     tree_method='hist',
   )
   model.fit(features_train, labels_train)
-print('duration',  time() - start)
+duration = time() - start
 
 # Make predictions on the test data.
 if args.library == 'h2o':
@@ -115,5 +117,8 @@ else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
 
 # Compute metrics.
-auc = roc_auc_score(labels_test, predictions_proba)
-print('auc', auc)
+auc_roc = roc_auc_score(labels_test, predictions_proba)
+print(json.dumps({
+  'auc_roc': auc_roc,
+  'duration': duration
+}))

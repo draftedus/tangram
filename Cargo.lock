@@ -2218,6 +2218,8 @@ dependencies = [
  "ndarray",
  "num-traits",
  "rayon",
+ "serde",
+ "serde_json",
  "tangram_dataframe",
  "tangram_metrics",
  "tangram_util",

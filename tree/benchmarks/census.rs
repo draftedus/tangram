@@ -1,5 +1,6 @@
 use maplit::btreemap;
 use ndarray::prelude::*;
+use serde_json::json;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::Metric;
@@ -215,5 +216,6 @@ fn main() {
 		.zip(labels_test.iter().map(|d| d.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
-	println!("auc {}", auc_roc);
+	let output = json!({ "auc_roc": auc_roc });
+	println!("{}", output);
 }

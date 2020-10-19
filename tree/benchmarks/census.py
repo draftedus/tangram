@@ -3,6 +3,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 import argparse
 import numpy as np
 import pandas as pd
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
@@ -108,5 +109,7 @@ else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
 
 # Compute metrics.
-auc = roc_auc_score(labels_test, predictions_proba)
-print('auc', auc)
+auc_roc = roc_auc_score(labels_test, predictions_proba)
+print(json.dumps({
+  'auc_roc': auc_roc
+}))

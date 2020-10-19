@@ -1,6 +1,7 @@
 use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
+use serde_json::json;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::Metric;
@@ -71,7 +72,7 @@ fn main() {
 		&train_options,
 		&mut |_| {},
 	);
-	println!("duration {}", start.elapsed().as_secs_f32());
+	let duration = start.elapsed().as_secs_f32();
 
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
@@ -95,5 +96,6 @@ fn main() {
 		.zip(labels.iter().map(|d| d.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
-	println!("auc {}", auc_roc);
+	let output = json!({ "auc_roc": auc_roc, "duration": duration });
+	println!("{}", output);
 }

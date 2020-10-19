@@ -1,4 +1,5 @@
 use ndarray::prelude::*;
+use serde_json::json;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::StreamingMetric;
@@ -40,5 +41,6 @@ fn main() {
 		labels: labels_test.view().as_slice().into(),
 	});
 	let metrics = metrics.finalize();
-	println!("accuracy {}", metrics.accuracy);
+	let output = json!({"accuracy": metrics.accuracy});
+	println!("{}", output);
 }

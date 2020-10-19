@@ -3,6 +3,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 import argparse
 import numpy as np
 import pandas as pd
+import json
 from time import time
 
 parser = argparse.ArgumentParser()
@@ -157,9 +158,11 @@ elif args.library == 'xgboost':
 		grow_policy='lossguide',
 		n_estimators=100,
 		tree_method='hist',
+		max_depth=0,
+		max_leaves=255
 	)
 	model.fit(features_train, labels_train)
-print('duration',  time() - start)
+duration = time() - start
 
 # Make predictions on the test data.
 if args.library == 'h2o':
@@ -168,5 +171,8 @@ else:
   predictions_proba = model.predict_proba(features_test)[:, 1]
 
 # Compute metrics.
-auc = roc_auc_score(labels_test, predictions_proba)
-print('auc', auc)
+auc_roc = roc_auc_score(labels_test, predictions_proba)
+print(json.dumps({
+  'auc_roc': auc_roc,
+  'duration': duration
+}))

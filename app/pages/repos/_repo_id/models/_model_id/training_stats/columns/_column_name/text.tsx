@@ -33,6 +33,7 @@ export function TextColumnDetail(props: Props) {
 					<BarChart
 						data={data}
 						id="text_histogram"
+						shouldDrawXAxisLabels={false}
 						title="Most Frequent Tokens"
 						xAxisTitle="Token"
 						yAxisTitle="Count"

@@ -1,6 +1,7 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
 use itertools::Itertools;
 use num_traits::ToPrimitive;
+use serde::ser::SerializeSeq;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use tangram_metrics::StreamingMetric;
 use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
@@ -46,9 +47,53 @@ pub struct TextProductionColumnStats {
 	pub column_name: String,
 	pub invalid_count: u64,
 	pub count: u64,
+	#[serde(
+		serialize_with = "serialize_token_histogram",
+		deserialize_with = "deserialize_token_histogram"
+	)]
 	pub token_histogram: HashMap<Token, u64>,
+	#[serde(
+		serialize_with = "serialize_token_histogram",
+		deserialize_with = "deserialize_token_histogram"
+	)]
 	pub per_example_histogram: HashMap<Token, u64>,
 	pub tokenizer: Tokenizer,
+}
+
+fn serialize_token_histogram<S>(map: &HashMap<Token, u64>, serializer: S) -> Result<S::Ok, S::Error>
+where
+	S: serde::Serializer,
+{
+	let mut seq = serializer.serialize_seq(Some(map.len()))?;
+	for (key, value) in map.iter() {
+		seq.serialize_element(&(key, value))?;
+	}
+	seq.end()
+}
+
+fn deserialize_token_histogram<'de, D>(deserializer: D) -> Result<HashMap<Token, u64>, D::Error>
+where
+	D: serde::Deserializer<'de>,
+{
+	struct Visitor;
+	impl<'de> serde::de::Visitor<'de> for Visitor {
+		type Value = HashMap<Token, u64>;
+		fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+			formatter.write_str("Vec<(Token, u64)>")
+		}
+
+		fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+		where
+			A: serde::de::SeqAccess<'de>,
+		{
+			let mut map = HashMap::new();
+			while let Some((key, value)) = seq.next_element()? {
+				map.insert(key, value);
+			}
+			Ok(map)
+		}
+	}
+	deserializer.deserialize_seq(Visitor)
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
