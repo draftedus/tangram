@@ -55,9 +55,19 @@ pub fn compute_binned_features_column_major(
 			}
 			BinningInstruction::Enum { n_options } => {
 				if *n_options <= 255 {
-					compute_binned_features_column_major_for_enum_feature_u8(feature, progress)
+					BinnedFeaturesColumnMajorColumn::U8(
+						compute_binned_features_column_major_for_enum_feature_inner(
+							feature, progress,
+						),
+					)
+				} else if *n_options <= 65535 {
+					BinnedFeaturesColumnMajorColumn::U16(
+						compute_binned_features_column_major_for_enum_feature_inner(
+							feature, progress,
+						),
+					)
 				} else {
-					compute_binned_features_column_major_for_enum_feature_u16(feature, progress)
+					panic!("enum column has too many options")
 				}
 			}
 		})
@@ -91,38 +101,21 @@ fn compute_binned_features_column_major_for_number_feature(
 	BinnedFeaturesColumnMajorColumn::U8(binned_feature_column)
 }
 
-fn compute_binned_features_column_major_for_enum_feature_u8(
+fn compute_binned_features_column_major_for_enum_feature_inner<T, P>(
 	feature: &DataFrameColumnView,
-	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumnMajorColumn {
-	let binned_feature_column = feature
+	_progress: &P,
+) -> Vec<T>
+where
+	T: NumCast + Send + Sync,
+	P: Fn() + Sync,
+{
+	feature
 		.as_enum()
 		.unwrap()
 		.as_slice()
 		.par_iter()
-		.map(|feature_value| feature_value.map(|v| v.get()).unwrap_or(0).to_u8().unwrap())
-		.collect();
-	BinnedFeaturesColumnMajorColumn::U8(binned_feature_column)
-}
-
-fn compute_binned_features_column_major_for_enum_feature_u16(
-	feature: &DataFrameColumnView,
-	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumnMajorColumn {
-	let binned_feature_column = feature
-		.as_enum()
-		.unwrap()
-		.as_slice()
-		.par_iter()
-		.map(|feature_value| {
-			feature_value
-				.map(|v| v.get())
-				.unwrap_or(0)
-				.to_u16()
-				.unwrap()
-		})
-		.collect();
-	BinnedFeaturesColumnMajorColumn::U16(binned_feature_column)
+		.map(|feature_value| T::from(feature_value.map(|v| v.get()).unwrap_or(0)).unwrap())
+		.collect()
 }
 
 pub fn compute_binned_features_row_major(
