@@ -1,14 +1,23 @@
 use crate::compute_binning_instructions::BinningInstruction;
 use ndarray::prelude::*;
-use num_traits::ToPrimitive;
+use num_traits::{NumCast, ToPrimitive};
 use rayon::prelude::*;
 use tangram_dataframe::{DataFrameColumnView, DataFrameView};
 use tangram_util::pzip;
 
 #[derive(Debug)]
-pub struct BinnedFeaturesRowMajor {
-	pub values_with_offsets: Array2<u16>,
-	pub offsets: Vec<u16>,
+pub enum BinnedFeaturesRowMajor {
+	U16(BinnedFeaturesRowMajorInner<u16>),
+	U32(BinnedFeaturesRowMajorInner<u32>),
+}
+
+#[derive(Debug)]
+pub struct BinnedFeaturesRowMajorInner<T>
+where
+	T: NumCast,
+{
+	pub values_with_offsets: Array2<T>,
+	pub offsets: Vec<T>,
 }
 
 #[derive(Debug)]
@@ -197,8 +206,8 @@ fn compute_binned_features_row_major_u16(
 			}
 		},
 	);
-	BinnedFeaturesRowMajor {
+	BinnedFeaturesRowMajor::U16(BinnedFeaturesRowMajorInner {
 		values_with_offsets,
 		offsets,
-	}
+	})
 }

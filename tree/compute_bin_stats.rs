@@ -296,7 +296,6 @@ pub fn compute_bin_stats_row_major_root(
 	hessians: &[f32],
 	hessians_are_constant: bool,
 ) {
-	let n_features = binned_features.values_with_offsets.ncols();
 	for entry in bin_stats.iter_mut() {
 		*entry = BinStatsEntry {
 			sum_gradients: 0.0,
@@ -304,25 +303,52 @@ pub fn compute_bin_stats_row_major_root(
 		};
 	}
 	if hessians_are_constant {
-		unsafe {
-			compute_bin_stats_row_major_root_no_hessians(
-				bin_stats,
-				examples_index,
-				binned_features.values_with_offsets.as_slice().unwrap(),
-				gradients,
-				n_features,
-			)
+		match binned_features {
+			BinnedFeaturesRowMajor::U16(binned_features) => unsafe {
+				let n_features = binned_features.values_with_offsets.ncols();
+				compute_bin_stats_row_major_root_no_hessians(
+					bin_stats,
+					examples_index,
+					binned_features.values_with_offsets.as_slice().unwrap(),
+					gradients,
+					n_features,
+				)
+			},
+			BinnedFeaturesRowMajor::U32(binned_features) => unsafe {
+				let n_features = binned_features.values_with_offsets.ncols();
+				compute_bin_stats_row_major_root_no_hessians(
+					bin_stats,
+					examples_index,
+					binned_features.values_with_offsets.as_slice().unwrap(),
+					gradients,
+					n_features,
+				)
+			},
 		}
 	} else {
-		unsafe {
-			compute_bin_stats_row_major_root_yes_hessians(
-				bin_stats,
-				examples_index,
-				binned_features.values_with_offsets.as_slice().unwrap(),
-				gradients,
-				hessians,
-				n_features,
-			)
+		match binned_features {
+			BinnedFeaturesRowMajor::U16(binned_features) => unsafe {
+				let n_features = binned_features.values_with_offsets.ncols();
+				compute_bin_stats_row_major_root_yes_hessians(
+					bin_stats,
+					examples_index,
+					binned_features.values_with_offsets.as_slice().unwrap(),
+					gradients,
+					hessians,
+					n_features,
+				)
+			},
+			BinnedFeaturesRowMajor::U32(binned_features) => unsafe {
+				let n_features = binned_features.values_with_offsets.ncols();
+				compute_bin_stats_row_major_root_yes_hessians(
+					bin_stats,
+					examples_index,
+					binned_features.values_with_offsets.as_slice().unwrap(),
+					gradients,
+					hessians,
+					n_features,
+				)
+			},
 		}
 	}
 }
@@ -335,7 +361,6 @@ pub fn compute_bin_stats_row_major_not_root(
 	hessians: &[f32],
 	hessians_are_constant: bool,
 ) {
-	let n_features = binned_features.values_with_offsets.ncols();
 	for entry in smaller_child_bin_stats.iter_mut() {
 		*entry = BinStatsEntry {
 			sum_gradients: 0.0,
@@ -343,25 +368,52 @@ pub fn compute_bin_stats_row_major_not_root(
 		};
 	}
 	if hessians_are_constant {
-		unsafe {
-			compute_bin_stats_row_major_not_root_no_hessians(
-				smaller_child_bin_stats,
-				smaller_child_examples_index,
-				binned_features.values_with_offsets.as_slice().unwrap(),
-				gradients,
-				n_features,
-			)
+		match binned_features {
+			BinnedFeaturesRowMajor::U16(binned_features) => unsafe {
+				let n_features = binned_features.values_with_offsets.ncols();
+				compute_bin_stats_row_major_not_root_no_hessians(
+					smaller_child_bin_stats,
+					smaller_child_examples_index,
+					binned_features.values_with_offsets.as_slice().unwrap(),
+					gradients,
+					n_features,
+				)
+			},
+			BinnedFeaturesRowMajor::U32(binned_features) => unsafe {
+				let n_features = binned_features.values_with_offsets.ncols();
+				compute_bin_stats_row_major_not_root_no_hessians(
+					smaller_child_bin_stats,
+					smaller_child_examples_index,
+					binned_features.values_with_offsets.as_slice().unwrap(),
+					gradients,
+					n_features,
+				)
+			},
 		}
 	} else {
-		unsafe {
-			compute_bin_stats_row_major_not_root_yes_hessians(
-				smaller_child_bin_stats,
-				smaller_child_examples_index,
-				binned_features.values_with_offsets.as_slice().unwrap(),
-				gradients,
-				hessians,
-				n_features,
-			)
+		match binned_features {
+			BinnedFeaturesRowMajor::U16(binned_features) => unsafe {
+				let n_features = binned_features.values_with_offsets.ncols();
+				compute_bin_stats_row_major_not_root_yes_hessians(
+					smaller_child_bin_stats,
+					smaller_child_examples_index,
+					binned_features.values_with_offsets.as_slice().unwrap(),
+					gradients,
+					hessians,
+					n_features,
+				)
+			},
+			BinnedFeaturesRowMajor::U32(binned_features) => unsafe {
+				let n_features = binned_features.values_with_offsets.ncols();
+				compute_bin_stats_row_major_not_root_yes_hessians(
+					smaller_child_bin_stats,
+					smaller_child_examples_index,
+					binned_features.values_with_offsets.as_slice().unwrap(),
+					gradients,
+					hessians,
+					n_features,
+				)
+			},
 		}
 	}
 }

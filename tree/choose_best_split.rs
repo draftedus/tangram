@@ -287,7 +287,10 @@ fn choose_best_split_root_row_major(
 		train_options,
 	} = options;
 	// Compute the bin stats for the child with fewer examples.
-	let n_examples = binned_features_row_major.values_with_offsets.nrows();
+	let n_examples = match binned_features_row_major {
+		BinnedFeaturesRowMajor::U16(binned_features) => binned_features.values_with_offsets.nrows(),
+		BinnedFeaturesRowMajor::U32(binned_features) => binned_features.values_with_offsets.nrows(),
+	};
 	let n_threads = rayon::current_num_threads();
 	let chunk_size = (n_examples + n_threads - 1) / n_threads;
 	*bin_stats = examples_index
