@@ -2,7 +2,6 @@
 	-moz-tab-size: 2;
 	background-color: var(--header-color);
 	border-radius: var(--border-radius);
-	/* overflow: hidden; */
 	tab-size: 2;
 }
 
@@ -28,7 +27,6 @@
 	grid-area: code;
 	overflow: auto;
 	padding: 0.5rem;
-	width: 100%;
 }
 
 .code-radio-input {
