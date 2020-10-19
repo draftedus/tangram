@@ -322,40 +322,59 @@ fn choose_best_split_root_row_major(
 		);
 	// Choose the best split for each featue.
 	match binned_features_row_major {
-		BinnedFeaturesRowMajor::U16(binned_features_row_major) => choose_best_split_for_features(
-			bin_stats,
-			binning_instructions,
-			&binned_features_row_major.offsets,
-			n_examples,
-			sum_gradients,
-			sum_hessians,
-			train_options,
-		),
-		BinnedFeaturesRowMajor::U32(binned_features_row_major) => choose_best_split_for_features(
-			bin_stats,
-			binning_instructions,
-			&binned_features_row_major.offsets,
-			n_examples,
-			sum_gradients,
-			sum_hessians,
-			train_options,
-		),
+		BinnedFeaturesRowMajor::U16(binned_features_row_major) => {
+			let options = ChooseBestSplitForFeaturesOptions {
+				bin_stats,
+				binning_instructions,
+				offsets: &binned_features_row_major.offsets,
+				n_examples,
+				sum_gradients,
+				sum_hessians,
+				train_options,
+			};
+			choose_best_split_for_features(options)
+		}
+		BinnedFeaturesRowMajor::U32(binned_features_row_major) => {
+			let options = ChooseBestSplitForFeaturesOptions {
+				bin_stats,
+				binning_instructions,
+				offsets: &binned_features_row_major.offsets,
+				n_examples,
+				sum_gradients,
+				sum_hessians,
+				train_options,
+			};
+			choose_best_split_for_features(options)
+		}
 	}
 }
 
-fn choose_best_split_for_features<T>(
-	bin_stats: &mut Vec<BinStatsEntry>,
-	binning_instructions: &[BinningInstruction],
-	offsets: &[T],
+struct ChooseBestSplitForFeaturesOptions<'a, T> {
+	bin_stats: &'a mut Vec<BinStatsEntry>,
+	binning_instructions: &'a [BinningInstruction],
+	offsets: &'a [T],
 	n_examples: usize,
 	sum_gradients: f64,
 	sum_hessians: f64,
-	train_options: &TrainOptions,
+	train_options: &'a TrainOptions,
+}
+
+fn choose_best_split_for_features<T>(
+	options: ChooseBestSplitForFeaturesOptions<T>,
 ) -> Option<ChooseBestSplitForFeatureOutput>
 where
 	T: Sync + NumCast,
 {
-	// examples_index: &'a [u32],
+	let ChooseBestSplitForFeaturesOptions {
+		bin_stats,
+		binning_instructions,
+		offsets,
+		n_examples,
+		sum_gradients,
+		sum_hessians,
+		train_options,
+	} = options;
+
 	let bin_stats = SuperUnsafe::new(bin_stats);
 	pzip!(binning_instructions, offsets)
 		.enumerate()
