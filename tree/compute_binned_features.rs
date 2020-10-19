@@ -48,11 +48,11 @@ pub fn compute_binned_features_column_major(
 ) -> BinnedFeaturesColumnMajor {
 	let columns = pzip!(features.columns().as_slice(), binning_instructions)
 		.map(|(feature, binning_instruction)| match binning_instruction {
-			BinningInstruction::Number { thresholds } => {
+			BinningInstruction::Number { thresholds } => BinnedFeaturesColumnMajorColumn::U8(
 				compute_binned_features_column_major_for_number_feature(
 					feature, thresholds, progress,
-				)
-			}
+				),
+			),
 			BinningInstruction::Enum { n_options } => {
 				if *n_options <= 255 {
 					BinnedFeaturesColumnMajorColumn::U8(
@@ -79,7 +79,7 @@ fn compute_binned_features_column_major_for_number_feature(
 	feature: &DataFrameColumnView,
 	thresholds: &[f32],
 	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesColumnMajorColumn {
+) -> Vec<u8> {
 	let binned_feature_column = feature
 		.as_number()
 		.unwrap()
@@ -98,7 +98,7 @@ fn compute_binned_features_column_major_for_number_feature(
 				.unwrap() + 1
 		})
 		.collect();
-	BinnedFeaturesColumnMajorColumn::U8(binned_feature_column)
+	binned_feature_column
 }
 
 fn compute_binned_features_column_major_for_enum_feature_inner<T, P>(
