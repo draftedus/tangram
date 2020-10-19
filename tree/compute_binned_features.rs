@@ -1,6 +1,6 @@
 use crate::compute_binning_instructions::BinningInstruction;
 use ndarray::prelude::*;
-use num_traits::{NumCast, ToPrimitive};
+use num_traits::{Num, NumCast, ToPrimitive};
 use rayon::prelude::*;
 use tangram_dataframe::{DataFrameColumnView, DataFrameView};
 use tangram_util::pzip;
@@ -37,6 +37,104 @@ impl BinnedFeaturesColumnMajorColumn {
 			BinnedFeaturesColumnMajorColumn::U8(values) => values.len(),
 			BinnedFeaturesColumnMajorColumn::U16(values) => values.len(),
 		}
+	}
+}
+
+pub fn compute_binned_features_row_major(
+	features: &DataFrameView,
+	binning_instructions: &[BinningInstruction],
+	progress: &(impl Fn() + Sync),
+) -> BinnedFeaturesRowMajor {
+	let n_bins_across_all_features = binning_instructions
+		.iter()
+		.map(|binning_instructions| binning_instructions.n_bins())
+		.sum::<usize>();
+	match n_bins_across_all_features {
+		n_bins_across_all_features if n_bins_across_all_features <= 65536 => {
+			BinnedFeaturesRowMajor::U16(compute_binned_features_row_major_inner(
+				features,
+				binning_instructions,
+				progress,
+			))
+		}
+		n_bins_across_all_features if n_bins_across_all_features <= 4294967296 => {
+			BinnedFeaturesRowMajor::U32(compute_binned_features_row_major_inner(
+				features,
+				binning_instructions,
+				progress,
+			))
+		}
+		_ => unreachable!(),
+	}
+}
+
+fn compute_binned_features_row_major_inner<T, P>(
+	features: &DataFrameView,
+	binning_instructions: &[BinningInstruction],
+	_progress: &P,
+) -> BinnedFeaturesRowMajorInner<T>
+where
+	T: Num + NumCast + Send + Sync + Copy + std::ops::Add + std::ops::AddAssign,
+	P: Fn() + Sync,
+{
+	let n_features = features.ncols();
+	let n_examples = features.nrows();
+	let mut values_with_offsets: Array2<T> =
+		unsafe { Array::uninitialized((n_examples, n_features)) };
+	let mut offsets: Vec<T> = Vec::with_capacity(n_features);
+	let mut current_offset: T = T::zero();
+	for binning_instruction in binning_instructions.iter() {
+		offsets.push(current_offset);
+		current_offset += T::from(binning_instruction.n_bins()).unwrap();
+	}
+	pzip!(
+		values_with_offsets.axis_iter_mut(Axis(1)),
+		features.columns().as_slice(),
+		binning_instructions,
+		&offsets,
+	)
+	.for_each(
+		|(mut binned_features_column, feature, binning_instruction, offset)| {
+			match binning_instruction {
+				BinningInstruction::Number { thresholds } => {
+					pzip!(
+						binned_features_column.axis_iter_mut(Axis(0)),
+						feature.as_number().unwrap().as_slice(),
+					)
+					.for_each(|(binned_feature_value, feature_value)| {
+						// Invalid values go to the first bin.
+						let binned_feature_value = binned_feature_value.into_scalar();
+						if !feature_value.is_finite() {
+							*binned_feature_value = *offset;
+						} else {
+							let threshold = thresholds
+								.binary_search_by(|threshold| {
+									threshold.partial_cmp(feature_value).unwrap()
+								})
+								.unwrap_or_else(|bin| bin);
+							let threshold = T::from(threshold).unwrap();
+							// Use binary search on the thresholds to find the bin for the feature value.
+							*binned_feature_value = *offset + threshold + T::one();
+						}
+					});
+				}
+				BinningInstruction::Enum { .. } => {
+					pzip!(
+						binned_features_column.axis_iter_mut(Axis(0)),
+						feature.as_enum().unwrap().as_slice(),
+					)
+					.for_each(|(binned_feature_value, feature_value)| {
+						let feature_value = feature_value.map(|v| v.get()).unwrap_or(0);
+						let feature_value = T::from(feature_value).unwrap();
+						*binned_feature_value.into_scalar() = *offset + feature_value;
+					});
+				}
+			}
+		},
+	);
+	BinnedFeaturesRowMajorInner {
+		values_with_offsets,
+		offsets,
 	}
 }
 
@@ -116,91 +214,4 @@ where
 		.par_iter()
 		.map(|feature_value| T::from(feature_value.map(|v| v.get()).unwrap_or(0)).unwrap())
 		.collect()
-}
-
-pub fn compute_binned_features_row_major(
-	features: &DataFrameView,
-	binning_instructions: &[BinningInstruction],
-	progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesRowMajor {
-	let n_bins_across_all_features = binning_instructions
-		.iter()
-		.map(|binning_instructions| binning_instructions.n_bins())
-		.sum::<usize>();
-	match n_bins_across_all_features {
-		n_bins_across_all_features if n_bins_across_all_features <= 65536 => {
-			compute_binned_features_row_major_u16(features, binning_instructions, progress)
-		}
-		_ => unreachable!(),
-	}
-}
-
-fn compute_binned_features_row_major_u16(
-	features: &DataFrameView,
-	binning_instructions: &[BinningInstruction],
-	_progress: &(impl Fn() + Sync),
-) -> BinnedFeaturesRowMajor {
-	let n_features = features.ncols();
-	let n_examples = features.nrows();
-	let mut values_with_offsets: Array2<u16> =
-		unsafe { Array::uninitialized((n_examples, n_features)) };
-	let mut offsets: Vec<u16> = Vec::with_capacity(n_features);
-	let mut current_offset: u16 = 0;
-	for binning_instruction in binning_instructions.iter() {
-		offsets.push(current_offset);
-		current_offset += binning_instruction.n_bins().to_u16().unwrap();
-	}
-	pzip!(
-		values_with_offsets.axis_iter_mut(Axis(1)),
-		features.columns().as_slice(),
-		binning_instructions,
-		&offsets,
-	)
-	.for_each(
-		|(mut binned_features_column, feature, binning_instruction, offset)| {
-			match binning_instruction {
-				BinningInstruction::Number { thresholds } => {
-					pzip!(
-						binned_features_column.axis_iter_mut(Axis(0)),
-						feature.as_number().unwrap().as_slice(),
-					)
-					.for_each(|(binned_feature_value, feature_value)| {
-						// Invalid values go to the first bin.
-						let binned_feature_value = binned_feature_value.into_scalar();
-						if !feature_value.is_finite() {
-							*binned_feature_value = *offset;
-						} else {
-							// Use binary search on the thresholds to find the bin for the feature value.
-							*binned_feature_value = offset
-								+ thresholds
-									.binary_search_by(|threshold| {
-										threshold.partial_cmp(feature_value).unwrap()
-									})
-									.unwrap_or_else(|bin| bin)
-									.to_u16()
-									.unwrap() + 1;
-						}
-					});
-				}
-				BinningInstruction::Enum { .. } => {
-					pzip!(
-						binned_features_column.axis_iter_mut(Axis(0)),
-						feature.as_enum().unwrap().as_slice(),
-					)
-					.for_each(|(binned_feature_value, feature_value)| {
-						*binned_feature_value.into_scalar() = offset
-							+ feature_value
-								.map(|v| v.get())
-								.unwrap_or(0)
-								.to_u16()
-								.unwrap();
-					});
-				}
-			}
-		},
-	);
-	BinnedFeaturesRowMajor::U16(BinnedFeaturesRowMajorInner {
-		values_with_offsets,
-		offsets,
-	})
 }

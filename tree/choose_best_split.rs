@@ -323,7 +323,7 @@ fn choose_best_split_root_row_major(
 	// Choose the best split for each featue.
 	match binned_features_row_major {
 		BinnedFeaturesRowMajor::U16(binned_features_row_major) => {
-			let options = ChooseBestSplitForFeaturesOptions {
+			let options = ChooseBestSplitRootRowMajorForFeaturesOptions {
 				bin_stats,
 				binning_instructions,
 				offsets: &binned_features_row_major.offsets,
@@ -332,10 +332,10 @@ fn choose_best_split_root_row_major(
 				sum_hessians,
 				train_options,
 			};
-			choose_best_split_for_features(options)
+			choose_best_split_root_row_major_for_features(options)
 		}
 		BinnedFeaturesRowMajor::U32(binned_features_row_major) => {
-			let options = ChooseBestSplitForFeaturesOptions {
+			let options = ChooseBestSplitRootRowMajorForFeaturesOptions {
 				bin_stats,
 				binning_instructions,
 				offsets: &binned_features_row_major.offsets,
@@ -344,12 +344,12 @@ fn choose_best_split_root_row_major(
 				sum_hessians,
 				train_options,
 			};
-			choose_best_split_for_features(options)
+			choose_best_split_root_row_major_for_features(options)
 		}
 	}
 }
 
-struct ChooseBestSplitForFeaturesOptions<'a, T> {
+struct ChooseBestSplitRootRowMajorForFeaturesOptions<'a, T> {
 	bin_stats: &'a mut Vec<BinStatsEntry>,
 	binning_instructions: &'a [BinningInstruction],
 	offsets: &'a [T],
@@ -359,13 +359,13 @@ struct ChooseBestSplitForFeaturesOptions<'a, T> {
 	train_options: &'a TrainOptions,
 }
 
-fn choose_best_split_for_features<T>(
-	options: ChooseBestSplitForFeaturesOptions<T>,
+fn choose_best_split_root_row_major_for_features<T>(
+	options: ChooseBestSplitRootRowMajorForFeaturesOptions<T>,
 ) -> Option<ChooseBestSplitForFeatureOutput>
 where
 	T: Sync + NumCast,
 {
-	let ChooseBestSplitForFeaturesOptions {
+	let ChooseBestSplitRootRowMajorForFeaturesOptions {
 		bin_stats,
 		binning_instructions,
 		offsets,
