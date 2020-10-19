@@ -128,7 +128,7 @@ pub fn compute_binned_features_row_major(
 		.map(|binning_instructions| binning_instructions.n_bins())
 		.sum::<usize>();
 	match n_bins_across_all_features {
-		n_bins_across_all_features if n_bins_across_all_features < 1 << 16 => {
+		n_bins_across_all_features if n_bins_across_all_features <= 65536 => {
 			compute_binned_features_row_major_u16(features, binning_instructions, progress)
 		}
 		_ => unreachable!(),
