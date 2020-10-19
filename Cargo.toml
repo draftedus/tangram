@@ -6,7 +6,6 @@ members = [
 	"libtangram",
 	"linear",
 	"metrics",
-	"ndarray",
 	"pinwheel",
 	"tree",
 	"util",
