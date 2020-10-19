@@ -352,7 +352,7 @@ pub fn train(
 	// Compute the feature importances.
 	let feature_importances = Some(compute_feature_importances(&trees, n_features));
 
-	// Print out the timing and tree information if the debug feature is enabled.
+	// Print out the timing and tree information if the timing feature is enabled.
 	#[cfg(feature = "timing")]
 	eprintln!("{:?}", timing);
 
