@@ -2,7 +2,7 @@
 	-moz-tab-size: 2;
 	background-color: var(--header-color);
 	border-radius: var(--border-radius);
-	overflow: hidden;
+	/* overflow: hidden; */
 	tab-size: 2;
 }
 
@@ -23,7 +23,7 @@
 
 .code-inner-wrapper {
 	color: var(--text-color);
-	display: grid;
+	display: none;
 	grid: auto / auto minmax(0, 1fr);
 	grid-area: code;
 	overflow: auto;
