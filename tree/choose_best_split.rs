@@ -12,6 +12,7 @@ use crate::{
 	BinnedFeaturesLayout, SplitDirection, TrainOptions,
 };
 use itertools::izip;
+use num_traits::NumCast;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_util::{
@@ -320,8 +321,43 @@ fn choose_best_split_root_row_major(
 			},
 		);
 	// Choose the best split for each featue.
+	match binned_features_row_major {
+		BinnedFeaturesRowMajor::U16(binned_features_row_major) => choose_best_split_for_features(
+			bin_stats,
+			binning_instructions,
+			&binned_features_row_major.offsets,
+			n_examples,
+			sum_gradients,
+			sum_hessians,
+			train_options,
+		),
+		BinnedFeaturesRowMajor::U32(binned_features_row_major) => choose_best_split_for_features(
+			bin_stats,
+			binning_instructions,
+			&binned_features_row_major.offsets,
+			n_examples,
+			sum_gradients,
+			sum_hessians,
+			train_options,
+		),
+	}
+}
+
+fn choose_best_split_for_features<T>(
+	bin_stats: &mut Vec<BinStatsEntry>,
+	binning_instructions: &[BinningInstruction],
+	offsets: &[T],
+	n_examples: usize,
+	sum_gradients: f64,
+	sum_hessians: f64,
+	train_options: &TrainOptions,
+) -> Option<ChooseBestSplitForFeatureOutput>
+where
+	T: Sync + NumCast,
+{
+	// examples_index: &'a [u32],
 	let bin_stats = SuperUnsafe::new(bin_stats);
-	pzip!(binning_instructions, &binned_features_row_major.offsets)
+	pzip!(binning_instructions, offsets)
 		.enumerate()
 		.map(|(feature_index, (binning_instructions, offset))| {
 			let offset = offset.to_usize().unwrap();
