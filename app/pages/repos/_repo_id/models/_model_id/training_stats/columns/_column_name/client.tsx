@@ -9,6 +9,6 @@ if (document.getElementById('number_quantiles')) {
 if (document.getElementById('number_histogram')) {
 	hydrateBarChart('number_histogram')
 }
-if (document.getElementById('text_histogram')) {
-	hydrateBarChart('text_histogram')
+if (document.getElementById('token_histogram')) {
+	hydrateBarChart('token_histogram')
 }

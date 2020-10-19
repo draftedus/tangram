@@ -32,7 +32,7 @@ export function TextColumnDetail(props: Props) {
 				<ui.Card>
 					<BarChart
 						data={data}
-						id="text_histogram"
+						id="token_histogram"
 						shouldDrawXAxisLabels={false}
 						title="Most Frequent Tokens"
 						xAxisTitle="Token"

@@ -90,7 +90,7 @@ pub enum Tokenizer {
 #[derive(Clone, Debug, PartialEq)]
 pub struct StatsSettings {
 	/// This is the maximum number of tokens to store in the histogram.
-	pub text_histogram_max_size: usize,
+	pub token_histogram_max_size: usize,
 	/// This is the maximum number of unique numeric values to store in the histogram.
 	pub number_histogram_max_size: usize,
 	/// This is the maximum number of tokens to track for text columns.
@@ -100,7 +100,7 @@ pub struct StatsSettings {
 impl Default for StatsSettings {
 	fn default() -> StatsSettings {
 		StatsSettings {
-			text_histogram_max_size: 100,
+			token_histogram_max_size: 100,
 			number_histogram_max_size: 100,
 			top_tokens_count: 20_000,
 		}
