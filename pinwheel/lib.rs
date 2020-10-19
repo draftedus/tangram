@@ -78,21 +78,18 @@ impl Pinwheel {
 		}
 
 		// Determine the output URLs.
+		let page_prefix = if self.src_dir.is_some() {
+			""
+		} else {
+			&page_entry
+		};
 		let static_js_url = Url::parse("dst:/")
 			.unwrap()
-			.join(&if self.src_dir.is_some() {
-				"static.js".to_owned()
-			} else {
-				page_entry.to_owned() + "/static.js"
-			})
+			.join(&format!("{}/static.js", page_prefix))
 			.unwrap();
 		let server_js_url = Url::parse("dst:/")
 			.unwrap()
-			.join(&if self.src_dir.is_some() {
-				"server.js".to_owned()
-			} else {
-				page_entry.to_owned() + "/server.js"
-			})
+			.join(&format!("{}/server.js", page_prefix))
 			.unwrap();
 		let page_js_url = if self.fs.exists(&static_js_url) {
 			static_js_url
@@ -103,21 +100,14 @@ impl Pinwheel {
 		};
 		let client_js_url = Url::parse("dst:/")
 			.unwrap()
-			.join(&if self.src_dir.is_some() {
-				"client.js".to_owned()
-			} else {
-				page_entry.to_owned() + "/client.js"
-			})
+			.join(&format!("{}/client.js", page_prefix))
 			.unwrap();
 		let client_js_src = if self.fs.exists(&client_js_url) {
-			Some(
-				"/".to_owned()
-					+ &if self.src_dir.is_some() {
-						"".to_owned()
-					} else {
-						page_entry + "/"
-					} + "client.js",
-			)
+			if self.src_dir.is_some() {
+				Some("/client.js".to_owned())
+			} else {
+				Some(format!("/{}/client.js", page_entry))
+			}
 		} else {
 			None
 		};
@@ -606,6 +596,7 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 		"--minify".to_owned(),
 		"--bundle".to_owned(),
 		"--splitting".to_owned(),
+		// format!("--outbase={}/pages", src_dir.display()),
 		"--resolve-extensions=.js,.jsx,.ts,.tsx,.css,.git,.jpg,.png,.svg".to_owned(),
 		"--public-path=/".to_owned(),
 		"--loader:.gif=file".to_owned(),
@@ -635,7 +626,11 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 			args.push(format!("{}", client_source_path.display()));
 		}
 	}
-	let mut process = std::process::Command::new(cmd).args(&args).spawn().unwrap();
+	let mut process = std::process::Command::new(cmd)
+		.stderr(std::process::Stdio::inherit())
+		.args(&args)
+		.spawn()
+		.unwrap();
 	let status = process.wait().unwrap();
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
