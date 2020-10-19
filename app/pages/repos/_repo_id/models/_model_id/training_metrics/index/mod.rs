@@ -154,10 +154,10 @@ fn build_inner_binary_classifier(
 fn build_inner_multiclass_classifier(
 	model: tangram_core::model::MulticlassClassifier,
 ) -> MulticlassClassifierInner {
-	let test_metrics = &model.test_metrics;
 	let classes = model.classes().to_owned();
-	let class_metrics = &test_metrics.class_metrics;
-	let class_metrics = class_metrics
+	let class_metrics = model
+		.test_metrics
+		.class_metrics
 		.iter()
 		.map(|class_metrics| ClassMetrics {
 			precision: class_metrics.precision,
@@ -170,8 +170,8 @@ fn build_inner_multiclass_classifier(
 	};
 	MulticlassClassifierInner {
 		id: model.id.to_string(),
-		accuracy: test_metrics.accuracy,
-		baseline_accuracy: test_metrics.baseline_accuracy,
+		accuracy: model.test_metrics.accuracy,
+		baseline_accuracy: model.test_metrics.baseline_accuracy,
 		class_metrics,
 		classes,
 		losses,

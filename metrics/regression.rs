@@ -33,10 +33,6 @@ pub struct RegressionMetricsOutput {
 	pub mae: f32,
 	/// The r-squared value. https://en.wikipedia.org/wiki/Coefficient_of_determination.
 	pub r2: f32,
-	/// The baseline mean squared error is the mean squared error if the model always predicted the mean value.
-	pub baseline_mse: f32,
-	/// The baseline root mean squared error is the square root of the baseline mean squared error.
-	pub baseline_rmse: f32,
 }
 
 impl RegressionMetrics {
@@ -132,15 +128,11 @@ impl<'a> StreamingMetric<'a> for RegressionMetrics {
 		let mse = self.squared_error / n;
 		let rmse = mse.sqrt();
 		let r2 = 1.0 - self.squared_error / (variance * n);
-		let baseline_mse = variance;
-		let baseline_rmse = baseline_mse.sqrt();
 		RegressionMetricsOutput {
 			mae: mae.to_f32().unwrap(),
 			mse: mse.to_f32().unwrap(),
 			r2: r2.to_f32().unwrap(),
 			rmse: rmse.to_f32().unwrap(),
-			baseline_mse: baseline_mse.to_f32().unwrap(),
-			baseline_rmse: baseline_rmse.to_f32().unwrap(),
 		}
 	}
 }

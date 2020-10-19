@@ -59,6 +59,7 @@ struct BinaryClassifierInner {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BinaryClassifierInnerMetrics {
+	baseline_accuracy: f32,
 	auc_roc: f32,
 	accuracy: f32,
 	precision: f32,
@@ -152,6 +153,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			Inner::BinaryClassifier(BinaryClassifierInner {
 				id: model_id.to_string(),
 				metrics: BinaryClassifierInnerMetrics {
+					baseline_accuracy: default_threshold_test_metrics.baseline_accuracy,
 					auc_roc: model.test_metrics.auc_roc,
 					accuracy: default_threshold_test_metrics.accuracy,
 					precision: default_threshold_test_metrics.precision,

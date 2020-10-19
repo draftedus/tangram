@@ -84,8 +84,6 @@ pub struct RegressionMetrics {
 	pub rmse: f32,
 	pub mae: f32,
 	pub r2: f32,
-	pub baseline_mse: f32,
-	pub baseline_rmse: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -289,7 +287,6 @@ pub struct MulticlassClassificationMetrics {
 	pub precision_weighted: f32,
 	pub recall_unweighted: f32,
 	pub recall_weighted: f32,
-	pub baseline_accuracy: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

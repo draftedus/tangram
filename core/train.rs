@@ -1620,8 +1620,6 @@ impl Into<model::RegressionMetrics> for metrics::RegressionMetricsOutput {
 			rmse: self.rmse,
 			mae: self.mae,
 			r2: self.r2,
-			baseline_mse: self.baseline_mse,
-			baseline_rmse: self.baseline_rmse,
 		}
 	}
 }
@@ -1666,7 +1664,6 @@ impl Into<model::MulticlassClassificationMetrics>
 			precision_weighted: self.precision_weighted,
 			recall_unweighted: self.recall_unweighted,
 			recall_weighted: self.recall_weighted,
-			baseline_accuracy: self.baseline_accuracy,
 		}
 	}
 }
