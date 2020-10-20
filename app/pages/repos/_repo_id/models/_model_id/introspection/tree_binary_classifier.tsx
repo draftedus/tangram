@@ -1,10 +1,9 @@
+import { TreeBinaryClassifierProps } from './props'
 import { TreeFeatureImportances } from './tree_feature_importances'
 import { h } from 'preact'
 
-type Props = {
-	featureImportances: Array<[string, number]>
-}
-
-export function TreeBinaryClassifierModelPage(props: Props) {
+export function TreeBinaryClassifierModelPage(
+	props: TreeBinaryClassifierProps,
+) {
 	return <TreeFeatureImportances values={props.featureImportances} />
 }

@@ -1,42 +1,8 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { AuthProps, InnerType, NoAuthProps, Props } from './props'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { h } from 'preact'
-
-export type Props = {
-	inner: Inner
-	pinwheelInfo: PinwheelInfo
-}
-
-enum InnerType {
-	NoAuth = 'no_auth',
-	Auth = 'auth',
-}
-
-type Inner =
-	| {
-			type: InnerType.NoAuth
-			value: NoAuthProps
-	  }
-	| {
-			type: InnerType.Auth
-			value: AuthProps
-	  }
-
-type NoAuthProps = {}
-
-type AuthProps = {
-	email: string
-	organizations: Array<{
-		id: string
-		name: string
-	}>
-	repos: Array<{
-		id: string
-		title: string
-	}>
-}
 
 export default function UserPage(props: Props) {
 	return renderPage(

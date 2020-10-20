@@ -1,92 +1,15 @@
+import { Props } from './props'
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { ClassSelectField } from 'common/class_select_field'
 import { DateWindowSelectField } from 'common/date_window_select_field'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { renderPage } from 'common/render'
-import { DateWindow, DateWindowInterval, intervalChartTitle } from 'common/time'
+import { intervalChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
-import {
-	ModelLayout,
-	ModelLayoutInfo,
-	ModelSideNavItem,
-} from 'layouts/model_layout'
+import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { Fragment, h } from 'preact'
-
-export type Props = {
-	class: string
-	classMetrics: Array<{
-		className: string
-		intervals: Array<{
-			f1Score: {
-				production: number | null
-				training: number
-			}
-			label: string
-			precision: {
-				production: number | null
-				training: number
-			}
-			recall: {
-				production: number | null
-				training: number
-			}
-		}>
-	}>
-	classes: string[]
-	dateWindow: DateWindow
-	dateWindowInterval: DateWindowInterval
-	id: string
-	modelLayoutInfo: ModelLayoutInfo
-	overall: {
-		classMetrics: OverallClassMetrics[]
-		label: string
-	}
-	pinwheelInfo: PinwheelInfo
-	title: string
-}
-
-export type OverallClassMetrics = {
-	className: string
-	comparison: {
-		falseNegativeFraction: {
-			production: number | null
-			training: number
-		}
-		falsePositiveFraction: {
-			production: number | null
-			training: number
-		}
-		trueNegativeFraction: {
-			production: number | null
-			training: number
-		}
-		truePositiveFraction: {
-			production: number | null
-			training: number
-		}
-	}
-	confusionMatrix: {
-		falseNegatives: number | null
-		falsePositives: number | null
-		trueNegatives: number | null
-		truePositives: number | null
-	}
-	f1Score: {
-		production: number | null
-		training: number
-	}
-	precision: {
-		production: number | null
-		training: number
-	}
-	recall: {
-		production: number | null
-		training: number
-	}
-}
 
 export default function ProductionMetricsPage(props: Props) {
 	let selectedClassIndex = props.classes.indexOf(props.class)

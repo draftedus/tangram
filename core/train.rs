@@ -1493,7 +1493,7 @@ fn test_model(
 impl Into<model::StatsSettings> for stats::StatsSettings {
 	fn into(self) -> model::StatsSettings {
 		model::StatsSettings {
-			token_histogram_max_sizze: self.token_histogram_max_size,
+			token_histogram_max_size: self.token_histogram_max_size,
 			number_histogram_max_size: self.number_histogram_max_size,
 		}
 	}

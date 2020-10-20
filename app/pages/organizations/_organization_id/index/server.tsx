@@ -1,43 +1,9 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { Plan, Props } from './props'
 import * as ui from '@tangramhq/ui'
 import { PricingCards } from '@tangramhq/www'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { h } from 'preact'
-
-export type Props = {
-	card: {
-		brand: string
-		country: string
-		expMonth: number
-		expYear: number
-		last4: string
-		name: string
-	} | null
-	id: string
-	members: Array<{
-		email: string
-		id: string
-		isAdmin: boolean
-	}>
-	name: string
-	pinwheelInfo: PinwheelInfo
-	plan: Plan
-	repos: Array<{
-		id: string
-		title: string
-	}>
-	stripePublishableKey: string
-	userId: string
-}
-
-export enum Plan {
-	Trial = 'trial',
-	Free = 'free',
-	Startup = 'startup',
-	Team = 'team',
-	Enterprise = 'enterprise',
-}
 
 export default function OrganizationIndexPage(props: Props) {
 	return renderPage(

@@ -1,17 +1,10 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { Props } from './props'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { AuthLayout } from 'layouts/auth_layout'
 import { h } from 'preact'
 
-export type LoginProps = {
-	code?: boolean
-	email?: string
-	error?: string
-	pinwheelInfo: PinwheelInfo
-}
-
-export default function Login(props: LoginProps) {
+export default function Login(props: Props) {
 	return renderPage(
 		<AuthLayout pinwheelInfo={props.pinwheelInfo}>
 			<ui.Form post={true}>

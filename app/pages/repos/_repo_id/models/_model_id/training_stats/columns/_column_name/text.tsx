@@ -1,19 +1,9 @@
+import { TextProps } from './props'
 import { BarChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
-export type Props = {
-	name: string
-	tokens: TokenStats[]
-}
-
-type TokenStats = {
-	count: number
-	examples_count: number
-	token: string
-}
-
-export function TextColumnDetail(props: Props) {
+export function TextColumnDetail(props: TextProps) {
 	let data = [
 		{
 			color: ui.colors.blue,

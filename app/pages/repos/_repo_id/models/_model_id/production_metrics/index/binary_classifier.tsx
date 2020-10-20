@@ -1,42 +1,16 @@
+import { BinaryClassifierProps } from './props'
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { DateWindowSelectField } from 'common/date_window_select_field'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
-import { DateWindow, DateWindowInterval, intervalChartTitle } from 'common/time'
+import { intervalChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
 
-export type Props = {
-	accuracyChart: {
-		data: Array<{
-			accuracy: number | null
-			label: string
-		}>
-		trainingAccuracy: number
-	}
-	dateWindow: DateWindow
-	dateWindowInterval: DateWindowInterval
-	id: string
-	overall: {
-		accuracy: {
-			production: number | null
-			training: number
-		}
-		precision: {
-			production: number | null
-			training: number
-		}
-		recall: {
-			production: number | null
-			training: number
-		}
-		trueValuesCount: number
-	}
-	true_values_count_chart: Array<{ count: number; label: string }>
-}
-
-export function BinaryClassifierProductionMetricsIndexPage(props: Props) {
+export function BinaryClassifierProductionMetricsIndexPage(
+	props: BinaryClassifierProps,
+) {
 	let chartLabels = props.accuracyChart.data.map(entry => entry.label)
 	let accuracyData = [
 		{

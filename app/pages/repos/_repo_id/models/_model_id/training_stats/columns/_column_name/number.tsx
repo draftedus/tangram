@@ -1,22 +1,10 @@
+import { NumberProps } from './props'
 import { BoxChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { h } from 'preact'
 
-export type Props = {
-	invalidCount: number
-	max: number
-	mean: number
-	min: number
-	name: string
-	p25: number
-	p50: number
-	p75: number
-	std: number
-	uniqueCount: number
-}
-
-export function NumberColumnDetail(props: Props) {
+export function NumberColumnDetail(props: NumberProps) {
 	let quantilesData = [
 		{
 			color: ui.colors.blue,

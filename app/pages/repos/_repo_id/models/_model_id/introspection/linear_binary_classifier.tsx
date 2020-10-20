@@ -1,15 +1,11 @@
 import { LinearFeatureWeights } from './linear_feature_weights'
+import { LinearBinaryClassifierProps } from './props'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
-type Props = {
-	bias: number
-	positiveClassName: string
-	targetColumnName: string
-	weights: Array<[string, number]>
-}
-
-export function LinearBinaryClassifierModelPage(props: Props) {
+export function LinearBinaryClassifierModelPage(
+	props: LinearBinaryClassifierProps,
+) {
 	let bias = ui.formatNumber(props.bias)
 	return (
 		<ui.S1>

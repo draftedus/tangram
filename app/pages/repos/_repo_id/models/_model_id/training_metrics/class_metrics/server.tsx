@@ -1,58 +1,74 @@
-import {
-	BinaryClassifierClassMetricsPage,
-	Props as BinaryClassifierProps,
-} from './binary_classifier'
-import {
-	MulticlassClassifierClassMetricsPage,
-	Props as MulticlassClassifierProps,
-} from './multiclass_classifier'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { Props } from './props'
+import * as ui from '@tangramhq/ui'
+import { ClassSelectField } from 'common/class_select_field'
+import * as definitions from 'common/definitions'
+import { MetricsRow } from 'common/metrics_row'
 import { renderPage } from 'common/render'
-import {
-	ModelLayout,
-	ModelLayoutInfo,
-	ModelSideNavItem,
-} from 'layouts/model_layout'
+import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { h } from 'preact'
 
-export type Props = {
-	inner: Inner
-	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
-}
-
-export enum ModelType {
-	BinaryClassifier = 'BinaryClassifier',
-	MulticlassClassifier = 'MulticlassClassifier',
-}
-
-export type Inner =
-	| {
-			type: ModelType.BinaryClassifier
-			value: BinaryClassifierProps
-	  }
-	| {
-			type: ModelType.MulticlassClassifier
-			value: MulticlassClassifierProps
-	  }
-
 export default function ClassMetricsPage(props: Props) {
-	let inner
-	switch (props.inner.type) {
-		case ModelType.BinaryClassifier:
-			inner = <BinaryClassifierClassMetricsPage {...props.inner.value} />
-			break
-		case ModelType.MulticlassClassifier:
-			inner = <MulticlassClassifierClassMetricsPage {...props.inner.value} />
-			break
-	}
 	return renderPage(
 		<ModelLayout
 			info={props.modelLayoutInfo}
 			pinwheelInfo={props.pinwheelInfo}
 			selectedItem={ModelSideNavItem.TrainingMetrics}
 		>
-			{inner}
+			<ui.S1>
+				<ui.H1>{'Training Metrics'}</ui.H1>
+				<ui.TabBar>
+					<ui.TabLink href="./">{'Overview'}</ui.TabLink>
+					<ui.TabLink href="class_metrics" selected={true}>
+						{'Class Metrics'}
+					</ui.TabLink>
+				</ui.TabBar>
+				<ui.Form>
+					<ClassSelectField class={props.class} classes={props.classes} />
+					<noscript>
+						<ui.Button>{'Submit'}</ui.Button>
+					</noscript>
+				</ui.Form>
+				<ui.S2>
+					<ui.H2>{'Precision and Recall'}</ui.H2>
+					<ui.P>{definitions.precisionRecall}</ui.P>
+					<MetricsRow>
+						<ui.Card>
+							<ui.NumberChart
+								key="precision"
+								title="Precision"
+								value={ui.formatPercent(props.classMetrics.precision, 2)}
+							/>
+						</ui.Card>
+						<ui.Card>
+							<ui.NumberChart
+								key="recall"
+								title="Recall"
+								value={ui.formatPercent(props.classMetrics.recall, 2)}
+							/>
+						</ui.Card>
+					</MetricsRow>
+					<MetricsRow>
+						<ui.Card>
+							<ui.NumberChart
+								key="f1Score"
+								title="F1 Score"
+								value={ui.formatPercent(props.classMetrics.f1Score, 2)}
+							/>
+						</ui.Card>
+					</MetricsRow>
+				</ui.S2>
+				<ui.S2>
+					<ui.H2>{'Confusion Matrix'}</ui.H2>
+					<ui.P>{definitions.confusionMatrix}</ui.P>
+					<ui.ConfusionMatrix
+						classLabel={props.class}
+						falseNegatives={props.classMetrics.falseNegatives}
+						falsePositives={props.classMetrics.falsePositives}
+						trueNegatives={props.classMetrics.trueNegatives}
+						truePositives={props.classMetrics.truePositives}
+					/>
+				</ui.S2>
+			</ui.S1>
 		</ModelLayout>,
 	)
 }

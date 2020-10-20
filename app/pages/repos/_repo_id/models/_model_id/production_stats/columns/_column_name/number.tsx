@@ -1,68 +1,12 @@
+import { NumberProps } from './props'
 import { BoxChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
-import {
-	DateWindow,
-	DateWindowInterval,
-	intervalChartTitle,
-	overallChartTitle,
-} from 'common/time'
+import { intervalChartTitle, overallChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
 
-export type Props = {
-	absentCount: number
-	alert: string | null
-	columnName: string
-	dateWindow: DateWindow
-	dateWindowInterval: DateWindowInterval
-	intervalBoxChartData: Array<{
-		label: string
-		stats: {
-			max: number
-			min: number
-			p25: number
-			p50: number
-			p75: number
-		} | null
-	}>
-	invalidCount: number
-	maxComparison: {
-		production: number | null
-		training: number
-	}
-	meanComparison: {
-		production: number | null
-		training: number
-	}
-	minComparison: {
-		production: number | null
-		training: number
-	}
-	overallBoxChartData: {
-		production: {
-			max: number
-			min: number
-			p25: number
-			p50: number
-			p75: number
-		} | null
-		training: {
-			max: number
-			min: number
-			p25: number
-			p50: number
-			p75: number
-		}
-	}
-	rowCount: number
-	stdComparison: {
-		production: number | null
-		training: number
-	}
-}
-
-export function Number(props: Props) {
+export function Number(props: NumberProps) {
 	let intervalBoxChartData = [
 		{
 			color: productionColor,

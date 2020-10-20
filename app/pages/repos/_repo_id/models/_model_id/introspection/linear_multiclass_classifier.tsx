@@ -1,15 +1,11 @@
 import { LinearFeatureWeights } from './linear_feature_weights'
+import { LinearMulticlassClassifierProps } from './props'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
-type Props = {
-	biases: number[]
-	classes: string[]
-	selectedClass: string
-	weights: Array<Array<[string, number]>>
-}
-
-export function LinearMulticlassClassifierModelPage(props: Props) {
+export function LinearMulticlassClassifierModelPage(
+	props: LinearMulticlassClassifierProps,
+) {
 	let selectedClassIndex = props.classes.indexOf(props.selectedClass)
 	let selectedWeights = props.weights[selectedClassIndex]
 	let bias = ui.formatNumber(props.biases[selectedClassIndex])

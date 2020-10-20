@@ -1,27 +1,9 @@
+import { BinaryClassifierProps } from './props'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { h } from 'preact'
 
-export type Props = {
-	id: string
-	metrics: {
-		accuracy: number
-		aucRoc: number
-		baselineAccuracy: number
-		precision: number
-		recall: number
-	}
-	title: string
-	trainingSummary: {
-		chosenModelTypeName: string
-		columnCount: number
-		modelComparisonMetricTypeName: string
-		testRowCount: number
-		trainRowCount: number
-	}
-}
-
-export function BinaryClassifierIndexPage(props: Props) {
+export function BinaryClassifierIndexPage(props: BinaryClassifierProps) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Overview'}</ui.H1>

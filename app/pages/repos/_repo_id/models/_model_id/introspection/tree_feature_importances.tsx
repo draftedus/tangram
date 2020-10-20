@@ -2,7 +2,7 @@ import { BarChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
-type Props = {
+export type Props = {
 	values: Array<[string, number]>
 }
 

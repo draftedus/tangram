@@ -1,24 +1,9 @@
+import { TuningProps } from './props'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { baselineColor, selectedThresholdColor } from 'common/tokens'
 import { h } from 'preact'
 import { useState } from 'preact/hooks'
-
-export type TuningProps = {
-	baselineThreshold: number
-	class: string
-	metrics: Array<{
-		accuracy: number
-		f1Score: number
-		falseNegatives: number
-		falsePositives: number
-		precision: number
-		recall: number
-		threshold: number
-		trueNegatives: number
-		truePositives: number
-	}>
-}
 
 export function Tuning(props: TuningProps) {
 	let thresholds = props.metrics.map(

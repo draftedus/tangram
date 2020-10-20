@@ -1,21 +1,8 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { Props } from './props'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { h } from 'preact'
-
-export type Props = {
-	error?: string
-	owner?: string
-	owners?: Owner[]
-	pinwheelInfo: PinwheelInfo
-	title?: string
-}
-
-type Owner = {
-	title: string
-	value: string
-}
 
 export default function RepoCreatePage(props: Props) {
 	return renderPage(
