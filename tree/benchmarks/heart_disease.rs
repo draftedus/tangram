@@ -84,7 +84,7 @@ fn main() {
 	let model = tangram_tree::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.view(),
-		&tangram_tree::TrainOptions {
+		tangram_tree::TrainOptions {
 			max_leaf_nodes: 255,
 			..Default::default()
 		},

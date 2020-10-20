@@ -312,21 +312,13 @@ pub fn train(
 				TrainModelOutput::LinearRegressor(LinearRegressorTrainModelOutput {
 					model,
 					feature_groups,
-					options,
 					..
-				}) => (
-					feature_groups,
-					RegressionModel::Linear(LinearRegressor { options, model }),
-				),
+				}) => (feature_groups, RegressionModel::Linear(model)),
 				TrainModelOutput::TreeRegressor(TreeRegressorTrainModelOutput {
 					model,
 					feature_groups,
-					options,
 					..
-				}) => (
-					feature_groups,
-					RegressionModel::Tree(TreeRegressor { model, options }),
-				),
+				}) => (feature_groups, RegressionModel::Tree(model)),
 				_ => unreachable!(),
 			};
 			model::Model::Regressor(model::Regressor {
@@ -366,22 +358,14 @@ pub fn train(
 					LinearBinaryClassifierTrainModelOutput {
 						model,
 						feature_groups,
-						options,
 						..
 					},
-				) => (
-					feature_groups,
-					BinaryClassificationModel::Linear(LinearBinaryClassifier { model, options }),
-				),
+				) => (feature_groups, BinaryClassificationModel::Linear(model)),
 				TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 					model,
 					feature_groups,
-					options,
 					..
-				}) => (
-					feature_groups,
-					BinaryClassificationModel::Tree(TreeBinaryClassifier { model, options }),
-				),
+				}) => (feature_groups, BinaryClassificationModel::Tree(model)),
 				_ => unreachable!(),
 			};
 			let (negative_class, positive_class) = match &train_target_column_stats {
@@ -430,30 +414,16 @@ pub fn train(
 					LinearMulticlassClassifierTrainModelOutput {
 						model,
 						feature_groups,
-						options,
 						..
 					},
-				) => (
-					feature_groups,
-					MulticlassClassificationModel::Linear(LinearMulticlassClassifier {
-						model,
-						options,
-					}),
-				),
+				) => (feature_groups, MulticlassClassificationModel::Linear(model)),
 				TrainModelOutput::TreeMulticlassClassifier(
 					TreeMulticlassClassifierTrainModelOutput {
 						model,
 						feature_groups,
-						options,
 						..
 					},
-				) => (
-					feature_groups,
-					MulticlassClassificationModel::Tree(TreeMulticlassClassifier {
-						model,
-						options,
-					}),
-				),
+				) => (feature_groups, MulticlassClassificationModel::Tree(model)),
 				_ => unreachable!(),
 			};
 			let classes = match &train_target_column_stats {
@@ -506,18 +476,8 @@ enum MulticlassClassificationComparisonMetric {
 }
 
 enum RegressionModel {
-	Linear(LinearRegressor),
-	Tree(TreeRegressor),
-}
-
-struct LinearRegressor {
-	pub options: tangram_linear::TrainOptions,
-	pub model: tangram_linear::Regressor,
-}
-
-struct TreeRegressor {
-	pub options: tangram_tree::TrainOptions,
-	pub model: tangram_tree::Regressor,
+	Linear(tangram_linear::Regressor),
+	Tree(tangram_tree::Regressor),
 }
 
 enum RegressionComparisonMetric {
@@ -528,33 +488,13 @@ enum RegressionComparisonMetric {
 }
 
 enum BinaryClassificationModel {
-	Linear(LinearBinaryClassifier),
-	Tree(TreeBinaryClassifier),
-}
-
-struct LinearBinaryClassifier {
-	pub model: tangram_linear::BinaryClassifier,
-	pub options: tangram_linear::TrainOptions,
-}
-
-struct TreeBinaryClassifier {
-	pub model: tangram_tree::BinaryClassifier,
-	pub options: tangram_tree::TrainOptions,
+	Linear(tangram_linear::BinaryClassifier),
+	Tree(tangram_tree::BinaryClassifier),
 }
 
 enum MulticlassClassificationModel {
-	Linear(LinearMulticlassClassifier),
-	Tree(TreeMulticlassClassifier),
-}
-
-struct LinearMulticlassClassifier {
-	pub model: tangram_linear::MulticlassClassifier,
-	pub options: tangram_linear::TrainOptions,
-}
-
-struct TreeMulticlassClassifier {
-	pub model: tangram_tree::MulticlassClassifier,
-	pub options: tangram_tree::TrainOptions,
+	Linear(tangram_linear::MulticlassClassifier),
+	Tree(tangram_tree::MulticlassClassifier),
 }
 
 enum ComparisonMetric {
@@ -871,7 +811,7 @@ fn train_linear_regressor(
 	let model = tangram_linear::Regressor::train(
 		features.view(),
 		labels,
-		&linear_options,
+		linear_options.clone(),
 		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
 				progress,
@@ -906,12 +846,13 @@ fn train_tree_regressor(
 		.unwrap()
 		.clone();
 	let tree_options = compute_tree_options(&options);
+	let progress = &mut |progress| {
+		update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
+			progress,
+		)))
+	};
 	let model =
-		tangram_tree::Regressor::train(features.view(), labels, &tree_options, &mut |progress| {
-			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
-				progress,
-			)))
-		});
+		tangram_tree::Regressor::train(features.view(), labels, tree_options.clone(), progress);
 	TrainModelOutput::TreeRegressor(TreeRegressorTrainModelOutput {
 		model,
 		feature_groups,
@@ -944,15 +885,16 @@ fn train_linear_binary_classifier(
 		.as_enum()
 		.unwrap();
 	let linear_options = compute_linear_options(&options);
+	let progress = &mut |progress| {
+		update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
+			progress,
+		)))
+	};
 	let model = tangram_linear::BinaryClassifier::train(
 		features.view(),
 		labels,
-		&linear_options,
-		&mut |progress| {
-			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
-				progress,
-			)))
-		},
+		linear_options.clone(),
+		progress,
 	);
 	TrainModelOutput::LinearBinaryClassifier(LinearBinaryClassifierTrainModelOutput {
 		model,
@@ -982,15 +924,16 @@ fn train_tree_binary_classifier(
 		.unwrap()
 		.clone();
 	let tree_options = compute_tree_options(&options);
+	let progress = &mut |progress| {
+		update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
+			progress,
+		)))
+	};
 	let model = tangram_tree::BinaryClassifier::train(
 		features.view(),
 		labels,
-		&tree_options,
-		&mut |progress| {
-			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
-				progress,
-			)))
-		},
+		tree_options.clone(),
+		progress,
 	);
 	TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 		model,
@@ -1024,15 +967,16 @@ fn train_linear_multiclass_classifier(
 		.as_enum()
 		.unwrap();
 	let linear_options = compute_linear_options(&options);
+	let progress = &mut |progress| {
+		update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
+			progress,
+		)))
+	};
 	let model = tangram_linear::MulticlassClassifier::train(
 		features.view(),
 		labels,
-		&linear_options,
-		&mut |progress| {
-			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Linear(
-				progress,
-			)))
-		},
+		linear_options.clone(),
+		progress,
 	);
 	TrainModelOutput::LinearMulticlassClassifier(LinearMulticlassClassifierTrainModelOutput {
 		model,
@@ -1065,7 +1009,7 @@ fn train_tree_multiclass_classifier(
 	let model = tangram_tree::MulticlassClassifier::train(
 		features.view(),
 		labels,
-		&tree_options,
+		tree_options.clone(),
 		&mut |progress| {
 			update_progress(TrainProgress::TrainingModel(ModelTrainProgress::Tree(
 				progress,
@@ -1904,26 +1848,26 @@ impl Into<model::BinaryClassificationModel> for BinaryClassificationModel {
 	}
 }
 
-impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
+impl Into<model::LinearBinaryClassifier> for tangram_linear::BinaryClassifier {
 	fn into(self) -> model::LinearBinaryClassifier {
 		model::LinearBinaryClassifier {
-			means: self.model.means,
-			weights: self.model.weights.into_raw_vec(),
-			bias: self.model.bias,
-			losses: self.model.losses,
-			train_options: self.options.into(),
+			means: self.means,
+			weights: self.weights.into_raw_vec(),
+			bias: self.bias,
+			losses: self.losses,
+			train_options: self.train_options.into(),
 		}
 	}
 }
 
-impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
+impl Into<model::TreeBinaryClassifier> for tangram_tree::BinaryClassifier {
 	fn into(self) -> model::TreeBinaryClassifier {
 		model::TreeBinaryClassifier {
-			trees: self.model.trees.into_iter().map(Into::into).collect(),
-			bias: self.model.bias,
-			losses: self.model.losses,
-			feature_importances: self.model.feature_importances.unwrap(),
-			train_options: self.options.into(),
+			trees: self.trees.into_iter().map(Into::into).collect(),
+			bias: self.bias,
+			losses: self.losses,
+			feature_importances: self.feature_importances.unwrap(),
+			train_options: self.train_options.into(),
 		}
 	}
 }
@@ -1941,31 +1885,31 @@ impl Into<model::MulticlassClassificationModel> for MulticlassClassificationMode
 	}
 }
 
-impl Into<model::LinearMulticlassClassifier> for LinearMulticlassClassifier {
+impl Into<model::LinearMulticlassClassifier> for tangram_linear::MulticlassClassifier {
 	fn into(self) -> model::LinearMulticlassClassifier {
 		model::LinearMulticlassClassifier {
-			n_features: self.model.weights.nrows(),
-			n_classes: self.model.weights.ncols(),
-			weights: self.model.weights.into_raw_vec(),
-			biases: self.model.biases.into_raw_vec(),
-			losses: self.model.losses,
-			classes: self.model.classes,
-			means: self.model.means,
-			train_options: self.options.into(),
+			n_features: self.weights.nrows(),
+			n_classes: self.weights.ncols(),
+			weights: self.weights.into_raw_vec(),
+			biases: self.biases.into_raw_vec(),
+			losses: self.losses,
+			classes: self.classes,
+			means: self.means,
+			train_options: self.train_options.into(),
 		}
 	}
 }
 
-impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
+impl Into<model::TreeMulticlassClassifier> for tangram_tree::MulticlassClassifier {
 	fn into(self) -> model::TreeMulticlassClassifier {
 		model::TreeMulticlassClassifier {
-			n_rounds: self.model.n_rounds,
-			n_classes: self.model.n_classes,
-			biases: self.model.biases,
-			trees: self.model.trees.into_iter().map(|t| t.into()).collect(),
-			losses: self.model.losses,
-			feature_importances: self.model.feature_importances.unwrap(),
-			train_options: self.options.into(),
+			n_rounds: self.n_rounds,
+			n_classes: self.n_classes,
+			biases: self.biases,
+			trees: self.trees.into_iter().map(|t| t.into()).collect(),
+			losses: self.losses,
+			feature_importances: self.feature_importances.unwrap(),
+			train_options: self.train_options.into(),
 		}
 	}
 }
@@ -1979,28 +1923,28 @@ impl Into<model::RegressionModel> for RegressionModel {
 	}
 }
 
-impl Into<model::LinearRegressor> for LinearRegressor {
+impl Into<model::LinearRegressor> for tangram_linear::Regressor {
 	fn into(self) -> model::LinearRegressor {
 		model::LinearRegressor {
-			weights: self.model.weights.into_raw_vec(),
-			bias: self.model.bias,
-			losses: self.model.losses,
-			means: self.model.means,
-			train_options: self.options.into(),
+			weights: self.weights.into_raw_vec(),
+			bias: self.bias,
+			losses: self.losses,
+			means: self.means,
+			train_options: self.train_options.into(),
 		}
 	}
 }
 
-impl Into<model::TreeRegressor> for TreeRegressor {
+impl Into<model::TreeRegressor> for tangram_tree::Regressor {
 	fn into(self) -> model::TreeRegressor {
-		let losses = self.model.losses.unwrap();
-		let trees = self.model.trees.into_iter().map(Into::into).collect();
+		let losses = self.losses.unwrap();
+		let trees = self.trees.into_iter().map(Into::into).collect();
 		model::TreeRegressor {
 			trees,
-			bias: self.model.bias,
+			bias: self.bias,
 			losses,
-			feature_importances: self.model.feature_importances.unwrap(),
-			train_options: self.options.into(),
+			feature_importances: self.feature_importances.unwrap(),
+			train_options: self.train_options.into(),
 		}
 	}
 }
@@ -2021,6 +1965,7 @@ impl Into<model::LinearModelTrainOptions> for tangram_linear::TrainOptions {
 impl Into<model::TreeModelTrainOptions> for tangram_tree::TrainOptions {
 	fn into(self) -> model::TreeModelTrainOptions {
 		model::TreeModelTrainOptions {
+			binned_features_layout: self.binned_features_layout.into(),
 			compute_loss: self.compute_loss,
 			l2_regularization: self.l2_regularization,
 			learning_rate: self.learning_rate,
@@ -2040,6 +1985,17 @@ impl Into<model::TreeModelTrainOptions> for tangram_tree::TrainOptions {
 				.smoothing_factor_for_discrete_bin_sorting,
 			supplemental_l2_regularization_for_discrete_splits: self
 				.supplemental_l2_regularization_for_discrete_splits,
+		}
+	}
+}
+
+impl Into<model::BinnedFeaturesLayout> for tangram_tree::BinnedFeaturesLayout {
+	fn into(self) -> model::BinnedFeaturesLayout {
+		match self {
+			tangram_tree::BinnedFeaturesLayout::RowMajor => model::BinnedFeaturesLayout::RowMajor,
+			tangram_tree::BinnedFeaturesLayout::ColumnMajor => {
+				model::BinnedFeaturesLayout::ColumnMajor
+			}
 		}
 	}
 }

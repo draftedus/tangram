@@ -693,6 +693,7 @@ impl TryFrom<model::Regressor> for Regressor {
 						weights: inner_model.weights.into(),
 						means: inner_model.means,
 						losses: inner_model.losses,
+						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
 			}
@@ -715,6 +716,7 @@ impl TryFrom<model::Regressor> for Regressor {
 							.collect::<Result<Vec<_>>>()?,
 						feature_importances: Some(inner_model.feature_importances),
 						losses: Some(inner_model.losses),
+						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
 			}
@@ -751,6 +753,7 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 						bias: inner_model.bias,
 						means: inner_model.means,
 						losses: inner_model.losses,
+						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
 			}
@@ -775,6 +778,7 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 							.collect::<Result<Vec<_>>>()?,
 						feature_importances: Some(inner_model.feature_importances),
 						losses: inner_model.losses,
+						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
 			}
@@ -815,6 +819,7 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 							means: inner_model.means,
 							losses: inner_model.losses,
 							classes: inner_model.classes,
+							train_options: inner_model.train_options.try_into()?,
 						},
 					),
 				})
@@ -832,93 +837,22 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 					feature_groups,
 					model: MulticlassClassificationModel::Tree(
 						tangram_tree::MulticlassClassifier {
+							train_options: inner_model.train_options.try_into()?,
 							biases: inner_model.biases,
 							trees: inner_model
 								.trees
 								.into_iter()
 								.map(TryInto::try_into)
 								.collect::<Result<Vec<_>>>()?,
-							feature_importances: Some(inner_model.feature_importances),
-							losses: inner_model.losses,
 							n_classes: inner_model.n_classes.to_usize().unwrap(),
 							n_rounds: inner_model.n_rounds.to_usize().unwrap(),
+							feature_importances: Some(inner_model.feature_importances),
+							losses: inner_model.losses,
 						},
 					),
 				})
 			}
 		}
-	}
-}
-
-impl TryFrom<model::Tree> for tangram_tree::Tree {
-	type Error = anyhow::Error;
-	fn try_from(value: model::Tree) -> Result<tangram_tree::Tree> {
-		Ok(tangram_tree::Tree {
-			nodes: value
-				.nodes
-				.into_iter()
-				.map(TryInto::try_into)
-				.collect::<Result<Vec<_>>>()?,
-		})
-	}
-}
-
-impl TryFrom<model::Node> for tangram_tree::Node {
-	type Error = anyhow::Error;
-	fn try_from(value: model::Node) -> Result<tangram_tree::Node> {
-		match value {
-			model::Node::Branch(value) => {
-				Ok(tangram_tree::Node::Branch(tangram_tree::BranchNode {
-					left_child_index: value.left_child_index.to_usize().unwrap(),
-					right_child_index: value.right_child_index.to_usize().unwrap(),
-					split: value.split.try_into()?,
-					examples_fraction: value.examples_fraction,
-				}))
-			}
-			model::Node::Leaf(value) => Ok(tangram_tree::Node::Leaf(tangram_tree::LeafNode {
-				value: value.value,
-				examples_fraction: value.examples_fraction,
-			})),
-		}
-	}
-}
-
-impl TryFrom<model::BranchSplit> for tangram_tree::BranchSplit {
-	type Error = anyhow::Error;
-	fn try_from(value: model::BranchSplit) -> Result<tangram_tree::BranchSplit> {
-		match value {
-			model::BranchSplit::Continuous(value) => Ok(tangram_tree::BranchSplit::Continuous(
-				tangram_tree::BranchSplitContinuous {
-					feature_index: value.feature_index.to_usize().unwrap(),
-					split_value: value.split_value,
-					invalid_values_direction: if value.invalid_values_direction {
-						tangram_tree::SplitDirection::Right
-					} else {
-						tangram_tree::SplitDirection::Left
-					},
-				},
-			)),
-			model::BranchSplit::Discrete(value) => Ok(tangram_tree::BranchSplit::Discrete(
-				tangram_tree::BranchSplitDiscrete {
-					feature_index: value.feature_index.to_usize().unwrap(),
-					directions: value
-						.directions
-						.into_iter()
-						.map(TryInto::try_into)
-						.collect::<Result<_, _>>()?,
-				},
-			)),
-		}
-	}
-}
-
-impl TryFrom<model::SplitDirection> for tangram_tree::SplitDirection {
-	type Error = anyhow::Error;
-	fn try_from(value: model::SplitDirection) -> Result<tangram_tree::SplitDirection> {
-		Ok(match value {
-			model::SplitDirection::Left => tangram_tree::SplitDirection::Left,
-			model::SplitDirection::Right => tangram_tree::SplitDirection::Right,
-		})
 	}
 }
 
@@ -1026,5 +960,173 @@ impl TryFrom<model::Tokenizer> for features::Tokenizer {
 		match value {
 			model::Tokenizer::Alphanumeric => Ok(features::Tokenizer::Alphanumeric),
 		}
+	}
+}
+
+impl TryFrom<model::LinearModelTrainOptions> for tangram_linear::TrainOptions {
+	type Error = anyhow::Error;
+	fn try_from(value: model::LinearModelTrainOptions) -> Result<tangram_linear::TrainOptions> {
+		Ok(tangram_linear::TrainOptions {
+			compute_loss: value.compute_loss,
+			early_stopping_options: match value.early_stopping_options {
+				Some(early_stopping_options) => Some(early_stopping_options.try_into()?),
+				None => None,
+			},
+			l2_regularization: value.l2_regularization,
+			learning_rate: value.learning_rate,
+			max_epochs: value.max_epochs.try_into()?,
+			n_examples_per_batch: value.n_examples_per_batch.try_into()?,
+		})
+	}
+}
+
+impl TryFrom<model::LinearEarlyStoppingOptions> for tangram_linear::EarlyStoppingOptions {
+	type Error = anyhow::Error;
+	fn try_from(
+		value: model::LinearEarlyStoppingOptions,
+	) -> Result<tangram_linear::EarlyStoppingOptions> {
+		Ok(tangram_linear::EarlyStoppingOptions {
+			early_stopping_fraction: value.early_stopping_fraction,
+			n_epochs_without_improvement_to_stop: value
+				.n_epochs_without_improvement_to_stop
+				.try_into()?,
+			min_decrease_in_loss_for_significant_change: value
+				.min_decrease_in_loss_for_significant_change,
+		})
+	}
+}
+
+impl TryFrom<model::TreeModelTrainOptions> for tangram_tree::TrainOptions {
+	type Error = anyhow::Error;
+	fn try_from(value: model::TreeModelTrainOptions) -> Result<tangram_tree::TrainOptions> {
+		Ok(tangram_tree::TrainOptions {
+			binned_features_layout: value.binned_features_layout.try_into()?,
+			compute_loss: value.compute_loss,
+			early_stopping_options: match value.early_stopping_options {
+				Some(early_stopping_options) => Some(early_stopping_options.try_into()?),
+				None => None,
+			},
+			l2_regularization: value.l2_regularization,
+			learning_rate: value.learning_rate,
+			max_depth: match value.max_depth {
+				Some(max_depth) => Some(max_depth.try_into()?),
+				None => None,
+			},
+			max_examples_for_computing_bin_thresholds: value
+				.max_examples_for_computing_bin_thresholds
+				.try_into()?,
+			max_leaf_nodes: value.max_leaf_nodes.try_into()?,
+			max_valid_bins_for_number_features: value.max_valid_bins_for_number_features,
+			max_rounds: value.max_rounds.try_into()?,
+			min_examples_per_node: value.min_examples_per_node.try_into()?,
+			min_gain_to_split: value.min_gain_to_split,
+			min_sum_hessians_per_node: value.min_sum_hessians_per_node,
+			smoothing_factor_for_discrete_bin_sorting: value
+				.smoothing_factor_for_discrete_bin_sorting,
+			supplemental_l2_regularization_for_discrete_splits: value
+				.supplemental_l2_regularization_for_discrete_splits,
+		})
+	}
+}
+
+impl TryFrom<model::BinnedFeaturesLayout> for tangram_tree::BinnedFeaturesLayout {
+	type Error = anyhow::Error;
+	fn try_from(value: model::BinnedFeaturesLayout) -> Result<tangram_tree::BinnedFeaturesLayout> {
+		match value {
+			model::BinnedFeaturesLayout::RowMajor => {
+				Ok(tangram_tree::BinnedFeaturesLayout::RowMajor)
+			}
+			model::BinnedFeaturesLayout::ColumnMajor => {
+				Ok(tangram_tree::BinnedFeaturesLayout::ColumnMajor)
+			}
+		}
+	}
+}
+
+impl TryFrom<model::TreeEarlyStoppingOptions> for tangram_tree::EarlyStoppingOptions {
+	type Error = anyhow::Error;
+	fn try_from(
+		value: model::TreeEarlyStoppingOptions,
+	) -> Result<tangram_tree::EarlyStoppingOptions> {
+		Ok(tangram_tree::EarlyStoppingOptions {
+			early_stopping_fraction: value.early_stopping_fraction,
+			n_epochs_without_improvement_to_stop: value
+				.n_epochs_without_improvement_to_stop
+				.try_into()?,
+			min_decrease_in_loss_for_significant_change: value
+				.min_decrease_in_loss_for_significant_change,
+		})
+	}
+}
+
+impl TryFrom<model::Tree> for tangram_tree::Tree {
+	type Error = anyhow::Error;
+	fn try_from(value: model::Tree) -> Result<tangram_tree::Tree> {
+		Ok(tangram_tree::Tree {
+			nodes: value
+				.nodes
+				.into_iter()
+				.map(TryInto::try_into)
+				.collect::<Result<Vec<_>>>()?,
+		})
+	}
+}
+
+impl TryFrom<model::Node> for tangram_tree::Node {
+	type Error = anyhow::Error;
+	fn try_from(value: model::Node) -> Result<tangram_tree::Node> {
+		match value {
+			model::Node::Branch(value) => {
+				Ok(tangram_tree::Node::Branch(tangram_tree::BranchNode {
+					left_child_index: value.left_child_index.to_usize().unwrap(),
+					right_child_index: value.right_child_index.to_usize().unwrap(),
+					split: value.split.try_into()?,
+					examples_fraction: value.examples_fraction,
+				}))
+			}
+			model::Node::Leaf(value) => Ok(tangram_tree::Node::Leaf(tangram_tree::LeafNode {
+				value: value.value,
+				examples_fraction: value.examples_fraction,
+			})),
+		}
+	}
+}
+
+impl TryFrom<model::BranchSplit> for tangram_tree::BranchSplit {
+	type Error = anyhow::Error;
+	fn try_from(value: model::BranchSplit) -> Result<tangram_tree::BranchSplit> {
+		match value {
+			model::BranchSplit::Continuous(value) => Ok(tangram_tree::BranchSplit::Continuous(
+				tangram_tree::BranchSplitContinuous {
+					feature_index: value.feature_index.to_usize().unwrap(),
+					split_value: value.split_value,
+					invalid_values_direction: if value.invalid_values_direction {
+						tangram_tree::SplitDirection::Right
+					} else {
+						tangram_tree::SplitDirection::Left
+					},
+				},
+			)),
+			model::BranchSplit::Discrete(value) => Ok(tangram_tree::BranchSplit::Discrete(
+				tangram_tree::BranchSplitDiscrete {
+					feature_index: value.feature_index.to_usize().unwrap(),
+					directions: value
+						.directions
+						.into_iter()
+						.map(TryInto::try_into)
+						.collect::<Result<_, _>>()?,
+				},
+			)),
+		}
+	}
+}
+
+impl TryFrom<model::SplitDirection> for tangram_tree::SplitDirection {
+	type Error = anyhow::Error;
+	fn try_from(value: model::SplitDirection) -> Result<tangram_tree::SplitDirection> {
+		Ok(match value {
+			model::SplitDirection::Left => tangram_tree::SplitDirection::Left,
+			model::SplitDirection::Right => tangram_tree::SplitDirection::Right,
+		})
 	}
 }

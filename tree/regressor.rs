@@ -14,6 +14,8 @@ use tangram_util::pzip;
 /// `Regressor`s predict continuous target values, for example the selling price of a home.
 #[derive(Debug)]
 pub struct Regressor {
+	/// These are the options the model was trained with.
+	pub train_options: TrainOptions,
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
 	pub bias: f32,
 	/// The trees for this model.
@@ -29,7 +31,7 @@ impl Regressor {
 	pub fn train(
 		features: DataFrameView,
 		labels: NumberDataFrameColumnView,
-		train_options: &TrainOptions,
+		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> Regressor {
 		let task = Task::Regression;

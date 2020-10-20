@@ -17,7 +17,7 @@ pub use multiclass_classifier::MulticlassClassifier;
 pub use regressor::Regressor;
 
 /// These are the options passed to `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct TrainOptions {
 	/// If true, the model will include the loss on the training data after each epoch.
 	pub compute_loss: bool,
@@ -51,7 +51,7 @@ impl Default for TrainOptions {
 }
 
 /// The parameters in this struct control how to determine whether training should stop early after each epoch.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct EarlyStoppingOptions {
 	/// This is the fraction of the dataset that is set aside to compute the early stopping metric.
 	pub early_stopping_fraction: f32,

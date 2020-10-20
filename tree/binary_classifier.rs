@@ -16,6 +16,8 @@ use tangram_util::pzip;
 /// `BinaryClassifier`s predict binary target values, for example whether a patient has heart disease or not.
 #[derive(Debug)]
 pub struct BinaryClassifier {
+	/// These are the options the model was trained with.
+	pub train_options: TrainOptions,
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
 	pub bias: f32,
 	/// The trees for this model.
@@ -31,7 +33,7 @@ impl BinaryClassifier {
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumDataFrameColumnView,
-		train_options: &TrainOptions,
+		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> BinaryClassifier {
 		let task = Task::BinaryClassification;

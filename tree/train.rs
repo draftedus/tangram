@@ -44,7 +44,7 @@ pub fn train(
 	task: Task,
 	features: DataFrameView,
 	labels: DataFrameColumnView,
-	train_options: &TrainOptions,
+	train_options: TrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> Model {
 	#[cfg(feature = "timing")]
@@ -364,12 +364,14 @@ pub fn train(
 			trees,
 			feature_importances,
 			losses,
+			train_options,
 		}),
 		Task::BinaryClassification => Model::BinaryClassifier(BinaryClassifier {
 			bias: *biases.get(0).unwrap(),
 			trees,
 			feature_importances,
 			losses,
+			train_options,
 		}),
 		Task::MulticlassClassification { .. } => {
 			Model::MulticlassClassifier(MulticlassClassifier {
@@ -379,6 +381,7 @@ pub fn train(
 				trees,
 				feature_importances,
 				losses,
+				train_options,
 			})
 		}
 	}

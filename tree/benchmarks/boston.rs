@@ -22,7 +22,7 @@ fn main() {
 	let model = tangram_tree::Regressor::train(
 		features_train.view(),
 		labels_train.view(),
-		&tangram_tree::TrainOptions {
+		tangram_tree::TrainOptions {
 			learning_rate: 0.1,
 			max_leaf_nodes: 255,
 			max_rounds: 100,

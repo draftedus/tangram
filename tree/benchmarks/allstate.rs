@@ -606,7 +606,7 @@ fn main() {
 	let model = tangram_tree::Regressor::train(
 		features_train.view(),
 		labels_train.view(),
-		&train_options,
+		train_options,
 		&mut |_| {},
 	);
 	let duration = start.elapsed().as_secs_f32();

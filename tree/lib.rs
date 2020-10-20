@@ -26,7 +26,7 @@ pub use multiclass_classifier::MulticlassClassifier;
 pub use regressor::Regressor;
 
 /// These are the options passed to `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct TrainOptions {
 	/// This option controls whether binned features will be layed out in row major or column major order. Each will produce the same result, but row major will be faster for datasets with more rows and fewer columns, while column major will be faster for datasets with fewer rows and more columns.
 	pub binned_features_layout: BinnedFeaturesLayout,
@@ -90,7 +90,7 @@ pub enum BinnedFeaturesLayout {
 }
 
 /// The parameters in this struct control how to determine whether training should stop early after each round. `early_stopping_fraction` is the fraction of the dataset that is set aside to compute the early stopping metric. If `early_stopping_rounds` rounds pass by without an improvement of at least `early_stopping_threshold` in the early stopping metric over the previous round, training will be stopped early.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct EarlyStoppingOptions {
 	pub early_stopping_fraction: f32,
 	pub n_epochs_without_improvement_to_stop: usize,

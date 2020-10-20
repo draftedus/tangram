@@ -133,6 +133,7 @@ pub struct LinearEarlyStoppingOptions {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeModelTrainOptions {
+	pub binned_features_layout: BinnedFeaturesLayout,
 	pub compute_loss: bool,
 	pub early_stopping_options: Option<TreeEarlyStoppingOptions>,
 	pub l2_regularization: f32,
@@ -147,6 +148,12 @@ pub struct TreeModelTrainOptions {
 	pub min_sum_hessians_per_node: f32,
 	pub smoothing_factor_for_discrete_bin_sorting: f32,
 	pub supplemental_l2_regularization_for_discrete_splits: f32,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub enum BinnedFeaturesLayout {
+	RowMajor,
+	ColumnMajor,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
