@@ -33,7 +33,7 @@ impl MulticlassClassifier {
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: EnumDataFrameColumnView,
-		options: TrainOptions,
+		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> MulticlassClassifier {
 		let n_classes = labels.options().len();
@@ -43,7 +43,7 @@ impl MulticlassClassifier {
 			train_early_stopping_split(
 				features,
 				labels.as_slice().into(),
-				options
+				train_options
 					.early_stopping_options
 					.as_ref()
 					.map(|o| o.early_stopping_fraction)
@@ -59,7 +59,7 @@ impl MulticlassClassifier {
 			means,
 			losses: None,
 			classes,
-			train_options: options,
+			train_options,
 		};
 		let mut early_stopping_monitor =
 			if let Some(early_stopping_options) = &model.train_options.early_stopping_options {

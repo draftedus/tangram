@@ -30,7 +30,7 @@ impl Regressor {
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: NumberDataFrameColumnView,
-		options: TrainOptions,
+		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(super::TrainProgress),
 	) -> Regressor {
 		let n_features = features.ncols();
@@ -38,7 +38,7 @@ impl Regressor {
 			train_early_stopping_split(
 				features,
 				labels.as_slice().into(),
-				options
+				train_options
 					.early_stopping_options
 					.as_ref()
 					.map(|o| o.early_stopping_fraction)
@@ -53,7 +53,7 @@ impl Regressor {
 			weights: <Array1<f32>>::zeros(n_features),
 			means,
 			losses: None,
-			train_options: options,
+			train_options,
 		};
 		let mut early_stopping_monitor =
 			if let Some(early_stopping_options) = &model.train_options.early_stopping_options {

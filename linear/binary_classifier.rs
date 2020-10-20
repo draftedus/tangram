@@ -31,7 +31,7 @@ impl BinaryClassifier {
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: EnumDataFrameColumnView,
-		options: TrainOptions,
+		train_options: TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> BinaryClassifier {
 		let n_features = features.ncols();
@@ -39,7 +39,7 @@ impl BinaryClassifier {
 			train_early_stopping_split(
 				features,
 				labels.as_slice().into(),
-				options
+				train_options
 					.early_stopping_options
 					.as_ref()
 					.map(|o| o.early_stopping_fraction)
@@ -54,7 +54,7 @@ impl BinaryClassifier {
 			weights: <Array1<f32>>::zeros(n_features),
 			means,
 			losses: None,
-			train_options: options,
+			train_options,
 		};
 		let mut early_stopping_monitor =
 			if let Some(early_stopping_options) = &model.train_options.early_stopping_options {
