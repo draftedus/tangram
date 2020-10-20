@@ -187,7 +187,33 @@ pub fn train(
 			}
 			Metrics::Regression(metrics.finalize())
 		}
-		Task::BinaryClassification => todo!(),
+		Task::BinaryClassification => {
+			let labels = dataframe_train.columns().get(target_column_index).unwrap();
+			let labels = labels.as_enum().unwrap();
+			let train_target_column_stats = match &train_target_column_stats {
+				stats::ColumnStatsOutput::Enum(train_target_column_stats) => {
+					train_target_column_stats
+				}
+				_ => unreachable!(),
+			};
+			let total_count = train_target_column_stats.count.to_f32().unwrap();
+			let baseline_probabilities = train_target_column_stats
+				.histogram
+				.iter()
+				.map(|(_, count)| count.to_f32().unwrap() / total_count)
+				.collect::<Vec<_>>();
+			let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(
+				train_target_column_stats.histogram.len(),
+			);
+			for label in labels.iter() {
+				metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
+					probabilities: ArrayView::from(baseline_probabilities.as_slice())
+						.insert_axis(Axis(0)),
+					labels: ArrayView::from(&[*label]),
+				});
+			}
+			Metrics::BinaryClassification(metrics.finalize())
+		}
 		Task::MulticlassClassification => {
 			let labels = dataframe_train.columns().get(target_column_index).unwrap();
 			let labels = labels.as_enum().unwrap();
