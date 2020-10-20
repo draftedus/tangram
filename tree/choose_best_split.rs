@@ -1240,8 +1240,8 @@ fn fill_gradients_and_hessians_ordered_buffers(
 		if smaller_child_examples_index.len() < 1024 {
 			izip!(
 				smaller_child_examples_index,
-				&mut *gradients_ordered_buffer,
-				&mut *hessians_ordered_buffer,
+				gradients_ordered_buffer.iter_mut(),
+				hessians_ordered_buffer.iter_mut(),
 			)
 			.for_each(
 				|(example_index, ordered_gradient, ordered_hessian)| unsafe {
@@ -1272,12 +1272,14 @@ fn fill_gradients_and_hessians_ordered_buffers(
 		}
 	} else {
 		if smaller_child_examples_index.len() < 1024 {
-			izip!(smaller_child_examples_index, &mut *gradients_ordered_buffer,).for_each(
-				|(example_index, ordered_gradient)| unsafe {
-					let example_index = example_index.to_usize().unwrap();
-					*ordered_gradient = *gradients.get_unchecked(example_index);
-				},
-			);
+			izip!(
+				smaller_child_examples_index,
+				gradients_ordered_buffer.iter_mut()
+			)
+			.for_each(|(example_index, ordered_gradient)| unsafe {
+				let example_index = example_index.to_usize().unwrap();
+				*ordered_gradient = *gradients.get_unchecked(example_index);
+			});
 		} else {
 			let chunk_size = (smaller_child_examples_index.len() + rayon::current_num_threads()
 				- 1) / rayon::current_num_threads();

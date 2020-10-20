@@ -318,7 +318,7 @@ pub fn predict(
 				let output = izip!(
 					features.axis_iter(Axis(0)),
 					predictions.iter(),
-					feature_contributions
+					feature_contributions,
 				)
 				.map(|(features, prediction, feature_contributions)| {
 					let baseline_value = feature_contributions.baseline_value;
@@ -328,8 +328,7 @@ pub fn predict(
 						features.iter().cloned(),
 						feature_contributions
 							.feature_contribution_values
-							.iter()
-							.cloned(),
+							.into_iter(),
 					);
 					let feature_contributions = FeatureContributions {
 						baseline_value,
@@ -382,8 +381,7 @@ pub fn predict(
 						}),
 						feature_contributions
 							.feature_contribution_values
-							.iter()
-							.cloned(),
+							.into_iter(),
 					);
 					let feature_contributions = FeatureContributions {
 						baseline_value,
@@ -425,7 +423,7 @@ pub fn predict(
 					Some(options) => options.threshold,
 					None => 0.5,
 				};
-				let output = izip!(probabilities.iter(), feature_contributions.iter())
+				let output = izip!(probabilities.iter(), feature_contributions)
 					.map(|(probability, feature_contributions)| {
 						let (probability, class_name) = if *probability >= threshold {
 							(*probability, model.positive_class.clone())
@@ -439,8 +437,7 @@ pub fn predict(
 							features.iter().cloned(),
 							feature_contributions
 								.feature_contribution_values
-								.iter()
-								.cloned(),
+								.into_iter(),
 						);
 						let feature_contributions = FeatureContributions {
 							baseline_value,
@@ -482,7 +479,7 @@ pub fn predict(
 					Some(options) => options.threshold,
 					None => 0.5,
 				};
-				let output = izip!(probabilities.iter(), feature_contributions.iter())
+				let output = izip!(probabilities.iter(), feature_contributions)
 					.map(|(probability, feature_contributions)| {
 						let (probability, class_name) = if *probability >= threshold {
 							(*probability, model.positive_class.clone())
@@ -502,8 +499,7 @@ pub fn predict(
 							}),
 							feature_contributions
 								.feature_contribution_values
-								.iter()
-								.cloned(),
+								.into_iter(),
 						);
 						let feature_contributions = FeatureContributions {
 							baseline_value,
@@ -543,38 +539,35 @@ pub fn predict(
 				let feature_contributions = inner_model
 					.model
 					.compute_feature_contributions(features.view());
-				let output = izip!(probabilities.axis_iter(Axis(0)), &feature_contributions)
+				let output = izip!(probabilities.axis_iter(Axis(0)), feature_contributions)
 					.map(|(probabilities, feature_contributions)| {
 						let (probability, class_name) =
 							izip!(probabilities.iter(), inner_model.model.classes.iter())
 								.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
 								.unwrap();
-						let probabilities = izip!(probabilities, &inner_model.model.classes)
+						let probabilities = izip!(probabilities, inner_model.model.classes.iter())
 							.map(|(p, c)| (c.clone(), *p))
 							.collect();
-						let feature_contributions = izip!(
-							inner_model.model.classes.iter(),
-							feature_contributions.iter(),
-						)
-						.map(|(class, feature_contributions)| {
-							let baseline_value = feature_contributions.baseline_value;
-							let output_value = feature_contributions.output_value;
-							let feature_contributions = compute_feature_contributions(
-								inner_model.feature_groups.iter(),
-								features.iter().cloned(),
-								feature_contributions
-									.feature_contribution_values
-									.iter()
-									.cloned(),
-							);
-							let feature_contributions = FeatureContributions {
-								baseline_value,
-								output_value,
-								feature_contributions,
-							};
-							(class.to_owned(), feature_contributions)
-						})
-						.collect();
+						let feature_contributions =
+							izip!(inner_model.model.classes.iter(), feature_contributions)
+								.map(|(class, feature_contributions)| {
+									let baseline_value = feature_contributions.baseline_value;
+									let output_value = feature_contributions.output_value;
+									let feature_contributions = compute_feature_contributions(
+										inner_model.feature_groups.iter(),
+										features.iter().cloned(),
+										feature_contributions
+											.feature_contribution_values
+											.into_iter(),
+									);
+									let feature_contributions = FeatureContributions {
+										baseline_value,
+										output_value,
+										feature_contributions,
+									};
+									(class.to_owned(), feature_contributions)
+								})
+								.collect();
 						MulticlassClassificationPredictOutput {
 							class_name: class_name.to_owned(),
 							probability: *probability,
@@ -608,7 +601,7 @@ pub fn predict(
 				let feature_contributions = inner_model
 					.model
 					.compute_feature_contributions(features.view());
-				let output = izip!(probabilities.axis_iter(Axis(0)), &feature_contributions)
+				let output = izip!(probabilities.axis_iter(Axis(0)), feature_contributions)
 					.map(|(probabilities, feature_contributions)| {
 						let (probability, class_name) =
 							izip!(probabilities.iter(), model.classes.iter())
@@ -618,7 +611,7 @@ pub fn predict(
 							.map(|(probability, class)| (class.clone(), *probability))
 							.collect();
 						let feature_contributions =
-							izip!(model.classes.iter(), feature_contributions.iter())
+							izip!(model.classes.iter(), feature_contributions)
 								.map(|(class, feature_contributions)| {
 									let baseline_value = feature_contributions.baseline_value;
 									let output_value = feature_contributions.output_value;
@@ -637,8 +630,7 @@ pub fn predict(
 										}),
 										feature_contributions
 											.feature_contribution_values
-											.iter()
-											.cloned(),
+											.into_iter(),
 									);
 									let feature_contributions = FeatureContributions {
 										baseline_value,

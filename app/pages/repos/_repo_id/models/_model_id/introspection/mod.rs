@@ -148,7 +148,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			match &model.model {
 				tangram_core::model::BinaryClassificationModel::Linear(inner_model) => {
 					let feature_names = compute_feature_names(&inner_model.feature_groups);
-					let mut weights = izip!(feature_names, &inner_model.weights)
+					let mut weights = izip!(feature_names, inner_model.weights.iter())
 						.map(|(feature_name, weight)| (feature_name, *weight))
 						.collect::<Vec<(String, f32)>>();
 					weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
@@ -162,7 +162,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				tangram_core::model::BinaryClassificationModel::Tree(inner_model) => {
 					let feature_names = compute_feature_names(&inner_model.feature_groups);
 					let mut feature_importances: Vec<(String, f32)> =
-						izip!(feature_names, &inner_model.feature_importances)
+						izip!(feature_names, inner_model.feature_importances.iter())
 							.map(|(feature_name, feature_importance)| {
 								(feature_name, *feature_importance)
 							})

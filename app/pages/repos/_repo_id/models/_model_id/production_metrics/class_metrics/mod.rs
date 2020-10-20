@@ -156,7 +156,7 @@ async fn props(
 			});
 	let training_class_metrics = &model.test_metrics.class_metrics;
 	let overall_class_metrics: Vec<OverallClassMetricsEntry> =
-		izip!(training_class_metrics, &classes)
+		izip!(training_class_metrics, classes.iter())
 			.enumerate()
 			.map(|(class_index, (training_class_metrics, class_name))| {
 				let production_class_metrics = overall_prediction_metrics

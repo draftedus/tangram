@@ -364,7 +364,7 @@ fn enum_props(
 	let production_row_count = get_production_stats_output.overall.row_count;
 	let overall_chart_data = izip!(
 		overall.histogram.iter(),
-		train_column_stats.histogram.iter()
+		train_column_stats.histogram.iter(),
 	)
 	.map(
 		|((production_enum_option, production_count), (_, training_count))| {

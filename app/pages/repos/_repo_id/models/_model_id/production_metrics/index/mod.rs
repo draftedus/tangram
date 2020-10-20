@@ -431,7 +431,7 @@ async fn props(
 				.map(|metrics| metrics.accuracy);
 			let production_class_metrics = overall_production_metrics
 				.map(|production_metrics| production_metrics.class_metrics);
-			let class_metrics_table = izip!(training_class_metrics, &model.classes)
+			let class_metrics_table = izip!(training_class_metrics, model.classes.iter())
 				.enumerate()
 				.map(|(class_index, (training_class_metrics, class_name))| {
 					let precision = production_class_metrics

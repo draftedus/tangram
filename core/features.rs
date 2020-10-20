@@ -377,7 +377,7 @@ pub fn compute_features_array_f32(
 fn compute_features_normalized_array_f32(
 	dataframe: &DataFrameView,
 	feature_group: &NormalizedFeatureGroup,
-	features: ArrayViewMut2<f32>,
+	mut features: ArrayViewMut2<f32>,
 	progress: &impl Fn(),
 ) {
 	// Get the source column.
@@ -388,7 +388,7 @@ fn compute_features_normalized_array_f32(
 		.unwrap();
 	let source_column = source_column.as_number().unwrap();
 	// Set the feature values to the normalized source column values.
-	for (feature, value) in izip!(features, source_column.iter()) {
+	for (feature, value) in izip!(features.iter_mut(), source_column.iter()) {
 		*feature = if value.is_nan() || feature_group.variance == 0.0 {
 			0.0
 		} else {
