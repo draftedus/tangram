@@ -266,7 +266,7 @@ fn predict(
 			_ => unreachable!(),
 		}
 	}
-	let predict_model: tangram_core::predict::PredictModel = model.try_into().unwrap();
+	let predict_model: tangram_core::predict::Model = model.try_into().unwrap();
 	let mut example: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
 	for (key, value) in search_params.into_iter() {
 		match column_lookup.get(&key) {

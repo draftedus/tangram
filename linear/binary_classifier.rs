@@ -14,10 +14,6 @@ use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperU
 /// This struct describes a linear binary classifier model. You can train one by calling `BinaryClassifier::train`.
 #[derive(Debug)]
 pub struct BinaryClassifier {
-	/// This is the negative class.
-	pub negative_class: String,
-	/// This is the positive class.
-	pub positive_class: String,
 	/// These are the weights the model learned.
 	pub weights: Array1<f32>,
 	/// This is the bias the model learned.
@@ -37,9 +33,6 @@ impl BinaryClassifier {
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> BinaryClassifier {
 		let n_features = features.ncols();
-		let classes = labels.options();
-		let negative_class = classes[0].to_owned();
-		let positive_class = classes[1].to_owned();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
 				features,
@@ -59,8 +52,6 @@ impl BinaryClassifier {
 			weights: <Array1<f32>>::zeros(n_features),
 			means,
 			losses: None,
-			negative_class,
-			positive_class,
 		};
 		let mut early_stopping_monitor =
 			if let Some(early_stopping_options) = &options.early_stopping_options {

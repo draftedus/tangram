@@ -365,22 +365,13 @@ pub fn train(
 			feature_importances,
 			losses,
 		}),
-		Task::BinaryClassification => {
-			let labels_train = labels_train.as_enum().unwrap();
-			let classes = labels_train.options();
-			let negative_class = classes[0].to_owned();
-			let positive_class = classes[1].to_owned();
-			Model::BinaryClassifier(BinaryClassifier {
-				bias: *biases.get(0).unwrap(),
-				trees,
-				feature_importances,
-				losses,
-				negative_class,
-				positive_class,
-			})
-		}
+		Task::BinaryClassification => Model::BinaryClassifier(BinaryClassifier {
+			bias: *biases.get(0).unwrap(),
+			trees,
+			feature_importances,
+			losses,
+		}),
 		Task::MulticlassClassification { .. } => {
-			let classes = labels_train.as_enum().unwrap().options().to_owned();
 			Model::MulticlassClassifier(MulticlassClassifier {
 				n_rounds: n_rounds_trained,
 				n_classes: n_trees_per_round,
@@ -388,7 +379,6 @@ pub fn train(
 				trees,
 				feature_importances,
 				losses,
-				classes,
 			})
 		}
 	}

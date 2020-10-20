@@ -202,9 +202,7 @@ pub fn train(
 				.iter()
 				.map(|(_, count)| count.to_f32().unwrap() / total_count)
 				.collect::<Vec<_>>();
-			let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(
-				train_target_column_stats.histogram.len(),
-			);
+			let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(101);
 			for label in labels.iter() {
 				metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
 					probabilities: ArrayView::from(baseline_probabilities.as_slice())
@@ -388,15 +386,12 @@ pub fn train(
 				}),
 				_ => unreachable!(),
 			};
-			let (negative_class, positive_class) = match &model {
-				BinaryClassificationModel::Linear(model) => (
-					model.model.negative_class.to_owned(),
-					model.model.positive_class.to_owned(),
+			let (negative_class, positive_class) = match &train_target_column_stats {
+				stats::ColumnStatsOutput::Enum(train_target_column_stats) => (
+					train_target_column_stats.histogram[0].0.to_owned(),
+					train_target_column_stats.histogram[1].0.to_owned(),
 				),
-				BinaryClassificationModel::Tree(model) => (
-					model.model.negative_class.to_owned(),
-					model.model.positive_class.to_owned(),
-				),
+				_ => unreachable!(),
 			};
 			model::Model::BinaryClassifier(model::BinaryClassifier {
 				id: model_id.to_string(),
@@ -458,9 +453,15 @@ pub fn train(
 				}),
 				_ => unreachable!(),
 			};
-			let classes = match &model {
-				MulticlassClassificationModel::Linear(model) => model.model.classes.to_owned(),
-				MulticlassClassificationModel::Tree(model) => model.model.classes.to_owned(),
+			let classes = match &train_target_column_stats {
+				stats::ColumnStatsOutput::Enum(train_target_column_stats) => {
+					train_target_column_stats
+						.histogram
+						.iter()
+						.map(|(class, _)| class.to_owned())
+						.collect()
+				}
+				_ => unreachable!(),
 			};
 			model::Model::MulticlassClassifier(model::MulticlassClassifier {
 				id: model_id.to_string(),
@@ -1898,8 +1899,6 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
 			bias: self.model.bias,
 			losses: self.model.losses,
 			train_options: self.options.into(),
-			negative_class: self.model.negative_class,
-			positive_class: self.model.positive_class,
 		}
 	}
 }
@@ -1913,8 +1912,6 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 			losses: self.model.losses,
 			feature_importances: self.model.feature_importances.unwrap(),
 			train_options: self.options.into(),
-			negative_class: self.model.negative_class,
-			positive_class: self.model.positive_class,
 		}
 	}
 }
@@ -1957,7 +1954,6 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 			trees: self.model.trees.into_iter().map(|t| t.into()).collect(),
 			feature_groups: self.feature_groups.into_iter().map(|t| t.into()).collect(),
 			losses: self.model.losses,
-			classes: self.model.classes,
 			feature_importances: self.model.feature_importances.unwrap(),
 			train_options: self.options.into(),
 		}

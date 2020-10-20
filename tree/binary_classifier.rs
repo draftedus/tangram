@@ -16,10 +16,6 @@ use tangram_util::pzip;
 /// `BinaryClassifier`s predict binary target values, for example whether a patient has heart disease or not.
 #[derive(Debug)]
 pub struct BinaryClassifier {
-	/// This is the negative class.
-	pub negative_class: String,
-	/// This is the positive class.
-	pub positive_class: String,
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
 	pub bias: f32,
 	/// The trees for this model.

@@ -10,7 +10,6 @@ use std::{
 	ffi::{CStr, CString},
 	panic::catch_unwind,
 };
-use tangram_core::{predict::PredictInput, predict::PredictModel};
 
 /// Retrieve the version of libtangram that is in use. On success, a pointer to the C string with the version will be written to `version_ptr`. You must call `tangram_string_free` when you are done with it.
 #[no_mangle]
@@ -31,13 +30,13 @@ pub extern "C" fn tangram_version(version_ptr: *mut *const u8) -> isize {
 pub extern "C" fn tangram_model_load(
 	model_data: *const u8,
 	model_data_len: usize,
-	model_ptr: *mut *const PredictModel,
+	model_ptr: *mut *const tangram_core::predict::Model,
 ) -> isize {
 	let result = catch_unwind(|| unsafe {
 		assert!(!model_ptr.is_null());
 		let bytes = std::slice::from_raw_parts(model_data, model_data_len);
 		let model = tangram_core::model::Model::from_slice(bytes).unwrap();
-		let model: PredictModel = model.try_into().unwrap();
+		let model: tangram_core::predict::Model = model.try_into().unwrap();
 		let model = Box::new(model);
 		*model_ptr = Box::into_raw(model);
 	});
@@ -49,16 +48,16 @@ pub extern "C" fn tangram_model_load(
 
 /// Retrieve the id of the model. On success, a pointer to the model id as a C string will be written to `id_ptr`. You must call `tangram_string_free` when you are done with it.
 #[no_mangle]
-pub extern "C" fn tangram_model_id(model: *const PredictModel, id_ptr: *mut *const u8) -> isize {
+pub extern "C" fn tangram_model_id(
+	model: *const tangram_core::predict::Model,
+	id_ptr: *mut *const u8,
+) -> isize {
 	let result = catch_unwind(|| unsafe {
 		let model = model.as_ref().unwrap();
 		let id = match model {
-			PredictModel::LinearRegressor(model) => &model.id,
-			PredictModel::TreeRegressor(model) => &model.id,
-			PredictModel::LinearBinaryClassifier(model) => &model.id,
-			PredictModel::TreeBinaryClassifier(model) => &model.id,
-			PredictModel::LinearMulticlassClassifier(model) => &model.id,
-			PredictModel::TreeMulticlassClassifier(model) => &model.id,
+			tangram_core::predict::Model::Regressor(model) => &model.id,
+			tangram_core::predict::Model::BinaryClassifier(model) => &model.id,
+			tangram_core::predict::Model::MulticlassClassifier(model) => &model.id,
 		};
 		let id = CString::new(id.to_owned()).unwrap();
 		*id_ptr = CString::into_raw(id) as *const u8;
@@ -72,7 +71,7 @@ pub extern "C" fn tangram_model_id(model: *const PredictModel, id_ptr: *mut *con
 /// Make a prediction! `model` should point to a model loaded with `tangram_model_load`. `input_ptr` should be a C string of a json serialized PredictInput. On success, a pointer to the output as a json serialized C string will be written to `output_ptr`. You must call `tangram_string_free` when you are done with it.
 #[no_mangle]
 pub extern "C" fn tangram_model_predict(
-	model: *const PredictModel,
+	model: *const tangram_core::predict::Model,
 	input: *const u8,
 	options: *const u8,
 	output_ptr: *mut *const u8,
@@ -80,7 +79,7 @@ pub extern "C" fn tangram_model_predict(
 	let result = catch_unwind(|| unsafe {
 		let model = model.as_ref().unwrap();
 		let input = CStr::from_ptr(input as *const i8).to_str().unwrap();
-		let input: PredictInput = serde_json::from_str(input).unwrap();
+		let input: tangram_core::predict::PredictInput = serde_json::from_str(input).unwrap();
 		let options: Option<tangram_core::predict::PredictOptions> =
 			options.as_ref().map(|options_ptr| {
 				let options = CStr::from_ptr(options_ptr as *const u8 as *const i8)
@@ -113,7 +112,7 @@ pub extern "C" fn tangram_string_free(string: *mut u8) -> isize {
 
 /// Free the model pointed to by `model`.
 #[no_mangle]
-pub extern "C" fn tangram_model_free(model: *mut PredictModel) -> isize {
+pub extern "C" fn tangram_model_free(model: *mut tangram_core::predict::Model) -> isize {
 	let result = catch_unwind(|| unsafe {
 		drop(Box::from_raw(model));
 	});

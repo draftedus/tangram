@@ -15,8 +15,6 @@ use tangram_util::pzip;
 /// `MulticlasClassifier`s predict multiclass target values, for example which of several species a flower is.
 #[derive(Debug)]
 pub struct MulticlassClassifier {
-	/// These are the names of the classes the model tries to predict.
-	pub classes: Vec<String>,
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the distribution of the unique values in target column in the training dataset.
 	pub biases: Vec<f32>,
 	/// The trees for this model. It has shape (n_rounds, n_classes) because for each round, we train n_classes trees.

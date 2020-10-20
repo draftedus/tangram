@@ -157,7 +157,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					Inner::LinearBinaryClassifier(LinearBinaryClassifier {
 						bias: inner_model.bias,
 						target_column_name,
-						positive_class_name: inner_model.positive_class.to_owned(),
+						positive_class_name: model.positive_class.to_owned(),
 						weights,
 					})
 				}
