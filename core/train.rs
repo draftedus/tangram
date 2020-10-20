@@ -333,11 +333,21 @@ pub fn train(
 				}),
 				_ => unreachable!(),
 			};
+			let (negative_class, positive_class) = match &model {
+				BinaryClassificationModel::Linear(model) => (
+					model.model.negative_class.to_owned(),
+					model.model.positive_class.to_owned(),
+				),
+				BinaryClassificationModel::Tree(model) => (
+					model.model.negative_class.to_owned(),
+					model.model.positive_class.to_owned(),
+				),
+			};
 			model::Model::BinaryClassifier(model::BinaryClassifier {
 				id: model_id.to_string(),
 				target_column_name: target_column_name.to_owned(),
-				negative_class: todo!(),
-				positive_class: todo!(),
+				negative_class,
+				positive_class,
 				test_row_count: test_row_count.to_u64().unwrap(),
 				train_row_count: train_row_count.to_u64().unwrap(),
 				stats_settings: stats_settings.into(),
@@ -393,10 +403,14 @@ pub fn train(
 				}),
 				_ => unreachable!(),
 			};
+			let classes = match &model {
+				MulticlassClassificationModel::Linear(model) => model.model.classes.to_owned(),
+				MulticlassClassificationModel::Tree(model) => model.model.classes.to_owned(),
+			};
 			model::Model::MulticlassClassifier(model::MulticlassClassifier {
 				id: model_id.to_string(),
 				target_column_name: target_column_name.to_owned(),
-				classes: todo!(),
+				classes,
 				test_row_count: test_row_count.to_u64().unwrap(),
 				train_row_count: train_row_count.to_u64().unwrap(),
 				stats_settings: stats_settings.into(),
