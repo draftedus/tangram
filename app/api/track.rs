@@ -36,8 +36,8 @@ pub(crate) async fn post(
 	let monitor_events: MonitorEventSet =
 		serde_json::from_slice(&data).map_err(|_| Error::BadRequest)?;
 	let monitor_events = match monitor_events {
-		MonitorEventSet::Single(s) => vec![s],
-		MonitorEventSet::Multiple(m) => m,
+		MonitorEventSet::Single(monitor_event) => vec![monitor_event],
+		MonitorEventSet::Multiple(monitor_event) => monitor_event,
 	};
 	let mut db = context
 		.pool
@@ -80,7 +80,7 @@ async fn handle_prediction_monitor_event(
 ) -> Result<()> {
 	let model_id = monitor_event.model_id;
 	let model = match models.get(&model_id) {
-		Some(m) => m,
+		Some(model) => model,
 		None => {
 			let model = get_model(&mut db, model_id).await?;
 			models.insert(model_id, model);
@@ -100,7 +100,7 @@ async fn handle_true_value_monitor_event(
 ) -> Result<()> {
 	let model_id = monitor_event.model_id;
 	let model = match models.get(&model_id) {
-		Some(m) => m,
+		Some(model) => model,
 		None => {
 			let model = get_model(&mut db, monitor_event.model_id).await?;
 			models.insert(model_id, model);

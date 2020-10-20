@@ -62,8 +62,7 @@ pub async fn post(request: Request<Body>, context: &Context) -> Result<Response<
 	let file_data = file_data.ok_or(Error::BadRequest)?;
 	let model = match tangram_core::model::Model::from_slice(&file_data) {
 		Ok(model) => model,
-		Err(e) => {
-			dbg!(e);
+		Err(_) => {
 			let error =
 				"The model you uploaded failed to deserialize. Are you sure it is a .tangram file?";
 			let props: Props =

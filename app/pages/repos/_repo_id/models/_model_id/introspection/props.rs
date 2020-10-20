@@ -97,26 +97,22 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 	let inner = match model {
 		tangram_core::model::Model::Regressor(model) => match model.model {
 			tangram_core::model::RegressionModel::Linear(inner_model) => {
-				let target_column_name = model.target_column_name.to_owned();
-				let feature_groups = inner_model.feature_groups;
-				let weights = inner_model.weights;
-				let feature_names = compute_feature_names(&feature_groups);
-				let mut weights: Vec<(String, f32)> = izip!(feature_names, weights)
-					.map(|(feature_name, weight)| (feature_name, weight))
-					.collect();
+				let feature_names = compute_feature_names(&model.feature_groups);
+				let mut weights: Vec<(String, f32)> =
+					izip!(feature_names, inner_model.weights.iter())
+						.map(|(feature_name, weight)| (feature_name, *weight))
+						.collect();
 				weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
 				Inner::LinearRegressor(LinearRegressorProps {
 					bias: inner_model.bias,
-					target_column_name,
+					target_column_name: model.target_column_name.to_owned(),
 					weights,
 				})
 			}
 			tangram_core::model::RegressionModel::Tree(inner_model) => {
-				let feature_groups = inner_model.feature_groups;
-				let feature_importances = inner_model.feature_importances.as_slice();
-				let feature_names = compute_feature_names(&feature_groups);
+				let feature_names = compute_feature_names(&model.feature_groups);
 				let mut feature_importances: Vec<(String, f32)> =
-					izip!(feature_names, feature_importances)
+					izip!(feature_names, inner_model.feature_importances.iter())
 						.map(|(feature_name, feature_importance)| {
 							(feature_name, *feature_importance)
 						})
@@ -127,85 +123,72 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 				})
 			}
 		},
-		tangram_core::model::Model::BinaryClassifier(model) => {
-			let target_column_name = model.target_column_name.to_owned();
-			match &model.model {
-				tangram_core::model::BinaryClassificationModel::Linear(inner_model) => {
-					let feature_names = compute_feature_names(&inner_model.feature_groups);
-					let mut weights = izip!(feature_names, inner_model.weights.iter())
-						.map(|(feature_name, weight)| (feature_name, *weight))
-						.collect::<Vec<(String, f32)>>();
-					weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-					Inner::LinearBinaryClassifier(LinearBinaryClassifierProps {
-						bias: inner_model.bias,
-						target_column_name,
-						positive_class_name: model.positive_class.to_owned(),
-						weights,
-					})
-				}
-				tangram_core::model::BinaryClassificationModel::Tree(inner_model) => {
-					let feature_names = compute_feature_names(&inner_model.feature_groups);
-					let mut feature_importances: Vec<(String, f32)> =
-						izip!(feature_names, inner_model.feature_importances.iter())
-							.map(|(feature_name, feature_importance)| {
-								(feature_name, *feature_importance)
-							})
-							.collect();
-					feature_importances
-						.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-					Inner::TreeBinaryClassifier(TreeBinaryClassifierProps {
-						feature_importances,
-					})
-				}
+		tangram_core::model::Model::BinaryClassifier(model) => match &model.model {
+			tangram_core::model::BinaryClassificationModel::Linear(inner_model) => {
+				let feature_names = compute_feature_names(&inner_model.feature_groups);
+				let mut weights = izip!(feature_names, inner_model.weights.iter())
+					.map(|(feature_name, weight)| (feature_name, *weight))
+					.collect::<Vec<(String, f32)>>();
+				weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+				Inner::LinearBinaryClassifier(LinearBinaryClassifierProps {
+					bias: inner_model.bias,
+					target_column_name: model.target_column_name.to_owned(),
+					positive_class_name: model.positive_class.to_owned(),
+					weights,
+				})
 			}
-		}
-		tangram_core::model::Model::MulticlassClassifier(model) => {
-			let target_column_name = model.target_column_name.to_owned();
-			let classes = model.classes.to_owned();
-			match model.model {
-				tangram_core::model::MulticlassClassificationModel::Linear(inner_model) => {
-					let feature_groups = inner_model.feature_groups;
-					let n_classes = inner_model.n_classes.to_usize().unwrap();
-					let n_features = inner_model.n_features.to_usize().unwrap();
-					let weights =
-						Array::from_shape_vec((n_classes, n_features), inner_model.weights)
-							.unwrap();
-					let feature_names = compute_feature_names(&feature_groups);
-					let weights: Vec<Vec<(String, f32)>> = weights
-						.axis_iter(Axis(0))
-						.map(|weights| {
-							let mut weights = izip!(feature_names.iter(), weights.iter())
-								.map(|(feature_name, weight)| (feature_name.to_owned(), *weight))
-								.collect::<Vec<(String, f32)>>();
-							weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-							weights
+			tangram_core::model::BinaryClassificationModel::Tree(inner_model) => {
+				let feature_names = compute_feature_names(&inner_model.feature_groups);
+				let mut feature_importances: Vec<(String, f32)> =
+					izip!(feature_names, inner_model.feature_importances.iter())
+						.map(|(feature_name, feature_importance)| {
+							(feature_name, *feature_importance)
 						})
 						.collect();
-					Inner::LinearMulticlassClassifier(LinearMulticlassClassifierProps {
-						biases: inner_model.biases,
-						target_column_name,
-						classes,
-						weights,
-					})
-				}
-				tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {
-					let feature_groups = inner_model.feature_groups;
-					let feature_importances = inner_model.feature_importances.as_slice();
-					let feature_names = compute_feature_names(&feature_groups);
-					let mut feature_importances: Vec<(String, f32)> =
-						izip!(feature_names, feature_importances)
-							.map(|(feature_name, feature_importance)| {
-								(feature_name, *feature_importance)
-							})
-							.collect();
-					feature_importances
-						.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-					Inner::TreeMulticlassClassifier(TreeMulticlassClassifierProps {
-						feature_importances,
-					})
-				}
+				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+				Inner::TreeBinaryClassifier(TreeBinaryClassifierProps {
+					feature_importances,
+				})
 			}
-		}
+		},
+		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
+			tangram_core::model::MulticlassClassificationModel::Linear(inner_model) => {
+				let n_classes = inner_model.n_classes.to_usize().unwrap();
+				let n_features = inner_model.n_features.to_usize().unwrap();
+				let weights =
+					Array::from_shape_vec((n_classes, n_features), inner_model.weights).unwrap();
+				let feature_names = compute_feature_names(&model.feature_groups);
+				let weights: Vec<Vec<(String, f32)>> = weights
+					.axis_iter(Axis(0))
+					.map(|weights| {
+						let mut weights = izip!(feature_names.iter(), weights.iter())
+							.map(|(feature_name, weight)| (feature_name.to_owned(), *weight))
+							.collect::<Vec<(String, f32)>>();
+						weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+						weights
+					})
+					.collect();
+				Inner::LinearMulticlassClassifier(LinearMulticlassClassifierProps {
+					biases: inner_model.biases,
+					target_column_name: model.target_column_name.to_owned(),
+					classes: model.classes.to_owned(),
+					weights,
+				})
+			}
+			tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {
+				let feature_names = compute_feature_names(&feature_groups);
+				let mut feature_importances: Vec<(String, f32)> =
+					izip!(feature_names, inner_model.feature_importances.iter())
+						.map(|(feature_name, feature_importance)| {
+							(feature_name, *feature_importance)
+						})
+						.collect();
+				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+				Inner::TreeMulticlassClassifier(TreeMulticlassClassifierProps {
+					feature_importances,
+				})
+			}
+		},
 	};
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
