@@ -55,7 +55,7 @@ impl Regressor {
 		predictions.fill(self.bias);
 		let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
 		for (i, prediction) in predictions.iter_mut().enumerate() {
-			for tree in &self.trees {
+			for tree in self.trees.iter() {
 				for (v, feature) in izip!(row.iter_mut(), features.row(i)) {
 					*v = *feature;
 				}

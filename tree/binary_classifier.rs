@@ -56,7 +56,7 @@ impl BinaryClassifier {
 	) {
 		probabilities.fill(self.bias);
 		for (example_index, logit) in probabilities.iter_mut().enumerate() {
-			for tree in &self.trees {
+			for tree in self.trees.iter() {
 				let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
 				for (v, feature) in izip!(row.iter_mut(), features.row(example_index)) {
 					*v = *feature;
