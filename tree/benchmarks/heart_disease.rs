@@ -92,12 +92,11 @@ fn main() {
 
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
-	let mut probabilities = Array::zeros((n_rows_test, 2));
+	let mut probabilities = Array::zeros(n_rows_test);
 	model.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute metrics.
 	let input = probabilities
-		.column(1)
 		.iter()
 		.cloned()
 		.zip(labels_test.iter().map(|d| d.unwrap()))

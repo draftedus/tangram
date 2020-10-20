@@ -119,10 +119,9 @@ pub fn test_linear_binary_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let n_classes = labels.options().len();
 	let n_examples_per_batch = 256;
 	struct State {
-		predictions: Array2<f32>,
+		predictions: Array1<f32>,
 		test_metrics: metrics::BinaryClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
@@ -132,14 +131,14 @@ pub fn test_linear_binary_classifier(
 	)
 	.fold(
 		{
-			let predictions = Array::zeros((n_examples_per_batch, n_classes));
+			let predictions = Array::zeros(n_examples_per_batch);
 			State {
 				predictions,
 				test_metrics: metrics::BinaryClassificationMetrics::new(101),
 			}
 		},
 		|mut state, (features, labels)| {
-			let slice = s![0..features.nrows(), ..];
+			let slice = s![0..features.nrows()];
 			let predictions = state.predictions.slice_mut(slice);
 			model.predict(features, predictions);
 			let predictions = state.predictions.slice(slice);
@@ -184,9 +183,8 @@ pub fn test_tree_binary_classifier(
 		.unwrap()
 		.as_enum()
 		.unwrap();
-	let n_classes = labels.options().len();
 	let mut test_metrics = metrics::BinaryClassificationMetrics::new(101);
-	let mut predictions = Array::zeros((features.nrows(), n_classes));
+	let mut predictions = Array::zeros(features.nrows());
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
 	test_metrics.update(metrics::BinaryClassificationMetricsInput {

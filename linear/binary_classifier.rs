@@ -134,15 +134,15 @@ impl BinaryClassifier {
 		.fold(
 			|| {
 				let predictions =
-					unsafe { <Array2<f32>>::uninitialized((options.n_examples_per_batch, 2)) };
+					unsafe { <Array1<f32>>::uninitialized(options.n_examples_per_batch) };
 				let metric = BinaryCrossEntropy::new();
 				(predictions, metric)
 			},
 			|(mut predictions, mut metric), (features, labels)| {
-				let slice = s![0..features.nrows(), ..];
+				let slice = s![0..features.nrows()];
 				let mut predictions_slice = predictions.slice_mut(slice);
 				self.predict(features, predictions_slice.view_mut());
-				for (prediction, label) in predictions_slice.column(1).iter().zip(labels.iter()) {
+				for (prediction, label) in predictions_slice.iter().zip(labels.iter()) {
 					metric.update(BinaryCrossEntropyInput {
 						probability: *prediction,
 						label: *label,
@@ -161,22 +161,17 @@ impl BinaryClassifier {
 	}
 
 	/// Write predicted probabilities into `probabilities` for the input `features`.
-	pub fn predict(&self, features: ArrayView2<f32>, mut probabilities: ArrayViewMut2<f32>) {
-		let mut probabilities_pos = probabilities.column_mut(1);
-		probabilities_pos.fill(self.bias);
+	pub fn predict(&self, features: ArrayView2<f32>, mut probabilities: ArrayViewMut1<f32>) {
+		probabilities.fill(self.bias);
 		ndarray::linalg::general_mat_vec_mul(
 			1.0,
 			&features,
 			&self.weights,
 			1.0,
-			&mut probabilities_pos,
+			&mut probabilities,
 		);
-		let (mut probabilities_neg, mut probabilities_pos) = probabilities.split_at(Axis(1), 1);
-		for probability_pos in probabilities_pos.iter_mut() {
-			*probability_pos = 1.0 / (probability_pos.neg().exp() + 1.0);
-		}
-		for (neg, pos) in izip!(probabilities_neg.view_mut(), probabilities_pos.view()) {
-			*neg = 1.0 - *pos;
+		for probability in probabilities.iter_mut() {
+			*probability = 1.0 / (probability.neg().exp() + 1.0);
 		}
 	}
 

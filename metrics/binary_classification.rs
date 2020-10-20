@@ -35,7 +35,7 @@ impl BinaryConfusionMatrix {
 
 /// The input to [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
 pub struct BinaryClassificationMetricsInput<'a> {
-	pub probabilities: ArrayView2<'a, f32>,
+	pub probabilities: ArrayView1<'a, f32>,
 	pub labels: ArrayView1<'a, Option<NonZeroUsize>>,
 }
 
@@ -96,8 +96,8 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 
 	fn update(&mut self, input: BinaryClassificationMetricsInput) {
 		for (threshold, confusion_matrix) in self.confusion_matrices_for_thresholds.iter_mut() {
-			for (probabilities, label) in input.probabilities.axis_iter(Axis(0)).zip(input.labels) {
-				let predicted = probabilities[1] >= *threshold;
+			for (probability, label) in input.probabilities.iter().zip(input.labels) {
+				let predicted = *probability >= *threshold;
 				let actual = label.unwrap().get() == 2;
 				match (predicted, actual) {
 					(false, false) => confusion_matrix.true_negatives += 1,
@@ -193,7 +193,7 @@ fn test() {
 		Some(NonZeroUsize::new(1).unwrap()),
 		Some(NonZeroUsize::new(2).unwrap()),
 	]);
-	let probabilities = arr2(&[[0.9, 0.1], [0.2, 0.2], [0.7, 0.3], [0.2, 0.8], [0.1, 0.9]]);
+	let probabilities = arr1(&[0.9, 0.2, 0.7, 0.2, 0.1]);
 	metrics.update(BinaryClassificationMetricsInput {
 		probabilities: probabilities.view(),
 		labels: labels.view(),

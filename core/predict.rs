@@ -408,7 +408,7 @@ pub fn predict(
 					.map(|f| f.n_features())
 					.sum();
 				let mut features = Array::zeros((n_examples, n_features));
-				let mut probabilities = Array::zeros((n_examples, 2));
+				let mut probabilities = Array::zeros(n_examples);
 				features::compute_features_array_f32(
 					&dataframe.view(),
 					&inner_model.feature_groups,
@@ -426,13 +426,13 @@ pub fn predict(
 					None => 0.5,
 				};
 				let output = probabilities
-					.axis_iter(Axis(0))
+					.iter()
 					.zip(feature_contributions.iter())
-					.map(|(probabilities, feature_contributions)| {
-						let (probability, class_name) = if probabilities[1] >= threshold {
-							(probabilities[1], model.positive_class.clone())
+					.map(|(probability, feature_contributions)| {
+						let (probability, class_name) = if *probability >= threshold {
+							(*probability, model.positive_class.clone())
 						} else {
-							(probabilities[0], model.negative_class.clone())
+							(1.0 - probability, model.negative_class.clone())
 						};
 						let baseline_value = feature_contributions.baseline_value;
 						let output_value = feature_contributions.output_value;
@@ -473,7 +473,7 @@ pub fn predict(
 					features.view_mut(),
 					&|| {},
 				);
-				let mut probabilities = Array::zeros((n_examples, 2));
+				let mut probabilities = Array::zeros(n_examples);
 				inner_model
 					.model
 					.predict(features.view(), probabilities.view_mut());
@@ -485,13 +485,13 @@ pub fn predict(
 					None => 0.5,
 				};
 				let output = probabilities
-					.axis_iter(Axis(0))
+					.iter()
 					.zip(feature_contributions.iter())
-					.map(|(probabilities, feature_contributions)| {
-						let (probability, class_name) = if probabilities[1] >= threshold {
-							(probabilities[1], model.positive_class.clone())
+					.map(|(probability, feature_contributions)| {
+						let (probability, class_name) = if *probability >= threshold {
+							(*probability, model.positive_class.clone())
 						} else {
-							(probabilities[0], model.negative_class.clone())
+							(1.0 - probability, model.negative_class.clone())
 						};
 						let baseline_value = feature_contributions.baseline_value;
 						let output_value = feature_contributions.output_value;

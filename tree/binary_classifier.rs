@@ -4,7 +4,6 @@ use crate::{
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
@@ -52,11 +51,10 @@ impl BinaryClassifier {
 	pub fn predict(
 		&self,
 		features: ArrayView2<DataFrameValue>,
-		mut probabilities: ArrayViewMut2<f32>,
+		mut probabilities: ArrayViewMut1<f32>,
 	) {
-		let mut predictions = probabilities.column_mut(1);
-		predictions.fill(self.bias);
-		for (example_index, logit) in predictions.iter_mut().enumerate() {
+		probabilities.fill(self.bias);
+		for (example_index, logit) in probabilities.iter_mut().enumerate() {
 			for tree in &self.trees {
 				let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
 				for (v, feature) in row.iter_mut().zip(features.row(example_index)) {
@@ -65,12 +63,8 @@ impl BinaryClassifier {
 				*logit += tree.predict(&row);
 			}
 		}
-		for prediction in predictions {
-			*prediction = 1.0 / (prediction.neg().exp() + 1.0);
-		}
-		let (mut probabilities_neg, probabilities_pos) = probabilities.split_at(Axis(1), 1);
-		for (neg, pos) in izip!(probabilities_neg.view_mut(), probabilities_pos.view()) {
-			*neg = 1.0 - *pos
+		for probability in probabilities {
+			*probability = 1.0 / (probability.neg().exp() + 1.0);
 		}
 	}
 

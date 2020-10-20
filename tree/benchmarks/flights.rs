@@ -136,7 +136,7 @@ fn main() {
 	let features_test = features_test.to_rows();
 	let chunk_size =
 		(features_test.nrows() + rayon::current_num_threads() - 1) / rayon::current_num_threads();
-	let mut probabilities = Array::zeros((features_test.nrows(), 2));
+	let mut probabilities = Array::zeros(features_test.nrows());
 	pzip!(
 		features_test.axis_chunks_iter(Axis(0), chunk_size),
 		probabilities.axis_chunks_iter_mut(Axis(0), chunk_size),
@@ -148,7 +148,6 @@ fn main() {
 	// Compute metrics.
 	let labels = labels_test;
 	let input = probabilities
-		.column(1)
 		.iter()
 		.cloned()
 		.zip(labels.iter().map(|d| d.unwrap()))

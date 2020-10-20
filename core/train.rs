@@ -205,8 +205,7 @@ pub fn train(
 			let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(101);
 			for label in labels.iter() {
 				metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-					probabilities: ArrayView::from(baseline_probabilities.as_slice())
-						.insert_axis(Axis(0)),
+					probabilities: ArrayView::from(baseline_probabilities.as_slice()),
 					labels: ArrayView::from(&[*label]),
 				});
 			}
