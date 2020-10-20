@@ -171,21 +171,50 @@ pub fn train(
 		Task::Regression => {
 			let labels = dataframe_train.columns().get(target_column_index).unwrap();
 			let labels = labels.as_number().unwrap();
-			let baseline_prediction = ArrayView::from(labels.as_slice()).mean().unwrap();
-			let metrics = labels.iter().fold(
-				tangram_metrics::RegressionMetrics::default(),
-				|mut metrics, label| {
-					metrics.update(tangram_metrics::RegressionMetricsInput {
-						predictions: &[baseline_prediction],
-						labels: &[*label],
-					});
-					metrics
-				},
-			);
+			let train_target_column_stats = match &train_target_column_stats {
+				stats::ColumnStatsOutput::Number(train_target_column_stats) => {
+					train_target_column_stats
+				}
+				_ => unreachable!(),
+			};
+			let baseline_prediction = train_target_column_stats.mean;
+			let mut metrics = tangram_metrics::RegressionMetrics::new();
+			for label in labels.iter() {
+				metrics.update(tangram_metrics::RegressionMetricsInput {
+					predictions: &[baseline_prediction],
+					labels: &[*label],
+				});
+			}
 			Metrics::Regression(metrics.finalize())
 		}
 		Task::BinaryClassification => todo!(),
-		Task::MulticlassClassification => todo!(),
+		Task::MulticlassClassification => {
+			let labels = dataframe_train.columns().get(target_column_index).unwrap();
+			let labels = labels.as_enum().unwrap();
+			let train_target_column_stats = match &train_target_column_stats {
+				stats::ColumnStatsOutput::Enum(train_target_column_stats) => {
+					train_target_column_stats
+				}
+				_ => unreachable!(),
+			};
+			let total_count = train_target_column_stats.count.to_f32().unwrap();
+			let baseline_probabilities = train_target_column_stats
+				.histogram
+				.iter()
+				.map(|(_, count)| count.to_f32().unwrap() / total_count)
+				.collect::<Vec<_>>();
+			let mut metrics = tangram_metrics::MulticlassClassificationMetrics::new(
+				train_target_column_stats.histogram.len(),
+			);
+			for label in labels.iter() {
+				metrics.update(tangram_metrics::MulticlassClassificationMetricsInput {
+					probabilities: ArrayView::from(baseline_probabilities.as_slice())
+						.insert_axis(Axis(0)),
+					labels: ArrayView::from(&[*label]),
+				});
+			}
+			Metrics::MulticlassClassification(metrics.finalize())
+		}
 	};
 
 	// Split the train dataset into train and model comparison datasets.
