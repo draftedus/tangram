@@ -75,6 +75,7 @@ pub struct Regressor {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: RegressionMetrics,
 	pub baseline_metrics: RegressionMetrics,
+	pub feature_groups: Vec<FeatureGroup>,
 	pub model: RegressionModel,
 	pub comparison_metric: RegressionComparisonMetric,
 }
@@ -97,7 +98,6 @@ pub enum RegressionModel {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearRegressor {
-	pub feature_groups: Vec<FeatureGroup>,
 	pub bias: f32,
 	pub weights: Vec<f32>,
 	pub losses: Option<Vec<f32>>,
@@ -107,7 +107,6 @@ pub struct LinearRegressor {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeRegressor {
-	pub feature_groups: Vec<FeatureGroup>,
 	pub bias: f32,
 	pub trees: Vec<Tree>,
 	pub losses: Vec<f32>,
@@ -186,6 +185,7 @@ pub struct BinaryClassifier {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: BinaryClassificationMetrics,
 	pub baseline_metrics: BinaryClassificationMetrics,
+	pub feature_groups: Vec<FeatureGroup>,
 	pub model: BinaryClassificationModel,
 	pub comparison_metric: BinaryClassificationComparisonMetric,
 }
@@ -221,7 +221,6 @@ pub enum BinaryClassificationModel {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearBinaryClassifier {
-	pub feature_groups: Vec<FeatureGroup>,
 	pub weights: Vec<f32>,
 	pub bias: f32,
 	pub losses: Option<Vec<f32>>,
@@ -231,7 +230,6 @@ pub struct LinearBinaryClassifier {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeBinaryClassifier {
-	pub feature_groups: Vec<FeatureGroup>,
 	pub bias: f32,
 	pub trees: Vec<Tree>,
 	pub losses: Option<Vec<f32>>,
@@ -261,6 +259,7 @@ pub struct MulticlassClassifier {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: MulticlassClassificationMetrics,
 	pub baseline_metrics: MulticlassClassificationMetrics,
+	pub feature_groups: Vec<FeatureGroup>,
 	pub model: MulticlassClassificationModel,
 	pub comparison_metric: MulticlassClassificationComparisonMetric,
 }
@@ -297,7 +296,6 @@ pub enum MulticlassClassificationModel {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearMulticlassClassifier {
-	pub feature_groups: Vec<FeatureGroup>,
 	pub n_features: usize,
 	pub n_classes: usize,
 	pub biases: Vec<f32>,
@@ -310,7 +308,6 @@ pub struct LinearMulticlassClassifier {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeMulticlassClassifier {
-	pub feature_groups: Vec<FeatureGroup>,
 	pub n_classes: usize,
 	pub n_rounds: usize,
 	pub biases: Vec<f32>,

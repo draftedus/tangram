@@ -284,10 +284,10 @@ fn predict_regressor(
 	dataframe: DataFrame,
 	_options: Option<PredictOptions>,
 ) -> Vec<RegressionPredictOutput> {
+	let n_examples = dataframe.nrows();
+	let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 	match &model.model {
 		RegressionModel::Linear(inner_model) => {
-			let n_examples = dataframe.nrows();
-			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 			let mut features = Array::zeros((n_examples, n_features));
 			let mut predictions = Array::zeros(n_examples);
 			features::compute_features_array_f32(
@@ -326,12 +326,6 @@ fn predict_regressor(
 			.collect()
 		}
 		RegressionModel::Tree(inner_model) => {
-			let n_examples = dataframe.nrows();
-			let n_features = model
-				.feature_groups
-				.iter()
-				.map(|g| g.n_features())
-				.sum::<usize>();
 			let mut features =
 				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
 			features::compute_features_array_value(
@@ -384,10 +378,10 @@ fn predict_binary_classifier(
 	dataframe: DataFrame,
 	options: Option<PredictOptions>,
 ) -> Vec<BinaryClassificationPredictOutput> {
+	let n_examples = dataframe.nrows();
+	let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 	match &model.model {
 		BinaryClassificationModel::Linear(inner_model) => {
-			let n_examples = dataframe.nrows();
-			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 			let mut features = Array::zeros((n_examples, n_features));
 			let mut probabilities = Array::zeros(n_examples);
 			features::compute_features_array_f32(
@@ -432,12 +426,6 @@ fn predict_binary_classifier(
 				.collect()
 		}
 		BinaryClassificationModel::Tree(inner_model) => {
-			let n_examples = dataframe.nrows();
-			let n_features = model
-				.feature_groups
-				.iter()
-				.map(|g| g.n_features())
-				.sum::<usize>();
 			let mut features =
 				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
 			features::compute_features_array_value(
@@ -496,11 +484,11 @@ fn predict_multiclass_classifier(
 	dataframe: DataFrame,
 	_options: Option<PredictOptions>,
 ) -> Vec<MulticlassClassificationPredictOutput> {
+	let n_examples = dataframe.nrows();
+	let n_classes = model.classes.len();
+	let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 	match &model.model {
 		MulticlassClassificationModel::Linear(inner_model) => {
-			let n_examples = dataframe.nrows();
-			let n_classes = model.classes.len();
-			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 			let mut features = Array::zeros((n_examples, n_features));
 			let mut probabilities = Array::zeros((n_examples, n_classes));
 			features::compute_features_array_f32(
@@ -549,13 +537,6 @@ fn predict_multiclass_classifier(
 				.collect()
 		}
 		MulticlassClassificationModel::Tree(inner_model) => {
-			let n_examples = dataframe.nrows();
-			let n_classes = model.classes.len();
-			let n_features = model
-				.feature_groups
-				.iter()
-				.map(|g| g.n_features())
-				.sum::<usize>();
 			let mut features =
 				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
 			features::compute_features_array_value(
@@ -697,8 +678,8 @@ impl TryFrom<model::Regressor> for Regressor {
 			.map(TryFrom::try_from)
 			.collect::<Result<Vec<_>>>()?;
 		match value.model {
-			model::RegressionModel::Linear(model) => {
-				let feature_groups = model
+			model::RegressionModel::Linear(inner_model) => {
+				let feature_groups = value
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -708,15 +689,15 @@ impl TryFrom<model::Regressor> for Regressor {
 					columns,
 					feature_groups,
 					model: RegressionModel::Linear(tangram_linear::Regressor {
-						bias: model.bias,
-						weights: model.weights.into(),
-						means: model.means,
-						losses: model.losses,
+						bias: inner_model.bias,
+						weights: inner_model.weights.into(),
+						means: inner_model.means,
+						losses: inner_model.losses,
 					}),
 				})
 			}
-			model::RegressionModel::Tree(model) => {
-				let feature_groups = model
+			model::RegressionModel::Tree(inner_model) => {
+				let feature_groups = value
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -726,14 +707,14 @@ impl TryFrom<model::Regressor> for Regressor {
 					columns,
 					feature_groups,
 					model: RegressionModel::Tree(tangram_tree::Regressor {
-						bias: model.bias,
-						trees: model
+						bias: inner_model.bias,
+						trees: inner_model
 							.trees
 							.into_iter()
 							.map(TryInto::try_into)
 							.collect::<Result<Vec<_>>>()?,
-						feature_importances: Some(model.feature_importances),
-						losses: Some(model.losses),
+						feature_importances: Some(inner_model.feature_importances),
+						losses: Some(inner_model.losses),
 					}),
 				})
 			}
@@ -753,8 +734,8 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 		let negative_class = value.negative_class;
 		let positive_class = value.positive_class;
 		match value.model {
-			model::BinaryClassificationModel::Linear(model) => {
-				let feature_groups = model
+			model::BinaryClassificationModel::Linear(inner_model) => {
+				let feature_groups = value
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -766,15 +747,15 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 					positive_class,
 					feature_groups,
 					model: BinaryClassificationModel::Linear(tangram_linear::BinaryClassifier {
-						weights: model.weights.into(),
-						bias: model.bias,
-						means: model.means,
-						losses: model.losses,
+						weights: inner_model.weights.into(),
+						bias: inner_model.bias,
+						means: inner_model.means,
+						losses: inner_model.losses,
 					}),
 				})
 			}
-			model::BinaryClassificationModel::Tree(model) => {
-				let feature_groups = model
+			model::BinaryClassificationModel::Tree(inner_model) => {
+				let feature_groups = value
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -786,14 +767,14 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 					positive_class,
 					feature_groups,
 					model: BinaryClassificationModel::Tree(tangram_tree::BinaryClassifier {
-						bias: model.bias,
-						trees: model
+						bias: inner_model.bias,
+						trees: inner_model
 							.trees
 							.into_iter()
 							.map(TryInto::try_into)
 							.collect::<Result<Vec<_>>>()?,
-						feature_importances: Some(model.feature_importances),
-						losses: model.losses,
+						feature_importances: Some(inner_model.feature_importances),
+						losses: inner_model.losses,
 					}),
 				})
 			}
@@ -812,11 +793,11 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 			.collect::<Result<Vec<_>>>()?;
 		let classes = model.classes.clone();
 		match model.model {
-			model::MulticlassClassificationModel::Linear(model) => {
-				let n_classes = model.n_classes.to_usize().unwrap();
-				let n_features = model.n_features.to_usize().unwrap();
+			model::MulticlassClassificationModel::Linear(inner_model) => {
+				let n_classes = inner_model.n_classes.to_usize().unwrap();
+				let n_features = inner_model.n_features.to_usize().unwrap();
 				let weights =
-					Array::from_shape_vec((n_features, n_classes), model.weights).unwrap();
+					Array::from_shape_vec((n_features, n_classes), inner_model.weights).unwrap();
 				let feature_groups = model
 					.feature_groups
 					.into_iter()
@@ -830,15 +811,15 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 					model: MulticlassClassificationModel::Linear(
 						tangram_linear::MulticlassClassifier {
 							weights,
-							biases: model.biases.into(),
-							means: model.means,
-							losses: model.losses,
-							classes: model.classes,
+							biases: inner_model.biases.into(),
+							means: inner_model.means,
+							losses: inner_model.losses,
+							classes: inner_model.classes,
 						},
 					),
 				})
 			}
-			model::MulticlassClassificationModel::Tree(model) => {
+			model::MulticlassClassificationModel::Tree(inner_model) => {
 				let feature_groups = model
 					.feature_groups
 					.into_iter()
@@ -851,16 +832,16 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 					feature_groups,
 					model: MulticlassClassificationModel::Tree(
 						tangram_tree::MulticlassClassifier {
-							biases: model.biases,
-							trees: model
+							biases: inner_model.biases,
+							trees: inner_model
 								.trees
 								.into_iter()
 								.map(TryInto::try_into)
 								.collect::<Result<Vec<_>>>()?,
-							feature_importances: Some(model.feature_importances),
-							losses: model.losses,
-							n_classes: model.n_classes.to_usize().unwrap(),
-							n_rounds: model.n_rounds.to_usize().unwrap(),
+							feature_importances: Some(inner_model.feature_importances),
+							losses: inner_model.losses,
+							n_classes: inner_model.n_classes.to_usize().unwrap(),
+							n_rounds: inner_model.n_rounds.to_usize().unwrap(),
 						},
 					),
 				})
