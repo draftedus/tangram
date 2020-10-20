@@ -136,8 +136,8 @@ impl StreamingMetric<'_> for ProductionPredictionMetrics {
 				}
 			}
 			ProductionPredictionMetrics::BinaryClassification(s) => {
-				if let ProductionPredictionMetrics::BinaryClassification(o) = other {
-					s.merge(o)
+				if let ProductionPredictionMetrics::BinaryClassification(other) = other {
+					s.merge(other)
 				}
 			}
 			ProductionPredictionMetrics::MulticlassClassification(s) => {

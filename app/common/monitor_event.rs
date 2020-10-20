@@ -60,8 +60,8 @@ pub enum NumberOrString {
 impl NumberOrString {
 	pub fn as_number(&self) -> Result<f32, NotFiniteError> {
 		match self {
-			NumberOrString::Number(numbers) => Ok(*numbers),
-			NumberOrString::String(string) => match lexical::parse::<f32, _>(string) {
+			NumberOrString::Number(n) => Ok(*n),
+			NumberOrString::String(s) => match lexical::parse::<f32, _>(s) {
 				Ok(value) => Ok(value),
 				Err(_) => Err(NotFiniteError),
 			},
@@ -69,8 +69,8 @@ impl NumberOrString {
 	}
 	pub fn as_string(&self) -> Cow<str> {
 		match self {
-			NumberOrString::Number(number) => number.to_string().into(),
-			NumberOrString::String(string) => string.into(),
+			NumberOrString::Number(n) => n.to_string().into(),
+			NumberOrString::String(s) => s.into(),
 		}
 	}
 }

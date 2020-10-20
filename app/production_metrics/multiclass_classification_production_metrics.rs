@@ -52,11 +52,11 @@ impl StreamingMetric<'_> for MulticlassClassificationProductionPredictionMetrics
 	fn update(&mut self, value: Self::Input) {
 		let label = match value.1 {
 			NumberOrString::Number(_) => return,
-			NumberOrString::String(label) => label,
+			NumberOrString::String(s) => s,
 		};
 		let prediction = match value.0 {
 			NumberOrString::Number(_) => return,
-			NumberOrString::String(label) => label,
+			NumberOrString::String(s) => s,
 		};
 		let actual_label_id = match self.classes.iter().position(|c| *c == label) {
 			Some(position) => position,

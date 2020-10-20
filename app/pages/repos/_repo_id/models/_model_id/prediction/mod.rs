@@ -282,7 +282,7 @@ fn predict(
 						continue;
 					}
 					let value = match lexical::parse::<f64, _>(value) {
-						Ok(value) => value,
+						Ok(n) => n,
 						Err(_) => {
 							panic!();
 						}
