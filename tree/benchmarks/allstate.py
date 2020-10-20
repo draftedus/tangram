@@ -72,6 +72,9 @@ features_train = data_train.loc[:, data_train.columns != target_column_name]
 labels_train = data_train[target_column_name]
 features_test = data_test.loc[:, data_test.columns != target_column_name]
 labels_test = data_test[target_column_name]
+if args.library == 'xgboost' or args.library == 'sklearn':
+	features_train = pd.get_dummies(features_train)
+	features_test = pd.get_dummies(features_test)
 
 # Train the model.
 if args.library == 'h2o':
