@@ -16,7 +16,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
+            build/cargo
       - name: build
         run: |
           cargo build --release
@@ -24,17 +24,17 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: tangram-cli-linux-x64
-          path: target/release/tangram
+          path: build/cargo/release/tangram
       - name: upload cdylib
         uses: actions/upload-artifact@v1
         with:
           name: tangram-cdylib-linux-x64
-          path: target/release/libtangram.so
+          path: build/cargo/release/libtangram.so
       - name: upload staticlib
         uses: actions/upload-artifact@v1
         with:
           name: tangram-staticlib-linux-x64
-          path: target/release/libtangram.a
+          path: build/cargo/release/libtangram.a
   macos:
     runs-on: macos-latest
     steps:
@@ -47,7 +47,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
+            build/cargo
       - name: build
         run: |
           cargo build --release
@@ -55,17 +55,17 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: tangram-cli-macos-x64
-          path: target/release/tangram
+          path: build/cargo/release/tangram
       - name: upload cdylib
         uses: actions/upload-artifact@v1
         with:
           name: tangram-cdylib-macos-x64
-          path: target/release/libtangram.dylib
+          path: build/cargo/release/libtangram.dylib
       - name: upload staticlib
         uses: actions/upload-artifact@v1
         with:
           name: tangram-staticlib-macos-x64
-          path: target/release/libtangram.a
+          path: build/cargo/release/libtangram.a
   windows:
     runs-on: windows-latest
     steps:
@@ -78,7 +78,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
+            build/cargo
       - name: build
         run: |
           cargo build --release
@@ -86,17 +86,17 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: tangram-cli-windows-x64
-          path: target/release/tangram.exe
+          path: build/cargo/release/tangram.exe
       - name: upload cdylib
         uses: actions/upload-artifact@v1
         with:
           name: tangram-cdylib-windows-x64
-          path: target/release/tangram.dll
+          path: build/cargo/release/tangram.dll
       - name: upload staticlib
         uses: actions/upload-artifact@v1
         with:
           name: tangram-staticlib-windows-x64
-          path: target/release/tangram.lib
+          path: build/cargo/release/tangram.lib
   wasm:
     runs-on: ubuntu-latest
     steps:
@@ -109,7 +109,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
+            build/cargo
       - name: build
         run: |
           rustup target add wasm32-unknown-unknown
@@ -118,4 +118,4 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: tangram-wasm
-          path: target/wasm32-unknown-unknown/release/tangram.wasm
+          path: build/cargo/wasm32-unknown-unknown/release/tangram.wasm
