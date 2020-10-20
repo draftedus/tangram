@@ -28,11 +28,7 @@ export function FileField(props: FileFieldProps) {
 	)
 }
 
-/**
- * When using a custom 'Choose File' prompt,
- * it is necessary to use JS to update it to
- * show the selected file name.
- */
+/** When using a custom 'Choose File' prompt, it is necessary to use JS to update it to show the selected file name. */
 export function bootFileFields() {
 	let fileInputElements = document.querySelectorAll('input[type=file]')
 	fileInputElements.forEach(fileInputElement => {

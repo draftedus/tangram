@@ -37,9 +37,9 @@ Before submitting a pull request, please run `./scripts/fmt` and `./scripts/chec
 
 ### Tips
 
-- To get faster incremental compile times, install [lld](https://www.archlinux.org/packages/extra/x86_64/lld/) and add `build.rustflags = ["-C", "link-arg=-fuse-ld=lld"]` to `~/.cargo/config`.
+- To get faster incremental compile times, configure cargo to use [lld](https://www.archlinux.org/packages/extra/x86_64/lld/). Install it with your package manager then add `build.rustflags = ["-C", "link-arg=-fuse-ld=lld"]` to `~/.cargo/config`.
 
-- To save your SSD from a premature death, set up a RAM disk for Cargo's `target` folder on linux by adding `none /path/to/tangram/target tmpfs rw,relatime 0 0` to `/etc/fstab` and rebooting.
+- To save your SSD from a premature death, set up a RAM disk for the `build` directory, where output from cargo, tsc, eslint, and pinwheel is written. On linux you can do this by adding `none /path/to/tangram/build tmpfs rw,relatime 0 0` to `/etc/fstab` and rebooting.
 
 - For good IDE support, use [Visual Studio Code](https://code.visualstudio.com/) with the [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer), [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint), and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions.
 
