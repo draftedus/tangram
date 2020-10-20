@@ -641,9 +641,9 @@ fn compute_features_bag_of_words_array_value(
 		.unwrap();
 	let source_column = source_column.as_text().unwrap();
 	// Fill the features with zeros.
-	features
-		.iter_mut()
-		.for_each(|feature| *feature = DataFrameValue::Number(0.0));
+	for feature in features.iter_mut() {
+		*feature = DataFrameValue::Number(0.0);
+	}
 	// Compute the feature values for each example.
 	for (example_index, value) in source_column.iter().enumerate() {
 		match feature_group.tokenizer {

@@ -203,7 +203,7 @@ impl DataFrame {
 	}
 
 	pub fn shuffle(&mut self, seed: u64) {
-		self.columns_mut().iter_mut().for_each(|column| {
+		for column in self.columns_mut().iter_mut() {
 			let mut rng = Xoshiro256Plus::seed_from_u64(seed);
 			match column {
 				DataFrameColumn::Unknown(_) => {}
@@ -211,7 +211,7 @@ impl DataFrame {
 				DataFrameColumn::Enum(column) => column.data_mut().shuffle(&mut rng),
 				DataFrameColumn::Text(column) => column.data_mut().shuffle(&mut rng),
 			}
-		});
+		}
 	}
 
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
