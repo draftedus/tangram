@@ -259,8 +259,8 @@ pub struct LeafNode {
 impl BranchSplit {
 	pub fn feature_index(&self) -> usize {
 		match self {
-			BranchSplit::Continuous(b) => b.feature_index,
-			BranchSplit::Discrete(b) => b.feature_index,
+			BranchSplit::Continuous(s) => s.feature_index,
+			BranchSplit::Discrete(s) => s.feature_index,
 		}
 	}
 }

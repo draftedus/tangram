@@ -64,11 +64,11 @@ impl StreamingMetric<'_> for BinaryClassificationProductionPredictionMetrics {
 	fn update(&mut self, value: Self::Input) {
 		let label = match value.1 {
 			NumberOrString::Number(_) => return,
-			NumberOrString::String(s) => s,
+			NumberOrString::String(label) => label,
 		};
 		let prediction = match value.0 {
 			NumberOrString::Number(_) => return,
-			NumberOrString::String(s) => s,
+			NumberOrString::String(label) => label,
 		};
 		let confusion_matrix = &mut self.confusion_matrix;
 		let predicted = prediction == self.positive_class;

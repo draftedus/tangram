@@ -214,20 +214,20 @@ pub fn predict(
 	};
 	let column_names = columns
 		.iter()
-		.map(|c| match c {
-			Column::Unknown(c) => Some(c.name.clone()),
-			Column::Number(c) => Some(c.name.clone()),
-			Column::Enum(c) => Some(c.name.clone()),
-			Column::Text(c) => Some(c.name.clone()),
+		.map(|column| match column {
+			Column::Unknown(column) => Some(column.name.clone()),
+			Column::Number(column) => Some(column.name.clone()),
+			Column::Enum(column) => Some(column.name.clone()),
+			Column::Text(column) => Some(column.name.clone()),
 		})
 		.collect();
 	let column_types = columns
 		.iter()
-		.map(|c| match c {
+		.map(|column| match column {
 			Column::Unknown(_) => tangram_dataframe::DataFrameColumnType::Unknown,
 			Column::Number(_) => tangram_dataframe::DataFrameColumnType::Number,
-			Column::Enum(s) => tangram_dataframe::DataFrameColumnType::Enum {
-				options: s.options.clone(),
+			Column::Enum(column) => tangram_dataframe::DataFrameColumnType::Enum {
+				options: column.options.clone(),
 			},
 			Column::Text(_) => tangram_dataframe::DataFrameColumnType::Text,
 		})
@@ -887,21 +887,21 @@ impl TryFrom<model::BranchSplit> for tangram_tree::BranchSplit {
 	type Error = anyhow::Error;
 	fn try_from(value: model::BranchSplit) -> Result<tangram_tree::BranchSplit> {
 		match value {
-			model::BranchSplit::Continuous(s) => Ok(tangram_tree::BranchSplit::Continuous(
+			model::BranchSplit::Continuous(value) => Ok(tangram_tree::BranchSplit::Continuous(
 				tangram_tree::BranchSplitContinuous {
-					feature_index: s.feature_index.to_usize().unwrap(),
-					split_value: s.split_value,
-					invalid_values_direction: if s.invalid_values_direction {
+					feature_index: value.feature_index.to_usize().unwrap(),
+					split_value: value.split_value,
+					invalid_values_direction: if value.invalid_values_direction {
 						tangram_tree::SplitDirection::Right
 					} else {
 						tangram_tree::SplitDirection::Left
 					},
 				},
 			)),
-			model::BranchSplit::Discrete(s) => Ok(tangram_tree::BranchSplit::Discrete(
+			model::BranchSplit::Discrete(value) => Ok(tangram_tree::BranchSplit::Discrete(
 				tangram_tree::BranchSplitDiscrete {
-					feature_index: s.feature_index.to_usize().unwrap(),
-					directions: s
+					feature_index: value.feature_index.to_usize().unwrap(),
+					directions: value
 						.directions
 						.into_iter()
 						.map(TryInto::try_into)

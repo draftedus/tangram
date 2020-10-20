@@ -320,14 +320,14 @@ impl<'a> StreamingMetric<'a> for NumberProductionColumnStats {
 				return;
 			}
 			Some(serde_json::Value::String(value)) => match lexical::parse::<f32, _>(value) {
-				Ok(n) => n,
+				Ok(value) => value,
 				Err(_) => {
 					self.invalid_count += 1;
 					return;
 				}
 			},
 			Some(serde_json::Value::Number(value)) => match value.as_f64() {
-				Some(n) => n.to_f32().unwrap(),
+				Some(value) => value.to_f32().unwrap(),
 				None => {
 					self.invalid_count += 1;
 					return;

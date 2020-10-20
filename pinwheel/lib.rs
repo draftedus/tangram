@@ -362,7 +362,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn FileSystem, url: Url) -> Re
 	// Read the source map.
 	let source_map_url = match sourcemap::locate_sourcemap_reference_slice(code.as_bytes()).unwrap()
 	{
-		Some(s) => Some(url.join(s.get_url()).unwrap()),
+		Some(source_map_reference) => Some(url.join(source_map_reference.get_url()).unwrap()),
 		None => None,
 	};
 	let source_map = if let Some(source_map_url) = source_map_url {

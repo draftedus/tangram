@@ -262,15 +262,21 @@ impl ColumnStats {
 
 	fn finalize(self, settings: &StatsSettings) -> ColumnStatsOutput {
 		match self {
-			ColumnStats::Unknown(s) => {
+			ColumnStats::Unknown(column_stats_output) => {
 				ColumnStatsOutput::Unknown(stats::UnknownColumnStatsOutput {
-					column_name: s.column_name,
-					count: s.count,
+					column_name: column_stats_output.column_name,
+					count: column_stats_output.count,
 				})
 			}
-			ColumnStats::Number(s) => ColumnStatsOutput::Number(s.finalize(settings)),
-			ColumnStats::Enum(s) => ColumnStatsOutput::Enum(s.finalize(settings)),
-			ColumnStats::Text(s) => ColumnStatsOutput::Text(s.finalize(settings)),
+			ColumnStats::Number(column_stats_output) => {
+				ColumnStatsOutput::Number(column_stats_output.finalize(settings))
+			}
+			ColumnStats::Enum(column_stats_output) => {
+				ColumnStatsOutput::Enum(column_stats_output.finalize(settings))
+			}
+			ColumnStats::Text(column_stats_output) => {
+				ColumnStatsOutput::Text(column_stats_output.finalize(settings))
+			}
 		}
 	}
 }

@@ -253,7 +253,7 @@ fn number_props(
 		})
 		.unwrap();
 	let overall = match overall {
-		ProductionColumnStatsOutput::Number(s) => s,
+		ProductionColumnStatsOutput::Number(overall) => overall,
 		_ => unreachable!(),
 	};
 	let overall_box_chart_data = OverallBoxChartData {
@@ -287,7 +287,9 @@ fn number_props(
 				})
 				.unwrap();
 			let production_column_stats = match production_column_stats {
-				ProductionColumnStatsOutput::Number(s) => s,
+				ProductionColumnStatsOutput::Number(production_column_stats) => {
+					production_column_stats
+				}
 				_ => unreachable!(),
 			};
 			IntervalBoxChartDataPoint {
@@ -358,7 +360,7 @@ fn enum_props(
 		})
 		.unwrap();
 	let overall = match overall {
-		ProductionColumnStatsOutput::Enum(s) => s,
+		ProductionColumnStatsOutput::Enum(overall) => overall,
 		_ => unreachable!(),
 	};
 	let production_row_count = get_production_stats_output.overall.row_count;
@@ -411,7 +413,7 @@ fn text_props(
 		})
 		.unwrap();
 	let overall = match overall {
-		ProductionColumnStatsOutput::Text(s) => s,
+		ProductionColumnStatsOutput::Text(overall) => overall,
 		_ => unreachable!(),
 	};
 	let overall_token_histogram = overall

@@ -9,9 +9,9 @@ enum BenchmarkOutput {
 impl std::fmt::Display for BenchmarkOutput {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
 		match self {
-			BenchmarkOutput::Regression(r) => write!(f, "mse: {}", r.mse),
-			BenchmarkOutput::BinaryClassification(r) => write!(f, "auc_roc: {}", r.auc_roc),
-			BenchmarkOutput::MulticlassClassification(r) => write!(f, "accuracy: {}", r.accuracy),
+			BenchmarkOutput::Regression(s) => write!(f, "mse: {}", s.mse),
+			BenchmarkOutput::BinaryClassification(s) => write!(f, "auc_roc: {}", s.auc_roc),
+			BenchmarkOutput::MulticlassClassification(s) => write!(f, "accuracy: {}", s.accuracy),
 		}
 	}
 }

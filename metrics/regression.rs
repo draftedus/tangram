@@ -115,9 +115,9 @@ impl<'a> StreamingMetric<'a> for RegressionMetrics {
 
 	fn finalize(self) -> Self::Output {
 		let (n, variance) = match self.mean_variance {
-			Some(m) => (
-				m.n.get().to_f64().unwrap(),
-				m.m2 / m.n.get().to_f64().unwrap(),
+			Some(mean_variance) => (
+				mean_variance.n.get().to_f64().unwrap(),
+				mean_variance.m2 / mean_variance.n.get().to_f64().unwrap(),
 			),
 			None => (0.0, f64::NAN),
 		};

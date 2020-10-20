@@ -377,7 +377,7 @@ async fn start_stripe_checkout(
 	.and_then(|r| r.get(0));
 	// Retrieve or create the stripe customer.
 	let stripe_customer_id = match existing_stripe_customer_id {
-		Some(s) => s,
+		Some(stripe_customer_id) => stripe_customer_id,
 		None => {
 			let client = reqwest::Client::new();
 			// Create a stripe customer.

@@ -245,7 +245,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 		_ => context.pinwheel.handle(request).await,
 	};
 	let response = match result {
-		Ok(r) => r,
+		Ok(response) => response,
 		Err(error) => {
 			if error.downcast_ref::<pinwheel::NotFoundError>().is_some() {
 				Response::builder()

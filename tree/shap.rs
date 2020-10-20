@@ -102,23 +102,23 @@ fn tree_shap_recursive(options: TreeShapRecursiveOptions) {
 	let mut unique_depth = unique_depth;
 	let node = &tree.nodes[node_index];
 	match node {
-		Node::Leaf(n) => {
+		Node::Leaf(node) => {
 			for path_index in 1..=unique_depth {
 				let weight = unwound_path_sum(unique_path, unique_depth, path_index);
 				let path_item = &unique_path[path_index];
 				let scale = weight * (path_item.one_fraction - path_item.zero_fraction);
-				phi[path_item.feature_index.unwrap()] += scale * n.value;
+				phi[path_item.feature_index.unwrap()] += scale * node.value;
 			}
 		}
-		Node::Branch(n) => {
-			let (hot_child_index, cold_child_index) = compute_hot_cold_child(n, example);
+		Node::Branch(node) => {
+			let (hot_child_index, cold_child_index) = compute_hot_cold_child(node, example);
 			let hot_zero_fraction =
-				tree.nodes[hot_child_index].examples_fraction() / n.examples_fraction;
+				tree.nodes[hot_child_index].examples_fraction() / node.examples_fraction;
 			let cold_zero_fraction =
-				tree.nodes[cold_child_index].examples_fraction() / n.examples_fraction;
+				tree.nodes[cold_child_index].examples_fraction() / node.examples_fraction;
 			let mut incoming_zero_fraction = 1.0;
 			let mut incoming_one_fraction = 1.0;
-			let current_feature_index = n.split.feature_index();
+			let current_feature_index = node.split.feature_index();
 			if let Some(path_index) = (1..=unique_depth)
 				.find(|i| unique_path[*i].feature_index.unwrap() == current_feature_index)
 			{
@@ -127,7 +127,7 @@ fn tree_shap_recursive(options: TreeShapRecursiveOptions) {
 				unwind_path(unique_path, unique_depth, path_index);
 				unique_depth -= 1;
 			};
-			let feature_index = n.split.feature_index();
+			let feature_index = node.split.feature_index();
 			let (parent_path, child_path) = unique_path.split_at_mut(unique_depth + 1);
 			child_path[0..parent_path.len()].clone_from_slice(parent_path);
 			tree_shap_recursive(TreeShapRecursiveOptions {
@@ -247,14 +247,14 @@ fn compute_hot_cold_child(
 			split_value,
 			invalid_values_direction,
 		}) => match example[*feature_index] {
-			tangram_dataframe::DataFrameValue::Number(v) => {
-				if v.is_nan() {
+			tangram_dataframe::DataFrameValue::Number(value) => {
+				if value.is_nan() {
 					if let SplitDirection::Left = invalid_values_direction {
 						(node.left_child_index, node.right_child_index)
 					} else {
 						(node.right_child_index, node.left_child_index)
 					}
-				} else if v <= *split_value {
+				} else if value <= *split_value {
 					(node.left_child_index, node.right_child_index)
 				} else {
 					(node.right_child_index, node.left_child_index)

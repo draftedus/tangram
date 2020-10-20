@@ -220,8 +220,8 @@ impl FeatureGroup {
 		match self {
 			FeatureGroup::Identity(_) => 1,
 			FeatureGroup::Normalized(_) => 1,
-			FeatureGroup::OneHotEncoded(f) => f.options.len() + 1,
-			FeatureGroup::BagOfWords(f) => f.tokens.len(),
+			FeatureGroup::OneHotEncoded(s) => s.options.len() + 1,
+			FeatureGroup::BagOfWords(s) => s.tokens.len(),
 		}
 	}
 }
@@ -480,28 +480,28 @@ pub fn compute_features_dataframe(
 					.find(|column| column.name().unwrap() == feature_group.source_column_name)
 					.unwrap();
 				let column = match column {
-					DataFrameColumnView::Unknown(c) => {
+					DataFrameColumnView::Unknown(column) => {
 						let column =
-							UnknownDataFrameColumn::new(c.name().map(|name| name.to_owned()));
+							UnknownDataFrameColumn::new(column.name().map(|name| name.to_owned()));
 						DataFrameColumn::Unknown(column)
 					}
-					DataFrameColumnView::Number(c) => {
+					DataFrameColumnView::Number(column) => {
 						DataFrameColumn::Number(NumberDataFrameColumn::new(
-							c.name().map(|name| name.to_owned()),
-							c.as_slice().to_owned(),
+							column.name().map(|name| name.to_owned()),
+							column.as_slice().to_owned(),
 						))
 					}
-					DataFrameColumnView::Enum(c) => {
+					DataFrameColumnView::Enum(column) => {
 						DataFrameColumn::Enum(EnumDataFrameColumn::new(
-							c.name().map(|name| name.to_owned()),
-							c.options().to_owned(),
-							c.as_slice().to_owned(),
+							column.name().map(|name| name.to_owned()),
+							column.options().to_owned(),
+							column.as_slice().to_owned(),
 						))
 					}
-					DataFrameColumnView::Text(c) => {
+					DataFrameColumnView::Text(column) => {
 						DataFrameColumn::Text(TextDataFrameColumn::new(
-							c.name().map(|name| name.to_owned()),
-							c.as_slice().to_owned(),
+							column.name().map(|name| name.to_owned()),
+							column.as_slice().to_owned(),
 						))
 					}
 				};

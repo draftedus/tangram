@@ -72,20 +72,22 @@ pub fn train(
 			.columns()
 			.iter()
 			.map(|column| match column {
-				DataFrameColumn::Unknown(c) => {
-					(c.name().to_owned().unwrap(), DataFrameColumnType::Unknown)
-				}
-				DataFrameColumn::Enum(c) => (
-					c.name().to_owned().unwrap(),
+				DataFrameColumn::Unknown(column) => (
+					column.name().to_owned().unwrap(),
+					DataFrameColumnType::Unknown,
+				),
+				DataFrameColumn::Enum(column) => (
+					column.name().to_owned().unwrap(),
 					DataFrameColumnType::Enum {
-						options: c.options().to_owned(),
+						options: column.options().to_owned(),
 					},
 				),
-				DataFrameColumn::Number(c) => {
-					(c.name().to_owned().unwrap(), DataFrameColumnType::Number)
-				}
-				DataFrameColumn::Text(c) => {
-					(c.name().to_owned().unwrap(), DataFrameColumnType::Text)
+				DataFrameColumn::Number(column) => (
+					column.name().to_owned().unwrap(),
+					DataFrameColumnType::Number,
+				),
+				DataFrameColumn::Text(column) => {
+					(column.name().to_owned().unwrap(), DataFrameColumnType::Text)
 				}
 			})
 			.collect();
@@ -1371,11 +1373,11 @@ fn choose_best_model_regression(
 		.into_iter()
 		.max_by(|(_, metrics_a), (_, metrics_b)| {
 			let metrics_a = match metrics_a {
-				Metrics::Regression(m) => m,
+				Metrics::Regression(metrics) => metrics,
 				_ => unreachable!(),
 			};
 			let metrics_b = match metrics_b {
-				Metrics::Regression(m) => m,
+				Metrics::Regression(metrics) => metrics,
 				_ => unreachable!(),
 			};
 			match comparison_metric {
@@ -1403,11 +1405,11 @@ fn choose_best_model_binary_classification(
 		.into_iter()
 		.max_by(|(_, metrics_a), (_, metrics_b)| {
 			let task_metrics_a = match metrics_a {
-				Metrics::BinaryClassification(m) => m,
+				Metrics::BinaryClassification(metrics) => metrics,
 				_ => unreachable!(),
 			};
 			let task_metrics_b = match metrics_b {
-				Metrics::BinaryClassification(m) => m,
+				Metrics::BinaryClassification(metrics) => metrics,
 				_ => unreachable!(),
 			};
 			match comparison_metric {
@@ -1429,11 +1431,11 @@ fn choose_best_model_multiclass_classification(
 		.into_iter()
 		.max_by(|(_, metrics_a), (_, metrics_b)| {
 			let task_metrics_a = match metrics_a {
-				Metrics::MulticlassClassification(m) => m,
+				Metrics::MulticlassClassification(metrics) => metrics,
 				_ => unreachable!(),
 			};
 			let task_metrics_b = match metrics_b {
-				Metrics::MulticlassClassification(m) => m,
+				Metrics::MulticlassClassification(metrics) => metrics,
 				_ => unreachable!(),
 			};
 			match comparison_metric {
@@ -1564,12 +1566,18 @@ impl Into<model::StatsSettings> for stats::StatsSettings {
 impl Into<model::FeatureGroup> for features::FeatureGroup {
 	fn into(self) -> model::FeatureGroup {
 		match self {
-			features::FeatureGroup::Identity(f) => model::FeatureGroup::Identity(f.into()),
-			features::FeatureGroup::Normalized(f) => model::FeatureGroup::Normalized(f.into()),
-			features::FeatureGroup::OneHotEncoded(f) => {
-				model::FeatureGroup::OneHotEncoded(f.into())
+			features::FeatureGroup::Identity(feature_group) => {
+				model::FeatureGroup::Identity(feature_group.into())
 			}
-			features::FeatureGroup::BagOfWords(f) => model::FeatureGroup::BagOfWords(f.into()),
+			features::FeatureGroup::Normalized(feature_group) => {
+				model::FeatureGroup::Normalized(feature_group.into())
+			}
+			features::FeatureGroup::OneHotEncoded(feature_group) => {
+				model::FeatureGroup::OneHotEncoded(feature_group.into())
+			}
+			features::FeatureGroup::BagOfWords(feature_group) => {
+				model::FeatureGroup::BagOfWords(feature_group.into())
+			}
 		}
 	}
 }
@@ -1629,10 +1637,18 @@ impl Into<model::Tokenizer> for features::Tokenizer {
 impl Into<model::ColumnStats> for stats::ColumnStatsOutput {
 	fn into(self) -> model::ColumnStats {
 		match self {
-			stats::ColumnStatsOutput::Unknown(c) => model::ColumnStats::Unknown(c.into()),
-			stats::ColumnStatsOutput::Number(c) => model::ColumnStats::Number(c.into()),
-			stats::ColumnStatsOutput::Enum(c) => model::ColumnStats::Enum(c.into()),
-			stats::ColumnStatsOutput::Text(c) => model::ColumnStats::Text(c.into()),
+			stats::ColumnStatsOutput::Unknown(column_stats) => {
+				model::ColumnStats::Unknown(column_stats.into())
+			}
+			stats::ColumnStatsOutput::Number(column_stats) => {
+				model::ColumnStats::Number(column_stats.into())
+			}
+			stats::ColumnStatsOutput::Enum(column_stats) => {
+				model::ColumnStats::Enum(column_stats.into())
+			}
+			stats::ColumnStatsOutput::Text(column_stats) => {
+				model::ColumnStats::Text(column_stats.into())
+			}
 		}
 	}
 }
@@ -1878,10 +1894,12 @@ impl Into<model::LeafNode> for tangram_tree::LeafNode {
 impl Into<model::BinaryClassificationModel> for BinaryClassificationModel {
 	fn into(self) -> model::BinaryClassificationModel {
 		match self {
-			BinaryClassificationModel::Linear(m) => {
-				model::BinaryClassificationModel::Linear(m.into())
+			BinaryClassificationModel::Linear(model) => {
+				model::BinaryClassificationModel::Linear(model.into())
 			}
-			BinaryClassificationModel::Tree(m) => model::BinaryClassificationModel::Tree(m.into()),
+			BinaryClassificationModel::Tree(model) => {
+				model::BinaryClassificationModel::Tree(model.into())
+			}
 		}
 	}
 }
@@ -1913,11 +1931,11 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 impl Into<model::MulticlassClassificationModel> for MulticlassClassificationModel {
 	fn into(self) -> model::MulticlassClassificationModel {
 		match self {
-			MulticlassClassificationModel::Linear(m) => {
-				model::MulticlassClassificationModel::Linear(m.into())
+			MulticlassClassificationModel::Linear(model) => {
+				model::MulticlassClassificationModel::Linear(model.into())
 			}
-			MulticlassClassificationModel::Tree(m) => {
-				model::MulticlassClassificationModel::Tree(m.into())
+			MulticlassClassificationModel::Tree(model) => {
+				model::MulticlassClassificationModel::Tree(model.into())
 			}
 		}
 	}
@@ -1955,8 +1973,8 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassifier {
 impl Into<model::RegressionModel> for RegressionModel {
 	fn into(self) -> model::RegressionModel {
 		match self {
-			RegressionModel::Linear(m) => model::RegressionModel::Linear(m.into()),
-			RegressionModel::Tree(m) => model::RegressionModel::Tree(m.into()),
+			RegressionModel::Linear(model) => model::RegressionModel::Linear(model.into()),
+			RegressionModel::Tree(model) => model::RegressionModel::Tree(model.into()),
 		}
 	}
 }
