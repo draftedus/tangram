@@ -60,8 +60,8 @@ pub struct TreeModelTrainOptions {
 	pub l2_regularization: Option<f32>,
 	pub learning_rate: Option<f32>,
 	pub max_depth: Option<u64>,
-	pub max_examples_for_computing_bin_thresholds: Option<usize>,
-	pub max_leaf_nodes: Option<usize>,
+	pub max_examples_for_computing_bin_thresholds: Option<u64>,
+	pub max_leaf_nodes: Option<u64>,
 	pub max_rounds: Option<u64>,
 	pub max_valid_bins_for_number_features: Option<u8>,
 	pub min_examples_per_node: Option<u64>,
@@ -271,27 +271,15 @@ pub fn compute_multiclass_classification_hyperparameter_grid(
 		.collect()
 }
 
-// TODO
-
-// const DEFAULT_LINEAR_MODEL_LEARNING_RATE_VALUES: [f32; 4] = [0.1, 0.01, 0.001, 0.0001];
-// const DEFAULT_LINEAR_L2_REGULARIZATION_VALUES: [f32; 6] = [1.0, 0.1, 0.01, 0.001, 0.0001, 0.0];
-// const DEFAULT_LINEAR_MAX_EPOCHS_VALUES: [u64; 1] = [100];
-// const DEFAULT_LINEAR_N_EXAMPLES_PER_BATCH_VALUES: [u64; 1] = [128];
-const DEFAULT_LINEAR_MODEL_LEARNING_RATE_VALUES: [f32; 1] = [0.1];
-const DEFAULT_LINEAR_L2_REGULARIZATION_VALUES: [f32; 1] = [1.0];
-const DEFAULT_LINEAR_MAX_EPOCHS_VALUES: [u64; 1] = [100];
+const DEFAULT_LINEAR_MODEL_LEARNING_RATE_VALUES: [f32; 3] = [0.1, 0.01, 0.001];
+const DEFAULT_LINEAR_L2_REGULARIZATION_VALUES: [f32; 3] = [1.0, 0.1, 0.0];
+const DEFAULT_LINEAR_MAX_EPOCHS_VALUES: [u64; 1] = [1000];
 const DEFAULT_LINEAR_N_EXAMPLES_PER_BATCH_VALUES: [u64; 1] = [128];
 
-// const DEFAULT_TREE_LEARNING_RATE_VALUES: [f32; 3] = [0.1, 0.01, 0.001];
-// const DEFAULT_TREE_L2_REGULARIZATION_VALUES: [f32; 6] = [1.0, 0.1, 0.01, 0.001, 0.0001, 0.0];
-// const DEFAULT_TREE_DEPTH_VALUES: [u64; 2] = [3, 6];
-// const DEFAULT_TREE_MAX_TREES_VALUES: [u64; 2] = [100, 1000];
-// const DEFAULT_TREE_MIN_EXAMPLES_PER_LEAF_VALUES: [u64; 1] = [10];
-const DEFAULT_TREE_LEARNING_RATE_VALUES: [f32; 1] = [0.1];
-const DEFAULT_TREE_L2_REGULARIZATION_VALUES: [f32; 1] = [1.0];
-const DEFAULT_TREE_DEPTH_VALUES: [u64; 1] = [3];
-const DEFAULT_TREE_MAX_ROUNDS_VALUES: [u64; 1] = [100];
-const DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES: [u64; 1] = [3];
+const DEFAULT_TREE_LEARNING_RATE_VALUES: [f32; 3] = [0.1, 0.01, 0.001];
+const DEFAULT_TREE_L2_REGULARIZATION_VALUES: [f32; 3] = [1.0, 0.1, 0.0];
+const DEFAULT_TREE_MAX_LEAF_NODES: [u64; 2] = [255, 512];
+const DEFAULT_TREE_MAX_ROUNDS_VALUES: [u64; 1] = [1000];
 
 /// Compute the default hyperparameter grid for regression.
 pub fn default_regression_hyperparameter_grid(
@@ -317,20 +305,18 @@ pub fn default_regression_hyperparameter_grid(
 			},
 		});
 	}
-	for (&max_depth, &learning_rate, &l2_regularization, &min_examples_per_node, &max_rounds) in iproduct!(
-		DEFAULT_TREE_DEPTH_VALUES.iter(),
+	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds) in iproduct!(
+		DEFAULT_TREE_MAX_LEAF_NODES.iter(),
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES.iter(),
 		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
 	) {
 		grid.push(GridItem::TreeRegressor {
 			target_column_index,
 			feature_groups: features::choose_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
-				max_depth: Some(max_depth),
+				max_leaf_nodes: Some(max_leaf_nodes),
 				learning_rate: Some(learning_rate),
-				min_examples_per_node: Some(min_examples_per_node),
 				max_rounds: Some(max_rounds),
 				l2_regularization: Some(l2_regularization),
 				..Default::default()
@@ -364,20 +350,18 @@ pub fn default_binary_classification_hyperparameter_grid(
 			},
 		});
 	}
-	for (&max_depth, &learning_rate, &l2_regularization, &min_examples_per_node, &max_rounds) in iproduct!(
-		DEFAULT_TREE_DEPTH_VALUES.iter(),
+	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds) in iproduct!(
+		DEFAULT_TREE_MAX_LEAF_NODES.iter(),
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES.iter(),
 		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
 	) {
 		grid.push(GridItem::TreeBinaryClassifier {
 			target_column_index,
 			feature_groups: features::choose_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
-				max_depth: Some(max_depth),
+				max_leaf_nodes: Some(max_leaf_nodes),
 				learning_rate: Some(learning_rate),
-				min_examples_per_node: Some(min_examples_per_node),
 				max_rounds: Some(max_rounds),
 				l2_regularization: Some(l2_regularization),
 				..Default::default()
@@ -411,20 +395,18 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 			},
 		});
 	}
-	for (&max_depth, &learning_rate, &l2_regularization, &min_examples_per_node, &max_rounds) in iproduct!(
-		DEFAULT_TREE_DEPTH_VALUES.iter(),
+	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds) in iproduct!(
+		DEFAULT_TREE_MAX_LEAF_NODES.iter(),
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_TREE_MIN_EXAMPLES_PER_NODE_VALUES.iter(),
 		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
 	) {
 		grid.push(GridItem::TreeMulticlassClassifier {
 			target_column_index,
 			feature_groups: features::choose_feature_groups_tree(column_stats),
 			options: TreeModelTrainOptions {
-				max_depth: Some(max_depth),
+				max_leaf_nodes: Some(max_leaf_nodes),
 				learning_rate: Some(learning_rate),
-				min_examples_per_node: Some(min_examples_per_node),
 				max_rounds: Some(max_rounds),
 				l2_regularization: Some(l2_regularization),
 				..Default::default()

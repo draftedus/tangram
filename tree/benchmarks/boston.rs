@@ -8,8 +8,6 @@ fn main() {
 	// Load the data.
 	let csv_file_path_train = Path::new("data/boston_train.csv");
 	let csv_file_path_test = Path::new("data/boston_test.csv");
-	let _n_rows_train = 405;
-	let n_rows_test = 101;
 	let target_column_index = 13;
 	let mut features_train =
 		DataFrame::from_path(csv_file_path_train, Default::default(), |_| {}).unwrap();
@@ -35,7 +33,7 @@ fn main() {
 
 	// Make predictions on the test data.
 	let features = features_test.to_rows();
-	let mut predictions = Array::zeros(n_rows_test);
+	let mut predictions = Array::zeros(labels_test.len());
 	model.predict(features.view(), predictions.view_mut());
 
 	// Compute metrics.

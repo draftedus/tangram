@@ -16,6 +16,10 @@ name = "tangram_tree_benchmark_all"
 path = "benchmarks/all.rs"
 
 [[bin]]
+name = "tangram_tree_benchmark_allstate"
+path = "benchmarks/allstate.rs"
+
+[[bin]]
 name = "tangram_tree_benchmark_boston"
 path = "benchmarks/boston.rs"
 
