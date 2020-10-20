@@ -363,14 +363,12 @@ pub fn train(
 			bias: *biases.get(0).unwrap(),
 			trees,
 			feature_importances,
-			losses,
 			train_options,
 		}),
 		Task::BinaryClassification => Model::BinaryClassifier(BinaryClassifier {
 			bias: *biases.get(0).unwrap(),
 			trees,
 			feature_importances,
-			losses,
 			train_options,
 		}),
 		Task::MulticlassClassification { .. } => {
@@ -380,7 +378,6 @@ pub fn train(
 				biases: biases.into_raw_vec(),
 				trees,
 				feature_importances,
-				losses,
 				train_options,
 			})
 		}

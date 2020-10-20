@@ -14,16 +14,12 @@ use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperU
 /// This struct describes a linear binary classifier model. You can train one by calling `BinaryClassifier::train`.
 #[derive(Debug)]
 pub struct BinaryClassifier {
-	/// These are the options the model was trained with.
-	pub train_options: TrainOptions,
 	/// These are the weights the model learned.
 	pub weights: Array1<f32>,
 	/// This is the bias the model learned.
 	pub bias: f32,
 	/// These are the mean values of each feature in the training set, which are used to compute SHAP values.
 	pub means: Vec<f32>,
-	/// These are the loss values for each epoch.
-	pub losses: Option<Vec<f32>>,
 }
 
 impl BinaryClassifier {
@@ -31,7 +27,7 @@ impl BinaryClassifier {
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: EnumDataFrameColumnView,
-		train_options: TrainOptions,
+		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> BinaryClassifier {
 		let n_features = features.ncols();
@@ -53,11 +49,9 @@ impl BinaryClassifier {
 			bias: 0.0,
 			weights: <Array1<f32>>::zeros(n_features),
 			means,
-			losses: None,
-			train_options,
 		};
 		let mut early_stopping_monitor =
-			if let Some(early_stopping_options) = &model.train_options.early_stopping_options {
+			if let Some(early_stopping_options) = &train_options.early_stopping_options {
 				Some(EarlyStoppingMonitor::new(
 					early_stopping_options.min_decrease_in_loss_for_significant_change,
 					early_stopping_options.n_epochs_without_improvement_to_stop,
@@ -65,12 +59,11 @@ impl BinaryClassifier {
 			} else {
 				None
 			};
-		let progress_counter =
-			ProgressCounter::new(model.train_options.max_epochs.to_u64().unwrap());
+		let progress_counter = ProgressCounter::new(train_options.max_epochs.to_u64().unwrap());
 		update_progress(TrainProgress(progress_counter.clone()));
-		for _ in 0..model.train_options.max_epochs {
+		for _ in 0..train_options.max_epochs {
 			progress_counter.inc(1);
-			let n_examples_per_batch = model.train_options.n_examples_per_batch;
+			let n_examples_per_batch = train_options.n_examples_per_batch;
 			let model_cell = SuperUnsafe::new(model);
 			pzip!(
 				features_train.axis_chunks_iter(Axis(0), n_examples_per_batch),
@@ -78,7 +71,7 @@ impl BinaryClassifier {
 			)
 			.for_each(|(features, labels)| {
 				let model = unsafe { model_cell.get() };
-				BinaryClassifier::train_batch(model, features, labels);
+				BinaryClassifier::train_batch(model, features, labels, train_options);
 			});
 			model = model_cell.into_inner();
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
@@ -87,6 +80,7 @@ impl BinaryClassifier {
 						&model,
 						features_early_stopping,
 						labels_early_stopping,
+						train_options,
 					);
 				let should_stop = early_stopping_monitor.update(early_stopping_metric_value);
 				if should_stop {
@@ -97,8 +91,13 @@ impl BinaryClassifier {
 		model
 	}
 
-	fn train_batch(&mut self, features: ArrayView2<f32>, labels: ArrayView1<Option<NonZeroUsize>>) {
-		let learning_rate = self.train_options.learning_rate;
+	fn train_batch(
+		&mut self,
+		features: ArrayView2<f32>,
+		labels: ArrayView1<Option<NonZeroUsize>>,
+		train_options: &TrainOptions,
+	) {
+		let learning_rate = train_options.learning_rate;
 		let mut predictions = features.dot(&self.weights) + self.bias;
 		for prediction in predictions.iter_mut() {
 			*prediction = 1.0 / (prediction.neg().exp() + 1.0);
@@ -124,16 +123,16 @@ impl BinaryClassifier {
 		&self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<Option<NonZeroUsize>>,
+		train_options: &TrainOptions,
 	) -> f32 {
 		pzip!(
-			features.axis_chunks_iter(Axis(0), self.train_options.n_examples_per_batch),
-			labels.axis_chunks_iter(Axis(0), self.train_options.n_examples_per_batch),
+			features.axis_chunks_iter(Axis(0), train_options.n_examples_per_batch),
+			labels.axis_chunks_iter(Axis(0), train_options.n_examples_per_batch),
 		)
 		.fold(
 			|| {
-				let predictions = unsafe {
-					<Array1<f32>>::uninitialized(self.train_options.n_examples_per_batch)
-				};
+				let predictions =
+					unsafe { <Array1<f32>>::uninitialized(train_options.n_examples_per_batch) };
 				let metric = BinaryCrossEntropy::new();
 				(predictions, metric)
 			},

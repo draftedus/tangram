@@ -109,7 +109,7 @@ pub struct LinearRegressor {
 pub struct TreeRegressor {
 	pub bias: f32,
 	pub trees: Vec<Tree>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 	pub train_options: TreeModelTrainOptions,
 }
@@ -307,8 +307,6 @@ pub struct LinearMulticlassClassifier {
 	pub n_classes: usize,
 	pub biases: Vec<f32>,
 	pub weights: Vec<f32>,
-	pub classes: Vec<String>,
-	pub losses: Option<Vec<f32>>,
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
 }

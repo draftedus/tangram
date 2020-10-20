@@ -22,8 +22,6 @@ pub struct Regressor {
 	pub trees: Vec<Tree>,
 	/// The importance of each feature as measured by the number of times the feature was used in a branch node.
 	pub feature_importances: Option<Vec<f32>>,
-	/// The training losses in each round of training this model.
-	pub losses: Option<Vec<f32>>,
 }
 
 impl Regressor {

@@ -14,18 +14,12 @@ use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperU
 /// This struct describes a linear multiclass classifier model. You can train one by calling `MulticlassClassifier::train`.
 #[derive(Debug)]
 pub struct MulticlassClassifier {
-	/// These are the options the model was trained with.
-	pub train_options: TrainOptions,
 	/// These are the biases the model learned.
 	pub biases: Array1<f32>,
 	/// These are the weights the model learned.
 	pub weights: Array2<f32>,
 	/// These are the mean values of each feature in the training set, which are used to compute SHAP values.
 	pub means: Vec<f32>,
-	/// These are the loss values for each epoch.
-	pub losses: Option<Vec<f32>>,
-	/// These are the class names of the target column.
-	pub classes: Vec<String>,
 }
 
 impl MulticlassClassifier {
@@ -33,12 +27,11 @@ impl MulticlassClassifier {
 	pub fn train(
 		features: ArrayView2<f32>,
 		labels: EnumDataFrameColumnView,
-		train_options: TrainOptions,
+		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
 	) -> MulticlassClassifier {
 		let n_classes = labels.options().len();
 		let n_features = features.ncols();
-		let classes = labels.options().to_owned();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
 				features,
@@ -57,12 +50,9 @@ impl MulticlassClassifier {
 			biases: <Array1<f32>>::zeros(n_classes),
 			weights: <Array2<f32>>::zeros((n_features, n_classes)),
 			means,
-			losses: None,
-			classes,
-			train_options,
 		};
 		let mut early_stopping_monitor =
-			if let Some(early_stopping_options) = &model.train_options.early_stopping_options {
+			if let Some(early_stopping_options) = &train_options.early_stopping_options {
 				Some(EarlyStoppingMonitor::new(
 					early_stopping_options.min_decrease_in_loss_for_significant_change,
 					early_stopping_options.n_epochs_without_improvement_to_stop,
@@ -70,12 +60,11 @@ impl MulticlassClassifier {
 			} else {
 				None
 			};
-		let progress_counter =
-			ProgressCounter::new(model.train_options.max_epochs.to_u64().unwrap());
+		let progress_counter = ProgressCounter::new(train_options.max_epochs.to_u64().unwrap());
 		update_progress(TrainProgress(progress_counter.clone()));
-		for _ in 0..model.train_options.max_epochs {
+		for _ in 0..train_options.max_epochs {
 			progress_counter.inc(1);
-			let n_examples_per_batch = model.train_options.n_examples_per_batch;
+			let n_examples_per_batch = train_options.n_examples_per_batch;
 			let model_cell = SuperUnsafe::new(model);
 			pzip!(
 				features_train.axis_chunks_iter(Axis(0), n_examples_per_batch),
@@ -83,7 +72,7 @@ impl MulticlassClassifier {
 			)
 			.for_each(|(features, labels)| {
 				let model = unsafe { model_cell.get() };
-				MulticlassClassifier::train_batch(model, features, labels);
+				MulticlassClassifier::train_batch(model, features, labels, train_options);
 			});
 			model = model_cell.into_inner();
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
@@ -92,6 +81,7 @@ impl MulticlassClassifier {
 						&model,
 						features_early_stopping,
 						labels_early_stopping,
+						train_options,
 					);
 				let should_stop = early_stopping_monitor.update(early_stopping_metric_value);
 				if should_stop {
@@ -102,8 +92,13 @@ impl MulticlassClassifier {
 		model
 	}
 
-	fn train_batch(&mut self, features: ArrayView2<f32>, labels: ArrayView1<Option<NonZeroUsize>>) {
-		let learning_rate = self.train_options.learning_rate;
+	fn train_batch(
+		&mut self,
+		features: ArrayView2<f32>,
+		labels: ArrayView1<Option<NonZeroUsize>>,
+		train_options: &TrainOptions,
+	) {
+		let learning_rate = train_options.learning_rate;
 		let n_classes = self.weights.ncols();
 		let mut logits = features.dot(&self.weights) + &self.biases;
 		softmax(logits.view_mut());
@@ -141,19 +136,17 @@ impl MulticlassClassifier {
 		&self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<Option<NonZeroUsize>>,
+		train_options: &TrainOptions,
 	) -> f32 {
 		let n_classes = self.biases.len();
 		pzip!(
-			features.axis_chunks_iter(Axis(0), self.train_options.n_examples_per_batch),
-			labels.axis_chunks_iter(Axis(0), self.train_options.n_examples_per_batch),
+			features.axis_chunks_iter(Axis(0), train_options.n_examples_per_batch),
+			labels.axis_chunks_iter(Axis(0), train_options.n_examples_per_batch),
 		)
 		.fold(
 			|| {
 				let predictions = unsafe {
-					<Array2<f32>>::uninitialized((
-						self.train_options.n_examples_per_batch,
-						n_classes,
-					))
+					<Array2<f32>>::uninitialized((train_options.n_examples_per_batch, n_classes))
 				};
 				let metric = CrossEntropy::default();
 				(predictions, metric)

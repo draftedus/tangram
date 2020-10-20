@@ -692,8 +692,6 @@ impl TryFrom<model::Regressor> for Regressor {
 						bias: inner_model.bias,
 						weights: inner_model.weights.into(),
 						means: inner_model.means,
-						losses: inner_model.losses,
-						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
 			}
@@ -715,7 +713,6 @@ impl TryFrom<model::Regressor> for Regressor {
 							.map(TryInto::try_into)
 							.collect::<Result<Vec<_>>>()?,
 						feature_importances: Some(inner_model.feature_importances),
-						losses: Some(inner_model.losses),
 						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
@@ -752,8 +749,6 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 						weights: inner_model.weights.into(),
 						bias: inner_model.bias,
 						means: inner_model.means,
-						losses: inner_model.losses,
-						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
 			}
@@ -777,7 +772,6 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 							.map(TryInto::try_into)
 							.collect::<Result<Vec<_>>>()?,
 						feature_importances: Some(inner_model.feature_importances),
-						losses: inner_model.losses,
 						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
@@ -817,9 +811,6 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 							weights,
 							biases: inner_model.biases.into(),
 							means: inner_model.means,
-							losses: inner_model.losses,
-							classes: inner_model.classes,
-							train_options: inner_model.train_options.try_into()?,
 						},
 					),
 				})
@@ -847,7 +838,6 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 							n_classes: inner_model.n_classes.to_usize().unwrap(),
 							n_rounds: inner_model.n_rounds.to_usize().unwrap(),
 							feature_importances: Some(inner_model.feature_importances),
-							losses: inner_model.losses,
 						},
 					),
 				})
