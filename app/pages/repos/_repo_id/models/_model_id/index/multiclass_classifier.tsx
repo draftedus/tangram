@@ -1,29 +1,11 @@
+import { MulticlassClassifierProps } from './props'
 import * as ui from '@tangramhq/ui'
 import { baselineColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
 
-export type Props = {
-	id: string
-	metrics: {
-		accuracy: number
-		baselineAccuracy: number
-		classMetrics: Array<{
-			precision: number
-			recall: number
-		}>
-		classes: string[]
-	}
-	title: string
-	trainingSummary: {
-		chosenModelTypeName: string
-		columnCount: number
-		modelComparisonMetricTypeName: string
-		testRowCount: number
-		trainRowCount: number
-	}
-}
-
-export function MulticlassClassifierIndexPage(props: Props) {
+export function MulticlassClassifierIndexPage(
+	props: MulticlassClassifierProps,
+) {
 	return (
 		<ui.S1>
 			<ui.H1>{'Overview'}</ui.H1>

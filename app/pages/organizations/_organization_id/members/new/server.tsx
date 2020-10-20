@@ -1,11 +1,7 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { Props } from './props'
 import * as ui from '@tangramhq/ui'
 import { AppLayout } from 'layouts/app_layout'
 import { h } from 'preact'
-
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
 
 export default function MembersInvitePage(props: Props) {
 	return (

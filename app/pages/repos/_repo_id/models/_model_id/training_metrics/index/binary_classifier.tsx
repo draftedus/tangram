@@ -1,21 +1,13 @@
+import { BinaryClassifierProps } from './props'
 import * as ui from '@tangramhq/ui'
 import * as definitions from 'common/definitions'
 import { MetricsRow } from 'common/metrics_row'
 import { baselineColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
 
-export type Props = {
-	accuracy: number
-	aucRoc: number
-	baselineAccuracy: number
-	classes: string[]
-	id: string
-	losses: number[] | null
-	precision: number
-	recall: number
-}
-
-export function BinaryClassifierTrainingMetricsIndexPage(props: Props) {
+export function BinaryClassifierTrainingMetricsIndexPage(
+	props: BinaryClassifierProps,
+) {
 	let loss = props.losses?.slice(-1).pop()
 	return (
 		<ui.S1>

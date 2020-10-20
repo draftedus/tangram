@@ -1,36 +1,13 @@
+import { RegressorProps } from './props'
 import { LineChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { DateWindowSelectField } from 'common/date_window_select_field'
 import { MetricsRow } from 'common/metrics_row'
-import { DateWindow, DateWindowInterval, intervalChartTitle } from 'common/time'
+import { intervalChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
 
-export type Props = {
-	dateWindow: DateWindow
-	dateWindowInterval: DateWindowInterval
-	mseChart: {
-		data: Array<{
-			label: string
-			mse: number | null
-		}>
-		trainingMse: number
-	}
-	overall: {
-		mse: {
-			production: number | null
-			training: number
-		}
-		rmse: {
-			production: number | null
-			training: number
-		}
-		trueValuesCount: number
-	}
-	true_values_count_chart: Array<{ count: number; label: string }>
-}
-
-export function RegressorProductionMetricsPage(props: Props) {
+export function RegressorProductionMetricsPage(props: RegressorProps) {
 	let mseData = [
 		{
 			color: trainingColor,

@@ -1,15 +1,11 @@
+import { BinaryClassifierProductionMetricsIndexPage } from './binary_classifier'
+import { MulticlassClassifierProductionMetricsIndexPage } from './multiclass_classifier'
 import {
-	BinaryClassifierProductionMetricsIndexPage,
-	Props as BinaryClassifierProps,
-} from './binary_classifier'
-import {
-	MulticlassClassifierProductionMetricsIndexPage,
-	Props as MulticlassClassifierProps,
-} from './multiclass_classifier'
-import {
-	RegressorProductionMetricsPage,
-	Props as RegresssorProps,
-} from './regressor'
+	BinaryClassifierProps,
+	MulticlassClassifierProps,
+	RegressorProps,
+} from './props'
+import { RegressorProductionMetricsPage } from './regressor'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
 import {
@@ -28,7 +24,7 @@ export type Props = {
 export type Inner =
 	| {
 			type: Type.Regressor
-			value: RegresssorProps
+			value: RegressorProps
 	  }
 	| {
 			type: Type.BinaryClassifier

@@ -1,16 +1,10 @@
+import { EnumProps } from './props'
 import { BarChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { h } from 'preact'
 
-export type Props = {
-	histogram: Array<[string, number]>
-	invalidCount: number
-	name: string
-	uniqueCount: number
-}
-
-export function EnumColumnDetail(props: Props) {
+export function EnumColumnDetail(props: EnumProps) {
 	let histogramData = [
 		{
 			color: ui.colors.blue,

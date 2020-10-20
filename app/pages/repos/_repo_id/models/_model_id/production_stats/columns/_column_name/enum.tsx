@@ -1,33 +1,12 @@
+import { EnumProps } from './props'
 import { BarChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
-import { DateWindow, DateWindowInterval, overallChartTitle } from 'common/time'
+import { overallChartTitle } from 'common/time'
 import { productionColor, trainingColor } from 'common/tokens'
 import { Fragment, h } from 'preact'
 
-export type Props = {
-	absentCount: number
-	alert: string | null
-	columnName: string
-	dateWindow: DateWindow
-	dateWindowInterval: DateWindowInterval
-	invalidCount: number
-	overallChartData: Array<
-		[
-			string,
-			{
-				productionCount: number
-				productionFraction: number
-				trainingCount: number
-				trainingFraction: number
-			},
-		]
-	>
-	overallInvalidChartData: Array<[string, number]> | null
-	rowCount: number
-}
-
-export function Enum(props: Props) {
+export function Enum(props: EnumProps) {
 	let overallChartData = [
 		{
 			color: trainingColor,

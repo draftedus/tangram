@@ -1,40 +1,10 @@
-import { EnumColumnDetail, Props as EnumProps } from './enum'
-import { NumberColumnDetail, Props as NumberProps } from './number'
-import { TextColumnDetail, Props as TextProps } from './text'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { EnumColumnDetail } from './enum'
+import { NumberColumnDetail } from './number'
+import { Props, Type } from './props'
+import { TextColumnDetail } from './text'
 import { renderPage } from 'common/render'
-import {
-	ModelLayout,
-	ModelLayoutInfo,
-	ModelSideNavItem,
-} from 'layouts/model_layout'
+import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { h } from 'preact'
-
-export type Props = {
-	inner: Inner
-	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
-}
-
-export type Inner =
-	| {
-			type: Type.Number
-			value: NumberProps
-	  }
-	| {
-			type: Type.Enum
-			value: EnumProps
-	  }
-	| {
-			type: Type.Text
-			value: TextProps
-	  }
-
-export enum Type {
-	Number = 'number',
-	Enum = 'enum',
-	Text = 'text',
-}
 
 export default function TrainingStatsColumnPage(props: Props) {
 	let inner

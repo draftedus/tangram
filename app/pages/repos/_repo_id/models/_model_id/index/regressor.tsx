@@ -1,27 +1,9 @@
+import { RegressorProps } from './props'
 import * as ui from '@tangramhq/ui'
 import { baselineColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
 
-export type Props = {
-	id: string
-	metrics: {
-		baselineMse: number
-		baselineRmse: number
-		mse: number
-		rmse: number
-	}
-	trainingSummary: {
-		chosenModelTypeName: string
-		columnCount: number
-		modelComparisonMetricTypeName: string
-		targetColumn: string
-		testFraction: number
-		testRowCount: number
-		trainRowCount: number
-	}
-}
-
-export function RegressorIndexPage(props: Props) {
+export function RegressorIndexPage(props: RegressorProps) {
 	return (
 		<ui.S1>
 			<ui.SpaceBetween>

@@ -1,11 +1,22 @@
+import {
+	BinaryClassificationPrediction,
+	Column,
+	ColumnType,
+	EnumColumn,
+	MulticlassClassificationPrediction,
+	NumberColumn,
+	Prediction,
+	PredictionType,
+	Props,
+	RegressionPrediction,
+	TextColumn,
+} from './props'
 import './styles.css'
 import {
 	BarChart,
 	BoxChart,
 	FeatureContributionsChart,
-	FeatureContributionsChartData,
 } from '@tangramhq/charts'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import {
@@ -14,100 +25,8 @@ import {
 	TextColumnToken,
 	UnknownColumnToken,
 } from 'common/tokens'
-import {
-	ModelLayout,
-	ModelLayoutInfo,
-	ModelSideNavItem,
-} from 'layouts/model_layout'
+import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { Fragment, h } from 'preact'
-
-export type Props = {
-	columns: Column[]
-	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
-	prediction: Prediction | null
-}
-
-export type Column = UnknownColumn | NumberColumn | EnumColumn | TextColumn
-
-export enum ColumnType {
-	Unknown = 'unknown',
-	Number = 'number',
-	Enum = 'enum',
-	Text = 'text',
-}
-
-type UnknownColumn = {
-	name: string
-	type: ColumnType.Unknown
-	value: string | null
-}
-
-type NumberColumn = {
-	max: number
-	min: number
-	name: string
-	p25: number
-	p50: number
-	p75: number
-	type: ColumnType.Number
-	value: string | null
-}
-
-type EnumColumn = {
-	histogram: Array<[string, number]>
-	name: string
-	options: string[]
-	type: ColumnType.Enum
-	value: string | null
-}
-
-type TextColumn = {
-	name: string
-	type: ColumnType.Text
-	value: string | null
-}
-
-enum PredictionType {
-	Regression = 'regression',
-	BinaryClassification = 'binary_classification',
-	MulticlassClassification = 'multiclass_classification',
-}
-
-type Prediction =
-	| {
-			type: PredictionType.Regression
-			value: RegressionPrediction
-	  }
-	| {
-			type: PredictionType.BinaryClassification
-			value: BinaryClassificationPrediction
-	  }
-	| {
-			type: PredictionType.MulticlassClassification
-			value: MulticlassClassificationPrediction
-	  }
-
-type RegressionPrediction = {
-	featureContributionsChartData: FeatureContributionsChartData
-	value: number
-}
-
-type BinaryClassificationPrediction = {
-	className: string
-	classes: string[]
-	featureContributionsChartData: FeatureContributionsChartData
-	probabilities: Array<[string, number]>
-	probability: number
-}
-
-type MulticlassClassificationPrediction = {
-	className: string
-	classes: string[]
-	featureContributionsChartData: FeatureContributionsChartData
-	probabilities: Array<[string, number]>
-	probability: number
-}
 
 export default function PredictPage(props: Props) {
 	return renderPage(

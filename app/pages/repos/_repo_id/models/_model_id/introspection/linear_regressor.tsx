@@ -1,14 +1,9 @@
 import { LinearFeatureWeights } from './linear_feature_weights'
+import { LinearRegressorProps } from './props'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
-type Props = {
-	bias: number
-	targetColumnName: string
-	weights: Array<[string, number]>
-}
-
-export function LinearRegressorModelPage(props: Props) {
+export function LinearRegressorModelPage(props: LinearRegressorProps) {
 	let bias = ui.formatNumber(props.bias)
 	return (
 		<ui.S1>

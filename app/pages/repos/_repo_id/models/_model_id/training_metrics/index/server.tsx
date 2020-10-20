@@ -1,49 +1,10 @@
-import {
-	Props as BinaryClassifierProps,
-	BinaryClassifierTrainingMetricsIndexPage,
-} from './binary_classifier'
-import {
-	Props as MulticlassClassifierProps,
-	MulticlassClassifierTrainingMetricsIndexPage,
-} from './multiclass_classifier'
-import {
-	Props as RegressorProps,
-	RegressorTrainingMetricsIndexPage,
-} from './regressor'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { BinaryClassifierTrainingMetricsIndexPage } from './binary_classifier'
+import { MulticlassClassifierTrainingMetricsIndexPage } from './multiclass_classifier'
+import { Props, Type } from './props'
+import { RegressorTrainingMetricsIndexPage } from './regressor'
 import { renderPage } from 'common/render'
-import {
-	ModelLayout,
-	ModelLayoutInfo,
-	ModelSideNavItem,
-} from 'layouts/model_layout'
+import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { h } from 'preact'
-
-export enum Type {
-	Regressor = 'regressor',
-	BinaryClassifier = 'binaryClassifier',
-	MulticlassClassifier = 'multiclassClassifier',
-}
-
-export type Props = {
-	inner: Inner
-	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
-}
-
-export type Inner =
-	| {
-			type: Type.Regressor
-			value: RegressorProps
-	  }
-	| {
-			type: Type.BinaryClassifier
-			value: BinaryClassifierProps
-	  }
-	| {
-			type: Type.MulticlassClassifier
-			value: MulticlassClassifierProps
-	  }
 
 export default function TrainingMetricsIndexPage(props: Props) {
 	let inner

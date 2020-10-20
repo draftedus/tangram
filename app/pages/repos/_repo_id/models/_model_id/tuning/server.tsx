@@ -1,19 +1,10 @@
-import { Tuning, TuningProps } from './tuning'
-import { Client, PinwheelInfo } from '@tangramhq/pinwheel'
+import { Props } from './props'
+import { Tuning } from './tuning'
+import { Client } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
-import {
-	ModelLayout,
-	ModelLayoutInfo,
-	ModelSideNavItem,
-} from 'layouts/model_layout'
+import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { h } from 'preact'
-
-export type Props = {
-	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
-	tuning: TuningProps | null
-}
 
 export default function TuningPage(props: Props) {
 	let inner

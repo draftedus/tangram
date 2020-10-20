@@ -1,18 +1,8 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { Props } from './props'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { Fragment, h } from 'preact'
-
-export type Props = {
-	pinwheelInfo: PinwheelInfo
-	repos: Array<{
-		createdAt: string
-		id: string
-		ownerName: string | null
-		title: string
-	}>
-}
 
 export default function HomePage(props: Props) {
 	return renderPage(

@@ -1,22 +1,12 @@
+import { TextProps } from './props'
 import { BarChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
-import { DateWindow, DateWindowInterval, overallChartTitle } from 'common/time'
+import { overallChartTitle } from 'common/time'
 import { productionColor } from 'common/tokens'
 import { h } from 'preact'
 
-export type Props = {
-	absentCount: number
-	alert: string | null
-	columnName: string
-	dateWindow: DateWindow
-	dateWindowInterval: DateWindowInterval
-	invalidCount: number
-	overallTokenHistogram: Array<[string, number]>
-	rowCount: number
-}
-
-export function Text(props: Props) {
+export function Text(props: TextProps) {
 	let overallChartData = [
 		{
 			color: productionColor,
