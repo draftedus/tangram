@@ -127,7 +127,7 @@ impl Regressor {
 				let slice = s![0..features.nrows()];
 				let mut predictions_slice = predictions.slice_mut(slice);
 				self.predict(features, predictions_slice.view_mut());
-				for (prediction, label) in predictions_slice.iter().zip(labels.iter()) {
+				for (prediction, label) in izip!(predictions_slice.iter(), labels.iter()) {
 					metric.update((*prediction, *label));
 				}
 				(predictions, metric)

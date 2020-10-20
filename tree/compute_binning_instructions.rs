@@ -1,5 +1,5 @@
 use crate::TrainOptions;
-use itertools::Itertools;
+use itertools::{izip, Itertools};
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BTreeMap};
@@ -135,11 +135,13 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 	while let Some((value, count)) = iter.next() {
 		let value = value.get();
 		current_count += count;
-		let quantiles_iter = quantiles
-			.iter_mut()
-			.zip(quantile_indexes.iter().zip(quantile_fracts.iter()))
-			.filter(|(q, (_, _))| q.is_none());
-		for (quantile, (index, fract)) in quantiles_iter {
+		let quantiles_iter = izip!(
+			quantiles.iter_mut(),
+			quantile_indexes.iter(),
+			quantile_fracts.iter()
+		)
+		.filter(|(quantile, _, _)| quantile.is_none());
+		for (quantile, index, fract) in quantiles_iter {
 			match (current_count - 1).cmp(index) {
 				Ordering::Equal => {
 					if *fract > 0.0 {

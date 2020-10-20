@@ -162,9 +162,7 @@ impl DataFrame {
 		column_names: Vec<Option<String>>,
 		column_types: Vec<DataFrameColumnType>,
 	) -> DataFrame {
-		let columns = column_names
-			.into_iter()
-			.zip(column_types.into_iter())
+		let columns = izip!(column_names, column_types)
 			.map(|(column_name, column_type)| match column_type {
 				DataFrameColumnType::Unknown => {
 					DataFrameColumn::Unknown(UnknownDataFrameColumn::new(column_name))
@@ -516,7 +514,7 @@ impl<'a> DataFrameView<'a> {
 	}
 
 	pub fn read_row(&self, index: usize, row: &mut [DataFrameValue<'a>]) {
-		for (value, column) in row.iter_mut().zip(self.columns.iter()) {
+		for (value, column) in izip!(row.iter_mut(), self.columns.iter()) {
 			*value = match column {
 				DataFrameColumnView::Unknown(_) => DataFrameValue::Unknown,
 				DataFrameColumnView::Number(column) => DataFrameValue::Number(column.data[index]),

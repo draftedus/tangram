@@ -171,7 +171,7 @@ impl DataFrame {
 		let mut record = csv::ByteRecord::new();
 		while reader.read_byte_record(&mut record)? {
 			progress(record.position().unwrap().byte());
-			for (column, value) in dataframe.columns.iter_mut().zip(record.iter()) {
+			for (column, value) in izip!(dataframe.columns.iter_mut(), record.iter()) {
 				match column {
 					DataFrameColumn::Unknown(column) => {
 						column.len += 1;

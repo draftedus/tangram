@@ -1,6 +1,6 @@
 use crate::stats;
 use fnv::{FnvHashMap, FnvHashSet};
-use itertools::Itertools;
+use itertools::{izip, Itertools};
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
 use tangram_dataframe::prelude::*;
@@ -209,12 +209,8 @@ impl Stats {
 	}
 
 	pub fn merge(self, other: Stats) -> Stats {
-		let column_stats: Vec<ColumnStats> = self
-			.0
-			.into_iter()
-			.zip(other.0.into_iter())
-			.map(|(a, b)| a.merge(b))
-			.collect();
+		let column_stats: Vec<ColumnStats> =
+			izip!(self.0, other.0).map(|(a, b)| a.merge(b)).collect();
 		Stats(column_stats)
 	}
 
@@ -350,11 +346,9 @@ impl NumberColumnStats {
 			mean = new_mean;
 			m2 = new_m2;
 			current_count += count;
-			let quantiles_iter = quantiles
-				.iter_mut()
-				.zip(quantile_indexes.iter().zip(quantile_fracts.iter()))
-				.filter(|(q, (_, _))| q.is_none());
-			for (quantile, (index, fract)) in quantiles_iter {
+			let quantiles_iter = izip!(&mut quantiles, &quantile_indexes, &quantile_fracts)
+				.filter(|(quantile, _, _)| quantile.is_none());
+			for (quantile, index, fract) in quantiles_iter {
 				match (current_count - 1).cmp(index) {
 					Ordering::Equal => {
 						if *fract > 0.0 {
@@ -416,7 +410,7 @@ impl EnumColumnStats {
 	}
 
 	fn merge(mut self, other: EnumColumnStats) -> EnumColumnStats {
-		for (a, b) in self.histogram.iter_mut().zip(other.histogram.iter()) {
+		for (a, b) in izip!(&mut self.histogram, &other.histogram) {
 			*a += b;
 		}
 		self.count += other.count;
@@ -431,10 +425,7 @@ impl EnumColumnStats {
 			count: self.count.to_u64().unwrap(),
 			invalid_count: self.invalid_count,
 			unique_count: self.options.len(),
-			histogram: self
-				.options
-				.into_iter()
-				.zip(self.histogram.into_iter().skip(1))
+			histogram: izip!(self.options, self.histogram.into_iter().skip(1))
 				.map(|(value, count)| (value, count))
 				.collect(),
 		}

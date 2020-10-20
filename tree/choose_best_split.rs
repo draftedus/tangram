@@ -315,10 +315,10 @@ fn choose_best_split_root_row_major(
 		.reduce(
 			|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
 			|mut res, chunk| {
-				res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
+				for (res, chunk) in izip!(res.iter_mut(), chunk.iter()) {
 					res.sum_gradients += chunk.sum_gradients;
 					res.sum_hessians += chunk.sum_hessians;
-				});
+				}
 				res
 			},
 		);
@@ -802,10 +802,10 @@ fn compute_bin_stats_and_choose_best_splits_not_root_row_major(
 						.collect()
 				},
 				|mut res, chunk| {
-					res.iter_mut().zip(chunk.iter()).for_each(|(res, chunk)| {
+					for (res, chunk) in izip!(res.iter_mut(), chunk.iter()) {
 						res.sum_gradients += chunk.sum_gradients;
 						res.sum_hessians += chunk.sum_hessians;
-					});
+					}
 					res
 				},
 			);

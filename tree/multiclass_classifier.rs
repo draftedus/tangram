@@ -68,12 +68,12 @@ impl MulticlassClassifier {
 			features.axis_iter(Axis(0))
 		) {
 			let mut row = vec![DataFrameValue::Number(0.0); features.len()];
-			for (v, feature) in row.iter_mut().zip(features) {
+			for (v, feature) in izip!(row.iter_mut(), features.iter()) {
 				*v = *feature;
 			}
 			logits.assign(&biases);
 			for trees in trees.axis_iter(Axis(0)) {
-				for (logit, tree) in logits.iter_mut().zip(trees.iter()) {
+				for (logit, tree) in izip!(logits.iter_mut(), trees.iter()) {
 					*logit += tree.predict(&row);
 				}
 			}
@@ -111,8 +111,8 @@ pub fn update_logits(
 ) {
 	let features_rows = binned_features.axis_iter(Axis(0));
 	let logits_rows = predictions.axis_iter_mut(Axis(1));
-	for (features, mut logits) in features_rows.zip(logits_rows) {
-		for (logit, tree) in logits.iter_mut().zip(trees_for_round.iter()) {
+	for (features, mut logits) in izip!(features_rows, logits_rows) {
+		for (logit, tree) in izip!(logits.iter_mut(), trees_for_round.iter()) {
 			*logit += tree.predict(features.as_slice().unwrap());
 		}
 	}
@@ -121,7 +121,7 @@ pub fn update_logits(
 /// This function is used by the common train function to compute the loss after each tree is trained for multiclass classification.
 pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
-	for (label, logits) in labels.into_iter().zip(logits.axis_iter(Axis(0))) {
+	for (label, logits) in izip!(labels.into_iter(), logits.axis_iter(Axis(0))) {
 		let mut probabilities = logits.to_owned();
 		softmax(probabilities.as_slice_mut().unwrap());
 		for (index, &probability) in probabilities.indexed_iter() {

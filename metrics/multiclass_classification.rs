@@ -1,4 +1,5 @@
 use super::StreamingMetric;
+use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
@@ -69,10 +70,8 @@ impl<'a> StreamingMetric<'a> for MulticlassClassificationMetrics {
 	type Output = MulticlassClassificationMetricsOutput;
 
 	fn update(&mut self, value: Self::Input) {
-		for (label, probabilities) in value
-			.labels
-			.iter()
-			.zip(value.probabilities.axis_iter(Axis(0)))
+		for (label, probabilities) in
+			izip!(value.labels.iter(), value.probabilities.axis_iter(Axis(0)))
 		{
 			let prediction = probabilities
 				.iter()
@@ -130,18 +129,14 @@ impl<'a> StreamingMetric<'a> for MulticlassClassificationMetrics {
 		let recall_unweighted = class_metrics.iter().map(|class| class.recall).sum::<f32>()
 			/ n_classes.to_f32().unwrap();
 		let n_examples_per_class = confusion_matrix.sum_axis(Axis(0));
-		let precision_weighted = class_metrics
-			.iter()
-			.zip(n_examples_per_class.iter())
-			.map(|(class, &n_examples_in_class)| {
+		let precision_weighted = izip!(&class_metrics, &n_examples_per_class)
+			.map(|(class, n_examples_in_class)| {
 				class.precision * n_examples_in_class.to_f32().unwrap()
 			})
 			.sum::<f32>()
 			/ n_examples.to_f32().unwrap();
-		let recall_weighted = class_metrics
-			.iter()
-			.zip(n_examples_per_class.iter())
-			.map(|(class, &n_examples_in_class)| {
+		let recall_weighted = izip!(&class_metrics, &n_examples_per_class)
+			.map(|(class, n_examples_in_class)| {
 				class.recall * n_examples_in_class.to_f32().unwrap()
 			})
 			.sum::<f32>()

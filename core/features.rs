@@ -377,7 +377,7 @@ pub fn compute_features_array_f32(
 fn compute_features_normalized_array_f32(
 	dataframe: &DataFrameView,
 	feature_group: &NormalizedFeatureGroup,
-	mut features: ArrayViewMut2<f32>,
+	features: ArrayViewMut2<f32>,
 	progress: &impl Fn(),
 ) {
 	// Get the source column.
@@ -388,7 +388,7 @@ fn compute_features_normalized_array_f32(
 		.unwrap();
 	let source_column = source_column.as_number().unwrap();
 	// Set the feature values to the normalized source column values.
-	for (feature, value) in features.iter_mut().zip(source_column.iter()) {
+	for (feature, value) in izip!(features, source_column.iter()) {
 		*feature = if value.is_nan() || feature_group.variance == 0.0 {
 			0.0
 		} else {
@@ -414,7 +414,7 @@ fn compute_features_one_hot_encoded_array_f32(
 	// Fill the features with zeros.
 	features.fill(0.0);
 	// For each example, set the features corresponding to the enum value to one.
-	for (mut features, value) in features.axis_iter_mut(Axis(0)).zip(source_column.iter()) {
+	for (mut features, value) in izip!(features.axis_iter_mut(Axis(0)), source_column.iter()) {
 		let feature_index = value.map(|v| v.get()).unwrap_or(0);
 		features[feature_index] = 1.0;
 		progress();

@@ -1,3 +1,4 @@
+use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use serde_json::json;
@@ -96,10 +97,8 @@ fn main() {
 	model.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute metrics.
-	let input = probabilities
-		.iter()
-		.cloned()
-		.zip(labels_test.iter().map(|d| d.unwrap()))
+	let input = izip!(probabilities.iter(), labels_test.iter())
+		.map(|(probability, label)| (*probability, label.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 	let output = json!({ "auc_roc": auc_roc });

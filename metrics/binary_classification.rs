@@ -1,5 +1,5 @@
 use super::StreamingMetric;
-use itertools::Itertools;
+use itertools::{izip, Itertools};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
@@ -96,7 +96,7 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 
 	fn update(&mut self, input: BinaryClassificationMetricsInput) {
 		for (threshold, confusion_matrix) in self.confusion_matrices_for_thresholds.iter_mut() {
-			for (probability, label) in input.probabilities.iter().zip(input.labels) {
+			for (probability, label) in izip!(input.probabilities.iter(), input.labels.iter()) {
 				let predicted = *probability >= *threshold;
 				let actual = label.unwrap().get() == 2;
 				match (predicted, actual) {
@@ -110,11 +110,10 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 	}
 
 	fn merge(&mut self, other: Self) {
-		for ((_, confusion_matrix_a), (_, confusion_matrix_b)) in self
-			.confusion_matrices_for_thresholds
-			.iter_mut()
-			.zip(other.confusion_matrices_for_thresholds.iter())
-		{
+		for ((_, confusion_matrix_a), (_, confusion_matrix_b)) in izip!(
+			self.confusion_matrices_for_thresholds.iter_mut(),
+			other.confusion_matrices_for_thresholds.iter()
+		) {
 			confusion_matrix_a.true_positives += confusion_matrix_b.true_positives;
 			confusion_matrix_a.false_negatives += confusion_matrix_b.false_negatives;
 			confusion_matrix_a.true_negatives += confusion_matrix_b.true_negatives;

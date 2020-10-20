@@ -15,6 +15,7 @@ use crate::{
 use anyhow::Result;
 use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
+use itertools::izip;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use tangram_util::id::Id;
@@ -361,10 +362,7 @@ fn enum_props(
 		_ => unreachable!(),
 	};
 	let production_row_count = get_production_stats_output.overall.row_count;
-	let overall_chart_data = overall
-		.histogram
-		.iter()
-		.zip(train_column_stats.histogram.iter())
+	let overall_chart_data = izip!(&overall.histogram, &train_column_stats.histogram)
 		.map(
 			|((production_enum_option, production_count), (_, training_count))| {
 				(

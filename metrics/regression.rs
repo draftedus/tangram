@@ -1,4 +1,5 @@
 use super::StreamingMetric;
+use itertools::izip;
 use num_traits::ToPrimitive;
 use std::num::NonZeroU64;
 
@@ -56,7 +57,7 @@ impl<'a> StreamingMetric<'a> for RegressionMetrics {
 	type Output = RegressionMetricsOutput;
 
 	fn update(&mut self, input: RegressionMetricsInput) {
-		for (prediction, label) in input.predictions.iter().zip(input.labels.iter()) {
+		for (prediction, label) in izip!(input.predictions.iter(), input.labels.iter()) {
 			match &mut self.mean_variance {
 				Some(mean_variance) => {
 					let (mean, m2) = merge_mean_m2(

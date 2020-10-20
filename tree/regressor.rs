@@ -56,7 +56,7 @@ impl Regressor {
 		let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
 		for (i, prediction) in predictions.iter_mut().enumerate() {
 			for tree in &self.trees {
-				for (v, feature) in row.iter_mut().zip(features.row(i)) {
+				for (v, feature) in izip!(row.iter_mut(), features.row(i)) {
 					*v = *feature;
 				}
 				*prediction += tree.predict(&row);
@@ -95,7 +95,7 @@ pub fn update_logits(
 /// This function is used by the common train function to compute the loss after each tree is trained for regression.
 pub fn compute_loss(labels: ArrayView1<f32>, predictions: ArrayView2<f32>) -> f32 {
 	let mut loss = 0.0;
-	for (label, prediction) in labels.iter().zip(predictions) {
+	for (label, prediction) in izip!(labels.iter(), predictions) {
 		loss += 0.5 * (label - prediction).powi(2);
 	}
 	loss / labels.len().to_f32().unwrap()

@@ -1,3 +1,4 @@
+use itertools::izip;
 use num_traits::ToPrimitive;
 use rand::random;
 use std::num::NonZeroU64;
@@ -95,12 +96,9 @@ impl StreamingMetric<'_> for NumberStats {
 		let mut quantiles: Vec<f32> = vec![0.0; quantiles.len()];
 		let mut samples = self.reservoir;
 		samples.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-		for (quantile, (index, fract)) in quantiles
-			.iter_mut()
-			.zip(quantile_indexes.iter().zip(quantile_fracts))
-		{
+		for (quantile, index, fract) in izip!(&mut quantiles, &quantile_indexes, &quantile_fracts) {
 			let value = samples[*index];
-			if fract > 0.0 {
+			if *fract > 0.0 {
 				let next_value = samples[index + 1];
 				// Interpolate between two values.
 				*quantile = value * (1.0 - fract) + next_value * fract;

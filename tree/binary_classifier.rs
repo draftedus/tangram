@@ -4,6 +4,7 @@ use crate::{
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
+use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
@@ -57,7 +58,7 @@ impl BinaryClassifier {
 		for (example_index, logit) in probabilities.iter_mut().enumerate() {
 			for tree in &self.trees {
 				let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
-				for (v, feature) in row.iter_mut().zip(features.row(example_index)) {
+				for (v, feature) in izip!(row.iter_mut(), features.row(example_index)) {
 					*v = *feature;
 				}
 				*logit += tree.predict(&row);
@@ -90,9 +91,8 @@ pub fn update_logits(
 	mut predictions: ArrayViewMut2<f32>,
 ) {
 	for tree in trees_for_round {
-		for (prediction, features) in predictions
-			.iter_mut()
-			.zip(binned_features.axis_iter(Axis(0)))
+		for (prediction, features) in
+			izip!(predictions.iter_mut(), binned_features.axis_iter(Axis(0)))
 		{
 			*prediction += tree.predict(features.as_slice().unwrap());
 		}
@@ -102,7 +102,7 @@ pub fn update_logits(
 /// This function is used by the common train function to compute the loss after each tree is trained for binary classification.
 pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
 	let mut total = 0.0;
-	for (label, logit) in labels.iter().zip(logits) {
+	for (label, logit) in izip!(labels.iter(), logits) {
 		let label = (label.unwrap().get() - 1).to_f32().unwrap();
 		let probability = 1.0 / (logit.neg().exp() + 1.0);
 		let probability_clamped = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);

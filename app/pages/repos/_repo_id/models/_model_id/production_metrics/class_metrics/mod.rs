@@ -14,6 +14,7 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
+use itertools::izip;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use tangram_util::id::Id;
@@ -154,85 +155,84 @@ async fn props(
 				}
 			});
 	let training_class_metrics = &model.test_metrics.class_metrics;
-	let overall_class_metrics: Vec<OverallClassMetricsEntry> = training_class_metrics
-		.iter()
-		.zip(classes.iter())
-		.enumerate()
-		.map(|(class_index, (training_class_metrics, class_name))| {
-			let production_class_metrics = overall_prediction_metrics
-				.as_ref()
-				.map(|prediction_metrics| &prediction_metrics.class_metrics[class_index]);
-			let training_tn = training_class_metrics.true_negatives;
-			let training_fp = training_class_metrics.false_positives;
-			let training_tp = training_class_metrics.true_positives;
-			let training_fn = training_class_metrics.false_negatives;
-			let training_total = training_tn + training_fp + training_tp + training_fn;
-			let training_tn_fraction =
-				training_tn.to_f32().unwrap() / training_total.to_f32().unwrap();
-			let training_fp_fraction =
-				training_fp.to_f32().unwrap() / training_total.to_f32().unwrap();
-			let training_tp_fraction =
-				training_tp.to_f32().unwrap() / training_total.to_f32().unwrap();
-			let training_fn_fraction =
-				training_fn.to_f32().unwrap() / training_total.to_f32().unwrap();
-			let production_tp = production_class_metrics.map(|m| m.true_positives);
-			let production_fp = production_class_metrics.map(|m| m.false_positives);
-			let production_tn = production_class_metrics.map(|m| m.true_negatives);
-			let production_fn = production_class_metrics.map(|m| m.false_negatives);
-			let production_total = production_class_metrics.map(|m| {
-				m.false_positives + m.false_negatives + m.true_positives + m.true_negatives
-			});
-			let production_tp_fraction = production_tp
-				.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
-			let production_fp_fraction = production_fp
-				.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
-			let production_tn_fraction = production_tn
-				.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
-			let production_fn_fraction = production_fn
-				.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
-			let confusion_matrix = ConfusionMatrix {
-				false_negatives: production_fn,
-				true_negatives: production_tn,
-				true_positives: production_tp,
-				false_positives: production_fp,
-			};
-			let comparison = Comparison {
-				false_negative_fraction: TrainingProductionMetrics {
-					production: production_fn_fraction,
-					training: training_fn_fraction,
-				},
-				false_positive_fraction: TrainingProductionMetrics {
-					production: production_fp_fraction,
-					training: training_fp_fraction,
-				},
-				true_positive_fraction: TrainingProductionMetrics {
-					production: production_tp_fraction,
-					training: training_tp_fraction,
-				},
-				true_negative_fraction: TrainingProductionMetrics {
-					production: production_tn_fraction,
-					training: training_tn_fraction,
-				},
-			};
-			OverallClassMetricsEntry {
-				class_name: class_name.clone(),
-				comparison,
-				confusion_matrix,
-				f1_score: TrainingProductionMetrics {
-					training: training_class_metrics.f1_score,
-					production: production_class_metrics.map(|m| m.f1_score),
-				},
-				precision: TrainingProductionMetrics {
-					production: production_class_metrics.map(|m| m.precision),
-					training: training_class_metrics.f1_score,
-				},
-				recall: TrainingProductionMetrics {
-					training: training_class_metrics.recall,
-					production: production_class_metrics.map(|m| m.recall),
-				},
-			}
-		})
-		.collect();
+	let overall_class_metrics: Vec<OverallClassMetricsEntry> =
+		izip!(training_class_metrics, &classes)
+			.enumerate()
+			.map(|(class_index, (training_class_metrics, class_name))| {
+				let production_class_metrics = overall_prediction_metrics
+					.as_ref()
+					.map(|prediction_metrics| &prediction_metrics.class_metrics[class_index]);
+				let training_tn = training_class_metrics.true_negatives;
+				let training_fp = training_class_metrics.false_positives;
+				let training_tp = training_class_metrics.true_positives;
+				let training_fn = training_class_metrics.false_negatives;
+				let training_total = training_tn + training_fp + training_tp + training_fn;
+				let training_tn_fraction =
+					training_tn.to_f32().unwrap() / training_total.to_f32().unwrap();
+				let training_fp_fraction =
+					training_fp.to_f32().unwrap() / training_total.to_f32().unwrap();
+				let training_tp_fraction =
+					training_tp.to_f32().unwrap() / training_total.to_f32().unwrap();
+				let training_fn_fraction =
+					training_fn.to_f32().unwrap() / training_total.to_f32().unwrap();
+				let production_tp = production_class_metrics.map(|m| m.true_positives);
+				let production_fp = production_class_metrics.map(|m| m.false_positives);
+				let production_tn = production_class_metrics.map(|m| m.true_negatives);
+				let production_fn = production_class_metrics.map(|m| m.false_negatives);
+				let production_total = production_class_metrics.map(|m| {
+					m.false_positives + m.false_negatives + m.true_positives + m.true_negatives
+				});
+				let production_tp_fraction = production_tp
+					.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
+				let production_fp_fraction = production_fp
+					.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
+				let production_tn_fraction = production_tn
+					.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
+				let production_fn_fraction = production_fn
+					.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
+				let confusion_matrix = ConfusionMatrix {
+					false_negatives: production_fn,
+					true_negatives: production_tn,
+					true_positives: production_tp,
+					false_positives: production_fp,
+				};
+				let comparison = Comparison {
+					false_negative_fraction: TrainingProductionMetrics {
+						production: production_fn_fraction,
+						training: training_fn_fraction,
+					},
+					false_positive_fraction: TrainingProductionMetrics {
+						production: production_fp_fraction,
+						training: training_fp_fraction,
+					},
+					true_positive_fraction: TrainingProductionMetrics {
+						production: production_tp_fraction,
+						training: training_tp_fraction,
+					},
+					true_negative_fraction: TrainingProductionMetrics {
+						production: production_tn_fraction,
+						training: training_tn_fraction,
+					},
+				};
+				OverallClassMetricsEntry {
+					class_name: class_name.clone(),
+					comparison,
+					confusion_matrix,
+					f1_score: TrainingProductionMetrics {
+						training: training_class_metrics.f1_score,
+						production: production_class_metrics.map(|m| m.f1_score),
+					},
+					precision: TrainingProductionMetrics {
+						production: production_class_metrics.map(|m| m.precision),
+						training: training_class_metrics.f1_score,
+					},
+					recall: TrainingProductionMetrics {
+						training: training_class_metrics.recall,
+						production: production_class_metrics.map(|m| m.recall),
+					},
+				}
+			})
+			.collect();
 	let overall = OverallClassMetrics {
 		label: format_date_window_interval(overall.start_date, date_window_interval, timezone),
 		class_metrics: overall_class_metrics,

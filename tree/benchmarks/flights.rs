@@ -1,3 +1,4 @@
+use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
@@ -146,11 +147,8 @@ fn main() {
 	});
 
 	// Compute metrics.
-	let labels = labels_test;
-	let input = probabilities
-		.iter()
-		.cloned()
-		.zip(labels.iter().map(|d| d.unwrap()))
+	let input = izip!(probabilities.iter(), labels_test.iter())
+		.map(|(probability, label)| (*probability, label.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 	let output = json!({ "auc_roc": auc_roc, "duration": duration });
