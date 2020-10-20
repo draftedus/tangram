@@ -396,7 +396,7 @@ fn update_predictions_with_tree(
 	tree.leaf_values.par_iter().for_each(|(range, value)| {
 		examples_index[range.clone()]
 			.iter()
-			.for_each(|&example_index| unsafe {
+			.for_each(|example_index| unsafe {
 				let example_index = example_index.to_usize().unwrap();
 				*predictions_cell.get().get_unchecked_mut(example_index) += value;
 			});
