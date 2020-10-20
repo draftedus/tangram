@@ -131,6 +131,7 @@ pub enum Model {
 pub struct Regressor {
 	pub id: String,
 	pub columns: Vec<Column>,
+	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: RegressionModel,
 }
 
@@ -140,6 +141,7 @@ pub struct BinaryClassifier {
 	pub columns: Vec<Column>,
 	pub negative_class: String,
 	pub positive_class: String,
+	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: BinaryClassificationModel,
 }
 
@@ -148,61 +150,26 @@ pub struct MulticlassClassifier {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub classes: Vec<String>,
+	pub feature_groups: Vec<features::FeatureGroup>,
 	pub model: MulticlassClassificationModel,
 }
 
 #[derive(Debug)]
 pub enum RegressionModel {
-	Linear(LinearRegressor),
-	Tree(TreeRegressor),
+	Linear(tangram_linear::Regressor),
+	Tree(tangram_tree::Regressor),
 }
 
 #[derive(Debug)]
 pub enum BinaryClassificationModel {
-	Linear(LinearBinaryClassifier),
-	Tree(TreeBinaryClassifier),
+	Linear(tangram_linear::BinaryClassifier),
+	Tree(tangram_tree::BinaryClassifier),
 }
 
 #[derive(Debug)]
 pub enum MulticlassClassificationModel {
-	Linear(LinearMulticlassClassifier),
-	Tree(TreeMulticlassClassifier),
-}
-
-#[derive(Debug)]
-pub struct LinearRegressor {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_linear::Regressor,
-}
-
-#[derive(Debug)]
-pub struct TreeRegressor {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_tree::Regressor,
-}
-
-#[derive(Debug)]
-pub struct LinearBinaryClassifier {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_linear::BinaryClassifier,
-}
-
-#[derive(Debug)]
-pub struct TreeBinaryClassifier {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_tree::BinaryClassifier,
-}
-
-#[derive(Debug)]
-pub struct LinearMulticlassClassifier {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_linear::MulticlassClassifier,
-}
-
-#[derive(Debug)]
-pub struct TreeMulticlassClassifier {
-	pub feature_groups: Vec<features::FeatureGroup>,
-	pub model: tangram_tree::MulticlassClassifier,
+	Linear(tangram_linear::MulticlassClassifier),
+	Tree(tangram_tree::MulticlassClassifier),
 }
 
 #[derive(Debug)]
@@ -300,27 +267,148 @@ pub fn predict(
 	}
 	// Make the predictions by matching on the model type.
 	match model {
-		Model::Regressor(model) => match &model.model {
-			RegressionModel::Linear(model) => {
-				let n_examples = dataframe.nrows();
-				let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
-				let mut features = Array::zeros((n_examples, n_features));
-				let mut predictions = Array::zeros(n_examples);
-				features::compute_features_array_f32(
-					&dataframe.view(),
-					&model.feature_groups,
-					features.view_mut(),
-					&|| {},
+		Model::Regressor(model) => {
+			PredictOutput::Regression(predict_regressor(model, dataframe, options))
+		}
+		Model::BinaryClassifier(model) => PredictOutput::BinaryClassification(
+			predict_binary_classifier(model, dataframe, options),
+		),
+		Model::MulticlassClassifier(model) => PredictOutput::MulticlassClassification(
+			predict_multiclass_classifier(model, dataframe, options),
+		),
+	}
+}
+
+fn predict_regressor(
+	model: &Regressor,
+	dataframe: DataFrame,
+	_options: Option<PredictOptions>,
+) -> Vec<RegressionPredictOutput> {
+	match &model.model {
+		RegressionModel::Linear(inner_model) => {
+			let n_examples = dataframe.nrows();
+			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
+			let mut features = Array::zeros((n_examples, n_features));
+			let mut predictions = Array::zeros(n_examples);
+			features::compute_features_array_f32(
+				&dataframe.view(),
+				&model.feature_groups,
+				features.view_mut(),
+				&|| {},
+			);
+			inner_model.predict(features.view(), predictions.view_mut());
+			let feature_contributions = inner_model.compute_feature_contributions(features.view());
+			izip!(
+				features.axis_iter(Axis(0)),
+				predictions.iter(),
+				feature_contributions,
+			)
+			.map(|(features, prediction, feature_contributions)| {
+				let baseline_value = feature_contributions.baseline_value;
+				let output_value = feature_contributions.output_value;
+				let feature_contributions = compute_feature_contributions(
+					model.feature_groups.iter(),
+					features.iter().cloned(),
+					feature_contributions
+						.feature_contribution_values
+						.into_iter(),
 				);
-				model.model.predict(features.view(), predictions.view_mut());
-				let feature_contributions =
-					model.model.compute_feature_contributions(features.view());
-				let output = izip!(
-					features.axis_iter(Axis(0)),
-					predictions.iter(),
+				let feature_contributions = FeatureContributions {
+					baseline_value,
+					output_value,
 					feature_contributions,
-				)
-				.map(|(features, prediction, feature_contributions)| {
+				};
+				RegressionPredictOutput {
+					value: *prediction,
+					feature_contributions: Some(feature_contributions),
+				}
+			})
+			.collect()
+		}
+		RegressionModel::Tree(inner_model) => {
+			let n_examples = dataframe.nrows();
+			let n_features = model
+				.feature_groups
+				.iter()
+				.map(|g| g.n_features())
+				.sum::<usize>();
+			let mut features =
+				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
+			features::compute_features_array_value(
+				&dataframe.view(),
+				&model.feature_groups,
+				features.view_mut(),
+				&|| {},
+			);
+			let mut predictions = Array::zeros(n_examples);
+			inner_model.predict(features.view(), predictions.view_mut());
+			let feature_contributions = inner_model.compute_feature_contributions(features.view());
+			izip!(
+				features.axis_iter(Axis(0)),
+				predictions.iter(),
+				feature_contributions
+			)
+			.map(|(features, prediction, feature_contributions)| {
+				let baseline_value = feature_contributions.baseline_value;
+				let output_value = feature_contributions.output_value;
+				let feature_contributions = compute_feature_contributions(
+					model.feature_groups.iter(),
+					features.iter().map(|v| match v {
+						tangram_dataframe::DataFrameValue::Number(value) => *value,
+						tangram_dataframe::DataFrameValue::Enum(value) => {
+							value.map(|v| v.get()).unwrap_or(0).to_f32().unwrap()
+						}
+						_ => unreachable!(),
+					}),
+					feature_contributions
+						.feature_contribution_values
+						.into_iter(),
+				);
+				let feature_contributions = FeatureContributions {
+					baseline_value,
+					output_value,
+					feature_contributions,
+				};
+				RegressionPredictOutput {
+					value: *prediction,
+					feature_contributions: Some(feature_contributions),
+				}
+			})
+			.collect()
+		}
+	}
+}
+
+fn predict_binary_classifier(
+	model: &BinaryClassifier,
+	dataframe: DataFrame,
+	options: Option<PredictOptions>,
+) -> Vec<BinaryClassificationPredictOutput> {
+	match &model.model {
+		BinaryClassificationModel::Linear(inner_model) => {
+			let n_examples = dataframe.nrows();
+			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
+			let mut features = Array::zeros((n_examples, n_features));
+			let mut probabilities = Array::zeros(n_examples);
+			features::compute_features_array_f32(
+				&dataframe.view(),
+				&model.feature_groups,
+				features.view_mut(),
+				&|| {},
+			);
+			inner_model.predict(features.view(), probabilities.view_mut());
+			let feature_contributions = inner_model.compute_feature_contributions(features.view());
+			let threshold = match options {
+				Some(options) => options.threshold,
+				None => 0.5,
+			};
+			izip!(probabilities.iter(), feature_contributions)
+				.map(|(probability, feature_contributions)| {
+					let (probability, class_name) = if *probability >= threshold {
+						(*probability, model.positive_class.clone())
+					} else {
+						(1.0 - probability, model.negative_class.clone())
+					};
 					let baseline_value = feature_contributions.baseline_value;
 					let output_value = feature_contributions.output_value;
 					let feature_contributions = compute_feature_contributions(
@@ -335,39 +423,43 @@ pub fn predict(
 						output_value,
 						feature_contributions,
 					};
-					RegressionPredictOutput {
-						value: *prediction,
+					BinaryClassificationPredictOutput {
+						class_name,
+						probability,
 						feature_contributions: Some(feature_contributions),
 					}
 				})
-				.collect();
-				PredictOutput::Regression(output)
-			}
-			RegressionModel::Tree(model) => {
-				let n_examples = dataframe.nrows();
-				let n_features = model
-					.feature_groups
-					.iter()
-					.map(|g| g.n_features())
-					.sum::<usize>();
-				let mut features =
-					Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
-				features::compute_features_array_value(
-					&dataframe.view(),
-					&model.feature_groups,
-					features.view_mut(),
-					&|| {},
-				);
-				let mut predictions = Array::zeros(n_examples);
-				model.model.predict(features.view(), predictions.view_mut());
-				let feature_contributions =
-					model.model.compute_feature_contributions(features.view());
-				let output = izip!(
-					features.axis_iter(Axis(0)),
-					predictions.iter(),
-					feature_contributions
-				)
-				.map(|(features, prediction, feature_contributions)| {
+				.collect()
+		}
+		BinaryClassificationModel::Tree(inner_model) => {
+			let n_examples = dataframe.nrows();
+			let n_features = model
+				.feature_groups
+				.iter()
+				.map(|g| g.n_features())
+				.sum::<usize>();
+			let mut features =
+				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
+			features::compute_features_array_value(
+				&dataframe.view(),
+				&model.feature_groups,
+				features.view_mut(),
+				&|| {},
+			);
+			let mut probabilities = Array::zeros(n_examples);
+			inner_model.predict(features.view(), probabilities.view_mut());
+			let feature_contributions = inner_model.compute_feature_contributions(features.view());
+			let threshold = match options {
+				Some(options) => options.threshold,
+				None => 0.5,
+			};
+			izip!(probabilities.iter(), feature_contributions)
+				.map(|(probability, feature_contributions)| {
+					let (probability, class_name) = if *probability >= threshold {
+						(*probability, model.positive_class.clone())
+					} else {
+						(1.0 - probability, model.negative_class.clone())
+					};
 					let baseline_value = feature_contributions.baseline_value;
 					let output_value = feature_contributions.output_value;
 					let feature_contributions = compute_feature_contributions(
@@ -388,269 +480,136 @@ pub fn predict(
 						output_value,
 						feature_contributions,
 					};
-					RegressionPredictOutput {
-						value: *prediction,
+					BinaryClassificationPredictOutput {
+						class_name,
+						probability,
 						feature_contributions: Some(feature_contributions),
 					}
 				})
-				.collect();
-				PredictOutput::Regression(output)
-			}
-		},
-		Model::BinaryClassifier(model) => match &model.model {
-			BinaryClassificationModel::Linear(inner_model) => {
-				let n_examples = dataframe.nrows();
-				let n_features = inner_model
-					.feature_groups
-					.iter()
-					.map(|f| f.n_features())
-					.sum();
-				let mut features = Array::zeros((n_examples, n_features));
-				let mut probabilities = Array::zeros(n_examples);
-				features::compute_features_array_f32(
-					&dataframe.view(),
-					&inner_model.feature_groups,
-					features.view_mut(),
-					&|| {},
-				);
-				inner_model
-					.model
-					.predict(features.view(), probabilities.view_mut());
-				let feature_contributions = inner_model
-					.model
-					.compute_feature_contributions(features.view());
-				let threshold = match options {
-					Some(options) => options.threshold,
-					None => 0.5,
-				};
-				let output = izip!(probabilities.iter(), feature_contributions)
-					.map(|(probability, feature_contributions)| {
-						let (probability, class_name) = if *probability >= threshold {
-							(*probability, model.positive_class.clone())
-						} else {
-							(1.0 - probability, model.negative_class.clone())
-						};
-						let baseline_value = feature_contributions.baseline_value;
-						let output_value = feature_contributions.output_value;
-						let feature_contributions = compute_feature_contributions(
-							inner_model.feature_groups.iter(),
-							features.iter().cloned(),
-							feature_contributions
-								.feature_contribution_values
-								.into_iter(),
-						);
-						let feature_contributions = FeatureContributions {
-							baseline_value,
-							output_value,
-							feature_contributions,
-						};
-						BinaryClassificationPredictOutput {
-							class_name,
-							probability,
-							feature_contributions: Some(feature_contributions),
-						}
-					})
-					.collect();
-				PredictOutput::BinaryClassification(output)
-			}
-			BinaryClassificationModel::Tree(inner_model) => {
-				let n_examples = dataframe.nrows();
-				let n_features = inner_model
-					.feature_groups
-					.iter()
-					.map(|g| g.n_features())
-					.sum::<usize>();
-				let mut features =
-					Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
-				features::compute_features_array_value(
-					&dataframe.view(),
-					&inner_model.feature_groups,
-					features.view_mut(),
-					&|| {},
-				);
-				let mut probabilities = Array::zeros(n_examples);
-				inner_model
-					.model
-					.predict(features.view(), probabilities.view_mut());
-				let feature_contributions = inner_model
-					.model
-					.compute_feature_contributions(features.view());
-				let threshold = match options {
-					Some(options) => options.threshold,
-					None => 0.5,
-				};
-				let output = izip!(probabilities.iter(), feature_contributions)
-					.map(|(probability, feature_contributions)| {
-						let (probability, class_name) = if *probability >= threshold {
-							(*probability, model.positive_class.clone())
-						} else {
-							(1.0 - probability, model.negative_class.clone())
-						};
-						let baseline_value = feature_contributions.baseline_value;
-						let output_value = feature_contributions.output_value;
-						let feature_contributions = compute_feature_contributions(
-							inner_model.feature_groups.iter(),
-							features.iter().map(|v| match v {
-								tangram_dataframe::DataFrameValue::Number(value) => *value,
-								tangram_dataframe::DataFrameValue::Enum(value) => {
-									value.map(|v| v.get()).unwrap_or(0).to_f32().unwrap()
-								}
-								_ => unreachable!(),
-							}),
-							feature_contributions
-								.feature_contribution_values
-								.into_iter(),
-						);
-						let feature_contributions = FeatureContributions {
-							baseline_value,
-							output_value,
-							feature_contributions,
-						};
-						BinaryClassificationPredictOutput {
-							class_name,
-							probability,
-							feature_contributions: Some(feature_contributions),
-						}
-					})
-					.collect();
-				PredictOutput::BinaryClassification(output)
-			}
-		},
-		Model::MulticlassClassifier(model) => match &model.model {
-			MulticlassClassificationModel::Linear(inner_model) => {
-				let n_examples = dataframe.nrows();
-				let n_classes = inner_model.model.classes.len();
-				let n_features = inner_model
-					.feature_groups
-					.iter()
-					.map(|f| f.n_features())
-					.sum();
-				let mut features = Array::zeros((n_examples, n_features));
-				let mut probabilities = Array::zeros((n_examples, n_classes));
-				features::compute_features_array_f32(
-					&dataframe.view(),
-					&inner_model.feature_groups,
-					features.view_mut(),
-					&|| {},
-				);
-				inner_model
-					.model
-					.predict(features.view(), probabilities.view_mut());
-				let feature_contributions = inner_model
-					.model
-					.compute_feature_contributions(features.view());
-				let output = izip!(probabilities.axis_iter(Axis(0)), feature_contributions)
-					.map(|(probabilities, feature_contributions)| {
-						let (probability, class_name) =
-							izip!(probabilities.iter(), inner_model.model.classes.iter())
-								.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
-								.unwrap();
-						let probabilities = izip!(probabilities, inner_model.model.classes.iter())
-							.map(|(p, c)| (c.clone(), *p))
-							.collect();
-						let feature_contributions =
-							izip!(inner_model.model.classes.iter(), feature_contributions)
-								.map(|(class, feature_contributions)| {
-									let baseline_value = feature_contributions.baseline_value;
-									let output_value = feature_contributions.output_value;
-									let feature_contributions = compute_feature_contributions(
-										inner_model.feature_groups.iter(),
-										features.iter().cloned(),
-										feature_contributions
-											.feature_contribution_values
-											.into_iter(),
-									);
-									let feature_contributions = FeatureContributions {
-										baseline_value,
-										output_value,
-										feature_contributions,
-									};
-									(class.to_owned(), feature_contributions)
-								})
-								.collect();
-						MulticlassClassificationPredictOutput {
-							class_name: class_name.to_owned(),
-							probability: *probability,
-							probabilities,
-							feature_contributions: Some(feature_contributions),
-						}
-					})
-					.collect();
-				PredictOutput::MulticlassClassification(output)
-			}
-			MulticlassClassificationModel::Tree(inner_model) => {
-				let n_examples = dataframe.nrows();
-				let n_classes = model.classes.len();
-				let n_features = inner_model
-					.feature_groups
-					.iter()
-					.map(|g| g.n_features())
-					.sum::<usize>();
-				let mut features =
-					Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
-				features::compute_features_array_value(
-					&dataframe.view(),
-					&inner_model.feature_groups,
-					features.view_mut(),
-					&|| {},
-				);
-				let mut probabilities = Array::zeros((n_examples, n_classes));
-				inner_model
-					.model
-					.predict(features.view(), probabilities.view_mut());
-				let feature_contributions = inner_model
-					.model
-					.compute_feature_contributions(features.view());
-				let output = izip!(probabilities.axis_iter(Axis(0)), feature_contributions)
-					.map(|(probabilities, feature_contributions)| {
-						let (probability, class_name) =
-							izip!(probabilities.iter(), model.classes.iter())
-								.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
-								.unwrap();
-						let probabilities = izip!(probabilities.iter(), model.classes.iter())
-							.map(|(probability, class)| (class.clone(), *probability))
-							.collect();
-						let feature_contributions =
-							izip!(model.classes.iter(), feature_contributions)
-								.map(|(class, feature_contributions)| {
-									let baseline_value = feature_contributions.baseline_value;
-									let output_value = feature_contributions.output_value;
-									let feature_contributions = compute_feature_contributions(
-										inner_model.feature_groups.iter(),
-										features.iter().map(|v| match v {
-											tangram_dataframe::DataFrameValue::Number(value) => {
-												*value
-											}
-											tangram_dataframe::DataFrameValue::Enum(value) => value
-												.map(|v| v.get())
-												.unwrap_or(0)
-												.to_f32()
-												.unwrap(),
-											_ => unreachable!(),
-										}),
-										feature_contributions
-											.feature_contribution_values
-											.into_iter(),
-									);
-									let feature_contributions = FeatureContributions {
-										baseline_value,
-										output_value,
-										feature_contributions,
-									};
-									(class.to_owned(), feature_contributions)
-								})
-								.collect();
-						MulticlassClassificationPredictOutput {
-							class_name: class_name.to_owned(),
-							probability: *probability,
-							probabilities,
-							feature_contributions: Some(feature_contributions),
-						}
-					})
-					.collect();
-				PredictOutput::MulticlassClassification(output)
-			}
-		},
+				.collect()
+		}
+	}
+}
+
+fn predict_multiclass_classifier(
+	model: &MulticlassClassifier,
+	dataframe: DataFrame,
+	_options: Option<PredictOptions>,
+) -> Vec<MulticlassClassificationPredictOutput> {
+	match &model.model {
+		MulticlassClassificationModel::Linear(inner_model) => {
+			let n_examples = dataframe.nrows();
+			let n_classes = model.classes.len();
+			let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
+			let mut features = Array::zeros((n_examples, n_features));
+			let mut probabilities = Array::zeros((n_examples, n_classes));
+			features::compute_features_array_f32(
+				&dataframe.view(),
+				&model.feature_groups,
+				features.view_mut(),
+				&|| {},
+			);
+			inner_model.predict(features.view(), probabilities.view_mut());
+			let feature_contributions = inner_model.compute_feature_contributions(features.view());
+			izip!(probabilities.axis_iter(Axis(0)), feature_contributions)
+				.map(|(probabilities, feature_contributions)| {
+					let (probability, class_name) =
+						izip!(probabilities.iter(), model.classes.iter())
+							.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
+							.unwrap();
+					let probabilities = izip!(probabilities, model.classes.iter())
+						.map(|(p, c)| (c.clone(), *p))
+						.collect();
+					let feature_contributions = izip!(model.classes.iter(), feature_contributions)
+						.map(|(class, feature_contributions)| {
+							let baseline_value = feature_contributions.baseline_value;
+							let output_value = feature_contributions.output_value;
+							let feature_contributions = compute_feature_contributions(
+								model.feature_groups.iter(),
+								features.iter().cloned(),
+								feature_contributions
+									.feature_contribution_values
+									.into_iter(),
+							);
+							let feature_contributions = FeatureContributions {
+								baseline_value,
+								output_value,
+								feature_contributions,
+							};
+							(class.to_owned(), feature_contributions)
+						})
+						.collect();
+					MulticlassClassificationPredictOutput {
+						class_name: class_name.to_owned(),
+						probability: *probability,
+						probabilities,
+						feature_contributions: Some(feature_contributions),
+					}
+				})
+				.collect()
+		}
+		MulticlassClassificationModel::Tree(inner_model) => {
+			let n_examples = dataframe.nrows();
+			let n_classes = model.classes.len();
+			let n_features = model
+				.feature_groups
+				.iter()
+				.map(|g| g.n_features())
+				.sum::<usize>();
+			let mut features =
+				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
+			features::compute_features_array_value(
+				&dataframe.view(),
+				&model.feature_groups,
+				features.view_mut(),
+				&|| {},
+			);
+			let mut probabilities = Array::zeros((n_examples, n_classes));
+			inner_model.predict(features.view(), probabilities.view_mut());
+			let feature_contributions = inner_model.compute_feature_contributions(features.view());
+			izip!(probabilities.axis_iter(Axis(0)), feature_contributions)
+				.map(|(probabilities, feature_contributions)| {
+					let (probability, class_name) =
+						izip!(probabilities.iter(), model.classes.iter())
+							.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
+							.unwrap();
+					let probabilities = izip!(probabilities.iter(), model.classes.iter())
+						.map(|(probability, class)| (class.clone(), *probability))
+						.collect();
+					let feature_contributions = izip!(model.classes.iter(), feature_contributions)
+						.map(|(class, feature_contributions)| {
+							let baseline_value = feature_contributions.baseline_value;
+							let output_value = feature_contributions.output_value;
+							let feature_contributions = compute_feature_contributions(
+								model.feature_groups.iter(),
+								features.iter().map(|v| match v {
+									tangram_dataframe::DataFrameValue::Number(value) => *value,
+									tangram_dataframe::DataFrameValue::Enum(value) => {
+										value.map(|v| v.get()).unwrap_or(0).to_f32().unwrap()
+									}
+									_ => unreachable!(),
+								}),
+								feature_contributions
+									.feature_contribution_values
+									.into_iter(),
+							);
+							let feature_contributions = FeatureContributions {
+								baseline_value,
+								output_value,
+								feature_contributions,
+							};
+							(class.to_owned(), feature_contributions)
+						})
+						.collect();
+					MulticlassClassificationPredictOutput {
+						class_name: class_name.to_owned(),
+						probability: *probability,
+						probabilities,
+						feature_contributions: Some(feature_contributions),
+					}
+				})
+				.collect()
+		}
 	}
 }
 
@@ -719,185 +678,192 @@ impl TryFrom<model::Model> for Model {
 	type Error = anyhow::Error;
 	fn try_from(value: model::Model) -> Result<Model> {
 		match value {
-			model::Model::Regressor(model) => {
-				let id = model.id;
-				let columns = model
-					.overall_column_stats
-					.into_iter()
-					.map(TryFrom::try_from)
-					.collect::<Result<Vec<_>>>()?;
-				match model.model {
-					model::RegressionModel::Linear(model) => {
-						let feature_groups = model
-							.feature_groups
-							.into_iter()
-							.map(TryFrom::try_from)
-							.collect::<Result<Vec<_>>>()?;
-						Ok(Model::Regressor(Regressor {
-							id,
-							columns,
-							model: RegressionModel::Linear(LinearRegressor {
-								feature_groups,
-								model: tangram_linear::Regressor {
-									bias: model.bias,
-									weights: model.weights.into(),
-									means: model.means,
-									losses: model.losses,
-								},
-							}),
-						}))
-					}
-					model::RegressionModel::Tree(model) => {
-						let feature_groups = model
-							.feature_groups
-							.into_iter()
-							.map(TryFrom::try_from)
-							.collect::<Result<Vec<_>>>()?;
-						Ok(Model::Regressor(Regressor {
-							id,
-							columns,
-							model: RegressionModel::Tree(TreeRegressor {
-								feature_groups,
-								model: tangram_tree::Regressor {
-									bias: model.bias,
-									trees: model
-										.trees
-										.into_iter()
-										.map(TryInto::try_into)
-										.collect::<Result<Vec<_>>>()?,
-									feature_importances: Some(model.feature_importances),
-									losses: Some(model.losses),
-								},
-							}),
-						}))
-					}
-				}
-			}
-			model::Model::BinaryClassifier(model) => {
-				let id = model.id;
-				let columns = model
-					.overall_column_stats
-					.into_iter()
-					.map(TryFrom::try_from)
-					.collect::<Result<Vec<_>>>()?;
-				let negative_class = model.negative_class;
-				let positive_class = model.positive_class;
-				match model.model {
-					model::BinaryClassificationModel::Linear(model) => {
-						let feature_groups = model
-							.feature_groups
-							.into_iter()
-							.map(TryFrom::try_from)
-							.collect::<Result<Vec<_>>>()?;
-						Ok(Model::BinaryClassifier(BinaryClassifier {
-							id,
-							columns,
-							negative_class,
-							positive_class,
-							model: BinaryClassificationModel::Linear(LinearBinaryClassifier {
-								feature_groups,
-								model: tangram_linear::BinaryClassifier {
-									weights: model.weights.into(),
-									bias: model.bias,
-									means: model.means,
-									losses: model.losses,
-								},
-							}),
-						}))
-					}
-					model::BinaryClassificationModel::Tree(model) => {
-						let feature_groups = model
-							.feature_groups
-							.into_iter()
-							.map(TryFrom::try_from)
-							.collect::<Result<Vec<_>>>()?;
-						Ok(Model::BinaryClassifier(BinaryClassifier {
-							id,
-							columns,
-							negative_class,
-							positive_class,
-							model: BinaryClassificationModel::Tree(TreeBinaryClassifier {
-								feature_groups,
-								model: tangram_tree::BinaryClassifier {
-									bias: model.bias,
-									trees: model
-										.trees
-										.into_iter()
-										.map(TryInto::try_into)
-										.collect::<Result<Vec<_>>>()?,
-									feature_importances: Some(model.feature_importances),
-									losses: model.losses,
-								},
-							}),
-						}))
-					}
-				}
-			}
+			model::Model::Regressor(model) => Ok(Model::Regressor(model.try_into()?)),
+			model::Model::BinaryClassifier(model) => Ok(Model::BinaryClassifier(model.try_into()?)),
 			model::Model::MulticlassClassifier(model) => {
-				let id = model.id;
-				let columns = model
-					.overall_column_stats
+				Ok(Model::MulticlassClassifier(model.try_into()?))
+			}
+		}
+	}
+}
+
+impl TryFrom<model::Regressor> for Regressor {
+	type Error = anyhow::Error;
+	fn try_from(value: model::Regressor) -> Result<Regressor> {
+		let id = value.id;
+		let columns = value
+			.overall_column_stats
+			.into_iter()
+			.map(TryFrom::try_from)
+			.collect::<Result<Vec<_>>>()?;
+		match value.model {
+			model::RegressionModel::Linear(model) => {
+				let feature_groups = model
+					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
 					.collect::<Result<Vec<_>>>()?;
-				let classes = model.classes.clone();
-				match model.model {
-					model::MulticlassClassificationModel::Linear(model) => {
-						let n_classes = model.n_classes.to_usize().unwrap();
-						let n_features = model.n_features.to_usize().unwrap();
-						let weights =
-							Array::from_shape_vec((n_features, n_classes), model.weights).unwrap();
-						let feature_groups = model
-							.feature_groups
+				Ok(Regressor {
+					id,
+					columns,
+					feature_groups,
+					model: RegressionModel::Linear(tangram_linear::Regressor {
+						bias: model.bias,
+						weights: model.weights.into(),
+						means: model.means,
+						losses: model.losses,
+					}),
+				})
+			}
+			model::RegressionModel::Tree(model) => {
+				let feature_groups = model
+					.feature_groups
+					.into_iter()
+					.map(TryFrom::try_from)
+					.collect::<Result<Vec<_>>>()?;
+				Ok(Regressor {
+					id,
+					columns,
+					feature_groups,
+					model: RegressionModel::Tree(tangram_tree::Regressor {
+						bias: model.bias,
+						trees: model
+							.trees
 							.into_iter()
-							.map(TryFrom::try_from)
-							.collect::<Result<Vec<_>>>()?;
-						Ok(Model::MulticlassClassifier(MulticlassClassifier {
-							id,
-							columns,
-							classes,
-							model: MulticlassClassificationModel::Linear(
-								LinearMulticlassClassifier {
-									feature_groups,
-									model: tangram_linear::MulticlassClassifier {
-										weights,
-										biases: model.biases.into(),
-										means: model.means,
-										losses: model.losses,
-										classes: model.classes,
-									},
-								},
-							),
-						}))
-					}
-					model::MulticlassClassificationModel::Tree(model) => {
-						let feature_groups = model
-							.feature_groups
+							.map(TryInto::try_into)
+							.collect::<Result<Vec<_>>>()?,
+						feature_importances: Some(model.feature_importances),
+						losses: Some(model.losses),
+					}),
+				})
+			}
+		}
+	}
+}
+
+impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
+	type Error = anyhow::Error;
+	fn try_from(value: model::BinaryClassifier) -> Result<BinaryClassifier> {
+		let id = value.id;
+		let columns = value
+			.overall_column_stats
+			.into_iter()
+			.map(TryFrom::try_from)
+			.collect::<Result<Vec<_>>>()?;
+		let negative_class = value.negative_class;
+		let positive_class = value.positive_class;
+		match value.model {
+			model::BinaryClassificationModel::Linear(model) => {
+				let feature_groups = model
+					.feature_groups
+					.into_iter()
+					.map(TryFrom::try_from)
+					.collect::<Result<Vec<_>>>()?;
+				Ok(BinaryClassifier {
+					id,
+					columns,
+					negative_class,
+					positive_class,
+					feature_groups,
+					model: BinaryClassificationModel::Linear(tangram_linear::BinaryClassifier {
+						weights: model.weights.into(),
+						bias: model.bias,
+						means: model.means,
+						losses: model.losses,
+					}),
+				})
+			}
+			model::BinaryClassificationModel::Tree(model) => {
+				let feature_groups = model
+					.feature_groups
+					.into_iter()
+					.map(TryFrom::try_from)
+					.collect::<Result<Vec<_>>>()?;
+				Ok(BinaryClassifier {
+					id,
+					columns,
+					negative_class,
+					positive_class,
+					feature_groups,
+					model: BinaryClassificationModel::Tree(tangram_tree::BinaryClassifier {
+						bias: model.bias,
+						trees: model
+							.trees
 							.into_iter()
-							.map(TryFrom::try_from)
-							.collect::<Result<Vec<_>>>()?;
-						Ok(Model::MulticlassClassifier(MulticlassClassifier {
-							id,
-							columns,
-							classes,
-							model: MulticlassClassificationModel::Tree(TreeMulticlassClassifier {
-								feature_groups,
-								model: tangram_tree::MulticlassClassifier {
-									biases: model.biases,
-									trees: model
-										.trees
-										.into_iter()
-										.map(TryInto::try_into)
-										.collect::<Result<Vec<_>>>()?,
-									feature_importances: Some(model.feature_importances),
-									losses: model.losses,
-									n_classes: model.n_classes.to_usize().unwrap(),
-									n_rounds: model.n_rounds.to_usize().unwrap(),
-								},
-							}),
-						}))
-					}
-				}
+							.map(TryInto::try_into)
+							.collect::<Result<Vec<_>>>()?,
+						feature_importances: Some(model.feature_importances),
+						losses: model.losses,
+					}),
+				})
+			}
+		}
+	}
+}
+
+impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
+	type Error = anyhow::Error;
+	fn try_from(model: model::MulticlassClassifier) -> Result<MulticlassClassifier> {
+		let id = model.id;
+		let columns = model
+			.overall_column_stats
+			.into_iter()
+			.map(TryFrom::try_from)
+			.collect::<Result<Vec<_>>>()?;
+		let classes = model.classes.clone();
+		match model.model {
+			model::MulticlassClassificationModel::Linear(model) => {
+				let n_classes = model.n_classes.to_usize().unwrap();
+				let n_features = model.n_features.to_usize().unwrap();
+				let weights =
+					Array::from_shape_vec((n_features, n_classes), model.weights).unwrap();
+				let feature_groups = model
+					.feature_groups
+					.into_iter()
+					.map(TryFrom::try_from)
+					.collect::<Result<Vec<_>>>()?;
+				Ok(MulticlassClassifier {
+					id,
+					columns,
+					classes,
+					feature_groups,
+					model: MulticlassClassificationModel::Linear(
+						tangram_linear::MulticlassClassifier {
+							weights,
+							biases: model.biases.into(),
+							means: model.means,
+							losses: model.losses,
+							classes: model.classes,
+						},
+					),
+				})
+			}
+			model::MulticlassClassificationModel::Tree(model) => {
+				let feature_groups = model
+					.feature_groups
+					.into_iter()
+					.map(TryFrom::try_from)
+					.collect::<Result<Vec<_>>>()?;
+				Ok(MulticlassClassifier {
+					id,
+					columns,
+					classes,
+					feature_groups,
+					model: MulticlassClassificationModel::Tree(
+						tangram_tree::MulticlassClassifier {
+							biases: model.biases,
+							trees: model
+								.trees
+								.into_iter()
+								.map(TryInto::try_into)
+								.collect::<Result<Vec<_>>>()?,
+							feature_importances: Some(model.feature_importances),
+							losses: model.losses,
+							n_classes: model.n_classes.to_usize().unwrap(),
+							n_rounds: model.n_rounds.to_usize().unwrap(),
+						},
+					),
+				})
 			}
 		}
 	}
@@ -1000,48 +966,76 @@ impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
 	type Error = anyhow::Error;
 	fn try_from(value: model::FeatureGroup) -> Result<features::FeatureGroup> {
 		match value {
-			model::FeatureGroup::Identity(feature_group) => Ok(features::FeatureGroup::Identity(
-				features::IdentityFeatureGroup {
-					source_column_name: feature_group.source_column_name,
-				},
-			)),
+			model::FeatureGroup::Identity(feature_group) => {
+				Ok(features::FeatureGroup::Identity(feature_group.try_into()?))
+			}
 			model::FeatureGroup::Normalized(feature_group) => Ok(
-				features::FeatureGroup::Normalized(features::NormalizedFeatureGroup {
-					source_column_name: feature_group.source_column_name,
-					mean: feature_group.mean,
-					variance: feature_group.variance,
-				}),
+				features::FeatureGroup::Normalized(feature_group.try_into()?),
 			),
 			model::FeatureGroup::OneHotEncoded(feature_group) => Ok(
-				features::FeatureGroup::OneHotEncoded(features::OneHotEncodedFeatureGroup {
-					source_column_name: feature_group.source_column_name,
-					options: feature_group.options,
-				}),
+				features::FeatureGroup::OneHotEncoded(feature_group.try_into()?),
 			),
-			model::FeatureGroup::BagOfWords(feature_group) => {
-				let tokens = feature_group
-					.tokens
-					.into_iter()
-					.map(|token| features::BagOfWordsFeatureGroupToken {
-						token: token.token.into(),
-						idf: token.idf,
-					})
-					.collect::<Vec<_>>();
-				let tokens_map = tokens
-					.iter()
-					.enumerate()
-					.map(|(i, token)| (token.token.clone(), i))
-					.collect();
-				Ok(features::FeatureGroup::BagOfWords(
-					features::BagOfWordsFeatureGroup {
-						source_column_name: feature_group.source_column_name,
-						tokenizer: feature_group.tokenizer.try_into()?,
-						tokens,
-						tokens_map,
-					},
-				))
-			}
+			model::FeatureGroup::BagOfWords(feature_group) => Ok(
+				features::FeatureGroup::BagOfWords(feature_group.try_into()?),
+			),
 		}
+	}
+}
+
+impl TryFrom<model::IdentityFeatureGroup> for features::IdentityFeatureGroup {
+	type Error = anyhow::Error;
+	fn try_from(value: model::IdentityFeatureGroup) -> Result<features::IdentityFeatureGroup> {
+		Ok(features::IdentityFeatureGroup {
+			source_column_name: value.source_column_name,
+		})
+	}
+}
+
+impl TryFrom<model::NormalizedFeatureGroup> for features::NormalizedFeatureGroup {
+	type Error = anyhow::Error;
+	fn try_from(value: model::NormalizedFeatureGroup) -> Result<features::NormalizedFeatureGroup> {
+		Ok(features::NormalizedFeatureGroup {
+			source_column_name: value.source_column_name,
+			mean: value.mean,
+			variance: value.variance,
+		})
+	}
+}
+
+impl TryFrom<model::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatureGroup {
+	type Error = anyhow::Error;
+	fn try_from(
+		value: model::OneHotEncodedFeatureGroup,
+	) -> Result<features::OneHotEncodedFeatureGroup> {
+		Ok(features::OneHotEncodedFeatureGroup {
+			source_column_name: value.source_column_name,
+			options: value.options,
+		})
+	}
+}
+
+impl TryFrom<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
+	type Error = anyhow::Error;
+	fn try_from(value: model::BagOfWordsFeatureGroup) -> Result<features::BagOfWordsFeatureGroup> {
+		let tokens = value
+			.tokens
+			.into_iter()
+			.map(|token| features::BagOfWordsFeatureGroupToken {
+				token: token.token.into(),
+				idf: token.idf,
+			})
+			.collect::<Vec<_>>();
+		let tokens_map = tokens
+			.iter()
+			.enumerate()
+			.map(|(i, token)| (token.token.clone(), i))
+			.collect();
+		Ok(features::BagOfWordsFeatureGroup {
+			source_column_name: value.source_column_name,
+			tokenizer: value.tokenizer.try_into()?,
+			tokens,
+			tokens_map,
+		})
 	}
 }
 
