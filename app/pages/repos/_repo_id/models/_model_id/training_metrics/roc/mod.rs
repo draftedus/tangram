@@ -64,8 +64,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	match model {
 		tangram_core::model::Model::BinaryClassifier(model) => {
 			let metrics = &model.test_metrics;
-			let classes = model.classes().to_owned();
-			let class = classes[1].to_owned();
 			let roc_curve_data = metrics
 				.thresholds
 				.iter()
@@ -79,7 +77,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			db.commit().await?;
 			Ok(Props {
 				id: model_id.to_string(),
-				class,
+				class: model.positive_class,
 				roc_curve_data,
 				auc_roc,
 				model_layout_info,

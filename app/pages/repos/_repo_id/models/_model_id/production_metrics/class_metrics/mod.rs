@@ -139,7 +139,7 @@ async fn props(
 		tangram_core::model::Model::MulticlassClassifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let classes = model.classes();
+	let classes = model.classes;
 	let GetProductionMetricsOutput {
 		overall, intervals, ..
 	} = production_metrics;

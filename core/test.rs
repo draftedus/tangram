@@ -31,33 +31,32 @@ pub fn test_linear_regressor(
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array1<f32>,
-		metrics: metrics::RegressionMetrics,
+		test_metrics: metrics::RegressionMetrics,
 	}
-	let metrics = izip!(
+	let State { test_metrics, .. } = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		labels.as_slice().chunks(n_examples_per_batch),
 	)
 	.fold(
 		{
 			let predictions = Array::zeros(n_examples_per_batch);
-			let metrics = metrics::RegressionMetrics::default();
+			let test_metrics = metrics::RegressionMetrics::default();
 			State {
 				predictions,
-				metrics,
+				test_metrics,
 			}
 		},
 		|mut state, (features, labels)| {
 			let slice = s![0..features.nrows()];
 			model.predict(features, state.predictions.slice_mut(slice));
-			state.metrics.update(metrics::RegressionMetricsInput {
+			state.test_metrics.update(metrics::RegressionMetricsInput {
 				predictions: state.predictions.slice(slice).as_slice().unwrap(),
 				labels,
 			});
 			state
 		},
-	)
-	.metrics;
-	metrics.finalize()
+	);
+	test_metrics.finalize()
 }
 
 pub fn test_tree_regressor(
@@ -84,15 +83,15 @@ pub fn test_tree_regressor(
 	);
 	let labels = dataframe_test.columns().get(target_column_index).unwrap();
 	let labels = labels.as_number().unwrap();
-	let mut metrics = metrics::RegressionMetrics::default();
+	let mut test_metrics = metrics::RegressionMetrics::default();
 	let mut predictions = Array::zeros(features.nrows());
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
-	metrics.update(metrics::RegressionMetricsInput {
+	test_metrics.update(metrics::RegressionMetricsInput {
 		predictions: predictions.as_slice().unwrap(),
 		labels: labels.as_slice(),
 	});
-	metrics.finalize()
+	test_metrics.finalize()
 }
 
 pub fn test_linear_binary_classifier(
@@ -124,10 +123,10 @@ pub fn test_linear_binary_classifier(
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array2<f32>,
-		metrics: metrics::BinaryClassificationMetrics,
+		test_metrics: metrics::BinaryClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
-	izip!(
+	let State { test_metrics, .. } = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		ArrayView1::from(labels.as_slice()).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
@@ -136,7 +135,7 @@ pub fn test_linear_binary_classifier(
 			let predictions = Array::zeros((n_examples_per_batch, n_classes));
 			State {
 				predictions,
-				metrics: metrics::BinaryClassificationMetrics::new(101),
+				test_metrics: metrics::BinaryClassificationMetrics::new(101),
 			}
 		},
 		|mut state, (features, labels)| {
@@ -146,16 +145,15 @@ pub fn test_linear_binary_classifier(
 			let predictions = state.predictions.slice(slice);
 			let labels = labels.view();
 			state
-				.metrics
+				.test_metrics
 				.update(metrics::BinaryClassificationMetricsInput {
 					probabilities: predictions,
 					labels,
 				});
 			state
 		},
-	)
-	.metrics
-	.finalize()
+	);
+	test_metrics.finalize()
 }
 
 pub fn test_tree_binary_classifier(
@@ -187,15 +185,15 @@ pub fn test_tree_binary_classifier(
 		.as_enum()
 		.unwrap();
 	let n_classes = labels.options().len();
-	let mut metrics = metrics::BinaryClassificationMetrics::new(101);
+	let mut test_metrics = metrics::BinaryClassificationMetrics::new(101);
 	let mut predictions = Array::zeros((features.nrows(), n_classes));
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
-	metrics.update(metrics::BinaryClassificationMetricsInput {
+	test_metrics.update(metrics::BinaryClassificationMetricsInput {
 		probabilities: predictions.view(),
 		labels: labels.as_slice().into(),
 	});
-	metrics.finalize()
+	test_metrics.finalize()
 }
 
 pub fn test_linear_multiclass_classifier(
@@ -227,20 +225,20 @@ pub fn test_linear_multiclass_classifier(
 	let n_examples_per_batch = 256;
 	struct State {
 		predictions: Array2<f32>,
-		metrics: metrics::MulticlassClassificationMetrics,
+		test_metrics: metrics::MulticlassClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
-	let metrics = izip!(
+	let State { test_metrics, .. } = izip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		ArrayView1::from(labels.as_slice()).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
 	.fold(
 		{
 			let predictions = Array::zeros((n_examples_per_batch, n_classes));
-			let metrics = metrics::MulticlassClassificationMetrics::new(n_classes);
+			let test_metrics = metrics::MulticlassClassificationMetrics::new(n_classes);
 			State {
 				predictions,
-				metrics,
+				test_metrics,
 			}
 		},
 		|mut state, (features, labels)| {
@@ -250,16 +248,15 @@ pub fn test_linear_multiclass_classifier(
 			let predictions = state.predictions.slice(slice);
 			let labels = labels.view();
 			state
-				.metrics
+				.test_metrics
 				.update(metrics::MulticlassClassificationMetricsInput {
 					probabilities: predictions,
 					labels,
 				});
 			state
 		},
-	)
-	.metrics;
-	metrics.finalize()
+	);
+	test_metrics.finalize()
 }
 
 pub fn test_tree_multiclass_classifier(
@@ -291,13 +288,13 @@ pub fn test_tree_multiclass_classifier(
 		.as_enum()
 		.unwrap();
 	let n_classes = labels.options().len();
-	let mut metrics = metrics::MulticlassClassificationMetrics::new(n_classes);
+	let mut test_metrics = metrics::MulticlassClassificationMetrics::new(n_classes);
 	let mut predictions = Array::zeros((features.nrows(), n_classes));
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
-	metrics.update(metrics::MulticlassClassificationMetricsInput {
+	test_metrics.update(metrics::MulticlassClassificationMetricsInput {
 		probabilities: predictions.view(),
 		labels: labels.as_slice().into(),
 	});
-	metrics.finalize()
+	test_metrics.finalize()
 }

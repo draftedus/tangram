@@ -44,15 +44,16 @@ impl ProductionPredictionStats {
 				ProductionPredictionStats::Regression(RegressionProductionPredictionStats::new())
 			}
 			tangram_core::model::Model::BinaryClassifier(model) => {
-				let classes = model.classes();
 				ProductionPredictionStats::BinaryClassification(
-					ClassificationProductionPredictionStats::new(classes),
+					ClassificationProductionPredictionStats::new(&[
+						model.negative_class.to_owned(),
+						model.positive_class.to_owned(),
+					]),
 				)
 			}
 			tangram_core::model::Model::MulticlassClassifier(model) => {
-				let classes = model.classes();
 				ProductionPredictionStats::MulticlassClassification(
-					ClassificationProductionPredictionStats::new(classes),
+					ClassificationProductionPredictionStats::new(&model.classes),
 				)
 			}
 		}

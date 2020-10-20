@@ -72,7 +72,7 @@ async fn props(
 		_ => return Err(Error::BadRequest.into()),
 	};
 	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
-	let classes = model.classes().to_owned();
+	let classes = model.classes.to_owned();
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {

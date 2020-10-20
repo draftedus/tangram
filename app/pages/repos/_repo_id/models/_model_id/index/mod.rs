@@ -138,9 +138,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 			id: model_id.to_string(),
 			metrics: RegressorInnerMetrics {
 				rmse: model.test_metrics.rmse,
-				baseline_rmse: model.test_metrics.baseline_rmse,
+				baseline_rmse: model.baseline_metrics.rmse,
 				mse: model.test_metrics.mse,
-				baseline_mse: model.test_metrics.baseline_mse,
+				baseline_mse: model.baseline_metrics.mse,
 			},
 			training_summary,
 		}),
@@ -150,10 +150,15 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				.thresholds
 				.get(model.test_metrics.thresholds.len() / 2)
 				.unwrap();
+			let default_threshold_baseline_metrics = model
+				.baseline_metrics
+				.thresholds
+				.get(model.baseline_metrics.thresholds.len() / 2)
+				.unwrap();
 			Inner::BinaryClassifier(BinaryClassifierInner {
 				id: model_id.to_string(),
 				metrics: BinaryClassifierInnerMetrics {
-					baseline_accuracy: default_threshold_test_metrics.baseline_accuracy,
+					baseline_accuracy: default_threshold_baseline_metrics.accuracy,
 					auc_roc: model.test_metrics.auc_roc,
 					accuracy: default_threshold_test_metrics.accuracy,
 					precision: default_threshold_test_metrics.precision,
@@ -176,9 +181,9 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 				id: model_id.to_string(),
 				metrics: MulticlassClassifierInnerMetrics {
 					accuracy: model.test_metrics.accuracy,
-					baseline_accuracy: model.test_metrics.baseline_accuracy,
+					baseline_accuracy: model.baseline_metrics.accuracy,
 					class_metrics,
-					classes: model.classes().to_owned(),
+					classes: model.classes.to_owned(),
 				},
 				training_summary,
 			})

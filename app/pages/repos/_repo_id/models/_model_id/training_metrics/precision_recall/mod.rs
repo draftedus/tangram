@@ -65,8 +65,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		tangram_core::model::Model::BinaryClassifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let classes = model.classes().to_owned();
-	let class = classes[1].to_owned();
 	let precision_recall_curve_data = model
 		.test_metrics
 		.thresholds
@@ -80,7 +78,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
-		class,
+		class: model.positive_class,
 		precision_recall_curve_data,
 		id: model_id.to_string(),
 		model_layout_info,

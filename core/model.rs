@@ -74,6 +74,7 @@ pub struct Regressor {
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: RegressionMetrics,
+	pub baseline_metrics: RegressionMetrics,
 	pub model: RegressionModel,
 	pub comparison_metric: RegressionComparisonMetric,
 }
@@ -172,6 +173,8 @@ pub enum RegressionComparisonMetric {
 pub struct BinaryClassifier {
 	pub id: String,
 	pub target_column_name: String,
+	pub negative_class: String,
+	pub positive_class: String,
 	pub train_row_count: u64,
 	pub test_row_count: u64,
 	pub stats_settings: StatsSettings,
@@ -182,17 +185,9 @@ pub struct BinaryClassifier {
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: BinaryClassificationMetrics,
+	pub baseline_metrics: BinaryClassificationMetrics,
 	pub model: BinaryClassificationModel,
 	pub comparison_metric: BinaryClassificationComparisonMetric,
-}
-
-impl BinaryClassifier {
-	pub fn classes(&self) -> &[String] {
-		match &self.model {
-			BinaryClassificationModel::Linear(model) => model.classes.as_slice(),
-			BinaryClassificationModel::Tree(model) => model.classes.as_slice(),
-		}
-	}
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -229,7 +224,8 @@ pub struct LinearBinaryClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub weights: Vec<f32>,
 	pub bias: f32,
-	pub classes: Vec<String>,
+	pub negative_class: String,
+	pub positive_class: String,
 	pub losses: Option<Vec<f32>>,
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
@@ -240,7 +236,8 @@ pub struct TreeBinaryClassifier {
 	pub feature_groups: Vec<FeatureGroup>,
 	pub bias: f32,
 	pub trees: Vec<Tree>,
-	pub classes: Vec<String>,
+	pub negative_class: String,
+	pub positive_class: String,
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 	pub train_options: TreeModelTrainOptions,
@@ -256,6 +253,7 @@ pub enum BinaryClassificationComparisonMetric {
 pub struct MulticlassClassifier {
 	pub id: String,
 	pub target_column_name: String,
+	pub classes: Vec<String>,
 	pub train_row_count: u64,
 	pub test_row_count: u64,
 	pub stats_settings: StatsSettings,
@@ -266,17 +264,9 @@ pub struct MulticlassClassifier {
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: MulticlassClassificationMetrics,
+	pub baseline_metrics: MulticlassClassificationMetrics,
 	pub model: MulticlassClassificationModel,
 	pub comparison_metric: MulticlassClassificationComparisonMetric,
-}
-
-impl MulticlassClassifier {
-	pub fn classes(&self) -> &[String] {
-		match &self.model {
-			MulticlassClassificationModel::Linear(model) => model.classes.as_slice(),
-			MulticlassClassificationModel::Tree(model) => model.classes.as_slice(),
-		}
-	}
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

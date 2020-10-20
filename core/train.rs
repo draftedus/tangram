@@ -7,7 +7,7 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::{collections::BTreeMap, path::Path};
 use tangram_dataframe::prelude::*;
-use tangram_metrics::{self as metrics};
+use tangram_metrics::StreamingMetric;
 use tangram_util::{id::Id, progress_counter::ProgressCounter};
 
 /**
@@ -166,6 +166,28 @@ pub fn train(
 		_ => return Err(format_err!("invalid target column type")),
 	};
 
+	// Compute the baseline metrics.
+	let baseline_metrics = match task {
+		Task::Regression => {
+			let labels = dataframe_train.columns().get(target_column_index).unwrap();
+			let labels = labels.as_number().unwrap();
+			let baseline_prediction = ArrayView::from(labels.as_slice()).mean().unwrap();
+			let metrics = labels.iter().fold(
+				tangram_metrics::RegressionMetrics::default(),
+				|mut metrics, label| {
+					metrics.update(tangram_metrics::RegressionMetricsInput {
+						predictions: &[baseline_prediction],
+						labels: &[*label],
+					});
+					metrics
+				},
+			);
+			Metrics::Regression(metrics.finalize())
+		}
+		Task::BinaryClassification => todo!(),
+		Task::MulticlassClassification => todo!(),
+	};
+
 	// Split the train dataset into train and model comparison datasets.
 	let comparison_fraction = 0.1;
 	let split_index = ((1.0 - comparison_fraction) * dataframe_train.nrows().to_f32().unwrap())
@@ -182,7 +204,7 @@ pub fn train(
 
 	// Train each model in the grid and compute model comparison metrics.
 	let num_models = grid.len();
-	let outputs: Vec<(TrainModelOutput, TestMetrics)> = grid
+	let outputs: Vec<(TrainModelOutput, Metrics)> = grid
 		.into_iter()
 		.enumerate()
 		.map(|(model_index, grid_item)| {
@@ -220,12 +242,16 @@ pub fn train(
 	// Assemble the model.
 	let model = match task {
 		Task::Regression => {
+			let baseline_metrics = match baseline_metrics {
+				Metrics::Regression(baseline_metrics) => baseline_metrics,
+				_ => unreachable!(),
+			};
 			let comparison_metric = match comparison_metric {
-				ComparisonMetric::Regression(m) => m,
+				ComparisonMetric::Regression(comparison_metric) => comparison_metric,
 				_ => unreachable!(),
 			};
 			let test_metrics = match test_metrics {
-				TestMetrics::Regression(m) => m,
+				Metrics::Regression(test_metrics) => test_metrics,
 				_ => unreachable!(),
 			};
 			let model = match train_model_output {
@@ -264,17 +290,22 @@ pub fn train(
 				test_column_stats: test_column_stats.into_iter().map(Into::into).collect(),
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
+				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
 			})
 		}
 		Task::BinaryClassification => {
+			let baseline_metrics = match baseline_metrics {
+				Metrics::BinaryClassification(baseline_metrics) => baseline_metrics,
+				_ => unreachable!(),
+			};
 			let comparison_metric = match comparison_metric {
-				ComparisonMetric::BinaryClassification(m) => m,
+				ComparisonMetric::BinaryClassification(comparison_metric) => comparison_metric,
 				_ => unreachable!(),
 			};
 			let test_metrics = match test_metrics {
-				TestMetrics::BinaryClassification(m) => m,
+				Metrics::BinaryClassification(test_metrics) => test_metrics,
 				_ => unreachable!(),
 			};
 			let model = match train_model_output {
@@ -305,6 +336,8 @@ pub fn train(
 			model::Model::BinaryClassifier(model::BinaryClassifier {
 				id: model_id.to_string(),
 				target_column_name: target_column_name.to_owned(),
+				negative_class: todo!(),
+				positive_class: todo!(),
 				test_row_count: test_row_count.to_u64().unwrap(),
 				train_row_count: train_row_count.to_u64().unwrap(),
 				stats_settings: stats_settings.into(),
@@ -315,17 +348,22 @@ pub fn train(
 				test_column_stats: test_column_stats.into_iter().map(Into::into).collect(),
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
+				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
 			})
 		}
 		Task::MulticlassClassification { .. } => {
+			let baseline_metrics = match baseline_metrics {
+				Metrics::MulticlassClassification(baseline_metrics) => baseline_metrics,
+				_ => unreachable!(),
+			};
 			let comparison_metric = match comparison_metric {
-				ComparisonMetric::MulticlassClassification(m) => m,
+				ComparisonMetric::MulticlassClassification(comparison_metric) => comparison_metric,
 				_ => unreachable!(),
 			};
 			let test_metrics = match test_metrics {
-				TestMetrics::MulticlassClassification(m) => m,
+				Metrics::MulticlassClassification(test_metrics) => test_metrics,
 				_ => unreachable!(),
 			};
 			let model = match train_model_output {
@@ -358,6 +396,7 @@ pub fn train(
 			model::Model::MulticlassClassifier(model::MulticlassClassifier {
 				id: model_id.to_string(),
 				target_column_name: target_column_name.to_owned(),
+				classes: todo!(),
 				test_row_count: test_row_count.to_u64().unwrap(),
 				train_row_count: train_row_count.to_u64().unwrap(),
 				stats_settings: stats_settings.into(),
@@ -368,6 +407,7 @@ pub fn train(
 				test_column_stats: test_column_stats.into_iter().map(Into::into).collect(),
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
+				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
 			})
@@ -455,10 +495,10 @@ enum ComparisonMetric {
 	MulticlassClassification(MulticlassClassificationComparisonMetric),
 }
 
-enum TestMetrics {
-	Regression(metrics::RegressionMetricsOutput),
-	BinaryClassification(metrics::BinaryClassificationMetricsOutput),
-	MulticlassClassification(metrics::MulticlassClassificationMetricsOutput),
+enum Metrics {
+	Regression(tangram_metrics::RegressionMetricsOutput),
+	BinaryClassification(tangram_metrics::BinaryClassificationMetricsOutput),
+	MulticlassClassification(tangram_metrics::MulticlassClassificationMetricsOutput),
 }
 
 #[derive(Debug)]
@@ -1143,7 +1183,7 @@ fn compute_model_comparison_metrics(
 	train_model_output: &TrainModelOutput,
 	dataframe_comparison: &DataFrameView,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
-) -> TestMetrics {
+) -> Metrics {
 	match train_model_output {
 		TrainModelOutput::LinearRegressor(train_model_output) => {
 			let LinearRegressorTrainModelOutput {
@@ -1152,7 +1192,7 @@ fn compute_model_comparison_metrics(
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::Regression(test::test_linear_regressor(
+			Metrics::Regression(test::test_linear_regressor(
 				&dataframe_comparison,
 				*target_column_index,
 				feature_groups,
@@ -1167,7 +1207,7 @@ fn compute_model_comparison_metrics(
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::Regression(test::test_tree_regressor(
+			Metrics::Regression(test::test_tree_regressor(
 				&dataframe_comparison,
 				*target_column_index,
 				feature_groups,
@@ -1189,7 +1229,7 @@ fn compute_model_comparison_metrics(
 				model,
 				update_progress,
 			);
-			TestMetrics::BinaryClassification(metrics)
+			Metrics::BinaryClassification(metrics)
 		}
 		TrainModelOutput::TreeBinaryClassifier(train_model_output) => {
 			let TreeBinaryClassifierTrainModelOutput {
@@ -1205,7 +1245,7 @@ fn compute_model_comparison_metrics(
 				model,
 				update_progress,
 			);
-			TestMetrics::BinaryClassification(metrics)
+			Metrics::BinaryClassification(metrics)
 		}
 		TrainModelOutput::LinearMulticlassClassifier(train_model_output) => {
 			let LinearMulticlassClassifierTrainModelOutput {
@@ -1214,7 +1254,7 @@ fn compute_model_comparison_metrics(
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::MulticlassClassification(test::test_linear_multiclass_classifier(
+			Metrics::MulticlassClassification(test::test_linear_multiclass_classifier(
 				&dataframe_comparison,
 				*target_column_index,
 				feature_groups,
@@ -1229,7 +1269,7 @@ fn compute_model_comparison_metrics(
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::MulticlassClassification(test::test_tree_multiclass_classifier(
+			Metrics::MulticlassClassification(test::test_tree_multiclass_classifier(
 				&dataframe_comparison,
 				*target_column_index,
 				feature_groups,
@@ -1241,7 +1281,7 @@ fn compute_model_comparison_metrics(
 }
 
 fn choose_best_model(
-	outputs: Vec<(TrainModelOutput, TestMetrics)>,
+	outputs: Vec<(TrainModelOutput, Metrics)>,
 	comparison_metric: &ComparisonMetric,
 ) -> TrainModelOutput {
 	match comparison_metric {
@@ -1258,18 +1298,18 @@ fn choose_best_model(
 }
 
 fn choose_best_model_regression(
-	outputs: Vec<(TrainModelOutput, TestMetrics)>,
+	outputs: Vec<(TrainModelOutput, Metrics)>,
 	comparison_metric: &RegressionComparisonMetric,
 ) -> TrainModelOutput {
 	outputs
 		.into_iter()
 		.max_by(|(_, metrics_a), (_, metrics_b)| {
 			let metrics_a = match metrics_a {
-				TestMetrics::Regression(m) => m,
+				Metrics::Regression(m) => m,
 				_ => unreachable!(),
 			};
 			let metrics_b = match metrics_b {
-				TestMetrics::Regression(m) => m,
+				Metrics::Regression(m) => m,
 				_ => unreachable!(),
 			};
 			match comparison_metric {
@@ -1290,18 +1330,18 @@ fn choose_best_model_regression(
 }
 
 fn choose_best_model_binary_classification(
-	outputs: Vec<(TrainModelOutput, TestMetrics)>,
+	outputs: Vec<(TrainModelOutput, Metrics)>,
 	comparison_metric: &BinaryClassificationComparisonMetric,
 ) -> TrainModelOutput {
 	outputs
 		.into_iter()
 		.max_by(|(_, metrics_a), (_, metrics_b)| {
 			let task_metrics_a = match metrics_a {
-				TestMetrics::BinaryClassification(m) => m,
+				Metrics::BinaryClassification(m) => m,
 				_ => unreachable!(),
 			};
 			let task_metrics_b = match metrics_b {
-				TestMetrics::BinaryClassification(m) => m,
+				Metrics::BinaryClassification(m) => m,
 				_ => unreachable!(),
 			};
 			match comparison_metric {
@@ -1316,18 +1356,18 @@ fn choose_best_model_binary_classification(
 }
 
 fn choose_best_model_multiclass_classification(
-	outputs: Vec<(TrainModelOutput, TestMetrics)>,
+	outputs: Vec<(TrainModelOutput, Metrics)>,
 	comparison_metric: &MulticlassClassificationComparisonMetric,
 ) -> TrainModelOutput {
 	outputs
 		.into_iter()
 		.max_by(|(_, metrics_a), (_, metrics_b)| {
 			let task_metrics_a = match metrics_a {
-				TestMetrics::MulticlassClassification(m) => m,
+				Metrics::MulticlassClassification(m) => m,
 				_ => unreachable!(),
 			};
 			let task_metrics_b = match metrics_b {
-				TestMetrics::MulticlassClassification(m) => m,
+				Metrics::MulticlassClassification(m) => m,
 				_ => unreachable!(),
 			};
 			match comparison_metric {
@@ -1345,7 +1385,7 @@ fn test_model(
 	train_model_output: &TrainModelOutput,
 	dataframe_test: &DataFrameView,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
-) -> TestMetrics {
+) -> Metrics {
 	match train_model_output {
 		TrainModelOutput::LinearRegressor(train_model_output) => {
 			let LinearRegressorTrainModelOutput {
@@ -1354,13 +1394,14 @@ fn test_model(
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::Regression(test::test_linear_regressor(
+			let test_metrics = test::test_linear_regressor(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
-			))
+			);
+			Metrics::Regression(test_metrics)
 		}
 		TrainModelOutput::TreeRegressor(train_model_output) => {
 			let TreeRegressorTrainModelOutput {
@@ -1369,13 +1410,14 @@ fn test_model(
 				model,
 				..
 			} = &train_model_output;
-			TestMetrics::Regression(test::test_tree_regressor(
+			let test_metrics = test::test_tree_regressor(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
-			))
+			);
+			Metrics::Regression(test_metrics)
 		}
 		TrainModelOutput::LinearBinaryClassifier(train_model_output) => {
 			let LinearBinaryClassifierTrainModelOutput {
@@ -1384,14 +1426,14 @@ fn test_model(
 				model,
 				..
 			} = &train_model_output;
-			let metrics = test::test_linear_binary_classifier(
+			let test_metrics = test::test_linear_binary_classifier(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
 			);
-			TestMetrics::BinaryClassification(metrics)
+			Metrics::BinaryClassification(test_metrics)
 		}
 		TrainModelOutput::TreeBinaryClassifier(train_model_output) => {
 			let TreeBinaryClassifierTrainModelOutput {
@@ -1400,14 +1442,14 @@ fn test_model(
 				model,
 				..
 			} = &train_model_output;
-			let metrics = test::test_tree_binary_classifier(
+			let test_metrics = test::test_tree_binary_classifier(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
 			);
-			TestMetrics::BinaryClassification(metrics)
+			Metrics::BinaryClassification(test_metrics)
 		}
 		TrainModelOutput::LinearMulticlassClassifier(train_model_output) => {
 			let LinearMulticlassClassifierTrainModelOutput {
@@ -1416,14 +1458,14 @@ fn test_model(
 				model,
 				..
 			} = &train_model_output;
-			let metrics = test::test_linear_multiclass_classifier(
+			let test_metrics = test::test_linear_multiclass_classifier(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
 			);
-			TestMetrics::MulticlassClassification(metrics)
+			Metrics::MulticlassClassification(test_metrics)
 		}
 		TrainModelOutput::TreeMulticlassClassifier(train_model_output) => {
 			let TreeMulticlassClassifierTrainModelOutput {
@@ -1432,14 +1474,14 @@ fn test_model(
 				model,
 				..
 			} = &train_model_output;
-			let metrics = test::test_tree_multiclass_classifier(
+			let test_metrics = test::test_tree_multiclass_classifier(
 				&dataframe_test,
 				*target_column_index,
 				feature_groups,
 				model,
 				update_progress,
 			);
-			TestMetrics::MulticlassClassification(metrics)
+			Metrics::MulticlassClassification(test_metrics)
 		}
 	}
 }
@@ -1613,7 +1655,7 @@ impl Into<model::Token> for stats::Token {
 	}
 }
 
-impl Into<model::RegressionMetrics> for metrics::RegressionMetricsOutput {
+impl Into<model::RegressionMetrics> for tangram_metrics::RegressionMetricsOutput {
 	fn into(self) -> model::RegressionMetrics {
 		model::RegressionMetrics {
 			mse: self.mse,
@@ -1624,7 +1666,9 @@ impl Into<model::RegressionMetrics> for metrics::RegressionMetricsOutput {
 	}
 }
 
-impl Into<model::BinaryClassificationMetrics> for metrics::BinaryClassificationMetricsOutput {
+impl Into<model::BinaryClassificationMetrics>
+	for tangram_metrics::BinaryClassificationMetricsOutput
+{
 	fn into(self) -> model::BinaryClassificationMetrics {
 		model::BinaryClassificationMetrics {
 			auc_roc: self.auc_roc,
@@ -1634,7 +1678,7 @@ impl Into<model::BinaryClassificationMetrics> for metrics::BinaryClassificationM
 }
 
 impl Into<model::BinaryClassificationMetricsForThreshold>
-	for metrics::BinaryClassificationMetricsOutputForThreshold
+	for tangram_metrics::BinaryClassificationMetricsOutputForThreshold
 {
 	fn into(self) -> model::BinaryClassificationMetricsForThreshold {
 		model::BinaryClassificationMetricsForThreshold {
@@ -1654,7 +1698,7 @@ impl Into<model::BinaryClassificationMetricsForThreshold>
 }
 
 impl Into<model::MulticlassClassificationMetrics>
-	for metrics::MulticlassClassificationMetricsOutput
+	for tangram_metrics::MulticlassClassificationMetricsOutput
 {
 	fn into(self) -> model::MulticlassClassificationMetrics {
 		model::MulticlassClassificationMetrics {
@@ -1668,7 +1712,7 @@ impl Into<model::MulticlassClassificationMetrics>
 	}
 }
 
-impl Into<model::ClassMetrics> for metrics::ClassMetrics {
+impl Into<model::ClassMetrics> for tangram_metrics::ClassMetrics {
 	fn into(self) -> model::ClassMetrics {
 		model::ClassMetrics {
 			true_positives: self.true_positives,
@@ -1784,8 +1828,9 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassifier {
 			weights: self.model.weights.into_raw_vec(),
 			bias: self.model.bias,
 			losses: self.model.losses,
-			classes: self.model.classes,
 			train_options: self.options.into(),
+			negative_class: self.model.negative_class,
+			positive_class: self.model.positive_class,
 		}
 	}
 }
@@ -1797,9 +1842,10 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassifier {
 			trees: self.model.trees.into_iter().map(Into::into).collect(),
 			bias: self.model.bias,
 			losses: self.model.losses,
-			classes: self.model.classes,
 			feature_importances: self.model.feature_importances.unwrap(),
 			train_options: self.options.into(),
+			negative_class: self.model.negative_class,
+			positive_class: self.model.positive_class,
 		}
 	}
 }

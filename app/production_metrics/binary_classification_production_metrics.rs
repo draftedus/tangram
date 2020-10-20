@@ -4,7 +4,8 @@ use tangram_metrics::StreamingMetric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 pub struct BinaryClassificationProductionPredictionMetrics {
-	classes: Vec<String>,
+	negative_class: String,
+	positive_class: String,
 	confusion_matrix: BinaryConfusionMatrix,
 }
 
@@ -43,11 +44,15 @@ pub struct BinaryClassificationProductionPredictionMetricsOutput {
 }
 
 impl BinaryClassificationProductionPredictionMetrics {
-	pub fn new(classes: Vec<String>) -> BinaryClassificationProductionPredictionMetrics {
+	pub fn new(
+		negative_class: String,
+		positive_class: String,
+	) -> BinaryClassificationProductionPredictionMetrics {
 		let confusion_matrix = BinaryConfusionMatrix::new();
 		BinaryClassificationProductionPredictionMetrics {
 			confusion_matrix,
-			classes,
+			negative_class,
+			positive_class,
 		}
 	}
 }
@@ -66,28 +71,21 @@ impl StreamingMetric<'_> for BinaryClassificationProductionPredictionMetrics {
 			NumberOrString::String(s) => s,
 		};
 		let confusion_matrix = &mut self.confusion_matrix;
-		let actual_label_id = match self.classes.iter().position(|c| *c == label) {
-			Some(position) => position,
-			None => return,
-		};
-		let predicted_label_id = match self.classes.iter().position(|c| *c == prediction) {
-			Some(position) => position,
-			None => return,
-		};
-		match (actual_label_id, predicted_label_id) {
-			(1, 0) => {
+		let actual = label == self.positive_class;
+		let predicted = prediction == self.positive_class;
+		match (actual, predicted) {
+			(true, false) => {
 				confusion_matrix.false_negatives += 1;
 			}
-			(0, 1) => {
+			(false, true) => {
 				confusion_matrix.false_positives += 1;
 			}
-			(0, 0) => {
+			(false, false) => {
 				confusion_matrix.true_negatives += 1;
 			}
-			(1, 1) => {
+			(true, true) => {
 				confusion_matrix.true_positives += 1;
 			}
-			_ => todo!(),
 		}
 	}
 
@@ -134,7 +132,7 @@ impl StreamingMetric<'_> for BinaryClassificationProductionPredictionMetrics {
 #[test]
 fn test_binary() {
 	let mut metrics =
-		BinaryClassificationProductionPredictionMetrics::new(vec!["Cat".into(), "Dog".into()]);
+		BinaryClassificationProductionPredictionMetrics::new("Cat".to_owned(), "Dog".to_owned());
 	metrics.update((
 		NumberOrString::String("Cat".into()),
 		NumberOrString::String("Cat".into()),

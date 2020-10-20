@@ -145,7 +145,6 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		},
 		tangram_core::model::Model::BinaryClassifier(model) => {
 			let target_column_name = model.target_column_name.to_owned();
-			let classes = model.classes().to_owned();
 			match model.model {
 				tangram_core::model::BinaryClassificationModel::Linear(inner_model) => {
 					let feature_groups = inner_model.feature_groups;
@@ -160,7 +159,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					Inner::LinearBinaryClassifier(LinearBinaryClassifier {
 						bias: inner_model.bias,
 						target_column_name,
-						positive_class_name: classes[1].clone(),
+						positive_class_name: inner_model.positive_class.clone(),
 						weights,
 					})
 				}
@@ -183,7 +182,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 		}
 		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let target_column_name = model.target_column_name.to_owned();
-			let classes = model.classes().to_owned();
+			let classes = model.classes.to_owned();
 			match model.model {
 				tangram_core::model::MulticlassClassificationModel::Linear(inner_model) => {
 					let feature_groups = inner_model.feature_groups;

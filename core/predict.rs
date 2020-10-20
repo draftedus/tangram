@@ -395,9 +395,9 @@ pub fn predict(
 				.zip(feature_contributions.iter())
 				.map(|(probabilities, feature_contributions)| {
 					let (probability, class_name) = if probabilities[1] >= threshold {
-						(probabilities[1], model.model.classes[1].clone())
+						(probabilities[1], model.model.positive_class.clone())
 					} else {
-						(probabilities[0], model.model.classes[0].clone())
+						(probabilities[0], model.model.negative_class.clone())
 					};
 					let baseline_value = feature_contributions.baseline_value;
 					let output_value = feature_contributions.output_value;
@@ -452,9 +452,9 @@ pub fn predict(
 				.zip(feature_contributions.iter())
 				.map(|(probabilities, feature_contributions)| {
 					let (probability, class_name) = if probabilities[1] >= threshold {
-						(probabilities[1], model.model.classes[1].clone())
+						(probabilities[1], model.model.positive_class.clone())
 					} else {
-						(probabilities[0], model.model.classes[0].clone())
+						(probabilities[0], model.model.negative_class.clone())
 					};
 					let baseline_value = feature_contributions.baseline_value;
 					let output_value = feature_contributions.output_value;
@@ -767,7 +767,8 @@ impl TryFrom<model::Model> for PredictModel {
 									bias: model.bias,
 									means: model.means,
 									losses: model.losses,
-									classes: model.classes,
+									negative_class: model.negative_class,
+									positive_class: model.positive_class,
 								},
 							},
 						))
@@ -792,7 +793,8 @@ impl TryFrom<model::Model> for PredictModel {
 										.collect::<Result<Vec<_>>>()?,
 									feature_importances: Some(model.feature_importances),
 									losses: model.losses,
-									classes: model.classes,
+									negative_class: model.negative_class,
+									positive_class: model.positive_class,
 								},
 							},
 						))

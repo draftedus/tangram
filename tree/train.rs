@@ -366,13 +366,17 @@ pub fn train(
 			losses,
 		}),
 		Task::BinaryClassification => {
-			let classes = labels_train.as_enum().unwrap().options().to_owned();
+			let labels_train = labels_train.as_enum().unwrap();
+			let classes = labels_train.options();
+			let negative_class = classes[0].to_owned();
+			let positive_class = classes[1].to_owned();
 			Model::BinaryClassifier(BinaryClassifier {
 				bias: *biases.get(0).unwrap(),
 				trees,
 				feature_importances,
 				losses,
-				classes,
+				negative_class,
+				positive_class,
 			})
 		}
 		Task::MulticlassClassification { .. } => {

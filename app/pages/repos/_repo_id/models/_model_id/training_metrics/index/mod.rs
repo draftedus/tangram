@@ -123,9 +123,9 @@ fn build_inner_regressor(model: tangram_core::model::Regressor) -> RegressorInne
 	RegressorInner {
 		id: model.id,
 		rmse: model.test_metrics.rmse,
-		baseline_rmse: model.test_metrics.baseline_rmse,
+		baseline_rmse: model.baseline_metrics.rmse,
 		mse: model.test_metrics.mse,
-		baseline_mse: model.test_metrics.baseline_mse,
+		baseline_mse: model.baseline_metrics.mse,
 	}
 }
 
@@ -154,7 +154,7 @@ fn build_inner_binary_classifier(
 fn build_inner_multiclass_classifier(
 	model: tangram_core::model::MulticlassClassifier,
 ) -> MulticlassClassifierInner {
-	let classes = model.classes().to_owned();
+	let classes = model.classes.to_owned();
 	let class_metrics = model
 		.test_metrics
 		.class_metrics
@@ -171,7 +171,7 @@ fn build_inner_multiclass_classifier(
 	MulticlassClassifierInner {
 		id: model.id.to_string(),
 		accuracy: model.test_metrics.accuracy,
-		baseline_accuracy: model.test_metrics.baseline_accuracy,
+		baseline_accuracy: model.baseline_metrics.accuracy,
 		class_metrics,
 		classes,
 		losses,
