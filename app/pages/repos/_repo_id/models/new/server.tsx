@@ -1,13 +1,8 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { Props } from './props'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { h } from 'preact'
-
-type Props = {
-	error: string | null
-	pinwheelInfo: PinwheelInfo
-}
 
 export default function ModelCreatePage(props: Props) {
 	return renderPage(
