@@ -4,12 +4,10 @@ use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
 
-/// `BinaryClassificationMetrics` computes common metrics used to evaluate binary classifiers at various classification thresholds. Instead of computing threshold metrics for each prediction probability, we instead compute metrics for a fixed number of threshold values given by `n_thresholds` passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new). This is an approximation but is more memory efficient.
+/// `BinaryClassificationMetrics` computes common metrics used to evaluate binary classifiers at a number of classification thresholds.
 pub struct BinaryClassificationMetrics {
-	/// There is one confusion matrix per threshold.
-	confusion_matrices: Vec<BinaryConfusionMatrix>,
-	/// The thresholds are evenly-spaced between 0 and 1 based on the total number of thresholds: `n_thresholds`, passed to [BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
-	thresholds: Vec<f32>,
+	/// This field maps thresholds to the confusion matrix for prediction at that threshold.
+	confusion_matrices_for_thresholds: Vec<(f32, BinaryConfusionMatrix)>,
 }
 
 #[derive(Clone)]
@@ -29,7 +27,8 @@ impl BinaryConfusionMatrix {
 			true_positives: 0,
 		}
 	}
-	fn n_examples(&self) -> u64 {
+
+	fn total(&self) -> u64 {
 		self.false_negatives + self.false_positives + self.true_negatives + self.true_positives
 	}
 }
@@ -81,12 +80,12 @@ impl BinaryClassificationMetrics {
 	pub fn new(n_thresholds: usize) -> BinaryClassificationMetrics {
 		// The number of thresholds must be odd so that 0.5 is the middle threshold.
 		assert!(n_thresholds % 2 == 1);
-		let thresholds = (0..n_thresholds)
+		let confusion_matrices_for_thresholds = (0..n_thresholds)
 			.map(|i| (i + 1).to_f32().unwrap() * (1.0 / (n_thresholds.to_f32().unwrap() + 1.0)))
+			.map(|threshold| (threshold, BinaryConfusionMatrix::new()))
 			.collect();
 		BinaryClassificationMetrics {
-			confusion_matrices: vec![BinaryConfusionMatrix::new(); n_thresholds + 1],
-			thresholds,
+			confusion_matrices_for_thresholds,
 		}
 	}
 }
@@ -95,52 +94,41 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 	type Input = BinaryClassificationMetricsInput<'a>;
 	type Output = BinaryClassificationMetricsOutput;
 
-	fn update(&mut self, value: BinaryClassificationMetricsInput) {
-		let n_examples = value.labels.len();
-		for (threshold_index, &threshold) in self.thresholds.iter().enumerate() {
-			for example_index in 0..n_examples {
-				let predicted_label_id = if value.probabilities[(example_index, 1)] >= threshold {
-					1
-				} else {
-					0
-				};
-				let actual_label_id = if value.labels[example_index].unwrap().get() == 2 {
-					1
-				} else {
-					0
-				};
-				let confusion_matrix_for_threshold = &mut self.confusion_matrices[threshold_index];
-				match (predicted_label_id, actual_label_id) {
-					(0, 0) => confusion_matrix_for_threshold.true_negatives += 1,
-					(1, 1) => confusion_matrix_for_threshold.true_positives += 1,
-					(1, 0) => confusion_matrix_for_threshold.false_positives += 1,
-					(0, 1) => confusion_matrix_for_threshold.false_negatives += 1,
-					_ => panic!(),
+	fn update(&mut self, input: BinaryClassificationMetricsInput) {
+		for (threshold, confusion_matrix) in self.confusion_matrices_for_thresholds.iter_mut() {
+			for (probabilities, label) in input.probabilities.axis_iter(Axis(0)).zip(input.labels) {
+				let predicted = probabilities[1] >= *threshold;
+				let actual = label.unwrap().get() == 2;
+				match (predicted, actual) {
+					(false, false) => confusion_matrix.true_negatives += 1,
+					(false, true) => confusion_matrix.false_negatives += 1,
+					(true, false) => confusion_matrix.false_positives += 1,
+					(true, true) => confusion_matrix.true_positives += 1,
 				};
 			}
 		}
 	}
 
 	fn merge(&mut self, other: Self) {
-		self.confusion_matrices
+		for ((_, confusion_matrix_a), (_, confusion_matrix_b)) in self
+			.confusion_matrices_for_thresholds
 			.iter_mut()
-			.zip(other.confusion_matrices)
-			.for_each(|(confusion_matrix_a, confusion_matrix_b)| {
-				confusion_matrix_a.true_positives += confusion_matrix_b.true_positives;
-				confusion_matrix_a.false_negatives += confusion_matrix_b.false_negatives;
-				confusion_matrix_a.true_negatives += confusion_matrix_b.true_negatives;
-				confusion_matrix_a.false_positives += confusion_matrix_b.false_positives;
-			});
+			.zip(other.confusion_matrices_for_thresholds.iter())
+		{
+			confusion_matrix_a.true_positives += confusion_matrix_b.true_positives;
+			confusion_matrix_a.false_negatives += confusion_matrix_b.false_negatives;
+			confusion_matrix_a.true_negatives += confusion_matrix_b.true_negatives;
+			confusion_matrix_a.false_positives += confusion_matrix_b.false_positives;
+		}
 	}
 
 	fn finalize(self) -> BinaryClassificationMetricsOutput {
+		// Compute the metrics output for each threshold.
 		let thresholds: Vec<_> = self
-			.thresholds
+			.confusion_matrices_for_thresholds
 			.iter()
-			.enumerate()
-			.map(|(threshold_index, &threshold)| {
-				let confusion_matrix = &self.confusion_matrices[threshold_index];
-				let n_examples = confusion_matrix.n_examples();
+			.map(|(threshold, confusion_matrix)| {
+				let n_examples = confusion_matrix.total();
 				let true_positives = confusion_matrix.true_positives;
 				let false_positives = confusion_matrix.false_positives;
 				let false_negatives = confusion_matrix.false_negatives;
@@ -162,7 +150,7 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 				let false_positive_rate = false_positives.to_f32().unwrap()
 					/ (true_negatives.to_f32().unwrap() + false_positives.to_f32().unwrap());
 				BinaryClassificationMetricsOutputForThreshold {
-					threshold,
+					threshold: *threshold,
 					false_negatives,
 					false_positives,
 					true_negatives,

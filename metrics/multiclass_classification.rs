@@ -59,9 +59,6 @@ pub struct ClassMetrics {
 
 impl MulticlassClassificationMetrics {
 	pub fn new(n_classes: usize) -> MulticlassClassificationMetrics {
-		//                                 prediction     label
-		//                                      |           |
-		//                                      v           v
 		let confusion_matrix = Array::zeros((n_classes, n_classes));
 		MulticlassClassificationMetrics { confusion_matrix }
 	}

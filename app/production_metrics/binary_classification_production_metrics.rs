@@ -71,17 +71,17 @@ impl StreamingMetric<'_> for BinaryClassificationProductionPredictionMetrics {
 			NumberOrString::String(s) => s,
 		};
 		let confusion_matrix = &mut self.confusion_matrix;
-		let actual = label == self.positive_class;
 		let predicted = prediction == self.positive_class;
-		match (actual, predicted) {
-			(true, false) => {
-				confusion_matrix.false_negatives += 1;
-			}
-			(false, true) => {
-				confusion_matrix.false_positives += 1;
-			}
+		let actual = label == self.positive_class;
+		match (predicted, actual) {
 			(false, false) => {
 				confusion_matrix.true_negatives += 1;
+			}
+			(false, true) => {
+				confusion_matrix.false_negatives += 1;
+			}
+			(true, false) => {
+				confusion_matrix.false_positives += 1;
 			}
 			(true, true) => {
 				confusion_matrix.true_positives += 1;
