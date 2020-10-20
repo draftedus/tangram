@@ -296,12 +296,12 @@ pub async fn run(options: Options) -> Result<()> {
 	fn pinwheel() -> Pinwheel {
 		Pinwheel::dev(
 			std::path::PathBuf::from("app"),
-			std::path::PathBuf::from("target/app"),
+			std::path::PathBuf::from("build/pinwheel/app"),
 		)
 	}
 	#[cfg(not(debug_assertions))]
 	fn pinwheel() -> Pinwheel {
-		Pinwheel::prod(include_dir::include_dir!("../target/app"))
+		Pinwheel::prod(include_dir::include_dir!("../build/pinwheel/app"))
 	}
 	let pinwheel = pinwheel();
 	// Configure the database pool.

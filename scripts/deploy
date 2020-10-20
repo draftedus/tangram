@@ -1,2 +1,2 @@
-rsync --progress --archive --chown=tangram:tangram --chmod=770 target/release/tangram tangram@router.tangramhq.com:/var/lib/tangram/tangram
+rsync --progress --archive --chown=tangram:tangram --chmod=770 build/cargo/release/tangram tangram@router.tangramhq.com:/var/lib/tangram/tangram
 ssh -t tangram@router.tangramhq.com "sudo systemctl restart tangram"

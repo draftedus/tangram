@@ -1,1 +1,1 @@
-rsync --archive --delete --progress ../target/www/* tangram@router.tangramhq.com:/var/www/
+rsync --archive --delete --progress ../build/pinwheel/www/* tangram@router.tangramhq.com:/var/www/

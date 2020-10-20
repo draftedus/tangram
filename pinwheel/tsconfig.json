@@ -2,7 +2,7 @@
 	"extends": "../tscommon.json",
 	"compilerOptions": {
 		"baseUrl": ".",
-		"outDir": "../target/tsc/pinwheel"
+		"outDir": "../build/tsc/pinwheel"
 	},
 	"references": [],
 	"include": ["**/*.ts", "**/*.tsx"]

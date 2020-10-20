@@ -1,1 +1,1 @@
-cargo run --release -p pinwheel -- build --dst-dir ../target/www
+cargo run --release -p pinwheel -- build --dst-dir ../build/pinwheel/www

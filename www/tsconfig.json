@@ -2,7 +2,7 @@
 	"extends": "../tscommon.json",
 	"compilerOptions": {
 		"baseUrl": ".",
-		"outDir": "../target/tsc/www"
+		"outDir": "../build/tsc/www"
 	},
 	"references": [
 		{ "path": "../charts" },

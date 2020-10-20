@@ -1,8 +1,0 @@
-cargo build --release --bin tangram_tree_benchmark_boston
-cargo build --release --bin tangram_tree_benchmark_census
-cargo build --release --bin tangram_tree_benchmark_flights
-cargo build --release --bin tangram_tree_benchmark_heart_disease
-cargo build --release --bin tangram_tree_benchmark_higgs
-cargo build --release --bin tangram_tree_benchmark_iris
-python tree/benchmarks/boston.py --library lightgbm
-target/release/tangram_tree_benchmark_boston
