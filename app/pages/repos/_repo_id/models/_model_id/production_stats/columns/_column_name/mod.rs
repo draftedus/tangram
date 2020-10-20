@@ -362,23 +362,26 @@ fn enum_props(
 		_ => unreachable!(),
 	};
 	let production_row_count = get_production_stats_output.overall.row_count;
-	let overall_chart_data = izip!(&overall.histogram, &train_column_stats.histogram)
-		.map(
-			|((production_enum_option, production_count), (_, training_count))| {
-				(
-					production_enum_option.clone(),
-					EnumOverallHistogramEntry {
-						production_count: *production_count,
-						training_count: *training_count,
-						production_fraction: production_count.to_f32().unwrap()
-							/ production_row_count.to_f32().unwrap(),
-						training_fraction: training_count.to_f32().unwrap()
-							/ train_row_count.to_f32().unwrap(),
-					},
-				)
-			},
-		)
-		.collect();
+	let overall_chart_data = izip!(
+		overall.histogram.iter(),
+		train_column_stats.histogram.iter()
+	)
+	.map(
+		|((production_enum_option, production_count), (_, training_count))| {
+			(
+				production_enum_option.clone(),
+				EnumOverallHistogramEntry {
+					production_count: *production_count,
+					training_count: *training_count,
+					production_fraction: production_count.to_f32().unwrap()
+						/ production_row_count.to_f32().unwrap(),
+					training_fraction: training_count.to_f32().unwrap()
+						/ train_row_count.to_f32().unwrap(),
+				},
+			)
+		},
+	)
+	.collect();
 	EnumProps {
 		absent_count: overall.absent_count,
 		alert: None,

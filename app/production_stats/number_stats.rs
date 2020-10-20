@@ -96,7 +96,11 @@ impl StreamingMetric<'_> for NumberStats {
 		let mut quantiles: Vec<f32> = vec![0.0; quantiles.len()];
 		let mut samples = self.reservoir;
 		samples.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-		for (quantile, index, fract) in izip!(&mut quantiles, &quantile_indexes, &quantile_fracts) {
+		for (quantile, index, fract) in izip!(
+			quantiles.iter_mut(),
+			quantile_indexes.iter(),
+			quantile_fracts.iter(),
+		) {
 			let value = samples[*index];
 			if *fract > 0.0 {
 				let next_value = samples[index + 1];

@@ -115,13 +115,13 @@ impl StreamingMetric<'_> for MulticlassClassificationProductionPredictionMetrics
 		let recall_unweighted = class_metrics.iter().map(|class| class.recall).sum::<f32>()
 			/ n_classes.to_f32().unwrap();
 		let n_examples_per_class = confusion_matrix.sum_axis(Axis(0));
-		let precision_weighted = izip!(&class_metrics, &n_examples_per_class)
+		let precision_weighted = izip!(class_metrics.iter(), n_examples_per_class.iter())
 			.map(|(class, n_examples_in_class)| {
 				class.precision * n_examples_in_class.to_f32().unwrap()
 			})
 			.sum::<f32>()
 			/ n_examples.to_f32().unwrap();
-		let recall_weighted = izip!(&class_metrics, &n_examples_per_class)
+		let recall_weighted = izip!(class_metrics.iter(), n_examples_per_class.iter())
 			.map(|(class, n_examples_in_class)| {
 				class.recall * n_examples_in_class.to_f32().unwrap()
 			})

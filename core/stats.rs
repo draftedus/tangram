@@ -346,8 +346,12 @@ impl NumberColumnStats {
 			mean = new_mean;
 			m2 = new_m2;
 			current_count += count;
-			let quantiles_iter = izip!(&mut quantiles, &quantile_indexes, &quantile_fracts)
-				.filter(|(quantile, _, _)| quantile.is_none());
+			let quantiles_iter = izip!(
+				quantiles.iter_mut(),
+				quantile_indexes.iter(),
+				quantile_fracts.iter(),
+			)
+			.filter(|(quantile, _, _)| quantile.is_none());
 			for (quantile, index, fract) in quantiles_iter {
 				match (current_count - 1).cmp(index) {
 					Ordering::Equal => {
@@ -410,7 +414,7 @@ impl EnumColumnStats {
 	}
 
 	fn merge(mut self, other: EnumColumnStats) -> EnumColumnStats {
-		for (a, b) in izip!(&mut self.histogram, &other.histogram) {
+		for (a, b) in izip!(self.histogram.iter_mut(), other.histogram.iter()) {
 			*a += b;
 		}
 		self.count += other.count;

@@ -190,7 +190,7 @@ async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Res
 					let weights: Vec<Vec<(String, f32)>> = weights
 						.axis_iter(Axis(0))
 						.map(|weights| {
-							let mut weights = izip!(&feature_names, weights)
+							let mut weights = izip!(feature_names.iter(), weights.iter())
 								.map(|(feature_name, weight)| (feature_name.to_owned(), *weight))
 								.collect::<Vec<(String, f32)>>();
 							weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
