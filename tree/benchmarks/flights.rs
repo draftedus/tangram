@@ -125,10 +125,10 @@ fn main() {
 		max_rounds: 100,
 		..Default::default()
 	};
-	let model = tangram_tree::BinaryClassifier::train(
+	let train_output = tangram_tree::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.view(),
-		train_options,
+		&train_options,
 		&mut |_| {},
 	);
 	let duration = start.elapsed().as_secs_f32();
@@ -143,7 +143,9 @@ fn main() {
 		probabilities.axis_chunks_iter_mut(Axis(0), chunk_size),
 	)
 	.for_each(|(features_test_chunk, probabilities_chunk)| {
-		model.predict(features_test_chunk, probabilities_chunk);
+		train_output
+			.model
+			.predict(features_test_chunk, probabilities_chunk);
 	});
 
 	// Compute metrics.

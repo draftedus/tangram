@@ -22,7 +22,7 @@ pub struct Regressor {
 }
 
 /// This struct is returned by `Regressor::train`.
-struct RegressorTrainOuput {
+pub struct RegressorTrainOutput {
 	/// This is the model you just trained.
 	pub model: Regressor,
 	/// These are the loss values for each epoch.
@@ -36,7 +36,7 @@ impl Regressor {
 		labels: NumberDataFrameColumnView,
 		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(super::TrainProgress),
-	) -> Regressor {
+	) -> RegressorTrainOutput {
 		let n_features = features.ncols();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
@@ -94,7 +94,10 @@ impl Regressor {
 				}
 			}
 		}
-		model
+		RegressorTrainOutput {
+			model,
+			losses: todo!(),
+		}
 	}
 
 	fn train_batch(

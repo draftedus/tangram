@@ -603,10 +603,10 @@ fn main() {
 		max_rounds: 100,
 		..Default::default()
 	};
-	let model = tangram_tree::Regressor::train(
+	let train_output = tangram_tree::Regressor::train(
 		features_train.view(),
 		labels_train.view(),
-		train_options,
+		&train_options,
 		&mut |_| {},
 	);
 	let duration = start.elapsed().as_secs_f32();
@@ -621,7 +621,9 @@ fn main() {
 		predictions.axis_chunks_iter_mut(Axis(0), chunk_size),
 	)
 	.for_each(|(features_test_chunk, predictions_chunk)| {
-		model.predict(features_test_chunk, predictions_chunk);
+		train_output
+			.model
+			.predict(features_test_chunk, predictions_chunk);
 	});
 
 	// Compute metrics.

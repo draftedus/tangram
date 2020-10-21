@@ -1,6 +1,6 @@
 use crate::{
 	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
-	train::{train, Task},
+	train::{train, Task, TrainOutput},
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
@@ -20,10 +20,13 @@ pub struct Regressor {
 	pub trees: Vec<Tree>,
 }
 
+/// This struct is returned by `Regressor::train`.
 #[derive(Debug)]
 pub struct RegressorTrainOutput {
 	/// This is the model you just trained.
 	pub model: Regressor,
+	/// These are the loss values for each epoch.
+	pub losses: Option<Vec<f32>>,
 	/// The importance of each feature as measured by the number of times the feature was used in a branch node.
 	pub feature_importances: Option<Vec<f32>>,
 }

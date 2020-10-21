@@ -1,14 +1,14 @@
 #[cfg(feature = "timing")]
 use crate::timing::Timing;
 use crate::{
-	binary_classifier::BinaryClassifier,
+	binary_classifier::{BinaryClassifier, BinaryClassifierTrainOutput},
 	compute_bin_stats::{BinStats, BinStatsEntry},
 	compute_binned_features::{
 		compute_binned_features_column_major, compute_binned_features_row_major,
 	},
 	compute_binning_instructions::compute_binning_instructions,
 	compute_feature_importances::compute_feature_importances,
-	multiclass_classifier::MulticlassClassifier,
+	multiclass_classifier::{MulticlassClassifier, MulticlassClassifierTrainOutput},
 	regressor::{Regressor, RegressorTrainOutput},
 	train_tree::{
 		train_tree, TrainBranchNode, TrainBranchSplit, TrainBranchSplitContinuous,
@@ -359,26 +359,32 @@ pub fn train(
 	// Assemble the model.
 	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
 	match task {
-		Task::Regression => Model::Regressor(Regressor {
-			bias: *biases.get(0).unwrap(),
-			trees,
+		Task::Regression => TrainOutput::Regressor(RegressorTrainOutput {
+			model: Regressor {
+				bias: *biases.get(0).unwrap(),
+				trees,
+			},
 			feature_importances,
-			train_options,
+			losses,
 		}),
-		Task::BinaryClassification => Model::BinaryClassifier(BinaryClassifier {
-			bias: *biases.get(0).unwrap(),
-			trees,
+		Task::BinaryClassification => TrainOutput::BinaryClassifier(BinaryClassifierTrainOutput {
+			model: BinaryClassifier {
+				bias: *biases.get(0).unwrap(),
+				trees,
+			},
 			feature_importances,
-			train_options,
+			losses,
 		}),
 		Task::MulticlassClassification { .. } => {
-			Model::MulticlassClassifier(MulticlassClassifier {
-				n_rounds: n_rounds_trained,
-				n_classes: n_trees_per_round,
-				biases: biases.into_raw_vec(),
-				trees,
+			TrainOutput::MulticlassClassifier(MulticlassClassifierTrainOutput {
+				model: MulticlassClassifier {
+					n_rounds: n_rounds_trained,
+					n_classes: n_trees_per_round,
+					biases: biases.into_raw_vec(),
+					trees,
+				},
 				feature_importances,
-				train_options,
+				losses,
 			})
 		}
 	}

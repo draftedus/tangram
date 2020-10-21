@@ -22,6 +22,14 @@ pub struct BinaryClassifier {
 	pub means: Vec<f32>,
 }
 
+/// This struct is returned by `BinaryClassifier::train`.
+pub struct BinaryClassifierTrainOutput {
+	/// This is the model you just trained.
+	pub model: BinaryClassifier,
+	/// These are the loss values for each epoch.
+	pub losses: Option<Vec<f32>>,
+}
+
 impl BinaryClassifier {
 	/// Train a linear binary classifier.
 	pub fn train(
@@ -29,7 +37,7 @@ impl BinaryClassifier {
 		labels: EnumDataFrameColumnView,
 		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
-	) -> BinaryClassifier {
+	) -> BinaryClassifierTrainOutput {
 		let n_features = features.ncols();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
 			train_early_stopping_split(
@@ -88,7 +96,10 @@ impl BinaryClassifier {
 				}
 			}
 		}
-		model
+		BinaryClassifierTrainOutput {
+			model,
+			losses: todo!(),
+		}
 	}
 
 	fn train_batch(

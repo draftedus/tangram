@@ -1,6 +1,6 @@
 use crate::{
 	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
-	train::{train, Model, Task},
+	train::{train, Task, TrainOutput},
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
@@ -20,6 +20,15 @@ pub struct BinaryClassifier {
 	pub bias: f32,
 	/// The trees for this model.
 	pub trees: Vec<Tree>,
+}
+
+/// This struct is returned by `BinaryClassifier::train`.
+#[derive(Debug)]
+pub struct BinaryClassifierTrainOutput {
+	/// This is the model you just trained.
+	pub model: BinaryClassifier,
+	/// These are the loss values for each epoch.
+	pub losses: Option<Vec<f32>>,
 	/// The importance of each feature as measured by the number of times the feature was used in a branch node.
 	pub feature_importances: Option<Vec<f32>>,
 }
@@ -29,19 +38,19 @@ impl BinaryClassifier {
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumDataFrameColumnView,
-		train_options: TrainOptions,
+		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
-	) -> BinaryClassifier {
+	) -> BinaryClassifierTrainOutput {
 		let task = Task::BinaryClassification;
-		let model = train(
+		let train_output = train(
 			task,
 			features,
 			DataFrameColumnView::Enum(labels),
 			train_options,
 			update_progress,
 		);
-		match model {
-			Model::BinaryClassifier(model) => model,
+		match train_output {
+			TrainOutput::BinaryClassifier(train_output) => train_output,
 			_ => unreachable!(),
 		}
 	}

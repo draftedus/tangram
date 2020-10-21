@@ -22,6 +22,14 @@ pub struct MulticlassClassifier {
 	pub means: Vec<f32>,
 }
 
+/// This struct is returned by `MulticlassClassifier::train`.
+pub struct MulticlassClassifierTrainOutput {
+	/// This is the model you just trained.
+	pub model: MulticlassClassifier,
+	/// These are the loss values for each epoch.
+	pub losses: Option<Vec<f32>>,
+}
+
 impl MulticlassClassifier {
 	/// Train a linear multiclass classifier.
 	pub fn train(
@@ -29,7 +37,7 @@ impl MulticlassClassifier {
 		labels: EnumDataFrameColumnView,
 		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
-	) -> MulticlassClassifier {
+	) -> MulticlassClassifierTrainOutput {
 		let n_classes = labels.options().len();
 		let n_features = features.ncols();
 		let (features_train, labels_train, features_early_stopping, labels_early_stopping) =
@@ -89,7 +97,10 @@ impl MulticlassClassifier {
 				}
 			}
 		}
-		model
+		MulticlassClassifierTrainOutput {
+			model,
+			losses: todo!(),
+		}
 	}
 
 	fn train_batch(

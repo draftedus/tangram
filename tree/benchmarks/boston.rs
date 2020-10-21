@@ -19,10 +19,10 @@ fn main() {
 	let labels_test = labels_test.as_number().unwrap();
 
 	// Train the model.
-	let model = tangram_tree::Regressor::train(
+	let train_output = tangram_tree::Regressor::train(
 		features_train.view(),
 		labels_train.view(),
-		tangram_tree::TrainOptions {
+		&tangram_tree::TrainOptions {
 			learning_rate: 0.1,
 			max_leaf_nodes: 255,
 			max_rounds: 100,
@@ -34,7 +34,9 @@ fn main() {
 	// Make predictions on the test data.
 	let features = features_test.to_rows();
 	let mut predictions = Array::zeros(labels_test.len());
-	model.predict(features.view(), predictions.view_mut());
+	train_output
+		.model
+		.predict(features.view(), predictions.view_mut());
 
 	// Compute metrics.
 	let mut metrics = tangram_metrics::RegressionMetrics::new();

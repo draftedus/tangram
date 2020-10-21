@@ -712,8 +712,6 @@ impl TryFrom<model::Regressor> for Regressor {
 							.into_iter()
 							.map(TryInto::try_into)
 							.collect::<Result<Vec<_>>>()?,
-						feature_importances: Some(inner_model.feature_importances),
-						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
 			}
@@ -771,8 +769,6 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 							.into_iter()
 							.map(TryInto::try_into)
 							.collect::<Result<Vec<_>>>()?,
-						feature_importances: Some(inner_model.feature_importances),
-						train_options: inner_model.train_options.try_into()?,
 					}),
 				})
 			}
@@ -828,7 +824,6 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 					feature_groups,
 					model: MulticlassClassificationModel::Tree(
 						tangram_tree::MulticlassClassifier {
-							train_options: inner_model.train_options.try_into()?,
 							biases: inner_model.biases,
 							trees: inner_model
 								.trees
@@ -837,7 +832,6 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 								.collect::<Result<Vec<_>>>()?,
 							n_classes: inner_model.n_classes.to_usize().unwrap(),
 							n_rounds: inner_model.n_rounds.to_usize().unwrap(),
-							feature_importances: Some(inner_model.feature_importances),
 						},
 					),
 				})

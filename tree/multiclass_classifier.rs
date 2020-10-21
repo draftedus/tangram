@@ -1,6 +1,6 @@
 use crate::{
 	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
-	train::Model,
+	train::TrainOutput,
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
@@ -23,6 +23,15 @@ pub struct MulticlassClassifier {
 	pub n_classes: usize,
 	/// The number of rounds.
 	pub n_rounds: usize,
+}
+
+/// This struct is returned by `MulticlassClassifier::train`.
+#[derive(Debug)]
+pub struct MulticlassClassifierTrainOutput {
+	/// This is the model you just trained.
+	pub model: MulticlassClassifier,
+	/// These are the loss values for each epoch.
+	pub losses: Option<Vec<f32>>,
 	/// The importance of each feature as measured by the number of times the feature was used in a branch node.
 	pub feature_importances: Option<Vec<f32>>,
 }
@@ -32,21 +41,21 @@ impl MulticlassClassifier {
 	pub fn train(
 		features: DataFrameView,
 		labels: EnumDataFrameColumnView,
-		train_options: TrainOptions,
+		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
-	) -> MulticlassClassifier {
+	) -> MulticlassClassifierTrainOutput {
 		let task = crate::train::Task::MulticlassClassification {
 			n_classes: labels.options().len(),
 		};
-		let model = crate::train::train(
+		let train_output = crate::train::train(
 			task,
 			features,
 			DataFrameColumnView::Enum(labels),
 			train_options,
 			update_progress,
 		);
-		match model {
-			Model::MulticlassClassifier(model) => model,
+		match train_output {
+			TrainOutput::MulticlassClassifier(train_output) => train_output,
 			_ => unreachable!(),
 		}
 	}

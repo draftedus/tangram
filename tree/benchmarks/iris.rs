@@ -22,17 +22,19 @@ fn main() {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
-	let model = tangram_tree::MulticlassClassifier::train(
+	let train_output = tangram_tree::MulticlassClassifier::train(
 		features_train.view(),
 		labels_train.view(),
-		Default::default(),
+		&Default::default(),
 		&mut |_| {},
 	);
 
 	// Make predictions on the test data.
 	let mut probabilities = Array::zeros((n_rows_test, 3));
 	let features_test = features_test.to_rows();
-	model.predict(features_test.view(), probabilities.view_mut());
+	train_output
+		.model
+		.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute Metrics.
 	let mut metrics = tangram_metrics::MulticlassClassificationMetrics::new(n_classes);

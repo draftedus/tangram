@@ -81,10 +81,10 @@ fn main() {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
-	let model = tangram_tree::BinaryClassifier::train(
+	let train_output = tangram_tree::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.view(),
-		tangram_tree::TrainOptions {
+		&tangram_tree::TrainOptions {
 			max_leaf_nodes: 255,
 			..Default::default()
 		},
@@ -94,7 +94,9 @@ fn main() {
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
 	let mut probabilities = Array::zeros(n_rows_test);
-	model.predict(features_test.view(), probabilities.view_mut());
+	train_output
+		.model
+		.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute metrics.
 	let input = izip!(probabilities.iter(), labels_test.iter())

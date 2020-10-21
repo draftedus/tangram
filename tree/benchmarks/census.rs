@@ -197,17 +197,19 @@ fn main() {
 		max_rounds: 100,
 		..Default::default()
 	};
-	let model = tangram_tree::BinaryClassifier::train(
+	let train_output = tangram_tree::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.view(),
-		train_options,
+		&train_options,
 		&mut |_| {},
 	);
 
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
 	let mut probabilities = Array::zeros(n_rows_test);
-	model.predict(features_test.view(), probabilities.view_mut());
+	train_output
+		.model
+		.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute metrics.
 	let input = izip!(probabilities.iter(), labels_test.iter())
