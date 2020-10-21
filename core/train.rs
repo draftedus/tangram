@@ -308,17 +308,25 @@ pub fn train(
 				Metrics::Regression(test_metrics) => test_metrics,
 				_ => unreachable!(),
 			};
-			let (feature_groups, model) = match train_model_output {
+			let model = match train_model_output {
 				TrainModelOutput::LinearRegressor(LinearRegressorTrainModelOutput {
 					model,
 					feature_groups,
+					train_options,
+					losses,
 					..
-				}) => (feature_groups, RegressionModel::Linear(model)),
+				}) => RegressionModel::Linear(LinearRegressionModel {
+					model,
+					train_options,
+					feature_groups,
+					losses,
+				}),
 				TrainModelOutput::TreeRegressor(TreeRegressorTrainModelOutput {
 					model,
 					feature_groups,
+					train_options,
 					..
-				}) => (feature_groups, RegressionModel::Tree(model)),
+				}) => RegressionModel::Tree(model),
 				_ => unreachable!(),
 			};
 			model::Model::Regressor(model::Regressor {
@@ -335,7 +343,6 @@ pub fn train(
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
 				baseline_metrics: baseline_metrics.into(),
-				feature_groups: feature_groups.into_iter().map(Into::into).collect(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
 			})
@@ -353,19 +360,19 @@ pub fn train(
 				Metrics::BinaryClassification(test_metrics) => test_metrics,
 				_ => unreachable!(),
 			};
-			let (feature_groups, model) = match train_model_output {
+			let model = match train_model_output {
 				TrainModelOutput::LinearBinaryClassifier(
 					LinearBinaryClassifierTrainModelOutput {
 						model,
 						feature_groups,
 						..
 					},
-				) => (feature_groups, BinaryClassificationModel::Linear(model)),
+				) => BinaryClassificationModel::Linear(model),
 				TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 					model,
 					feature_groups,
 					..
-				}) => (feature_groups, BinaryClassificationModel::Tree(model)),
+				}) => BinaryClassificationModel::Tree(model),
 				_ => unreachable!(),
 			};
 			let (negative_class, positive_class) = match &train_target_column_stats {
@@ -391,7 +398,6 @@ pub fn train(
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
 				baseline_metrics: baseline_metrics.into(),
-				feature_groups: feature_groups.into_iter().map(Into::into).collect(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
 			})
@@ -451,7 +457,6 @@ pub fn train(
 				test_target_column_stats: test_target_column_stats.into(),
 				test_metrics: test_metrics.into(),
 				baseline_metrics: baseline_metrics.into(),
-				feature_groups: feature_groups.into_iter().map(Into::into).collect(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
 			})
@@ -475,8 +480,22 @@ enum MulticlassClassificationComparisonMetric {
 }
 
 enum RegressionModel {
-	Linear(tangram_linear::Regressor),
-	Tree(tangram_tree::Regressor),
+	Linear(LinearRegressionModel),
+	Tree(TreeRegressionModel),
+}
+
+struct LinearRegressionModel {
+	pub model: tangram_linear::Regressor,
+	pub train_options: tangram_linear::TrainOptions,
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
+}
+
+struct TreeRegressionModel {
+	pub model: tangram_tree::Regressor,
+	pub train_options: tangram_tree::TrainOptions,
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 enum RegressionComparisonMetric {
@@ -487,13 +506,41 @@ enum RegressionComparisonMetric {
 }
 
 enum BinaryClassificationModel {
-	Linear(tangram_linear::BinaryClassifier),
-	Tree(tangram_tree::BinaryClassifier),
+	Linear(LinearBinaryClassificationModel),
+	Tree(TreeBinaryClassificationModel),
+}
+
+struct LinearBinaryClassificationModel {
+	pub model: tangram_linear::BinaryClassifier,
+	pub train_options: tangram_linear::TrainOptions,
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
+}
+
+struct TreeBinaryClassificationModel {
+	pub model: tangram_tree::BinaryClassifier,
+	pub train_options: tangram_tree::TrainOptions,
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 enum MulticlassClassificationModel {
-	Linear(tangram_linear::MulticlassClassifier),
-	Tree(tangram_tree::MulticlassClassifier),
+	Linear(LinearMulticlassClassificationModel),
+	Tree(TreeMulticlassClassificationModel),
+}
+
+struct LinearMulticlassClassificationModel {
+	pub model: tangram_linear::MulticlassClassifier,
+	pub train_options: tangram_linear::TrainOptions,
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
+}
+
+struct TreeMulticlassClassificationModel {
+	pub model: tangram_tree::MulticlassClassifier,
+	pub train_options: tangram_tree::TrainOptions,
+	pub feature_groups: Vec<features::FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 enum ComparisonMetric {

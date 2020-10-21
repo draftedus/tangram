@@ -679,7 +679,7 @@ impl TryFrom<model::Regressor> for Regressor {
 			.collect::<Result<Vec<_>>>()?;
 		match value.model {
 			model::RegressionModel::Linear(inner_model) => {
-				let feature_groups = value
+				let feature_groups = inner_model
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -696,7 +696,7 @@ impl TryFrom<model::Regressor> for Regressor {
 				})
 			}
 			model::RegressionModel::Tree(inner_model) => {
-				let feature_groups = value
+				let feature_groups = inner_model
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -734,7 +734,7 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 		let positive_class = value.positive_class;
 		match value.model {
 			model::BinaryClassificationModel::Linear(inner_model) => {
-				let feature_groups = value
+				let feature_groups = inner_model
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -753,7 +753,7 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 				})
 			}
 			model::BinaryClassificationModel::Tree(inner_model) => {
-				let feature_groups = value
+				let feature_groups = inner_model
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -796,7 +796,7 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 				let n_features = inner_model.n_features.to_usize().unwrap();
 				let weights =
 					Array::from_shape_vec((n_features, n_classes), inner_model.weights).unwrap();
-				let feature_groups = model
+				let feature_groups = inner_model
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)
@@ -816,7 +816,7 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 				})
 			}
 			model::MulticlassClassificationModel::Tree(inner_model) => {
-				let feature_groups = model
+				let feature_groups = inner_model
 					.feature_groups
 					.into_iter()
 					.map(TryFrom::try_from)

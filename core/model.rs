@@ -75,7 +75,6 @@ pub struct Regressor {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: RegressionMetrics,
 	pub baseline_metrics: RegressionMetrics,
-	pub feature_groups: Vec<FeatureGroup>,
 	pub model: RegressionModel,
 	pub comparison_metric: RegressionComparisonMetric,
 }
@@ -100,18 +99,20 @@ pub enum RegressionModel {
 pub struct LinearRegressor {
 	pub bias: f32,
 	pub weights: Vec<f32>,
-	pub losses: Option<Vec<f32>>,
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
+	pub feature_groups: Vec<FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeRegressor {
 	pub bias: f32,
 	pub trees: Vec<Tree>,
-	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 	pub train_options: TreeModelTrainOptions,
+	pub feature_groups: Vec<FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -192,7 +193,6 @@ pub struct BinaryClassifier {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: BinaryClassificationMetrics,
 	pub baseline_metrics: BinaryClassificationMetrics,
-	pub feature_groups: Vec<FeatureGroup>,
 	pub model: BinaryClassificationModel,
 	pub comparison_metric: BinaryClassificationComparisonMetric,
 }
@@ -228,20 +228,22 @@ pub enum BinaryClassificationModel {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LinearBinaryClassifier {
-	pub weights: Vec<f32>,
 	pub bias: f32,
-	pub losses: Option<Vec<f32>>,
+	pub weights: Vec<f32>,
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
+	pub feature_groups: Vec<FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeBinaryClassifier {
 	pub bias: f32,
 	pub trees: Vec<Tree>,
-	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 	pub train_options: TreeModelTrainOptions,
+	pub feature_groups: Vec<FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -266,7 +268,6 @@ pub struct MulticlassClassifier {
 	pub test_target_column_stats: ColumnStats,
 	pub test_metrics: MulticlassClassificationMetrics,
 	pub baseline_metrics: MulticlassClassificationMetrics,
-	pub feature_groups: Vec<FeatureGroup>,
 	pub model: MulticlassClassificationModel,
 	pub comparison_metric: MulticlassClassificationComparisonMetric,
 }
@@ -309,6 +310,8 @@ pub struct LinearMulticlassClassifier {
 	pub weights: Vec<f32>,
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
+	pub feature_groups: Vec<FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -317,9 +320,10 @@ pub struct TreeMulticlassClassifier {
 	pub n_rounds: usize,
 	pub biases: Vec<f32>,
 	pub trees: Vec<Tree>,
-	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 	pub train_options: TreeModelTrainOptions,
+	pub feature_groups: Vec<FeatureGroup>,
+	pub losses: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
