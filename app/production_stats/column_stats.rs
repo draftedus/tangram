@@ -135,35 +135,35 @@ pub enum ProductionColumnStatsOutput {
 
 #[derive(Debug)]
 pub struct UnknownProductionColumnStatsOutput {
-	pub column_name: String,
 	pub absent_count: u64,
+	pub column_name: String,
 	pub invalid_count: u64,
 }
 
 #[derive(Debug)]
 pub struct NumberProductionColumnStatsOutput {
-	pub column_name: String,
 	pub absent_count: u64,
+	pub column_name: String,
 	pub invalid_count: u64,
 	pub stats: Option<NumberStatsOutput>,
 }
 
 #[derive(Debug)]
 pub struct EnumProductionColumnStatsOutput {
-	pub column_name: String,
 	pub absent_count: u64,
-	pub invalid_count: u64,
+	pub column_name: String,
 	pub histogram: Vec<(String, u64)>,
+	pub invalid_count: u64,
 	pub invalid_histogram: Option<Vec<(String, u64)>>,
 }
 
 #[derive(Debug)]
 pub struct TextProductionColumnStatsOutput {
-	pub column_name: String,
 	pub absent_count: u64,
+	pub column_name: String,
 	pub invalid_count: u64,
-	pub token_histogram: Vec<(Token, u64)>,
 	pub per_example_histogram: Vec<(Token, u64)>,
+	pub token_histogram: Vec<(Token, u64)>,
 }
 
 impl ProductionColumnStats {
@@ -289,8 +289,8 @@ impl<'a> StreamingMetric<'a> for UnknownProductionColumnStats {
 
 	fn finalize(self) -> Self::Output {
 		UnknownProductionColumnStatsOutput {
-			column_name: self.column_name,
 			absent_count: self.absent_count,
+			column_name: self.column_name,
 			invalid_count: self.invalid_count,
 		}
 	}
@@ -370,8 +370,8 @@ impl<'a> StreamingMetric<'a> for NumberProductionColumnStats {
 
 	fn finalize(self) -> Self::Output {
 		NumberProductionColumnStatsOutput {
-			column_name: self.column_name,
 			absent_count: self.absent_count,
+			column_name: self.column_name,
 			invalid_count: self.invalid_count,
 			stats: self.stats.map(|s| s.finalize()),
 		}
@@ -470,9 +470,9 @@ impl<'a> StreamingMetric<'a> for EnumProductionColumnStats {
 
 	fn finalize(self) -> Self::Output {
 		EnumProductionColumnStatsOutput {
+			absent_count: self.absent_count,
 			column_name: self.column_name,
 			histogram: self.histogram.into_iter().collect(),
-			absent_count: self.absent_count,
 			invalid_count: self.invalid_count,
 			invalid_histogram: self.invalid_histogram.map(|h| h.into_iter().collect()),
 		}
@@ -578,11 +578,11 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 
 	fn finalize(self) -> Self::Output {
 		TextProductionColumnStatsOutput {
-			column_name: self.column_name,
 			absent_count: self.absent_count,
+			column_name: self.column_name,
 			invalid_count: self.invalid_count,
-			token_histogram: self.token_histogram.into_iter().collect(),
 			per_example_histogram: self.per_example_histogram.into_iter().collect(),
+			token_histogram: self.token_histogram.into_iter().collect(),
 		}
 	}
 }

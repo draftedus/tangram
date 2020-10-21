@@ -20,6 +20,9 @@ use hyper::{Body, Request};
 use std::collections::BTreeMap;
 use tangram_util::id::Id;
 
+const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
+const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
@@ -161,6 +164,7 @@ pub async fn props(
 			model.overall_target_column_stats
 		}
 	};
+	let row_count = production_stats.overall.row_count;
 	let overall_column_stats_table = production_stats
 		.overall
 		.column_stats
@@ -169,28 +173,44 @@ pub async fn props(
 			ProductionColumnStatsOutput::Unknown(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
-				alert: None,
+				alert: alert_message(
+					row_count,
+					column_stats.absent_count,
+					column_stats.invalid_count,
+				),
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Unknown,
 			},
 			ProductionColumnStatsOutput::Text(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
-				alert: None,
+				alert: alert_message(
+					row_count,
+					column_stats.absent_count,
+					column_stats.invalid_count,
+				),
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Text,
 			},
 			ProductionColumnStatsOutput::Number(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
-				alert: None,
+				alert: alert_message(
+					row_count,
+					column_stats.absent_count,
+					column_stats.invalid_count,
+				),
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Number,
 			},
 			ProductionColumnStatsOutput::Enum(column_stats) => OverallColumnStats {
 				absent_count: column_stats.absent_count,
 				invalid_count: column_stats.invalid_count,
-				alert: None,
+				alert: alert_message(
+					row_count,
+					column_stats.absent_count,
+					column_stats.invalid_count,
+				),
 				name: column_stats.column_name.to_owned(),
 				column_type: ColumnType::Enum,
 			},
@@ -372,24 +392,18 @@ fn compute_production_training_quantiles(
 	}
 }
 
-// TODO
-
-// const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
-// const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
-// let invalid_ratio = self.invalid_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-// let absent_ratio = self.absent_count.to_f32().unwrap() / self.count.to_f32().unwrap();
-// let alert = alert_message(invalid_ratio, absent_ratio);
-
-// fn alert_message(invalid_ratio: f32, absent_ratio: f32) -> Option<String> {
-// 	if invalid_ratio > LARGE_INVALID_RATIO_THRESHOLD {
-// 		if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
-// 			Some("High Invalid and Absent Count".into())
-// 		} else {
-// 			Some("High Invalid Count".into())
-// 		}
-// 	} else if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
-// 		Some("High Absent Count".into())
-// 	} else {
-// 		None
-// 	}
-// }
+fn alert_message(count: usize, absent_count: usize, invalid_count: usize) -> Option<String> {
+	let invalid_ratio = invalid_count.to_f32().unwrap() / count.to_f32().unwrap();
+	let absent_ratio = absent_count.to_f32().unwrap() / count.to_f32().unwrap();
+	if invalid_ratio > LARGE_INVALID_RATIO_THRESHOLD {
+		if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
+			Some("High Invalid and Absent Count".into())
+		} else {
+			Some("High Invalid Count".into())
+		}
+	} else if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
+		Some("High Absent Count".into())
+	} else {
+		None
+	}
+}
