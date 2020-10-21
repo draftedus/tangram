@@ -96,7 +96,7 @@ impl Regressor {
 		}
 		RegressorTrainOutput {
 			model,
-			losses: todo!(),
+			losses: None,
 		}
 	}
 

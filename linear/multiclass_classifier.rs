@@ -99,7 +99,7 @@ impl MulticlassClassifier {
 		}
 		MulticlassClassifierTrainOutput {
 			model,
-			losses: todo!(),
+			losses: None,
 		}
 	}
 

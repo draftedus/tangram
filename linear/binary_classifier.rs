@@ -98,7 +98,7 @@ impl BinaryClassifier {
 		}
 		BinaryClassifierTrainOutput {
 			model,
-			losses: todo!(),
+			losses: None,
 		}
 	}
 
