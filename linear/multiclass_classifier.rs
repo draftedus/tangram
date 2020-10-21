@@ -16,7 +16,7 @@ use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperU
 pub struct MulticlassClassifier {
 	/// These are the biases the model learned.
 	pub biases: Array1<f32>,
-	/// These are the weights the model learned.
+	/// These are the weights the model learned. The shape is (n_features, n_classes).
 	pub weights: Array2<f32>,
 	/// These are the mean values of each feature in the training set, which are used to compute SHAP values.
 	pub means: Vec<f32>,
