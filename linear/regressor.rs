@@ -21,13 +21,13 @@ pub struct Regressor {
 	pub means: Vec<f32>,
 }
 
-// /// This struct is returned by `Regressor::train`.
-// struct RegressorTrainOuput {
-// 	/// This is the model you just trained.
-// 	pub model: Regressor,
-// 	/// These are the loss values for each epoch.
-// 	pub losses: Option<Vec<f32>>,
-// }
+/// This struct is returned by `Regressor::train`.
+struct RegressorTrainOuput {
+	/// This is the model you just trained.
+	pub model: Regressor,
+	/// These are the loss values for each epoch.
+	pub losses: Option<Vec<f32>>,
+}
 
 impl Regressor {
 	/// Train a linear regressor.

@@ -9,7 +9,7 @@ use crate::{
 	compute_binning_instructions::compute_binning_instructions,
 	compute_feature_importances::compute_feature_importances,
 	multiclass_classifier::MulticlassClassifier,
-	regressor::Regressor,
+	regressor::{Regressor, RegressorTrainOutput},
 	train_tree::{
 		train_tree, TrainBranchNode, TrainBranchSplit, TrainBranchSplitContinuous,
 		TrainBranchSplitDiscrete, TrainLeafNode, TrainNode, TrainTree, TrainTreeOptions,
@@ -33,10 +33,10 @@ pub enum Task {
 
 /// This is the return type of the common `train` function.
 #[derive(Debug)]
-pub enum Model {
-	Regressor(Regressor),
-	BinaryClassifier(BinaryClassifier),
-	MulticlassClassifier(MulticlassClassifier),
+pub enum TrainOutput {
+	Regressor(RegressorTrainOutput),
+	BinaryClassifier(BinaryClassifierTrainOutput),
+	MulticlassClassifier(MulticlassClassifierTrainOutput),
 }
 
 /// To avoid code duplication, this shared `train` function is called by `Regressor::train`, `BinaryClassifier::train`, and `MulticlassClassifier::train`.
@@ -44,9 +44,9 @@ pub fn train(
 	task: Task,
 	features: DataFrameView,
 	labels: DataFrameColumnView,
-	train_options: TrainOptions,
+	train_options: &TrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
-) -> Model {
+) -> TrainOutput {
 	#[cfg(feature = "timing")]
 	let timing = Timing::new();
 

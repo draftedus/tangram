@@ -935,8 +935,7 @@ fn train_tree_regressor(
 			progress,
 		)))
 	};
-	let model =
-		tangram_tree::Regressor::train(features.view(), labels, tree_options.clone(), progress);
+	let model = tangram_tree::Regressor::train(features.view(), labels, &tree_options, progress);
 	TrainModelOutput::TreeRegressor(TreeRegressorTrainModelOutput {
 		model,
 		feature_groups,

@@ -1,6 +1,6 @@
 use crate::{
 	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
-	train::{train, Model, Task},
+	train::{train, Task},
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
@@ -14,12 +14,16 @@ use tangram_util::pzip;
 /// `Regressor`s predict continuous target values, for example the selling price of a home.
 #[derive(Debug)]
 pub struct Regressor {
-	/// These are the options the model was trained with.
-	pub train_options: TrainOptions,
 	/// The initial prediction of the model given no trained trees. The bias is calculated using the mean value of the target column in the training dataset.
 	pub bias: f32,
 	/// The trees for this model.
 	pub trees: Vec<Tree>,
+}
+
+#[derive(Debug)]
+pub struct RegressorTrainOutput {
+	/// This is the model you just trained.
+	pub model: Regressor,
 	/// The importance of each feature as measured by the number of times the feature was used in a branch node.
 	pub feature_importances: Option<Vec<f32>>,
 }
@@ -29,19 +33,19 @@ impl Regressor {
 	pub fn train(
 		features: DataFrameView,
 		labels: NumberDataFrameColumnView,
-		train_options: TrainOptions,
+		train_options: &TrainOptions,
 		update_progress: &mut dyn FnMut(TrainProgress),
-	) -> Regressor {
+	) -> RegressorTrainOutput {
 		let task = Task::Regression;
-		let model = train(
+		let train_output = train(
 			task,
 			features,
 			DataFrameColumnView::Number(labels),
 			train_options,
 			update_progress,
 		);
-		match model {
-			Model::Regressor(model) => model,
+		match train_output {
+			TrainOutput::Regressor(train_output) => train_output,
 			_ => unreachable!(),
 		}
 	}
