@@ -77,25 +77,6 @@ pub struct Regressor {
 	pub baseline_metrics: RegressionMetrics,
 	pub model: RegressionModel,
 	pub comparison_metric: RegressionComparisonMetric,
-	// pub trained_models: Vec<TrainedModel>,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub enum TrainedModel {
-	Linear(LinearTrainedModel),
-	Tree(TreeTrainedModel),
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct LinearTrainedModel {
-	options: LinearModelTrainOptions,
-	value: f32,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct TreeTrainedModel {
-	options: TreeModelTrainOptions,
-	value: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -214,7 +195,6 @@ pub struct BinaryClassifier {
 	pub baseline_metrics: BinaryClassificationMetrics,
 	pub model: BinaryClassificationModel,
 	pub comparison_metric: BinaryClassificationComparisonMetric,
-	// pub trained_models: Vec<TrainedModel>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -290,7 +270,6 @@ pub struct MulticlassClassifier {
 	pub baseline_metrics: MulticlassClassificationMetrics,
 	pub model: MulticlassClassificationModel,
 	pub comparison_metric: MulticlassClassificationComparisonMetric,
-	// pub trained_models: Vec<TrainedModel>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
