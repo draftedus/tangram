@@ -351,7 +351,6 @@ pub fn train(
 				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
-				// trained_models: todo!(),
 			})
 		}
 		Task::BinaryClassification => {
@@ -421,7 +420,6 @@ pub fn train(
 				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
-				// trained_models: todo!(),
 			})
 		}
 		Task::MulticlassClassification { .. } => {
@@ -446,14 +444,12 @@ pub fn train(
 						losses,
 						..
 					},
-				) => (MulticlassClassificationModel::Linear(
-					LinearMulticlassClassificationModel {
-						model,
-						train_options,
-						feature_groups,
-						losses,
-					},
-				),),
+				) => MulticlassClassificationModel::Linear(LinearMulticlassClassificationModel {
+					model,
+					train_options,
+					feature_groups,
+					losses,
+				}),
 				TrainModelOutput::TreeMulticlassClassifier(
 					TreeMulticlassClassifierTrainModelOutput {
 						model,
@@ -462,14 +458,12 @@ pub fn train(
 						losses,
 						..
 					},
-				) => (MulticlassClassificationModel::Tree(
-					TreeMulticlassClassificationModel {
-						model,
-						train_options,
-						feature_groups,
-						losses,
-					},
-				),),
+				) => MulticlassClassificationModel::Tree(TreeMulticlassClassificationModel {
+					model,
+					train_options,
+					feature_groups,
+					losses,
+				}),
 				_ => unreachable!(),
 			};
 			let classes = match &train_target_column_stats {
@@ -499,7 +493,6 @@ pub fn train(
 				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
-				// trained_models: todo!(),
 			})
 		}
 	};
@@ -1944,7 +1937,7 @@ impl Into<model::LinearRegressor> for LinearRegressionModel {
 			means: self.model.means,
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
-			losses: self.losses.into(),
+			losses: self.losses,
 		}
 	}
 }

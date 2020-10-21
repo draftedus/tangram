@@ -97,7 +97,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 	let inner = match model {
 		tangram_core::model::Model::Regressor(model) => match model.model {
 			tangram_core::model::RegressionModel::Linear(inner_model) => {
-				let feature_names = compute_feature_names(&model.feature_groups);
+				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut weights: Vec<(String, f32)> =
 					izip!(feature_names, inner_model.weights.iter())
 						.map(|(feature_name, weight)| (feature_name, *weight))
@@ -110,7 +110,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 				})
 			}
 			tangram_core::model::RegressionModel::Tree(inner_model) => {
-				let feature_names = compute_feature_names(&model.feature_groups);
+				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut feature_importances: Vec<(String, f32)> =
 					izip!(feature_names, inner_model.feature_importances.iter())
 						.map(|(feature_name, feature_importance)| {
@@ -157,7 +157,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 				let n_features = inner_model.n_features.to_usize().unwrap();
 				let weights =
 					Array::from_shape_vec((n_classes, n_features), inner_model.weights).unwrap();
-				let feature_names = compute_feature_names(&model.feature_groups);
+				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let weights: Vec<Vec<(String, f32)>> = weights
 					.axis_iter(Axis(0))
 					.map(|weights| {
@@ -176,7 +176,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 				})
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {
-				let feature_names = compute_feature_names(&feature_groups);
+				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut feature_importances: Vec<(String, f32)> =
 					izip!(feature_names, inner_model.feature_importances.iter())
 						.map(|(feature_name, feature_importance)| {

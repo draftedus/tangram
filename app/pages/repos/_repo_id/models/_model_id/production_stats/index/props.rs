@@ -17,6 +17,7 @@ use crate::{
 };
 use anyhow::Result;
 use hyper::{Body, Request};
+use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use tangram_util::id::Id;
 
@@ -392,17 +393,17 @@ fn compute_production_training_quantiles(
 	}
 }
 
-fn alert_message(count: usize, absent_count: usize, invalid_count: usize) -> Option<String> {
+fn alert_message(count: u64, absent_count: u64, invalid_count: u64) -> Option<String> {
 	let invalid_ratio = invalid_count.to_f32().unwrap() / count.to_f32().unwrap();
 	let absent_ratio = absent_count.to_f32().unwrap() / count.to_f32().unwrap();
 	if invalid_ratio > LARGE_INVALID_RATIO_THRESHOLD {
 		if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
-			Some("High Invalid and Absent Count".into())
+			Some("High Invalid and Absent Count".to_owned())
 		} else {
-			Some("High Invalid Count".into())
+			Some("High Invalid Count".to_owned())
 		}
 	} else if absent_ratio > LARGE_ABSENT_RATIO_THRESHOLD {
-		Some("High Absent Count".into())
+		Some("High Absent Count".to_owned())
 	} else {
 		None
 	}
