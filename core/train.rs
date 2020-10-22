@@ -534,16 +534,16 @@ struct LinearRegressionModel {
 	pub model: tangram_linear::Regressor,
 	pub train_options: tangram_linear::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
-	pub feature_importances: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 struct TreeRegressionModel {
 	pub model: tangram_tree::Regressor,
 	pub train_options: tangram_tree::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
-	pub feature_importances: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 enum RegressionComparisonMetric {
@@ -562,8 +562,8 @@ struct LinearBinaryClassificationModel {
 	pub model: tangram_linear::BinaryClassifier,
 	pub train_options: tangram_linear::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
-	pub feature_importances: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 struct TreeBinaryClassificationModel {
@@ -769,27 +769,27 @@ struct LinearRegressorTrainModelOutput {
 	model: tangram_linear::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Option<Vec<f32>>,
+	losses: Vec<f32>,
 	train_options: tangram_linear::TrainOptions,
-	feature_importances: Option<Vec<f32>>,
+	feature_importances: Vec<f32>,
 }
 
 struct TreeRegressorTrainModelOutput {
 	model: tangram_tree::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Option<Vec<f32>>,
+	losses: Vec<f32>,
 	train_options: tangram_tree::TrainOptions,
-	feature_importances: Option<Vec<f32>>,
+	feature_importances: Vec<f32>,
 }
 
 struct LinearBinaryClassifierTrainModelOutput {
 	model: tangram_linear::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Option<Vec<f32>>,
+	losses: Vec<f32>,
 	train_options: tangram_linear::TrainOptions,
-	feature_importances: Option<Vec<f32>>,
+	feature_importances: Vec<f32>,
 }
 
 struct TreeBinaryClassifierTrainModelOutput {
@@ -930,8 +930,8 @@ fn train_linear_regressor(
 		feature_groups,
 		target_column_index,
 		train_options: linear_options,
-		losses: train_output.losses,
-		feature_importances: train_output.feature_importances,
+		losses: train_output.losses.unwrap(),
+		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
 
@@ -970,8 +970,8 @@ fn train_tree_regressor(
 		feature_groups,
 		target_column_index,
 		train_options: tree_options,
-		losses: train_output.losses,
-		feature_importances: train_output.feature_importances,
+		losses: train_output.losses.unwrap(),
+		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
 
@@ -1011,8 +1011,8 @@ fn train_linear_binary_classifier(
 		feature_groups,
 		target_column_index,
 		train_options: linear_options,
-		losses: train_output.losses,
-		feature_importances: train_output.feature_importances,
+		losses: train_output.losses.unwrap(),
+		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
 
@@ -1146,8 +1146,7 @@ fn train_tree_multiclass_classifier(
 
 fn compute_linear_options(options: &grid::LinearModelTrainOptions) -> tangram_linear::TrainOptions {
 	let mut linear_options = tangram_linear::TrainOptions::default();
-	// Always compute the loss.
-	linear_options.compute_loss = true;
+	linear_options.compute_losses = true;
 	if let Some(l2_regularization) = options.l2_regularization {
 		linear_options.l2_regularization = l2_regularization;
 	}
@@ -1173,8 +1172,7 @@ fn compute_linear_options(options: &grid::LinearModelTrainOptions) -> tangram_li
 
 fn compute_tree_options(options: &grid::TreeModelTrainOptions) -> tangram_tree::TrainOptions {
 	let mut tree_options = tangram_tree::TrainOptions::default();
-	// Always compute the loss.
-	tree_options.compute_loss = true;
+	tree_options.compute_losses = true;
 	if let Some(early_stopping_options) = options.early_stopping_options.as_ref() {
 		tree_options.early_stopping_options = Some(tangram_tree::EarlyStoppingOptions {
 			early_stopping_fraction: early_stopping_options.early_stopping_fraction,
@@ -1972,8 +1970,8 @@ impl Into<model::LinearRegressor> for LinearRegressionModel {
 			means: self.model.means,
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
-			losses: self.losses.unwrap(),
-			feature_importances: self.feature_importances.unwrap(),
+			losses: self.losses,
+			feature_importances: self.feature_importances,
 		}
 	}
 }
@@ -1985,8 +1983,8 @@ impl Into<model::TreeRegressor> for TreeRegressionModel {
 			trees: self.model.trees.into_iter().map(Into::into).collect(),
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
-			losses: self.losses.unwrap(),
-			feature_importances: self.feature_importances.unwrap(),
+			losses: self.losses,
+			feature_importances: self.feature_importances,
 		}
 	}
 }
@@ -2012,8 +2010,8 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassificationModel {
 			means: self.model.means,
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
-			losses: self.losses.unwrap(),
-			feature_importances: self.feature_importances.unwrap(),
+			losses: self.losses,
+			feature_importances: self.feature_importances,
 		}
 	}
 }
@@ -2080,7 +2078,7 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassificationModel
 impl Into<model::LinearModelTrainOptions> for tangram_linear::TrainOptions {
 	fn into(self) -> model::LinearModelTrainOptions {
 		model::LinearModelTrainOptions {
-			compute_loss: self.compute_loss,
+			compute_loss: self.compute_losses,
 			l2_regularization: self.l2_regularization,
 			learning_rate: self.learning_rate,
 			max_epochs: self.max_epochs.to_u64().unwrap(),
@@ -2094,7 +2092,7 @@ impl Into<model::TreeModelTrainOptions> for tangram_tree::TrainOptions {
 	fn into(self) -> model::TreeModelTrainOptions {
 		model::TreeModelTrainOptions {
 			binned_features_layout: self.binned_features_layout.into(),
-			compute_loss: self.compute_loss,
+			compute_loss: self.compute_losses,
 			l2_regularization: self.l2_regularization,
 			learning_rate: self.learning_rate,
 			max_depth: self.max_depth.map(|max_depth| max_depth.to_u64().unwrap()),

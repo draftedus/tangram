@@ -20,7 +20,7 @@ pub use regressor::Regressor;
 #[derive(Clone, Debug)]
 pub struct TrainOptions {
 	/// If true, the model will include the loss on the training data after each epoch.
-	pub compute_loss: bool,
+	pub compute_losses: bool,
 	/// Specify options for early stopping. If the value is `Some`, early stopping will be enabled. If it is `None`, early stopping will be disabled.
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 	/// This is the L2 regularization value to use when updating the model parameters.
@@ -36,7 +36,7 @@ pub struct TrainOptions {
 impl Default for TrainOptions {
 	fn default() -> TrainOptions {
 		TrainOptions {
-			compute_loss: false,
+			compute_losses: false,
 			l2_regularization: 0.0,
 			learning_rate: 0.1,
 			max_epochs: 100,

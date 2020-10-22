@@ -31,7 +31,7 @@ pub struct TrainOptions {
 	/// This option controls whether binned features will be layed out in row major or column major order. Each will produce the same result, but row major will be faster for datasets with more rows and fewer columns, while column major will be faster for datasets with fewer rows and more columns.
 	pub binned_features_layout: BinnedFeaturesLayout,
 	/// If true, the model will include the loss on the training data after each round.
-	pub compute_loss: bool,
+	pub compute_losses: bool,
 	/// This option controls early stopping. If it is `Some`, then early stopping will be enabled. If it is `None`, then early stopping will be disabled.
 	pub early_stopping_options: Option<EarlyStoppingOptions>,
 	/// This option sets the L2 regularization value, which helps avoid overfitting.
@@ -64,7 +64,7 @@ impl Default for TrainOptions {
 	fn default() -> TrainOptions {
 		TrainOptions {
 			binned_features_layout: BinnedFeaturesLayout::ColumnMajor,
-			compute_loss: false,
+			compute_losses: false,
 			early_stopping_options: None,
 			l2_regularization: 0.0,
 			learning_rate: 0.1,

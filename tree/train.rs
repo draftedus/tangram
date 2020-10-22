@@ -208,7 +208,7 @@ pub fn train(
 	// These are the trees in round-major order. After training this will be converted to an array of shape (n_rounds, n_trees_per_round).
 	let mut trees: Vec<TrainTree> = Vec::new();
 	// Collect the loss on the training dataset for each round if enabled.
-	let mut losses: Option<Vec<f32>> = if train_options.compute_loss {
+	let mut losses: Option<Vec<f32>> = if train_options.compute_losses {
 		Some(Vec::new())
 	} else {
 		None
