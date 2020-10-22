@@ -7,7 +7,7 @@ use crate::{
 	Context,
 };
 use anyhow::Result;
-use hyper::{Body, Request, Response};
+use hyper::{Body, Request, Response, StatusCode};
 use tangram_util::id::Id;
 
 pub async fn get(
@@ -29,7 +29,11 @@ pub async fn get(
 			return Err(Error::NotFound.into());
 		}
 	}
-	let response = render(context, None).await;
+	let html = render(context, None).await?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
 	db.commit().await?;
-	response
+	Ok(response)
 }

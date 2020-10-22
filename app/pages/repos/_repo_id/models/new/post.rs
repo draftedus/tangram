@@ -40,13 +40,18 @@ pub async fn post(
 	{
 		Some(boundary) => boundary,
 		None => {
-			return render::render(
+			let html = render::render(
 				context,
 				Some(render::Options {
 					error: "Failed to parse request body.".into(),
 				}),
 			)
-			.await
+			.await?;
+			let response = Response::builder()
+				.status(StatusCode::BAD_REQUEST)
+				.body(Body::from(html))
+				.unwrap();
+			return Ok(response);
 		}
 	};
 	let mut file: Option<Vec<u8>> = None;
@@ -55,13 +60,18 @@ pub async fn post(
 		let name = match field.name() {
 			Some(name) => name.to_owned(),
 			None => {
-				return render::render(
+				let html = render::render(
 					context,
 					Some(render::Options {
 						error: "Failed to parse request body.".into(),
 					}),
 				)
-				.await
+				.await?;
+				let response = Response::builder()
+					.status(StatusCode::BAD_REQUEST)
+					.body(Body::from(html))
+					.unwrap();
+				return Ok(response);
 			}
 		};
 		let mut field_data = Vec::new();
@@ -71,38 +81,53 @@ pub async fn post(
 		match name.as_str() {
 			"file" => file = Some(field_data),
 			_ => {
-				return render::render(
+				let html = render::render(
 					context,
 					Some(render::Options {
 						error: "Failed to parse request body.".into(),
 					}),
 				)
-				.await
+				.await?;
+				let response = Response::builder()
+					.status(StatusCode::BAD_REQUEST)
+					.body(Body::from(html))
+					.unwrap();
+				return Ok(response);
 			}
 		}
 	}
 	let file = match file {
 		Some(file) => file,
 		None => {
-			return render::render(
+			let html = render::render(
 				context,
 				Some(render::Options {
 					error: "A file is required.".into(),
 				}),
 			)
-			.await
+			.await?;
+			let response = Response::builder()
+				.status(StatusCode::BAD_REQUEST)
+				.body(Body::from(html))
+				.unwrap();
+			return Ok(response);
 		}
 	};
 	let model = match tangram_core::model::Model::from_slice(&file) {
 		Ok(model) => model,
 		Err(_) => {
-			return render::render(
+			let html = render::render(
 				context,
 				Some(render::Options {
 					error: "Invalid tangram model file.".into(),
 				}),
 			)
-			.await
+			.await?;
+			let response = Response::builder()
+				.status(StatusCode::BAD_REQUEST)
+				.body(Body::from(html))
+				.unwrap();
+			return Ok(response);
 		}
 	};
 	let now = Utc::now().timestamp();
@@ -121,13 +146,18 @@ pub async fn post(
 	.execute(&mut *db)
 	.await;
 	if result.is_err() {
-		return render::render(
+		let html = render::render(
 			context,
 			Some(render::Options {
 				error: "There was an error uploading your model.".into(),
 			}),
 		)
-		.await;
+		.await?;
+		let response = Response::builder()
+			.status(StatusCode::INTERNAL_SERVER_ERROR)
+			.body(Body::from(html))
+			.unwrap();
+		return Ok(response);
 	};
 	db.commit().await?;
 	let response = Response::builder()

@@ -1,1 +1,0 @@
-watchexec --exts rs --restart --watch .. -- cargo run -p pinwheel -- dev --dst-dir ../build/pinwheel/www

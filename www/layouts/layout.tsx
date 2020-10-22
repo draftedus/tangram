@@ -1,4 +1,3 @@
-import backgroundImage from './background.svg'
 import { Footer } from './footer'
 import './layout.css'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
@@ -14,12 +13,9 @@ type LayoutProps = {
 }
 
 export function Layout(props: LayoutProps) {
-	let wrapperStyle = {
-		background: props.background && (`url(${backgroundImage})` as any),
-	}
 	return (
 		<Document pinwheelInfo={props.pinwheelInfo}>
-			<div class="layout" style={wrapperStyle}>
+			<div class="layout">
 				<header>
 					<Topbar />
 				</header>
