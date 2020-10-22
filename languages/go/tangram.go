@@ -2,7 +2,7 @@ package tangram
 
 // #cgo linux LDFLAGS: -L${SRCDIR} -lm -ldl -ltangram-linux-x64
 // #cgo darwin LDFLAGS: -L${SRCDIR} -ltangram-macos-x64
-// #cgo windows LDFLAGS: -L${SRCDIR} -ltangram-windows-x64 -lws2_32 -l userenv
+// #cgo windows LDFLAGS: -L${SRCDIR} -lws2_32 -luserenv -ltangram-windows-x64
 // #include "./tangram.h"
 import "C"
 
@@ -16,27 +16,27 @@ import (
 	"unsafe"
 )
 
-// A Model represents a Tangram model loaded from a .tangram file.
+// A Model represents a model loaded from a .tangram file.
 type Model struct {
 	modelPtr *C.tangram_model
 	options  *ModelOptions
 	logQueue []event
 }
 
-// ModelOptions is the second argument to the load functions, used to configure the url where the tangram reporting and monitoring web app is running.
+// ModelOptions is the second argument to the load function. It is used to configure the URL where the tangram reporting and monitoring web app is running.
 type ModelOptions struct {
 	TangramURL string
 }
 
-// PredictOptions is the second argument to the predict function, used to configure the threshold for classification tasks.
+// PredictOptions is the second argument to the predict function. It is used to configure the threshold for classification tasks.
 type PredictOptions struct {
 	Threshold float32 `json:"threshold"`
 }
 
-// Input is the input type to a model for prediction.
+// Input is the input to a model for making predictions.
 type Input map[string]interface{}
 
-// The Output of calling Predict
+// Output is the output of calling Predict
 type Output struct {
 	Value         float32            `json:"value"`
 	ClassName     string             `json:"className"`

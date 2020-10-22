@@ -9,7 +9,6 @@ The Tangram Node.js library makes it easy to make predictions with your Tangram 
 
 ```
 $ npm install @tangramhq/tangram-node
-$ yarn add @tangramhq/tangram-node
 ```
 
 ```javascript
@@ -48,8 +47,8 @@ To run the example:
 
 ```
 $ cd examples/basic
-$ yarn install
-$ yarn start
+$ npm install
+$ npm start
 ```
 
 ### Advanced
@@ -60,8 +59,8 @@ Then you can run the example:
 
 ```
 $ cd examples/advanced
-$ yarn install
-$ yarn start
+$ npm install
+$ npm start
 ```
 
 Now if you refresh the production stats or production metrics tabs for the model you uploaded, you should see predictions and true values being reported.
@@ -76,7 +75,7 @@ To build and run the example:
 
 ```
 $ cd examples/typescript
-$ yarn install
-$ yarn build
-$ yarn start
+$ npm install
+$ npm run build
+$ npm start
 ```

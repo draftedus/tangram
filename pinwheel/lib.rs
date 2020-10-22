@@ -587,10 +587,9 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	}
 	std::fs::create_dir_all(&dst_dir).unwrap();
 	let manifest_path = dst_dir.join("manifest.json");
-	let cmd = "yarn";
+	let cmd = "npm";
 	let mut args = vec![
-		"run".to_owned(),
-		"-s".to_owned(),
+		"exec".to_owned(),
 		"esbuild".to_owned(),
 		"--format=esm".to_owned(),
 		"--minify".to_owned(),

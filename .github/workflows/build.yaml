@@ -1,8 +1,9 @@
 name: build
 on:
-  repository_dispatch:
-    types:
-      - build
+  workflow_dispatch:
+    input:
+      version:
+        default: v0.0.0
 jobs:
   linux:
     runs-on: ubuntu-latest

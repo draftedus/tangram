@@ -1,3 +1,0 @@
-cargo clippy --all-targets --all-features
-yarn run tsc
-yarn run eslint --ext ts,tsx .

@@ -1,0 +1,10 @@
+{
+	"dependencies": {
+		"@octokit/rest": "^18.0.6",
+		"node-fetch": "^2.6.1"
+	},
+	"license": "MIT",
+	"name": "@tangramhq/scripts",
+	"type": "module",
+	"version": "0.0.0"
+}

@@ -7,6 +7,7 @@ members = [
 	"linear",
 	"metrics",
 	"pinwheel",
+	"scripts",
 	"tree",
 	"util",
 ]

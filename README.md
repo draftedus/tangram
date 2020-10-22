@@ -28,9 +28,9 @@ Watch the video below to learn more.
 
 ## Contributing
 
-1. Install recent versions of [Rust](rust-lang.org), [Node](nodejs.org), and [Yarn](yarnpkg.org) on Linux, macOS, or Windows.
+1. Install [Rust](rust-lang.org) >= 1.47 and [Node.js](nodejs.org) >= 15 on Linux, macOS, or Windows.
 2. Clone this repo and `cd` into it.
-3. Run `yarn` to install npm dependencies.
+3. Run `npm install` to install npm dependencies.
 4. Run `cargo run` to run a debug build of the cli. If you are working on the app, install [watchexec](github.com/watchexec/watchexec) and run `./scripts/dev`, which runs the cli with the `app` subcommand under a file watcher.
 
 Before submitting a pull request, please run `./scripts/fmt` and `./scripts/check` at the root of the repository to confirm that your changes are formatted correctly and do not have any errors.
