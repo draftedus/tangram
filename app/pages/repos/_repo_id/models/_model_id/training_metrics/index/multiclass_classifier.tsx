@@ -7,7 +7,6 @@ import { h } from 'preact'
 export function MulticlassClassifierTrainingMetricsIndexPage(
 	props: MulticlassClassifierProps,
 ) {
-	let loss = props.losses?.slice(-1).pop()
 	return (
 		<ui.S1>
 			<ui.H1>{'Training Metrics'}</ui.H1>
@@ -66,18 +65,6 @@ export function MulticlassClassifierTrainingMetricsIndexPage(
 					</ui.TableBody>
 				</ui.Table>
 			</ui.S2>
-			{loss !== undefined && (
-				<ui.S2>
-					<ui.H2>{'Loss'}</ui.H2>
-					<ui.P>{definitions.crossEntropyLoss}</ui.P>
-					<ui.Card>
-						<ui.NumberChart
-							title="Cross Entropy Loss"
-							value={ui.formatNumber(loss)}
-						/>
-					</ui.Card>
-				</ui.S2>
-			)}
 		</ui.S1>
 	)
 }

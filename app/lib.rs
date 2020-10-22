@@ -103,8 +103,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "introspection"]) => {
-			self::pages::repos::_repo_id::models::_model_id::introspection::get(
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_importances"]) => {
+			self::pages::repos::_repo_id::models::_model_id::training_importances::get(
 				request, &context, model_id,
 			)
 			.await

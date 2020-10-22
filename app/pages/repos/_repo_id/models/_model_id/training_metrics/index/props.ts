@@ -41,7 +41,6 @@ export type BinaryClassifierProps = {
 	baselineAccuracy: number
 	classes: string[]
 	id: string
-	losses: number[] | null
 	precision: number
 	recall: number
 }
@@ -55,5 +54,4 @@ export type MulticlassClassifierProps = {
 	}>
 	classes: string[]
 	id: string
-	losses: number[] | null
 }

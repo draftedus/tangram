@@ -25,11 +25,6 @@ pub async fn post(
 	if !context.options.auth_enabled {
 		return Err(Error::NotFound.into());
 	}
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
 	let mut db = context
 		.pool
 		.begin()
@@ -39,9 +34,14 @@ pub async fn post(
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let user = user.unwrap();
+	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
 	authorize_user_for_organization(&mut db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
+	let data = to_bytes(request.body_mut())
+		.await
+		.map_err(|_| Error::BadRequest)?;
+	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
 	let response = add_member(action, user, &mut db, context, organization_id).await?;
 	db.commit().await?;
 	Ok(response)

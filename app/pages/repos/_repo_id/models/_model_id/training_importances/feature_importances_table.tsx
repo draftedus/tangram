@@ -1,60 +1,52 @@
 import { BarChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import { Fragment, h } from 'preact'
 
-type Props = {
+export type Props = {
 	values: Array<[string, number]>
 }
 
-export function LinearFeatureWeights(props: Props) {
+export function FeatureImportancesTable(props: Props) {
 	let max = Math.max(...props.values.map(([, value]) => Math.abs(value)))
 	let data = [
 		{
 			color: ui.colors.blue,
-			data: props.values.map(([label, value], i) => ({
-				label,
-				x: i,
-				y: value,
-			})),
-			title: 'Feature Weight',
+			data: props.values
+				.filter(([_, value]) => value > 0)
+				.map(([label, value], i) => ({
+					label,
+					x: i,
+					y: value,
+				})),
+			title: 'Feature Importance',
 		},
 	]
 	return (
-		<ui.S2>
-			<ui.H2>{'Feature Weights'}</ui.H2>
+		<>
 			<ui.Card>
 				<BarChart
 					data={data}
-					id="feature_weights"
+					id="feature_importances"
 					shouldDrawXAxisLabels={false}
-					title="Feature Weights"
-					xAxisTitle="Name"
-					yAxisTitle="Weight"
+					title="Feature Importances"
+					xAxisTitle="Feature Name"
+					yAxisTitle="Importance Score"
 				/>
 			</ui.Card>
 			<ui.Table width="100%">
 				<ui.TableHeader>
 					<ui.TableHeaderCell>{'Feature'}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{'Weight'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'Importance'}</ui.TableHeaderCell>
 				</ui.TableHeader>
 				<ui.TableBody>
 					{props.values.map(([feature, weight], i) => (
 						<ui.TableRow key={i}>
 							<ui.TableCell>{feature}</ui.TableCell>
-							<ui.TableCell
-								color={
-									(weight > 0 ? 'var(--green)' : 'var(--red)') +
-									Math.floor((Math.abs(weight) / max) * 255)
-										.toString(16)
-										.padStart(2, '0')
-								}
-							>
-								{weight}
-							</ui.TableCell>
+							<ui.TableCell>{weight / max}</ui.TableCell>
 						</ui.TableRow>
 					))}
 				</ui.TableBody>
 			</ui.Table>
-		</ui.S2>
+		</>
 	)
 }

@@ -28,6 +28,8 @@ pub struct MulticlassClassifierTrainOutput {
 	pub model: MulticlassClassifier,
 	/// These are the loss values for each epoch.
 	pub losses: Option<Vec<f32>>,
+	/// These are the importances of each feature.
+	pub feature_importances: Option<Vec<f32>>,
 }
 
 impl MulticlassClassifier {
@@ -100,6 +102,7 @@ impl MulticlassClassifier {
 		MulticlassClassifierTrainOutput {
 			model,
 			losses: None,
+			feature_importances: None,
 		}
 	}
 

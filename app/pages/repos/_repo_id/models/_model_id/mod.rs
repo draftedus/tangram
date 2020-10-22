@@ -11,10 +11,10 @@ use sqlx::prelude::*;
 use tangram_util::id::Id;
 
 pub mod index;
-pub mod introspection;
 pub mod prediction;
 pub mod production_metrics;
 pub mod production_stats;
+pub mod training_importances;
 pub mod training_metrics;
 pub mod training_stats;
 pub mod tuning;

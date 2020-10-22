@@ -314,12 +314,14 @@ pub fn train(
 					feature_groups,
 					train_options,
 					losses,
+					feature_importances,
 					..
 				}) => RegressionModel::Linear(LinearRegressionModel {
 					model,
 					train_options,
 					feature_groups,
 					losses,
+					feature_importances,
 				}),
 				TrainModelOutput::TreeRegressor(TreeRegressorTrainModelOutput {
 					model,
@@ -375,6 +377,7 @@ pub fn train(
 						feature_groups,
 						losses,
 						train_options,
+						feature_importances,
 						..
 					},
 				) => BinaryClassificationModel::Linear(LinearBinaryClassificationModel {
@@ -382,6 +385,7 @@ pub fn train(
 					feature_groups,
 					losses,
 					train_options,
+					feature_importances,
 				}),
 				TrainModelOutput::TreeBinaryClassifier(TreeBinaryClassifierTrainModelOutput {
 					model,
@@ -446,6 +450,7 @@ pub fn train(
 						feature_groups,
 						train_options,
 						losses,
+						feature_importances,
 						..
 					},
 				) => MulticlassClassificationModel::Linear(LinearMulticlassClassificationModel {
@@ -453,6 +458,7 @@ pub fn train(
 					train_options,
 					feature_groups,
 					losses,
+					feature_importances,
 				}),
 				TrainModelOutput::TreeMulticlassClassifier(
 					TreeMulticlassClassifierTrainModelOutput {
@@ -529,6 +535,7 @@ struct LinearRegressionModel {
 	pub train_options: tangram_linear::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub losses: Option<Vec<f32>>,
+	pub feature_importances: Option<Vec<f32>>,
 }
 
 struct TreeRegressionModel {
@@ -556,14 +563,15 @@ struct LinearBinaryClassificationModel {
 	pub train_options: tangram_linear::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
 	pub losses: Option<Vec<f32>>,
+	pub feature_importances: Option<Vec<f32>>,
 }
 
 struct TreeBinaryClassificationModel {
 	pub model: tangram_tree::BinaryClassifier,
 	pub train_options: tangram_tree::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
-	pub feature_importances: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 enum MulticlassClassificationModel {
@@ -575,15 +583,16 @@ struct LinearMulticlassClassificationModel {
 	pub model: tangram_linear::MulticlassClassifier,
 	pub train_options: tangram_linear::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 struct TreeMulticlassClassificationModel {
 	pub model: tangram_tree::MulticlassClassifier,
 	pub train_options: tangram_tree::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
-	pub feature_importances: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 enum ComparisonMetric {
@@ -762,6 +771,7 @@ struct LinearRegressorTrainModelOutput {
 	target_column_index: usize,
 	losses: Option<Vec<f32>>,
 	train_options: tangram_linear::TrainOptions,
+	feature_importances: Option<Vec<f32>>,
 }
 
 struct TreeRegressorTrainModelOutput {
@@ -779,32 +789,34 @@ struct LinearBinaryClassifierTrainModelOutput {
 	target_column_index: usize,
 	losses: Option<Vec<f32>>,
 	train_options: tangram_linear::TrainOptions,
+	feature_importances: Option<Vec<f32>>,
 }
 
 struct TreeBinaryClassifierTrainModelOutput {
 	model: tangram_tree::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Option<Vec<f32>>,
+	losses: Vec<f32>,
 	train_options: tangram_tree::TrainOptions,
-	feature_importances: Option<Vec<f32>>,
+	feature_importances: Vec<f32>,
 }
 
 struct LinearMulticlassClassifierTrainModelOutput {
 	model: tangram_linear::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Option<Vec<f32>>,
+	losses: Vec<f32>,
 	train_options: tangram_linear::TrainOptions,
+	feature_importances: Vec<f32>,
 }
 
 struct TreeMulticlassClassifierTrainModelOutput {
 	model: tangram_tree::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Option<Vec<f32>>,
+	losses: Vec<f32>,
 	train_options: tangram_tree::TrainOptions,
-	feature_importances: Option<Vec<f32>>,
+	feature_importances: Vec<f32>,
 }
 
 fn train_model(
@@ -919,6 +931,7 @@ fn train_linear_regressor(
 		target_column_index,
 		train_options: linear_options,
 		losses: train_output.losses,
+		feature_importances: train_output.feature_importances,
 	})
 }
 
@@ -996,6 +1009,7 @@ fn train_linear_binary_classifier(
 		target_column_index,
 		train_options: linear_options,
 		losses: train_output.losses,
+		feature_importances: train_output.feature_importances,
 	})
 }
 
@@ -1031,8 +1045,8 @@ fn train_tree_binary_classifier(
 		feature_groups,
 		target_column_index,
 		train_options: tree_options,
-		losses: train_output.losses,
-		feature_importances: train_output.feature_importances,
+		losses: train_output.losses.unwrap(),
+		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
 
@@ -1076,7 +1090,8 @@ fn train_linear_multiclass_classifier(
 		feature_groups,
 		target_column_index,
 		train_options: linear_options,
-		losses: train_output.losses,
+		losses: train_output.losses.unwrap(),
+		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
 
@@ -1115,8 +1130,8 @@ fn train_tree_multiclass_classifier(
 		feature_groups,
 		target_column_index,
 		train_options: tree_options,
-		losses: train_output.losses,
-		feature_importances: train_output.feature_importances,
+		losses: train_output.losses.unwrap(),
+		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
 
@@ -1948,7 +1963,8 @@ impl Into<model::LinearRegressor> for LinearRegressionModel {
 			means: self.model.means,
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
-			losses: self.losses,
+			losses: self.losses.unwrap(),
+			feature_importances: self.feature_importances.unwrap(),
 		}
 	}
 }
@@ -1958,10 +1974,10 @@ impl Into<model::TreeRegressor> for TreeRegressionModel {
 		model::TreeRegressor {
 			bias: self.model.bias,
 			trees: self.model.trees.into_iter().map(Into::into).collect(),
-			feature_importances: self.feature_importances.unwrap(),
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
-			losses: self.losses,
+			losses: self.losses.unwrap(),
+			feature_importances: self.feature_importances.unwrap(),
 		}
 	}
 }
@@ -1987,7 +2003,8 @@ impl Into<model::LinearBinaryClassifier> for LinearBinaryClassificationModel {
 			means: self.model.means,
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
-			losses: self.losses,
+			losses: self.losses.unwrap(),
+			feature_importances: self.feature_importances.unwrap(),
 		}
 	}
 }
@@ -2000,7 +2017,7 @@ impl Into<model::TreeBinaryClassifier> for TreeBinaryClassificationModel {
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
 			losses: self.losses,
 			trees: self.model.trees.into_iter().map(Into::into).collect(),
-			feature_importances: self.feature_importances.unwrap(),
+			feature_importances: self.feature_importances,
 		}
 	}
 }
@@ -2023,14 +2040,15 @@ impl Into<model::LinearMulticlassClassifier> for LinearMulticlassClassificationM
 		let n_features = self.model.weights.nrows();
 		let n_classes = self.model.weights.ncols();
 		model::LinearMulticlassClassifier {
+			n_features,
+			n_classes,
+			biases: self.model.biases.into_raw_vec(),
 			weights: self.model.weights.into_raw_vec(),
 			means: self.model.means,
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
 			losses: self.losses,
-			n_features,
-			n_classes,
-			biases: self.model.biases.into_raw_vec(),
+			feature_importances: self.feature_importances,
 		}
 	}
 }
@@ -2042,59 +2060,13 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassificationModel
 			n_rounds: self.model.n_rounds,
 			biases: self.model.biases,
 			trees: self.model.trees.into_iter().map(Into::into).collect(),
-			feature_importances: self.feature_importances.unwrap(),
 			train_options: self.train_options.into(),
 			feature_groups: self.feature_groups.into_iter().map(Into::into).collect(),
 			losses: self.losses,
+			feature_importances: self.feature_importances,
 		}
 	}
 }
-
-// model::LinearRegressor {
-// 	bias: self.bias,
-// 	weights: self.weights.into_raw_vec(),
-// 	losses: None,
-// 	means: self.means,
-// }
-// let trees = self.trees.into_iter().map(Into::into).collect();
-// model::TreeRegressor {
-// 	bias: self.bias,
-// 	trees,
-// 	losses: None,
-// 	feature_importances: self.feature_importances.unwrap(),
-// 	train_options: self.train_options.into(),
-// }
-
-// model::LinearBinaryClassifier {
-// 	means: self.means,
-// 	weights: self.weights.into_raw_vec(),
-// 	bias: self.bias,
-// 	losses: None,
-// }
-// model::TreeBinaryClassifier {
-// 	trees: self.trees.into_iter().map(Into::into).collect(),
-// 	bias: self.bias,
-// 	feature_importances: self.feature_importances.unwrap(),
-// 	losses: None,
-// 	train_options: self.train_options.into(),
-// }
-
-// model::LinearMulticlassClassifier {
-// 	n_features: self.weights.nrows(),
-// 	n_classes: self.weights.ncols(),
-// 	weights: self.weights.into_raw_vec(),
-// 	biases: self.biases.into_raw_vec(),
-// 	means: self.means,
-// }
-// model::TreeMulticlassClassifier {
-// 	n_rounds: self.n_rounds,
-// 	n_classes: self.n_classes,
-// 	biases: self.biases,
-// 	trees: self.trees.into_iter().map(|t| t.into()).collect(),
-// 	losses: None,
-// 	feature_importances: self.feature_importances.unwrap(),
-// 	train_options: self.train_options.into(),
-// }
 
 impl Into<model::LinearRegressor> for tangram_linear::Regressor {
 	fn into(self) -> model::LinearRegressor {

@@ -102,17 +102,18 @@ pub struct LinearRegressor {
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeRegressor {
 	pub bias: f32,
 	pub trees: Vec<Tree>,
-	pub feature_importances: Vec<f32>,
 	pub train_options: TreeModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -233,17 +234,18 @@ pub struct LinearBinaryClassifier {
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TreeBinaryClassifier {
 	pub bias: f32,
 	pub trees: Vec<Tree>,
-	pub feature_importances: Vec<f32>,
 	pub train_options: TreeModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -311,7 +313,8 @@ pub struct LinearMulticlassClassifier {
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -320,10 +323,10 @@ pub struct TreeMulticlassClassifier {
 	pub n_rounds: usize,
 	pub biases: Vec<f32>,
 	pub trees: Vec<Tree>,
-	pub feature_importances: Vec<f32>,
 	pub train_options: TreeModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Option<Vec<f32>>,
+	pub losses: Vec<f32>,
+	pub feature_importances: Vec<f32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

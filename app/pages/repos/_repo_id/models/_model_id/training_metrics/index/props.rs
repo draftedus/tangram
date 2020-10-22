@@ -44,7 +44,6 @@ pub struct BinaryClassifierProps {
 	accuracy: f32,
 	auc_roc: f32,
 	id: String,
-	losses: Option<Vec<f32>>,
 	precision: f32,
 	recall: f32,
 }
@@ -57,7 +56,6 @@ pub struct MulticlassClassifierProps {
 	class_metrics: Vec<ClassMetrics>,
 	classes: Vec<String>,
 	id: String,
-	losses: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize)]
@@ -121,15 +119,10 @@ fn build_inner_binary_classifier(
 		.thresholds
 		.get(model.test_metrics.thresholds.len() / 2)
 		.unwrap();
-	let losses = match model.model {
-		tangram_core::model::BinaryClassificationModel::Linear(model) => model.losses,
-		tangram_core::model::BinaryClassificationModel::Tree(model) => model.losses,
-	};
 	BinaryClassifierProps {
 		accuracy: default_threshold_test_metrics.accuracy,
 		auc_roc: model.test_metrics.auc_roc,
 		id: model.id,
-		losses,
 		precision: default_threshold_test_metrics.precision,
 		recall: default_threshold_test_metrics.recall,
 	}
@@ -148,16 +141,11 @@ fn build_inner_multiclass_classifier(
 			recall: class_metrics.recall,
 		})
 		.collect::<Vec<ClassMetrics>>();
-	let losses = match model.model {
-		tangram_core::model::MulticlassClassificationModel::Linear(model) => model.losses,
-		tangram_core::model::MulticlassClassificationModel::Tree(model) => model.losses,
-	};
 	MulticlassClassifierProps {
 		id: model.id.to_string(),
 		accuracy: model.test_metrics.accuracy,
 		baseline_accuracy: model.baseline_metrics.accuracy,
 		class_metrics,
 		classes,
-		losses,
 	}
 }

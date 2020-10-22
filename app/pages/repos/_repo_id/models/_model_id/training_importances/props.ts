@@ -43,23 +43,15 @@ export enum Type {
 }
 
 export type LinearRegressorProps = {
-	bias: number
-	targetColumnName: string
-	weights: Array<[string, number]>
+	featureImportances: Array<[string, number]>
 }
 
 export type LinearBinaryClassifierProps = {
-	bias: number
-	positiveClassName: string
-	targetColumnName: string
-	weights: Array<[string, number]>
+	featureImportances: Array<[string, number]>
 }
 
 export type LinearMulticlassClassifierProps = {
-	biases: number[]
-	classes: string[]
-	selectedClass: string
-	weights: Array<Array<[string, number]>>
+	featureImportances: Array<[string, number]>
 }
 
 export type TreeRegressorProps = {

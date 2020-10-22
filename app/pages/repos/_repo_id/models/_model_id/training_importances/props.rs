@@ -10,8 +10,6 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request};
 use itertools::izip;
-use ndarray::prelude::*;
-use num_traits::ToPrimitive;
 use tangram_util::id::Id;
 
 #[derive(serde::Serialize)]
@@ -37,9 +35,7 @@ pub enum Inner {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinearRegressorProps {
-	bias: f32,
-	target_column_name: String,
-	weights: Vec<(String, f32)>,
+	feature_importances: Vec<(String, f32)>,
 }
 
 #[derive(serde::Serialize)]
@@ -51,10 +47,7 @@ pub struct TreeRegressorProps {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinearBinaryClassifierProps {
-	bias: f32,
-	target_column_name: String,
-	positive_class_name: String,
-	weights: Vec<(String, f32)>,
+	feature_importances: Vec<(String, f32)>,
 }
 
 #[derive(serde::Serialize)]
@@ -66,10 +59,7 @@ pub struct TreeBinaryClassifierProps {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinearMulticlassClassifierProps {
-	biases: Vec<f32>,
-	target_column_name: String,
-	classes: Vec<String>,
-	weights: Vec<Vec<(String, f32)>>,
+	feature_importances: Vec<(String, f32)>,
 }
 
 #[derive(serde::Serialize)]
@@ -98,15 +88,15 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 		tangram_core::model::Model::Regressor(model) => match model.model {
 			tangram_core::model::RegressionModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let mut weights: Vec<(String, f32)> =
-					izip!(feature_names, inner_model.weights.iter())
-						.map(|(feature_name, weight)| (feature_name, *weight))
+				let mut feature_importances: Vec<(String, f32)> =
+					izip!(feature_names, inner_model.feature_importances.iter())
+						.map(|(feature_name, feature_importance)| {
+							(feature_name, *feature_importance)
+						})
 						.collect();
-				weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
 				Inner::LinearRegressor(LinearRegressorProps {
-					bias: inner_model.bias,
-					target_column_name: model.target_column_name.to_owned(),
-					weights,
+					feature_importances,
 				})
 			}
 			tangram_core::model::RegressionModel::Tree(inner_model) => {
@@ -126,15 +116,15 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 		tangram_core::model::Model::BinaryClassifier(model) => match &model.model {
 			tangram_core::model::BinaryClassificationModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let mut weights = izip!(feature_names, inner_model.weights.iter())
-					.map(|(feature_name, weight)| (feature_name, *weight))
-					.collect::<Vec<(String, f32)>>();
-				weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+				let mut feature_importances: Vec<(String, f32)> =
+					izip!(feature_names, inner_model.feature_importances.iter())
+						.map(|(feature_name, feature_importance)| {
+							(feature_name, *feature_importance)
+						})
+						.collect();
+				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
 				Inner::LinearBinaryClassifier(LinearBinaryClassifierProps {
-					bias: inner_model.bias,
-					target_column_name: model.target_column_name.to_owned(),
-					positive_class_name: model.positive_class.to_owned(),
-					weights,
+					feature_importances,
 				})
 			}
 			tangram_core::model::BinaryClassificationModel::Tree(inner_model) => {
@@ -153,26 +143,16 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 		},
 		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
 			tangram_core::model::MulticlassClassificationModel::Linear(inner_model) => {
-				let n_classes = inner_model.n_classes.to_usize().unwrap();
-				let n_features = inner_model.n_features.to_usize().unwrap();
-				let weights =
-					Array::from_shape_vec((n_classes, n_features), inner_model.weights).unwrap();
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let weights: Vec<Vec<(String, f32)>> = weights
-					.axis_iter(Axis(0))
-					.map(|weights| {
-						let mut weights = izip!(feature_names.iter(), weights.iter())
-							.map(|(feature_name, weight)| (feature_name.to_owned(), *weight))
-							.collect::<Vec<(String, f32)>>();
-						weights.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
-						weights
-					})
-					.collect();
+				let mut feature_importances: Vec<(String, f32)> =
+					izip!(feature_names, inner_model.feature_importances.iter())
+						.map(|(feature_name, feature_importance)| {
+							(feature_name, *feature_importance)
+						})
+						.collect();
+				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
 				Inner::LinearMulticlassClassifier(LinearMulticlassClassifierProps {
-					biases: inner_model.biases,
-					target_column_name: model.target_column_name.to_owned(),
-					classes: model.classes.to_owned(),
-					weights,
+					feature_importances,
 				})
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {

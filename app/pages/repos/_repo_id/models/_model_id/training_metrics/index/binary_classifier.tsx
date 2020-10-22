@@ -8,7 +8,6 @@ import { h } from 'preact'
 export function BinaryClassifierTrainingMetricsIndexPage(
 	props: BinaryClassifierProps,
 ) {
-	let loss = props.losses?.slice(-1).pop()
 	return (
 		<ui.S1>
 			<ui.H1>{'Training Metrics'}</ui.H1>
@@ -59,15 +58,6 @@ export function BinaryClassifierTrainingMetricsIndexPage(
 					/>
 				</ui.Card>
 			</MetricsRow>
-			{loss !== undefined && (
-				<ui.S2>
-					<ui.H2>{'Loss'}</ui.H2>
-					<ui.P>{definitions.logLoss}</ui.P>
-					<ui.Card>
-						<ui.NumberChart title="Log Loss" value={ui.formatNumber(loss)} />
-					</ui.Card>
-				</ui.S2>
-			)}
 		</ui.S1>
 	)
 }
