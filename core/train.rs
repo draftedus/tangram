@@ -942,10 +942,13 @@ fn train_tree_regressor(
 	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	let n_features = feature_groups.iter().map(|f| f.n_features()).sum::<usize>();
+	let n_features = n_features.to_u64().unwrap();
+	let n_examples = dataframe_train.nrows().to_u64().unwrap();
+	let progress_counter = ProgressCounter::new(n_features * n_examples);
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|| {
-		progress_counter.inc(1)
+	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
+		progress_counter.inc(i)
 	});
 	let labels = dataframe_train
 		.columns()
@@ -1020,10 +1023,13 @@ fn train_tree_binary_classifier(
 	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	let n_features = feature_groups.iter().map(|f| f.n_features()).sum::<usize>();
+	let n_features = n_features.to_u64().unwrap();
+	let n_examples = dataframe_train.nrows().to_u64().unwrap();
+	let progress_counter = ProgressCounter::new(n_features * n_examples);
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|| {
-		progress_counter.inc(1)
+	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
+		progress_counter.inc(i)
 	});
 	let labels = dataframe_train
 		.columns()
@@ -1102,10 +1108,13 @@ fn train_tree_multiclass_classifier(
 	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
+	let n_features = feature_groups.iter().map(|f| f.n_features()).sum::<usize>();
+	let n_features = n_features.to_u64().unwrap();
+	let n_examples = dataframe_train.nrows().to_u64().unwrap();
+	let progress_counter = ProgressCounter::new(n_features * n_examples);
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|| {
-		progress_counter.inc(1)
+	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
+		progress_counter.inc(i)
 	});
 	let labels = dataframe_train
 		.columns()
@@ -2065,18 +2074,6 @@ impl Into<model::TreeMulticlassClassifier> for TreeMulticlassClassificationModel
 			losses: self.losses,
 			feature_importances: self.feature_importances,
 		}
-	}
-}
-
-impl Into<model::LinearRegressor> for tangram_linear::Regressor {
-	fn into(self) -> model::LinearRegressor {
-		todo!()
-	}
-}
-
-impl Into<model::TreeRegressor> for tangram_tree::Regressor {
-	fn into(self) -> model::TreeRegressor {
-		todo!()
 	}
 }
 

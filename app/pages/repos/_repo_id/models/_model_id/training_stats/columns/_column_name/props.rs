@@ -116,7 +116,7 @@ pub async fn props(
 		return Err(Error::NotFound.into());
 	};
 	let inner = match column {
-		tangram_core::model::ColumnStats::Unknown(_) => unimplemented!(),
+		tangram_core::model::ColumnStats::Unknown(_) => todo!(),
 		tangram_core::model::ColumnStats::Number(column) => Inner::Number(Number {
 			invalid_count: column.invalid_count.to_owned(),
 			min: column.min,

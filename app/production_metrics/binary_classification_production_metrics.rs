@@ -18,8 +18,8 @@ pub struct BinaryConfusionMatrix {
 }
 
 impl BinaryConfusionMatrix {
-	fn new() -> Self {
-		Self {
+	fn new() -> BinaryConfusionMatrix {
+		BinaryConfusionMatrix {
 			false_negatives: 0,
 			false_positives: 0,
 			true_negatives: 0,

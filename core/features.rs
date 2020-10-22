@@ -6,6 +6,7 @@ use crate::{model, stats};
 use fnv::FnvBuildHasher;
 use itertools::izip;
 use ndarray::{prelude::*, s};
+use num_traits::ToPrimitive;
 use std::collections::HashMap;
 use tangram_dataframe::prelude::*;
 use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
@@ -351,7 +352,9 @@ pub fn compute_features_array_f32(
 		let slice = s![.., feature_index..feature_index + n_features_in_group];
 		let features = features.slice_mut(slice);
 		match &feature_group {
-			FeatureGroup::Identity(_) => unimplemented!(),
+			FeatureGroup::Identity(feature_group) => {
+				compute_features_identity_array_f32(dataframe, feature_group, features, progress)
+			}
 			FeatureGroup::Normalized(feature_group) => {
 				compute_features_normalized_array_f32(dataframe, feature_group, features, progress)
 			}
@@ -374,6 +377,26 @@ pub fn compute_features_array_f32(
 	}
 }
 
+fn compute_features_identity_array_f32(
+	dataframe: &DataFrameView,
+	feature_group: &IdentityFeatureGroup,
+	mut features: ArrayViewMut2<f32>,
+	progress: &impl Fn(),
+) {
+	// Get the source column.
+	let source_column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name() == Some(&feature_group.source_column_name))
+		.unwrap();
+	let source_column = source_column.as_number().unwrap();
+	// Set the feature values to the source column values.
+	for (feature, value) in izip!(features.iter_mut(), source_column.iter()) {
+		*feature = *value;
+		progress()
+	}
+}
+
 fn compute_features_normalized_array_f32(
 	dataframe: &DataFrameView,
 	feature_group: &NormalizedFeatureGroup,
@@ -392,7 +415,7 @@ fn compute_features_normalized_array_f32(
 		*feature = if value.is_nan() || feature_group.variance == 0.0 {
 			0.0
 		} else {
-			(value - feature_group.mean) / f32::sqrt(feature_group.variance)
+			(*value - feature_group.mean) / f32::sqrt(feature_group.variance)
 		};
 		progress()
 	}
@@ -468,43 +491,14 @@ fn compute_features_bag_of_words_array_f32(
 pub fn compute_features_dataframe(
 	dataframe: &DataFrameView,
 	feature_groups: &[FeatureGroup],
-	progress: &impl Fn(),
+	progress: &impl Fn(u64),
 ) -> DataFrame {
 	let mut result = DataFrame::new(Vec::new(), Vec::new());
 	for feature_group in feature_groups.iter() {
 		match &feature_group {
 			FeatureGroup::Identity(feature_group) => {
-				let column = dataframe
-					.columns()
-					.iter()
-					.find(|column| column.name().unwrap() == feature_group.source_column_name)
-					.unwrap();
-				let column = match column {
-					DataFrameColumnView::Unknown(column) => {
-						let column =
-							UnknownDataFrameColumn::new(column.name().map(|name| name.to_owned()));
-						DataFrameColumn::Unknown(column)
-					}
-					DataFrameColumnView::Number(column) => {
-						DataFrameColumn::Number(NumberDataFrameColumn::new(
-							column.name().map(|name| name.to_owned()),
-							column.as_slice().to_owned(),
-						))
-					}
-					DataFrameColumnView::Enum(column) => {
-						DataFrameColumn::Enum(EnumDataFrameColumn::new(
-							column.name().map(|name| name.to_owned()),
-							column.options().to_owned(),
-							column.as_slice().to_owned(),
-						))
-					}
-					DataFrameColumnView::Text(column) => {
-						DataFrameColumn::Text(TextDataFrameColumn::new(
-							column.name().map(|name| name.to_owned()),
-							column.as_slice().to_owned(),
-						))
-					}
-				};
+				let column =
+					compute_features_identity_dataframe(dataframe, feature_group, progress);
 				result.columns_mut().push(column);
 			}
 			FeatureGroup::Normalized(_) => unimplemented!(),
@@ -521,10 +515,43 @@ pub fn compute_features_dataframe(
 	result
 }
 
+fn compute_features_identity_dataframe(
+	dataframe: &DataFrameView,
+	feature_group: &IdentityFeatureGroup,
+	progress: &impl Fn(u64),
+) -> DataFrameColumn {
+	let column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
+		.unwrap();
+	let column = match column {
+		DataFrameColumnView::Unknown(column) => {
+			let column = UnknownDataFrameColumn::new(column.name().map(|name| name.to_owned()));
+			DataFrameColumn::Unknown(column)
+		}
+		DataFrameColumnView::Number(column) => DataFrameColumn::Number(NumberDataFrameColumn::new(
+			column.name().map(|name| name.to_owned()),
+			column.as_slice().to_owned(),
+		)),
+		DataFrameColumnView::Enum(column) => DataFrameColumn::Enum(EnumDataFrameColumn::new(
+			column.name().map(|name| name.to_owned()),
+			column.options().to_owned(),
+			column.as_slice().to_owned(),
+		)),
+		DataFrameColumnView::Text(column) => DataFrameColumn::Text(TextDataFrameColumn::new(
+			column.name().map(|name| name.to_owned()),
+			column.as_slice().to_owned(),
+		)),
+	};
+	progress(column.len().to_u64().unwrap());
+	column
+}
+
 fn compute_features_bag_of_words_dataframe(
 	dataframe: &DataFrameView,
 	feature_group: &BagOfWordsFeatureGroup,
-	progress: &impl Fn(),
+	progress: &impl Fn(u64),
 ) -> Vec<DataFrameColumn> {
 	// Get the data for the source column.
 	let source_column = dataframe
@@ -558,7 +585,7 @@ fn compute_features_bag_of_words_dataframe(
 				}
 			}
 		}
-		progress();
+		progress(1);
 	}
 	feature_columns
 		.into_iter()

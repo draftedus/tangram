@@ -14,10 +14,10 @@ use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperU
 /// This struct describes a linear binary classifier model. You can train one by calling `BinaryClassifier::train`.
 #[derive(Debug)]
 pub struct BinaryClassifier {
-	/// These are the weights the model learned.
-	pub weights: Array1<f32>,
 	/// This is the bias the model learned.
 	pub bias: f32,
+	/// These are the weights the model learned.
+	pub weights: Array1<f32>,
 	/// These are the mean values of each feature in the training set, which are used to compute SHAP values.
 	pub means: Vec<f32>,
 }

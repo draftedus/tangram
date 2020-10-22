@@ -635,7 +635,6 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	if !status.success() {
 		return Err(format_err!("esbuild {}", status.to_string()));
 	}
-	// TODO Concatenate CSS.
 	let output = std::process::Command::new("fd")
 		.args(&["-e", "css", ".", "../ui", "-x", "cat"])
 		.current_dir(src_dir)
