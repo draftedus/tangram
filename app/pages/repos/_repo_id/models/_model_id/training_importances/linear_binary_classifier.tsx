@@ -9,7 +9,7 @@ export function LinearBinaryClassifierTrainingImportancesPage(
 	return (
 		<ui.S1>
 			<ui.H1>{'Training Feature Importances'}</ui.H1>
-			<FeatureImportancesTable values={props.featureImportances} />
+			<FeatureImportancesTable featureImportances={props.featureImportances} />
 		</ui.S1>
 	)
 }

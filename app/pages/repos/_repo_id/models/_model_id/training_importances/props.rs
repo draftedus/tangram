@@ -34,38 +34,45 @@ pub enum Inner {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct FeatureImportance {
+	feature_importance_value: f32,
+	feature_name: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LinearRegressorProps {
-	feature_importances: Vec<(String, f32)>,
+	feature_importances: Vec<FeatureImportance>,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeRegressorProps {
-	feature_importances: Vec<(String, f32)>,
+	feature_importances: Vec<FeatureImportance>,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinearBinaryClassifierProps {
-	feature_importances: Vec<(String, f32)>,
+	feature_importances: Vec<FeatureImportance>,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeBinaryClassifierProps {
-	feature_importances: Vec<(String, f32)>,
+	feature_importances: Vec<FeatureImportance>,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinearMulticlassClassifierProps {
-	feature_importances: Vec<(String, f32)>,
+	feature_importances: Vec<FeatureImportance>,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeMulticlassClassifierProps {
-	feature_importances: Vec<(String, f32)>,
+	feature_importances: Vec<FeatureImportance>,
 }
 
 pub async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
@@ -88,26 +95,42 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 		tangram_core::model::Model::Regressor(model) => match model.model {
 			tangram_core::model::RegressionModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let mut feature_importances: Vec<(String, f32)> =
+				let mut feature_importances =
 					izip!(feature_names, inner_model.feature_importances.iter())
-						.map(|(feature_name, feature_importance)| {
-							(feature_name, *feature_importance)
-						})
-						.collect();
-				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+						.map(
+							|(feature_name, feature_importance_value)| FeatureImportance {
+								feature_name,
+								feature_importance_value: *feature_importance_value,
+							},
+						)
+						.collect::<Vec<_>>();
+				feature_importances.sort_by(|a, b| {
+					a.feature_importance_value
+						.partial_cmp(&b.feature_importance_value)
+						.unwrap()
+						.reverse()
+				});
 				Inner::LinearRegressor(LinearRegressorProps {
 					feature_importances,
 				})
 			}
 			tangram_core::model::RegressionModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let mut feature_importances: Vec<(String, f32)> =
+				let mut feature_importances =
 					izip!(feature_names, inner_model.feature_importances.iter())
-						.map(|(feature_name, feature_importance)| {
-							(feature_name, *feature_importance)
-						})
-						.collect();
-				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+						.map(
+							|(feature_name, feature_importance_value)| FeatureImportance {
+								feature_name,
+								feature_importance_value: *feature_importance_value,
+							},
+						)
+						.collect::<Vec<_>>();
+				feature_importances.sort_by(|a, b| {
+					a.feature_importance_value
+						.partial_cmp(&b.feature_importance_value)
+						.unwrap()
+						.reverse()
+				});
 				Inner::TreeRegressor(TreeRegressorProps {
 					feature_importances,
 				})
@@ -116,26 +139,42 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 		tangram_core::model::Model::BinaryClassifier(model) => match &model.model {
 			tangram_core::model::BinaryClassificationModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let mut feature_importances: Vec<(String, f32)> =
+				let mut feature_importances =
 					izip!(feature_names, inner_model.feature_importances.iter())
-						.map(|(feature_name, feature_importance)| {
-							(feature_name, *feature_importance)
-						})
-						.collect();
-				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+						.map(
+							|(feature_name, feature_importance_value)| FeatureImportance {
+								feature_name,
+								feature_importance_value: *feature_importance_value,
+							},
+						)
+						.collect::<Vec<_>>();
+				feature_importances.sort_by(|a, b| {
+					a.feature_importance_value
+						.partial_cmp(&b.feature_importance_value)
+						.unwrap()
+						.reverse()
+				});
 				Inner::LinearBinaryClassifier(LinearBinaryClassifierProps {
 					feature_importances,
 				})
 			}
 			tangram_core::model::BinaryClassificationModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let mut feature_importances: Vec<(String, f32)> =
+				let mut feature_importances =
 					izip!(feature_names, inner_model.feature_importances.iter())
-						.map(|(feature_name, feature_importance)| {
-							(feature_name, *feature_importance)
-						})
-						.collect();
-				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+						.map(
+							|(feature_name, feature_importance_value)| FeatureImportance {
+								feature_name,
+								feature_importance_value: *feature_importance_value,
+							},
+						)
+						.collect::<Vec<_>>();
+				feature_importances.sort_by(|a, b| {
+					a.feature_importance_value
+						.partial_cmp(&b.feature_importance_value)
+						.unwrap()
+						.reverse()
+				});
 				Inner::TreeBinaryClassifier(TreeBinaryClassifierProps {
 					feature_importances,
 				})
@@ -144,26 +183,42 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
 			tangram_core::model::MulticlassClassificationModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let mut feature_importances: Vec<(String, f32)> =
+				let mut feature_importances =
 					izip!(feature_names, inner_model.feature_importances.iter())
-						.map(|(feature_name, feature_importance)| {
-							(feature_name, *feature_importance)
-						})
-						.collect();
-				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+						.map(
+							|(feature_name, feature_importance_value)| FeatureImportance {
+								feature_name,
+								feature_importance_value: *feature_importance_value,
+							},
+						)
+						.collect::<Vec<_>>();
+				feature_importances.sort_by(|a, b| {
+					a.feature_importance_value
+						.partial_cmp(&b.feature_importance_value)
+						.unwrap()
+						.reverse()
+				});
 				Inner::LinearMulticlassClassifier(LinearMulticlassClassifierProps {
 					feature_importances,
 				})
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
-				let mut feature_importances: Vec<(String, f32)> =
+				let mut feature_importances =
 					izip!(feature_names, inner_model.feature_importances.iter())
-						.map(|(feature_name, feature_importance)| {
-							(feature_name, *feature_importance)
-						})
-						.collect();
-				feature_importances.sort_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap().reverse());
+						.map(
+							|(feature_name, feature_importance_value)| FeatureImportance {
+								feature_name,
+								feature_importance_value: *feature_importance_value,
+							},
+						)
+						.collect::<Vec<_>>();
+				feature_importances.sort_by(|a, b| {
+					a.feature_importance_value
+						.partial_cmp(&b.feature_importance_value)
+						.unwrap()
+						.reverse()
+				});
 				Inner::TreeMulticlassClassifier(TreeMulticlassClassifierProps {
 					feature_importances,
 				})

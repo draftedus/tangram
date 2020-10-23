@@ -42,26 +42,31 @@ export enum Type {
 	TreeMulticlassClassifier = 'tree_multiclass_classifier',
 }
 
+export type FeatureImportance = {
+	featureImportanceValue: number
+	featureName: string
+}
+
 export type LinearRegressorProps = {
-	featureImportances: Array<[string, number]>
+	featureImportances: FeatureImportance[]
 }
 
 export type LinearBinaryClassifierProps = {
-	featureImportances: Array<[string, number]>
+	featureImportances: FeatureImportance[]
 }
 
 export type LinearMulticlassClassifierProps = {
-	featureImportances: Array<[string, number]>
+	featureImportances: FeatureImportance[]
 }
 
 export type TreeRegressorProps = {
-	featureImportances: Array<[string, number]>
+	featureImportances: FeatureImportance[]
 }
 
 export type TreeBinaryClassifierProps = {
-	featureImportances: Array<[string, number]>
+	featureImportances: FeatureImportance[]
 }
 
 export type TreeMulticlassClassifierProps = {
-	featureImportances: Array<[string, number]>
+	featureImportances: FeatureImportance[]
 }
