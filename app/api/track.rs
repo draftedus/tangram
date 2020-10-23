@@ -3,8 +3,9 @@ use crate::{
 		error::Error,
 		model::get_model,
 		monitor_event::{
-			MonitorEvent, MulticlassClassificationOutput, NumberOrString, PredictOutput,
-			PredictionMonitorEvent, RegressionOutput, TrueValueMonitorEvent,
+			BinaryClassificationPredictOutput, MonitorEvent, MulticlassClassificationPredictOutput,
+			NumberOrString, PredictOutput, PredictionMonitorEvent, RegressionPredictOutput,
+			TrueValueMonitorEvent,
 		},
 	},
 	production_metrics::ProductionMetrics,
@@ -282,8 +283,14 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 	let output: Vec<u8> = base64::decode(output)?;
 	let output: PredictOutput = serde_json::from_slice(output.as_slice())?;
 	let prediction = match output {
-		PredictOutput::Regression(RegressionOutput { value }) => NumberOrString::Number(value),
-		PredictOutput::MulticlassClassification(MulticlassClassificationOutput {
+		PredictOutput::Regression(RegressionPredictOutput { value }) => {
+			NumberOrString::Number(value)
+		}
+		PredictOutput::BinaryClassification(BinaryClassificationPredictOutput {
+			class_name,
+			..
+		}) => NumberOrString::String(class_name),
+		PredictOutput::MulticlassClassification(MulticlassClassificationPredictOutput {
 			class_name,
 			..
 		}) => NumberOrString::String(class_name),

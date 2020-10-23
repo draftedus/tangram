@@ -1,23 +1,17 @@
 import {
-	BinaryClassificationPrediction,
 	Column,
-	ColumnType,
-	EnumColumn,
-	MulticlassClassificationPrediction,
-	NumberColumn,
-	Prediction,
-	PredictionType,
+	EnumField,
+	FieldType,
+	Form,
+	InnerType,
+	NumberField,
 	Props,
-	RegressionPrediction,
-	TextColumn,
+	TextField,
 } from './props'
 import './styles.css'
-import {
-	BarChart,
-	BoxChart,
-	FeatureContributionsChart,
-} from '@tangramhq/charts'
+import { BarChart, BoxChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
+import { PredictionResult } from 'common/predict'
 import { renderPage } from 'common/render'
 import {
 	EnumColumnToken,
@@ -29,26 +23,32 @@ import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { Fragment, h } from 'preact'
 
 export default function PredictPage(props: Props) {
+	let inner
+	switch (props.inner.type) {
+		case InnerType.PredictionForm:
+			inner = <PredictionForm form={props.inner.value.form} />
+			break
+		case InnerType.PredictionResult:
+			inner = (
+				<PredictionResult
+					inputTable={props.inner.value.inputTable}
+					prediction={props.inner.value.prediction}
+				/>
+			)
+	}
 	return renderPage(
 		<ModelLayout
 			info={props.modelLayoutInfo}
 			pinwheelInfo={props.pinwheelInfo}
 			selectedItem={ModelSideNavItem.Prediction}
 		>
-			{props.prediction === null ? (
-				<PredictionForm columns={props.columns} />
-			) : (
-				<PredictionResult
-					columns={props.columns}
-					prediction={props.prediction}
-				/>
-			)}
+			{inner}
 		</ModelLayout>,
 	)
 }
 
 type PredictionFormProps = {
-	columns: Column[]
+	form: Form
 }
 
 function PredictionForm(props: PredictionFormProps) {
@@ -57,16 +57,16 @@ function PredictionForm(props: PredictionFormProps) {
 			<ui.H1>{'Prediction'}</ui.H1>
 			<ui.Form>
 				<div class="predict-form-items-wrapper">
-					{props.columns.map(column => {
-						switch (column.type) {
-							case ColumnType.Unknown:
-								return <UnknownField column={column} />
-							case ColumnType.Number:
-								return <NumberField column={column} />
-							case ColumnType.Enum:
-								return <EnumField column={column} />
-							case ColumnType.Text:
-								return <TextField column={column} />
+					{props.form.fields.map(field => {
+						switch (field.type) {
+							case FieldType.Unknown:
+								return <UnknownField field={field} />
+							case FieldType.Number:
+								return <NumberField field={field} />
+							case FieldType.Enum:
+								return <EnumField field={field} />
+							case FieldType.Text:
+								return <TextField field={field} />
 						}
 					})}
 				</div>
@@ -82,7 +82,7 @@ function PredictionForm(props: PredictionFormProps) {
 }
 
 type UnknownFieldProps = {
-	column: Column
+	field: Column
 }
 
 function UnknownField(props: UnknownFieldProps) {
@@ -93,10 +93,10 @@ function UnknownField(props: UnknownFieldProps) {
 					<UnknownColumnToken />
 				</div>
 				<ui.TextField
-					key={props.column.name}
-					label={props.column.name}
-					name={props.column.name}
-					value={props.column.value}
+					key={props.field.name}
+					label={props.field.name}
+					name={props.field.name}
+					value={props.field.value}
 				/>
 			</div>
 			<div></div>
@@ -105,7 +105,7 @@ function UnknownField(props: UnknownFieldProps) {
 }
 
 type NumberFieldProps = {
-	column: NumberColumn
+	field: NumberField
 }
 
 function NumberField(props: NumberFieldProps) {
@@ -116,10 +116,10 @@ function NumberField(props: NumberFieldProps) {
 					<NumberColumnToken />
 				</div>
 				<ui.TextField
-					key={props.column.name}
-					label={props.column.name}
-					name={props.column.name}
-					value={props.column.value}
+					key={props.field.name}
+					label={props.field.name}
+					name={props.field.name}
+					value={props.field.value}
 				/>
 			</div>
 			<div class="predict-column-chart-wrapper">
@@ -130,14 +130,14 @@ function NumberField(props: NumberFieldProps) {
 							color: ui.colors.blue,
 							data: [
 								{
-									label: props.column.name,
+									label: props.field.name,
 									x: 0,
 									y: {
-										max: props.column.max,
-										min: props.column.min,
-										p25: props.column.p25,
-										p50: props.column.p50,
-										p75: props.column.p75,
+										max: props.field.max,
+										min: props.field.min,
+										p25: props.field.p25,
+										p50: props.field.p50,
+										p75: props.field.p75,
 									},
 								},
 							],
@@ -145,7 +145,7 @@ function NumberField(props: NumberFieldProps) {
 						},
 					]}
 					hideLegend={true}
-					id={props.column.name}
+					id={props.field.name}
 					shouldDrawXAxisLabels={false}
 				/>
 			</div>
@@ -154,7 +154,7 @@ function NumberField(props: NumberFieldProps) {
 }
 
 type EnumFieldProps = {
-	column: EnumColumn
+	field: EnumField
 }
 
 function EnumField(props: EnumFieldProps) {
@@ -165,14 +165,14 @@ function EnumField(props: EnumFieldProps) {
 					<EnumColumnToken />
 				</div>
 				<ui.SelectField
-					key={props.column.name}
-					label={props.column.name}
-					name={props.column.name}
-					options={props.column.options.map(option => ({
+					key={props.field.name}
+					label={props.field.name}
+					name={props.field.name}
+					options={props.field.options.map(option => ({
 						text: option,
 						value: option,
 					}))}
-					value={props.column.value ?? undefined}
+					value={props.field.value ?? undefined}
 				/>
 			</div>
 			<div class="predict-column-chart-wrapper">
@@ -181,7 +181,7 @@ function EnumField(props: EnumFieldProps) {
 					data={[
 						{
 							color: ui.colors.blue,
-							data: props.column.histogram.map(([label, value], i) => ({
+							data: props.field.histogram.map(([label, value], i) => ({
 								label,
 								x: i,
 								y: value,
@@ -190,7 +190,7 @@ function EnumField(props: EnumFieldProps) {
 						},
 					]}
 					hideLegend={true}
-					id={props.column.name}
+					id={props.field.name}
 					shouldDrawXAxisLabels={false}
 				/>
 			</div>
@@ -199,7 +199,7 @@ function EnumField(props: EnumFieldProps) {
 }
 
 type TextFieldProps = {
-	column: TextColumn
+	field: TextField
 }
 
 function TextField(props: TextFieldProps) {
@@ -210,183 +210,13 @@ function TextField(props: TextFieldProps) {
 					<TextColumnToken />
 				</div>
 				<ui.TextField
-					key={props.column.name}
-					label={props.column.name}
-					name={props.column.name}
-					value={props.column.value ?? undefined}
+					key={props.field.name}
+					label={props.field.name}
+					name={props.field.name}
+					value={props.field.value ?? undefined}
 				/>
 			</div>
 			<div />
 		</>
-	)
-}
-
-export type PredictionResultProps = {
-	columns: Column[]
-	prediction: Prediction
-}
-
-function PredictionResult(props: PredictionResultProps) {
-	let inner
-	console.log(JSON.stringify(props, null, 2))
-	switch (props.prediction.type) {
-		case PredictionType.Regression:
-			inner = <RegressionPredictionResult prediction={props.prediction.value} />
-			break
-		case PredictionType.BinaryClassification:
-			inner = (
-				<BinaryClassificationPredictionResult
-					prediction={props.prediction.value}
-				/>
-			)
-			break
-		case PredictionType.MulticlassClassification:
-			inner = (
-				<MulticlassClassificationPredictionResult
-					prediction={props.prediction.value}
-				/>
-			)
-			break
-	}
-	return (
-		<ui.S1>
-			<ui.H1>{'Prediction'}</ui.H1>
-			<div class="predict-output-items-wrapper">
-				<ui.H2>{'Input'}</ui.H2>
-				{props.columns.map(column => (
-					<div key={column.name}>
-						<span style="color: var(--muted-text-color)">{column.name}</span>
-						{': '}
-						<span style="color: var(--text-color)">{column.value}</span>
-					</div>
-				))}
-				{inner}
-			</div>
-		</ui.S1>
-	)
-}
-
-type RegressionPredictionResultProps = {
-	prediction: RegressionPrediction
-}
-
-function RegressionPredictionResult(props: RegressionPredictionResultProps) {
-	return (
-		<ui.S2>
-			<ui.H2>{'Output'}</ui.H2>
-			<ui.Card>
-				<ui.NumberChart
-					title="Predicted"
-					value={props.prediction.value.toString()}
-				/>
-			</ui.Card>
-			<ui.H2>{'Explanation'}</ui.H2>
-			<ui.P>
-				{"This chart shows how the input values influenced the model's output."}
-			</ui.P>
-			<ui.Card>
-				<FeatureContributionsChart
-					data={props.prediction.featureContributionsChartData}
-					id="regression_feature_contributions"
-					includeXAxisTitle={true}
-					includeYAxisLabels={false}
-					includeYAxisTitle={false}
-					negativeColor={ui.colors.red}
-					positiveColor={ui.colors.green}
-				/>
-			</ui.Card>
-		</ui.S2>
-	)
-}
-
-type BinaryClassificationPredictionResultProps = {
-	prediction: BinaryClassificationPrediction
-}
-
-function BinaryClassificationPredictionResult(
-	props: BinaryClassificationPredictionResultProps,
-) {
-	return (
-		<ui.S2>
-			<ui.H2>{'Output'}</ui.H2>
-			<ui.Card>
-				<ui.NumberChart title="Prediction" value={props.prediction.className} />
-			</ui.Card>
-			<ui.Card>
-				<ui.NumberChart
-					title="Probability"
-					value={ui.formatPercent(props.prediction.probability, 2)}
-				/>
-			</ui.Card>
-			<ui.H2>{'Explanation'}</ui.H2>
-			<ui.P>
-				{"This chart shows how the input values influenced the model's output."}
-			</ui.P>
-			<ui.Card>
-				<FeatureContributionsChart
-					data={props.prediction.featureContributionsChartData}
-					id="binary_classification_feature_contributions"
-					includeXAxisTitle={true}
-					includeYAxisLabels={true}
-					includeYAxisTitle={true}
-					negativeColor={ui.colors.red}
-					positiveColor={ui.colors.green}
-				/>
-			</ui.Card>
-		</ui.S2>
-	)
-}
-
-type MulticlassClassificationPredictionResultProps = {
-	prediction: MulticlassClassificationPrediction
-}
-
-function MulticlassClassificationPredictionResult(
-	props: MulticlassClassificationPredictionResultProps,
-) {
-	let probabilityData = [
-		{
-			color: ui.colors.blue,
-			data: props.prediction.probabilities.map(([label, probability], i) => ({
-				label,
-				x: i,
-				y: probability,
-			})),
-			title: 'Probabilities',
-		},
-	]
-	return (
-		<ui.S2>
-			<ui.H2>{'Output'}</ui.H2>
-			<ui.Card>
-				<ui.NumberChart title="Prediction" value={props.prediction.className} />
-			</ui.Card>
-			<ui.Card>
-				<ui.NumberChart
-					title="Probability"
-					value={ui.formatPercent(props.prediction.probability, 2)}
-				/>
-			</ui.Card>
-			<BarChart
-				data={probabilityData}
-				id="probabilities"
-				title="Predicted Probabilities"
-			/>
-			<ui.H2>{'Explanation'}</ui.H2>
-			<ui.P>
-				{"This chart shows how the input values influenced the model's output."}
-			</ui.P>
-			<ui.Card>
-				<FeatureContributionsChart
-					data={props.prediction.featureContributionsChartData}
-					id="multiclass_classification_feature_contributions"
-					includeXAxisTitle={true}
-					includeYAxisLabels={true}
-					includeYAxisTitle={true}
-					negativeColor={ui.colors.red}
-					positiveColor={ui.colors.green}
-				/>
-			</ui.Card>
-		</ui.S2>
 	)
 }

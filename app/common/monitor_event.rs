@@ -33,19 +33,27 @@ pub struct TrueValueMonitorEvent {
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 pub enum PredictOutput {
-	Regression(RegressionOutput),
-	MulticlassClassification(MulticlassClassificationOutput),
+	Regression(RegressionPredictOutput),
+	BinaryClassification(BinaryClassificationPredictOutput),
+	MulticlassClassification(MulticlassClassificationPredictOutput),
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RegressionOutput {
+pub struct RegressionPredictOutput {
 	pub value: f32,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MulticlassClassificationOutput {
+pub struct BinaryClassificationPredictOutput {
+	pub class_name: String,
+	pub probability: f32,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MulticlassClassificationPredictOutput {
 	pub class_name: String,
 	pub probabilities: Option<BTreeMap<String, f32>>,
 }

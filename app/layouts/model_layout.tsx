@@ -32,6 +32,7 @@ export enum ModelSideNavItem {
 	TrainingImportances = 'training_importances',
 	Prediction = 'prediction',
 	Tuning = 'tuning',
+	ProductionPredictions = 'production_predictions',
 	ProductionStats = 'production_stats',
 	ProductionMetrics = 'production_metrics',
 }
@@ -151,6 +152,14 @@ function ModelSideNav(props: ModelSideNavProps) {
 					selected={props.selectedItem === ModelSideNavItem.Tuning}
 				>
 					{'Tuning'}
+				</ui.SideNavItem>
+				<ui.SideNavItem
+					href={`/repos/${props.id}/models/${props.id}/production_predictions/`}
+					selected={
+						props.selectedItem === ModelSideNavItem.ProductionPredictions
+					}
+				>
+					{'Production Predictions'}
 				</ui.SideNavItem>
 				<ui.SideNavItem
 					href={`/repos/${props.id}/models/${props.id}/production_stats/`}

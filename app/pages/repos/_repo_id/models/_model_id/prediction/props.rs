@@ -3,6 +3,7 @@ use crate::{
 		error::Error,
 		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
+		predict::{ColumnType, InputTable, InputTableRow, Prediction, PredictionResult},
 		user::{authorize_user, authorize_user_for_model},
 	},
 	Context,
@@ -10,16 +11,32 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request};
 use std::collections::BTreeMap;
-use std::convert::TryInto;
 use tangram_util::id::Id;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
-	columns: Vec<Column>,
 	id: String,
 	model_layout_info: ModelLayoutInfo,
-	prediction: Option<Prediction>,
+	inner: Inner,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(tag = "type", content = "value")]
+pub enum Inner {
+	PredictionForm(PredictionForm),
+	PredictionResult(PredictionResult),
+}
+
+#[derive(serde::Serialize)]
+pub struct PredictionForm {
+	form: PredictForm,
+}
+
+#[derive(serde::Serialize)]
+pub struct PredictForm {
+	fields: Vec<Column>,
 }
 
 #[derive(serde::Serialize)]
@@ -67,60 +84,6 @@ pub struct Enum {
 pub struct Text {
 	name: String,
 	value: String,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(tag = "type", content = "value")]
-pub enum Prediction {
-	#[serde(rename = "regression")]
-	Regression(RegressionPrediction),
-	#[serde(rename = "binary_classification")]
-	BinaryClassification(BinaryClassificationPrediction),
-	#[serde(rename = "multiclass_classification")]
-	MulticlassClassification(MulticlassClassificationPrediction),
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct RegressionPrediction {
-	value: f32,
-	feature_contributions_chart_data: FeatureContributionsChartData,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct BinaryClassificationPrediction {
-	class_name: String,
-	probability: f32,
-	feature_contributions_chart_data: FeatureContributionsChartData,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct MulticlassClassificationPrediction {
-	class_name: String,
-	probability: f32,
-	probabilities: Vec<(String, f32)>,
-	feature_contributions_chart_data: FeatureContributionsChartData,
-}
-
-pub type FeatureContributionsChartData = Vec<FeatureContributionsChartSeries>;
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct FeatureContributionsChartSeries {
-	baseline: f32,
-	baseline_label: String,
-	label: String,
-	output: f32,
-	output_label: String,
-	values: Vec<FeatureContributionsChartValue>,
-}
-
-#[derive(serde::Serialize, Debug)]
-pub struct FeatureContributionsChartValue {
-	feature: String,
-	value: f32,
 }
 
 pub async fn props(
@@ -215,17 +178,42 @@ pub async fn props(
 		})
 		.collect();
 	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
-	let prediction = if let Some(search_params) = search_params {
-		Some(predict(model, columns.as_slice(), search_params))
+	let inner = if let Some(search_params) = search_params {
+		let prediction = predict(model, columns.as_slice(), search_params);
+		let input_table_rows = columns
+			.into_iter()
+			.map(|column| {
+				let (column_type, column_name, value) = match column {
+					Column::Unknown(column) => (ColumnType::Unknown, column.name, column.value),
+					Column::Enum(column) => (ColumnType::Enum, column.name, column.value),
+					Column::Number(column) => (ColumnType::Number, column.name, column.value),
+					Column::Text(column) => (ColumnType::Text, column.name, column.value),
+				};
+				InputTableRow {
+					column_name,
+					value: serde_json::Value::String(value),
+					column_type,
+				}
+			})
+			.collect();
+		Inner::PredictionResult(PredictionResult {
+			input_table: InputTable {
+				rows: input_table_rows,
+			},
+			prediction,
+		})
 	} else {
-		None
+		Inner::PredictionForm(PredictionForm {
+			form: PredictForm { fields: columns },
+		})
 	};
+
 	db.commit().await?;
+
 	Ok(Props {
 		model_layout_info,
 		id: model_id.to_string(),
-		columns,
-		prediction,
+		inner,
 	})
 }
 
@@ -249,7 +237,6 @@ fn predict(
 			_ => unreachable!(),
 		}
 	}
-	let predict_model: tangram_core::predict::Model = model.try_into().unwrap();
 	let mut example: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
 	for (key, value) in search_params.into_iter() {
 		match column_lookup.get(&key) {
@@ -280,135 +267,5 @@ fn predict(
 			None => panic!(),
 		}
 	}
-	let examples = tangram_core::predict::PredictInput(vec![example]);
-	let output = tangram_core::predict::predict(&predict_model, examples, None);
-	let predict_output: Prediction = match output {
-		tangram_core::predict::PredictOutput::Regression(mut output) => {
-			let output = output.remove(0);
-			let feature_contributions = output.feature_contributions.unwrap();
-			let feature_contributions_chart_data = vec![FeatureContributionsChartSeries {
-				baseline: feature_contributions.baseline_value,
-				baseline_label: format!("{}", feature_contributions.baseline_value),
-				label: "output".to_owned(),
-				output: feature_contributions.output_value,
-				output_label: format!("{}", feature_contributions.output_value),
-				values: feature_contributions
-					.feature_contributions
-					.into_iter()
-					.map(compute_feature_contributions_chart_value)
-					.collect(),
-			}];
-			let prediction = RegressionPrediction {
-				feature_contributions_chart_data,
-				value: output.value,
-			};
-			Prediction::Regression(prediction)
-		}
-		tangram_core::predict::PredictOutput::BinaryClassification(mut output) => {
-			let output = output.remove(0);
-			let feature_contributions = output.feature_contributions.unwrap();
-			let feature_contributions_chart_data = vec![FeatureContributionsChartSeries {
-				baseline: feature_contributions.baseline_value,
-				baseline_label: format!("{}", feature_contributions.baseline_value),
-				label: "output".to_owned(),
-				output: feature_contributions.output_value,
-				output_label: format!("{}", feature_contributions.output_value),
-				values: feature_contributions
-					.feature_contributions
-					.into_iter()
-					.map(compute_feature_contributions_chart_value)
-					.collect(),
-			}];
-			let prediction = BinaryClassificationPrediction {
-				class_name: output.class_name,
-				probability: output.probability,
-				feature_contributions_chart_data,
-			};
-			Prediction::BinaryClassification(prediction)
-		}
-		tangram_core::predict::PredictOutput::MulticlassClassification(mut output) => {
-			let output = output.remove(0);
-			let feature_contributions_chart_data = output
-				.feature_contributions
-				.unwrap()
-				.into_iter()
-				.map(
-					|(class, feature_contributions)| FeatureContributionsChartSeries {
-						baseline: feature_contributions.baseline_value,
-						baseline_label: format!("{}", feature_contributions.baseline_value),
-						label: class,
-						output: feature_contributions.output_value,
-						output_label: format!("{}", feature_contributions.output_value),
-						values: feature_contributions
-							.feature_contributions
-							.into_iter()
-							.map(compute_feature_contributions_chart_value)
-							.collect(),
-					},
-				)
-				.collect::<Vec<_>>();
-			let prediction = MulticlassClassificationPrediction {
-				class_name: output.class_name,
-				probability: output.probability,
-				probabilities: output.probabilities.into_iter().collect(),
-				feature_contributions_chart_data,
-			};
-			Prediction::MulticlassClassification(prediction)
-		}
-	};
-	predict_output
-}
-
-fn compute_feature_contributions_chart_value(
-	feature_contribution: tangram_core::predict::FeatureContribution,
-) -> FeatureContributionsChartValue {
-	match feature_contribution {
-		tangram_core::predict::FeatureContribution::Identity {
-			column_name,
-			feature_contribution_value,
-		} => FeatureContributionsChartValue {
-			feature: column_name,
-			value: feature_contribution_value,
-		},
-		tangram_core::predict::FeatureContribution::Normalized {
-			column_name,
-			feature_contribution_value,
-		} => FeatureContributionsChartValue {
-			feature: column_name,
-			value: feature_contribution_value,
-		},
-		tangram_core::predict::FeatureContribution::OneHotEncoded {
-			column_name,
-			option,
-			feature_value,
-			feature_contribution_value,
-		} => {
-			let predicate = if feature_value { "is" } else { "is not" };
-			let option = option
-				.map(|option| format!("\"{}\"", option))
-				.unwrap_or_else(|| "invalid".to_owned());
-			let feature = format!("{} {} {}", column_name, predicate, option);
-			FeatureContributionsChartValue {
-				feature,
-				value: feature_contribution_value,
-			}
-		}
-		tangram_core::predict::FeatureContribution::BagOfWords {
-			column_name,
-			token,
-			feature_value,
-			feature_contribution_value,
-		} => {
-			let predicate = if feature_value {
-				"contains"
-			} else {
-				"does not contain"
-			};
-			let feature = format!("{} {} \"{}\"", column_name, predicate, token);
-			FeatureContributionsChartValue {
-				feature,
-				value: feature_contribution_value,
-			}
-		}
-	}
+	crate::common::predict::predict(model, example)
 }

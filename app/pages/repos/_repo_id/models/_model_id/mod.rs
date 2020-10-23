@@ -13,6 +13,7 @@ use tangram_util::id::Id;
 pub mod index;
 pub mod prediction;
 pub mod production_metrics;
+pub mod production_predictions;
 pub mod production_stats;
 pub mod training_importances;
 pub mod training_metrics;

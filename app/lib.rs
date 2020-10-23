@@ -136,27 +136,6 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::production_metrics::index::get(
-				request,
-				&context,
-				model_id,
-				search_params,
-			)
-			.await
-		}
-		(
-			&Method::GET,
-			&["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"],
-		) => {
-			self::pages::repos::_repo_id::models::_model_id::production_metrics::class_metrics::get(
-				request,
-				&context,
-				model_id,
-				search_params,
-			)
-			.await
-		}
 		(
 			&Method::GET,
 			&["repos", _repo_id, "models", model_id, "training_metrics", "precision_recall"],
@@ -180,6 +159,24 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			self::pages::repos::_repo_id::models::_model_id::tuning::get(request, &context, model_id)
 				.await
 		}
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
+			self::pages::repos::_repo_id::models::_model_id::production_predictions::index::get(
+				request,
+				&context,
+				model_id,
+				search_params,
+			)
+			.await
+		}
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", "predictions", identifier]) => {
+			self::pages::repos::_repo_id::models::_model_id::production_predictions::predictions::_identifier::get(
+				request,
+				&context,
+				model_id,
+				identifier,
+			)
+			.await
+		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_stats::index::get(
 				request,
@@ -198,6 +195,27 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 				&context,
 				model_id,
 				column_name,
+				search_params,
+			)
+			.await
+		}
+		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", ""]) => {
+			self::pages::repos::_repo_id::models::_model_id::production_metrics::index::get(
+				request,
+				&context,
+				model_id,
+				search_params,
+			)
+			.await
+		}
+		(
+			&Method::GET,
+			&["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"],
+		) => {
+			self::pages::repos::_repo_id::models::_model_id::production_metrics::class_metrics::get(
+				request,
+				&context,
+				model_id,
 				search_params,
 			)
 			.await

@@ -13,10 +13,10 @@ export function FeatureImportancesTable(props: Props) {
 			color: ui.colors.blue,
 			data: props.values
 				.filter(([_, value]) => value > 0)
-				.map(([label, value], i) => ({
-					label,
+				.map(([featureName, featureImportanceValue], i) => ({
+					label: featureName,
 					x: i,
-					y: value,
+					y: featureImportanceValue,
 				})),
 			title: 'Feature Importance',
 		},
@@ -39,10 +39,10 @@ export function FeatureImportancesTable(props: Props) {
 					<ui.TableHeaderCell>{'Importance'}</ui.TableHeaderCell>
 				</ui.TableHeader>
 				<ui.TableBody>
-					{props.values.map(([feature, weight], i) => (
+					{props.values.map(([featureName, featureImportanceValue], i) => (
 						<ui.TableRow key={i}>
-							<ui.TableCell>{feature}</ui.TableCell>
-							<ui.TableCell>{weight / max}</ui.TableCell>
+							<ui.TableCell>{featureName}</ui.TableCell>
+							<ui.TableCell>{featureImportanceValue}</ui.TableCell>
 						</ui.TableRow>
 					))}
 				</ui.TableBody>
