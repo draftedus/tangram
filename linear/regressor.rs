@@ -96,11 +96,27 @@ impl Regressor {
 				}
 			}
 		}
+		let feature_importances = Regressor::compute_feature_importances(&model);
 		RegressorTrainOutput {
 			model,
 			losses: None,
-			feature_importances: None,
+			feature_importances: Some(feature_importances),
 		}
+	}
+
+	fn compute_feature_importances(model: &Regressor) -> Vec<f32> {
+		// Compute the absolute value of each of the weights.
+		let mut feature_importances = model
+			.weights
+			.iter()
+			.map(|weight| weight.abs())
+			.collect::<Vec<_>>();
+		// Compute the sum and normalize so the importances sum to 1.
+		let feature_importances_sum = feature_importances.iter().sum::<f32>();
+		feature_importances
+			.iter_mut()
+			.for_each(|feature_importance| *feature_importance /= feature_importances_sum);
+		feature_importances
 	}
 
 	fn train_batch(

@@ -22,6 +22,7 @@ export function Button(props: ButtonProps) {
 		return (
 			<a
 				class="button"
+				disabled={props.disabled}
 				download={props.download}
 				href={props.href}
 				style={style}
@@ -33,6 +34,7 @@ export function Button(props: ButtonProps) {
 		return (
 			<button
 				class="button"
+				disabled={props.disabled}
 				id={props.id}
 				onClick={onClick}
 				style={style}

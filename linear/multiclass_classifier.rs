@@ -99,11 +99,32 @@ impl MulticlassClassifier {
 				}
 			}
 		}
+		let feature_importances = MulticlassClassifier::compute_feature_importances(&model);
 		MulticlassClassifierTrainOutput {
 			model,
 			losses: None,
-			feature_importances: None,
+			feature_importances: Some(feature_importances),
 		}
+	}
+
+	fn compute_feature_importances(model: &MulticlassClassifier) -> Vec<f32> {
+		// Compute the absolute value of each of the weights.
+		let mut feature_importances = model
+			.weights
+			.axis_iter(Axis(0))
+			.map(|weights_each_class| {
+				weights_each_class
+					.iter()
+					.map(|weight| weight.abs())
+					.sum::<f32>() / model.weights.ncols().to_f32().unwrap()
+			})
+			.collect::<Vec<_>>();
+		// Compute the sum and normalize so the importances sum to 1.
+		let feature_importances_sum: f32 = feature_importances.iter().sum::<f32>();
+		feature_importances
+			.iter_mut()
+			.for_each(|feature_importance| *feature_importance /= feature_importances_sum);
+		feature_importances
 	}
 
 	fn train_batch(

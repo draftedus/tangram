@@ -54,7 +54,7 @@ export default function ProductionPredictionIndexPage(props: Props) {
 							</Fragment>
 						) : (
 							<ui.Button disabled={true} type="submit">
-								{'Previous'}
+								{'Newer'}
 							</ui.Button>
 						)}
 					</ui.Form>
@@ -70,7 +70,7 @@ export default function ProductionPredictionIndexPage(props: Props) {
 							</Fragment>
 						) : (
 							<ui.Button disabled={true} type="submit">
-								{'Next'}
+								{'Older'}
 							</ui.Button>
 						)}
 					</ui.Form>

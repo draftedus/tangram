@@ -21,7 +21,12 @@
 	width: 100%;
 }
 
-.button:hover {
+.button[disabled] {
+	background-color: var(--gray);
+	cursor: not-allowed;
+}
+
+.button:hover:not([disabled]) {
 	filter: brightness(90%);
 }
 
