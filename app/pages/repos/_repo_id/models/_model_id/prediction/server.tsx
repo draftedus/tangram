@@ -42,7 +42,10 @@ export default function PredictPage(props: Props) {
 			pinwheelInfo={props.pinwheelInfo}
 			selectedItem={ModelSideNavItem.Prediction}
 		>
-			{inner}
+			<ui.S1>
+				<ui.H1>{'Prediction'}</ui.H1>
+				{inner}
+			</ui.S1>
 		</ModelLayout>,
 	)
 }

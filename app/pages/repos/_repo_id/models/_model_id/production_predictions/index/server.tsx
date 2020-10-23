@@ -13,12 +13,16 @@ export default function ProductionPredictionIndexPage(props: Props) {
 		>
 			<ui.S1>
 				<ui.H1>{'Production Predictions'}</ui.H1>
-				{/* <ui.Form>
+				<ui.Form post={true}>
 					<div class="search-bar-wrapper">
-						<ui.TextField label="Identifier" name="identifier"></ui.TextField>
+						<ui.TextField
+							autocomplete="off"
+							label="Identifier"
+							name="identifier"
+						/>
 						<ui.Button type="submit">{'Lookup'}</ui.Button>
 					</div>
-				</ui.Form> */}
+				</ui.Form>
 				<ui.Table width="100%">
 					<ui.TableHeader>
 						<ui.TableRow>

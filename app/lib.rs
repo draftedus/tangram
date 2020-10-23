@@ -168,6 +168,14 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
+		(&Method::POST, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
+			self::pages::repos::_repo_id::models::_model_id::production_predictions::index::post(
+				request,
+				&context,
+				model_id,
+			)
+			.await
+		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", "predictions", identifier]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_predictions::predictions::_identifier::get(
 				request,

@@ -4,11 +4,13 @@ use crate::{
 		model::get_model,
 		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		predict::{ColumnType, InputTable, InputTableRow, Prediction},
+		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_model},
 	},
 	Context,
 };
 use anyhow::Result;
+use chrono::prelude::*;
 use hyper::{Body, Request};
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
@@ -19,6 +21,7 @@ use tangram_util::id::Id;
 pub struct Props {
 	model_layout_info: ModelLayoutInfo,
 	identifier: String,
+	date: String,
 	input_table: InputTable,
 	prediction: Prediction,
 }
@@ -29,6 +32,7 @@ pub async fn props(
 	model_id: &str,
 	identifier: &str,
 ) -> Result<Props> {
+	let timezone = get_timezone(&request);
 	let mut db = context
 		.pool
 		.begin()
@@ -64,6 +68,12 @@ pub async fn props(
 	.bind(identifier)
 	.fetch_one(&mut *db)
 	.await?;
+	let date: i64 = row.get(0);
+	let date: DateTime<Utc> = Utc.timestamp(date, 0);
+	println!("date: {:?}", date);
+	println!("{:?}", timezone);
+	let date = date.with_timezone(&timezone);
+	println!("date: {:?}", date);
 	let identifier: String = row.get(1);
 	let input: String = row.get(2);
 	let input: Vec<u8> = base64::decode(input).unwrap();
@@ -75,6 +85,7 @@ pub async fn props(
 		identifier,
 		input_table: prediction_output.input_table,
 		prediction: prediction_output.prediction,
+		date: date.to_rfc3339(),
 	})
 }
 

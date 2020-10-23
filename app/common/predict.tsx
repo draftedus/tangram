@@ -91,41 +91,38 @@ export function PredictionResult(props: PredictionResultProps) {
 			break
 	}
 	return (
-		<ui.S1>
-			<ui.H1>{'Prediction'}</ui.H1>
-			<div class="predict-output-items-wrapper">
-				<ui.H2>{'Input'}</ui.H2>
-				<ui.Table width="100%">
-					<ui.TableHeader>
-						<ui.TableRow>
-							<ui.TableHeaderCell>{'Column Name'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Column Type'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
+		<div class="predict-output-items-wrapper">
+			<ui.H2>{'Input'}</ui.H2>
+			<ui.Table width="100%">
+				<ui.TableHeader>
+					<ui.TableRow>
+						<ui.TableHeaderCell>{'Column Name'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Column Type'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
+					</ui.TableRow>
+				</ui.TableHeader>
+				<ui.TableBody>
+					{props.inputTable.rows.map(inputTableRow => (
+						<ui.TableRow key={inputTableRow.columnName}>
+							<ui.TableCell>{inputTableRow.columnName}</ui.TableCell>
+							<ui.TableCell>
+								{inputTableRow.columnType === ColumnType.Number ? (
+									<NumberColumnToken />
+								) : inputTableRow.columnType === ColumnType.Enum ? (
+									<EnumColumnToken />
+								) : inputTableRow.columnType === ColumnType.Text ? (
+									<TextColumnToken />
+								) : inputTableRow.columnType === ColumnType.Unknown ? (
+									<UnknownColumnToken />
+								) : null}
+							</ui.TableCell>
+							<ui.TableCell>{inputTableRow.value}</ui.TableCell>
 						</ui.TableRow>
-					</ui.TableHeader>
-					<ui.TableBody>
-						{props.inputTable.rows.map(inputTableRow => (
-							<ui.TableRow key={inputTableRow.columnName}>
-								<ui.TableCell>{inputTableRow.columnName}</ui.TableCell>
-								<ui.TableCell>
-									{inputTableRow.columnType === ColumnType.Number ? (
-										<NumberColumnToken />
-									) : inputTableRow.columnType === ColumnType.Enum ? (
-										<EnumColumnToken />
-									) : inputTableRow.columnType === ColumnType.Text ? (
-										<TextColumnToken />
-									) : inputTableRow.columnType === ColumnType.Unknown ? (
-										<UnknownColumnToken />
-									) : null}
-								</ui.TableCell>
-								<ui.TableCell>{inputTableRow.value}</ui.TableCell>
-							</ui.TableRow>
-						))}
-					</ui.TableBody>
-				</ui.Table>
-				{inner}
-			</div>
-		</ui.S1>
+					))}
+				</ui.TableBody>
+			</ui.Table>
+			{inner}
+		</div>
 	)
 }
 

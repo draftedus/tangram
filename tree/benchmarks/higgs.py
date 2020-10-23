@@ -122,3 +122,7 @@ print(json.dumps({
   'auc_roc': auc_roc,
   'duration': duration
 }))
+
+# Compute memory usage.
+f = open("/proc/self/status", "r")
+print(f.read())

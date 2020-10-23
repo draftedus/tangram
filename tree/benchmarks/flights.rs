@@ -3,6 +3,8 @@ use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
 use serde_json::json;
+use std::fs::File;
+use std::io::prelude::*;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::Metric;
@@ -155,4 +157,10 @@ fn main() {
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 	let output = json!({ "auc_roc": auc_roc, "duration": duration });
 	println!("{}", output);
+
+	// Compute memory usage.
+	let mut file = File::open("/proc/self/status").unwrap();
+	let mut contents = String::new();
+	file.read_to_string(&mut contents).unwrap();
+	println!("{}", contents);
 }
