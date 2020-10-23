@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use serde_json::json;
 use std::fs::File;
 use std::io::prelude::*;
+use std::io::BufReader;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::Metric;
@@ -97,12 +98,16 @@ fn main() {
 		.map(|(probability, label)| (*probability, label.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
-	let output = json!({ "auc_roc": auc_roc, "duration": duration });
-	println!("{}", output);
 
 	// Compute memory usage.
-	let mut file = File::open("/proc/self/status").unwrap();
-	let mut contents = String::new();
-	file.read_to_string(&mut contents).unwrap();
-	println!("{}", contents);
+	let mut vmhwm = String::new();
+	let file = File::open("/proc/self/status").unwrap();
+	for line in BufReader::new(file).lines().map(|l| l.unwrap()) {
+		if line.starts_with("VmHWM") {
+			vmhwm = line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap();
+		}
+	}
+
+	let output = json!({ "auc_roc": auc_roc, "duration": duration , "vmhwm": vmhwm});
+	println!("{}", output);
 }

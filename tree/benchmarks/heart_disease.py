@@ -22,6 +22,7 @@ fasting_blood_sugar_greater_than_120_options = ['True', 'False']
 resting_ecg_result_options = ['probable or definite left ventricular hypertrophy', 'normal', 'ST-T wave abnormality']
 exercise_induced_angina_options = ['no', 'yes']
 exercise_st_slope_options = ['downsloping', 'flat', 'upsloping']
+fluoroscopy_vessels_colored_options = ['0', '1', '2', '3']
 thallium_stress_test_options = ['fixed defect', 'normal', 'reversible defect']
 diagnosis_options = ['Negative', 'Positive']
 dtype = {
@@ -36,7 +37,7 @@ dtype = {
   'exercise_induced_angina': CategoricalDtype(categories=exercise_induced_angina_options),
   'exercise_st_depression': np.float64,
   'exercise_st_slope': CategoricalDtype(categories=exercise_st_slope_options),
-  'fluoroscopy_vessels_colored': np.float64,
+  'fluoroscopy_vessels_colored': CategoricalDtype(categories=fluoroscopy_vessels_colored_options),
   'thallium_stress_test': CategoricalDtype(categories=thallium_stress_test_options),
   'diagnosis': CategoricalDtype(categories=diagnosis_options)
 }

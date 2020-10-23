@@ -9,9 +9,13 @@ enum BenchmarkOutput {
 impl std::fmt::Display for BenchmarkOutput {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
 		match self {
-			BenchmarkOutput::Regression(s) => write!(f, "mse: {}", s.mse),
-			BenchmarkOutput::BinaryClassification(s) => write!(f, "auc_roc: {}", s.auc_roc),
-			BenchmarkOutput::MulticlassClassification(s) => write!(f, "accuracy: {}", s.accuracy),
+			BenchmarkOutput::Regression(s) => write!(f, "mse: {}, vmhwm: {:?}", s.mse, s.vmhwm),
+			BenchmarkOutput::BinaryClassification(s) => {
+				write!(f, "auc_roc: {}, vmhwm: {:?}", s.auc_roc, s.vmhwm)
+			}
+			BenchmarkOutput::MulticlassClassification(s) => {
+				write!(f, "accuracy: {}, vmhwm: {:?}", s.accuracy, s.vmhwm)
+			}
 		}
 	}
 }
@@ -19,22 +23,26 @@ impl std::fmt::Display for BenchmarkOutput {
 #[derive(serde::Deserialize, Debug)]
 struct RegressionBenchmarkOutput {
 	mse: f32,
+	vmhwm: Option<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 struct BinaryClassificationBenchmarkOutput {
 	auc_roc: f32,
+	vmhwm: Option<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 struct MulticlassClassificationBenchmarkOutput {
 	accuracy: f32,
+	vmhwm: Option<String>,
 }
 
 fn main() {
 	// Test the regression datasets.
 	println!("Regression");
 	run_benchmarks(&["lightgbm", "xgboost", "sklearn", "tangram"], &["boston"]);
+	run_benchmarks(&["lightgbm", "tangram"], &["allstate"]);
 	println!();
 
 	// Test the binary classification datasets.

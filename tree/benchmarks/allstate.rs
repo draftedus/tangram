@@ -2,6 +2,9 @@ use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
 use serde_json::json;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::StreamingMetric;
@@ -633,6 +636,16 @@ fn main() {
 		labels: labels_test.view().as_slice(),
 	});
 	let metrics = metrics.finalize();
-	let output = json!({"mse": metrics.mse, "duration": duration});
+
+	// Compute memory usage.
+	let mut vmhwm = String::new();
+	let file = File::open("/proc/self/status").unwrap();
+	for line in BufReader::new(file).lines().map(|l| l.unwrap()) {
+		if line.starts_with("VmHWM") {
+			vmhwm = line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap();
+		}
+	}
+
+	let output = json!({"mse": metrics.mse, "duration": duration, "vmhwm": vmhwm});
 	println!("{}", output);
 }

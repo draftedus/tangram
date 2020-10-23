@@ -118,11 +118,15 @@ else:
 
 # Compute metrics.
 auc_roc = roc_auc_score(labels_test, predictions_proba)
-print(json.dumps({
-  'auc_roc': auc_roc,
-  'duration': duration
-}))
 
 # Compute memory usage.
 f = open("/proc/self/status", "r")
-print(f.read())
+for line in f.readlines():
+	if line.startswith("VmHWM"):
+		vmhwm = line.split(":")[1].strip()
+
+print(json.dumps({
+  'auc_roc': auc_roc,
+  'duration': duration,
+	'vmhwm': vmhwm,
+}))

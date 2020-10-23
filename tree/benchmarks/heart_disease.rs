@@ -48,6 +48,10 @@ fn main() {
 		.iter()
 		.map(ToString::to_string)
 		.collect();
+	let fluoroscopy_vessels_colored_options = vec!["0", "1", "2", "3"]
+		.iter()
+		.map(ToString::to_string)
+		.collect();
 	let diagnosis_options = vec!["Negative", "Positive"]
 		.iter()
 		.map(ToString::to_string)
@@ -65,7 +69,7 @@ fn main() {
 		  "exercise_induced_angina".into() => DataFrameColumnType::Enum {options: exercise_induced_angina_options},
 		  "exercise_st_depression".into() => DataFrameColumnType::Number,
 		  "exercise_st_slope".into() => DataFrameColumnType::Enum {options: exercise_st_slope_options},
-		  "fluoroscopy_vessels_colored".into() => DataFrameColumnType::Number,
+		  "fluoroscopy_vessels_colored".into() => DataFrameColumnType::Enum {options: fluoroscopy_vessels_colored_options},
 		  "thallium_stress_test".into() => DataFrameColumnType::Enum {options: thallium_stress_test_options},
 		  "diagnosis".into() => DataFrameColumnType::Enum {options: diagnosis_options},
 		}),

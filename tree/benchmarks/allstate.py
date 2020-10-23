@@ -137,8 +137,16 @@ else:
 # Compute metrics.
 mse = mean_squared_error(predictions, labels_test)
 mae = mean_absolute_error(predictions, labels_test)
+
+# Compute memory usage.
+f = open("/proc/self/status", "r")
+for line in f.readlines():
+	if line.startswith("VmHWM"):
+		vmhwm = line.split(":")[1].strip()
+
 print(json.dumps({
 	'mse': mse,
 	'mae': mae,
+	'vmhwm': vmhwm,
 	'duration': duration,
 }))
