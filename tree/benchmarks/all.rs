@@ -51,9 +51,8 @@ fn main() {
 	println!("Binary Classification");
 	run_benchmarks(
 		&["lightgbm", "xgboost", "sklearn", "tangram"],
-		&["heart_disease", "census", "higgs"],
+		&["heart_disease", "census", "higgs", "flights"],
 	);
-	run_benchmarks(&["lightgbm", "xgboost", "tangram"], &["flights"]);
 	println!();
 
 	// Test the multiclass classification datasets.
