@@ -11,7 +11,7 @@ export let batchGradientDescent =
 export let epoch =
 	'An epoch is a full pass over the training dataset. If we have 100 rows, with mini-batch gradient descent of size 20 examples, we would have 5 batches for a single epoch. In stochastic gradient descent with 1 example per batch, we would have 100 batches for 1 epoch and for full batch gradient descent we would have 1 batch per epoch.'
 export let logLoss =
-	'Log loss is the loss function used in logistic regression.'
+	'Logarithmic loss is the loss function used in logistic regression.'
 export let crossEntropyLoss =
 	'Cross Entropy Loss is the loss function used in multiclass classification.'
 export let logisticRegression =
@@ -21,9 +21,9 @@ export let miniBatchGradientDescent =
 export let stochasticGradientDescent =
 	'In stochastic gradient descent, the gradient of the loss function and update of the model weights is performed for each training example.'
 export let accuracy =
-	'The percentage of instances in the training dataset that were correctly classified.'
+	'Accuracy is the percentage of instances in the training dataset that were correctly classified.'
 export let aucRoc =
-	"The probability that a randomly chosen positive example's predicted score is higher than a randomly selected negative example's score"
+	"The area under the receiver operating characteric curve is the probability that a randomly chosen positive example's predicted score is higher than a randomly selected negative example's score"
 export let confusionMatrix =
 	'The confusion matrix shows the distribution of how your model predicted classes versus what the actual class labels are.'
 export let precisionRecall =
@@ -33,4 +33,4 @@ export let precision =
 export let recall =
 	'Recall is the percentage of positive examples that were labeled as positive.'
 export let receiverOperatingCharacteristic =
-	'The Receiver Operating Characteristic curve shows the True Positive Rate v. False Positive Rate at various thresholds in a logistic regression classification model.'
+	'The Receiver Operating Characteristic Curve shows the True Positive Rate v. False Positive Rate at various thresholds in binary classification.'

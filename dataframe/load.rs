@@ -37,7 +37,7 @@ impl Default for InferOptions {
 
 /// These values are the default values that are considered invalid.
 const DEFAULT_INVALID_VALUES: &[&str] = &[
-	"", "null", "NULL", "n/a", "N/A", "nan", "-nan", "NaN", "-NaN", "?",
+	"", "?", "null", "NULL", "n/a", "N/A", "nan", "-nan", "NaN", "-NaN",
 ];
 
 impl DataFrame {
