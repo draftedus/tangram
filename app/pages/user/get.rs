@@ -7,6 +7,9 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 
 pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let mut db = context
 		.pool
 		.begin()

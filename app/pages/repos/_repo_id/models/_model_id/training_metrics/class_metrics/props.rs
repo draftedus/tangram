@@ -69,7 +69,7 @@ pub async fn props(
 	let true_positives = class_metrics.true_positives;
 	let false_negatives = class_metrics.false_negatives;
 	let false_positives = class_metrics.false_positives;
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
 		id: model_id.to_string(),

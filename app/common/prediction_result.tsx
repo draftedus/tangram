@@ -91,7 +91,7 @@ export function PredictionResult(props: PredictionResultProps) {
 			break
 	}
 	return (
-		<div class="predict-output-items-wrapper">
+		<ui.S2>
 			<ui.H2>{'Input'}</ui.H2>
 			<ui.Table width="100%">
 				<ui.TableHeader>
@@ -122,7 +122,7 @@ export function PredictionResult(props: PredictionResultProps) {
 				</ui.TableBody>
 			</ui.Table>
 			{inner}
-		</div>
+		</ui.S2>
 	)
 }
 

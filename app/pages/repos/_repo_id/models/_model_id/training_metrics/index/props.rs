@@ -92,7 +92,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 			Inner::MulticlassClassifier(build_inner_multiclass_classifier(model))
 		}
 	};
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
 		id: model_id.to_string(),

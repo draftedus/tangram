@@ -6,7 +6,7 @@ use url::Url;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-	let version = std::env::var("VERSION").unwrap_or_else(|_| {
+	let _version = std::env::var("VERSION").unwrap_or_else(|_| {
 		rustyline::Editor::<()>::new()
 			.readline("Version: ")
 			.unwrap()

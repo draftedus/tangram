@@ -534,7 +534,7 @@ struct LinearRegressionModel {
 	pub model: tangram_linear::Regressor,
 	pub train_options: tangram_linear::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -542,7 +542,7 @@ struct TreeRegressionModel {
 	pub model: tangram_tree::Regressor,
 	pub train_options: tangram_tree::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -562,7 +562,7 @@ struct LinearBinaryClassificationModel {
 	pub model: tangram_linear::BinaryClassifier,
 	pub train_options: tangram_linear::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -570,7 +570,7 @@ struct TreeBinaryClassificationModel {
 	pub model: tangram_tree::BinaryClassifier,
 	pub train_options: tangram_tree::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -583,7 +583,7 @@ struct LinearMulticlassClassificationModel {
 	pub model: tangram_linear::MulticlassClassifier,
 	pub train_options: tangram_linear::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -591,7 +591,7 @@ struct TreeMulticlassClassificationModel {
 	pub model: tangram_tree::MulticlassClassifier,
 	pub train_options: tangram_tree::TrainOptions,
 	pub feature_groups: Vec<features::FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -769,7 +769,7 @@ struct LinearRegressorTrainModelOutput {
 	model: tangram_linear::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Vec<f32>,
+	losses: Option<Vec<f32>>,
 	train_options: tangram_linear::TrainOptions,
 	feature_importances: Vec<f32>,
 }
@@ -778,7 +778,7 @@ struct TreeRegressorTrainModelOutput {
 	model: tangram_tree::Regressor,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Vec<f32>,
+	losses: Option<Vec<f32>>,
 	train_options: tangram_tree::TrainOptions,
 	feature_importances: Vec<f32>,
 }
@@ -787,7 +787,7 @@ struct LinearBinaryClassifierTrainModelOutput {
 	model: tangram_linear::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Vec<f32>,
+	losses: Option<Vec<f32>>,
 	train_options: tangram_linear::TrainOptions,
 	feature_importances: Vec<f32>,
 }
@@ -796,7 +796,7 @@ struct TreeBinaryClassifierTrainModelOutput {
 	model: tangram_tree::BinaryClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Vec<f32>,
+	losses: Option<Vec<f32>>,
 	train_options: tangram_tree::TrainOptions,
 	feature_importances: Vec<f32>,
 }
@@ -805,7 +805,7 @@ struct LinearMulticlassClassifierTrainModelOutput {
 	model: tangram_linear::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Vec<f32>,
+	losses: Option<Vec<f32>>,
 	train_options: tangram_linear::TrainOptions,
 	feature_importances: Vec<f32>,
 }
@@ -814,7 +814,7 @@ struct TreeMulticlassClassifierTrainModelOutput {
 	model: tangram_tree::MulticlassClassifier,
 	feature_groups: Vec<features::FeatureGroup>,
 	target_column_index: usize,
-	losses: Vec<f32>,
+	losses: Option<Vec<f32>>,
 	train_options: tangram_tree::TrainOptions,
 	feature_importances: Vec<f32>,
 }
@@ -930,7 +930,7 @@ fn train_linear_regressor(
 		feature_groups,
 		target_column_index,
 		train_options: linear_options,
-		losses: train_output.losses.unwrap(),
+		losses: train_output.losses,
 		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
@@ -970,7 +970,7 @@ fn train_tree_regressor(
 		feature_groups,
 		target_column_index,
 		train_options: tree_options,
-		losses: train_output.losses.unwrap(),
+		losses: train_output.losses,
 		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
@@ -1011,7 +1011,7 @@ fn train_linear_binary_classifier(
 		feature_groups,
 		target_column_index,
 		train_options: linear_options,
-		losses: train_output.losses.unwrap(),
+		losses: train_output.losses,
 		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
@@ -1051,7 +1051,7 @@ fn train_tree_binary_classifier(
 		feature_groups,
 		target_column_index,
 		train_options: tree_options,
-		losses: train_output.losses.unwrap(),
+		losses: train_output.losses,
 		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
@@ -1096,7 +1096,7 @@ fn train_linear_multiclass_classifier(
 		feature_groups,
 		target_column_index,
 		train_options: linear_options,
-		losses: train_output.losses.unwrap(),
+		losses: train_output.losses,
 		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }
@@ -1139,7 +1139,7 @@ fn train_tree_multiclass_classifier(
 		feature_groups,
 		target_column_index,
 		train_options: tree_options,
-		losses: train_output.losses.unwrap(),
+		losses: train_output.losses,
 		feature_importances: train_output.feature_importances.unwrap(),
 	})
 }

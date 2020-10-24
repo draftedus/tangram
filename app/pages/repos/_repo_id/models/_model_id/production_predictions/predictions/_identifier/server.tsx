@@ -1,6 +1,6 @@
 import { Props } from './props'
 import * as ui from '@tangramhq/ui'
-import { PredictionResult } from 'common/predict'
+import { PredictionResult } from 'common/prediction_result'
 import { renderPage } from 'common/render'
 import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { h } from 'preact'

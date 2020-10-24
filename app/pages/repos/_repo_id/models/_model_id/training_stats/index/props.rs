@@ -75,7 +75,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
 				id: model.id.to_owned(),
-				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
+				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				row_count: model.test_row_count.to_usize().unwrap()
 					+ model.train_row_count.to_usize().unwrap(),
@@ -90,7 +90,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
 				id: model.id.to_owned(),
-				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
+				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				row_count: model.test_row_count.to_usize().unwrap()
 					+ model.train_row_count.to_usize().unwrap(),
@@ -105,7 +105,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
 				id: model.id.to_owned(),
-				model_layout_info: get_model_layout_info(&mut db, model_id).await?,
+				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				row_count: model.test_row_count.to_usize().unwrap()
 					+ model.train_row_count.to_usize().unwrap(),

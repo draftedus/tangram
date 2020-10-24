@@ -2,7 +2,7 @@ import './avatar.css'
 import { h } from 'preact'
 
 type AvatarProps = {
-	src?: string
+	src?: string | null
 }
 
 export function Avatar(props: AvatarProps) {

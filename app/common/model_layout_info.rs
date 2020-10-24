@@ -1,3 +1,4 @@
+use crate::Context;
 use anyhow::Result;
 use sqlx::prelude::*;
 use tangram_util::id::Id;
@@ -6,21 +7,29 @@ use tangram_util::id::Id;
 #[serde(rename_all = "camelCase")]
 pub struct ModelLayoutInfo {
 	pub id: String,
-	pub title: String,
+	pub model_id: Id,
 	pub model_version_ids: Vec<Id>,
 	pub owner: Option<Owner>,
-	pub model_id: Id,
+	pub topbar_avatar: Option<TopbarAvatar>,
+	pub title: String,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Owner {
-	pub name: String,
-	pub url: String,
+pub struct TopbarAvatar {
+	avatar_url: Option<String>,
+}
+
+#[derive(serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum Owner {
+	User { id: Id, email: String },
+	Organization { id: Id, name: String },
 }
 
 pub async fn get_model_layout_info(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	context: &Context,
 	model_id: Id,
 ) -> Result<ModelLayoutInfo> {
 	let row = sqlx::query(
@@ -28,17 +37,17 @@ pub async fn get_model_layout_info(
 			select
 				repos.id,
 				repos.title,
-				repos.organization_id,
-				organizations.name,
 				repos.user_id,
-				users.email
+				users.email,
+				repos.organization_id,
+				organizations.name
 			from repos
 			join models
 				on models.repo_id = repos.id
-			left join organizations
-				on organizations.id = repos.organization_id
 			left join users
 				on users.id = repos.user_id
+			left join organizations
+				on organizations.id = repos.organization_id
 			where models.id = ?1
 		",
 	)
@@ -49,27 +58,34 @@ pub async fn get_model_layout_info(
 	let id: Id = id.parse()?;
 	let title: String = row.get(1);
 	let model_version_ids = super::repos::get_model_version_ids(&mut db, id).await?;
-	let organization_id: Option<String> = row.get(2);
-	let organization_name: Option<String> = row.get(3);
-	let user_id: Option<String> = row.get(4);
-	let user_email: Option<String> = row.get(5);
-	let owner = match (organization_id, user_id) {
-		(Some(organization_id), None) => Some(Owner {
-			name: organization_name.unwrap(),
-			url: format!("/organizations/{}/", organization_id),
-		}),
-		(None, Some(_)) => Some(Owner {
-			name: user_email.unwrap(),
-			url: "/user".to_owned(),
-		}),
-		(None, None) => None,
-		(_, _) => unreachable!(),
+	let owner_organization_id: Option<String> = row.get(2);
+	let owner_organization_name: Option<String> = row.get(3);
+	let owner_user_id: Option<String> = row.get(4);
+	let owner_user_email: Option<String> = row.get(5);
+	let owner = if let Some(owner_user_id) = owner_user_id {
+		Some(Owner::User {
+			id: owner_user_id.parse().unwrap(),
+			email: owner_user_email.unwrap(),
+		})
+	} else if let Some(owner_organization_id) = owner_organization_id {
+		Some(Owner::Organization {
+			id: owner_organization_id.parse().unwrap(),
+			name: owner_organization_name.unwrap(),
+		})
+	} else {
+		None
+	};
+	let topbar_avatar = if context.options.auth_enabled {
+		Some(TopbarAvatar { avatar_url: None })
+	} else {
+		None
 	};
 	Ok(ModelLayoutInfo {
 		id: id.to_string(),
-		title,
+		model_id,
 		model_version_ids,
 		owner,
-		model_id,
+		title,
+		topbar_avatar,
 	})
 }

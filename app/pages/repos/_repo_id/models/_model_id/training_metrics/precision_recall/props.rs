@@ -58,7 +58,7 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 			threshold: class_metrics.threshold,
 		})
 		.collect();
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
 		class: model.positive_class,

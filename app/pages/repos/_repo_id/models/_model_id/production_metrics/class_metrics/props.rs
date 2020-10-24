@@ -114,7 +114,7 @@ pub async fn props(
 		}
 	}
 	let model = get_model(&mut db, model_id).await?;
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let production_metrics =
 		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
 			.await?;

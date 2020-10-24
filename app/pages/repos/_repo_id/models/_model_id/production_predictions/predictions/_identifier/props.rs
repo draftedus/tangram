@@ -48,7 +48,7 @@ pub async fn props(
 			return Err(Error::NotFound.into());
 		}
 	}
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let row = sqlx::query(
 		"
 		select

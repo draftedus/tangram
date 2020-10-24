@@ -11,7 +11,7 @@ import {
 import './styles.css'
 import { BarChart, BoxChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
-import { PredictionResult } from 'common/predict'
+import { PredictionResult } from 'common/prediction_result'
 import { renderPage } from 'common/render'
 import {
 	EnumColumnToken,
@@ -56,31 +56,23 @@ type PredictionFormProps = {
 
 function PredictionForm(props: PredictionFormProps) {
 	return (
-		<ui.S1>
-			<ui.H1>{'Prediction'}</ui.H1>
-			<ui.Form>
-				<div class="predict-form-items-wrapper">
-					{props.form.fields.map(field => {
-						switch (field.type) {
-							case FieldType.Unknown:
-								return <UnknownField field={field} />
-							case FieldType.Number:
-								return <NumberField field={field} />
-							case FieldType.Enum:
-								return <EnumField field={field} />
-							case FieldType.Text:
-								return <TextField field={field} />
-						}
-					})}
-				</div>
-				<div class="predict-form-buttons-wrapper">
-					<ui.Button type="submit">{'Predict'}</ui.Button>
-					<ui.Button color={ui.colors.yellow} type="reset">
-						{'Reset Defaults'}
-					</ui.Button>
-				</div>
-			</ui.Form>
-		</ui.S1>
+		<ui.Form>
+			<div class="predict-form-grid">
+				{props.form.fields.map(field => {
+					switch (field.type) {
+						case FieldType.Unknown:
+							return <UnknownField field={field} />
+						case FieldType.Number:
+							return <NumberField field={field} />
+						case FieldType.Enum:
+							return <EnumField field={field} />
+						case FieldType.Text:
+							return <TextField field={field} />
+					}
+				})}
+			</div>
+			<ui.Button type="submit">{'Predict'}</ui.Button>
+		</ui.Form>
 	)
 }
 

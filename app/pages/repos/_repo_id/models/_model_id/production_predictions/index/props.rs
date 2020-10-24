@@ -14,7 +14,7 @@ use num_traits::ToPrimitive;
 use sqlx::prelude::*;
 use tangram_util::id::Id;
 
-const RESULT_LIMIT: i64 = 10;
+const N_PREDICTIONS_PER_PAGE: i64 = 10;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -70,17 +70,17 @@ pub async fn props(
 			return Err(Error::NotFound.into());
 		}
 	}
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 
 	let rows = match (after, before) {
 		(Some(after), None) => {
 			let rows = sqlx::query(
 				"
-				select
-					date,
-					identifier,
-					input,
-					output
+					select
+						date,
+						identifier,
+						input,
+						output
 					from (
 						select
 							date,
@@ -99,7 +99,7 @@ pub async fn props(
 			)
 			.bind(&model_id.to_string())
 			.bind(after)
-			.bind(RESULT_LIMIT)
+			.bind(N_PREDICTIONS_PER_PAGE)
 			.fetch_all(&mut *db)
 			.await?;
 			rows
@@ -122,27 +122,27 @@ pub async fn props(
 			)
 			.bind(&model_id.to_string())
 			.bind(before)
-			.bind(RESULT_LIMIT)
+			.bind(N_PREDICTIONS_PER_PAGE)
 			.fetch_all(&mut *db)
 			.await?
 		}
 		(None, None) => {
 			sqlx::query(
 				"
-				select
-					date,
-					identifier,
-					input,
-					output
-				from predictions
-					where
-						model_id = ?1
-				order by date desc
-				limit ?2
-			",
+					select
+						date,
+						identifier,
+						input,
+						output
+					from predictions
+						where
+							model_id = ?1
+					order by date desc
+					limit ?2
+				",
 			)
 			.bind(&model_id.to_string())
-			.bind(RESULT_LIMIT)
+			.bind(N_PREDICTIONS_PER_PAGE)
 			.fetch_all(&mut *db)
 			.await?
 		}
@@ -156,14 +156,13 @@ pub async fn props(
 			(Some(first_row_timestamp), Some(last_row_timestamp)) => {
 				let newer_predictions_exist: bool = sqlx::query(
 					"
-				select case when exists (
-					select *
-						from predictions
-						where model_id = ?1
-							and date > ?2
-					)
-					then 1 else 0 end
-				",
+						select case when exists (
+							select 1
+							from predictions
+							where model_id = ?1 and date > ?2
+						)
+						then 1 else 0 end
+					",
 				)
 				.bind(&model_id.to_string())
 				.bind(first_row_timestamp)
@@ -173,10 +172,9 @@ pub async fn props(
 				let older_predictions_exist: bool = sqlx::query(
 					"
 					select case when exists (
-						select *
-							from predictions
-							where model_id = ?1
-								and date < ?2
+						select 1
+						from predictions
+						where model_id = ?1 and date < ?2
 					)
 					then 1 else 0 end
 				",

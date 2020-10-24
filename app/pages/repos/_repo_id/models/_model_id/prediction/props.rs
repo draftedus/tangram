@@ -177,7 +177,7 @@ pub async fn props(
 			}
 		})
 		.collect();
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let inner = if let Some(search_params) = search_params {
 		let prediction = predict(model, columns.as_slice(), search_params);
 		let input_table_rows = columns

@@ -353,7 +353,7 @@ pub async fn props(
 			)
 		}
 	};
-	let model_layout_info = get_model_layout_info(&mut db, model_id).await?;
+	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
 	Ok(Props {
 		overall_column_stats_table,

@@ -24,6 +24,9 @@ pub async fn props(
 	context: &Context,
 	organization_id: &str,
 ) -> Result<Props> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let mut db = context
 		.pool
 		.begin()

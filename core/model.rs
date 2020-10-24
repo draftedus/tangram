@@ -102,7 +102,7 @@ pub struct LinearRegressor {
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -112,7 +112,7 @@ pub struct TreeRegressor {
 	pub trees: Vec<Tree>,
 	pub train_options: TreeModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -234,7 +234,7 @@ pub struct LinearBinaryClassifier {
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -244,7 +244,7 @@ pub struct TreeBinaryClassifier {
 	pub trees: Vec<Tree>,
 	pub train_options: TreeModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -313,7 +313,7 @@ pub struct LinearMulticlassClassifier {
 	pub means: Vec<f32>,
 	pub train_options: LinearModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 
@@ -325,7 +325,7 @@ pub struct TreeMulticlassClassifier {
 	pub trees: Vec<Tree>,
 	pub train_options: TreeModelTrainOptions,
 	pub feature_groups: Vec<FeatureGroup>,
-	pub losses: Vec<f32>,
+	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
 

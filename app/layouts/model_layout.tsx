@@ -1,5 +1,5 @@
 import './model_layout.css'
-import { Layout } from './topbar_layout'
+import { TopbarLayout } from './topbar_layout'
 import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { ComponentChildren, Fragment, h } from 'preact'
@@ -16,13 +16,18 @@ export type ModelLayoutInfo = {
 	modelId: string
 	modelTitle: string
 	modelVersionIds: string[]
-	owner?: Owner
+	owner: Owner | null
 	title: string
+	userAvatar: UserAvatar | null
 }
 
 type Owner = {
 	name: string
 	url: string
+}
+
+type UserAvatar = {
+	avatarUrl: string | null
 }
 
 export enum ModelSideNavItem {
@@ -42,7 +47,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 		modelVersionId => modelVersionId == props.info.modelId,
 	)
 	return (
-		<Layout pinwheelInfo={props.pinwheelInfo}>
+		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
 			<div class="model-layout">
 				<div class="model-layout-topbar">
 					<div class="model-layout-owner-slash-repo-slash-model-wrapper">
@@ -103,7 +108,7 @@ export function ModelLayout(props: ModelLayoutProps) {
 					<div class="model-layout-content">{props.children}</div>
 				</div>
 			</div>
-		</Layout>
+		</TopbarLayout>
 	)
 }
 

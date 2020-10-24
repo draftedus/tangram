@@ -2,7 +2,7 @@ import { Props } from './props'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { Fragment, h } from 'preact'
+import { h } from 'preact'
 
 export default function ProductionPredictionIndexPage(props: Props) {
 	return renderPage(
@@ -47,36 +47,31 @@ export default function ProductionPredictionIndexPage(props: Props) {
 				</ui.Table>
 				<div class="pagination-buttons">
 					<ui.Form>
-						{props.pagination.after ? (
-							<Fragment>
-								<input
-									name="after"
-									type="hidden"
-									value={props.pagination.after}
-								/>
-								<ui.Button type="submit">{'Newer'}</ui.Button>
-							</Fragment>
-						) : (
-							<ui.Button disabled={true} type="submit">
-								{'Newer'}
-							</ui.Button>
+						{props.pagination.after && (
+							<input
+								name="after"
+								type="hidden"
+								value={props.pagination.after}
+							/>
 						)}
+						<ui.Button disabled={props.pagination.after === null} type="submit">
+							{'Newer'}
+						</ui.Button>
 					</ui.Form>
 					<ui.Form>
-						{props.pagination.before ? (
-							<Fragment>
-								<input
-									name="before"
-									type="hidden"
-									value={props.pagination.before}
-								/>
-								<ui.Button type="submit">{'Older'}</ui.Button>
-							</Fragment>
-						) : (
-							<ui.Button disabled={true} type="submit">
-								{'Older'}
-							</ui.Button>
+						{props.pagination.before && (
+							<input
+								name="before"
+								type="hidden"
+								value={props.pagination.before}
+							/>
 						)}
+						<ui.Button
+							disabled={props.pagination.before === null}
+							type="submit"
+						>
+							{'Older'}
+						</ui.Button>
 					</ui.Form>
 				</div>
 			</ui.S1>

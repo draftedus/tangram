@@ -1,5 +1,5 @@
 import { PinwheelInfo } from '@tangramhq/pinwheel'
-import { InputTable, Prediction } from 'common/predict'
+import { InputTable, Prediction } from 'common/prediction_result'
 import { ModelLayoutInfo } from 'layouts/model_layout'
 
 export type Props = {
