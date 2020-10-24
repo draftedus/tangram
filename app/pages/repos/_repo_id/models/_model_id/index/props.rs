@@ -37,7 +37,7 @@ pub struct RegressorProps {
 	id: String,
 	metrics: RegressorInnerMetrics,
 	training_summary: TrainingSummary,
-	losses_chart_data: Vec<f32>,
+	losses_chart_data: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize)]
@@ -55,7 +55,7 @@ pub struct BinaryClassifierProps {
 	id: String,
 	metrics: BinaryClassifierInnerMetrics,
 	training_summary: TrainingSummary,
-	losses_chart_data: Vec<f32>,
+	losses_chart_data: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize)]
@@ -74,7 +74,7 @@ pub struct MulticlassClassifierProps {
 	id: String,
 	metrics: MulticlassClassifierInnerMetrics,
 	training_summary: TrainingSummary,
-	losses_chart_data: Vec<f32>,
+	losses_chart_data: Option<Vec<f32>>,
 }
 
 #[derive(serde::Serialize)]

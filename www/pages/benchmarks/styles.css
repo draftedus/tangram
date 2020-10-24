@@ -1,0 +1,13 @@
+.benchmarks_table_chart_grid {
+	display: grid;
+	grid: auto / 1fr 1fr;
+	grid-gap: 2rem;
+}
+
+@media (max-width: 1199px) {
+	.benchmarks_table_chart_grid {
+		display: grid;
+		grid: auto auto / 1fr;
+		grid-gap: 2rem;
+	}
+}

@@ -18,7 +18,7 @@ export type Inner =
 
 export type RegressorProps = {
 	id: string
-	lossesChartData: number[]
+	lossesChartData: number[] | null
 	metrics: {
 		baselineMse: number
 		baselineRmse: number
@@ -38,7 +38,7 @@ export type RegressorProps = {
 
 export type BinaryClassifierProps = {
 	id: string
-	lossesChartData: number[]
+	lossesChartData: number[] | null
 	metrics: {
 		accuracy: number
 		aucRoc: number
@@ -58,7 +58,7 @@ export type BinaryClassifierProps = {
 
 export type MulticlassClassifierProps = {
 	id: string
-	lossesChartData: number[]
+	lossesChartData: number[] | null
 	metrics: {
 		accuracy: number
 		baselineAccuracy: number

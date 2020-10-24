@@ -6,7 +6,7 @@ export type Props = {
 		after: string | null
 		before: string | null
 	}
-	predictionTable: { rows: PredictionTableRow[] }
+	predictionTable: { rows: PredictionTableRow[] } | null
 }
 
 type PredictionTableRow = {

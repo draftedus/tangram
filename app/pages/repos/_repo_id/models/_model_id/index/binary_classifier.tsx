@@ -5,7 +5,7 @@ import { MetricsRow } from 'common/metrics_row'
 import { h } from 'preact'
 
 export function BinaryClassifierIndexPage(props: BinaryClassifierProps) {
-	let lossesChartData = [
+	let lossesChartData = props.lossesChartData && [
 		{
 			color: ui.colors.blue,
 			data: props.lossesChartData.map((loss, index) => ({
@@ -78,14 +78,16 @@ export function BinaryClassifierIndexPage(props: BinaryClassifierProps) {
 						/>
 					</ui.Card>
 				</MetricsRow>
-				<LineChart
-					data={lossesChartData}
-					id="loss_curve"
-					title="Training Loss Curve"
-					xAxisTitle="Epoch"
-					yAxisTitle="Loss"
-					yMin={0}
-				/>
+				{lossesChartData && (
+					<LineChart
+						data={lossesChartData}
+						id="loss_curve"
+						title="Training Loss Curve"
+						xAxisTitle="Epoch"
+						yAxisTitle="Loss"
+						yMin={0}
+					/>
+				)}
 			</ui.S2>
 		</ui.S1>
 	)

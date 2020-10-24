@@ -20,7 +20,7 @@ const N_PREDICTIONS_PER_PAGE: i64 = 10;
 #[serde(rename_all = "camelCase")]
 pub struct Props {
 	model_layout_info: ModelLayoutInfo,
-	prediction_table: PredictionTable,
+	prediction_table: Option<PredictionTable>,
 	pagination: Pagination,
 }
 
@@ -156,12 +156,9 @@ pub async fn props(
 			(Some(first_row_timestamp), Some(last_row_timestamp)) => {
 				let newer_predictions_exist: bool = sqlx::query(
 					"
-						select case when exists (
-							select 1
+						select count(*) > 0
 							from predictions
 							where model_id = ?1 and date > ?2
-						)
-						then 1 else 0 end
 					",
 				)
 				.bind(&model_id.to_string())
@@ -171,12 +168,9 @@ pub async fn props(
 				.get(0);
 				let older_predictions_exist: bool = sqlx::query(
 					"
-					select case when exists (
-						select 1
+					select count(*) > 0
 						from predictions
 						where model_id = ?1 and date < ?2
-					)
-					then 1 else 0 end
 				",
 				)
 				.bind(&model_id.to_string())
@@ -224,8 +218,12 @@ pub async fn props(
 	};
 	Ok(Props {
 		model_layout_info,
-		prediction_table: PredictionTable {
-			rows: prediction_table_rows,
+		prediction_table: if prediction_table_rows.is_empty() {
+			None
+		} else {
+			Some(PredictionTable {
+				rows: prediction_table_rows,
+			})
 		},
 		pagination,
 	})

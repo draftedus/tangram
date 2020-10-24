@@ -7,7 +7,7 @@ import { h } from 'preact'
 export function MulticlassClassifierIndexPage(
 	props: MulticlassClassifierProps,
 ) {
-	let lossesChartData = [
+	let lossesChartData = props.lossesChartData && [
 		{
 			color: ui.colors.blue,
 			data: props.lossesChartData.map((loss, index) => ({
@@ -89,14 +89,16 @@ export function MulticlassClassifierIndexPage(
 						})}
 					</ui.TableBody>
 				</ui.Table>
-				<LineChart
-					data={lossesChartData}
-					id="loss_curve"
-					title="Training Loss Curve"
-					xAxisTitle="Epoch"
-					yAxisTitle="Loss"
-					yMin={0}
-				/>
+				{lossesChartData && (
+					<LineChart
+						data={lossesChartData}
+						id="loss_curve"
+						title="Training Loss Curve"
+						xAxisTitle="Epoch"
+						yAxisTitle="Loss"
+						yMin={0}
+					/>
+				)}
 			</ui.S2>
 		</ui.S1>
 	)

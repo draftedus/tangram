@@ -21,6 +21,20 @@ use tangram_util::id::Id;
 pub struct Props {
 	model_layout_info: ModelLayoutInfo,
 	identifier: String,
+	inner: Inner,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(tag = "type", content = "value")]
+pub enum Inner {
+	NotFound,
+	Found(Found),
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Found {
 	date: String,
 	input_table: InputTable,
 	prediction: Prediction,
@@ -66,26 +80,31 @@ pub async fn props(
 	)
 	.bind(&model_id.to_string())
 	.bind(identifier)
-	.fetch_one(&mut *db)
+	.fetch_optional(&mut *db)
 	.await?;
-	let date: i64 = row.get(0);
-	let date: DateTime<Utc> = Utc.timestamp(date, 0);
-	println!("date: {:?}", date);
-	println!("{:?}", timezone);
-	let date = date.with_timezone(&timezone);
-	println!("date: {:?}", date);
-	let identifier: String = row.get(1);
-	let input: String = row.get(2);
-	let input: Vec<u8> = base64::decode(input).unwrap();
-	let input: serde_json::Map<String, serde_json::Value> = serde_json::from_slice(&input).unwrap();
-	let prediction_output = predict(model, input);
-	db.commit().await?;
+	let inner = match row {
+		Some(row) => {
+			let date: i64 = row.get(0);
+			let date: DateTime<Utc> = Utc.timestamp(date, 0);
+			let date = date.with_timezone(&timezone);
+			let input: String = row.get(2);
+			let input: Vec<u8> = base64::decode(input).unwrap();
+			let input: serde_json::Map<String, serde_json::Value> =
+				serde_json::from_slice(&input).unwrap();
+			let prediction_output = predict(model, input);
+			db.commit().await?;
+			Inner::Found(Found {
+				input_table: prediction_output.input_table,
+				prediction: prediction_output.prediction,
+				date: date.to_rfc3339(),
+			})
+		}
+		None => Inner::NotFound,
+	};
 	Ok(Props {
 		model_layout_info,
-		identifier,
-		input_table: prediction_output.input_table,
-		prediction: prediction_output.prediction,
-		date: date.to_rfc3339(),
+		identifier: identifier.to_owned(),
+		inner,
 	})
 }
 
