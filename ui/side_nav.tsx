@@ -1,5 +1,5 @@
 import './side_nav.css'
-import { cx } from '@tangramhq/pinwheel'
+import { cx } from './util'
 import { ComponentChildren, h } from 'preact'
 
 type SideNavProps = { children?: ComponentChildren }

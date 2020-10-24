@@ -1,6 +1,6 @@
 import { Level } from './alert'
 import './alert_icon.css'
-import { cx } from '@tangramhq/pinwheel'
+import { cx } from './util'
 import { h } from 'preact'
 
 type AlertProps = {

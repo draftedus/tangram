@@ -7,7 +7,7 @@
 		"preact-render-to-string": "5.1.11"
 	},
 	"license": "UNLICENSED",
-	"main": "mod.ts",
+	"main": "lib.ts",
 	"name": "@tangramhq/www",
 	"version": "0.0.0"
 }

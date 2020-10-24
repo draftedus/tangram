@@ -1,4 +1,4 @@
-import type { PinwheelInfo } from './mod'
+import type { PinwheelInfo } from './lib'
 import { ComponentChildren, Fragment, h } from 'preact'
 
 export type HeadProps = {

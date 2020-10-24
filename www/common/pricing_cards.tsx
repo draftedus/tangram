@@ -1,5 +1,4 @@
 import './pricing_cards.css'
-import { cx } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { JSX, h } from 'preact'
 
@@ -88,7 +87,7 @@ type PricingCardProps = {
 function PricingCard(props: PricingCardProps) {
 	return (
 		<div
-			class={cx(
+			class={ui.cx(
 				'pricing-card-grid',
 				props.selected && 'pricing-card-grid-selected',
 			)}

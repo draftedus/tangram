@@ -1,3 +1,10 @@
+/** Merge CSS class names together. */
+export function cx(
+	...classes: Array<string | null | undefined | false>
+): string {
+	return classes.filter(c => c).join(' ')
+}
+
 /**
  * Format a value between 0 and 1 as a percent, rounded to the nearest percent.
  * For example, 0.75105 will format as "75%".

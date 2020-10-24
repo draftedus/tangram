@@ -1,5 +1,5 @@
 import './layout.css'
-import { cx } from '@tangramhq/pinwheel'
+import { cx } from './util'
 import { ComponentChildren, h } from 'preact'
 
 type Props = { children?: ComponentChildren }

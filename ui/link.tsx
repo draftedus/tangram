@@ -1,5 +1,5 @@
 import './link.css'
-import { cx } from '@tangramhq/pinwheel'
+import { cx } from './util'
 import { ComponentChildren, h } from 'preact'
 
 export type LinkProps = {

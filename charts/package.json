@@ -3,7 +3,7 @@
 		"preact": "10.5.5"
 	},
 	"license": "UNLICENSED",
-	"main": "mod.ts",
+	"main": "lib.ts",
 	"name": "@tangramhq/charts",
 	"version": "0.0.0"
 }

@@ -1,6 +1,6 @@
 import './confusion_matrix_comparison.css'
 import { Token } from './token'
-import { cx } from '@tangramhq/pinwheel'
+import { cx } from './util'
 import { ComponentChildren, h } from 'preact'
 
 // |-----------------------------------------------------------|

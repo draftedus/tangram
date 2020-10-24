@@ -1,5 +1,5 @@
 import './tab_bar.css'
-import { cx } from '@tangramhq/pinwheel'
+import { cx } from './util'
 import { ComponentChildren, h } from 'preact'
 
 type TabBarProps = { children?: ComponentChildren }

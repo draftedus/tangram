@@ -3,7 +3,7 @@
 		"esbuild": "0.7.17"
 	},
 	"license": "MIT",
-	"main": "mod.ts",
+	"main": "lib.ts",
 	"name": "@tangramhq/pinwheel",
 	"version": "0.0.0"
 }

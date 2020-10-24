@@ -1,6 +1,6 @@
 import { Level } from './alert'
 import './callout.css'
-import { cx } from '@tangramhq/pinwheel'
+import { cx } from './util'
 import { ComponentChildren, h } from 'preact'
 
 type CalloutProps = {
