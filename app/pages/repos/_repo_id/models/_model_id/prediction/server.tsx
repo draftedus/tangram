@@ -10,6 +10,7 @@ import {
 } from './props'
 import './styles.css'
 import { BarChart, BoxChart } from '@tangramhq/charts'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { PredictionResult } from 'common/prediction_result'
 import { renderPage } from 'common/render'
@@ -22,7 +23,7 @@ import {
 import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { Fragment, h } from 'preact'
 
-export default function PredictPage(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	let inner
 	switch (props.inner.type) {
 		case InnerType.PredictionForm:
@@ -38,8 +39,10 @@ export default function PredictPage(props: Props) {
 	}
 	return renderPage(
 		<ModelLayout
-			info={props.modelLayoutInfo}
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			modelLayoutInfo={props.modelLayoutInfo}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedItem={ModelSideNavItem.Prediction}
 		>
 			<ui.S1>

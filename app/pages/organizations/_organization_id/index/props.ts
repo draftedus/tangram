@@ -1,5 +1,3 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
-
 export type Props = {
 	card: {
 		brand: string
@@ -16,7 +14,6 @@ export type Props = {
 		isAdmin: boolean
 	}>
 	name: string
-	pinwheelInfo: PinwheelInfo
 	plan: Plan
 	repos: Array<{
 		id: string

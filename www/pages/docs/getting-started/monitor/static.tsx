@@ -3,7 +3,7 @@ import { LogModelInit } from './log_model_init'
 import { LogPrediction } from './log_prediction'
 import { LogPredictionBatched } from './log_prediction_batched'
 import { LogTrueValue } from './log_true_value'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { DocsLayout, DocsPage } from 'layouts/docs_layout'
@@ -17,14 +17,12 @@ import productionColumnStatsUnknownValues from './screenshots/production_column_
 import productionMetricsOverview from './screenshots/production_metrics_overview.png'
 import productionStatsColumnStats from './screenshots/production_stats_column_stats.png'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default (props: Props) =>
-	renderPage(
+export default (pageInfo: PageInfo) => {
+	return renderPage(
 		<DocsLayout
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedPage={DocsPage.Monitor}
 		>
 			<ui.S1>
@@ -161,3 +159,4 @@ export default (props: Props) =>
 			</ui.S1>
 		</DocsLayout>,
 	)
+}

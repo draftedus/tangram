@@ -1,17 +1,23 @@
 import { Layout } from './layout'
 import './page_layout.css'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 
 type PageLayoutProps = {
 	background?: boolean
 	children?: ComponentChildren
-	pinwheelInfo: PinwheelInfo
+	clientJsSrc?: string
+	cssSrcs?: string[]
+	preloadJsSrcs?: string[]
 }
 
 export function PageLayout(props: PageLayoutProps) {
 	return (
-		<Layout background={props.background} pinwheelInfo={props.pinwheelInfo}>
+		<Layout
+			background={props.background}
+			clientJsSrc={props.clientJsSrc}
+			cssSrcs={props.cssSrcs}
+			preloadJsSrcs={props.preloadJsSrcs}
+		>
 			<div class="page-layout-wrapper">{props.children}</div>
 		</Layout>
 	)

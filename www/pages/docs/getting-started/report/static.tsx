@@ -1,4 +1,4 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { DocsLayout, DocsPage } from 'layouts/docs_layout'
@@ -14,14 +14,12 @@ import trainingStatsHistogramImageURL from './screenshots/training_stats_histogr
 import trainingStatsOverviewImageURL from './screenshots/training_stats_overview.png'
 import uploadImageURL from './screenshots/upload.png'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default (props: Props) =>
-	renderPage(
+export default (pageInfo: PageInfo) => {
+	return renderPage(
 		<DocsLayout
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedPage={DocsPage.Report}
 		>
 			<ui.S1>
@@ -125,3 +123,4 @@ export default (props: Props) =>
 			</ui.S1>
 		</DocsLayout>,
 	)
+}

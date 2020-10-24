@@ -1,29 +1,38 @@
 import './model_layout.css'
 import { TopbarLayout } from './topbar_layout'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { ComponentChildren, Fragment, h } from 'preact'
 
 type ModelLayoutProps = {
 	children?: ComponentChildren
-	info: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
+	clientJsSrc?: string
+	cssSrcs?: string[]
+	modelLayoutInfo: ModelLayoutInfo
+	preloadJsSrcs?: string[]
 	selectedItem: ModelSideNavItem
 }
 
 export type ModelLayoutInfo = {
-	id: string
 	modelId: string
-	modelTitle: string
 	modelVersionIds: string[]
 	owner: Owner | null
-	title: string
+	repoId: string
+	repoTitle: string
 	userAvatar: UserAvatar | null
 }
 
-type Owner = {
+type Owner =
+	| { type: 'user'; value: UserOwner }
+	| { type: 'organization'; value: OrganizationOwner }
+
+type UserOwner = {
+	email: string
+	id: string
+}
+
+type OrganizationOwner = {
+	id: string
 	name: string
-	url: string
 }
 
 type UserAvatar = {
@@ -43,66 +52,27 @@ export enum ModelSideNavItem {
 }
 
 export function ModelLayout(props: ModelLayoutProps) {
-	let selectedModelVersionId = props.info.modelVersionIds.find(
-		modelVersionId => modelVersionId == props.info.modelId,
+	let selectedModelVersionId = props.modelLayoutInfo.modelVersionIds.find(
+		modelVersionId => modelVersionId == props.modelLayoutInfo.modelId,
 	)
+	if (!selectedModelVersionId) throw Error()
 	return (
-		<TopbarLayout pinwheelInfo={props.pinwheelInfo}>
+		<TopbarLayout
+			clientJsSrc={props.clientJsSrc}
+			cssSrcs={props.cssSrcs}
+			preloadJsSrcs={props.preloadJsSrcs}
+		>
 			<div class="model-layout">
-				<div class="model-layout-topbar">
-					<div class="model-layout-owner-slash-repo-slash-model-wrapper">
-						<div class="model-layout-owner-slash-repo-wrapper">
-							{props.info.owner && (
-								<>
-									<a
-										class="model-layout-owner-slash-repo-link"
-										href={props.info.owner.url}
-										title="owner"
-									>
-										{props.info.owner.name}
-									</a>
-									<span class="model-layout-owner-slash-repo-slash">{'/'}</span>
-								</>
-							)}
-							<a
-								class="model-layout-owner-slash-repo-link"
-								href={`/repos/${props.info.id}/`}
-								title="repo"
-							>
-								{props.info.title}
-							</a>
-						</div>
-					</div>
-					<div class="model-layout-topbar-actions-wrapper">
-						<div class="model-layout-topbar-version-select-wrapper">
-							{'Version:'}
-							<ui.Details
-								options={
-									props.info.modelVersionIds.map(modelVersionId => ({
-										href: `/repos/${props.info.id}/models/${modelVersionId}/`,
-										name: modelVersionId,
-									})) ?? []
-								}
-								summary={selectedModelVersionId ?? null}
-							/>
-						</div>
-						<ui.Button
-							download={`${props.info.modelTitle}.tangram`}
-							href={`/repos/${props.info.id}/models/${props.info.modelId}/download`}
-						>
-							{'Download'}
-						</ui.Button>
-						<ui.Button href={`/repos/${props.info.id}/models/new`}>
-							{'Upload New Version'}
-						</ui.Button>
-					</div>
-				</div>
+				<ModelLayoutTopbar
+					modelLayoutInfo={props.modelLayoutInfo}
+					selectedModelVersionId={selectedModelVersionId}
+				/>
 				<div class="model-layout-grid">
 					<div class="model-layout-side-nav-wrapper">
 						<ModelSideNav
-							id={props.info.modelId}
+							id={props.modelLayoutInfo.modelId}
+							repoTitle={props.modelLayoutInfo.repoTitle}
 							selectedItem={props.selectedItem}
-							title={props.info.modelTitle}
 						/>
 					</div>
 					<div class="model-layout-content">{props.children}</div>
@@ -112,10 +82,77 @@ export function ModelLayout(props: ModelLayoutProps) {
 	)
 }
 
+type ModelLayoutTopbarProps = {
+	modelLayoutInfo: ModelLayoutInfo
+	selectedModelVersionId: string
+}
+
+function ModelLayoutTopbar(props: ModelLayoutTopbarProps) {
+	let owner = props.modelLayoutInfo.owner
+	let ownerTitle
+	let ownerUrl
+	if (owner?.type === 'user') {
+		ownerTitle = owner.value.email
+		ownerUrl = `/user`
+	} else if (owner?.type === 'organization') {
+		ownerTitle = owner.value.name
+		ownerUrl = `/organizations/${owner.value.id}`
+	}
+	return (
+		<div class="model-layout-topbar">
+			<div class="model-layout-owner-slash-repo-slash-model-wrapper">
+				<div class="model-layout-owner-slash-repo-wrapper">
+					{props.modelLayoutInfo.owner && (
+						<>
+							<a
+								class="model-layout-owner-slash-repo-link"
+								href={ownerUrl}
+								title="owner"
+							>
+								{ownerTitle}
+							</a>
+							<span class="model-layout-owner-slash-repo-slash">{'/'}</span>
+						</>
+					)}
+					<a
+						class="model-layout-owner-slash-repo-link"
+						href={`/repos/${props.modelLayoutInfo.repoId}/`}
+						title="repo"
+					>
+						{props.modelLayoutInfo.repoTitle}
+					</a>
+				</div>
+			</div>
+			<div class="model-layout-topbar-actions-wrapper">
+				<div class="model-layout-topbar-version-select-wrapper">
+					<ui.Details
+						options={
+							props.modelLayoutInfo.modelVersionIds.map(modelVersionId => ({
+								href: `/repos/${props.modelLayoutInfo.repoId}/models/${modelVersionId}/`,
+								title: modelVersionId,
+							})) ?? []
+						}
+						summary={`Version: ${props.selectedModelVersionId}`}
+					/>
+				</div>
+				<ui.Button
+					download={`${props.modelLayoutInfo.repoTitle}.tangram`}
+					href={`/repos/${props.modelLayoutInfo.repoId}/models/${props.modelLayoutInfo.modelId}/download`}
+				>
+					{'Download'}
+				</ui.Button>
+				<ui.Button href={`/repos/${props.modelLayoutInfo.repoId}/models/new`}>
+					{'Upload New Version'}
+				</ui.Button>
+			</div>
+		</div>
+	)
+}
+
 type ModelSideNavProps = {
 	id: string
+	repoTitle: string
 	selectedItem: ModelSideNavItem
-	title: string
 }
 
 function ModelSideNav(props: ModelSideNavProps) {

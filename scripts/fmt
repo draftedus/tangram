@@ -1,2 +1,2 @@
 cargo fmt
-yarn run -s prettier --loglevel silent --write "**/*.{ts,tsx,css}"
+npm exec prettier -- --loglevel silent --write "**/*.{ts,tsx,css}"

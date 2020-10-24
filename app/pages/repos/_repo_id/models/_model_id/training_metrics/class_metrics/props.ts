@@ -1,4 +1,3 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { ModelLayoutInfo } from 'layouts/model_layout'
 
 export type Props = {
@@ -13,7 +12,7 @@ export type Props = {
 		truePositives: number
 	}
 	classes: string[]
+
 	id: string
 	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
 }

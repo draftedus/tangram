@@ -1,16 +1,21 @@
-import { Body, Head, PinwheelInfo } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 
 export type DocumentProps = {
 	children?: ComponentChildren
-	pinwheelInfo: PinwheelInfo
+	clientJsSrc?: string
+	cssSrcs?: string[]
+	preloadJsSrcs?: string[]
 }
 
 export function Document(props: DocumentProps) {
 	return (
 		<html lang="en">
 			<head>
-				<Head pinwheelInfo={props.pinwheelInfo} />
+				<meta charSet="utf-8" />
+				<meta content="width=device-width, initial-scale=1" name="viewport" />
+				{props.preloadJsSrcs?.map(modulePath => (
+					<link href={modulePath} key={modulePath} rel="modulepreload" />
+				))}
 				<link href="/favicon.png" rel="icon" type="image/png" />
 				<link
 					as="font"
@@ -30,7 +35,8 @@ export function Document(props: DocumentProps) {
 				/>
 			</head>
 			<body>
-				<Body pinwheelInfo={props.pinwheelInfo}>{props.children}</Body>
+				{props.children}
+				{props.clientJsSrc && <script src={props.clientJsSrc} type="module" />}
 			</body>
 		</html>
 	)

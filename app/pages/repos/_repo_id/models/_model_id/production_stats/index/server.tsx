@@ -6,6 +6,7 @@ import {
 	Task,
 } from './props'
 import { BarChart, BoxChart } from '@tangramhq/charts'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { DateWindowSelectField } from 'common/date_window_select_field'
 import { renderPage } from 'common/render'
@@ -23,7 +24,7 @@ import {
 import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { h } from 'preact'
 
-export default function ProductionStatsIndexPage(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	let predictionCountData = [
 		{
 			color: ui.colors.blue,
@@ -41,8 +42,10 @@ export default function ProductionStatsIndexPage(props: Props) {
 	)
 	return renderPage(
 		<ModelLayout
-			info={props.modelLayoutInfo}
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			modelLayoutInfo={props.modelLayoutInfo}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedItem={ModelSideNavItem.ProductionStats}
 		>
 			<ui.S1>

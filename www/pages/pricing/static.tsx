@@ -1,18 +1,19 @@
 import './styles.css'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { PricingCards } from 'common/pricing_cards'
 import { renderPage } from 'common/render'
 import { PageLayout } from 'layouts/page_layout'
 import { h } from 'preact'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default function Pricing(props: Props) {
+export default (pageInfo: PageInfo) => {
 	return renderPage(
-		<PageLayout background={true} pinwheelInfo={props.pinwheelInfo}>
+		<PageLayout
+			background={true}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
+		>
 			<ui.S1>
 				<ui.H1 center={true}>{'Pricing'}</ui.H1>
 				<h2 class="pricing-subtitle">

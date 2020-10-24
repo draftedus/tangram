@@ -1,9 +1,8 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { ModelLayoutInfo } from 'layouts/model_layout'
 
 export type Props = {
 	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
+
 	tuning: TuningProps | null
 }
 

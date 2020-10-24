@@ -1,4 +1,3 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { DateWindow, DateWindowInterval } from 'common/time'
 import { ModelLayoutInfo } from 'layouts/model_layout'
 
@@ -23,6 +22,7 @@ export type Props = {
 		}>
 	}>
 	classes: string[]
+
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 	id: string
@@ -31,7 +31,7 @@ export type Props = {
 		classMetrics: OverallClassMetrics[]
 		label: string
 	}
-	pinwheelInfo: PinwheelInfo
+
 	title: string
 }
 

@@ -1,15 +1,15 @@
 import { AppLayout } from './layouts/app_layout'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default function ErrorPage(props: Props) {
+export default (pageInfo: PageInfo) => {
 	return (
-		<AppLayout pinwheelInfo={props.pinwheelInfo}>
+		<AppLayout
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
+		>
 			<ui.S1>
 				<ui.H1>{'Error'}</ui.H1>
 				<ui.P>

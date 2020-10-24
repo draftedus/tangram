@@ -1,18 +1,23 @@
 import './docs_layout.css'
 import { Layout } from './layout'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { ComponentChildren, h } from 'preact'
 
 type DocsLayoutProps = {
 	children?: ComponentChildren
-	pinwheelInfo: PinwheelInfo
+	clientJsSrc?: string
+	cssSrcs?: string[]
+	preloadJsSrcs?: string[]
 	selectedPage: DocsPage
 }
 
 export function DocsLayout(props: DocsLayoutProps) {
 	return (
-		<Layout pinwheelInfo={props.pinwheelInfo}>
+		<Layout
+			clientJsSrc={props.clientJsSrc}
+			cssSrcs={props.cssSrcs}
+			preloadJsSrcs={props.preloadJsSrcs}
+		>
 			<div class="docs-layout-wrapper">
 				<PageNav selectedPage={props.selectedPage} />
 				<div>{props.children}</div>

@@ -6,7 +6,7 @@ import {
 	RegressorProps,
 } from './props'
 import { RegressorProductionMetricsPage } from './regressor'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { PageInfo } from '@tangramhq/pinwheel'
 import { renderPage } from 'common/render'
 import {
 	ModelLayout,
@@ -18,7 +18,6 @@ import { h } from 'preact'
 export type Props = {
 	inner: Inner
 	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
 }
 
 export type Inner =
@@ -41,7 +40,7 @@ export enum Type {
 	MulticlassClassifier = 'multiclass_classifier',
 }
 
-export default function ProductionMetricsPage(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	let inner
 	switch (props.inner.type) {
 		case Type.Regressor: {
@@ -65,8 +64,10 @@ export default function ProductionMetricsPage(props: Props) {
 	}
 	return renderPage(
 		<ModelLayout
-			info={props.modelLayoutInfo}
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			modelLayoutInfo={props.modelLayoutInfo}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedItem={ModelSideNavItem.ProductionMetrics}
 		>
 			{inner}

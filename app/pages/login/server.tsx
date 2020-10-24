@@ -1,12 +1,17 @@
 import { Props } from './props'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { AuthLayout } from 'layouts/auth_layout'
 import { h } from 'preact'
 
-export default function Login(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
-		<AuthLayout pinwheelInfo={props.pinwheelInfo}>
+		<AuthLayout
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
+		>
 			<ui.Form post={true}>
 				{props.error && (
 					<ui.Alert level={ui.Level.Danger}>{props.error}</ui.Alert>

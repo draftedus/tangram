@@ -1,14 +1,17 @@
 import { Props } from './props'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { h } from 'preact'
 
-export default function ProductionPredictionIndexPage(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
 		<ModelLayout
-			info={props.modelLayoutInfo}
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			modelLayoutInfo={props.modelLayoutInfo}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedItem={ModelSideNavItem.ProductionPredictions}
 		>
 			<ui.S1>

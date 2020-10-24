@@ -1,13 +1,12 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { DateWindow, DateWindowInterval } from 'common/time'
 import { ModelLayoutInfo } from 'layouts/model_layout'
 
 export type Props = {
 	columnName: string
+
 	dateWindow: DateWindow
 	inner: Inner
 	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
 }
 
 export type Inner =

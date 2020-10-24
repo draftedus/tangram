@@ -1,4 +1,3 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { DateWindow, DateWindowInterval } from 'common/time'
 import { ModelLayoutInfo } from 'layouts/model_layout'
 
@@ -14,7 +13,6 @@ export type Props = {
 		invalidCount: number
 		name: string
 	}>
-	pinwheelInfo: PinwheelInfo
 	predictionCountChart: Array<{
 		count: number
 		label: string

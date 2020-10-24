@@ -6,12 +6,12 @@ use tangram_util::id::Id;
 #[derive(serde::Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelLayoutInfo {
-	pub id: String,
 	pub model_id: Id,
 	pub model_version_ids: Vec<Id>,
 	pub owner: Option<Owner>,
+	pub repo_id: String,
+	pub repo_title: String,
 	pub topbar_avatar: Option<TopbarAvatar>,
-	pub title: String,
 }
 
 #[derive(serde::Serialize, Clone, Debug)]
@@ -21,9 +21,11 @@ pub struct TopbarAvatar {
 }
 
 #[derive(serde::Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
+#[serde(tag = "type", content = "value")]
 pub enum Owner {
+	#[serde(rename = "user")]
 	User { id: Id, email: String },
+	#[serde(rename = "organization")]
 	Organization { id: Id, name: String },
 }
 
@@ -54,10 +56,10 @@ pub async fn get_model_layout_info(
 	.bind(&model_id.to_string())
 	.fetch_one(&mut *db)
 	.await?;
-	let id: String = row.get(0);
-	let id: Id = id.parse()?;
-	let title: String = row.get(1);
-	let model_version_ids = super::repos::get_model_version_ids(&mut db, id).await?;
+	let repo_id: String = row.get(0);
+	let repo_id: Id = repo_id.parse()?;
+	let repo_title: String = row.get(1);
+	let model_version_ids = super::repos::get_model_version_ids(&mut db, repo_id).await?;
 	let owner_organization_id: Option<String> = row.get(2);
 	let owner_organization_name: Option<String> = row.get(3);
 	let owner_user_id: Option<String> = row.get(4);
@@ -81,11 +83,11 @@ pub async fn get_model_layout_info(
 		None
 	};
 	Ok(ModelLayoutInfo {
-		id: id.to_string(),
 		model_id,
 		model_version_ids,
 		owner,
-		title,
+		repo_id: repo_id.to_string(),
+		repo_title,
 		topbar_avatar,
 	})
 }

@@ -1,3 +1,9 @@
+import { createBarChart } from './bar_chart'
+import { createBoxChart } from './box_chart'
+import { Chart } from './chart'
+import { createFeatureContributionsChart } from './feature_contributions_chart'
+import { createLineChart } from './line_chart'
+
 export type {
 	BarChartData,
 	BarChartSeries,
@@ -26,12 +32,6 @@ export { createLineChart, LineStyle, PointStyle } from './line_chart'
 export { createFeatureContributionsChart } from './feature_contributions_chart'
 export { chartConfig, lightChartColors, darkChartColors } from './config'
 export * from './components'
-
-import { createBarChart } from './bar_chart'
-import { createBoxChart } from './box_chart'
-import { Chart } from './chart'
-import { createFeatureContributionsChart } from './feature_contributions_chart'
-import { createLineChart } from './line_chart'
 
 export function hydrateChart<Options>(
 	id: string,

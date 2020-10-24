@@ -1,12 +1,13 @@
 import { Props } from './props'
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import * as definitions from 'common/definitions'
 import { renderPage } from 'common/render'
 import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { h } from 'preact'
 
-export default function TrainingMetricsIndexPage(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	let rocData = props.rocCurveData.map(
 		({ falsePositiveRate, truePositiveRate }) => ({
 			x: falsePositiveRate,
@@ -33,8 +34,10 @@ export default function TrainingMetricsIndexPage(props: Props) {
 	]
 	return renderPage(
 		<ModelLayout
-			info={props.modelLayoutInfo}
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			modelLayoutInfo={props.modelLayoutInfo}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedItem={ModelSideNavItem.TrainingMetrics}
 		>
 			<ui.S1>

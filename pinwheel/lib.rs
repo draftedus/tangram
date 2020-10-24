@@ -146,32 +146,34 @@ impl Pinwheel {
 			let page_module_default_export_function: v8::Local<v8::Function> =
 				unsafe { v8::Local::cast(page_module_default_export) };
 
-			// Send the props to v8.
-			let json = serde_json::to_string(&props)?;
-			let json = v8::String::new(&mut scope, &json).unwrap();
-			let props = v8::json::parse(&mut scope, json).unwrap();
-			let props = props.to_object(&mut scope).unwrap();
-			let info = v8::Object::new(&mut scope);
+			// create the page info object
+			let page_info = v8::Object::new(&mut scope);
 			let client_js_src_literal = v8::String::new(&mut scope, "clientJsSrc").unwrap();
 			let client_js_src_string = if let Some(client_js_src) = client_js_src {
 				v8::String::new(&mut scope, &client_js_src).unwrap().into()
 			} else {
 				v8::undefined(&mut scope).into()
 			};
-			info.set(
+			page_info.set(
 				&mut scope,
 				client_js_src_literal.into(),
 				client_js_src_string,
 			);
-			let info_literal = v8::String::new(&mut scope, "pinwheelInfo").unwrap();
-			props.set(&mut scope, info_literal.into(), info.into());
-			let props = props.into();
+			let page_info = page_info.into();
 
-			// Call `renderPage` to render the page.
+			// Send the props to v8.
+			let json = serde_json::to_string(&props)?;
+			let json = v8::String::new(&mut scope, &json).unwrap();
+			let props = v8::json::parse(&mut scope, json).unwrap();
+
+			// Render the page.
 			let mut try_catch_scope = v8::TryCatch::new(&mut scope);
 			let undefined = v8::undefined(&mut try_catch_scope).into();
-			let html =
-				page_module_default_export_function.call(&mut try_catch_scope, undefined, &[props]);
+			let html = page_module_default_export_function.call(
+				&mut try_catch_scope,
+				undefined,
+				&[page_info, props],
+			);
 			if try_catch_scope.has_caught() {
 				let exception = try_catch_scope.exception().unwrap();
 				let mut scope = v8::HandleScope::new(&mut try_catch_scope);

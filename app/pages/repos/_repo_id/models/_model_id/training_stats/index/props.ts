@@ -1,4 +1,3 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { ModelLayoutInfo } from 'layouts/model_layout'
 
 export type Props = {
@@ -14,9 +13,10 @@ export type Props = {
 		uniqueCount: number | null
 		variance: number | null
 	}>
+
 	modelId: string
 	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
+
 	rowCount: number
 	targetColumnStats: {
 		columnType?: ColumnType

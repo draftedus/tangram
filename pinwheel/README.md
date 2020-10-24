@@ -6,7 +6,7 @@
 
 Pinwheel is Tangram's front end build tool that powers the Tangram app and website.
 
-When we started work on Tangram, we had a number of requirements/desirements to balance:
+When we started work on Tangram, we had a number of requirements to balance:
 
 1. We wanted to use the same code for user interface elements across both the app and website. This would give us a consistent look and feel and allow us to embed subcomponents of the app in the website.
 

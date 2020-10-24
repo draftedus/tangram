@@ -1,19 +1,17 @@
 import { Install } from '../shared/install'
 import { LibraryInstall } from '../shared/library_install'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 import { h } from 'preact'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default (props: Props) =>
-	renderPage(
+export default (pageInfo: PageInfo) => {
+	return renderPage(
 		<DocsLayout
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedPage={DocsPage.Install}
 		>
 			<ui.S1>
@@ -31,3 +29,4 @@ export default (props: Props) =>
 			</ui.S1>
 		</DocsLayout>,
 	)
+}

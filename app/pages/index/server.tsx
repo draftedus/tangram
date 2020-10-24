@@ -1,12 +1,17 @@
 import { Props } from './props'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { Fragment, h } from 'preact'
 
-export default function HomePage(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
-		<AppLayout pinwheelInfo={props.pinwheelInfo}>
+		<AppLayout
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
+		>
 			<ui.S1>
 				<ui.SpaceBetween>
 					<ui.H1>{'Repositories'}</ui.H1>

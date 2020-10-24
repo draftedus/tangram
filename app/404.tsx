@@ -1,15 +1,14 @@
 import { AppLayout } from './layouts/app_layout'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { h } from 'preact'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default function NotFoundPage(props: Props) {
+export default (props: Props) => {
 	return (
-		<AppLayout pinwheelInfo={props.pinwheelInfo}>
+		<AppLayout
+			clientJsSrc={props.clientJsSrc}
+			cssSrcs={props.cssSrcs}
+			preloadJsSrcs={props.preloadJsSrcs}
+		>
 			<ui.S1>
 				<ui.H1>{'Not Found'}</ui.H1>
 				<ui.P>{'We were unable to find the page you requested.'}</ui.P>

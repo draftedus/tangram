@@ -17,19 +17,20 @@ import { TrainingStats } from './training_stats'
 import trainingStats from './training_stats.svg'
 import { Tuning } from './tuning'
 import tuning from './tuning.svg'
-import { Client, PinwheelInfo } from '@tangramhq/pinwheel'
+import { Client, PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { PageLayout } from 'layouts/page_layout'
 import { h } from 'preact'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default function Home(props: Props) {
+export default (pageInfo: PageInfo) => {
 	return renderPage(
-		<PageLayout background={true} pinwheelInfo={props.pinwheelInfo}>
+		<PageLayout
+			background={true}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
+		>
 			<ui.S1>
 				<Hero />
 				<Features />

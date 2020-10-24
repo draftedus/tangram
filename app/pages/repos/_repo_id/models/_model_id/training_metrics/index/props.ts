@@ -1,4 +1,3 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import { ModelLayoutInfo } from 'layouts/model_layout'
 
 export enum Type {
@@ -10,7 +9,6 @@ export enum Type {
 export type Props = {
 	inner: Inner
 	modelLayoutInfo: ModelLayoutInfo
-	pinwheelInfo: PinwheelInfo
 }
 
 export type Inner =

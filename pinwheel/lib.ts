@@ -1,7 +1,6 @@
-export { Head, Body, Document } from './document'
 export { Client, hydrateComponent } from './client'
 
-export type PinwheelInfo = {
+export type PageInfo = {
 	clientJsSrc?: string
 	cssSrcs?: string[]
 	preloadJsSrcs?: string[]

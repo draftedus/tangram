@@ -1,4 +1,4 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { DocsLayout, DocsPage } from 'layouts/docs_layout'
@@ -7,13 +7,14 @@ import { h } from 'preact'
 import tuning from './screenshots/tuning.png'
 import tuningConfusionMatrix from './screenshots/tuning_confusion_matrix.png'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default (props: Props) =>
-	renderPage(
-		<DocsLayout pinwheelInfo={props.pinwheelInfo} selectedPage={DocsPage.Tune}>
+export default (pageInfo: PageInfo) => {
+	return renderPage(
+		<DocsLayout
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
+			selectedPage={DocsPage.Tune}
+		>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>
 				<ui.S2>
@@ -46,3 +47,4 @@ export default (props: Props) =>
 			</ui.S1>
 		</DocsLayout>,
 	)
+}

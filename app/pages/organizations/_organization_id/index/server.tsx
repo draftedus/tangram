@@ -1,13 +1,18 @@
 import { Plan, Props } from './props'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { PricingCards } from '@tangramhq/www'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { h } from 'preact'
 
-export default function OrganizationIndexPage(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
-		<AppLayout pinwheelInfo={props.pinwheelInfo}>
+		<AppLayout
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
+		>
 			<div
 				data-stripe-publishable-key={props.stripePublishableKey}
 				id="stripe-publishable-key"

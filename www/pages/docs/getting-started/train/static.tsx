@@ -1,18 +1,19 @@
 import { Install } from '../../shared/install'
 import { DatasetPreview } from './dataset_preview'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { renderPage } from 'common/render'
 import { DocsLayout, DocsPage } from 'layouts/docs_layout'
 import { h } from 'preact'
 
-type Props = {
-	pinwheelInfo: PinwheelInfo
-}
-
-export default (props: Props) =>
-	renderPage(
-		<DocsLayout pinwheelInfo={props.pinwheelInfo} selectedPage={DocsPage.Train}>
+export default (pageInfo: PageInfo) => {
+	return renderPage(
+		<DocsLayout
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
+			selectedPage={DocsPage.Train}
+		>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>
 				<ui.P>
@@ -187,3 +188,4 @@ export default (props: Props) =>
 			</ui.S1>
 		</DocsLayout>,
 	)
+}

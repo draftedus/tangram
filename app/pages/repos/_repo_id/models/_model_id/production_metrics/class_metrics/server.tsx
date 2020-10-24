@@ -1,5 +1,6 @@
 import { Props } from './props'
 import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { ClassSelectField } from 'common/class_select_field'
 import { DateWindowSelectField } from 'common/date_window_select_field'
@@ -11,7 +12,7 @@ import { productionColor, trainingColor } from 'common/tokens'
 import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
 import { Fragment, h } from 'preact'
 
-export default function ProductionMetricsPage(props: Props) {
+export default (pageInfo: PageInfo, props: Props) => {
 	let selectedClassIndex = props.classes.indexOf(props.class)
 	let selectedIntervalClassMetrics = props.classMetrics[selectedClassIndex]
 	let selectedOverallClassMetrics = props.overall.classMetrics
@@ -101,8 +102,10 @@ export default function ProductionMetricsPage(props: Props) {
 
 	return renderPage(
 		<ModelLayout
-			info={props.modelLayoutInfo}
-			pinwheelInfo={props.pinwheelInfo}
+			clientJsSrc={pageInfo.clientJsSrc}
+			cssSrcs={pageInfo.cssSrcs}
+			modelLayoutInfo={props.modelLayoutInfo}
+			preloadJsSrcs={pageInfo.preloadJsSrcs}
 			selectedItem={ModelSideNavItem.ProductionMetrics}
 		>
 			<ui.S1>

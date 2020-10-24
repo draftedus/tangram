@@ -1,4 +1,4 @@
-# ${{ github.event.inputs.logLevel }}
+# ${{ github.event.inputs.version }}
 name: build
 on:
   workflow_dispatch:

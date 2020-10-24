@@ -1,6 +1,5 @@
 import { Footer } from './footer'
 import './layout.css'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { Document } from 'common/document'
 import { Logo, LogoScheme } from 'common/logo'
@@ -9,12 +8,18 @@ import { ComponentChildren, h } from 'preact'
 type LayoutProps = {
 	background?: boolean
 	children?: ComponentChildren
-	pinwheelInfo: PinwheelInfo
+	clientJsSrc?: string
+	cssSrcs?: string[]
+	preloadJsSrcs?: string[]
 }
 
 export function Layout(props: LayoutProps) {
 	return (
-		<Document pinwheelInfo={props.pinwheelInfo}>
+		<Document
+			clientJsSrc={props.clientJsSrc}
+			cssSrcs={props.cssSrcs}
+			preloadJsSrcs={props.preloadJsSrcs}
+		>
 			<div class="layout">
 				<header>
 					<Topbar />

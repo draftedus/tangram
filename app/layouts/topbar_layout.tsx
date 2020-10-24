@@ -1,18 +1,23 @@
 import './topbar_layout.css'
-import { PinwheelInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { Document, Logo, LogoScheme } from '@tangramhq/www'
 import { ComponentChildren, h } from 'preact'
 
 type LayoutProps = {
 	children?: ComponentChildren
-	pinwheelInfo: PinwheelInfo
+	clientJsSrc?: string
+	cssSrcs?: string[]
+	preloadJsSrcs?: string[]
 	// topbarAvatar: TopbarAvatar | null
 }
 
 export function TopbarLayout(props: LayoutProps) {
 	return (
-		<Document pinwheelInfo={props.pinwheelInfo}>
+		<Document
+			clientJsSrc={props.clientJsSrc}
+			cssSrcs={props.cssSrcs}
+			preloadJsSrcs={props.preloadJsSrcs}
+		>
 			<div class="topbar-layout-grid">
 				<Topbar topbarAvatar={null} />
 				<div>{props.children}</div>

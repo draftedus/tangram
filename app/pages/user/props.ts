@@ -1,8 +1,5 @@
-import { PinwheelInfo } from '@tangramhq/pinwheel'
-
 export type Props = {
 	inner: Inner
-	pinwheelInfo: PinwheelInfo
 }
 
 export enum InnerType {
