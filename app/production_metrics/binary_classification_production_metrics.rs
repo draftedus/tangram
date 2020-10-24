@@ -151,5 +151,18 @@ fn test_binary() {
 		));
 	}
 	let metrics = metrics.finalize();
-	insta::assert_debug_snapshot!(metrics, @r###""###);
+	insta::assert_debug_snapshot!(metrics, @r###"
+ Some(
+     BinaryClassificationProductionPredictionMetricsOutput {
+         accuracy: 0.61538464,
+         f1_score: 0.54545456,
+         false_negatives: 2,
+         false_positives: 3,
+         precision: 0.5,
+         recall: 0.6,
+         true_negatives: 5,
+         true_positives: 3,
+     },
+ )
+ "###);
 }
