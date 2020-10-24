@@ -1,4 +1,5 @@
 import { MulticlassClassifierProps } from './props'
+import { LineChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { baselineColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
@@ -6,6 +7,16 @@ import { h } from 'preact'
 export function MulticlassClassifierIndexPage(
 	props: MulticlassClassifierProps,
 ) {
+	let lossesChartData = [
+		{
+			color: ui.colors.blue,
+			data: props.lossesChartData.map((loss, index) => ({
+				x: index,
+				y: loss,
+			})),
+			title: 'loss',
+		},
+	]
 	return (
 		<ui.S1>
 			<ui.H1>{'Overview'}</ui.H1>
@@ -78,6 +89,14 @@ export function MulticlassClassifierIndexPage(
 						})}
 					</ui.TableBody>
 				</ui.Table>
+				<LineChart
+					data={lossesChartData}
+					id="loss_curve"
+					title="Training Loss Curve"
+					xAxisTitle="Epoch"
+					yAxisTitle="Loss"
+					yMin={0}
+				/>
 			</ui.S2>
 		</ui.S1>
 	)

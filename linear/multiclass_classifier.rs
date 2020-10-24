@@ -4,7 +4,7 @@ use super::{
 };
 use itertools::izip;
 use ndarray::prelude::*;
-use num_traits::ToPrimitive;
+use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use tangram_dataframe::prelude::*;
@@ -72,6 +72,12 @@ impl MulticlassClassifier {
 			};
 		let progress_counter = ProgressCounter::new(train_options.max_epochs.to_u64().unwrap());
 		update_progress(TrainProgress(progress_counter.clone()));
+		let mut probabilities_buffer: Array2<f32> = Array2::zeros((labels.len(), n_classes));
+		let mut losses = if train_options.compute_losses {
+			Some(Vec::new())
+		} else {
+			None
+		};
 		for _ in 0..train_options.max_epochs {
 			progress_counter.inc(1);
 			let n_examples_per_batch = train_options.n_examples_per_batch;
@@ -79,12 +85,24 @@ impl MulticlassClassifier {
 			pzip!(
 				features_train.axis_chunks_iter(Axis(0), n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), n_examples_per_batch),
+				probabilities_buffer.axis_chunks_iter_mut(Axis(0), n_examples_per_batch),
 			)
-			.for_each(|(features, labels)| {
+			.for_each(|(features, labels, probabilities)| {
 				let model = unsafe { model_cell.get() };
-				MulticlassClassifier::train_batch(model, features, labels, train_options);
+				MulticlassClassifier::train_batch(
+					model,
+					features,
+					labels,
+					probabilities,
+					train_options,
+				);
 			});
 			model = model_cell.into_inner();
+			if let Some(losses) = &mut losses {
+				let loss =
+					MulticlassClassifier::compute_loss(probabilities_buffer.view(), labels_train);
+				losses.push(loss);
+			}
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
 				let early_stopping_metric_value =
 					MulticlassClassifier::compute_early_stopping_metric_value(
@@ -102,7 +120,7 @@ impl MulticlassClassifier {
 		let feature_importances = MulticlassClassifier::compute_feature_importances(&model);
 		MulticlassClassifierTrainOutput {
 			model,
-			losses: None,
+			losses,
 			feature_importances: Some(feature_importances),
 		}
 	}
@@ -131,12 +149,16 @@ impl MulticlassClassifier {
 		&mut self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<Option<NonZeroUsize>>,
+		mut probabilities: ArrayViewMut2<f32>,
 		train_options: &TrainOptions,
 	) {
 		let learning_rate = train_options.learning_rate;
 		let n_classes = self.weights.ncols();
 		let mut logits = features.dot(&self.weights) + &self.biases;
 		softmax(logits.view_mut());
+		for (probability, logit) in izip!(probabilities.iter_mut(), logits.iter()) {
+			*probability = *logit;
+		}
 		let mut predictions = logits;
 		for (mut predictions, label) in izip!(predictions.axis_iter_mut(Axis(0)), labels) {
 			for (class_index, prediction) in predictions.iter_mut().enumerate() {
@@ -165,6 +187,22 @@ impl MulticlassClassifier {
 				.unwrap();
 			self.biases[class_index] += -learning_rate * bias_gradients[0];
 		}
+	}
+
+	pub fn compute_loss(
+		probabilities: ArrayView2<f32>,
+		labels: ArrayView1<Option<NonZeroUsize>>,
+	) -> f32 {
+		let mut loss = 0.0;
+		for (label, probabilities) in izip!(labels.into_iter(), probabilities.axis_iter(Axis(0))) {
+			for (index, &probability) in probabilities.indexed_iter() {
+				let probability = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
+				if index == (label.unwrap().get() - 1) {
+					loss += -probability.ln();
+				}
+			}
+		}
+		loss / labels.len().to_f32().unwrap()
 	}
 
 	fn compute_early_stopping_metric_value(

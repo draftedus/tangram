@@ -18,6 +18,7 @@ import { drawTooltip } from './tooltip'
 
 export type BarChartOptions = {
 	data: BarChartData
+	groupGap?: number
 	hideLegend?: boolean
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
@@ -115,17 +116,16 @@ export function drawBarChart(
 	})
 
 	let categories = data[0].data.map(({ label }) => label)
-
+	let groupGap = options.groupGap ?? chartConfig.barGroupGap
 	let barGroupWidth =
-		(chartBox.w - chartConfig.barGroupGap * (categories.length + 1)) /
-		categories.length
+		(chartBox.w - groupGap * (categories.length + 1)) / categories.length
 	let barWidth =
 		(barGroupWidth - chartConfig.barGap * (data.length - 1)) / data.length
 
 	// Draw the X axis labels.
 	if (options.shouldDrawXAxisLabels ?? true) {
 		drawBarChartXAxisLabels({
-			barGroupGap: chartConfig.barGroupGap,
+			barGroupGap: groupGap,
 			box: xAxisLabelsBox,
 			categories,
 			ctx,
@@ -182,8 +182,7 @@ export function drawBarChart(
 					data.length,
 				x:
 					chartBox.x +
-					(chartConfig.barGroupGap +
-						(chartConfig.barGroupGap + barGroupWidth) * pointIndex) +
+					(groupGap + (groupGap + barGroupWidth) * pointIndex) +
 					(chartConfig.barGap + barWidth) * seriesIndex,
 				y: chartBox.y + ((yMax - point.y) / (yMax - yMin)) * chartBox.h,
 			}

@@ -100,13 +100,14 @@ dtype = {
 }
 data_train = pd.read_csv(path_train, dtype=dtype)
 data_test = pd.read_csv(path_test, dtype=dtype)
+if args.library == 'xgboost' or args.library == 'sklearn':
+	categorical_columns = data_train.select_dtypes(['category']).columns
+	data_train.loc[:, categorical_columns] = data_train.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
+	data_test.loc[:, categorical_columns] = data_test.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
 features_train = data_train.loc[:, data_train.columns != target_column_name]
 labels_train = data_train[target_column_name]
 features_test = data_test.loc[:, data_test.columns != target_column_name]
 labels_test = data_test[target_column_name]
-if args.library == 'xgboost' or args.library == 'sklearn':
-	features_train = pd.get_dummies(features_train)
-	features_test = pd.get_dummies(features_test)
 
 # Train the model.
 start = time()

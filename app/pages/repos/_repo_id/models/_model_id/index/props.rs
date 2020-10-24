@@ -37,6 +37,7 @@ pub struct RegressorProps {
 	id: String,
 	metrics: RegressorInnerMetrics,
 	training_summary: TrainingSummary,
+	losses_chart_data: Vec<f32>,
 }
 
 #[derive(serde::Serialize)]
@@ -54,6 +55,7 @@ pub struct BinaryClassifierProps {
 	id: String,
 	metrics: BinaryClassifierInnerMetrics,
 	training_summary: TrainingSummary,
+	losses_chart_data: Vec<f32>,
 }
 
 #[derive(serde::Serialize)]
@@ -72,6 +74,7 @@ pub struct MulticlassClassifierProps {
 	id: String,
 	metrics: MulticlassClassifierInnerMetrics,
 	training_summary: TrainingSummary,
+	losses_chart_data: Vec<f32>,
 }
 
 #[derive(serde::Serialize)]
@@ -126,6 +129,10 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 				mse: model.test_metrics.mse,
 				baseline_mse: model.baseline_metrics.mse,
 			},
+			losses_chart_data: match &model.model {
+				tangram_core::model::RegressionModel::Linear(model) => model.losses.clone(),
+				tangram_core::model::RegressionModel::Tree(model) => model.losses.clone(),
+			},
 			training_summary,
 		}),
 		tangram_core::model::Model::BinaryClassifier(model) => {
@@ -148,6 +155,14 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 					precision: default_threshold_test_metrics.precision,
 					recall: default_threshold_test_metrics.recall,
 				},
+				losses_chart_data: match &model.model {
+					tangram_core::model::BinaryClassificationModel::Linear(model) => {
+						model.losses.clone()
+					}
+					tangram_core::model::BinaryClassificationModel::Tree(model) => {
+						model.losses.clone()
+					}
+				},
 				training_summary,
 			})
 		}
@@ -168,6 +183,14 @@ pub async fn props(request: Request<Body>, context: &Context, model_id: &str) ->
 					baseline_accuracy: model.baseline_metrics.accuracy,
 					class_metrics,
 					classes: model.classes.to_owned(),
+				},
+				losses_chart_data: match &model.model {
+					tangram_core::model::MulticlassClassificationModel::Linear(model) => {
+						model.losses.clone()
+					}
+					tangram_core::model::MulticlassClassificationModel::Tree(model) => {
+						model.losses.clone()
+					}
 				},
 				training_summary,
 			})

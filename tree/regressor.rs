@@ -100,10 +100,10 @@ pub fn update_logits(
 }
 
 /// This function is used by the common train function to compute the loss after each tree is trained for regression.
-pub fn compute_loss(labels: ArrayView1<f32>, predictions: ArrayView2<f32>) -> f32 {
+pub fn compute_loss(predictions: ArrayView2<f32>, labels: ArrayView1<f32>) -> f32 {
 	let mut loss = 0.0;
-	for (label, prediction) in izip!(labels.iter(), predictions) {
-		loss += 0.5 * (label - prediction).powi(2);
+	for (label, prediction) in izip!(labels, predictions) {
+		loss += 0.5 * (label - prediction) * (label - prediction)
 	}
 	loss / labels.len().to_f32().unwrap()
 }

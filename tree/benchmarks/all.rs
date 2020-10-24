@@ -41,8 +41,10 @@ struct MulticlassClassificationBenchmarkOutput {
 fn main() {
 	// Test the regression datasets.
 	println!("Regression");
-	run_benchmarks(&["lightgbm", "xgboost", "sklearn", "tangram"], &["boston"]);
-	run_benchmarks(&["lightgbm", "tangram"], &["allstate"]);
+	run_benchmarks(
+		&["lightgbm", "xgboost", "sklearn", "tangram"],
+		&["boston", "allstate"],
+	);
 	println!();
 
 	// Test the binary classification datasets.
@@ -51,8 +53,7 @@ fn main() {
 		&["lightgbm", "xgboost", "sklearn", "tangram"],
 		&["heart_disease", "census"],
 	);
-	run_benchmarks(&["lightgbm", "xgboost", "tangram"], &["higgs"]);
-	run_benchmarks(&["lightgbm", "tangram"], &["flights"]);
+	run_benchmarks(&["lightgbm", "xgboost", "tangram"], &["higgs", "flights"]);
 	println!();
 
 	// Test the multiclass classification datasets.

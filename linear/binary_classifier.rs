@@ -4,7 +4,7 @@ use super::{
 };
 use itertools::izip;
 use ndarray::prelude::*;
-use num_traits::ToPrimitive;
+use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::{num::NonZeroUsize, ops::Neg};
 use tangram_dataframe::prelude::*;
@@ -71,6 +71,12 @@ impl BinaryClassifier {
 			};
 		let progress_counter = ProgressCounter::new(train_options.max_epochs.to_u64().unwrap());
 		update_progress(TrainProgress(progress_counter.clone()));
+		let mut probabilities_buffer: Array1<f32> = Array1::zeros(labels.len());
+		let mut losses = if train_options.compute_losses {
+			Some(Vec::new())
+		} else {
+			None
+		};
 		for _ in 0..train_options.max_epochs {
 			progress_counter.inc(1);
 			let n_examples_per_batch = train_options.n_examples_per_batch;
@@ -78,12 +84,24 @@ impl BinaryClassifier {
 			pzip!(
 				features_train.axis_chunks_iter(Axis(0), n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), n_examples_per_batch),
+				probabilities_buffer.axis_chunks_iter_mut(Axis(0), n_examples_per_batch),
 			)
-			.for_each(|(features, labels)| {
+			.for_each(|(features, labels, probabilities)| {
 				let model = unsafe { model_cell.get() };
-				BinaryClassifier::train_batch(model, features, labels, train_options);
+				BinaryClassifier::train_batch(
+					model,
+					features,
+					labels,
+					probabilities,
+					train_options,
+				);
 			});
 			model = model_cell.into_inner();
+			if let Some(losses) = &mut losses {
+				let loss =
+					BinaryClassifier::compute_loss(probabilities_buffer.view(), labels_train);
+				losses.push(loss);
+			}
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
 				let early_stopping_metric_value =
 					BinaryClassifier::compute_early_stopping_metric_value(
@@ -101,7 +119,7 @@ impl BinaryClassifier {
 		let feature_importances = BinaryClassifier::compute_feature_importances(&model);
 		BinaryClassifierTrainOutput {
 			model,
-			losses: None,
+			losses,
 			feature_importances: Some(feature_importances),
 		}
 	}
@@ -125,28 +143,45 @@ impl BinaryClassifier {
 		&mut self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<Option<NonZeroUsize>>,
+		mut probabilities: ArrayViewMut1<f32>,
 		train_options: &TrainOptions,
 	) {
 		let learning_rate = train_options.learning_rate;
-		let mut predictions = features.dot(&self.weights) + self.bias;
-		for prediction in predictions.iter_mut() {
-			*prediction = 1.0 / (prediction.neg().exp() + 1.0);
+		let mut py = features.dot(&self.weights) + self.bias;
+		for (probability, py) in izip!(probabilities.iter_mut(), py.iter_mut()) {
+			*probability = 1.0 / (py.neg().exp() + 1.0);
+			*py = *probability;
 		}
-		for (prediction, label) in izip!(predictions.view_mut(), labels) {
+		for (py, label) in izip!(py.view_mut(), labels) {
 			let label = match label.map(|l| l.get()) {
 				Some(1) => 0.0,
 				Some(2) => 1.0,
 				_ => unreachable!(),
 			};
-			*prediction -= label
+			*py -= label
 		}
-		let py = predictions.insert_axis(Axis(1));
+		let py = py.insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
 		let bias_gradient = py.mean_axis(Axis(0)).unwrap()[0];
 		for (weight, weight_gradient) in izip!(self.weights.view_mut(), weight_gradients.view()) {
 			*weight += -learning_rate * weight_gradient;
 		}
 		self.bias += -learning_rate * bias_gradient;
+	}
+
+	pub fn compute_loss(
+		probabilities: ArrayView1<f32>,
+		labels: ArrayView1<Option<NonZeroUsize>>,
+	) -> f32 {
+		let mut total = 0.0;
+		for (label, probability) in izip!(labels.iter(), probabilities) {
+			let label = (label.unwrap().get() - 1).to_f32().unwrap();
+			let probability_clamped =
+				clamp(*probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
+			total += -1.0 * label * probability_clamped.ln()
+				+ -1.0 * (1.0 - label) * (1.0 - probability_clamped).ln()
+		}
+		total / labels.len().to_f32().unwrap()
 	}
 
 	fn compute_early_stopping_metric_value(

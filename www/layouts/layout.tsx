@@ -35,6 +35,7 @@ export function Topbar() {
 			href: 'https://github.com/tangram-hq',
 			title: 'Github',
 		},
+		{ href: '/benchmarks', title: 'Benchmarks' },
 		{ href: '/pricing', title: 'Pricing' },
 		{ href: '/docs/', title: 'Docs' },
 		{ href: 'https://app.tangramhq.com', title: 'Sign In' },

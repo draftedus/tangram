@@ -1,3 +1,3 @@
 import { hydrateBarChart } from '@tangramhq/charts'
 
-hydrateBarChart('roc')
+hydrateBarChart('loss_curve')

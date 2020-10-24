@@ -308,17 +308,17 @@ pub fn train(
 				Task::Regression => {
 					let labels_train = labels_train.as_number().unwrap();
 					let labels_train = labels_train.as_slice().into();
-					crate::regressor::compute_loss(labels_train, predictions.view())
+					crate::regressor::compute_loss(predictions.view(), labels_train)
 				}
 				Task::BinaryClassification => {
 					let labels_train = labels_train.as_enum().unwrap();
 					let labels_train = labels_train.as_slice().into();
-					crate::binary_classifier::compute_loss(labels_train, predictions.view())
+					crate::binary_classifier::compute_loss(predictions.view(), labels_train)
 				}
 				Task::MulticlassClassification { .. } => {
 					let labels_train = labels_train.as_enum().unwrap();
 					let labels_train = labels_train.as_slice().into();
-					crate::multiclass_classifier::compute_loss(labels_train, predictions.view())
+					crate::multiclass_classifier::compute_loss(predictions.view(), labels_train)
 				}
 			};
 			losses.push(loss);
@@ -492,7 +492,7 @@ fn compute_early_stopping_metric(
 				features.view(),
 				predictions.view_mut(),
 			);
-			crate::regressor::compute_loss(labels, predictions.view())
+			crate::regressor::compute_loss(predictions.view(), labels)
 		}
 		Task::BinaryClassification => {
 			let labels = labels.as_enum().unwrap();
@@ -502,7 +502,7 @@ fn compute_early_stopping_metric(
 				features.view(),
 				predictions.view_mut(),
 			);
-			crate::binary_classifier::compute_loss(labels, predictions.view())
+			crate::binary_classifier::compute_loss(predictions.view(), labels)
 		}
 		Task::MulticlassClassification { .. } => {
 			let labels = labels.as_enum().unwrap();
@@ -512,7 +512,7 @@ fn compute_early_stopping_metric(
 				features.view(),
 				predictions.view_mut(),
 			);
-			crate::multiclass_classifier::compute_loss(labels, predictions.view())
+			crate::multiclass_classifier::compute_loss(predictions.view(), labels)
 		}
 	}
 }

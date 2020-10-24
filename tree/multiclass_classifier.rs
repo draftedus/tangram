@@ -126,7 +126,7 @@ pub fn update_logits(
 }
 
 /// This function is used by the common train function to compute the loss after each tree is trained for multiclass classification.
-pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
+pub fn compute_loss(logits: ArrayView2<f32>, labels: ArrayView1<Option<NonZeroUsize>>) -> f32 {
 	let mut loss = 0.0;
 	for (label, logits) in izip!(labels.into_iter(), logits.axis_iter(Axis(0))) {
 		let mut probabilities = logits.to_owned();

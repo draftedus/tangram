@@ -1,9 +1,20 @@
 import { BinaryClassifierProps } from './props'
+import { LineChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { MetricsRow } from 'common/metrics_row'
 import { h } from 'preact'
 
 export function BinaryClassifierIndexPage(props: BinaryClassifierProps) {
+	let lossesChartData = [
+		{
+			color: ui.colors.blue,
+			data: props.lossesChartData.map((loss, index) => ({
+				x: index,
+				y: loss,
+			})),
+			title: 'loss',
+		},
+	]
 	return (
 		<ui.S1>
 			<ui.H1>{'Overview'}</ui.H1>
@@ -67,6 +78,14 @@ export function BinaryClassifierIndexPage(props: BinaryClassifierProps) {
 						/>
 					</ui.Card>
 				</MetricsRow>
+				<LineChart
+					data={lossesChartData}
+					id="loss_curve"
+					title="Training Loss Curve"
+					xAxisTitle="Epoch"
+					yAxisTitle="Loss"
+					yMin={0}
+				/>
 			</ui.S2>
 		</ui.S1>
 	)

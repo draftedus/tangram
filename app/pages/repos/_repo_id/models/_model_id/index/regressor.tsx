@@ -1,9 +1,20 @@
 import { RegressorProps } from './props'
+import { LineChart } from '@tangramhq/charts'
 import * as ui from '@tangramhq/ui'
 import { baselineColor, trainingColor } from 'common/tokens'
 import { h } from 'preact'
 
 export function RegressorIndexPage(props: RegressorProps) {
+	let lossesChartData = [
+		{
+			color: ui.colors.blue,
+			data: props.lossesChartData.map((loss, index) => ({
+				x: index,
+				y: loss,
+			})),
+			title: 'loss',
+		},
+	]
 	return (
 		<ui.S1>
 			<ui.SpaceBetween>
@@ -55,6 +66,14 @@ export function RegressorIndexPage(props: RegressorProps) {
 						valueFormatter={value => ui.formatNumber(value)}
 					/>
 				</ui.Card>
+				<LineChart
+					data={lossesChartData}
+					id="loss_curve"
+					title="Training Loss Curve"
+					xAxisTitle="Epoch"
+					yAxisTitle="Loss"
+					yMin={0}
+				/>
 			</ui.S2>
 		</ui.S1>
 	)

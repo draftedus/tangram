@@ -70,6 +70,12 @@ impl Regressor {
 			};
 		let epoch_counter = ProgressCounter::new(train_options.max_epochs.to_u64().unwrap());
 		update_progress(super::TrainProgress(epoch_counter.clone()));
+		let mut predictions_buffer: Array1<f32> = Array1::zeros(labels.len());
+		let mut losses = if train_options.compute_losses {
+			Some(Vec::new())
+		} else {
+			None
+		};
 		for _ in 0..train_options.max_epochs {
 			epoch_counter.inc(1);
 			let n_examples_per_batch = train_options.n_examples_per_batch;
@@ -77,12 +83,17 @@ impl Regressor {
 			pzip!(
 				features_train.axis_chunks_iter(Axis(0), n_examples_per_batch),
 				labels_train.axis_chunks_iter(Axis(0), n_examples_per_batch),
+				predictions_buffer.axis_chunks_iter_mut(Axis(0), n_examples_per_batch),
 			)
-			.for_each(|(features, labels)| {
+			.for_each(|(features, labels, predictions)| {
 				let model = unsafe { model_cell.get() };
-				Regressor::train_batch(model, features, labels, train_options);
+				Regressor::train_batch(model, features, labels, predictions, train_options);
 			});
 			model = model_cell.into_inner();
+			if let Some(losses) = &mut losses {
+				let loss = Regressor::compute_loss(predictions_buffer.view(), labels_train);
+				losses.push(loss);
+			}
 			if let Some(early_stopping_monitor) = early_stopping_monitor.as_mut() {
 				let early_stopping_metric_value = Regressor::compute_early_stopping_metric_value(
 					&model,
@@ -99,7 +110,7 @@ impl Regressor {
 		let feature_importances = Regressor::compute_feature_importances(&model);
 		RegressorTrainOutput {
 			model,
-			losses: None,
+			losses,
 			feature_importances: Some(feature_importances),
 		}
 	}
@@ -123,17 +134,29 @@ impl Regressor {
 		&mut self,
 		features: ArrayView2<f32>,
 		labels: ArrayView1<f32>,
+		mut predictions: ArrayViewMut1<f32>,
 		train_options: &TrainOptions,
 	) {
 		let learning_rate = train_options.learning_rate;
-		let predictions = features.dot(&self.weights) + self.bias;
-		let py = (predictions - labels).insert_axis(Axis(1));
+		let p = features.dot(&self.weights) + self.bias;
+		for (prediction, p) in izip!(predictions.iter_mut(), p.iter()) {
+			*prediction = *p;
+		}
+		let py = (p - labels).insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
 		let bias_gradient = py.mean_axis(Axis(0)).unwrap()[0];
 		for (weight, weight_gradient) in izip!(self.weights.iter_mut(), weight_gradients.iter()) {
 			*weight += -learning_rate * weight_gradient;
 		}
 		self.bias += -learning_rate * bias_gradient;
+	}
+
+	fn compute_loss(predictions: ArrayView1<f32>, labels: ArrayView1<f32>) -> f32 {
+		let mut loss = 0.0;
+		for (label, prediction) in izip!(labels, predictions.iter()) {
+			loss += 0.5 * (label - prediction) * (label - prediction)
+		}
+		loss / labels.len().to_f32().unwrap()
 	}
 
 	fn compute_early_stopping_metric_value(

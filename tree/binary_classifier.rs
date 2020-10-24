@@ -107,7 +107,7 @@ pub fn update_logits(
 }
 
 /// This function is used by the common train function to compute the loss after each tree is trained for binary classification.
-pub fn compute_loss(labels: ArrayView1<Option<NonZeroUsize>>, logits: ArrayView2<f32>) -> f32 {
+pub fn compute_loss(logits: ArrayView2<f32>, labels: ArrayView1<Option<NonZeroUsize>>) -> f32 {
 	let mut total = 0.0;
 	for (label, logit) in izip!(labels.iter(), logits) {
 		let label = (label.unwrap().get() - 1).to_f32().unwrap();
