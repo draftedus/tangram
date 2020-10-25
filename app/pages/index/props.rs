@@ -66,7 +66,7 @@ async fn props_user(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> R
 				repos.id,
 				repos.title,
 				repos.created_at,
-				organizations.title
+				organizations.name
 			from repos
 			left join organizations
 				on organizations.id = repos.organization_id

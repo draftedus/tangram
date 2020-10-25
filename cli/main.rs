@@ -59,7 +59,7 @@ struct TrainOptions {
 #[clap(about = "run the app")]
 #[clap(long_about = "run the reporting and monitoring web app")]
 struct AppOptions {
-	#[clap(long, env = "AUTH_ENABLED")]
+	#[clap(long = "auth", env = "AUTH", takes_value = false)]
 	auth_enabled: bool,
 	#[clap(long, env = "COOKIE_DOMAIN")]
 	cookie_domain: Option<String>,

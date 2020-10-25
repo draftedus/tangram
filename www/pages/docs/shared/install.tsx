@@ -41,7 +41,7 @@ function MacOS() {
 			<ui.ListItem>
 				{'Unzip it: '}
 				<ui.InlineCode>
-					{'tar -xvf tangram-cli-X.X.X-macos-x86_64.tar.gz'}
+					{'tar -xvf tangram-cli-X.X.X-macos-amd64.tar.gz'}
 				</ui.InlineCode>
 			</ui.ListItem>
 			<ui.ListItem>{'Run the unzipped executable.'}</ui.ListItem>
@@ -65,7 +65,7 @@ function Linux() {
 			<ui.ListItem>
 				{'Unzip it: '}
 				<ui.InlineCode>
-					{'tar -xvf tangram-cli-X.X.X-linux-x86_64.tar.gz'}
+					{'tar -xvf tangram-cli-X.X.X-linux-amd64.tar.gz'}
 				</ui.InlineCode>
 			</ui.ListItem>
 			<ui.ListItem>{'Run the unzipped executable.'}</ui.ListItem>

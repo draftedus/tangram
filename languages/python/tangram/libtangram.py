@@ -28,11 +28,11 @@ ffi.cdef("""
 machine = platform.machine()
 platform = sys.platform
 if machine == 'x86_64' and (platform == "linux" or platform == "linux2"):
-	library_name = "libtangram-linux-x64.so"
+	library_name = "libtangram-linux-amd64.so"
 elif machine == 'x86_64' and platform == "darwin":
-	library_name = "libtangram-macos-x64.dylib"
+	library_name = "libtangram-macos-amd64.dylib"
 elif machine == 'x86_64' and platform == "win32":
-	library_name = "tangram-windows-x64.dll"
+	library_name = "tangram-windows-amd64.dll"
 else:
 	raise Exception('tangram-python does not yet support your combination of operating system and CPU architecture. Want support for your platform? Get in touch at help@tangramhq.com.')
 

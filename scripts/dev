@@ -1,1 +1,1 @@
-watchexec --exts rs --restart -- cargo run -- app
+watchexec --exts rs --restart -- cargo run -- app $@
