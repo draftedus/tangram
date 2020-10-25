@@ -38,7 +38,7 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: cache
+      - name: cargo cache
         uses: actions/cache@v2
         with:
           key: ${{ matrix.os }}-cargo-${{ hashFiles('Cargo.lock') }}
@@ -46,6 +46,16 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             build/cargo
+      - name: npm cache
+        uses: actions/cache@v2
+        with:
+          key: ${{ matrix.os }}-npm-${{ hashFiles('package-lock.json') }}
+          path: |
+            node_modules
+      - name: npm install
+        run: |
+          nvm use
+          npm install
       - name: build
         run: |
           cargo build --release
