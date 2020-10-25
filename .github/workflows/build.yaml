@@ -41,7 +41,7 @@ jobs:
       - name: cache
         uses: actions/cache@v2
         with:
-          key: ${{ matrix-os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          key: ${{ matrix.os }}-cargo-${{ hashFiles('Cargo.lock') }}
           path: |
             ~/.cargo/registry
             ~/.cargo/git
