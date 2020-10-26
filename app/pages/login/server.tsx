@@ -7,11 +7,7 @@ import { h } from 'preact'
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
-		<AuthLayout
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
-		>
+		<AuthLayout pageInfo={pageInfo}>
 			<ui.Form post={true}>
 				{props.error && (
 					<ui.Alert level={ui.Level.Danger}>{props.error}</ui.Alert>

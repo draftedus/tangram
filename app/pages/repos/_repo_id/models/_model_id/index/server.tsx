@@ -25,10 +25,8 @@ export default (pageInfo: PageInfo, props: Props) => {
 	}
 	return renderPage(
 		<ModelLayout
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			modelLayoutInfo={props.modelLayoutInfo}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
+			info={props.modelLayoutInfo}
+			pageInfo={pageInfo}
 			selectedItem={ModelSideNavItem.Overview}
 		>
 			{inner}

@@ -16,6 +16,7 @@ use url::Url;
 
 mod api;
 mod common;
+mod layouts;
 mod migrations;
 mod pages;
 mod production_metrics;

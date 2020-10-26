@@ -29,7 +29,7 @@ pub async fn get(
 			.await
 			.map_err(|_| Error::NotFound)?;
 	}
-	let props = props(&mut db, repo_id).await?;
+	let props = props(&mut db, context, repo_id).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/repos/_repo_id/", props)?;
 	let response = Response::builder()

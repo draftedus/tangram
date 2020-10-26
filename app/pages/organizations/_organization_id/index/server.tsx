@@ -8,11 +8,7 @@ import { h } from 'preact'
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
-		<AppLayout
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
-		>
+		<AppLayout info={props.appLayoutInfo} pageInfo={pageInfo}>
 			<div
 				data-stripe-publishable-key={props.stripePublishableKey}
 				id="stripe-publishable-key"

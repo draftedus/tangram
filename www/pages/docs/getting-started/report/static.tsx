@@ -16,12 +16,7 @@ import uploadImageURL from './screenshots/upload.png'
 
 export default (pageInfo: PageInfo) => {
 	return renderPage(
-		<DocsLayout
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
-			selectedPage={DocsPage.Report}
-		>
+		<DocsLayout pageInfo={pageInfo} selectedPage={DocsPage.Report}>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>
 				<ui.S2>

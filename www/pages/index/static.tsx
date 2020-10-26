@@ -25,12 +25,7 @@ import { h } from 'preact'
 
 export default (pageInfo: PageInfo) => {
 	return renderPage(
-		<PageLayout
-			background={true}
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
-		>
+		<PageLayout background={true} pageInfo={pageInfo}>
 			<ui.S1>
 				<Hero />
 				<Features />

@@ -3,12 +3,12 @@ use crate::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
 		error::Error,
 		model::get_model,
-		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		production_stats::{get_production_stats, GetProductionStatsOutput},
 		time::format_date_window_interval,
 		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_model},
 	},
+	layouts::model_layout::{get_model_layout_info, ModelLayoutInfo},
 	production_stats::ProductionColumnStatsOutput,
 	Context,
 };

@@ -1,6 +1,10 @@
-use crate::common::{
-	organizations::{get_organizations, Organization},
-	user::User,
+use crate::{
+	common::{
+		organizations::{get_organizations, Organization},
+		user::User,
+	},
+	layouts::app_layout::{get_app_layout_info, AppLayoutInfo},
+	Context,
 };
 use anyhow::Result;
 use sqlx::prelude::*;
@@ -9,6 +13,7 @@ use tangram_util::id::Id;
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
+	app_layout_info: AppLayoutInfo,
 	inner: Inner,
 }
 
@@ -44,12 +49,15 @@ pub struct Repo {
 
 pub async fn props(
 	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	context: &Context,
 	user: Option<User>,
 ) -> Result<Props> {
+	let app_layout_info = get_app_layout_info(context).await?;
 	if let Some(user) = user {
 		let organizations = get_organizations(&mut db, user.id).await?;
 		let repos = get_user_repositories(&mut db, user.id).await?;
 		Ok(Props {
+			app_layout_info,
 			inner: Inner::Auth(AuthProps {
 				email: user.email,
 				organizations,
@@ -59,6 +67,7 @@ pub async fn props(
 	} else {
 		let repos = get_root_user_repositories(&mut db).await?;
 		Ok(Props {
+			app_layout_info,
 			inner: Inner::NoAuth(NoAuthProps { repos }),
 		})
 	}

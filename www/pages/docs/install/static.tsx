@@ -8,12 +8,7 @@ import { h } from 'preact'
 
 export default (pageInfo: PageInfo) => {
 	return renderPage(
-		<DocsLayout
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
-			selectedPage={DocsPage.Install}
-		>
+		<DocsLayout pageInfo={pageInfo} selectedPage={DocsPage.Install}>
 			<ui.S1>
 				<ui.H1>{'Install'}</ui.H1>
 				<ui.S2>

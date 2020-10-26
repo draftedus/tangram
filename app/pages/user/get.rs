@@ -18,7 +18,7 @@ pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<B
 	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let props = props(&mut db, user).await?;
+	let props = props(&mut db, context, user).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/user", props)?;
 	let response = Response::builder()

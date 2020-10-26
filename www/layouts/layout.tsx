@@ -1,5 +1,6 @@
 import { Footer } from './footer'
 import './layout.css'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { Document } from 'common/document'
 import { Logo, LogoScheme } from 'common/logo'
@@ -8,18 +9,12 @@ import { ComponentChildren, h } from 'preact'
 type LayoutProps = {
 	background?: boolean
 	children?: ComponentChildren
-	clientJsSrc?: string
-	cssSrcs?: string[]
-	preloadJsSrcs?: string[]
+	pageInfo: PageInfo
 }
 
 export function Layout(props: LayoutProps) {
 	return (
-		<Document
-			clientJsSrc={props.clientJsSrc}
-			cssSrcs={props.cssSrcs}
-			preloadJsSrcs={props.preloadJsSrcs}
-		>
+		<Document pageInfo={props.pageInfo}>
 			<div class="layout">
 				<header>
 					<Topbar />

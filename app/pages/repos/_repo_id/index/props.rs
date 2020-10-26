@@ -1,3 +1,7 @@
+use crate::{
+	layouts::app_layout::{get_app_layout_info, AppLayoutInfo},
+	Context,
+};
 use anyhow::Result;
 use chrono::prelude::*;
 use sqlx::prelude::*;
@@ -6,6 +10,7 @@ use tangram_util::id::Id;
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
+	app_layout_info: AppLayoutInfo,
 	models: Vec<Model>,
 }
 
@@ -16,7 +21,12 @@ struct Model {
 	created_at: String,
 }
 
-pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, repo_id: Id) -> Result<Props> {
+pub async fn props(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	context: &Context,
+	repo_id: Id,
+) -> Result<Props> {
+	let app_layout_info = get_app_layout_info(context).await?;
 	let rows = sqlx::query(
 		"
 			select
@@ -43,5 +53,8 @@ pub async fn props(db: &mut sqlx::Transaction<'_, sqlx::Any>, repo_id: Id) -> Re
 			}
 		})
 		.collect();
-	Ok(Props { models })
+	Ok(Props {
+		app_layout_info,
+		models,
+	})
 }

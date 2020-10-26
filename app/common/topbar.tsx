@@ -1,30 +1,6 @@
-import './topbar_layout.css'
 import * as ui from '@tangramhq/ui'
-import { Document, Logo, LogoScheme } from '@tangramhq/www'
-import { ComponentChildren, h } from 'preact'
-
-type LayoutProps = {
-	children?: ComponentChildren
-	clientJsSrc?: string
-	cssSrcs?: string[]
-	preloadJsSrcs?: string[]
-	// topbarAvatar: TopbarAvatar | null
-}
-
-export function TopbarLayout(props: LayoutProps) {
-	return (
-		<Document
-			clientJsSrc={props.clientJsSrc}
-			cssSrcs={props.cssSrcs}
-			preloadJsSrcs={props.preloadJsSrcs}
-		>
-			<div class="topbar-layout-grid">
-				<Topbar topbarAvatar={null} />
-				<div>{props.children}</div>
-			</div>
-		</Document>
-	)
-}
+import { Logo, LogoScheme } from '@tangramhq/www'
+import { h } from 'preact'
 
 type TopbarProps = {
 	topbarAvatar: TopbarAvatar | null
@@ -34,7 +10,7 @@ export type TopbarAvatar = {
 	avatarUrl: string | null
 }
 
-function Topbar(props: TopbarProps) {
+export function Topbar(props: TopbarProps) {
 	let items = []
 	if (props.topbarAvatar) {
 		items.push({

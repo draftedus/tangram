@@ -1,3 +1,11 @@
+.model-layout-topbar-grid {
+	color: var(--text-color);
+	display: grid;
+	grid: auto 1fr / auto;
+	height: 100vh;
+	overflow-x: hidden;
+}
+
 .model-layout {
 	display: grid;
 	overflow: hidden;

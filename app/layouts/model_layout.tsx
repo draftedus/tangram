@@ -1,24 +1,26 @@
+import { AppLayoutInfo } from './app_layout'
 import './model_layout.css'
-import { TopbarLayout } from './topbar_layout'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
+import { Document } from '@tangramhq/www'
+import { Topbar, TopbarAvatar } from 'common/topbar'
 import { ComponentChildren, Fragment, h } from 'preact'
 
 type ModelLayoutProps = {
 	children?: ComponentChildren
-	clientJsSrc?: string
-	cssSrcs?: string[]
-	modelLayoutInfo: ModelLayoutInfo
-	preloadJsSrcs?: string[]
+	info: ModelLayoutInfo
+	pageInfo: PageInfo
 	selectedItem: ModelSideNavItem
 }
 
 export type ModelLayoutInfo = {
+	appLayoutInfo: AppLayoutInfo
 	modelId: string
 	modelVersionIds: string[]
 	owner: Owner | null
 	repoId: string
 	repoTitle: string
-	userAvatar: UserAvatar | null
+	topbarAvatar: TopbarAvatar | null
 }
 
 type Owner =
@@ -35,10 +37,6 @@ type OrganizationOwner = {
 	name: string
 }
 
-type UserAvatar = {
-	avatarUrl: string | null
-}
-
 export enum ModelSideNavItem {
 	Overview = 'overview',
 	TrainingStats = 'training_stats',
@@ -52,33 +50,32 @@ export enum ModelSideNavItem {
 }
 
 export function ModelLayout(props: ModelLayoutProps) {
-	let selectedModelVersionId = props.modelLayoutInfo.modelVersionIds.find(
-		modelVersionId => modelVersionId == props.modelLayoutInfo.modelId,
+	let selectedModelVersionId = props.info.modelVersionIds.find(
+		modelVersionId => modelVersionId == props.info.modelId,
 	)
 	if (!selectedModelVersionId) throw Error()
 	return (
-		<TopbarLayout
-			clientJsSrc={props.clientJsSrc}
-			cssSrcs={props.cssSrcs}
-			preloadJsSrcs={props.preloadJsSrcs}
-		>
-			<div class="model-layout">
-				<ModelLayoutTopbar
-					modelLayoutInfo={props.modelLayoutInfo}
-					selectedModelVersionId={selectedModelVersionId}
-				/>
-				<div class="model-layout-grid">
-					<div class="model-layout-side-nav-wrapper">
-						<ModelSideNav
-							id={props.modelLayoutInfo.modelId}
-							repoTitle={props.modelLayoutInfo.repoTitle}
-							selectedItem={props.selectedItem}
-						/>
+		<Document pageInfo={props.pageInfo}>
+			<div class="model-layout-topbar-grid">
+				<Topbar topbarAvatar={props.info.topbarAvatar} />
+				<div class="model-layout">
+					<ModelLayoutTopbar
+						modelLayoutInfo={props.info}
+						selectedModelVersionId={selectedModelVersionId}
+					/>
+					<div class="model-layout-grid">
+						<div class="model-layout-side-nav-wrapper">
+							<ModelSideNav
+								id={props.info.modelId}
+								repoTitle={props.info.repoTitle}
+								selectedItem={props.selectedItem}
+							/>
+						</div>
+						<div class="model-layout-content">{props.children}</div>
 					</div>
-					<div class="model-layout-content">{props.children}</div>
 				</div>
 			</div>
-		</TopbarLayout>
+		</Document>
 	)
 }
 

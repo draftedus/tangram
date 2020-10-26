@@ -1,6 +1,12 @@
-use crate::common::organizations::{get_organization, Member, Plan};
-use crate::common::user::{authorize_user, authorize_user_for_organization};
-use crate::{common::error::Error, Context};
+use crate::{
+	common::{
+		error::Error,
+		organizations::{get_organization, Member, Plan},
+		user::{authorize_user, authorize_user_for_organization},
+	},
+	layouts::app_layout::{get_app_layout_info, AppLayoutInfo},
+	Context,
+};
 use anyhow::Result;
 use hyper::{Body, Request};
 use sqlx::prelude::*;
@@ -9,14 +15,15 @@ use tangram_util::id::Id;
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
+	app_layout_info: AppLayoutInfo,
 	card: Option<Card>,
 	id: String,
 	members: Vec<Member>,
 	name: String,
 	plan: Plan,
-	user_id: String,
 	repos: Vec<Repo>,
 	stripe_publishable_key: String,
+	user_id: String,
 }
 
 #[derive(serde::Serialize)]
@@ -63,6 +70,7 @@ pub async fn props(
 	context: &Context,
 	organization_id: &str,
 ) -> Result<Props> {
+	let app_layout_info = get_app_layout_info(context).await?;
 	let mut db = context
 		.pool
 		.begin()
@@ -114,14 +122,15 @@ pub async fn props(
 		.unwrap()
 		.to_owned();
 	Ok(Props {
+		app_layout_info,
+		card,
 		id: organization_id.to_string(),
+		members: organization.members,
 		name: organization.name,
 		plan: organization.plan,
-		members: organization.members,
-		user_id: user.id.to_string(),
-		stripe_publishable_key,
-		card,
 		repos,
+		stripe_publishable_key,
+		user_id: user.id.to_string(),
 	})
 }
 

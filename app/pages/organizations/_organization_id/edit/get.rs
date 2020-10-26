@@ -4,14 +4,14 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 
 pub async fn get(
-	request: Request<Body>,
+	_request: Request<Body>,
 	context: &Context,
-	organization_id: &str,
+	_organization_id: &str,
 ) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {
 		return Err(Error::NotFound.into());
 	}
-	let props = props(request, context, organization_id).await?;
+	let props = props(context, None).await?;
 	let html = context
 		.pinwheel
 		.render_with("/organizations/_organization_id/edit", props)?;

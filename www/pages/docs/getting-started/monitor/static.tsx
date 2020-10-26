@@ -19,12 +19,7 @@ import productionStatsColumnStats from './screenshots/production_stats_column_st
 
 export default (pageInfo: PageInfo) => {
 	return renderPage(
-		<DocsLayout
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
-			selectedPage={DocsPage.Monitor}
-		>
+		<DocsLayout pageInfo={pageInfo} selectedPage={DocsPage.Monitor}>
 			<ui.S1>
 				<ui.H1>{'Monitor'}</ui.H1>
 				<ui.S2>

@@ -1,10 +1,10 @@
 use crate::{
 	common::{
 		error::Error,
-		model_layout_info::{get_model_layout_info, ModelLayoutInfo},
 		monitor_event::PredictOutput,
 		user::{authorize_user, authorize_user_for_model},
 	},
+	layouts::model_layout::{get_model_layout_info, ModelLayoutInfo},
 	Context,
 };
 use anyhow::Result;

@@ -1,10 +1,9 @@
+import { PageInfo } from '@tangramhq/pinwheel'
 import { ComponentChildren, h } from 'preact'
 
 export type DocumentProps = {
 	children?: ComponentChildren
-	clientJsSrc?: string
-	cssSrcs?: string[]
-	preloadJsSrcs?: string[]
+	pageInfo: PageInfo
 }
 
 export function Document(props: DocumentProps) {
@@ -13,7 +12,7 @@ export function Document(props: DocumentProps) {
 			<head>
 				<meta charSet="utf-8" />
 				<meta content="width=device-width, initial-scale=1" name="viewport" />
-				{props.preloadJsSrcs?.map(modulePath => (
+				{props.pageInfo.preloadJsSrcs?.map(modulePath => (
 					<link href={modulePath} key={modulePath} rel="modulepreload" />
 				))}
 				<link href="/favicon.png" rel="icon" type="image/png" />
@@ -36,7 +35,9 @@ export function Document(props: DocumentProps) {
 			</head>
 			<body>
 				{props.children}
-				{props.clientJsSrc && <script src={props.clientJsSrc} type="module" />}
+				{props.pageInfo.clientJsSrc && (
+					<script src={props.pageInfo.clientJsSrc} type="module" />
+				)}
 			</body>
 		</html>
 	)

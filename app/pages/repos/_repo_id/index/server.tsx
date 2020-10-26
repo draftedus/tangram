@@ -7,11 +7,7 @@ import { h } from 'preact'
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
-		<AppLayout
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
-		>
+		<AppLayout info={props.appLayoutInfo} pageInfo={pageInfo}>
 			<ui.S1>
 				<ui.SpaceBetween>
 					<ui.H1>{'Models'}</ui.H1>

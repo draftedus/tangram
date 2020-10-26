@@ -1,4 +1,8 @@
-use crate::common::user::User;
+use crate::{
+	common::user::User,
+	layouts::app_layout::{get_app_layout_info, AppLayoutInfo},
+	Context,
+};
 use anyhow::Result;
 use chrono::prelude::*;
 use sqlx::prelude::*;
@@ -7,6 +11,7 @@ use tangram_util::id::Id;
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
+	app_layout_info: AppLayoutInfo,
 	repos: Vec<Repo>,
 }
 
@@ -21,16 +26,26 @@ pub struct Repo {
 
 pub async fn props(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	context: &Context,
 	user: &Option<User>,
 ) -> Result<Props> {
-	if let Some(user) = user {
-		props_user(db, user).await
+	let app_layout_info = get_app_layout_info(context).await?;
+	let repos = if let Some(user) = user {
+		repos_for_user(db, user).await
 	} else {
-		props_root(db).await
-	}
+		repos_for_root(db).await
+	}?;
+	Ok(Props {
+		app_layout_info,
+		repos,
+	})
 }
 
-async fn props_user(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> Result<Props> {
+async fn repos_for_user(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user: &User,
+) -> Result<Vec<Repo>> {
+	let mut repos = Vec::new();
 	let rows = sqlx::query(
 		"
 			select
@@ -44,22 +59,19 @@ async fn props_user(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> R
 	.bind(&user.id.to_string())
 	.fetch_all(&mut *db)
 	.await?;
-	let user_repos: Vec<Repo> = rows
-		.into_iter()
-		.map(|row| {
-			let id = row.get(0);
-			let title = row.get(1);
-			let created_at = row.get::<i64, _>(2);
-			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
-			let owner_name = user.email.clone();
-			Repo {
-				id,
-				title,
-				created_at: created_at.to_rfc3339(),
-				owner_name: Some(owner_name),
-			}
-		})
-		.collect();
+	for row in rows {
+		let id = row.get(0);
+		let title = row.get(1);
+		let created_at = row.get::<i64, _>(2);
+		let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+		let owner_name = user.email.clone();
+		repos.push(Repo {
+			id,
+			title,
+			created_at: created_at.to_rfc3339(),
+			owner_name: Some(owner_name),
+		});
+	}
 	let rows = sqlx::query(
 		"
 			select
@@ -78,28 +90,23 @@ async fn props_user(db: &mut sqlx::Transaction<'_, sqlx::Any>, user: &User) -> R
 	.bind(&user.id.to_string())
 	.fetch_all(&mut *db)
 	.await?;
-	let org_repos: Vec<Repo> = rows
-		.into_iter()
-		.map(|row: sqlx::any::AnyRow| {
-			let id = row.get(0);
-			let title = row.get(1);
-			let created_at = row.get::<i64, _>(2);
-			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
-			let org_title = row.get(3);
-			Repo {
-				id,
-				title,
-				created_at: created_at.to_rfc3339(),
-				owner_name: org_title,
-			}
-		})
-		.collect();
-	let mut repos = user_repos;
-	repos.extend(org_repos);
-	Ok(Props { repos })
+	for row in rows {
+		let id = row.get(0);
+		let title = row.get(1);
+		let created_at = row.get::<i64, _>(2);
+		let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+		let org_title = row.get(3);
+		repos.push(Repo {
+			id,
+			title,
+			created_at: created_at.to_rfc3339(),
+			owner_name: org_title,
+		});
+	}
+	Ok(repos)
 }
 
-async fn props_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Props> {
+async fn repos_for_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Vec<Repo>> {
 	let rows = sqlx::query(
 		"
 			select
@@ -129,5 +136,5 @@ async fn props_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Props> 
 			}
 		})
 		.collect();
-	Ok(Props { repos })
+	Ok(repos)
 }

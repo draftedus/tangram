@@ -1,23 +1,19 @@
-import { AppLayout } from './app_layout'
+import { AppLayout, AppLayoutInfo } from './app_layout'
+import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
 import { ComponentChildren, h } from 'preact'
 
 type Props = {
+	appLayoutInfo: AppLayoutInfo
 	children?: ComponentChildren
-	clientJsSrc?: string
-	cssSrcs?: string[]
 	id: string
 	name: string
-	preloadJsSrcs?: string[]
+	pageInfo: PageInfo
 }
 
 export function OrganizationLayout(props: Props) {
 	return (
-		<AppLayout
-			clientJsSrc={props.clientJsSrc}
-			cssSrcs={props.cssSrcs}
-			preloadJsSrcs={props.preloadJsSrcs}
-		>
+		<AppLayout info={props.appLayoutInfo} pageInfo={props.pageInfo}>
 			<ui.S1>
 				<ui.H1>{props.name}</ui.H1>
 				<ui.TabBar>

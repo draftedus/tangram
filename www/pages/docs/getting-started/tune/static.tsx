@@ -9,12 +9,7 @@ import tuningConfusionMatrix from './screenshots/tuning_confusion_matrix.png'
 
 export default (pageInfo: PageInfo) => {
 	return renderPage(
-		<DocsLayout
-			clientJsSrc={pageInfo.clientJsSrc}
-			cssSrcs={pageInfo.cssSrcs}
-			preloadJsSrcs={pageInfo.preloadJsSrcs}
-			selectedPage={DocsPage.Tune}
-		>
+		<DocsLayout pageInfo={pageInfo} selectedPage={DocsPage.Tune}>
 			<ui.S1>
 				<ui.H1>{'Getting Started'}</ui.H1>
 				<ui.S2>

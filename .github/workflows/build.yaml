@@ -10,24 +10,21 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: linux amd64
-            os: linux
+          - os: linux
             arch: amd64
             runs_on: ubuntu-latest
             rust_target: x86_64-unknown-linux-gnu
             cli_file_name: tangram
             dynamic_library_file_name: libtangram.so
             static_library_file_name: libtangram.a
-          - name: macos amd64
-            os: macos
+          - os: macos
             arch: amd64
             runs_on: macos-latest
             rust_target: x86_64-apple-darwin
             cli_file_name: tangram
             dynamic_library_file_name: libtangram.dylib
             static_library_file_name: libtangram.a
-          - name: windows amd64
-            os: windows
+          - os: windows
             arch: amd64
             runs_on: windows-latest
             rust_target: x86_64-pc-windows-msvc
@@ -52,13 +49,16 @@ jobs:
           key: ${{ matrix.os }}-npm-${{ hashFiles('package-lock.json') }}
           path: |
             node_modules
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '15'
       - name: npm install
         run: |
-          nvm use
           npm install
       - name: build
         run: |
-          cargo build --release
+          cargo build --release --bin tangram --target ${{ matrix.rust_target }}
+          cargo build --release --lib libtangram --target ${{ matrix.rust_target }}
       - name: upload cli
         uses: actions/upload-artifact@v1
         with:

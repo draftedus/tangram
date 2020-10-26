@@ -59,7 +59,7 @@ pub async fn get_model_layout_info(
 	let repo_id: String = row.get(0);
 	let repo_id: Id = repo_id.parse()?;
 	let repo_title: String = row.get(1);
-	let model_version_ids = super::repos::get_model_version_ids(&mut db, repo_id).await?;
+	let model_version_ids = crate::common::repos::get_model_version_ids(&mut db, repo_id).await?;
 	let owner_organization_id: Option<String> = row.get(2);
 	let owner_organization_name: Option<String> = row.get(3);
 	let owner_user_id: Option<String> = row.get(4);

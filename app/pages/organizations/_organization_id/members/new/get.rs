@@ -1,4 +1,4 @@
-use super::props::Props;
+use super::props::props;
 use crate::{common::error::Error, Context};
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
@@ -11,7 +11,7 @@ pub async fn get(
 	if !context.options.auth_enabled {
 		return Err(Error::NotFound.into());
 	}
-	let props = Props {};
+	let props = props(context, None).await?;
 	let html = context
 		.pinwheel
 		.render_with("/organizations/_organization_id/members/new", props)?;
