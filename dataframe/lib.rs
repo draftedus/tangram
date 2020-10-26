@@ -786,10 +786,6 @@ impl<'a> EnumDataFrameColumnView<'a> {
 	pub fn view(&self) -> EnumDataFrameColumnView {
 		self.clone()
 	}
-
-	pub fn data(&self) -> &[Option<NonZeroUsize>] {
-		&self.data
-	}
 }
 
 impl<'a> TextDataFrameColumnView<'a> {
