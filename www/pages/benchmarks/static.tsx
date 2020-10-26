@@ -21,126 +21,139 @@ export default (pageInfo: PageInfo) => {
 					}
 				</ui.P>
 				<ui.S2>
-					<ui.H2>{'Memory Usage'}</ui.H2>
-					<TreeMemoryBenchmark />
-				</ui.S2>
-				<ui.S2>
-					<ui.H2>{'Training Time'}</ui.H2>
-					<TreeTimeBenchmark />
-				</ui.S2>
-				<ui.S2>
 					<ui.H2>{'Area Under the Receiver Operating Characteristic'}</ui.H2>
 					<TreeAUCBenchmark />
+				</ui.S2>
+				<ui.S2>
+					<ui.H2>{'Time'}</ui.H2>
+					<TimeBenchmark />
+				</ui.S2>
+				<ui.S2>
+					<ui.H2>{'Memory Usage'}</ui.H2>
+					<MemoryBenchmark />
 				</ui.S2>
 			</ui.S1>
 		</PageLayout>,
 	)
 }
 
-function TreeMemoryBenchmark() {
-	let barChartMemoryData = [
+function TreeAUCBenchmark() {
+	let barChartAUCData = [
 		{
 			color: ui.colors.blue,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.tangram.memory },
-				{ label: 'flights', x: 1, y: data.flights.tangram.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.tangram.memory },
+				{ label: 'higgs', x: 0, y: data.higgs.tangram.auc_roc },
+				{ label: 'flights', x: 1, y: data.flights.tangram.auc_roc },
 			],
 			title: 'tangram',
 		},
+
 		{
 			color: ui.colors.purple,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.lightgbm.memory },
-				{ label: 'flights', x: 1, y: data.flights.lightgbm.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.lightgbm.memory },
+				{ label: 'higgs', x: 0, y: data.higgs.lightgbm.auc_roc },
+				{ label: 'flights', x: 1, y: data.flights.lightgbm.auc_roc },
 			],
 			title: 'lightgbm',
 		},
 		{
 			color: ui.colors.green,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.xgboost.memory },
-				{ label: 'flights', x: 1, y: data.flights.xgboost.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.xgboost.memory },
+				{ label: 'higgs', x: 0, y: data.higgs.xgboost.auc_roc },
+				{ label: 'flights', x: 1, y: data.flights.xgboost.auc_roc },
 			],
 			title: 'xgboost',
 		},
 		{
 			color: ui.colors.yellow,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.sklearn.memory },
-				{ label: 'flights', x: 1, y: data.flights.sklearn.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.sklearn.memory },
+				{ label: 'higgs', x: 0, y: data.higgs.sklearn.auc_roc },
+				{ label: 'flights', x: 1, y: data.flights.sklearn.auc_roc },
 			],
 			title: 'sklearn',
 		},
 		{
 			color: ui.colors.orange,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.h2o.memory },
-				{ label: 'flights', x: 1, y: data.flights.h2o.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.h2o.memory },
+				{ label: 'higgs', x: 0, y: data.higgs.h2o.auc_roc },
+				{ label: 'flights', x: 1, y: data.flights.h2o.auc_roc },
 			],
 			title: 'h2o',
 		},
 		{
 			color: ui.colors.red,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.catboost.memory },
-				{ label: 'flights', x: 1, y: data.flights.catboost.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.catboost.memory },
+				{ label: 'higgs', x: 0, y: data.higgs.catboost.auc_roc },
+				{ label: 'flights', x: 1, y: data.flights.catboost.auc_roc },
 			],
 			title: 'catboost',
 		},
 	]
-	let formatGB = (value: number) => `${ui.formatNumber(value, 4)} GB`
-	let formatGBDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 	return (
-		<div className="benchmarks_table_chart_grid">
-			<ui.Table>
-				<ui.TableHeader>
-					<ui.TableRow>
-						<ui.TableHeaderCell>{'Dataset'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Memory'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
-					</ui.TableRow>
-				</ui.TableHeader>
-				<ui.TableBody>
-					{['higgs', 'flights', 'allstate'].map(dataset =>
-						libraries.map(library => (
-							<ui.TableRow key={dataset + library}>
-								<ui.TableCell>{dataset}</ui.TableCell>
-								<ui.TableCell>{library}</ui.TableCell>
-								<ui.TableCell>
-									{formatGB(data[dataset][library].memory)}
-								</ui.TableCell>
-								<ui.TableCell>
-									{formatGBDiff(
-										data[dataset][library].memory /
-											data[dataset]['tangram'].memory,
-									)}
-								</ui.TableCell>
-							</ui.TableRow>
-						)),
-					)}
-				</ui.TableBody>
-			</ui.Table>
+		<div className="benchmarks_tables_grid_wrapper">
+			<div className="benchmarks_tables_grid">
+				<div className="benchmarks_table_grid">
+					<div className="benchmarks_table_title">{'Flights'}</div>
+					<AUCTable data={data['flights']} />
+				</div>
+				<div className="benchmarks_table_grid">
+					<div className="benchmarks_table_title">{'Higgs'}</div>
+					<AUCTable data={data['higgs']} />
+				</div>
+			</div>
 			<BarChart
-				data={barChartMemoryData}
+				data={barChartAUCData}
 				groupGap={10}
-				id="memory_benchmark"
-				title="Memory Usage Benchmark (GB)"
+				id="auc_benchmark"
+				title="AUC (higher is better)"
 				xAxisTitle="Library"
-				yAxisTitle="Memory Usage (GB)"
+				yAxisTitle="AUC"
+				yMax={1}
 				yMin={0}
 			/>
 		</div>
 	)
 }
 
-function TreeTimeBenchmark() {
+type AUCTableProps = {
+	data: BenchmarkLibraries
+}
+
+function AUCTable(props: AUCTableProps) {
+	let formatAUC = (value: number) => `${ui.formatNumber(value, 4)}`
+	let formatAUCDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
+	return (
+		<ui.Table width="100%">
+			<ui.TableHeader>
+				<ui.TableRow>
+					<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'AUC'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
+				</ui.TableRow>
+			</ui.TableHeader>
+			<ui.TableBody>
+				{libraries.map(library => (
+					<ui.TableRow
+						color={library == 'tangram' ? ui.colors.blue : undefined}
+						key={library}
+					>
+						<ui.TableCell>{library}</ui.TableCell>
+						<ui.TableCell>
+							{formatAUC(props.data[library].auc_roc)}
+						</ui.TableCell>
+						<ui.TableCell>
+							{formatAUCDiff(
+								props.data[library].auc_roc / props.data['tangram'].auc_roc,
+							)}
+						</ui.TableCell>
+					</ui.TableRow>
+				))}
+			</ui.TableBody>
+		</ui.Table>
+	)
+}
+
+function TimeBenchmark() {
 	let barChartTimeData = [
 		{
 			color: ui.colors.blue,
@@ -197,44 +210,27 @@ function TreeTimeBenchmark() {
 			title: 'catboost',
 		},
 	]
-	let formatTime = (value: number) => `${ui.formatNumber(value, 4)} seconds`
-	let formatTimeDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 	return (
-		<div className="benchmarks_table_chart_grid">
-			<ui.Table>
-				<ui.TableHeader>
-					<ui.TableRow>
-						<ui.TableHeaderCell>{'Dataset'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Training Time'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
-					</ui.TableRow>
-				</ui.TableHeader>
-				<ui.TableBody>
-					{['higgs', 'flights', 'allstate'].map(dataset =>
-						libraries.map(library => (
-							<ui.TableRow key={dataset + library}>
-								<ui.TableCell>{dataset}</ui.TableCell>
-								<ui.TableCell>{library}</ui.TableCell>
-								<ui.TableCell>
-									{formatTime(data[dataset][library].duration)}
-								</ui.TableCell>
-								<ui.TableCell>
-									{formatTimeDiff(
-										data[dataset][library].duration /
-											data[dataset]['tangram'].duration,
-									)}
-								</ui.TableCell>
-							</ui.TableRow>
-						)),
-					)}
-				</ui.TableBody>
-			</ui.Table>
+		<div className="benchmarks_tables_grid_wrapper">
+			<div className="benchmarks_tables_grid">
+				<div className="benchmarks_table_grid">
+					<div className="benchmarks_table_title">{'Allstate'}</div>
+					<TimeTable data={data['allstate']} />
+				</div>
+				<div className="benchmarks_table_grid">
+					<div className="benchmarks_table_title">{'Flights'}</div>
+					<TimeTable data={data['flights']} />
+				</div>
+				<div className="benchmarks_table_grid">
+					<div className="benchmarks_table_title">{'Higgs'}</div>
+					<TimeTable data={data['higgs']} />
+				</div>
+			</div>
 			<BarChart
 				data={barChartTimeData}
 				groupGap={10}
 				id="time_benchmark"
-				title="Training Time Benchmark (seconds)"
+				title="Training Time (lower is better)"
 				xAxisTitle="Library"
 				yAxisTitle="Training Time (seconds)"
 			/>
@@ -242,106 +238,167 @@ function TreeTimeBenchmark() {
 	)
 }
 
-function TreeAUCBenchmark() {
-	let barChartAUCData = [
+type TimeTableProps = {
+	data: BenchmarkLibraries
+}
+
+function TimeTable(props: TimeTableProps) {
+	let formatTime = (value: number) => `${ui.formatNumber(value, 4)} sec`
+	let formatTimeDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
+	return (
+		<ui.Table width="100%">
+			<ui.TableHeader>
+				<ui.TableRow>
+					<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'Training'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
+				</ui.TableRow>
+			</ui.TableHeader>
+			<ui.TableBody>
+				{libraries.map(library => (
+					<ui.TableRow
+						color={library == 'tangram' ? ui.colors.blue : undefined}
+						key={library}
+					>
+						<ui.TableCell>{library}</ui.TableCell>
+						<ui.TableCell>
+							{formatTime(props.data[library].duration)}
+						</ui.TableCell>
+						<ui.TableCell>
+							{formatTimeDiff(
+								props.data[library].duration / props.data['tangram'].duration,
+							)}
+						</ui.TableCell>
+					</ui.TableRow>
+				))}
+			</ui.TableBody>
+		</ui.Table>
+	)
+}
+
+function MemoryBenchmark() {
+	let barChartMemoryData = [
 		{
 			color: ui.colors.blue,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.tangram.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.tangram.auc_roc },
+				{ label: 'higgs', x: 0, y: data.higgs.tangram.memory },
+				{ label: 'flights', x: 1, y: data.flights.tangram.memory },
+				{ label: 'allstate', x: 2, y: data.allstate.tangram.memory },
 			],
 			title: 'tangram',
 		},
-
 		{
 			color: ui.colors.purple,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.lightgbm.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.lightgbm.auc_roc },
+				{ label: 'higgs', x: 0, y: data.higgs.lightgbm.memory },
+				{ label: 'flights', x: 1, y: data.flights.lightgbm.memory },
+				{ label: 'allstate', x: 2, y: data.allstate.lightgbm.memory },
 			],
 			title: 'lightgbm',
 		},
 		{
 			color: ui.colors.green,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.xgboost.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.xgboost.auc_roc },
+				{ label: 'higgs', x: 0, y: data.higgs.xgboost.memory },
+				{ label: 'flights', x: 1, y: data.flights.xgboost.memory },
+				{ label: 'allstate', x: 2, y: data.allstate.xgboost.memory },
 			],
 			title: 'xgboost',
 		},
 		{
 			color: ui.colors.yellow,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.sklearn.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.sklearn.auc_roc },
+				{ label: 'higgs', x: 0, y: data.higgs.sklearn.memory },
+				{ label: 'flights', x: 1, y: data.flights.sklearn.memory },
+				{ label: 'allstate', x: 2, y: data.allstate.sklearn.memory },
 			],
 			title: 'sklearn',
 		},
 		{
 			color: ui.colors.orange,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.h2o.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.h2o.auc_roc },
+				{ label: 'higgs', x: 0, y: data.higgs.h2o.memory },
+				{ label: 'flights', x: 1, y: data.flights.h2o.memory },
+				{ label: 'allstate', x: 2, y: data.allstate.h2o.memory },
 			],
 			title: 'h2o',
 		},
 		{
 			color: ui.colors.red,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.catboost.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.catboost.auc_roc },
+				{ label: 'higgs', x: 0, y: data.higgs.catboost.memory },
+				{ label: 'flights', x: 1, y: data.flights.catboost.memory },
+				{ label: 'allstate', x: 2, y: data.allstate.catboost.memory },
 			],
 			title: 'catboost',
 		},
 	]
-	let formatAUC = (value: number) => `${ui.formatNumber(value, 4)}`
-	let formatAUCDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 	return (
-		<div className="benchmarks_table_chart_grid">
-			<ui.Table>
-				<ui.TableHeader>
-					<ui.TableRow>
-						<ui.TableHeaderCell>{'Dataset'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'AUC'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
-					</ui.TableRow>
-				</ui.TableHeader>
-				<ui.TableBody>
-					{['higgs', 'flights'].map(dataset =>
-						libraries.map(library => (
-							<ui.TableRow key={dataset + library}>
-								<ui.TableCell>{dataset}</ui.TableCell>
-								<ui.TableCell>{library}</ui.TableCell>
-								<ui.TableCell>
-									{formatAUC(data[dataset][library].auc_roc)}
-								</ui.TableCell>
-								<ui.TableCell>
-									{formatAUCDiff(
-										data[dataset][library].auc_roc /
-											data[dataset]['tangram'].auc_roc,
-									)}
-								</ui.TableCell>
-							</ui.TableRow>
-						)),
-					)}
-				</ui.TableBody>
-			</ui.Table>
+		<div className="benchmarks_tables_grid_wrapper">
+			<div className="benchmarks_tables_grid">
+				<div className="benchmarks_table_grid">
+					<div className="benchmarks_table_title">{'Allstate'}</div>
+					<MemoryTable data={data['allstate']} />
+				</div>
+				<div className="benchmarks_table_grid">
+					<div className="benchmarks_table_title">{'Flights'}</div>
+					<MemoryTable data={data['flights']} />
+				</div>
+				<div className="benchmarks_table_grid">
+					<div className="benchmarks_table_title">{'Higgs'}</div>
+					<MemoryTable data={data['higgs']} />
+				</div>
+			</div>
 			<BarChart
-				data={barChartAUCData}
+				data={barChartMemoryData}
 				groupGap={10}
-				id="auc_benchmark"
-				title="AUC Benchmark"
+				id="memory_benchmark"
+				title="Memory Usage (lower is better)"
 				xAxisTitle="Library"
-				yAxisTitle="AUC"
-				yMax={1}
+				yAxisTitle="Memory Usage (GB)"
 				yMin={0}
 			/>
 		</div>
 	)
 }
 
-let libraries = ['tangram', 'lightgbm', 'xgboost', 'sklearn', 'h2o']
+type MemoryTableProps = {
+	data: BenchmarkLibraries
+}
+
+function MemoryTable(props: MemoryTableProps) {
+	let formatGB = (value: number) => `${ui.formatNumber(value, 4)} GB`
+	let formatGBDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
+	return (
+		<ui.Table>
+			<ui.TableHeader>
+				<ui.TableRow>
+					<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'Memory'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
+				</ui.TableRow>
+			</ui.TableHeader>
+			<ui.TableBody>
+				{libraries.map(library => (
+					<ui.TableRow
+						color={library == 'tangram' ? ui.colors.blue : undefined}
+						key={library}
+					>
+						<ui.TableCell>{library}</ui.TableCell>
+						<ui.TableCell>{formatGB(props.data[library].memory)}</ui.TableCell>
+						<ui.TableCell>
+							{formatGBDiff(
+								props.data[library].memory / props.data['tangram'].memory,
+							)}
+						</ui.TableCell>
+					</ui.TableRow>
+				))}
+			</ui.TableBody>
+		</ui.Table>
+	)
+}
+
+let libraries = ['tangram', 'lightgbm', 'xgboost', 'sklearn', 'h2o', 'catboost']
 let data: BenchmarkDatasets = {
 	allstate: {
 		catboost: { duration: 1020.302861637, memory: 18.918908, mse: 1579.626 },

@@ -1,14 +1,19 @@
-.benchmarks_table_chart_grid {
+.benchmarks_tables_grid_wrapper {
 	display: grid;
-	grid: auto / 1fr 1fr;
-	grid-gap: 2rem;
-	align-items: flex-start;
+	grid-gap: 1rem;
 }
 
-@media (max-width: 1199px) {
-	.benchmarks_table_chart_grid {
-		display: grid;
-		grid: auto auto / 1fr;
-		grid-gap: 2rem;
-	}
+.benchmarks_tables_grid {
+	display: grid;
+	grid-auto-flow: column;
+	grid-gap: 1rem;
+}
+
+.benchmarks_table_grid {
+	display: grid;
+	grid-gap: 0.5rem;
+}
+
+.benchmarks_table_title {
+	font-size: 1.25rem;
 }

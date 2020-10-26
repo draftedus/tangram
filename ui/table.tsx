@@ -35,10 +35,14 @@ export function TableBody(props: TableBodyProps) {
 
 export type TableRowProps = {
 	children?: ComponentChildren
+	color?: string
 }
 
 export function TableRow(props: TableRowProps) {
-	return <tr>{props.children}</tr>
+	let style = {
+		backgroundColor: props.color as any,
+	}
+	return <tr style={style}>{props.children}</tr>
 }
 
 export type TableCellProps = {
