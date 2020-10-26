@@ -2,7 +2,7 @@
 	color: var(--text-color);
 	display: grid;
 	grid: auto 1fr / auto;
-	height: 100vh;
+	min-height: 100vh;
 	overflow-x: hidden;
 }
 

@@ -1,4 +1,4 @@
-import { hydrateBarChart } from '@tangramhq/charts'
+import { hydrateLineChart } from '@tangramhq/charts'
 
-hydrateBarChart('parametric_pr')
-hydrateBarChart('non_parametric_pr')
+hydrateLineChart('parametric_pr')
+hydrateLineChart('non_parametric_pr')
