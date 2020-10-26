@@ -42,6 +42,7 @@ pub struct RegressorProps {
 #[serde(rename_all = "camelCase")]
 pub struct BinaryClassifierProps {
 	accuracy: f32,
+	baseline_accuracy: f32,
 	auc_roc: f32,
 	id: String,
 	precision: f32,
@@ -119,8 +120,15 @@ fn build_inner_binary_classifier(
 		.thresholds
 		.get(model.test_metrics.thresholds.len() / 2)
 		.unwrap();
+	let baseline_accuracy = model
+		.baseline_metrics
+		.thresholds
+		.get(model.baseline_metrics.thresholds.len() / 2)
+		.unwrap()
+		.accuracy;
 	BinaryClassifierProps {
 		accuracy: default_threshold_test_metrics.accuracy,
+		baseline_accuracy,
 		auc_roc: model.test_metrics.auc_roc,
 		id: model.id,
 		precision: default_threshold_test_metrics.precision,

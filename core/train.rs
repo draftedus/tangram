@@ -199,18 +199,21 @@ pub fn train(
 				_ => unreachable!(),
 			};
 			let total_count = train_target_column_stats.count.to_f32().unwrap();
-			let baseline_probabilities = train_target_column_stats
+			let baseline_probability = train_target_column_stats
 				.histogram
 				.iter()
-				.map(|(_, count)| count.to_f32().unwrap() / total_count)
-				.collect::<Vec<_>>();
-			let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(101);
-			for label in labels.iter() {
-				metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-					probabilities: ArrayView::from(baseline_probabilities.as_slice()),
-					labels: ArrayView::from(&[*label]),
-				});
-			}
+				.last()
+				.unwrap()
+				.1
+				.to_f32()
+				.unwrap() / total_count;
+			let baseline_probabilities =
+				Array1::from_shape_fn(labels.len(), |_| baseline_probability);
+			let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
+			metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
+				probabilities: baseline_probabilities.view(),
+				labels: labels.view().data().into(),
+			});
 			Metrics::BinaryClassification(metrics.finalize())
 		}
 		Task::MulticlassClassification => {
