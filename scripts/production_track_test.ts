@@ -120,7 +120,7 @@ for (let i = 0; i < 1000; i++) {
 		if (input['chest_pain'] === 'asymptomatic') {
 			input['chest_pain'] = 'asx'
 		}
-		let isCorrect = Math.random() > 0.4
+		let isCorrect = Math.random() > 0.6
 		let className = isCorrect
 			? input[config.target]
 			: config.targetValues[

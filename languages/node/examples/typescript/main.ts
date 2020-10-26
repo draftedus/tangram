@@ -38,7 +38,7 @@ type Input = {
 // Define the type for the output of the model.
 type Output = tangram.MulticlassClassificationOutput<'Positive' | 'Negative'>
 
-// If you are running the Tangram reporting and monitoring web app on-prem you can pass the URL to its API with the TANGRAM_URL environment variable.
+// If you are running the Tangram reporting and monitoring web app on your own server you can pass the URL to it with the TANGRAM_URL environment variable.
 let tangramUrl = process.env.TANGRAM_URL || 'https://app.tangramhq.com.com'
 
 // Get the path to the .tangram file.
