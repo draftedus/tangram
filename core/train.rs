@@ -207,13 +207,13 @@ pub fn train(
 				.1
 				.to_f32()
 				.unwrap() / total_count;
-			let baseline_probabilities =
-				Array1::from_shape_fn(labels.len(), |_| baseline_probability);
 			let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
-			metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-				probabilities: baseline_probabilities.view(),
-				labels: labels.view().data().into(),
-			});
+			for label in labels.iter() {
+				metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
+					probabilities: ArrayView::from(&[baseline_probability]),
+					labels: ArrayView::from(&[*label]),
+				});
+			}
 			Metrics::BinaryClassification(metrics.finalize())
 		}
 		Task::MulticlassClassification => {
