@@ -41,7 +41,6 @@ export type BinaryClassificationPrediction = {
 	className: string
 	classes: string[]
 	featureContributionsChartData: FeatureContributionsChartData
-	probabilities: Array<[string, number]>
 	probability: number
 }
 

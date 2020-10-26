@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::convert::TryInto;
 
 #[derive(serde::Serialize)]
@@ -60,7 +59,7 @@ pub struct BinaryClassificationPrediction {
 pub struct MulticlassClassificationProductionPrediction {
 	class_name: String,
 	probability: f32,
-	probabilities: BTreeMap<String, f32>,
+	probabilities: Vec<(String, f32)>,
 	feature_contributions_chart_data: FeatureContributionsChartData,
 }
 
@@ -158,7 +157,7 @@ pub fn predict(
 			let prediction = MulticlassClassificationProductionPrediction {
 				class_name: output.class_name,
 				probability: output.probability,
-				probabilities: output.probabilities,
+				probabilities: output.probabilities.into_iter().collect::<Vec<_>>(),
 				feature_contributions_chart_data,
 			};
 			Prediction::MulticlassClassification(prediction)
