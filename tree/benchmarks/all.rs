@@ -9,12 +9,12 @@ enum BenchmarkOutput {
 impl std::fmt::Display for BenchmarkOutput {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
 		match self {
-			BenchmarkOutput::Regression(s) => write!(f, "mse: {}, vmhwm: {:?}", s.mse, s.vmhwm),
+			BenchmarkOutput::Regression(s) => write!(f, "mse: {}, memory: {:?}", s.mse, s.memory),
 			BenchmarkOutput::BinaryClassification(s) => {
-				write!(f, "auc_roc: {}, vmhwm: {:?}", s.auc_roc, s.vmhwm)
+				write!(f, "auc_roc: {}, memory: {:?}", s.auc_roc, s.memory)
 			}
 			BenchmarkOutput::MulticlassClassification(s) => {
-				write!(f, "accuracy: {}, vmhwm: {:?}", s.accuracy, s.vmhwm)
+				write!(f, "accuracy: {}, memory: {:?}", s.accuracy, s.memory)
 			}
 		}
 	}
@@ -23,41 +23,36 @@ impl std::fmt::Display for BenchmarkOutput {
 #[derive(serde::Deserialize, Debug)]
 struct RegressionBenchmarkOutput {
 	mse: f32,
-	vmhwm: Option<String>,
+	memory: Option<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 struct BinaryClassificationBenchmarkOutput {
 	auc_roc: f32,
-	vmhwm: Option<String>,
+	memory: Option<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 struct MulticlassClassificationBenchmarkOutput {
 	accuracy: f32,
-	vmhwm: Option<String>,
+	memory: Option<String>,
 }
 
 fn main() {
+	let libraries = &["lightgbm", "xgboost", "sklearn", "tangram", "catboost"];
 	// Test the regression datasets.
 	println!("Regression");
-	run_benchmarks(
-		&["lightgbm", "xgboost", "sklearn", "tangram"],
-		&["boston", "allstate"],
-	);
+	run_benchmarks(libraries, &["boston", "allstate"]);
 	println!();
 
 	// Test the binary classification datasets.
 	println!("Binary Classification");
-	run_benchmarks(
-		&["lightgbm", "xgboost", "sklearn", "tangram"],
-		&["heart_disease", "census", "higgs", "flights"],
-	);
+	run_benchmarks(libraries, &["heart_disease", "census", "higgs", "flights"]);
 	println!();
 
 	// Test the multiclass classification datasets.
 	println!("Multiclass Classification");
-	run_benchmarks(&["lightgbm", "xgboost", "sklearn", "tangram"], &["iris"]);
+	run_benchmarks(libraries, &["iris"]);
 	println!();
 }
 

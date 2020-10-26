@@ -5,7 +5,7 @@ import pandas as pd
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
+parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
 args = parser.parse_args()
 
 # Load the data.
@@ -56,7 +56,7 @@ elif args.library == 'sklearn':
     learning_rate=0.1,
     max_iter=100,
     max_leaf_nodes=255,
-    min_samples_leaf=1,
+    validation_fraction=None,
   )
   model.fit(features_train, labels_train)
 elif args.library == 'xgboost':
@@ -68,6 +68,16 @@ elif args.library == 'xgboost':
     tree_method='hist'
   )
   model.fit(features_train, labels_train)
+elif args.library == 'catboost':
+  from catboost import CatBoostClassifier
+  model = CatBoostClassifier(
+    learning_rate=0.1,
+    n_estimators=100,
+    num_leaves=255,
+    grow_policy='Lossguide',
+    verbose=False
+  )
+  model.fit(features_train, labels_train, silent=True)
 
 # Make predictions on the test data.
 if args.library == 'h2o':

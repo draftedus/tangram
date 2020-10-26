@@ -6,7 +6,7 @@ import pandas as pd
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
+parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
 args = parser.parse_args()
 
 # Load the data.
@@ -43,7 +43,7 @@ dtype = {
 }
 data_train = pd.read_csv(path_train, dtype=dtype)
 data_test = pd.read_csv(path_test, dtype=dtype)
-if args.library == 'xgboost' or args.library == 'sklearn':
+if args.library == 'xgboost' or args.library == 'sklearn' or args.library == 'catboost':
 	categorical_columns = data_train.select_dtypes(['category']).columns
 	data_train.loc[:, categorical_columns] = data_train.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
 	data_test.loc[:, categorical_columns] = data_test.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
@@ -91,6 +91,7 @@ elif args.library == 'sklearn':
     learning_rate=0.1,
     max_iter=100,
     max_leaf_nodes=255,
+    validation_fraction=None,
   )
   model.fit(features_train, labels_train)
 elif args.library == 'xgboost':
@@ -102,6 +103,17 @@ elif args.library == 'xgboost':
     tree_method='hist',
   )
   model.fit(features_train, labels_train)
+elif args.library == 'catboost':
+  from catboost import CatBoostClassifier
+  categorical_columns = [column for column in categorical_columns if column != target_column_name]
+  model = CatBoostClassifier(
+    learning_rate=0.1,
+    n_estimators=100,
+    num_leaves=255,
+    grow_policy='Lossguide',
+    verbose=False
+  )
+  model.fit(features_train, labels_train, silent=True)
 
 # Make predictions on the test data.
 if args.library == 'h2o':

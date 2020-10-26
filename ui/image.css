@@ -1,4 +1,5 @@
-.image-details[open] > summary::before {
+details.image-details[open] > summary::before {
+	-webkit-appearance: none;
 	background: transparent;
 	bottom: 0;
 	content: ' ';
@@ -11,11 +12,11 @@
 	z-index: 1;
 }
 
-.image-details-summary {
+summary.image-details-summary {
 	display: grid;
 }
 
-.image-details-summary:-webkit-details-marker {
+.image-details-summary::-webkit-details-marker {
 	display: none;
 }
 

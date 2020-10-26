@@ -7,7 +7,7 @@ import pandas as pd
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
+parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
 args = parser.parse_args()
 
 # Load the data.
@@ -63,7 +63,7 @@ start = time()
 if args.library == 'h2o':
   import h2o
   from h2o.estimators import H2OGradientBoostingEstimator
-  h2o.init()
+  h2o.init(max_mem_size=20480000 * 1000)
   data_train = pd.concat([features_train, labels_train], axis=1)
   data_test = pd.concat([features_test, labels_test], axis=1)
   data_train = h2o.H2OFrame(python_obj=data_train)
@@ -96,6 +96,7 @@ elif args.library == 'sklearn':
     learning_rate=0.1,
     max_iter=100,
     max_leaf_nodes=255,
+    validation_fraction=None,
   )
   model.fit(features_train, labels_train)
 elif args.library == 'xgboost':
@@ -108,6 +109,16 @@ elif args.library == 'xgboost':
     tree_method='hist',
   )
   model.fit(features_train, labels_train)
+elif args.library == 'catboost':
+  from catboost import CatBoostClassifier
+  model = CatBoostClassifier(
+    learning_rate=0.1,
+    n_estimators=100,
+    num_leaves=255,
+    grow_policy='Lossguide',
+    verbose=False
+  )
+  model.fit(features_train, labels_train, silent=True)
 duration = time() - start
 
 # Make predictions on the test data.
@@ -123,10 +134,10 @@ auc_roc = roc_auc_score(labels_test, predictions_proba)
 f = open("/proc/self/status", "r")
 for line in f.readlines():
 	if line.startswith("VmHWM"):
-		vmhwm = line.split(":")[1].strip()
+		memory = line.split(":")[1].strip()
 
 print(json.dumps({
   'auc_roc': auc_roc,
   'duration': duration,
-	'vmhwm': vmhwm,
+	'memory': memory,
 }))

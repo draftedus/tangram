@@ -10,36 +10,6 @@ type BenchmarkLibraries = {
 	[key: string]: BenchmarkResults
 }
 type BenchmarkResults = { [key: string]: number }
-
-let data: BenchmarkDatasets = {
-	allstate: {
-		lightgbm: { duration: 73.958655182, memory: 12.281084, mse: 1587.0221 },
-		sklearn: { duration: 72.647664062, memory: 10.928152, mse: 1583.6423 },
-		tangram: { duration: 60.637947846, memory: 4.832316, mse: 1587.8885 },
-		xgboost: { duration: 77.592920662, memory: 12.41334, mse: 1581.0436 },
-	},
-	flights: {
-		lightgbm: { auc_roc: 0.7807312, duration: 42.959502341, memory: 1.984692 },
-		sklearn: { auc_roc: 0.75876635, duration: 58.51804273, memory: 2.542824 },
-		tangram: { auc_roc: 0.7815357, duration: 37.162440456, memory: 1.140836 },
-		xgboost: { auc_roc: 0.75779957, duration: 47.069649134, memory: 2.420956 },
-	},
-	higgs: {
-		lightgbm: {
-			auc_roc: 0.83145106,
-			duration: 121.337377524,
-			memory: 11.616628,
-		},
-		sklearn: { auc_roc: 0.831599, duration: 205.640246711, memory: 9.294468 },
-		tangram: { auc_roc: 0.8320089, duration: 98.863112924, memory: 2.45728 },
-		xgboost: {
-			auc_roc: 0.81292254,
-			duration: 105.822569973,
-			memory: 12.734708,
-		},
-	},
-}
-
 export default (pageInfo: PageInfo) => {
 	return renderPage(
 		<PageLayout background={true} pageInfo={pageInfo}>
@@ -47,7 +17,7 @@ export default (pageInfo: PageInfo) => {
 				<ui.H1>{'Benchmarks'}</ui.H1>
 				<ui.P>
 					{
-						'Under the hood, the Tangram CLI uses Tangram Tree and Tangram Linear to train machine learning models.'
+						'Under the hood, the Tangram CLI uses Tangram Tree and Tangram Linear to train machine learning models. Tangram tree is the fastest gradient boosted decision tree library and has by far lowest memory usage.'
 					}
 				</ui.P>
 				<ui.S2>
@@ -105,6 +75,24 @@ function TreeMemoryBenchmark() {
 			],
 			title: 'sklearn',
 		},
+		{
+			color: ui.colors.orange,
+			data: [
+				{ label: 'higgs', x: 0, y: data.higgs.h2o.memory },
+				{ label: 'flights', x: 1, y: data.flights.h2o.memory },
+				{ label: 'allstate', x: 2, y: data.allstate.h2o.memory },
+			],
+			title: 'h2o',
+		},
+		{
+			color: ui.colors.red,
+			data: [
+				{ label: 'higgs', x: 0, y: data.higgs.catboost.memory },
+				{ label: 'flights', x: 1, y: data.flights.catboost.memory },
+				{ label: 'allstate', x: 2, y: data.allstate.catboost.memory },
+			],
+			title: 'catboost',
+		},
 	]
 	let formatGB = (value: number) => `${ui.formatNumber(value, 4)} GB`
 	let formatGBDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
@@ -121,7 +109,7 @@ function TreeMemoryBenchmark() {
 				</ui.TableHeader>
 				<ui.TableBody>
 					{['higgs', 'flights', 'allstate'].map(dataset =>
-						['tangram', 'lightgbm', 'xgboost', 'sklearn'].map(library => (
+						libraries.map(library => (
 							<ui.TableRow key={dataset + library}>
 								<ui.TableCell>{dataset}</ui.TableCell>
 								<ui.TableCell>{library}</ui.TableCell>
@@ -190,6 +178,24 @@ function TreeTimeBenchmark() {
 			],
 			title: 'sklearn',
 		},
+		{
+			color: ui.colors.orange,
+			data: [
+				{ label: 'higgs', x: 0, y: data.higgs.h2o.duration },
+				{ label: 'flights', x: 1, y: data.flights.h2o.duration },
+				{ label: 'allstate', x: 2, y: data.allstate.h2o.duration },
+			],
+			title: 'h2o',
+		},
+		{
+			color: ui.colors.red,
+			data: [
+				{ label: 'higgs', x: 0, y: data.higgs.catboost.duration },
+				{ label: 'flights', x: 1, y: data.flights.catboost.duration },
+				{ label: 'allstate', x: 2, y: data.allstate.catboost.duration },
+			],
+			title: 'catboost',
+		},
 	]
 	let formatTime = (value: number) => `${ui.formatNumber(value, 4)} seconds`
 	let formatTimeDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
@@ -206,7 +212,7 @@ function TreeTimeBenchmark() {
 				</ui.TableHeader>
 				<ui.TableBody>
 					{['higgs', 'flights', 'allstate'].map(dataset =>
-						['tangram', 'lightgbm', 'xgboost', 'sklearn'].map(library => (
+						libraries.map(library => (
 							<ui.TableRow key={dataset + library}>
 								<ui.TableCell>{dataset}</ui.TableCell>
 								<ui.TableCell>{library}</ui.TableCell>
@@ -246,6 +252,7 @@ function TreeAUCBenchmark() {
 			],
 			title: 'tangram',
 		},
+
 		{
 			color: ui.colors.purple,
 			data: [
@@ -270,6 +277,22 @@ function TreeAUCBenchmark() {
 			],
 			title: 'sklearn',
 		},
+		{
+			color: ui.colors.orange,
+			data: [
+				{ label: 'higgs', x: 0, y: data.higgs.h2o.auc_roc },
+				{ label: 'flights', x: 1, y: data.flights.h2o.auc_roc },
+			],
+			title: 'h2o',
+		},
+		{
+			color: ui.colors.red,
+			data: [
+				{ label: 'higgs', x: 0, y: data.higgs.catboost.auc_roc },
+				{ label: 'flights', x: 1, y: data.flights.catboost.auc_roc },
+			],
+			title: 'catboost',
+		},
 	]
 	let formatAUC = (value: number) => `${ui.formatNumber(value, 4)}`
 	let formatAUCDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
@@ -286,7 +309,7 @@ function TreeAUCBenchmark() {
 				</ui.TableHeader>
 				<ui.TableBody>
 					{['higgs', 'flights'].map(dataset =>
-						['tangram', 'lightgbm', 'xgboost', 'sklearn'].map(library => (
+						libraries.map(library => (
 							<ui.TableRow key={dataset + library}>
 								<ui.TableCell>{dataset}</ui.TableCell>
 								<ui.TableCell>{library}</ui.TableCell>
@@ -316,4 +339,56 @@ function TreeAUCBenchmark() {
 			/>
 		</div>
 	)
+}
+
+let libraries = ['tangram', 'lightgbm', 'xgboost', 'sklearn', 'h2o']
+let data: BenchmarkDatasets = {
+	allstate: {
+		catboost: { duration: 1020.302861637, memory: 18.918908, mse: 1579.626 },
+		h2o: {
+			duration: 315.6087601184845,
+			memory: 20.654428,
+			mse: 1579.611798325048,
+		},
+		lightgbm: { duration: 73.958655182, memory: 12.281084, mse: 1587.0221 },
+		sklearn: { duration: 72.647664062, memory: 10.928152, mse: 1583.6423 },
+		tangram: { duration: 60.637947846, memory: 4.832316, mse: 1587.8885 },
+		xgboost: { duration: 77.592920662, memory: 12.41334, mse: 1581.0436 },
+	},
+	flights: {
+		catboost: { auc_roc: 0.7357335, duration: 490.062091923, memory: 9.852156 },
+		h2o: {
+			auc_roc: 0.7460383618332509,
+			duration: 153.73776364326477,
+			memory: 3.676572,
+		},
+		lightgbm: { auc_roc: 0.7807312, duration: 42.959502341, memory: 1.984692 },
+		sklearn: { auc_roc: 0.75876635, duration: 58.51804273, memory: 2.542824 },
+		tangram: { auc_roc: 0.7815357, duration: 37.162440456, memory: 1.140836 },
+		xgboost: { auc_roc: 0.75779957, duration: 47.069649134, memory: 2.420956 },
+	},
+	higgs: {
+		catboost: {
+			auc_roc: 0.81350523,
+			duration: 392.363988334,
+			memory: 13.218528,
+		},
+		h2o: {
+			auc_roc: 0.8076566606451562,
+			duration: 540.6656179428101,
+			memory: 21.101324,
+		},
+		lightgbm: {
+			auc_roc: 0.83145106,
+			duration: 121.337377524,
+			memory: 11.616628,
+		},
+		sklearn: { auc_roc: 0.831599, duration: 205.640246711, memory: 9.294468 },
+		tangram: { auc_roc: 0.8320089, duration: 98.863112924, memory: 2.45728 },
+		xgboost: {
+			auc_roc: 0.81292254,
+			duration: 105.822569973,
+			memory: 12.734708,
+		},
+	},
 }

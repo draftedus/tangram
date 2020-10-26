@@ -7,7 +7,7 @@ import pandas as pd
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost'], required=True)
+parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
 args = parser.parse_args()
 
 # Load the data.
@@ -18,7 +18,7 @@ nrows_test = 61
 target_column_name = "diagnosis"
 gender_options = ['male', 'female']
 chest_pain_options = ['typical angina', 'asymptomatic', 'non-angina pain', 'atypical angina']
-fasting_blood_sugar_greater_than_120_options = ['True', 'False']
+fasting_blood_sugar_greater_than_120_options = [True, False]
 resting_ecg_result_options = ['probable or definite left ventricular hypertrophy', 'normal', 'ST-T wave abnormality']
 exercise_induced_angina_options = ['no', 'yes']
 exercise_st_slope_options = ['downsloping', 'flat', 'upsloping']
@@ -43,7 +43,7 @@ dtype = {
 }
 data_train = pd.read_csv(path_train, dtype=dtype)
 data_test = pd.read_csv(path_test, dtype=dtype)
-if args.library == 'xgboost' or args.library == 'sklearn':
+if args.library == 'xgboost' or args.library == 'sklearn' or args.library == 'catboost':
 	categorical_columns = data_train.select_dtypes(['category']).columns
 	data_train.loc[:, categorical_columns] = data_train.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
 	data_test.loc[:, categorical_columns] = data_test.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
@@ -57,6 +57,7 @@ if args.library == 'h2o':
   import h2o
   from h2o.estimators import H2OGradientBoostingEstimator
   h2o.init()
+  h2o.no_progress()
   data_train = pd.concat([features_train, labels_train], axis=1)
   data_test = pd.concat([features_test, labels_test], axis=1)
   data_train = h2o.H2OFrame(python_obj=data_train)
@@ -88,6 +89,7 @@ elif args.library == 'sklearn':
     learning_rate=0.1,
     max_iter=100,
     max_leaf_nodes=255,
+    validation_fraction=None,
   )
   model.fit(features_train, labels_train)
 elif args.library == 'xgboost':
@@ -99,6 +101,18 @@ elif args.library == 'xgboost':
     tree_method='hist',
   )
   model.fit(features_train, labels_train)
+elif args.library == 'catboost':
+  from catboost import CatBoostClassifier
+  categorical_columns = [column for column in categorical_columns if column != target_column_name]
+  model = CatBoostClassifier(
+    learning_rate=0.1,
+    n_estimators=100,
+    num_leaves=255,
+    cat_features=categorical_columns,
+    grow_policy='Lossguide',
+    verbose=False
+  )
+  model.fit(features_train, labels_train, silent=True)
 
 # Make predictions on the test data.
 if args.library == 'h2o':
