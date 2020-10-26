@@ -1,7 +1,7 @@
 require 'tangram'
 
 # Get the path to the .tangram file.
-model_path = File.join(File.dirname(__FILE__), 'heart-disease.tangram')
+model_path = File.join(File.dirname(__FILE__), 'heart_disease.tangram')
 # Load the model from the file.
 model = Tangram::Model.from_file(model_path)
 

@@ -14,7 +14,7 @@ $ go get -u github.com/tangram-hq/tangram-go
 ```go
 import "github.com/tangram-hq/tangram-go"
 
-model, _ := tangram.LoadModelFromFile("./heart-disease.tangram", nil)
+model, _ := tangram.LoadModelFromFile("./heart_disease.tangram", nil)
 defer model.Destroy()
 
 input := tangram.Input{
@@ -52,7 +52,7 @@ $ go run basic.go
 
 ### Advanced
 
-This example demonstrates logging predictions and true values to the Tangram reporting and monitoring web app. Before running the example, run `tangram app` to start the app running locally, open `http://localhost:8080` in your browser, and upload the file `examples/heart-disease.tangram` to it.
+This example demonstrates logging predictions and true values to the Tangram reporting and monitoring web app. Before running the example, run `tangram app` to start the app running locally, open `http://localhost:8080` in your browser, and upload the file `examples/heart_disease.tangram` to it.
 
 Then you can run the example:
 

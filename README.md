@@ -7,9 +7,9 @@
 Tangram is an all-in-one machine learning toolkit for developers. Here's the TLDR:
 
 1. Install the `tangram` cli: [Install Instructions](https://www.tangramhq.com/docs/install).
-2. Train a machine learning model from a CSV file: `tangram train --file heart-disease.csv --target diagnosis`. The cli automatically performs feature engineering, trains a number of models with a range of hyperparameter settings, and writes the best one to `heart-disease.tangram` in the current directory. Your data stays secure because all training happens on your laptop or your own server. If you want more control, you can configure training with a YAML config file.
+2. Train a machine learning model from a CSV file: `tangram train --file heart_disease.csv --target diagnosis`. The cli automatically performs feature engineering, trains a number of models with a range of hyperparameter settings, and writes the best one to `heart_disease.tangram` in the current directory. Your data stays secure because all training happens on your laptop or your own server. If you want more control, you can configure training with a YAML config file.
 3. Use one of the language libraries to load your model and make predictions from your code. Prediction happens in process, so predictions are fast and data doesn't go over the network. Go, JavaScript, Python, and Ruby are available now. C/C++, C#, Java, PHP, and Rust are coming soon.
-4. Run `tangram app --model heart-disease.tangram`. This starts a web app where you can:
+4. Run `tangram app --model heart_disease.tangram`. This starts a web app where you can:
 
 - View stats and metrics showing how your model performed on the test set.
 - Tune your model to get the best performance.

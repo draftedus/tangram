@@ -16,13 +16,13 @@ export default (pageInfo: PageInfo) => {
 						{'After training a model using the '}
 						<ui.InlineCode>{'tangram train'}</ui.InlineCode>
 						{' command, a file called '}
-						<ui.InlineCode>{'heart-disease.tangram'}</ui.InlineCode>
+						<ui.InlineCode>{'heart_disease.tangram'}</ui.InlineCode>
 						{
 							' is output in the current directory. We can use this file to make predictions in our code. Libraries are available for Go, JavaScript, Python, and Ruby. Support for C/C++, C#, Java, PHP, and Rust is coming soon.'
 						}
 					</ui.P>
 					<ui.Code
-						code="$ ls<br/>heart-disease.tangram<br/>heart-disease.csv"
+						code="$ ls<br/>heart_disease.tangram<br/>heart_disease.csv"
 						hideLineNumbers={true}
 					/>
 					<ui.P>

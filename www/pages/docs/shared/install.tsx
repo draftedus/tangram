@@ -93,6 +93,6 @@ function Windows() {
 }
 
 function Docker() {
-	let code = `$ docker run --rm -it tangramhq/tangram train --file heart-disease.csv --target diagnosis`
+	let code = `$ docker run --rm -it tangramhq/tangram train --file heart_disease.csv --target diagnosis`
 	return <ui.Code code={code} hideLineNumbers={true} />
 }

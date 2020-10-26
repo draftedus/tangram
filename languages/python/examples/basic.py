@@ -2,7 +2,7 @@ import os
 import tangram
 
 # Get the path to the .tangram file.
-model_path = os.path.join(os.path.dirname(__file__), 'heart-disease.tangram')
+model_path = os.path.join(os.path.dirname(__file__), 'heart_disease.tangram')
 # Load the model from the file.
 model = tangram.Model.from_file(model_path)
 

@@ -21,6 +21,6 @@ if !present {
 options := tangram.ModelOptions{
 	BaseURL: baseURL,
 }
-model, err := tangram.LoadModelFromFile("./heart-disease.tangram", &options)
+model, err := tangram.LoadModelFromFile("./heart_disease.tangram", &options)
 `,
 }

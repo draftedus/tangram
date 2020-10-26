@@ -9,7 +9,7 @@ export function Prediction() {
 let codeForLanguage = {
 	[Language.Go]: `import "github.com/tangram-hq/tangram/languages/go"
 
-path := "./heart-disease.tangram"
+path := "./heart_disease.tangram"
 model, _ := tangram.LoadModelFromFile(path, nil)
 defer model.Destroy()
 
@@ -23,7 +23,7 @@ output := model.PredictOne(input, nil)`,
 	[Language.JavaScript]: `const fs = require('fs')
 const tangram = require('@tangramhq/tangram')
 
-const modelData = fs.readFileSync('./heart-disease.tangram')
+const modelData = fs.readFileSync('./heart_disease.tangram')
 const model = new tangram.Model(modelData)
 
 const output = model.predictSync({
@@ -43,7 +43,7 @@ output = model.predict({
 })`,
 	[Language.Ruby]: `require 'tangram'
 
-model = Tangram::Model.from_file('./heart-disease.tangram')
+model = Tangram::Model.from_file('./heart_disease.tangram')
 
 output = model.predict({
 	age: 63,

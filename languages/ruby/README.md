@@ -14,7 +14,7 @@ $ gem install tangram
 ```ruby
 require 'tangram'
 
-model = Tangram::Model.from_file('./heart-disease.tangram')
+model = Tangram::Model.from_file('./heart_disease.tangram')
 
 input = {
 	age: 63,
@@ -49,7 +49,7 @@ $ ruby examples/basic.rb
 
 ### Advanced
 
-This example demonstrates logging predictions and true values to the Tangram reporting and monitoring web app. Before running the example, run `tangram app` to start the app running locally, open `http://localhost:8080` in your browser, and upload the file `examples/heart-disease.tangram` to it.
+This example demonstrates logging predictions and true values to the Tangram reporting and monitoring web app. Before running the example, run `tangram app` to start the app running locally, open `http://localhost:8080` in your browser, and upload the file `examples/heart_disease.tangram` to it.
 
 Then you can run the example:
 

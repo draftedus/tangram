@@ -1,7 +1,7 @@
 /*!
 This crate implements machine learning models for regression and classification using ensembles of decision trees. It has many similarities to [LightGBM](github.com/microsoft/lightgbm), [XGBoost](github.com/xgboost/xgboost), and others, but is written in pure Rust.
 
-For an example of regression, see `benchmarks/boston.rs`.rs`. For an example of binary classification, see `benchmarks/heart-disease.rs`. For an example of multiclass classification, see `benchmarks/iris.rs`.
+For an example of regression, see `benchmarks/boston.rs`.rs`. For an example of binary classification, see `benchmarks/heart_disease.rs`. For an example of multiclass classification, see `benchmarks/iris.rs`.
 */
 
 #![allow(clippy::tabs_in_doc_comments)]

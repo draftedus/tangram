@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/tangram-hq/tangram/languages/go"
 	"log"
 	"os"
 )
@@ -18,7 +17,7 @@ func main() {
 	options := tangram.ModelOptions{
 		BaseURL: tangramURL,
 	}
-	model, err := tangram.LoadModelFromFile("./heart-disease.tangram", &options)
+	model, err := tangram.LoadModelFromFile("./heart_disease.tangram", &options)
 	if err != nil {
 		log.Fatal(err)
 	}

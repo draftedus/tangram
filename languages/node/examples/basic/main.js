@@ -3,7 +3,7 @@ let path = require('path')
 let tangram = require('@tangramhq/tangram-node')
 
 // Get the path to the .tangram file.
-let modelPath = path.join(__dirname, 'heart-disease.tangram')
+let modelPath = path.join(__dirname, 'heart_disease.tangram')
 // Load the model from the file.
 let modelData = fs.readFileSync(modelPath)
 let model = new tangram.Model(modelData)

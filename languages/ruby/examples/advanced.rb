@@ -4,7 +4,7 @@ require 'tangram'
 tangram_url = ENV['TANGRAM_URL'] || 'https://app.tangramhq.com.com'
 
 # Get the path to the `.tangram` file.
-model_path = File.join(File.dirname(__FILE__), 'heart-disease.tangram')
+model_path = File.join(File.dirname(__FILE__), 'heart_disease.tangram')
 # Load the model from the file and set the url where the tangram app is running.
 model = Tangram::Model.from_file(model_path, tangram_url: tangram_url)
 

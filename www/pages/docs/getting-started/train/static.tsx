@@ -23,8 +23,8 @@ export default (pageInfo: PageInfo) => {
 				<ui.S2>
 					<ui.H2>{'Get the data'}</ui.H2>
 					<ui.P>
-						<ui.Link href="https://tangram-datasets.nyc3.digitaloceanspaces.com/heart-disease.csv">
-							{'Download heart-disease.csv'}
+						<ui.Link href="https://tangram-datasets.nyc3.digitaloceanspaces.com/heart_disease.csv">
+							{'Download heart_disease.csv'}
 						</ui.Link>
 					</ui.P>
 					<ui.P>
@@ -57,7 +57,7 @@ export default (pageInfo: PageInfo) => {
 						{' column.'}
 					</ui.P>
 					<ui.Code
-						code="$ tangram train --file heart-disease.csv --target diagnosis"
+						code="$ tangram train --file heart_disease.csv --target diagnosis"
 						hideLineNumbers={true}
 					/>
 				</ui.S2>

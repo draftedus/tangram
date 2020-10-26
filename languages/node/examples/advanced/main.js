@@ -6,7 +6,7 @@ let tangram = require('@tangramhq/tangram-node')
 let baseUrl = process.env.TANGRAM_URL || 'https://app.tangramhq.com.com'
 
 // Get the path to the .tangram file.
-let modelPath = path.join(__dirname, 'heart-disease.tangram')
+let modelPath = path.join(__dirname, 'heart_disease.tangram')
 // Load the model from the file and set the url where the tangram app is running.
 let modelData = fs.readFileSync(modelPath)
 let model = new tangram.Model(modelData, {

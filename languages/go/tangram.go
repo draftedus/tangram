@@ -1,8 +1,8 @@
 package tangram
 
-// #cgo linux LDFLAGS: -L${SRCDIR} -lm -ldl -ltangram-linux-x64
-// #cgo darwin LDFLAGS: -L${SRCDIR} -ltangram-macos-x64
-// #cgo windows LDFLAGS: -L${SRCDIR} -lws2_32 -luserenv -ltangram-windows-x64
+// #cgo linux LDFLAGS: -L${SRCDIR} -lm -ldl -ltangram-linux-amd64
+// #cgo darwin LDFLAGS: -L${SRCDIR} -ltangram-macos-amd64
+// #cgo windows LDFLAGS: -L${SRCDIR} -lws2_32 -luserenv -ltangram-windows-amd64
 // #include "./tangram.h"
 import "C"
 

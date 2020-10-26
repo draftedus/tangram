@@ -12,7 +12,7 @@ const path = require('path')
 const tangram = require('@tangramhq/tangram')
 
 // Get the path to the .tangram file.
-const modelPath = path.join(__dirname, 'heart-disease.tangram')
+const modelPath = path.join(__dirname, 'heart_disease.tangram')
 // Load the model from the file.
 const modelData = fs.readFileSync(modelPath)
 const model = new tangram.Model(modelData)
@@ -44,7 +44,7 @@ console.log('Output:', output)`,
 import tangram
 
 # Get the path to the .tangram file.
-model_path = os.path.join(os.path.dirname(__file__), 'heart-disease.tangram')
+model_path = os.path.join(os.path.dirname(__file__), 'heart_disease.tangram')
 # Load the model from the file.
 model = tangram.Model.from_file(model_path)
 
@@ -74,7 +74,7 @@ print('Output:', output)`,
 	[Language.Ruby]: `require 'tangram'
 
 # Get the path to the .tangram file.
-model_path = File.join(File.dirname(__FILE__), 'heart-disease.tangram')
+model_path = File.join(File.dirname(__FILE__), 'heart_disease.tangram')
 # Load the model from the file.
 model = Tangram::Model.from_file(model_path)
 
@@ -104,7 +104,7 @@ puts('Output:', output)`,
 	[Language.Go]: `import "github.com/tangram-hq/tangram/languages/go"
 
 // Load the model from the file.
-model, err := tangram.LoadModelFromFile("./heart-disease.tangram", nil)
+model, err := tangram.LoadModelFromFile("./heart_disease.tangram", nil)
 if err != nil {
 	log.Fatal(err)
 }

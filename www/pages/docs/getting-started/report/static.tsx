@@ -23,7 +23,7 @@ export default (pageInfo: PageInfo) => {
 					<ui.H2>{'Report'}</ui.H2>
 					<ui.P>
 						{"Let's learn more about our model by uploading the "}
-						<ui.InlineCode>{'heart-disease.tangram'}</ui.InlineCode>
+						<ui.InlineCode>{'heart_disease.tangram'}</ui.InlineCode>
 						{
 							' file to the reporting and monitoring web app. The app can be run by us in the cloud or by you on your own servers. To try the cloud hosted version, go to '
 						}
