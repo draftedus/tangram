@@ -9,6 +9,10 @@ build = false
 name = "tangram_script_release"
 path = "release.rs"
 
+[[bin]]
+name = "tangram_script_production_track_test"
+path = "production_track_test.rs"
+
 [dependencies]
 anyhow = "1"
 base64 = "0.13"

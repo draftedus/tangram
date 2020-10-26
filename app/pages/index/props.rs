@@ -80,9 +80,9 @@ async fn repos_for_user(
 				repos.created_at,
 				organizations.name
 			from repos
-			left join organizations
+			inner join organizations
 				on organizations.id = repos.organization_id
-			left join organizations_users
+			inner join organizations_users
 				on organizations_users.organization_id = repos.organization_id
 				and organizations_users.user_id = ?1
 		",
@@ -95,12 +95,12 @@ async fn repos_for_user(
 		let title = row.get(1);
 		let created_at = row.get::<i64, _>(2);
 		let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
-		let org_title = row.get(3);
+		let owner_name = row.get(3);
 		repos.push(Repo {
 			id,
 			title,
 			created_at: created_at.to_rfc3339(),
-			owner_name: org_title,
+			owner_name,
 		});
 	}
 	Ok(repos)
