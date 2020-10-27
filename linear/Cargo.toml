@@ -7,17 +7,17 @@ version = "0.0.0"
 [lib]
 path = "lib.rs"
 
-[[bin]]
-name = "tangram_linear_benchmark_all"
-path = "benchmarks/all.rs"
-
-[[bin]]
-name = "tangram_linear_benchmark_allstate"
-path = "benchmarks/allstate.rs"
-
-[[bin]]
-name = "tangram_linear_benchmark_boston"
-path = "benchmarks/boston.rs"
+# [[bin]]
+# name = "tangram_linear_benchmark_all"
+# path = "benchmarks/all.rs"
+#
+# [[bin]]
+# name = "tangram_linear_benchmark_allstate"
+# path = "benchmarks/allstate.rs"
+#
+# [[bin]]
+# name = "tangram_linear_benchmark_boston"
+# path = "benchmarks/boston.rs"
 
 [dependencies]
 itertools = "0.9"
