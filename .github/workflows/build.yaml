@@ -41,12 +41,14 @@ jobs:
       - name: cache
         uses: actions/cache@v2
         with:
-          key: ${{ matrix.os }}-${{ hashFiles('Cargo.lock', 'package-lock.json') }}
+          key: ${{ matrix.os }}-${{ hashFiles('Cargo.lock', 'package-lock.json') }}-v1
           path: |
             node_modules
-            ~/.cargo/registry
-            ~/.cargo/git
-            build/cargo
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            build
       - name: npm install
         run: |
           npm install
