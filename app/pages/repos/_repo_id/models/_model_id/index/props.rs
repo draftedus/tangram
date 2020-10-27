@@ -241,15 +241,15 @@ fn regression_model_comparison_type_name(
 ) -> String {
 	match comparison_metric {
 		tangram_core::model::RegressionComparisonMetric::MeanAbsoluteError => {
-			"Mean Absolute Error".into()
+			"Mean Absolute Error".to_owned()
 		}
 		tangram_core::model::RegressionComparisonMetric::MeanSquaredError => {
-			"Mean Squared Error".into()
+			"Mean Squared Error".to_owned()
 		}
 		tangram_core::model::RegressionComparisonMetric::RootMeanSquaredError => {
-			"Root Mean Squared Error".into()
+			"Root Mean Squared Error".to_owned()
 		}
-		tangram_core::model::RegressionComparisonMetric::R2 => "R2".into(),
+		tangram_core::model::RegressionComparisonMetric::R2 => "R2".to_owned(),
 	}
 }
 
@@ -258,7 +258,7 @@ fn binary_classification_model_comparison_type_name(
 ) -> String {
 	match comparison_metric {
 		tangram_core::model::BinaryClassificationComparisonMetric::AUCROC => {
-			"Area Under the Receiver Operating Characteristic Curve".into()
+			"Area Under the Receiver Operating Characteristic Curve".to_owned()
 		}
 	}
 }
@@ -268,7 +268,7 @@ fn multiclass_classification_model_comparison_type_name(
 ) -> String {
 	match comparison_metric {
 		tangram_core::model::MulticlassClassificationComparisonMetric::Accuracy => {
-			"Accuracy".into()
+			"Accuracy".to_owned()
 		}
 	}
 }
@@ -276,25 +276,25 @@ fn multiclass_classification_model_comparison_type_name(
 fn model_type_name(model: &tangram_core::model::Model) -> String {
 	match model {
 		tangram_core::model::Model::Regressor(model) => match &model.model {
-			tangram_core::model::RegressionModel::Linear(_) => "Linear Regressor".into(),
+			tangram_core::model::RegressionModel::Linear(_) => "Linear Regressor".to_owned(),
 			tangram_core::model::RegressionModel::Tree(_) => {
-				"Gradient Boosted Tree Regressor".into()
+				"Gradient Boosted Tree Regressor".to_owned()
 			}
 		},
 		tangram_core::model::Model::BinaryClassifier(model) => match &model.model {
 			tangram_core::model::BinaryClassificationModel::Linear(_) => {
-				"Linear Binary Classifier".into()
+				"Linear Binary Classifier".to_owned()
 			}
 			tangram_core::model::BinaryClassificationModel::Tree(_) => {
-				"Gradient Boosted Tree Binary Classifier".into()
+				"Gradient Boosted Tree Binary Classifier".to_owned()
 			}
 		},
 		tangram_core::model::Model::MulticlassClassifier(model) => match &model.model {
 			tangram_core::model::MulticlassClassificationModel::Linear(_) => {
-				"Linear Multiclass Classifier".into()
+				"Linear Multiclass Classifier".to_owned()
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(_) => {
-				"Gradient Boosted Tree Multiclass Classifier".into()
+				"Gradient Boosted Tree Multiclass Classifier".to_owned()
 			}
 		},
 	}

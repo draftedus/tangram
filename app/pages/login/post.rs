@@ -89,7 +89,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 			} else {
 				let props = Props {
 					code: true,
-					error: Some("invalid code".into()),
+					error: Some("invalid code".to_owned()),
 					email: Some(email),
 				};
 				let html = context.pinwheel.render_with("/login", props)?;

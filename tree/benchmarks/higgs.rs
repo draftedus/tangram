@@ -20,7 +20,7 @@ fn main() {
 	let target_column_index = 0;
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-			"signal".to_owned() => DataFrameColumnType::Enum { options: vec!["false".into(), "true".into()] },
+			"signal".to_owned() => DataFrameColumnType::Enum { options: vec!["false".to_owned(), "true".to_owned()] },
 			"lepton_pt".to_owned() => DataFrameColumnType::Number,
 			"lepton_eta".to_owned() => DataFrameColumnType::Number,
 			"lepton_phi".to_owned() => DataFrameColumnType::Number,

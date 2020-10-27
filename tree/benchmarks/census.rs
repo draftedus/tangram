@@ -158,26 +158,26 @@ fn main() {
 		.collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-		  "age".into() => DataFrameColumnType::Number ,
-			"workclass".into() => DataFrameColumnType::Enum {options: workclass_options },
-			"fnlwgt".into() =>
+		  "age".to_owned() => DataFrameColumnType::Number ,
+			"workclass".to_owned() => DataFrameColumnType::Enum {options: workclass_options },
+			"fnlwgt".to_owned() =>
 		   DataFrameColumnType::Number,
-			"education".into() => DataFrameColumnType::Enum {options: education_options },
-			"education_num".into() =>
+			"education".to_owned() => DataFrameColumnType::Enum {options: education_options },
+			"education_num".to_owned() =>
 		   DataFrameColumnType::Number,
-			"marital_status".into() => DataFrameColumnType::Enum {options: marital_status_options },
-			"occupation".into() => DataFrameColumnType::Enum {options: occupation_options },
-			"relationship".into() => DataFrameColumnType::Enum {options: relationship_options },
-			"race".into() => DataFrameColumnType::Enum {options: race_options },
-			"sex".into() => DataFrameColumnType::Enum {options: sex_options },
-			"capital_gain".into() =>
+			"marital_status".to_owned() => DataFrameColumnType::Enum {options: marital_status_options },
+			"occupation".to_owned() => DataFrameColumnType::Enum {options: occupation_options },
+			"relationship".to_owned() => DataFrameColumnType::Enum {options: relationship_options },
+			"race".to_owned() => DataFrameColumnType::Enum {options: race_options },
+			"sex".to_owned() => DataFrameColumnType::Enum {options: sex_options },
+			"capital_gain".to_owned() =>
 		   DataFrameColumnType::Number,
-			"capital_loss".into() =>
+			"capital_loss".to_owned() =>
 		   DataFrameColumnType::Number,
-			"hours_per_week".into() =>
+			"hours_per_week".to_owned() =>
 		   DataFrameColumnType::Number,
-			"native_country".into() => DataFrameColumnType::Enum {options: native_country_options },
-			"income".into() => DataFrameColumnType::Enum {options: income_options },
+			"native_country".to_owned() => DataFrameColumnType::Enum {options: native_country_options },
+			"income".to_owned() => DataFrameColumnType::Enum {options: income_options },
 		}),
 		..Default::default()
 	};

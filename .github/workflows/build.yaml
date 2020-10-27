@@ -52,6 +52,9 @@ jobs:
       - name: npm install
         run: |
           npm install
+      - name: try to use npx
+        run: |
+          npx esbuild --help
       - name: build
         run: |
           cargo build --release --target ${{ matrix.rust_target }}

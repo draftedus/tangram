@@ -153,11 +153,11 @@ impl StreamingMetric<'_> for MulticlassClassificationProductionPredictionMetrics
 
 #[test]
 fn test_binary() {
-	let classes = vec!["Cat".into(), "Dog".into()];
+	let classes = vec!["Cat".to_owned(), "Dog".to_owned()];
 	let mut metrics = MulticlassClassificationProductionPredictionMetrics::new(classes);
 	metrics.update((
-		NumberOrString::String("Cat".into()),
-		NumberOrString::String("Cat".into()),
+		NumberOrString::String("Cat".to_owned()),
+		NumberOrString::String("Cat".to_owned()),
 	));
 	let labels = vec![
 		"Cat", "Cat", "Cat", "Cat", "Cat", "Cat", "Cat", "Dog", "Dog", "Dog", "Dog", "Dog",
@@ -213,11 +213,11 @@ fn test_binary() {
 #[test]
 fn test_multiclass() {
 	// This example is taken from https://en.wikipedia.org/wiki/Confusion_matrix.
-	let classes = vec!["Cat".into(), "Dog".into(), "Rabbit".into()];
+	let classes = vec!["Cat".to_owned(), "Dog".to_owned(), "Rabbit".to_owned()];
 	let mut metrics = MulticlassClassificationProductionPredictionMetrics::new(classes);
 	metrics.update((
-		NumberOrString::String("Cat".into()),
-		NumberOrString::String("Cat".into()),
+		NumberOrString::String("Cat".to_owned()),
+		NumberOrString::String("Cat".to_owned()),
 	));
 	let labels = vec![
 		"Cat", "Cat", "Cat", "Cat", "Dog", "Dog", "Cat", "Cat", "Cat", "Dog", "Dog", "Dog",

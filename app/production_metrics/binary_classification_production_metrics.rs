@@ -135,8 +135,8 @@ fn test_binary() {
 	let mut metrics =
 		BinaryClassificationProductionPredictionMetrics::new("Cat".to_owned(), "Dog".to_owned());
 	metrics.update((
-		NumberOrString::String("Cat".into()),
-		NumberOrString::String("Cat".into()),
+		NumberOrString::String("Cat".to_owned()),
+		NumberOrString::String("Cat".to_owned()),
 	));
 	let labels = vec![
 		"Cat", "Cat", "Cat", "Cat", "Cat", "Cat", "Cat", "Dog", "Dog", "Dog", "Dog", "Dog",
