@@ -64,12 +64,12 @@ jobs:
         with:
           name: tangram-cli-${{ github.event.inputs.version }}-${{ matrix.os }}-${{ matrix.arch }}
           path: build/cargo/release/${{ matrix.cli_file_name }}
-      - name: upload cdylib
+      - name: upload dynamic library
         uses: actions/upload-artifact@v1
         with:
-          name: tangram-cdylib-${{ matrix.os }}-${{ matrix.arch }}
+          name: tangram-dyanmiclib-${{ matrix.os }}-${{ matrix.arch }}
           path: build/cargo/release/${{ matrix.dynamic_library_file_name }}
-      - name: upload staticlib
+      - name: upload static library
         uses: actions/upload-artifact@v1
         with:
           name: tangram-staticlib-${{ matrix.os }}-${{ matrix.arch }}
