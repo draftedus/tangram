@@ -1,3 +1,4 @@
+from pandas.api.types import CategoricalDtype
 from sklearn.metrics import mean_squared_error
 import argparse
 import numpy as np
@@ -14,8 +15,28 @@ path_test = 'data/boston_test.csv'
 nrows_train = 405
 nrows_test = 101
 target_column_name = "medv"
-data_train = pd.read_csv(path_train)
-data_test = pd.read_csv(path_test)
+chas_options = ["0", "1"]
+dtype = {
+  'crim': np.float64,
+  'zn': np.float64,
+  'indus': np.float64,
+  'chas': CategoricalDtype(categories=chas_options),
+  'nox': np.float64,
+  'rm': np.float64,
+  'age': np.float64,
+  'dis': np.float64,
+  'rad': np.int64,
+  'tax': np.float64,
+  'ptratio': np.float64,
+  'b': np.float64,
+  'lstat': np.float64,
+}
+data_train = pd.read_csv(path_train, dtype=dtype)
+data_test = pd.read_csv(path_test, dtype=dtype)
+if args.library == 'xgboost' or args.library == 'sklearn' or args.library == 'catboost':
+  categorical_columns = data_train.select_dtypes(['category']).columns
+  data_train.loc[:, categorical_columns] = data_train.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
+  data_test.loc[:, categorical_columns] = data_test.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
 features_train = data_train.loc[:, data_train.columns != target_column_name]
 labels_train = data_train[target_column_name]
 features_test = data_test.loc[:, data_test.columns != target_column_name]

@@ -2280,6 +2280,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "tangram_dataframe",
+ "tangram_features",
  "tangram_linear",
  "tangram_metrics",
  "tangram_tree",
@@ -2303,14 +2304,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "tangram_features"
+version = "0.0.0"
+dependencies = [
+ "fnv",
+ "itertools",
+ "ndarray",
+ "num-traits",
+ "tangram_dataframe",
+ "tangram_util",
+]
+
+[[package]]
 name = "tangram_linear"
 version = "0.0.0"
 dependencies = [
  "itertools",
+ "maplit",
  "ndarray",
  "num-traits",
  "rayon",
+ "serde",
+ "serde_json",
  "tangram_dataframe",
+ "tangram_features",
  "tangram_metrics",
  "tangram_util",
 ]

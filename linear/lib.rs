@@ -41,11 +41,7 @@ impl Default for TrainOptions {
 			learning_rate: 0.1,
 			max_epochs: 100,
 			n_examples_per_batch: 128,
-			early_stopping_options: Some(EarlyStoppingOptions {
-				early_stopping_fraction: 0.1,
-				n_epochs_without_improvement_to_stop: 3,
-				min_decrease_in_loss_for_significant_change: 1e-3,
-			}),
+			early_stopping_options: None,
 		}
 	}
 }

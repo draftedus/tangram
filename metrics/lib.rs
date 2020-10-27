@@ -26,7 +26,7 @@ pub use self::binary_cross_entropy::{BinaryCrossEntropy, BinaryCrossEntropyInput
 pub use self::cross_entropy::{CrossEntropy, CrossEntropyInput, CrossEntropyOutput};
 pub use self::mean::Mean;
 pub use self::mean_squared_error::MeanSquaredError;
-pub use self::mean_variance::{m2_to_variance, merge_mean_m2};
+pub use self::mean_variance::{m2_to_variance, merge_mean_m2, MeanVariance};
 pub use self::mode::Mode;
 pub use self::multiclass_classification::{
 	ClassMetrics, MulticlassClassificationMetrics, MulticlassClassificationMetricsInput,

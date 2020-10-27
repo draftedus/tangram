@@ -32,11 +32,11 @@ fn main() {
 	);
 
 	// Make predictions on the test data.
-	let features = features_test.to_rows();
+	let features_test = features_test.to_rows();
 	let mut predictions = Array::zeros(labels_test.len());
 	train_output
 		.model
-		.predict(features.view(), predictions.view_mut());
+		.predict(features_test.view(), predictions.view_mut());
 
 	// Compute metrics.
 	let mut metrics = tangram_metrics::RegressionMetrics::new();

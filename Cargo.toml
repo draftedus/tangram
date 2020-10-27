@@ -3,6 +3,7 @@ members = [
 	"app",
 	"cli",
 	"core",
+	"features",
 	"libtangram",
 	"linear",
 	"metrics",
