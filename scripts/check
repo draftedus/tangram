@@ -1,3 +1,3 @@
 cargo clippy --all-targets --all-features
-npm exec tsc -- -b
-npm exec eslint -- --cache --cache-location build/eslint --ext ts,tsx app charts pinwheel ui www
+npx tsc -b
+npx eslint --cache --cache-location build/eslint --ext ts,tsx app charts pinwheel ui www

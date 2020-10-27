@@ -1,2 +1,2 @@
 cargo fmt
-npm exec prettier -- --loglevel silent --write "**/*.{ts,tsx,css}"
+npx prettier --loglevel silent --write "**/*.{ts,tsx,css}"
