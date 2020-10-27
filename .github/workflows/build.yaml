@@ -62,14 +62,14 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: tangram-cli-${{ github.event.inputs.version }}-${{ matrix.os }}-${{ matrix.arch }}
-          path: build/cargo/release/${{ matrix.cli_file_name }}
+          path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.cli_file_name }}
       - name: upload dynamic library
         uses: actions/upload-artifact@v1
         with:
           name: tangram-dyanmiclib-${{ matrix.os }}-${{ matrix.arch }}
-          path: build/cargo/release/${{ matrix.dynamic_library_file_name }}
+          path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.dynamic_library_file_name }}
       - name: upload static library
         uses: actions/upload-artifact@v1
         with:
           name: tangram-staticlib-${{ matrix.os }}-${{ matrix.arch }}
-          path: build/cargo/release/${{ matrix.static_library_file_name }}
+          path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.static_library_file_name }}
