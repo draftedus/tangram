@@ -1,7 +1,7 @@
 use crate::{
 	common::{
 		error::Error,
-		user::{authorize_user, User},
+		user::{authorize_normal_user, NormalUser},
 	},
 	Context,
 };
@@ -28,18 +28,17 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
+	let user = authorize_normal_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let user = user.unwrap();
-	let response = create_organization(action, user, &mut db).await?;
+	let response = create_organization(action, &user, &mut db).await?;
 	db.commit().await?;
 	Ok(response)
 }
 
 async fn create_organization(
 	action: Action,
-	user: User,
+	user: &NormalUser,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 ) -> Result<Response<Body>> {
 	let Action { name } = action;

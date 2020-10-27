@@ -1,6 +1,8 @@
-use crate::common::user::User;
 use crate::{
-	common::{error::Error, user::authorize_user},
+	common::{
+		error::Error,
+		user::{authorize_normal_user, NormalUser},
+	},
 	Context,
 };
 use anyhow::Result;
@@ -23,22 +25,24 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
+	let user = authorize_normal_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let user = user.unwrap();
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
 	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
 	let response = match action {
-		Action::Logout => logout(user, &mut db).await?,
+		Action::Logout => logout(&user, &mut db).await?,
 	};
 	db.commit().await?;
 	Ok(response)
 }
 
-async fn logout(user: User, db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Response<Body>> {
+async fn logout(
+	user: &NormalUser,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+) -> Result<Response<Body>> {
 	let now = Utc::now().timestamp();
 	sqlx::query(
 		"

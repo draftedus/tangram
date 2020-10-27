@@ -42,11 +42,9 @@ pub async fn post(
 	match action {
 		Action::DeleteModel(DeleteModelAction { model_id, .. }) => {
 			let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-			if let Some(user) = user {
-				authorize_user_for_model(&mut db, &user, model_id)
-					.await
-					.map_err(|_| Error::NotFound)?;
-			}
+			authorize_user_for_model(&mut db, &user, model_id)
+				.await
+				.map_err(|_| Error::NotFound)?;
 			sqlx::query(
 				"
 					delete from models

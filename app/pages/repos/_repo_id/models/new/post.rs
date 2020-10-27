@@ -27,10 +27,8 @@ pub async fn post(
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
-	if let Some(user) = user {
-		if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
-			return Err(Error::Unauthorized.into());
-		}
+	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
+		return Err(Error::Unauthorized.into());
 	}
 	let boundary = match request
 		.headers()

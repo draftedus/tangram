@@ -34,7 +34,6 @@ pub async fn post(
 	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let user = user.unwrap();
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
 	authorize_user_for_organization(&mut db, &user, organization_id)
 		.await

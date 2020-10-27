@@ -38,11 +38,9 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 	match action {
 		Action::DeleteRepo(DeleteRepoAction { repo_id, .. }) => {
 			let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
-			if let Some(user) = user {
-				authorize_user_for_repo(&mut db, &user, repo_id)
-					.await
-					.map_err(|_| Error::NotFound)?;
-			}
+			authorize_user_for_repo(&mut db, &user, repo_id)
+				.await
+				.map_err(|_| Error::NotFound)?;
 			sqlx::query(
 				"
 					delete from repos

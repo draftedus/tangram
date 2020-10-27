@@ -24,11 +24,9 @@ pub async fn get(
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
-	if let Some(user) = user {
-		authorize_user_for_repo(&mut db, &user, repo_id)
-			.await
-			.map_err(|_| Error::NotFound)?;
-	}
+	authorize_user_for_repo(&mut db, &user, repo_id)
+		.await
+		.map_err(|_| Error::NotFound)?;
 	let props = props(&mut db, context, repo_id).await?;
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/repos/_repo_id/", props)?;

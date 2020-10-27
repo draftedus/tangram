@@ -1,6 +1,6 @@
 use crate::common::{
 	organizations::Plan,
-	user::{authorize_user, authorize_user_for_organization, User},
+	user::{authorize_normal_user, authorize_normal_user_for_organization, NormalUser},
 };
 use crate::{common::error::Error, Context};
 use anyhow::Result;
@@ -65,12 +65,11 @@ pub async fn post(
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
+	let user = authorize_normal_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let user = user.unwrap();
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
+	if !authorize_normal_user_for_organization(&mut db, &user, organization_id).await? {
 		return Err(Error::NotFound.into());
 	}
 	let response = match action {
@@ -78,7 +77,7 @@ pub async fn post(
 		Action::DeleteMember(action) => delete_member(&mut db, organization_id, action).await?,
 		Action::ChangePlan(action) => change_plan(&mut db, organization_id, action).await?,
 		Action::StartStripeCheckout => {
-			start_stripe_checkout(&mut db, organization_id, user, context).await?
+			start_stripe_checkout(&mut db, organization_id, &user, context).await?
 		}
 		Action::FinishStripeCheckout(action) => {
 			finish_stripe_checkout(&mut db, organization_id, action, context).await?
@@ -174,7 +173,7 @@ async fn change_plan(
 async fn start_stripe_checkout(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
-	user: User,
+	user: &NormalUser,
 	context: &Context,
 ) -> Result<Response<Body>> {
 	// Retrieve the existing stripe customer id for the organization.

@@ -2,7 +2,7 @@ use crate::{
 	common::{
 		error::Error,
 		organizations::{get_organization, Member, Plan},
-		user::{authorize_user, authorize_user_for_organization},
+		user::{authorize_normal_user, authorize_normal_user_for_organization},
 	},
 	layouts::app_layout::{get_app_layout_info, AppLayoutInfo},
 	Context,
@@ -70,18 +70,20 @@ pub async fn props(
 	context: &Context,
 	organization_id: &str,
 ) -> Result<Props> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let app_layout_info = get_app_layout_info(context).await?;
 	let mut db = context
 		.pool
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
+	let user = authorize_normal_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let user = user.unwrap();
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
-	if !authorize_user_for_organization(&mut db, &user, organization_id).await? {
+	if !authorize_normal_user_for_organization(&mut db, &user, organization_id).await? {
 		return Err(Error::NotFound.into());
 	}
 	let organization = get_organization(organization_id, &mut db)

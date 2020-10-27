@@ -1,8 +1,8 @@
 use crate::common::{
 	error::Error,
-	user::{authorize_user, authorize_user_for_organization},
+	user::{authorize_normal_user, authorize_normal_user_for_organization},
 };
-use crate::{common::user::User, Context};
+use crate::{common::user::NormalUser, Context};
 use anyhow::format_err;
 use anyhow::Result;
 use chrono::prelude::*;
@@ -30,12 +30,11 @@ pub async fn post(
 		.begin()
 		.await
 		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
+	let user = authorize_normal_user(&request, &mut db)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let user = user.unwrap();
 	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
-	authorize_user_for_organization(&mut db, &user, organization_id)
+	authorize_normal_user_for_organization(&mut db, &user, organization_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
 	let data = to_bytes(request.body_mut())
@@ -49,7 +48,7 @@ pub async fn post(
 
 async fn add_member(
 	action: Action,
-	user: User,
+	user: NormalUser,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	context: &Context,
 	organization_id: Id,

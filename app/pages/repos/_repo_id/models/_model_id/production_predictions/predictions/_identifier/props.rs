@@ -57,10 +57,8 @@ pub async fn props(
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
 	let model = get_model(&mut db, model_id).await?;
-	if let Some(user) = user {
-		if !authorize_user_for_model(&mut db, &user, model_id).await? {
-			return Err(Error::NotFound.into());
-		}
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
+		return Err(Error::NotFound.into());
 	}
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let row = sqlx::query(

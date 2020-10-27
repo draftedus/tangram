@@ -26,19 +26,21 @@ pub struct Owner {
 pub async fn props(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	context: &Context,
-	user: Option<User>,
+	user: User,
 	error: Option<String>,
 	title: Option<String>,
 	owner: Option<String>,
 ) -> Result<Props> {
 	let app_layout_info = get_app_layout_info(context).await?;
-	let owners = if let Some(user) = user {
-		let mut owners = vec![Owner {
-			value: format!("user:{}", user.id),
-			title: user.email,
-		}];
-		let rows = sqlx::query(
-			"
+	let owners = match user {
+		User::Root => None,
+		User::Normal(user) => {
+			let mut owners = vec![Owner {
+				value: format!("user:{}", user.id),
+				title: user.email,
+			}];
+			let rows = sqlx::query(
+				"
 				select
 					organizations.id,
 					organizations.name
@@ -47,21 +49,20 @@ pub async fn props(
 					on organizations_users.organization_id = organizations.id
 					and organizations_users.user_id = ?1
 			",
-		)
-		.bind(&user.id.to_string())
-		.fetch_all(&mut *db)
-		.await?;
-		for row in rows {
-			let id: String = row.get(0);
-			let title: String = row.get(1);
-			owners.push(Owner {
-				value: format!("organization:{}", id),
-				title,
-			})
+			)
+			.bind(&user.id.to_string())
+			.fetch_all(&mut *db)
+			.await?;
+			for row in rows {
+				let id: String = row.get(0);
+				let title: String = row.get(1);
+				owners.push(Owner {
+					value: format!("organization:{}", id),
+					title,
+				})
+			}
+			Some(owners)
 		}
-		Some(owners)
-	} else {
-		None
 	};
 	Ok(Props {
 		app_layout_info,

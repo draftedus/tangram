@@ -5,7 +5,13 @@ use sqlx::prelude::*;
 use tangram_util::id::Id;
 
 #[derive(Debug)]
-pub struct User {
+pub enum User {
+	Root,
+	Normal(NormalUser),
+}
+
+#[derive(Debug)]
+pub struct NormalUser {
 	pub id: Id,
 	pub email: String,
 	pub token: String,
@@ -25,11 +31,21 @@ pub async fn authorize_user(
 	request: &Request<Body>,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	auth_enabled: bool,
-) -> Result<Result<Option<User>, AuthorizeUserError>> {
+) -> Result<Result<User, AuthorizeUserError>> {
 	// When auth is disabled, everyone is authorized as the root user.
 	if !auth_enabled {
-		return Ok(Ok(None));
+		Ok(Ok(User::Root))
+	} else {
+		authorize_normal_user(request, db)
+			.await
+			.map(|r| r.map(User::Normal))
 	}
+}
+
+pub async fn authorize_normal_user(
+	request: &Request<Body>,
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+) -> Result<Result<NormalUser, AuthorizeUserError>> {
 	let token = if let Some(authorization) = request.headers().get(header::AUTHORIZATION) {
 		let authorization = match authorization.to_str() {
 			Ok(authorization) => authorization,
@@ -79,13 +95,26 @@ pub async fn authorize_user(
 	let id: String = row.get(0);
 	let id: Id = id.parse().unwrap();
 	let email = row.get(1);
-	let user = User { id, email, token };
-	Ok(Ok(Some(user)))
+	let user = NormalUser { id, email, token };
+	Ok(Ok(user))
 }
 
 pub async fn authorize_user_for_organization(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user: &User,
+	organization_id: Id,
+) -> Result<bool> {
+	match user {
+		User::Root => Ok(true),
+		User::Normal(user) => {
+			authorize_normal_user_for_organization(db, user, organization_id).await
+		}
+	}
+}
+
+pub async fn authorize_normal_user_for_organization(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user: &NormalUser,
 	organization_id: Id,
 ) -> Result<bool> {
 	Ok(sqlx::query(
@@ -104,9 +133,58 @@ pub async fn authorize_user_for_organization(
 	.get(0))
 }
 
+pub async fn authorize_user_for_repo(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user: &User,
+	repo_id: Id,
+) -> Result<bool> {
+	match user {
+		User::Root => Ok(true),
+		User::Normal(user) => authorize_normal_user_for_repo(db, user, repo_id).await,
+	}
+}
+
+pub async fn authorize_normal_user_for_repo(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user: &NormalUser,
+	repo_id: Id,
+) -> Result<bool> {
+	Ok(sqlx::query(
+		"
+			select
+				count(*) > 0
+			from repos
+			left join users
+				on users.id = repos.user_id
+			left join organizations_users
+				on organizations_users.organization_id = repos.organization_id
+			and
+				organizations_users.user_id = ?1
+			where
+				repos.id = ?2
+		",
+	)
+	.bind(&user.id.to_string())
+	.bind(&repo_id.to_string())
+	.fetch_one(&mut *db)
+	.await?
+	.get(0))
+}
+
 pub async fn authorize_user_for_model(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user: &User,
+	model_id: Id,
+) -> Result<bool> {
+	match user {
+		User::Root => Ok(true),
+		User::Normal(user) => authorize_normal_user_for_model(db, user, model_id).await,
+	}
+}
+
+pub async fn authorize_normal_user_for_model(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	user: &NormalUser,
 	model_id: Id,
 ) -> Result<bool> {
 	Ok(sqlx::query(
@@ -128,33 +206,6 @@ pub async fn authorize_user_for_model(
 	)
 	.bind(&user.id.to_string())
 	.bind(&model_id.to_string())
-	.fetch_one(&mut *db)
-	.await?
-	.get(0))
-}
-
-pub async fn authorize_user_for_repo(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	user: &User,
-	repo_id: Id,
-) -> Result<bool> {
-	Ok(sqlx::query(
-		"
-			select
-				count(*) > 0
-			from repos
-			left join users
-				on users.id = repos.user_id
-			left join organizations_users
-				on organizations_users.organization_id = repos.organization_id
-			and
-				organizations_users.user_id = ?1
-			where
-				repos.id = ?2
-		",
-	)
-	.bind(&user.id.to_string())
-	.bind(&repo_id.to_string())
 	.fetch_one(&mut *db)
 	.await?
 	.get(0))

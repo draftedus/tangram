@@ -158,10 +158,8 @@ pub async fn props(
 	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	if let Some(user) = user {
-		if !authorize_user_for_model(&mut db, &user, model_id).await? {
-			return Err(Error::NotFound.into());
-		}
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
+		return Err(Error::NotFound.into());
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;

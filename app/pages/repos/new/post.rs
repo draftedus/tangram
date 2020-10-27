@@ -44,9 +44,7 @@ pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Respo
 				crate::common::repos::create_user_repo(&mut db, owner_id, repo_id, &title).await?;
 			}
 			"organization" => {
-				if !authorize_user_for_organization(&mut db, user.as_ref().unwrap(), owner_id)
-					.await?
-				{
+				if !authorize_user_for_organization(&mut db, &user, owner_id).await? {
 					return Err(Error::Unauthorized.into());
 				}
 				crate::common::repos::create_org_repo(&mut db, owner_id, repo_id, title.as_str())

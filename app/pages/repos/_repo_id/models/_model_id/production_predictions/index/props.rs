@@ -65,13 +65,10 @@ pub async fn props(
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if let Some(user) = user {
-		if !authorize_user_for_model(&mut db, &user, model_id).await? {
-			return Err(Error::NotFound.into());
-		}
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
+		return Err(Error::NotFound.into());
 	}
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
-
 	let rows = match (after, before) {
 		(Some(after), None) => {
 			let rows = sqlx::query(
@@ -148,7 +145,6 @@ pub async fn props(
 		}
 		_ => unreachable!(),
 	};
-
 	let first_row_timestamp = rows.first().map(|row| row.get::<i64, _>(0));
 	let last_row_timestamp = rows.last().map(|row| row.get::<i64, _>(0));
 	let (newer_predictions_exist, older_predictions_exist) =

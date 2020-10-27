@@ -1,5 +1,5 @@
 use crate::{
-	common::user::User,
+	common::user::{NormalUser, User},
 	layouts::app_layout::{get_app_layout_info, AppLayoutInfo},
 	Context,
 };
@@ -27,23 +27,54 @@ pub struct Repo {
 pub async fn props(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	context: &Context,
-	user: &Option<User>,
+	user: &User,
 ) -> Result<Props> {
 	let app_layout_info = get_app_layout_info(context).await?;
-	let repos = if let Some(user) = user {
-		repos_for_user(db, user).await
-	} else {
-		repos_for_root(db).await
-	}?;
+	let repos = match user {
+		User::Root => repos_for_root(db).await?,
+		User::Normal(user) => repos_for_user(db, user).await?,
+	};
 	Ok(Props {
 		app_layout_info,
 		repos,
 	})
 }
 
+async fn repos_for_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Vec<Repo>> {
+	let rows = sqlx::query(
+		"
+			select
+				repos.id,
+				repos.created_at,
+				repos.title
+			from repos
+			where repos.user_id is null and repos.organization_id is null
+			order by repos.created_at
+		",
+	)
+	.fetch_all(db)
+	.await?;
+	let repos = rows
+		.iter()
+		.map(|row| {
+			let id: String = row.get(0);
+			let id: Id = id.parse().unwrap();
+			let created_at: i64 = row.get(1);
+			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+			let title = row.get(2);
+			Repo {
+				created_at: created_at.to_rfc3339(),
+				id: id.to_string(),
+				owner_name: None,
+				title,
+			}
+		})
+		.collect();
+	Ok(repos)
+}
 async fn repos_for_user(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	user: &User,
+	user: &NormalUser,
 ) -> Result<Vec<Repo>> {
 	let mut repos = Vec::new();
 	let rows = sqlx::query(
@@ -103,38 +134,5 @@ async fn repos_for_user(
 			owner_name,
 		});
 	}
-	Ok(repos)
-}
-
-async fn repos_for_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Vec<Repo>> {
-	let rows = sqlx::query(
-		"
-			select
-				repos.id,
-				repos.created_at,
-				repos.title
-			from repos
-			where repos.user_id is null and repos.organization_id is null
-			order by repos.created_at
-		",
-	)
-	.fetch_all(db)
-	.await?;
-	let repos = rows
-		.iter()
-		.map(|row| {
-			let id: String = row.get(0);
-			let id: Id = id.parse().unwrap();
-			let created_at: i64 = row.get(1);
-			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
-			let title = row.get(2);
-			Repo {
-				created_at: created_at.to_rfc3339(),
-				id: id.to_string(),
-				owner_name: None,
-				title,
-			}
-		})
-		.collect();
 	Ok(repos)
 }

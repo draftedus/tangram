@@ -28,10 +28,8 @@ pub async fn post(
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-	if let Some(user) = user {
-		if !authorize_user_for_model(&mut db, &user, model_id).await? {
-			return Err(Error::NotFound.into());
-		}
+	if !authorize_user_for_model(&mut db, &user, model_id).await? {
+		return Err(Error::NotFound.into());
 	}
 	let data = to_bytes(request.body_mut())
 		.await
