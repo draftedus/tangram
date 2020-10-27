@@ -1,6 +1,5 @@
 use super::StreamingMetric;
 use itertools::{izip, Itertools};
-use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
 
@@ -35,8 +34,8 @@ impl BinaryConfusionMatrix {
 
 /// The input to [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
 pub struct BinaryClassificationMetricsInput<'a> {
-	pub probabilities: ArrayView1<'a, f32>,
-	pub labels: ArrayView1<'a, Option<NonZeroUsize>>,
+	pub probabilities: &'a [f32],
+	pub labels: &'a [Option<NonZeroUsize>],
 }
 
 /// BinaryClassificationMetrics contains common metrics used to evaluate binary classifiers.
@@ -185,17 +184,17 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 #[test]
 fn test() {
 	let mut metrics = BinaryClassificationMetrics::new(3);
-	let labels = arr1(&[
+	let labels = &[
 		Some(NonZeroUsize::new(1).unwrap()),
 		Some(NonZeroUsize::new(1).unwrap()),
 		Some(NonZeroUsize::new(2).unwrap()),
 		Some(NonZeroUsize::new(1).unwrap()),
 		Some(NonZeroUsize::new(2).unwrap()),
-	]);
-	let probabilities = arr1(&[0.9, 0.2, 0.7, 0.2, 0.1]);
+	];
+	let probabilities = &[0.9, 0.2, 0.7, 0.2, 0.1];
 	metrics.update(BinaryClassificationMetricsInput {
-		probabilities: probabilities.view(),
-		labels: labels.view(),
+		probabilities,
+		labels,
 	});
 	let metrics = metrics.finalize();
 	insta::assert_debug_snapshot!(metrics, @r###"

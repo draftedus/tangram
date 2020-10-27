@@ -139,15 +139,13 @@ pub fn test_linear_binary_classifier(
 		},
 		|mut state, (features, labels)| {
 			let slice = s![0..features.nrows()];
-			let predictions = state.predictions.slice_mut(slice);
-			model.predict(features, predictions);
-			let predictions = state.predictions.slice(slice);
-			let labels = labels.view();
+			let mut predictions = state.predictions.slice_mut(slice);
+			model.predict(features, predictions.view_mut());
 			state
 				.test_metrics
 				.update(metrics::BinaryClassificationMetricsInput {
-					probabilities: predictions,
-					labels,
+					probabilities: predictions.as_slice().unwrap(),
+					labels: labels.as_slice().unwrap(),
 				});
 			state
 		},
@@ -188,8 +186,8 @@ pub fn test_tree_binary_classifier(
 	update_progress(ModelTestProgress::Testing);
 	model.predict(features.view(), predictions.view_mut());
 	test_metrics.update(metrics::BinaryClassificationMetricsInput {
-		probabilities: predictions.view(),
-		labels: labels.as_slice().into(),
+		probabilities: predictions.as_slice().unwrap(),
+		labels: labels.as_slice(),
 	});
 	test_metrics.finalize()
 }
