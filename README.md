@@ -6,8 +6,8 @@
 
 Tangram is an all-in-one machine learning toolkit for developers. Here's the TLDR:
 
-1. Install the `tangram` cli: [Install Instructions](https://www.tangramhq.com/docs/install).
-2. Train a machine learning model from a CSV file: `tangram train --file heart_disease.csv --target diagnosis`. The cli automatically performs feature engineering, trains a number of models with a range of hyperparameter settings, and writes the best one to `heart_disease.tangram` in the current directory. Your data stays secure because all training happens on your laptop or your own server. If you want more control, you can configure training with a YAML config file.
+1. Install the `tangram` CLI: [Install Instructions](https://www.tangramhq.com/docs/install).
+2. Train a machine learning model from a CSV file: `tangram train --file heart_disease.csv --target diagnosis`. The CLI automatically performs feature engineering, trains a number of models with a range of hyperparameter settings, and writes the best one to `heart_disease.tangram` in the current directory. Your data stays secure because all training happens on your laptop or your own server. If you want more control, you can configure training with a YAML config file.
 3. Use one of the language libraries to load your model and make predictions from your code. Prediction happens in process, so predictions are fast and data doesn't go over the network. Go, JavaScript, Python, and Ruby are available now. C/C++, C#, Java, PHP, and Rust are coming soon.
 4. Run `tangram app --model heart_disease.tangram`. This starts a web app where you can:
 
@@ -31,7 +31,7 @@ Watch the video below to learn more.
 1. Install [Rust](rust-lang.org) >= 1.47 and [Node.js](nodejs.org) >= 15 on Linux, macOS, or Windows.
 2. Clone this repo and `cd` into it.
 3. Run `npm install` to install npm dependencies.
-4. Run `cargo run` to run a debug build of the cli. If you are working on the app, install [watchexec](github.com/watchexec/watchexec) and run `./scripts/dev`, which runs the cli with the `app` subcommand under a file watcher.
+4. Run `cargo run` to run a debug build of the CLI. If you are working on the app, install [watchexec](github.com/watchexec/watchexec) and run `./scripts/dev`, which runs the CLI with the `app` subcommand under a file watcher.
 
 Before submitting a pull request, please run `./scripts/fmt` and `./scripts/check` at the root of the repository to confirm that your changes are formatted correctly and do not have any errors.
 

@@ -57,8 +57,7 @@ jobs:
           npm install
       - name: build
         run: |
-          cargo build --release --bin tangram --target ${{ matrix.rust_target }}
-          cargo build --release --lib libtangram --target ${{ matrix.rust_target }}
+          cargo build --release --target ${{ matrix.rust_target }}
       - name: upload cli
         uses: actions/upload-artifact@v1
         with:

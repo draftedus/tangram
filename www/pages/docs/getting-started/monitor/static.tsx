@@ -142,7 +142,7 @@ export default (pageInfo: PageInfo) => {
 					<ui.Img alt="feature importances" src={featureImportances} />
 					<ui.P>
 						{
-							"We're done! We just trained and deployed a custom machine learning model using the tangram cli and language libraries. Then, we learned more about our model and debugged an issue in production using the reporting and monitoring web app."
+							"We're done! We just trained and deployed a custom machine learning model using the tangram CLI and language libraries. Then, we learned more about our model and debugged an issue in production using the reporting and monitoring web app."
 						}
 					</ui.P>
 					<ui.P>
