@@ -15,8 +15,8 @@ struct Action {
 }
 
 pub async fn post(
-	mut request: Request<Body>,
 	context: &Context,
+	mut request: Request<Body>,
 	model_id: &str,
 ) -> Result<Response<Body>> {
 	let mut db = context

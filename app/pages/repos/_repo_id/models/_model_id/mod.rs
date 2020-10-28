@@ -30,8 +30,8 @@ enum Action {
 }
 
 pub async fn post(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 ) -> Result<Response<Body>> {
 	let mut db = context
@@ -74,8 +74,8 @@ async fn delete_model(
 }
 
 pub async fn download(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 ) -> Result<Response<Body>> {
 	let mut db = context

@@ -141,8 +141,8 @@ pub struct TextProps {
 }
 
 pub async fn props(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 	column_name: &str,
 	search_params: Option<BTreeMap<String, String>>,

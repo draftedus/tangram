@@ -68,8 +68,8 @@ pub struct TokenStats {
 }
 
 pub async fn props(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 	column_name: &str,
 ) -> Result<Props> {

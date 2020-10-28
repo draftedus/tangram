@@ -87,8 +87,8 @@ pub struct Text {
 }
 
 pub async fn props(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Props> {

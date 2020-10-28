@@ -41,8 +41,8 @@ pub struct Found {
 }
 
 pub async fn props(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 	identifier: &str,
 ) -> Result<Props> {

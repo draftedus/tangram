@@ -11,8 +11,8 @@ use hyper::{Body, Request, Response, StatusCode};
 use tangram_util::id::Id;
 
 pub async fn get(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	repo_id: &str,
 ) -> Result<Response<Body>> {
 	let mut db = context

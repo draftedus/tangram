@@ -23,8 +23,8 @@ struct DeleteModelAction {
 }
 
 pub async fn post(
-	mut request: Request<Body>,
 	context: &Context,
+	mut request: Request<Body>,
 	repo_id: &str,
 ) -> Result<Response<Body>> {
 	let data = to_bytes(request.body_mut())

@@ -49,7 +49,7 @@ pub enum ColumnType {
 	Text,
 }
 
-pub async fn props(request: Request<Body>, context: &Context, model_id: &str) -> Result<Props> {
+pub async fn props(context: &Context, request: Request<Body>, model_id: &str) -> Result<Props> {
 	let mut db = context
 		.pool
 		.begin()

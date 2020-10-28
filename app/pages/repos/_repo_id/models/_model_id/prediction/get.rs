@@ -5,12 +5,12 @@ use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 
 pub async fn get(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(request, context, model_id, search_params).await?;
+	let props = props(context, request, model_id, search_params).await?;
 	let html = context
 		.pinwheel
 		.render_with("/repos/_repo_id/models/_model_id/prediction", props)?;

@@ -16,7 +16,7 @@ struct Action {
 	owner: Option<String>,
 }
 
-pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
 	let mut db = context
 		.pool
 		.begin()

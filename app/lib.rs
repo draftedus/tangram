@@ -57,38 +57,38 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 				.collect()
 		});
 	let result = match (&method, path_components.as_slice()) {
-		(&Method::GET, &["health"]) => self::api::health::get(request, &context).await,
-		(&Method::POST, &["track"]) => self::api::track::post(request, context).await,
-		(&Method::GET, &["login"]) => self::pages::login::get(request, context, search_params).await,
-		(&Method::POST, &["login"]) => self::pages::login::post(request, &context).await,
-		(&Method::GET, &[""]) => self::pages::index::get(request, &context).await,
-		(&Method::POST, &[""]) => self::pages::index::post(request, &context).await,
-		(&Method::GET, &["repos", "new"]) => self::pages::repos::new::get(request, &context).await,
-		(&Method::POST, &["repos", "new"]) => self::pages::repos::new::post(request, &context).await,
+		(&Method::GET, &["health"]) => self::api::health::get(&context, request).await,
+		(&Method::POST, &["track"]) => self::api::track::post(&context, request).await,
+		(&Method::GET, &["login"]) => self::pages::login::get(&context, request, search_params).await,
+		(&Method::POST, &["login"]) => self::pages::login::post(&context, request).await,
+		(&Method::GET, &[""]) => self::pages::index::get(&context, request).await,
+		(&Method::POST, &[""]) => self::pages::index::post(&context, request).await,
+		(&Method::GET, &["repos", "new"]) => self::pages::repos::new::get(&context, request).await,
+		(&Method::POST, &["repos", "new"]) => self::pages::repos::new::post(&context, request).await,
 		(&Method::GET, &["repos", repo_id, ""]) => {
-			self::pages::repos::_repo_id::index::get(request, &context, repo_id).await
+			self::pages::repos::_repo_id::index::get(&context, request, repo_id).await
 		}
 		(&Method::POST, &["repos", repo_id, ""]) => {
-			self::pages::repos::_repo_id::index::post(request, &context, repo_id).await
+			self::pages::repos::_repo_id::index::post(&context, request, repo_id).await
 		}
 		(&Method::GET, &["repos", repo_id, "models", "new"]) => {
-			self::pages::repos::_repo_id::models::new::get(request, &context, repo_id).await
+			self::pages::repos::_repo_id::models::new::get(&context, request, repo_id).await
 		}
 		(&Method::POST, &["repos", repo_id, "models", "new"]) => {
-			self::pages::repos::_repo_id::models::new::post(request, &context, repo_id).await
+			self::pages::repos::_repo_id::models::new::post(&context, request, repo_id).await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::index::get(request, &context, model_id).await
+			self::pages::repos::_repo_id::models::_model_id::index::get(&context, request, model_id).await
 		}
 		(&Method::POST, &["repos", _repo_id, "models", model_id]) => {
-			self::pages::repos::_repo_id::models::_model_id::post(request, &context, model_id).await
+			self::pages::repos::_repo_id::models::_model_id::post(&context, request, model_id).await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "download"]) => {
-			self::pages::repos::_repo_id::models::_model_id::download(request, &context, model_id).await
+			self::pages::repos::_repo_id::models::_model_id::download(&context, request, model_id).await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_stats", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::training_stats::index::get(
-				request, &context, model_id,
+				&context, request, model_id,
 			)
 			.await
 		}
@@ -97,8 +97,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			&["repos", _repo_id, "models", model_id, "training_stats", "columns", column_name],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::training_stats::columns::_column_name::get(
-				request,
 				&context,
+				request,
 				model_id,
 				column_name,
 			)
@@ -106,14 +106,14 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_importances"]) => {
 			self::pages::repos::_repo_id::models::_model_id::training_importances::get(
-				request, &context, model_id,
+				&context, request, model_id,
 			)
 			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "prediction"]) => {
 			self::pages::repos::_repo_id::models::_model_id::prediction::get(
-				request,
 				&context,
+				request,
 				model_id,
 				search_params,
 			)
@@ -121,7 +121,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::training_metrics::index::get(
-				request, &context, model_id,
+				&context, request, model_id,
 			)
 			.await
 		}
@@ -130,8 +130,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			&["repos", _repo_id, "models", model_id, "training_metrics", "class_metrics"],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::training_metrics::class_metrics::get(
-				request,
 				&context,
+				request,
 				model_id,
 				search_params,
 			)
@@ -142,28 +142,28 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			&["repos", _repo_id, "models", model_id, "training_metrics", "precision_recall"],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::training_metrics::precision_recall::get(
-				request,
 				&context,
+				request,
 				model_id,
 			)
 			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", "roc"]) => {
 			self::pages::repos::_repo_id::models::_model_id::training_metrics::roc::get(
-				request,
 				&context,
+				request,
 				model_id,
 			)
 			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "tuning"]) => {
-			self::pages::repos::_repo_id::models::_model_id::tuning::get(request, &context, model_id)
+			self::pages::repos::_repo_id::models::_model_id::tuning::get(&context, request, model_id)
 				.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_predictions::index::get(
-				request,
 				&context,
+				request,
 				model_id,
 				search_params,
 			)
@@ -171,16 +171,16 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 		}
 		(&Method::POST, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_predictions::index::post(
-				request,
 				&context,
+				request,
 				model_id,
 			)
 			.await
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", "predictions", identifier]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_predictions::predictions::_identifier::get(
-				request,
 				&context,
+				request,
 				model_id,
 				identifier,
 			)
@@ -188,8 +188,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_stats::index::get(
-				request,
 				&context,
+				request,
 				model_id,
 				search_params,
 			)
@@ -200,8 +200,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			&["repos", _repo_id, "models", model_id, "production_stats", "columns", column_name],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::production_stats::columns::_column_name::get(
-				request,
 				&context,
+				request,
 				model_id,
 				column_name,
 				search_params,
@@ -210,8 +210,8 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 		}
 		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_metrics::index::get(
-				request,
 				&context,
+				request,
 				model_id,
 				search_params,
 			)
@@ -222,51 +222,51 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			&["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::production_metrics::class_metrics::get(
-				request,
 				&context,
+				request,
 				model_id,
 				search_params,
 			)
 			.await
 		}
-		(&Method::GET, &["user"]) => self::pages::user::get(request, &context).await,
-		(&Method::POST, &["user"]) => self::pages::user::post(request, &context).await,
+		(&Method::GET, &["user"]) => self::pages::user::get(&context, request).await,
+		(&Method::POST, &["user"]) => self::pages::user::post(&context, request).await,
 		(&Method::GET, &["organizations", "new"]) => {
-			self::pages::organizations::new::get(request, &context).await
+			self::pages::organizations::new::get(&context, request).await
 		}
 		(&Method::POST, &["organizations", "new"]) => {
-			self::pages::organizations::new::post(request, &context).await
+			self::pages::organizations::new::post(&context, request).await
 		}
 		(&Method::GET, &["organizations", organization_id, ""]) => {
-			self::pages::organizations::_organization_id::index::get(request, &context, organization_id)
+			self::pages::organizations::_organization_id::index::get(&context, request, organization_id)
 				.await
 		}
 		(&Method::POST, &["organizations", organization_id, ""]) => {
-			self::pages::organizations::_organization_id::index::post(request, &context, organization_id)
+			self::pages::organizations::_organization_id::index::post(&context, request, organization_id)
 				.await
 		}
 		(&Method::GET, &["organizations", organization_id, "edit"]) => {
-			self::pages::organizations::_organization_id::edit::get(request, &context, organization_id)
+			self::pages::organizations::_organization_id::edit::get(&context, request, organization_id)
 				.await
 		}
 		(&Method::GET, &["organizations", organization_id, "members", "new"]) => {
 			self::pages::organizations::_organization_id::members::new::get(
-				request,
 				&context,
+				request,
 				organization_id,
 			)
 			.await
 		}
 		(&Method::POST, &["organizations", organization_id, "members", "new"]) => {
 			self::pages::organizations::_organization_id::members::new::post(
-				request,
 				&context,
+				request,
 				organization_id,
 			)
 			.await
 		}
 		(&Method::POST, &["organizations", organization_id, "edit"]) => {
-			self::pages::organizations::_organization_id::edit::post(request, &context, organization_id)
+			self::pages::organizations::_organization_id::edit::post(&context, request, organization_id)
 				.await
 		}
 		_ => context.pinwheel.handle(request).await,

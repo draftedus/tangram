@@ -66,8 +66,8 @@ struct StripeCard {
 }
 
 pub async fn props(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	organization_id: &str,
 ) -> Result<Props> {
 	if !context.options.auth_enabled {

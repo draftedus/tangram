@@ -15,7 +15,7 @@ struct Action {
 	name: String,
 }
 
-pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {
 		return Err(Error::BadRequest.into());
 	}

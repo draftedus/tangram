@@ -144,8 +144,8 @@ pub struct ClassMetricsTableEntry {
 }
 
 pub async fn props(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,

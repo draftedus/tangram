@@ -4,8 +4,8 @@ use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 
 pub async fn get(
-	_request: Request<Body>,
 	context: &Context,
+	_request: Request<Body>,
 	_organization_id: &str,
 ) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {

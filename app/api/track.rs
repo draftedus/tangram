@@ -16,7 +16,7 @@ use anyhow::{format_err, Result};
 use chrono::prelude::*;
 use hyper::{body::to_bytes, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use std::{collections::BTreeMap, sync::Arc};
+use std::collections::BTreeMap;
 use tangram_metrics::StreamingMetric;
 use tangram_util::id::Id;
 
@@ -27,10 +27,7 @@ enum MonitorEventSet {
 	Multiple(Vec<MonitorEvent>),
 }
 
-pub(crate) async fn post(
-	mut request: Request<Body>,
-	context: Arc<Context>,
-) -> Result<Response<Body>> {
+pub(crate) async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;

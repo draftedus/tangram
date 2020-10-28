@@ -15,8 +15,8 @@ struct Action {
 }
 
 pub async fn post(
-	mut request: Request<Body>,
 	context: &Context,
+	mut request: Request<Body>,
 	organization_id: &str,
 ) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {

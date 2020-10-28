@@ -6,7 +6,7 @@ use crate::{
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 
-pub async fn get(request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {
 		return Err(Error::NotFound.into());
 	}

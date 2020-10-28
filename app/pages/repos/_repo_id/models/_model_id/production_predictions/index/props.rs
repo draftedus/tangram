@@ -50,8 +50,8 @@ struct PaginationRange {
 }
 
 pub async fn props(
-	request: Request<Body>,
 	context: &Context,
+	request: Request<Body>,
 	model_id: &str,
 	before: Option<i64>,
 	after: Option<i64>,

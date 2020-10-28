@@ -22,7 +22,7 @@ struct DeleteRepoAction {
 	repo_id: String,
 }
 
-pub async fn post(mut request: Request<Body>, context: &Context) -> Result<Response<Body>> {
+pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
 	let data = to_bytes(request.body_mut())
 		.await
 		.map_err(|_| Error::BadRequest)?;
