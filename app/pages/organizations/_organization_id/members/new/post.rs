@@ -53,11 +53,7 @@ async fn add_member(
 	context: &Context,
 	organization_id: Id,
 ) -> Result<Response<Body>> {
-	let Action { email, .. } = action;
-	let sender_email = user.email;
-	if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
-		send_invitation_email(email.clone(), sender_email.clone(), sendgrid_api_token).await?;
-	}
+	// Create the new user.
 	let user_id = Id::new();
 	let now = Utc::now().timestamp();
 	sqlx::query(
@@ -72,9 +68,10 @@ async fn add_member(
 	)
 	.bind(&user_id.to_string())
 	.bind(&now)
-	.bind(&email)
+	.bind(&action.email)
 	.execute(&mut *db)
 	.await?;
+	// Add the user to the organization.
 	let is_admin = if let Some(is_admin) = action.is_admin {
 		is_admin == "on"
 	} else {
@@ -94,6 +91,10 @@ async fn add_member(
 	.bind(&is_admin)
 	.execute(&mut *db)
 	.await?;
+	// Send the new user an invitation email.
+	if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
+		send_invitation_email(action.email.clone(), user.email.clone(), sendgrid_api_token).await?;
+	}
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(
