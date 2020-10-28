@@ -3,7 +3,6 @@ edition = "2018"
 license = "MIT"
 name = "tangram_scripts"
 version = "0.0.0"
-build = false
 
 [[bin]]
 name = "tangram_script_release"
@@ -12,10 +11,6 @@ path = "release.rs"
 [[bin]]
 name = "tangram_script_production_track_test"
 path = "production_track_test.rs"
-
-[[bin]]
-name = "tangram_script_command_test"
-path = "test.rs"
 
 [dependencies]
 anyhow = "1"

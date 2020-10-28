@@ -9,6 +9,7 @@ members = [
 	"metrics",
 	"pinwheel",
 	"scripts",
+	"test_npx",
 	"tree",
 	"util",
 ]

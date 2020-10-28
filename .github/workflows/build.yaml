@@ -36,7 +36,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: run stuff
-        run: cargo run --bin tangram_script_command_test
+        run: cargo run -p tangram_test_npx
       # - name: setup node
       #   uses: actions/setup-node@v1
       #   with:
