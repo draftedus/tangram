@@ -39,6 +39,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '15'
+      - name: cache purge
+        if: ${{ matrix.os == 'macos' }}
+        run: sudo /usr/sbin/purge
       - name: cache
         uses: actions/cache@v2
         with:
