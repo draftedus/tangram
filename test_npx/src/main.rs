@@ -1,5 +1,7 @@
+use which::which;
+
 fn main() {
-	let cmd = if cfg!(not(windows)) { "npx" } else { "npx.exe" };
+	let cmd = which("npx").unwrap();
 	let args = vec!["esbuild".to_owned(), "--help".to_owned()];
 	let mut process = std::process::Command::new(dbg!(cmd))
 		.stderr(std::process::Stdio::inherit())

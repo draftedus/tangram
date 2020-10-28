@@ -3,3 +3,6 @@ edition = "2018"
 license = "MIT"
 name = "tangram_test_npx"
 version = "0.0.0"
+
+[dependencies]
+which = "4"

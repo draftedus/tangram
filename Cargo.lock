@@ -2360,6 +2360,9 @@ dependencies = [
 [[package]]
 name = "tangram_test_npx"
 version = "0.0.0"
+dependencies = [
+ "which",
+]
 
 [[package]]
 name = "tangram_tree"
