@@ -1,9 +1,8 @@
 fn main() {
-	let cmd = if cfg!(not(target_os = "windows")) {
-		"npx"
-	} else {
-		"npx.exe"
-	};
+	#[cfg(not(windows))]
+	let cmd = "npx";
+	#[cfg(windows)]
+	let cmd = "npx.exe";
 	let args = vec!["esbuild".to_owned(), "--help".to_owned()];
 	let mut process = std::process::Command::new(cmd)
 		.stderr(std::process::Stdio::inherit())
