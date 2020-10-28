@@ -35,10 +35,16 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - name: setup rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: '1.47'
+          profile: minimal
+          components: rustfmt, clippy
       - name: setup node
         uses: actions/setup-node@v1
         with:
-          node-version: '15'
+          node-version: '15.0.1'
       - name: workaround for https://github.com/actions/cache/issues/403
         if: runner.os == 'macOS'
         run: |
