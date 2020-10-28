@@ -1,10 +1,5 @@
 name: build
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        required: true
-        default: v0.0.0
+on: workflow_dispatch
 jobs:
   build:
     strategy:
@@ -53,14 +48,13 @@ jobs:
       - name: cache
         uses: actions/cache@v2
         with:
-          key: ${{ matrix.os }}-v1
+          key: ${{ matrix.os }}-v2
           path: |
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            node_modules/
-            build/
+            build/cargo/
       - name: npm install
         run: |
           npm install
@@ -70,7 +64,7 @@ jobs:
       - name: upload cli
         uses: actions/upload-artifact@v1
         with:
-          name: tangram-cli-${{ github.event.inputs.version }}-${{ matrix.os }}-${{ matrix.arch }}
+          name: tangram-cli-${{ matrix.os }}-${{ matrix.arch }}
           path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.cli_file_name }}
       - name: upload dynamic library
         uses: actions/upload-artifact@v1
