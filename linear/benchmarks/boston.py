@@ -75,9 +75,10 @@ elif args.library == 'sklearn':
   features_train = preprocessor.fit_transform(features_train)
   features_test = preprocessor.transform(features_test)
   model = SGDRegressor(
-    max_iter=1000,
+    max_iter=10,
     eta0=0.01,
     learning_rate='constant'
+    tol=None,
   )
   model.fit(features_train, labels_train)
 elif args.library == 'tensorflow':

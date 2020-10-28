@@ -64,8 +64,7 @@ fn compute_features_identity_array_f32(
 		.iter()
 		.find(|column| column.name() == Some(&feature_group.source_column_name))
 		.unwrap();
-	let source_column = source_column.as_number().unwrap();
-	feature_group.compute_array_f32(features, source_column.as_slice(), progress);
+	feature_group.compute_array_f32(features, source_column.view(), progress);
 }
 
 fn compute_features_normalized_array_f32(
@@ -80,8 +79,7 @@ fn compute_features_normalized_array_f32(
 		.iter()
 		.find(|column| column.name() == Some(&feature_group.source_column_name))
 		.unwrap();
-	let source_column = source_column.as_number().unwrap();
-	feature_group.compute_array_f32(features, source_column.view().as_slice(), progress);
+	feature_group.compute_array_f32(features, source_column.view(), progress);
 }
 
 fn compute_features_one_hot_encoded_array_f32(
@@ -303,13 +301,25 @@ impl IdentityFeatureGroup {
 	pub fn compute_array_f32(
 		&self,
 		mut features: ArrayViewMut2<f32>,
-		values: &[f32],
+		column: DataFrameColumnView,
 		progress: &impl Fn(),
 	) {
 		// Set the feature values to the source column values.
-		for (feature, value) in izip!(features.iter_mut(), values.iter()) {
-			*feature = *value;
-			progress()
+		match column {
+			DataFrameColumnView::Unknown(_) => todo!(),
+			DataFrameColumnView::Number(column) => {
+				for (feature, value) in izip!(features.iter_mut(), column.view().iter()) {
+					*feature = *value;
+					progress()
+				}
+			}
+			DataFrameColumnView::Enum(column) => {
+				for (feature, value) in izip!(features.iter_mut(), column.view().iter()) {
+					*feature = value.map(|v| v.get().to_f32().unwrap()).unwrap_or(0.0);
+					progress()
+				}
+			}
+			DataFrameColumnView::Text(_) => todo!(),
 		}
 	}
 	pub fn compute_dataframe(
@@ -403,17 +413,36 @@ impl NormalizedFeatureGroup {
 	pub fn compute_array_f32(
 		&self,
 		mut features: ArrayViewMut2<f32>,
-		values: &[f32],
+		column: DataFrameColumnView,
 		progress: &impl Fn(),
 	) {
 		// Set the feature values to the normalized source column values.
-		for (feature, value) in izip!(features.iter_mut(), values.iter()) {
-			*feature = if value.is_nan() || self.variance == 0.0 {
-				0.0
-			} else {
-				(*value - self.mean) / f32::sqrt(self.variance)
-			};
-			progress()
+		match column {
+			DataFrameColumnView::Unknown(_) => todo!(),
+			DataFrameColumnView::Number(column) => {
+				for (feature, value) in izip!(features.iter_mut(), column.iter()) {
+					*feature = if value.is_nan() || self.variance == 0.0 {
+						0.0
+					} else {
+						(*value - self.mean) / f32::sqrt(self.variance)
+					};
+					progress()
+				}
+			}
+			DataFrameColumnView::Enum(column) => {
+				for (feature, value) in izip!(features.iter_mut(), column.iter()) {
+					let value = value
+						.map(|value| value.get().to_f32().unwrap())
+						.unwrap_or(0.0);
+					*feature = if value.is_nan() || self.variance == 0.0 {
+						0.0
+					} else {
+						(value - self.mean) / f32::sqrt(self.variance)
+					};
+					progress()
+				}
+			}
+			DataFrameColumnView::Text(_) => todo!(),
 		}
 	}
 	pub fn compute_dataframe(&self, column: &mut Vec<f32>) {
