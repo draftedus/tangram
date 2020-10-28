@@ -39,6 +39,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '15'
+      - name: run npx
+        run: npx esbuild --help
       - name: run stuff
         run: cargo run -p tangram_test_npx
       # - name: cache
