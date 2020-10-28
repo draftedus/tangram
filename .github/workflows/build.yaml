@@ -35,9 +35,13 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: setup node
+        uses: actions/setup-node@v1
         with:
           node-version: '15'
+      - name: update npm
+        run: |
+          npm -g add npm@7
       - name: cache
         uses: actions/cache@v2
         with:
