@@ -13,6 +13,10 @@ path = "release.rs"
 name = "tangram_script_production_track_test"
 path = "production_track_test.rs"
 
+[[bin]]
+name = "tangram_script_command_test"
+path = "test.rs"
+
 [dependencies]
 anyhow = "1"
 base64 = "0.13"
