@@ -44,7 +44,7 @@ jobs:
       - if: ${{ matrix.os != 'windows' }}
         run: which npm
       - if: ${{ matrix.os == 'windows' }}
-        run: where npm
+        run: Get-Command npm
       # - name: cache
       #   uses: actions/cache@v2
       #   with:
