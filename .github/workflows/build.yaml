@@ -42,9 +42,9 @@ jobs:
         with:
           node-version: '15'
       - if: ${{ matrix.os != 'windows' }}
-        run: which npm
+        run: echo $PATH
       - if: ${{ matrix.os == 'windows' }}
-        run: Get-Command npm
+        run: path
       # - name: cache
       #   uses: actions/cache@v2
       #   with:
