@@ -6,6 +6,7 @@ use sourcemap::SourceMap;
 use std::fmt::Write;
 use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc};
 use url::Url;
+use which::which;
 
 pub struct Pinwheel {
 	src_dir: Option<PathBuf>,
@@ -589,7 +590,7 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	}
 	std::fs::create_dir_all(&dst_dir).unwrap();
 	let manifest_path = dst_dir.join("manifest.json");
-	let cmd = "npx";
+	let cmd = which("npx").unwrap();
 	let mut args = vec![
 		"esbuild".to_owned(),
 		"--format=esm".to_owned(),

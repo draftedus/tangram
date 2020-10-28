@@ -39,39 +39,35 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '15'
-      - name: run npx
-        run: npx esbuild --help
-      - name: run stuff
-        run: cargo run -p tangram_test_npx
-      # - name: cache
-      #   uses: actions/cache@v2
-      #   with:
-      #     key: ${{ matrix.os }}
-      #     path: |
-      #       ~/.cargo/bin/
-      #       ~/.cargo/registry/index/
-      #       ~/.cargo/registry/cache/
-      #       ~/.cargo/git/db/
-      #       node_modules/
-      #       build/
-      # - name: npm install
-      #   run: |
-      #     npm install
-      # - name: build
-      #   run: |
-      #     cargo build --release --target ${{ matrix.rust_target }}
-      # - name: upload cli
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: tangram-cli-${{ github.event.inputs.version }}-${{ matrix.os }}-${{ matrix.arch }}
-      #     path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.cli_file_name }}
-      # - name: upload dynamic library
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: tangram-dyanmiclib-${{ matrix.os }}-${{ matrix.arch }}
-      #     path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.dynamic_library_file_name }}
-      # - name: upload static library
-      #   uses: actions/upload-artifact@v1
-      #   with:
-      #     name: tangram-staticlib-${{ matrix.os }}-${{ matrix.arch }}
-      #     path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.static_library_file_name }}
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          key: ${{ matrix.os }}
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            node_modules/
+            build/
+      - name: npm install
+        run: |
+          npm install
+      - name: build
+        run: |
+          cargo build --release --target ${{ matrix.rust_target }}
+      - name: upload cli
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-cli-${{ github.event.inputs.version }}-${{ matrix.os }}-${{ matrix.arch }}
+          path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.cli_file_name }}
+      - name: upload dynamic library
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-dyanmiclib-${{ matrix.os }}-${{ matrix.arch }}
+          path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.dynamic_library_file_name }}
+      - name: upload static library
+        uses: actions/upload-artifact@v1
+        with:
+          name: tangram-staticlib-${{ matrix.os }}-${{ matrix.arch }}
+          path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.static_library_file_name }}

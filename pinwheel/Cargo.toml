@@ -25,3 +25,4 @@ sourcemap = "6"
 tokio = { version = "0.2", features = ["full"] }
 url = "2"
 walkdir = "2"
+which = "4"

@@ -1507,6 +1507,7 @@ dependencies = [
  "tokio",
  "url",
  "walkdir",
+ "which",
 ]
 
 [[package]]
@@ -2355,13 +2356,6 @@ dependencies = [
  "tokio",
  "url",
  "xshell",
-]
-
-[[package]]
-name = "tangram_test_npx"
-version = "0.0.0"
-dependencies = [
- "which",
 ]
 
 [[package]]
