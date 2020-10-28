@@ -39,13 +39,15 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '15'
-      - name: cache purge
-        if: ${{ matrix.os == 'macos' }}
-        run: sudo /usr/sbin/purge
+      - name: workaround for https://github.com/actions/cache/issues/403
+        if: runner.os == 'macOS'
+        run: |
+          brew install gnu-tar
+          echo PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH" >> $GITHUB_ENV
       - name: cache
         uses: actions/cache@v2
         with:
-          key: ${{ matrix.os }}
+          key: ${{ matrix.os }}-v1
           path: |
             ~/.cargo/bin/
             ~/.cargo/registry/index/
@@ -74,3 +76,6 @@ jobs:
         with:
           name: tangram-staticlib-${{ matrix.os }}-${{ matrix.arch }}
           path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.static_library_file_name }}
+  publish_language_libraries:
+    runs-on: ubuntu-latest
+    steps:
