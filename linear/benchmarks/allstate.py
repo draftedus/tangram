@@ -8,7 +8,7 @@ import json
 from time import time
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
+parser.add_argument('--library', choices=['h2o', 'pytorch', 'sklearn', 'tensorflow'], required=True)
 args = parser.parse_args()
 
 # Load the data.
@@ -73,21 +73,13 @@ data_test = pd.read_csv(path_test, dtype=dtype)
 if args.library == 'xgboost' or args.library == 'sklearn' or args.library == 'catboost':
   categorical_columns = data_train.select_dtypes(['category']).columns
   data_train.loc[:, categorical_columns] = data_train.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
-  data_test.loc[:, categorical_columns] = data_test.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
+  data_test.lo[:, categorical_columns] = data_test.loc[:, categorical_columns].apply(lambda x: x.cat.codes)
 features_train = data_train.loc[:, data_train.columns != target_column_name]
 labels_train = data_train[target_column_name]
 features_test = data_test.loc[:, data_test.columns != target_column_name]
 labels_test = data_test[target_column_name]
 
-# Train the model.
-start = time()
-if args.library == 'h2o':
-  import h2o
-  pass
-elif args.library == 'pytorch':
-  pass
-elif args.library == 'sklearn':
-  from sklearn.linear_model import SGDRegressor
+if args.library == 'pytorch' or args.library == 'sklearn':
   from sklearn.preprocessing import StandardScaler
   from sklearn.compose import ColumnTransformer
   from sklearn.pipeline import Pipeline
@@ -115,6 +107,18 @@ elif args.library == 'sklearn':
   ])
   features_train = preprocessor.fit_transform(features_train)
   features_test = preprocessor.transform(features_test)
+
+# Train the model.
+start = time()
+if args.library == 'h2o':
+  import h2o
+  pass
+elif args.library == 'pytorch':
+  from pytorch_linear import LinearRegressor
+  model = LinearRegressor(n_epochs=10, learning_rate=0.01)
+  model.fit(features_train, labels_train)
+elif args.library == 'sklearn':
+  from sklearn.linear_model import SGDRegressor
   model = SGDRegressor(
     max_iter=10,
     eta0=0.01,

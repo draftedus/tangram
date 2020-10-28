@@ -1,0 +1,11 @@
+name: tangram_linear_benchmarks
+channels:
+  - conda-forge
+  - h2oai
+dependencies:
+  - h2o
+  - numpy
+  - openjdk
+  - pandas
+  - scikit-learn
+  - pytorch
