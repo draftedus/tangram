@@ -7,7 +7,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
-use tangram_metrics::StreamingMetric;
+use tangram_metrics::{Metric, StreamingMetric};
 use tangram_util::pzip;
 
 fn main() {
@@ -596,6 +596,40 @@ fn main() {
 	let mut features_test = DataFrame::from_path(csv_file_path_test, options, |_| {}).unwrap();
 	let labels_test = features_test.columns_mut().remove(target_column_index);
 	let labels_test = labels_test.as_number().unwrap();
+	let feature_groups: Vec<tangram_features::FeatureGroup> = features_train
+		.columns()
+		.iter()
+		.map(|column| match column {
+			DataFrameColumn::Number(column) => {
+				let mean_variance =
+					tangram_metrics::MeanVariance::compute(column.view().as_slice());
+				tangram_features::FeatureGroup::Normalized(
+					tangram_features::NormalizedFeatureGroup {
+						source_column_name: column.name().clone().unwrap(),
+						mean: mean_variance.mean,
+						variance: mean_variance.variance,
+					},
+				)
+			}
+			DataFrameColumn::Enum(column) => tangram_features::FeatureGroup::OneHotEncoded(
+				tangram_features::OneHotEncodedFeatureGroup {
+					source_column_name: column.name().clone().unwrap(),
+					options: column.options().to_owned(),
+				},
+			),
+			_ => unreachable!(),
+		})
+		.collect();
+	let features_train = tangram_features::compute_features_array_f32(
+		&features_train.view(),
+		feature_groups.as_slice(),
+		&|| {},
+	);
+	let features_test = tangram_features::compute_features_array_f32(
+		&features_test.view(),
+		feature_groups.as_slice(),
+		&|| {},
+	);
 
 	// Train the model.
 	let start = std::time::Instant::now();
@@ -613,7 +647,6 @@ fn main() {
 	let duration = start.elapsed().as_secs_f32();
 
 	// Make predictions on the test data.
-	let features_test = features_test.to_rows();
 	let chunk_size =
 		(features_test.nrows() + rayon::current_num_threads() - 1) / rayon::current_num_threads();
 	let mut predictions = Array::zeros(labels_test.len());

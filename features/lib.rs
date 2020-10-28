@@ -7,11 +7,245 @@ use num_traits::ToPrimitive;
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use tangram_dataframe::{
-	DataFrameColumn, DataFrameColumnView, DataFrameValue, EnumDataFrameColumn,
-	NumberDataFrameColumn, TextDataFrameColumn, UnknownDataFrameColumn,
+	DataFrame, DataFrameColumn, DataFrameColumnView, DataFrameValue, DataFrameView,
+	EnumDataFrameColumn, NumberDataFrameColumn, TextDataFrameColumn, UnknownDataFrameColumn,
 };
 use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
 
+/// Compute features as an `Array` of `f32`s.
+pub fn compute_features_array_f32(
+	dataframe: &DataFrameView,
+	feature_groups: &[FeatureGroup],
+	progress: &impl Fn(),
+) -> Array2<f32> {
+	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
+	let mut features = Array::zeros((dataframe.nrows(), n_features));
+	let mut feature_index = 0;
+	for feature_group in feature_groups.iter() {
+		let n_features_in_group = feature_group.n_features();
+		let slice = s![.., feature_index..feature_index + n_features_in_group];
+		let features = features.slice_mut(slice);
+		match &feature_group {
+			FeatureGroup::Identity(feature_group) => {
+				compute_features_identity_array_f32(dataframe, feature_group, features, progress)
+			}
+			FeatureGroup::Normalized(feature_group) => {
+				compute_features_normalized_array_f32(dataframe, feature_group, features, progress)
+			}
+			FeatureGroup::OneHotEncoded(feature_group) => {
+				compute_features_one_hot_encoded_array_f32(
+					dataframe,
+					feature_group,
+					features,
+					progress,
+				)
+			}
+			FeatureGroup::BagOfWords(feature_group) => compute_features_bag_of_words_array_f32(
+				dataframe,
+				feature_group,
+				features,
+				progress,
+			),
+		};
+		feature_index += n_features_in_group;
+	}
+	features
+}
+
+fn compute_features_identity_array_f32(
+	dataframe: &DataFrameView,
+	feature_group: &IdentityFeatureGroup,
+	features: ArrayViewMut2<f32>,
+	progress: &impl Fn(),
+) {
+	// Get the source column.
+	let source_column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name() == Some(&feature_group.source_column_name))
+		.unwrap();
+	let source_column = source_column.as_number().unwrap();
+	feature_group.compute_array_f32(features, source_column.as_slice(), progress);
+}
+
+fn compute_features_normalized_array_f32(
+	dataframe: &DataFrameView,
+	feature_group: &NormalizedFeatureGroup,
+	features: ArrayViewMut2<f32>,
+	progress: &impl Fn(),
+) {
+	// Get the source column.
+	let source_column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name() == Some(&feature_group.source_column_name))
+		.unwrap();
+	let source_column = source_column.as_number().unwrap();
+	feature_group.compute_array_f32(features, source_column.view().as_slice(), progress);
+}
+
+fn compute_features_one_hot_encoded_array_f32(
+	dataframe: &DataFrameView,
+	feature_group: &OneHotEncodedFeatureGroup,
+	features: ArrayViewMut2<f32>,
+	progress: &impl Fn(),
+) {
+	// Get the source column.
+	let source_column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name() == Some(&feature_group.source_column_name))
+		.unwrap();
+	let source_column = source_column.as_enum().unwrap();
+	feature_group.compute_array_f32(features, source_column.as_slice(), progress);
+}
+
+fn compute_features_bag_of_words_array_f32(
+	dataframe: &DataFrameView,
+	feature_group: &BagOfWordsFeatureGroup,
+	features: ArrayViewMut2<f32>,
+	progress: &impl Fn(),
+) {
+	// Get the source column.
+	let source_column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name() == Some(&feature_group.source_column_name))
+		.unwrap();
+	let source_column = source_column.as_text().unwrap();
+	feature_group.compute_array_f32(features, source_column.view().as_slice(), progress);
+}
+
+/// Compute features as a `DataFrame`.
+pub fn compute_features_dataframe(
+	dataframe: &DataFrameView,
+	feature_groups: &[FeatureGroup],
+	progress: &impl Fn(u64),
+) -> DataFrame {
+	let mut features = DataFrame::new(Vec::new(), Vec::new());
+	for feature_group in feature_groups.iter() {
+		match &feature_group {
+			FeatureGroup::Identity(feature_group) => {
+				let column =
+					compute_features_identity_dataframe(dataframe, feature_group, progress);
+				features.columns_mut().push(column);
+			}
+			FeatureGroup::Normalized(_) => unimplemented!(),
+			FeatureGroup::OneHotEncoded(_) => unimplemented!(),
+			FeatureGroup::BagOfWords(feature_group) => {
+				let columns =
+					compute_features_bag_of_words_dataframe(dataframe, feature_group, &|| {
+						progress(1)
+					});
+				for column in columns {
+					features.columns_mut().push(column);
+				}
+			}
+		};
+	}
+	features
+}
+
+fn compute_features_identity_dataframe(
+	dataframe: &DataFrameView,
+	feature_group: &IdentityFeatureGroup,
+	progress: &impl Fn(u64),
+) -> DataFrameColumn {
+	let column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
+		.unwrap();
+	feature_group.compute_dataframe(column.view(), progress)
+}
+
+fn compute_features_bag_of_words_dataframe(
+	dataframe: &DataFrameView,
+	feature_group: &BagOfWordsFeatureGroup,
+	progress: &impl Fn(),
+) -> Vec<DataFrameColumn> {
+	// Get the data for the source column.
+	let source_column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
+		.unwrap();
+	let source_column = source_column.as_text().unwrap();
+	let mut feature_columns = vec![vec![0.0; source_column.len()]; feature_group.tokens.len()];
+	feature_group.compute_dataframe(
+		feature_columns.as_mut_slice(),
+		source_column.view().as_slice(),
+		progress,
+	);
+	feature_columns
+		.into_iter()
+		.map(|feature_column| {
+			DataFrameColumn::Number(NumberDataFrameColumn::new(None, feature_column))
+		})
+		.collect()
+}
+
+/// Compute features as a `DataFrame`.
+pub fn compute_features_array_value<'a>(
+	dataframe: &DataFrameView<'a>,
+	feature_groups: &[FeatureGroup],
+	progress: &impl Fn(),
+) -> Array2<DataFrameValue<'a>> {
+	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
+	let mut features = Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
+	let mut feature_index = 0;
+	for feature_group in feature_groups.iter() {
+		let n_features_in_group = feature_group.n_features();
+		let slice = s![.., feature_index..feature_index + n_features_in_group];
+		let features = features.slice_mut(slice);
+		match &feature_group {
+			FeatureGroup::Identity(feature_group) => {
+				compute_features_identity_array_value(dataframe, feature_group, features, progress)
+			}
+			FeatureGroup::Normalized(_) => unimplemented!(),
+			FeatureGroup::OneHotEncoded(_) => unimplemented!(),
+			FeatureGroup::BagOfWords(feature_group) => compute_features_bag_of_words_array_value(
+				dataframe,
+				feature_group,
+				features,
+				progress,
+			),
+		};
+		feature_index += n_features_in_group;
+	}
+	features
+}
+
+fn compute_features_identity_array_value(
+	dataframe: &DataFrameView,
+	feature_group: &IdentityFeatureGroup,
+	features: ArrayViewMut2<DataFrameValue>,
+	progress: &impl Fn(),
+) {
+	let column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
+		.unwrap();
+	feature_group.compute_array_value(features, column.view(), progress);
+}
+
+/// Compute the feature values for a `BagOfWordsFeatureGroup` from `dataframe` and write them to `features`.
+fn compute_features_bag_of_words_array_value(
+	dataframe: &DataFrameView,
+	feature_group: &BagOfWordsFeatureGroup,
+	features: ArrayViewMut2<DataFrameValue>,
+	progress: &impl Fn(),
+) {
+	// Get the data for the source column.
+	let source_column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
+		.unwrap();
+	let source_column = source_column.as_text().unwrap();
+	feature_group.compute_array_value(features, source_column.as_slice(), progress);
+}
 /// This struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
 #[derive(Debug)]
 pub enum FeatureGroup {

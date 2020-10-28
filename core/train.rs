@@ -904,16 +904,12 @@ fn train_linear_regressor(
 	options: grid::LinearModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let mut features = Array::zeros((dataframe_train.nrows(), n_features));
-	features::compute_features_array_f32(
-		dataframe_train,
-		&feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_f32(dataframe_train, &feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	let labels = dataframe_train
 		.columns()
 		.get(target_column_index)
@@ -950,9 +946,10 @@ fn train_tree_regressor(
 	let n_examples = dataframe_train.nrows().to_u64().unwrap();
 	let progress_counter = ProgressCounter::new(n_features * n_examples);
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
-		progress_counter.inc(i)
-	});
+	let features =
+		tangram_features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
+			progress_counter.inc(i)
+		});
 	let labels = dataframe_train
 		.columns()
 		.get(target_column_index)
@@ -985,16 +982,12 @@ fn train_linear_binary_classifier(
 	options: grid::LinearModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let mut features = Array::zeros((dataframe_train.nrows(), n_features));
-	features::compute_features_array_f32(
-		dataframe_train,
-		&feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_f32(dataframe_train, &feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	let labels = dataframe_train
 		.columns()
 		.get(target_column_index)
@@ -1031,9 +1024,10 @@ fn train_tree_binary_classifier(
 	let n_examples = dataframe_train.nrows().to_u64().unwrap();
 	let progress_counter = ProgressCounter::new(n_features * n_examples);
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
-		progress_counter.inc(i)
-	});
+	let features =
+		tangram_features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
+			progress_counter.inc(i)
+		});
 	let labels = dataframe_train
 		.columns()
 		.get(target_column_index)
@@ -1066,16 +1060,12 @@ fn train_linear_multiclass_classifier(
 	options: grid::LinearModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
-	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
 	let progress_counter = ProgressCounter::new(dataframe_train.nrows().to_u64().unwrap());
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let mut features = Array::zeros((dataframe_train.nrows(), n_features));
-	features::compute_features_array_f32(
-		dataframe_train,
-		&feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_f32(dataframe_train, &feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	let labels = dataframe_train
 		.columns()
 		.get(target_column_index)
@@ -1116,9 +1106,10 @@ fn train_tree_multiclass_classifier(
 	let n_examples = dataframe_train.nrows().to_u64().unwrap();
 	let progress_counter = ProgressCounter::new(n_features * n_examples);
 	update_progress(TrainProgress::ComputingFeatures(progress_counter.clone()));
-	let features = features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
-		progress_counter.inc(i)
-	});
+	let features =
+		tangram_features::compute_features_dataframe(dataframe_train, &feature_groups, &|i| {
+			progress_counter.inc(i)
+		});
 	let labels = dataframe_train
 		.columns()
 		.get(target_column_index)

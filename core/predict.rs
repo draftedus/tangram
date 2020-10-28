@@ -285,15 +285,12 @@ fn predict_regressor(
 	_options: Option<PredictOptions>,
 ) -> Vec<RegressionPredictOutput> {
 	let n_examples = dataframe.nrows();
-	let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 	match &model.model {
 		RegressionModel::Linear(inner_model) => {
-			let mut features = Array::zeros((n_examples, n_features));
 			let mut predictions = Array::zeros(n_examples);
-			features::compute_features_array_f32(
+			let features = tangram_features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
-				features.view_mut(),
 				&|| {},
 			);
 			inner_model.predict(features.view(), predictions.view_mut());
@@ -326,12 +323,9 @@ fn predict_regressor(
 			.collect()
 		}
 		RegressionModel::Tree(inner_model) => {
-			let mut features =
-				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
-			features::compute_features_array_value(
+			let features = tangram_features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
-				features.view_mut(),
 				&|| {},
 			);
 			let mut predictions = Array::zeros(n_examples);
@@ -379,15 +373,12 @@ fn predict_binary_classifier(
 	options: Option<PredictOptions>,
 ) -> Vec<BinaryClassificationPredictOutput> {
 	let n_examples = dataframe.nrows();
-	let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 	match &model.model {
 		BinaryClassificationModel::Linear(inner_model) => {
-			let mut features = Array::zeros((n_examples, n_features));
 			let mut probabilities = Array::zeros(n_examples);
-			features::compute_features_array_f32(
+			let features = tangram_features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
-				features.view_mut(),
 				&|| {},
 			);
 			inner_model.predict(features.view(), probabilities.view_mut());
@@ -426,12 +417,9 @@ fn predict_binary_classifier(
 				.collect()
 		}
 		BinaryClassificationModel::Tree(inner_model) => {
-			let mut features =
-				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
-			features::compute_features_array_value(
+			let features = tangram_features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
-				features.view_mut(),
 				&|| {},
 			);
 			let mut probabilities = Array::zeros(n_examples);
@@ -486,15 +474,12 @@ fn predict_multiclass_classifier(
 ) -> Vec<MulticlassClassificationPredictOutput> {
 	let n_examples = dataframe.nrows();
 	let n_classes = model.classes.len();
-	let n_features = model.feature_groups.iter().map(|f| f.n_features()).sum();
 	match &model.model {
 		MulticlassClassificationModel::Linear(inner_model) => {
-			let mut features = Array::zeros((n_examples, n_features));
 			let mut probabilities = Array::zeros((n_examples, n_classes));
-			features::compute_features_array_f32(
+			let features = tangram_features::compute_features_array_f32(
 				&dataframe.view(),
 				&model.feature_groups,
-				features.view_mut(),
 				&|| {},
 			);
 			inner_model.predict(features.view(), probabilities.view_mut());
@@ -537,12 +522,9 @@ fn predict_multiclass_classifier(
 				.collect()
 		}
 		MulticlassClassificationModel::Tree(inner_model) => {
-			let mut features =
-				Array::from_elem((dataframe.nrows(), n_features), DataFrameValue::Unknown);
-			features::compute_features_array_value(
+			let features = tangram_features::compute_features_array_value(
 				&dataframe.view(),
 				&model.feature_groups,
-				features.view_mut(),
 				&|| {},
 			);
 			let mut probabilities = Array::zeros((n_examples, n_classes));

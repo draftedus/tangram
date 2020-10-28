@@ -13,18 +13,14 @@ pub fn test_linear_regressor(
 	model: &tangram_linear::Regressor,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::RegressionMetricsOutput {
-	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	let progress_counter = ProgressCounter::new(dataframe_test.ncols().to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	let mut features = Array::zeros((dataframe_test.nrows(), n_features));
-	features::compute_features_array_f32(
-		dataframe_test,
-		&feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_f32(dataframe_test, &feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	update_progress(ModelTestProgress::Testing);
 	let labels = dataframe_test.columns().get(target_column_index).unwrap();
 	let labels = labels.as_number().unwrap();
@@ -67,20 +63,14 @@ pub fn test_tree_regressor(
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::RegressionMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let mut features = Array::from_elem(
-		(dataframe_test.nrows(), n_features),
-		DataFrameValue::Unknown,
-	);
 	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	features::compute_features_array_value(
-		dataframe_test,
-		feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_value(dataframe_test, feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	let labels = dataframe_test.columns().get(target_column_index).unwrap();
 	let labels = labels.as_number().unwrap();
 	let mut test_metrics = metrics::RegressionMetrics::default();
@@ -101,18 +91,14 @@ pub fn test_linear_binary_classifier(
 	model: &tangram_linear::BinaryClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::BinaryClassificationMetricsOutput {
-	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let mut features = Array::zeros((dataframe_test.nrows(), n_features));
-	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	let progress_counter = ProgressCounter::new(dataframe_test.ncols().to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	features::compute_features_array_f32(
-		dataframe_test,
-		&feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_f32(dataframe_test, &feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	let labels = dataframe_test
 		.columns()
 		.get(target_column_index)
@@ -165,16 +151,10 @@ pub fn test_tree_binary_classifier(
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	let mut features = Array::from_elem(
-		(dataframe_test.nrows(), n_features),
-		DataFrameValue::Unknown,
-	);
-	features::compute_features_array_value(
-		dataframe_test,
-		feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_value(dataframe_test, feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	let labels = dataframe_test
 		.columns()
 		.get(target_column_index)
@@ -199,18 +179,14 @@ pub fn test_linear_multiclass_classifier(
 	model: &tangram_linear::MulticlassClassifier,
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::MulticlassClassificationMetricsOutput {
-	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let mut features = Array::zeros((dataframe_test.nrows(), n_features));
-	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
+	let progress_counter = ProgressCounter::new(dataframe_test.ncols().to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	features::compute_features_array_f32(
-		dataframe_test,
-		&feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_f32(dataframe_test, &feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	let labels = dataframe_test
 		.columns()
 		.get(target_column_index)
@@ -263,20 +239,14 @@ pub fn test_tree_multiclass_classifier(
 	update_progress: &mut dyn FnMut(ModelTestProgress),
 ) -> metrics::MulticlassClassificationMetricsOutput {
 	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
-	let mut features = Array::from_elem(
-		(dataframe_test.nrows(), n_features),
-		DataFrameValue::Unknown,
-	);
 	let progress_counter = ProgressCounter::new(n_features.to_u64().unwrap());
 	update_progress(ModelTestProgress::ComputingFeatures(
 		progress_counter.clone(),
 	));
-	features::compute_features_array_value(
-		dataframe_test,
-		feature_groups,
-		features.view_mut(),
-		&|| progress_counter.inc(1),
-	);
+	let features =
+		tangram_features::compute_features_array_value(dataframe_test, feature_groups, &|| {
+			progress_counter.inc(1)
+		});
 	let labels = dataframe_test
 		.columns()
 		.get(target_column_index)
