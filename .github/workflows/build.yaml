@@ -33,18 +33,18 @@ jobs:
             static_library_file_name: tangram.lib
     runs-on: ${{ matrix.runs_on }}
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          depth: 1
-      - name: setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '15'
+      # - name: checkout
+      #   uses: actions/checkout@v2
+      #   with:
+      #     depth: 1
+      # - name: setup node
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: '15'
       - if: ${{ matrix.os != 'windows' }}
         run: echo $PATH
       - if: ${{ matrix.os == 'windows' }}
-        run: path
+        run: echo %PATH%
       # - name: cache
       #   uses: actions/cache@v2
       #   with:
