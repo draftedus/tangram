@@ -1,5 +1,5 @@
-use super::props::props;
-use crate::Context;
+use super::props::Props;
+use crate::{layouts::app_layout::get_app_layout_info, Context};
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 
@@ -11,4 +11,12 @@ pub async fn get(context: &Context, _request: Request<Body>) -> Result<Response<
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
+}
+
+pub async fn props(context: &Context, error: Option<String>) -> Result<Props> {
+	let app_layout_info = get_app_layout_info(context).await?;
+	Ok(Props {
+		app_layout_info,
+		error,
+	})
 }

@@ -1,13 +1,16 @@
-use super::props::props;
+use super::props::{Model, Props};
 use crate::{
 	common::{
 		error::Error,
 		user::{authorize_user, authorize_user_for_repo},
 	},
+	layouts::app_layout::get_app_layout_info,
 	Context,
 };
 use anyhow::Result;
+use chrono::prelude::*;
 use hyper::{Body, Request, Response, StatusCode};
+use sqlx::prelude::*;
 use tangram_util::id::Id;
 
 pub async fn get(
@@ -35,4 +38,42 @@ pub async fn get(
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
+}
+
+pub async fn props(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	context: &Context,
+	repo_id: Id,
+) -> Result<Props> {
+	let app_layout_info = get_app_layout_info(context).await?;
+	let rows = sqlx::query(
+		"
+			select
+				models.id,
+				models.created_at
+			from models
+			where models.repo_id = ?1
+			order by models.created_at
+		",
+	)
+	.bind(&repo_id.to_string())
+	.fetch_all(db)
+	.await?;
+	let models = rows
+		.iter()
+		.map(|row| {
+			let id: String = row.get(0);
+			let id: Id = id.parse().unwrap();
+			let created_at: i64 = row.get(1);
+			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+			Model {
+				created_at: created_at.to_rfc3339(),
+				id: id.to_string(),
+			}
+		})
+		.collect();
+	Ok(Props {
+		app_layout_info,
+		models,
+	})
 }
