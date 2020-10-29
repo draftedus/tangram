@@ -69,7 +69,7 @@ jobs:
       - name: upload dynamic library
         uses: actions/upload-artifact@v1
         with:
-          name: tangram-dyanmiclib-${{ matrix.os }}-${{ matrix.arch }}
+          name: tangram-dynamiclib-${{ matrix.os }}-${{ matrix.arch }}
           path: build/cargo/${{ matrix.rust_target }}/release/${{ matrix.dynamic_library_file_name }}
       - name: upload static library
         uses: actions/upload-artifact@v1

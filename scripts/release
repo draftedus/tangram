@@ -1,1 +1,1 @@
-cargo run --bin tangram_script_build_download
+cargo run --bin tangram_script_release

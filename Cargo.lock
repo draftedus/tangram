@@ -2355,7 +2355,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "url",
- "xshell",
 ]
 
 [[package]]
@@ -2947,21 +2946,6 @@ dependencies = [
  "winapi 0.2.8",
  "winapi-build",
 ]
-
-[[package]]
-name = "xshell"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e9bbfccbb2233e6b0473b7870d4b0811a402e9e249a5e8394e768e5a5c9c37d"
-dependencies = [
- "xshell-macros",
-]
-
-[[package]]
-name = "xshell-macros"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b94f1c632d730a1704b21dc551a4c74fbed713cfa59593708f94943548206134"
 
 [[package]]
 name = "yaml-rust"

@@ -1,14 +1,21 @@
 use anyhow::Result;
 use serde::{de::DeserializeOwned, Deserialize};
+use std::io::Write;
 use std::path::PathBuf;
 use tokio::fs;
 use url::Url;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-	let _version = std::env::var("VERSION").unwrap_or_else(|_| {
+	// Get the input we need to run the release.
+	let version = std::env::var("VERSION").unwrap_or_else(|_| {
 		rustyline::Editor::<()>::new()
 			.readline("Version: ")
+			.unwrap()
+	});
+	let run_id = std::env::var("ACTION_RUN_ID").unwrap_or_else(|_| {
+		rustyline::Editor::<()>::new()
+			.readline("GitHub Action Run ID: ")
 			.unwrap()
 	});
 	let username = std::env::var("GITHUB_USERNAME").unwrap_or_else(|_| {
@@ -22,25 +29,8 @@ async fn main() -> Result<()> {
 			.unwrap()
 	});
 
-	let github_client = GitHubClient::new(username, token);
-
-	// Get the most recent workflow run.
-	#[derive(Debug, Deserialize)]
-	pub struct WorkflowRunsResponse {
-		pub total_count: usize,
-		pub workflow_runs: Vec<WorkflowRun>,
-	}
-	#[derive(Debug, Deserialize)]
-	pub struct WorkflowRun {
-		pub id: String,
-	}
-	let workflow_runs_response = github_client
-		.request::<WorkflowRunsResponse>(
-			reqwest::Method::GET,
-			"/repos/tangram-hq/tangram/actions/workflows/build.yaml/runs",
-		)
-		.await?;
-	let workflow_run = workflow_runs_response.workflow_runs.get(0).unwrap();
+	// Create the GitHub client.
+	let github_client = GitHubClient::new();
 
 	// Get the artifacts from the workflow run.
 	#[derive(Debug, Deserialize)]
@@ -55,65 +45,231 @@ async fn main() -> Result<()> {
 	}
 	let artifacts_response = github_client
 		.request::<ArtifactsResponse>(
+			&username,
+			&token,
 			reqwest::Method::GET,
 			&format!(
-				"/repos/tangram-hq/tangram/actions/runs/${}/artifacts",
-				workflow_run.id
+				"/repos/tangram-hq/tangram/actions/runs/{}/artifacts",
+				run_id
 			),
 		)
-		.await?;
+		.await
+		.unwrap();
 	let artifacts = artifacts_response.artifacts;
 
+	// Make the dist directory if necessary.
+	let dist_path = PathBuf::from("dist");
+	fs::create_dir_all(&dist_path).await.unwrap();
+
 	// Download the artifacts.
-	for artifact in artifacts {
-		let data = reqwest::get(&artifact.archive_download_url)
-			.await?
+	for artifact in artifacts.iter() {
+		let data = github_client
+			.client
+			.get(&artifact.archive_download_url)
+			.basic_auth(&username, Some(&token))
+			.send()
+			.await
+			.unwrap()
 			.bytes()
-			.await?;
-		let output_path = PathBuf::from("dist").join(artifact.name);
-		fs::write(output_path, data).await?;
+			.await
+			.unwrap();
+		let artifact_path = dist_path.join(&artifact.name);
+		fs::write(artifact_path, data).await.unwrap();
+	}
+
+	// Create the cli linux amd64 archive.
+	sh("unzip dist/tangram-cli-linux-amd64 -d dist");
+	sh("chmod +x dist/tangram");
+	sh(format!(
+		"tar czf dist/tangram-cli-linux-amd64-{}.tar.gz -C dist tangram",
+		version
+	));
+	fs::remove_file("dist/tangram").await.unwrap();
+
+	// Create the cli macos amd64 archive.
+	sh("unzip dist/tangram-cli-macos-amd64 -d dist");
+	sh("chmod +x dist/tangram");
+	sh(format!(
+		"tar czf dist/tangram-cli-macos-amd64-{}.tar.gz -C dist tangram",
+		version
+	));
+	fs::remove_file("dist/tangram").await.unwrap();
+
+	// Create the windows amd64 cli archive.
+	sh("unzip dist/tangram-cli-windows-amd64 -d dist");
+	sh(format!(
+		"zip -qj dist/tangram-cli-windows-amd64-{}.zip dist/tangram.exe",
+		version
+	));
+	fs::remove_file("dist/tangram.exe").await.unwrap();
+
+	// Create the dynamic library linux amd64 archive.
+	sh("unzip dist/tangram-dynamiclib-linux-amd64 -d dist");
+	sh(format!(
+		"zip -qj dist/tangram-dynamiclib-linux-amd64-{}.zip dist/libtangram.so",
+		version
+	));
+	fs::copy(
+		"dist/libtangram.so",
+		"languages/python/tangram/libtangram-linux-amd64.so",
+	)
+	.await
+	.unwrap();
+	fs::copy(
+		"dist/libtangram.so",
+		"languages/ruby/lib/tangram/libtangram-linux-amd64.so",
+	)
+	.await
+	.unwrap();
+	fs::remove_file("dist/libtangram.so").await.unwrap();
+
+	// Create the dynamic library macos amd64 archive.
+	sh("unzip dist/tangram-dynamiclib-macos-amd64 -d dist");
+	sh(format!(
+		"zip -qj dist/tangram-dynamiclib-macos-amd64-{}.zip dist/libtangram.dylib",
+		version
+	));
+	fs::copy(
+		"dist/libtangram.dylib",
+		"languages/python/tangram/libtangram-macos-amd64.dylib",
+	)
+	.await
+	.unwrap();
+	fs::copy(
+		"dist/libtangram.dylib",
+		"languages/ruby/lib/tangram/libtangram-macos-amd64.dylib",
+	)
+	.await
+	.unwrap();
+	fs::remove_file("dist/libtangram.dylib").await.unwrap();
+
+	// Create the dynamic library windows amd64 archive.
+	sh("unzip dist/tangram-dynamiclib-windows-amd64 -d dist");
+	sh(format!(
+		"zip -qj dist/tangram-dynamiclib-windows-amd64-{}.zip dist/tangram.dll",
+		version
+	));
+	fs::copy(
+		"dist/tangram.dll",
+		"languages/python/tangram/tangram-windows-amd64.dll",
+	)
+	.await
+	.unwrap();
+	fs::copy(
+		"dist/tangram.dll",
+		"languages/ruby/lib/tangram/tangram-windows-amd64.dll",
+	)
+	.await
+	.unwrap();
+	fs::remove_file("dist/tangram.dll").await.unwrap();
+
+	// Create the static library linux amd64 archive.
+	sh("unzip dist/tangram-staticlib-linux-amd64 -d dist");
+	sh(format!(
+		"zip -qj dist/tangram-staticlib-linux-amd64-{}.zip dist/libtangram.a",
+		version
+	));
+	fs::copy("dist/libtangram.a", "languages/go/libtangram-linux-amd64.a")
+		.await
+		.unwrap();
+	fs::copy(
+		"dist/libtangram.a",
+		"languages/node/packages/tangram-node/libtangram-linux-amd64.a",
+	)
+	.await
+	.unwrap();
+	fs::remove_file("dist/libtangram.a").await.unwrap();
+
+	// Create the static library macos amd64 archive.
+	sh("unzip dist/tangram-staticlib-macos-amd64 -d dist");
+	sh(format!(
+		"zip -qj dist/tangram-staticlib-macos-amd64-{}.zip dist/libtangram.a",
+		version
+	));
+	fs::copy("dist/libtangram.a", "languages/go/libtangram-macos-amd64.a")
+		.await
+		.unwrap();
+	fs::copy(
+		"dist/libtangram.a",
+		"languages/node/packages/tangram-node/libtangram-macos-amd64.a",
+	)
+	.await
+	.unwrap();
+	fs::remove_file("dist/libtangram.a").await.unwrap();
+
+	// Create the static library windows amd64 archive.
+	sh("unzip dist/tangram-staticlib-windows-amd64 -d dist");
+	sh(format!(
+		"zip -qj dist/tangram-staticlib-windows-amd64-{}.zip dist/tangram.lib",
+		version
+	));
+	fs::copy("dist/tangram.lib", "languages/go/tangram-windows-amd64.lib")
+		.await
+		.unwrap();
+	fs::copy(
+		"dist/tangram.lib",
+		"languages/node/packages/tangram-node/tangram-windows-amd64.lib",
+	)
+	.await
+	.unwrap();
+	fs::remove_file("dist/tangram.lib").await.unwrap();
+
+	// Delete all the downloaded artifacts.
+	for artifact in artifacts.iter() {
+		let artifact_path = dist_path.join(&artifact.name);
+		fs::remove_file(artifact_path).await.unwrap();
 	}
 
 	Ok(())
 }
 
+fn sh<T>(cmd: T)
+where
+	T: AsRef<str>,
+{
+	let mut command = std::process::Command::new("sh")
+		.stdin(std::process::Stdio::piped())
+		.spawn()
+		.unwrap();
+	command
+		.stdin
+		.as_mut()
+		.unwrap()
+		.write_all(cmd.as_ref().as_bytes())
+		.unwrap();
+	let exit_status = command.wait().unwrap();
+	if !exit_status.success() {
+		panic!();
+	}
+}
+
 struct GitHubClient {
 	base_url: Url,
 	client: reqwest::Client,
-	username: String,
-	token: String,
 }
 
 impl GitHubClient {
-	pub fn new(username: String, token: String) -> GitHubClient {
+	pub fn new() -> GitHubClient {
 		let base_url = Url::parse("https://api.github.com").unwrap();
 		let mut headers = reqwest::header::HeaderMap::new();
 		headers.insert(
 			reqwest::header::USER_AGENT,
-			reqwest::header::HeaderValue::from_str("tangram-hq/tangram build_download script")
-				.unwrap(),
-		);
-		headers.insert(
-			reqwest::header::AUTHORIZATION,
-			reqwest::header::HeaderValue::from_str(&base64::encode(&format!(
-				"{}:{}",
-				username, token
-			)))
-			.unwrap(),
+			reqwest::header::HeaderValue::from_str("tangram-hq/tangram release script").unwrap(),
 		);
 		let client = reqwest::Client::builder()
 			.default_headers(headers)
 			.build()
 			.unwrap();
-		GitHubClient {
-			base_url,
-			client,
-			username,
-			token,
-		}
+		GitHubClient { base_url, client }
 	}
 
-	async fn request<T>(&self, method: reqwest::Method, path: &str) -> Result<T>
+	async fn request<T>(
+		&self,
+		username: &str,
+		token: &str,
+		method: reqwest::Method,
+		path: &str,
+	) -> Result<T>
 	where
 		T: DeserializeOwned,
 	{
@@ -122,7 +278,7 @@ impl GitHubClient {
 		let value = self
 			.client
 			.request(method, url)
-			.basic_auth(&self.username, Some(&self.token))
+			.basic_auth(&username, Some(&token))
 			.send()
 			.await?
 			.json()
@@ -130,135 +286,3 @@ impl GitHubClient {
 		Ok(value)
 	}
 }
-
-// async function sh(cmd: string) {
-// 	await Deno.run({
-// 		cmd: ['sh', '-c', cmd],
-// 	}).status()
-// }
-
-// // Create the linux x64 cli archive.
-// await sh(`unzip dist/tangram-cli-linux-x64 -d dist`)
-// await sh(`chmod +x dist/tangram`)
-// await sh(`tar czf dist/tangram-cli-${version}-linux-x64.tar.gz -C dist tangram`)
-// await Deno.remove('dist/tangram')
-
-// // Create the macos x64 cli archive.
-// await sh(`unzip dist/tangram-cli-macos-x64 -d dist`)
-// await sh(`chmod +x dist/tangram`)
-// await sh(`tar czf dist/tangram-cli-${version}-macos-x64.tar.gz -C dist tangram`)
-// await Deno.remove('dist/tangram')
-
-// // Create the windows x64 cli archive.
-// await sh(`unzip dist/tangram-cli-windows-x64 -d dist`)
-// await sh(`zip -qj dist/tangram-cli-${version}-windows-x64.zip dist/tangram.exe`)
-// await Deno.remove('dist/tangram.exe')
-
-// // Create the linux x64 dynamic libtangram archive.
-// await sh(`unzip dist/tangram-cdylib-linux-x64 -d dist`)
-// await sh(
-// 	`zip -qj dist/tangram-cdylib-${version}-linux-x64.zip dist/libtangram.so`,
-// )
-// await Deno.copyFile(
-// 	'dist/libtangram.so',
-// 	'languages/python/tangram/libtangram-linux-x64.so',
-// )
-// await Deno.copyFile(
-// 	'dist/libtangram.so',
-// 	'languages/ruby/lib/tangram/libtangram-linux-x64.so',
-// )
-// await Deno.remove('dist/libtangram.so')
-
-// // Create the linux x64 static libtangram archive.
-// await sh(`unzip dist/tangram-staticlib-linux-x64 -d dist`)
-// await sh(
-// 	`zip -qj dist/tangram-staticlib-${version}-linux-x64.zip dist/libtangram.a`,
-// )
-// await Deno.copyFile('dist/libtangram.a', 'languages/go/libtangram-linux-x64.a')
-// await Deno.copyFile(
-// 	'dist/libtangram.a',
-// 	'languages/node/packages/tangram-node/libtangram-linux-x64.a',
-// )
-// await Deno.copyFile(
-// 	'dist/libtangram.a',
-// 	'languages/rust/libtangram-linux-x64.a',
-// )
-// await Deno.remove('dist/libtangram.a')
-
-// // Create the macos x64 dynamic libtangram archive.
-// await sh(`unzip dist/tangram-cdylib-macos-x64 -d dist`)
-// await sh(
-// 	`zip -qj dist/tangram-cdylib-${version}-macos-x64.zip dist/libtangram.dylib`,
-// )
-// await Deno.copyFile(
-// 	'dist/libtangram.dylib',
-// 	'languages/python/tangram/libtangram-macos-x64.dylib',
-// )
-// await Deno.copyFile(
-// 	'dist/libtangram.dylib',
-// 	'languages/ruby/lib/tangram/libtangram-macos-x64.dylib',
-// )
-// await Deno.remove('dist/libtangram.dylib')
-
-// // Create the macos x64 static libtangram archive.
-// await sh(`unzip dist/tangram-staticlib-macos-x64 -d dist`)
-// await sh(
-// 	`zip -qj dist/tangram-staticlib-${version}-macos-x64.zip dist/libtangram.a`,
-// )
-// await Deno.copyFile('dist/libtangram.a', 'languages/go/libtangram-macos-x64.a')
-// await Deno.copyFile(
-// 	'dist/libtangram.a',
-// 	'languages/node/packages/tangram-node/libtangram-macos-x64.a',
-// )
-// await Deno.copyFile(
-// 	'dist/libtangram.a',
-// 	'languages/rust/libtangram-macos-x64.a',
-// )
-// await Deno.remove('dist/libtangram.a')
-
-// // Create the windows x64 dynamic libtangram archive.
-// await sh(`unzip dist/tangram-cdylib-windows-x64 -d dist`)
-// await sh(
-// 	`zip -qj dist/tangram-cdylib-${version}-windows-x64.zip dist/tangram.dll`,
-// )
-// await Deno.copyFile(
-// 	'dist/tangram.dll',
-// 	'languages/python/tangram/tangram-windows-x64.dll',
-// )
-// await Deno.copyFile(
-// 	'dist/tangram.dll',
-// 	'languages/ruby/lib/tangram/tangram-windows-x64.dll',
-// )
-// await Deno.remove('dist/tangram.dll')
-
-// // Create the windows x64 static libtangram archive.
-// await sh(`unzip dist/tangram-staticlib-windows-x64 -d dist`)
-// await sh(
-// 	`zip -qj dist/tangram-staticlib-${version}-windows-x64.zip dist/tangram.lib`,
-// )
-// await Deno.copyFile('dist/tangram.lib', 'languages/go/tangram-windows-x64.lib')
-// await Deno.copyFile(
-// 	'dist/tangram.lib',
-// 	'languages/node/packages/tangram-node/tangram-windows-x64.lib',
-// )
-// await Deno.copyFile(
-// 	'dist/tangram.lib',
-// 	'languages/rust/tangram-windows-x64.lib',
-// )
-// await Deno.remove('dist/tangram.lib')
-
-// // Create the wasm libtangram archive.
-// await sh(`unzip dist/tangram-wasm -d dist`)
-// await sh(`zip -qj dist/tangram-wasm-${version}.zip dist/tangram.wasm`)
-// await Deno.copyFile(
-// 	'dist/tangram.wasm',
-// 	'languages/js/packages/tangram-js/tangram.wasm',
-// )
-// await Deno.remove('dist/tangram.wasm')
-
-// // Delete all the downloaded artifacts.
-// await Promise.all(
-// 	artifacts.map(async (artifact: any) => {
-// 		await Deno.remove(join('dist', artifact.name))
-// 	}),
-// )
