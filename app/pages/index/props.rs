@@ -48,7 +48,6 @@ async fn repos_for_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Vec
 				repos.created_at,
 				repos.title
 			from repos
-			where repos.user_id is null and repos.organization_id is null
 			order by repos.created_at
 		",
 	)
