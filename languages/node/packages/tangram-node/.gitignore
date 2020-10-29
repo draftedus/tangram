@@ -3,6 +3,6 @@
 /index.js
 /index.js.map
 /node_modules
-/libtangram-linux-x64.a
-/libtangram-macos-x64.a
-/tangram-windows-x64.lib
+/libtangram-linux-amd64.a
+/libtangram-macos-amd64.a
+/tangram-windows-amd64.lib
