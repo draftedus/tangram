@@ -95,7 +95,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 													value="delete_member"
 												/>
 												<input
-													name="memberId"
+													name="member_id"
 													type="hidden"
 													value={member.id}
 												/>

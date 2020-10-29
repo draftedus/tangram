@@ -275,7 +275,6 @@ export function drawBarChartXAxisLabels(
 	ctx.textBaseline = 'bottom'
 	ctx.textAlign = 'center'
 	let labelStepSize = 1
-	console.log(JSON.stringify(categories))
 	// Find the smallest label step size at which labels do not overlap.
 	while (true) {
 		// This is how far the next label's center is.

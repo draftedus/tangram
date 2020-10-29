@@ -13,7 +13,7 @@ fn main() {
 	let _n_rows_train = 26049;
 	let n_rows_test = 6512;
 	let target_column_index = 14;
-	let workclass_options = vec![
+	let workclass_options = [
 		"State-gov",
 		"Self-emp-not-inc",
 		"Private",
@@ -27,7 +27,7 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let education_options = vec![
+	let education_options = [
 		"Bachelors",
 		"HS-grad",
 		"11th",
@@ -48,7 +48,7 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let marital_status_options = vec![
+	let marital_status_options = [
 		"Never-married",
 		"Married-civ-spouse",
 		"Divorced",
@@ -60,7 +60,7 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let occupation_options = vec![
+	let occupation_options = [
 		"Adm-clerical",
 		"Exec-managerial",
 		"Handlers-cleaners",
@@ -80,7 +80,7 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let relationship_options = vec![
+	let relationship_options = [
 		"Not-in-family",
 		"Husband",
 		"Wife",
@@ -91,7 +91,7 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let race_options = vec![
+	let race_options = [
 		"White",
 		"Black",
 		"Asian-Pac-Islander",
@@ -101,11 +101,8 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let sex_options = vec!["Male", "Female"]
-		.iter()
-		.map(ToString::to_string)
-		.collect();
-	let native_country_options = vec![
+	let sex_options = ["Male", "Female"].iter().map(ToString::to_string).collect();
+	let native_country_options = [
 		"United-States",
 		"Cuba",
 		"Jamaica",
@@ -152,30 +149,22 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let income_options = vec!["<=50K", ">50K"]
-		.iter()
-		.map(ToString::to_string)
-		.collect();
+	let income_options = ["<=50K", ">50K"].iter().map(ToString::to_string).collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
 		  "age".to_owned() => DataFrameColumnType::Number ,
 			"workclass".to_owned() => DataFrameColumnType::Enum {options: workclass_options },
-			"fnlwgt".to_owned() =>
-		   DataFrameColumnType::Number,
+			"fnlwgt".to_owned() => DataFrameColumnType::Number,
 			"education".to_owned() => DataFrameColumnType::Enum {options: education_options },
-			"education_num".to_owned() =>
-		   DataFrameColumnType::Number,
+			"education_num".to_owned() => DataFrameColumnType::Number,
 			"marital_status".to_owned() => DataFrameColumnType::Enum {options: marital_status_options },
 			"occupation".to_owned() => DataFrameColumnType::Enum {options: occupation_options },
 			"relationship".to_owned() => DataFrameColumnType::Enum {options: relationship_options },
 			"race".to_owned() => DataFrameColumnType::Enum {options: race_options },
 			"sex".to_owned() => DataFrameColumnType::Enum {options: sex_options },
-			"capital_gain".to_owned() =>
-		   DataFrameColumnType::Number,
-			"capital_loss".to_owned() =>
-		   DataFrameColumnType::Number,
-			"hours_per_week".to_owned() =>
-		   DataFrameColumnType::Number,
+			"capital_gain".to_owned() => DataFrameColumnType::Number,
+			"capital_loss".to_owned() => DataFrameColumnType::Number,
+			"hours_per_week".to_owned() => DataFrameColumnType::Number,
 			"native_country".to_owned() => DataFrameColumnType::Enum {options: native_country_options },
 			"income".to_owned() => DataFrameColumnType::Enum {options: income_options },
 		}),

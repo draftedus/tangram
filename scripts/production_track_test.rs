@@ -233,18 +233,21 @@ const HEART_DISEASE: DatasetConfig = DatasetConfig {
 	target: "diagnosis",
 	class_names: Some(&["Positive", "Negative"]),
 };
+
 const BOSTON: DatasetConfig = DatasetConfig {
 	csv_path: "data/boston.csv",
 	name: "boston",
 	target: "medv",
 	class_names: None,
 };
+
 const IRIS: DatasetConfig = DatasetConfig {
 	csv_path: "data/iris.csv",
 	name: "iris",
 	target: "species",
 	class_names: Some(&["Iris Setosa", "Iris Virginica", "Iris Versicolor"]),
 };
+
 const MPG: DatasetConfig = DatasetConfig {
 	csv_path: "data/mpg.csv",
 	name: "mpg",

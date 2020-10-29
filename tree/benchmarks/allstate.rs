@@ -15,7 +15,7 @@ fn main() {
 	let csv_file_path_train = Path::new("data/allstate_train.csv");
 	let csv_file_path_test = Path::new("data/allstate_test.csv");
 	let target_column_index = 34;
-	let blind_make_options = vec![
+	let blind_make_options = [
 		"AU", "BF", "AR", "AJ", "BO", "BW", "BH", "AQ", "L", "BP", "AN", "K", "AO", "AH", "D", "X",
 		"Y", "W", "BU", "Q", "R", "AL", "BV", "M", "I", "BG", "BT", "E", "S", "AY", "P", "N", "O",
 		"AI", "Z", "BZ", "BY", "BM", "AX", "J", "BN", "BS", "AZ", "BB", "AV", "BD", "AF", "G",
@@ -495,56 +495,56 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let cat1_options = vec!["G", "B", "D", "I", "F", "A", "E", "C", "H", "J", "?"]
+	let cat1_options = ["G", "B", "D", "I", "F", "A", "E", "C", "H", "J", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat2_options = vec!["B", "C", "?", "A"]
+	let cat2_options = ["B", "C", "?", "A"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat3_options = vec!["A", "F", "B", "C", "E", "D", "?"]
+	let cat3_options = ["A", "F", "B", "C", "E", "D", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat4_options = vec!["A", "?", "C", "B"]
+	let cat4_options = ["A", "?", "C", "B"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat5_options = vec!["C", "A", "?", "B"]
+	let cat5_options = ["C", "A", "?", "B"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat6_options = vec!["D", "C", "E", "B", "F", "?"]
+	let cat6_options = ["D", "C", "E", "B", "F", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat7_options = vec!["A", "C", "?", "D", "B"]
+	let cat7_options = ["A", "C", "?", "D", "B"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat8_options = vec!["A", "B", "C", "?"]
+	let cat8_options = ["A", "B", "C", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat9_options = vec!["B", "A"].iter().map(ToString::to_string).collect();
-	let cat10_options = vec!["A", "B", "C", "?"]
+	let cat9_options = ["B", "A"].iter().map(ToString::to_string).collect();
+	let cat10_options = ["A", "B", "C", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat11_options = vec!["B", "E", "C", "A", "D", "F", "?"]
+	let cat11_options = ["B", "E", "C", "A", "D", "F", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat12_options = vec!["C", "B", "E", "D", "F", "A"]
+	let cat12_options = ["C", "B", "E", "D", "F", "A"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let ordcat_options = vec!["4", "2", "5", "3", "7", "6", "1", "?"]
+	let ordcat_options = ["4", "2", "5", "3", "7", "6", "1", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let nvcat_options = vec![
+	let nvcat_options = [
 		"L", "N", "M", "J", "B", "E", "O", "F", "K", "D", "A", "H", "C", "G", "I",
 	]
 	.iter()
@@ -552,40 +552,40 @@ fn main() {
 	.collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-		"row_id".to_owned()=> DataFrameColumnType::Number,
-		"household_id".to_owned()=> DataFrameColumnType::Number,
-		"vehicle".to_owned()=> DataFrameColumnType::Number,
-		"calendar_year".to_owned()=> DataFrameColumnType::Number,
-		"model_year".to_owned()=> DataFrameColumnType::Number,
-		"blind_make".to_owned()=> DataFrameColumnType::Enum { options: blind_make_options },
-		"blind_model".to_owned()=> DataFrameColumnType::Enum { options: blind_model_options },
-		"blind_submodel".to_owned()=> DataFrameColumnType::Enum { options: blind_submodel_options },
-		"cat1".to_owned()=> DataFrameColumnType::Enum { options: cat1_options },
-		"cat2".to_owned()=>  DataFrameColumnType::Enum { options: cat2_options },
-		"cat3".to_owned()=>  DataFrameColumnType::Enum { options: cat3_options },
-		"cat4".to_owned()=>  DataFrameColumnType::Enum { options: cat4_options },
-		"cat5".to_owned()=>  DataFrameColumnType::Enum { options: cat5_options },
-		"cat6".to_owned()=>  DataFrameColumnType::Enum { options: cat6_options },
-		"cat7".to_owned()=>  DataFrameColumnType::Enum { options: cat7_options },
-		"cat8".to_owned()=>  DataFrameColumnType::Enum { options: cat8_options },
-		"cat9".to_owned()=>  DataFrameColumnType::Enum { options: cat9_options },
-		"cat10".to_owned()=>  DataFrameColumnType::Enum { options: cat10_options },
-		"cat11".to_owned()=>  DataFrameColumnType::Enum { options: cat11_options },
-		"cat12".to_owned()=>  DataFrameColumnType::Enum { options: cat12_options },
-		"ordcat".to_owned()=> DataFrameColumnType::Enum { options: ordcat_options },
-		"var1".to_owned()=> DataFrameColumnType::Number,
-		"var2".to_owned()=> DataFrameColumnType::Number,
-		"var3".to_owned()=> DataFrameColumnType::Number,
-		"var4".to_owned()=> DataFrameColumnType::Number,
-		"var5".to_owned()=> DataFrameColumnType::Number,
-		"var6".to_owned()=> DataFrameColumnType::Number,
-		"var7".to_owned()=> DataFrameColumnType::Number,
-		"var8".to_owned()=> DataFrameColumnType::Number,
-		"nvcat".to_owned()=> DataFrameColumnType::Enum { options: nvcat_options },
-		"nvvar2".to_owned()=> DataFrameColumnType::Number,
-		"nvvar3".to_owned()=> DataFrameColumnType::Number,
-		"nvvar4".to_owned()=> DataFrameColumnType::Number ,
-		"claim_amount".to_owned()=> DataFrameColumnType::Number,
+			"row_id".to_owned()=> DataFrameColumnType::Number,
+			"household_id".to_owned()=> DataFrameColumnType::Number,
+			"vehicle".to_owned()=> DataFrameColumnType::Number,
+			"calendar_year".to_owned()=> DataFrameColumnType::Number,
+			"model_year".to_owned()=> DataFrameColumnType::Number,
+			"blind_make".to_owned()=> DataFrameColumnType::Enum { options: blind_make_options },
+			"blind_model".to_owned()=> DataFrameColumnType::Enum { options: blind_model_options },
+			"blind_submodel".to_owned()=> DataFrameColumnType::Enum { options: blind_submodel_options },
+			"cat1".to_owned()=> DataFrameColumnType::Enum { options: cat1_options },
+			"cat2".to_owned()=>  DataFrameColumnType::Enum { options: cat2_options },
+			"cat3".to_owned()=>  DataFrameColumnType::Enum { options: cat3_options },
+			"cat4".to_owned()=>  DataFrameColumnType::Enum { options: cat4_options },
+			"cat5".to_owned()=>  DataFrameColumnType::Enum { options: cat5_options },
+			"cat6".to_owned()=>  DataFrameColumnType::Enum { options: cat6_options },
+			"cat7".to_owned()=>  DataFrameColumnType::Enum { options: cat7_options },
+			"cat8".to_owned()=>  DataFrameColumnType::Enum { options: cat8_options },
+			"cat9".to_owned()=>  DataFrameColumnType::Enum { options: cat9_options },
+			"cat10".to_owned()=>  DataFrameColumnType::Enum { options: cat10_options },
+			"cat11".to_owned()=>  DataFrameColumnType::Enum { options: cat11_options },
+			"cat12".to_owned()=>  DataFrameColumnType::Enum { options: cat12_options },
+			"ordcat".to_owned()=> DataFrameColumnType::Enum { options: ordcat_options },
+			"var1".to_owned()=> DataFrameColumnType::Number,
+			"var2".to_owned()=> DataFrameColumnType::Number,
+			"var3".to_owned()=> DataFrameColumnType::Number,
+			"var4".to_owned()=> DataFrameColumnType::Number,
+			"var5".to_owned()=> DataFrameColumnType::Number,
+			"var6".to_owned()=> DataFrameColumnType::Number,
+			"var7".to_owned()=> DataFrameColumnType::Number,
+			"var8".to_owned()=> DataFrameColumnType::Number,
+			"nvcat".to_owned()=> DataFrameColumnType::Enum { options: nvcat_options },
+			"nvvar2".to_owned()=> DataFrameColumnType::Number,
+			"nvvar3".to_owned()=> DataFrameColumnType::Number,
+			"nvvar4".to_owned()=> DataFrameColumnType::Number ,
+			"claim_amount".to_owned()=> DataFrameColumnType::Number,
 		}),
 		..Default::default()
 	};

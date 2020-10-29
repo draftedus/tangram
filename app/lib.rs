@@ -1,5 +1,5 @@
 use self::{common::error::Error, context::Context};
-use anyhow::{format_err, Result};
+use anyhow::{anyhow, Result};
 use futures::FutureExt;
 use hyper::{
 	header,
@@ -26,6 +26,7 @@ pub struct Options {
 	pub auth_enabled: bool,
 	pub cookie_domain: Option<String>,
 	pub database_url: Url,
+	pub database_max_connections: Option<u32>,
 	pub host: std::net::IpAddr,
 	pub model: Option<PathBuf>,
 	pub port: u16,
@@ -313,7 +314,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			}
 		}
 	};
-	eprintln!("{} {} {}", method, path, response.status().as_u16());
+	eprintln!("{} {} {}", method, path, response.status());
 	response
 }
 
@@ -333,26 +334,28 @@ pub async fn run(options: Options) -> Result<()> {
 	let pinwheel = pinwheel();
 	// Configure the database pool.
 	let database_url = options.database_url.to_string();
-	let database_pool_max_size: u32 = std::env::var("DATABASE_POOL_MAX_SIZE")
-		.map(|s| {
-			s.parse()
-				.expect("DATABASE_POOL_MAX_SIZE environment variable invalid")
-		})
-		.unwrap_or(10);
-	let pool_options = match database_url {
-		_ if database_url.starts_with("sqlite:") => sqlx::any::AnyConnectOptions::from(
-			sqlx::sqlite::SqliteConnectOptions::from_str(&database_url)?
-				.create_if_missing(true)
-				.foreign_keys(true)
-				.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),
-		),
-		_ if database_url.starts_with("postgres:") => sqlx::any::AnyConnectOptions::from(
-			sqlx::postgres::PgConnectOptions::from_str(&database_url)?,
-		),
+	let (pool_options, pool_max_connections) = match database_url {
+		_ if database_url.starts_with("sqlite:") => {
+			let pool_options = sqlx::any::AnyConnectOptions::from(
+				sqlx::sqlite::SqliteConnectOptions::from_str(&database_url)?
+					.create_if_missing(true)
+					.foreign_keys(true)
+					.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),
+			);
+			let pool_max_connections = options.database_max_connections.unwrap_or(1);
+			(pool_options, pool_max_connections)
+		}
+		_ if database_url.starts_with("postgres:") => {
+			let pool_options = sqlx::any::AnyConnectOptions::from(
+				sqlx::postgres::PgConnectOptions::from_str(&database_url)?,
+			);
+			let pool_max_connections = options.database_max_connections.unwrap_or(10);
+			(pool_options, pool_max_connections)
+		}
 		_ => panic!("DATABASE_URL must be a sqlite or postgres database url"),
 	};
 	let pool = sqlx::any::AnyPoolOptions::new()
-		.max_connections(database_pool_max_size)
+		.max_connections(pool_max_connections)
 		.connect_with(pool_options)
 		.await?;
 	// Run any pending migrations.
@@ -365,9 +368,9 @@ pub async fn run(options: Options) -> Result<()> {
 		let model = tangram_core::model::Model::from_slice(&model_data)?;
 		let title = model_path
 			.file_stem()
-			.ok_or_else(|| format_err!("bad model path"))?
+			.ok_or_else(|| anyhow!("bad model path"))?
 			.to_str()
-			.ok_or_else(|| format_err!("bad model path"))?;
+			.ok_or_else(|| anyhow!("bad model path"))?;
 		crate::common::repos::create_root_repo(&mut db, repo_id, title).await?;
 		crate::common::repos::add_model_version(&mut db, repo_id, model.id(), &model_data).await?;
 		db.commit().await?;

@@ -17,7 +17,6 @@ enum Action {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct DeleteModelAction {
 	model_id: String,
 }

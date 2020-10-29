@@ -3,7 +3,7 @@ use crate::common::{
 	user::{authorize_normal_user, authorize_normal_user_for_organization},
 };
 use crate::{common::user::NormalUser, Context};
-use anyhow::format_err;
+use anyhow::anyhow;
 use anyhow::Result;
 use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
@@ -150,7 +150,7 @@ async fn send_invitation_email(
 		.await?;
 	if !response.status().is_success() {
 		let text = response.text().await?;
-		return Err(format_err!("Non-2xx response from sengrid: {:?}", text));
+		return Err(anyhow!("Non-2xx response from sengrid: {:?}", text));
 	}
 	Ok(())
 }

@@ -16,17 +16,17 @@ fn main() {
 	let csv_file_path_train = Path::new("data/flights_10m_train.csv");
 	let csv_file_path_test = Path::new("data/flights_test.csv");
 	let target_column_index = 8;
-	let month_options = vec![
+	let month_options = [
 		"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
 	]
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let day_of_week_options = vec!["c-1", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7"]
+	let day_of_week_options = ["c-1", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let day_of_month_options = vec![
+	let day_of_month_options = [
 		"c-1", "c-10", "c-11", "c-12", "c-13", "c-14", "c-15", "c-16", "c-17", "c-18", "c-19",
 		"c-2", "c-20", "c-21", "c-22", "c-23", "c-24", "c-25", "c-26", "c-27", "c-28", "c-29",
 		"c-3", "c-30", "c-31", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
@@ -34,14 +34,14 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let carrier_options = vec![
+	let carrier_options = [
 		"AA", "AQ", "AS", "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH",
 		"OO", "TZ", "UA", "US", "WN", "XE", "YV",
 	]
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let origin_options: Vec<String> = vec![
+	let origin_options: Vec<String> = [
 		"ABE", "ABI", "ABQ", "ABY", "ACK", "ACT", "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN",
 		"ALB", "AMA", "ANC", "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET",
 		"BFL", "BGM", "BGR", "BHM", "BIL", "BIS", "BLI", "BMI", "BNA", "BOI", "BOS", "BPT", "BQK",
@@ -69,7 +69,7 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let dest_options: Vec<String> = vec![
+	let dest_options: Vec<String> = [
 		"ABE", "ABI", "ABQ", "ABY", "ACK", "ACT", "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN",
 		"ALB", "AMA", "ANC", "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET",
 		"BFL", "BGM", "BGR", "BHM", "BIL", "BIS", "BLI", "BMI", "BNA", "BOI", "BOS", "BPT", "BQK",
@@ -97,6 +97,7 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
+	let target_options = ["N", "Y"].iter().map(ToString::to_string).collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
 		  "month".to_owned() => DataFrameColumnType::Enum {options: month_options },
@@ -107,7 +108,7 @@ fn main() {
 		  "origin".to_owned() => DataFrameColumnType::Enum { options: origin_options },
 		  "dest".to_owned() => DataFrameColumnType::Enum { options: dest_options },
 		  "distance".to_owned() => DataFrameColumnType::Number,
-		  "dep_delayed_15min".to_owned() => DataFrameColumnType::Enum { options: vec!["N".to_owned(), "Y".to_owned()] }
+		  "dep_delayed_15min".to_owned() => DataFrameColumnType::Enum { options: target_options }
 		}),
 		..Default::default()
 	};

@@ -25,21 +25,21 @@ sex_options = ['Male', 'Female']
 native_country_options = ['United-States', 'Cuba', 'Jamaica', 'India', '?', 'Mexico', 'South', 'Puerto-Rico', 'Honduras', 'England', 'Canada', 'Germany', 'Iran', 'Philippines','Italy', 'Poland', 'Columbia', 'Cambodia', 'Thailand', 'Ecuador', 'Laos', 'Taiwan', 'Haiti', 'Portugal', 'Dominican-Republic', 'El-Salvador', 'France', 'Guatemala', 'China', 'Japan', 'Yugoslavia', 'Peru', 'Outlying-US(Guam-USVI-etc)', 'Scotland', 'Trinadad&Tobago', 'Greece', 'Nicaragua', 'Vietnam', 'Hong', 'Ireland', 'Hungary', 'Holand-Netherlands']
 income_options = ['<=50K', '>50K']
 dtype = {
-  'age': np.float64,
-  'workclass': CategoricalDtype(categories=workclass_options),
-  'fnlwgt': np.float64,
-  'education': CategoricalDtype(categories=education_options),
-  'education_num': np.float64,
-  'marital_status': CategoricalDtype(categories=marital_status_options),
-  'occupation': CategoricalDtype(categories=occupation_options),
-  'relationship': CategoricalDtype(categories=relationship_options),
-  'race': CategoricalDtype(categories=race_options),
-  'sex': CategoricalDtype(categories=sex_options),
-  'captial_gain': np.float64,
-  'captial_loss': np.float64,
-  'hours_per_week': np.float64,
-  'native_country': CategoricalDtype(categories=native_country_options),
-  'income': CategoricalDtype(categories=income_options),
+	'age': np.float64,
+	'workclass': CategoricalDtype(categories=workclass_options),
+	'fnlwgt': np.float64,
+	'education': CategoricalDtype(categories=education_options),
+	'education_num': np.float64,
+	'marital_status': CategoricalDtype(categories=marital_status_options),
+	'occupation': CategoricalDtype(categories=occupation_options),
+	'relationship': CategoricalDtype(categories=relationship_options),
+	'race': CategoricalDtype(categories=race_options),
+	'sex': CategoricalDtype(categories=sex_options),
+	'captial_gain': np.float64,
+	'captial_loss': np.float64,
+	'hours_per_week': np.float64,
+	'native_country': CategoricalDtype(categories=native_country_options),
+	'income': CategoricalDtype(categories=income_options),
 }
 data_train = pd.read_csv(path_train, dtype=dtype)
 data_test = pd.read_csv(path_test, dtype=dtype)
@@ -54,75 +54,75 @@ labels_test = data_test[target_column_name]
 
 # Train the model.
 if args.library == 'h2o':
-  import h2o
-  from h2o.estimators import H2OGradientBoostingEstimator
-  h2o.init()
-  data_train = pd.concat([features_train, labels_train], axis=1)
-  data_test = pd.concat([features_test, labels_test], axis=1)
-  data_train = h2o.H2OFrame(python_obj=data_train)
-  data_test = h2o.H2OFrame(python_obj=data_test)
-  feature_column_names = [column for column in data_train.columns if column != target_column_name]
-  model = H2OGradientBoostingEstimator(
-    distribution="bernoulli",
-    learn_rate=0.1,
-    nbins=255,
-    ntrees=100,
-  )
-  model.train(
-    training_frame=data_train,
-    x=feature_column_names,
-    y=target_column_name,
-  )
+	import h2o
+	from h2o.estimators import H2OGradientBoostingEstimator
+	h2o.init()
+	data_train = pd.concat([features_train, labels_train], axis=1)
+	data_test = pd.concat([features_test, labels_test], axis=1)
+	data_train = h2o.H2OFrame(python_obj=data_train)
+	data_test = h2o.H2OFrame(python_obj=data_test)
+	feature_column_names = [column for column in data_train.columns if column != target_column_name]
+	model = H2OGradientBoostingEstimator(
+		distribution="bernoulli",
+		learn_rate=0.1,
+		nbins=255,
+		ntrees=100,
+	)
+	model.train(
+		training_frame=data_train,
+		x=feature_column_names,
+		y=target_column_name,
+	)
 elif args.library == 'lightgbm':
-  import lightgbm as lgb
-  model = lgb.LGBMClassifier(
-    learning_rate=0.1,
-    n_estimators=100,
-    num_leaves=255,
-  )
-  model.fit(
-    features_train,
-    labels_train
-  )
+	import lightgbm as lgb
+	model = lgb.LGBMClassifier(
+		learning_rate=0.1,
+		n_estimators=100,
+		num_leaves=255,
+	)
+	model.fit(
+		features_train,
+		labels_train
+	)
 elif args.library == 'sklearn':
-  from sklearn.experimental import enable_hist_gradient_boosting
-  from sklearn.ensemble import HistGradientBoostingClassifier
-  model = HistGradientBoostingClassifier(
-    learning_rate=0.1,
-    max_iter=100,
-    max_leaf_nodes=255,
-    validation_fraction=None,
-  )
-  model.fit(features_train, labels_train)
+	from sklearn.experimental import enable_hist_gradient_boosting
+	from sklearn.ensemble import HistGradientBoostingClassifier
+	model = HistGradientBoostingClassifier(
+		learning_rate=0.1,
+		max_iter=100,
+		max_leaf_nodes=255,
+		validation_fraction=None,
+	)
+	model.fit(features_train, labels_train)
 elif args.library == 'xgboost':
-  import xgboost as xgb
-  model = xgb.XGBClassifier(
-    eta=0.1,
-    grow_policy='lossguide',
-    n_estimators=100,
-    tree_method='hist',
-  )
-  model.fit(features_train, labels_train)
+	import xgboost as xgb
+	model = xgb.XGBClassifier(
+		eta=0.1,
+		grow_policy='lossguide',
+		n_estimators=100,
+		tree_method='hist',
+	)
+	model.fit(features_train, labels_train)
 elif args.library == 'catboost':
-  from catboost import CatBoostClassifier
-  categorical_columns = [column for column in categorical_columns if column != target_column_name]
-  model = CatBoostClassifier(
-    learning_rate=0.1,
-    n_estimators=100,
-    num_leaves=255,
-    grow_policy='Lossguide',
-    verbose=False
-  )
-  model.fit(features_train, labels_train, silent=True)
+	from catboost import CatBoostClassifier
+	categorical_columns = [column for column in categorical_columns if column != target_column_name]
+	model = CatBoostClassifier(
+		learning_rate=0.1,
+		n_estimators=100,
+		num_leaves=255,
+		grow_policy='Lossguide',
+		verbose=False
+	)
+	model.fit(features_train, labels_train, silent=True)
 
 # Make predictions on the test data.
 if args.library == 'h2o':
-  predictions_proba = model.predict(data_test).as_data_frame()['>50K']
+	predictions_proba = model.predict(data_test).as_data_frame()['>50K']
 else:
-  predictions_proba = model.predict_proba(features_test)[:, 1]
+	predictions_proba = model.predict_proba(features_test)[:, 1]
 
 # Compute metrics.
 auc_roc = roc_auc_score(labels_test, predictions_proba)
 print(json.dumps({
-  'auc_roc': auc_roc
+	'auc_roc': auc_roc
 }))

@@ -1,5 +1,5 @@
-use super::props::props;
-use crate::{common::error::Error, Context};
+use super::props::Props;
+use crate::{common::error::Error, layouts::app_layout::get_app_layout_info, Context};
 use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 
@@ -11,7 +11,11 @@ pub async fn get(
 	if !context.options.auth_enabled {
 		return Err(Error::NotFound.into());
 	}
-	let props = props(context, None).await?;
+	let app_layout_info = get_app_layout_info(context).await?;
+	let props = Props {
+		app_layout_info,
+		error: None,
+	};
 	let html = context
 		.pinwheel
 		.render_with("/organizations/_organization_id/edit", props)?;

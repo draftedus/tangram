@@ -16,7 +16,7 @@ fn main() {
 	let csv_file_path_train = Path::new("data/allstate_train.csv");
 	let csv_file_path_test = Path::new("data/allstate_test.csv");
 	let target_column_index = 34;
-	let blind_make_options = vec![
+	let blind_make_options = [
 		"AU", "BF", "AR", "AJ", "BO", "BW", "BH", "AQ", "L", "BP", "AN", "K", "AO", "AH", "D", "X",
 		"Y", "W", "BU", "Q", "R", "AL", "BV", "M", "I", "BG", "BT", "E", "S", "AY", "P", "N", "O",
 		"AI", "Z", "BZ", "BY", "BM", "AX", "J", "BN", "BS", "AZ", "BB", "AV", "BD", "AF", "G",
@@ -158,6 +158,7 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
+
 	let blind_submodel_options = [
 		"AU.54.3", "BF.36.3", "AR.41.1", "AJ.129.0", "AU.58.0", "BO.52.1", "BW.156.0", "BO.38.2",
 		"BH.12.2", "AQ.17.1", "L.29.3", "BW.3.0", "BP.24.0", "AN.16.0", "K.3.5", "AR.35.0",
@@ -496,56 +497,56 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let cat1_options = vec!["G", "B", "D", "I", "F", "A", "E", "C", "H", "J", "?"]
+	let cat1_options = ["G", "B", "D", "I", "F", "A", "E", "C", "H", "J", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat2_options = vec!["B", "C", "?", "A"]
+	let cat2_options = ["B", "C", "?", "A"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat3_options = vec!["A", "F", "B", "C", "E", "D", "?"]
+	let cat3_options = ["A", "F", "B", "C", "E", "D", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat4_options = vec!["A", "?", "C", "B"]
+	let cat4_options = ["A", "?", "C", "B"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat5_options = vec!["C", "A", "?", "B"]
+	let cat5_options = ["C", "A", "?", "B"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat6_options = vec!["D", "C", "E", "B", "F", "?"]
+	let cat6_options = ["D", "C", "E", "B", "F", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat7_options = vec!["A", "C", "?", "D", "B"]
+	let cat7_options = ["A", "C", "?", "D", "B"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat8_options = vec!["A", "B", "C", "?"]
+	let cat8_options = ["A", "B", "C", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat9_options = vec!["B", "A"].iter().map(ToString::to_string).collect();
-	let cat10_options = vec!["A", "B", "C", "?"]
+	let cat9_options = ["B", "A"].iter().map(ToString::to_string).collect();
+	let cat10_options = ["A", "B", "C", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat11_options = vec!["B", "E", "C", "A", "D", "F", "?"]
+	let cat11_options = ["B", "E", "C", "A", "D", "F", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let cat12_options = vec!["C", "B", "E", "D", "F", "A"]
+	let cat12_options = ["C", "B", "E", "D", "F", "A"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let ordcat_options = vec!["4", "2", "5", "3", "7", "6", "1", "?"]
+	let ordcat_options = ["4", "2", "5", "3", "7", "6", "1", "?"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let nvcat_options = vec![
+	let nvcat_options = [
 		"L", "N", "M", "J", "B", "E", "O", "F", "K", "D", "A", "H", "C", "G", "I",
 	]
 	.iter()

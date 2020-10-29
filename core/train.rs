@@ -2,7 +2,7 @@ use crate::{
 	config::{self, Config},
 	features, grid, model, stats, test,
 };
-use anyhow::{format_err, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::{collections::BTreeMap, path::Path};
@@ -146,7 +146,7 @@ pub fn train(
 		.iter()
 		.position(|column_name| *column_name == target_column_name)
 		.ok_or_else(|| {
-			format_err!(
+			anyhow!(
 				"did not find target column \"{}\" among column names \"{}\"",
 				target_column_name,
 				column_names.join(", ")
@@ -165,7 +165,7 @@ pub fn train(
 			2 => Task::BinaryClassification,
 			_ => Task::MulticlassClassification,
 		},
-		_ => return Err(format_err!("invalid target column type")),
+		_ => return Err(anyhow!("invalid target column type")),
 	};
 
 	// Compute the baseline metrics.
@@ -1245,7 +1245,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 					config::ComparisonMetric::R2 => {
 						Ok(ComparisonMetric::Regression(RegressionComparisonMetric::R2))
 					}
-					metric => Err(format_err!(
+					metric => Err(anyhow!(
 						"{} is an invalid model comparison metric for regression",
 						metric
 					)),
@@ -1267,7 +1267,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 							BinaryClassificationComparisonMetric::AUCROC,
 						))
 					}
-					metric => Err(format_err!(
+					metric => Err(anyhow!(
 						"{} is an invalid model comparison metric for binary classification",
 						metric,
 					)),
@@ -1289,7 +1289,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 							MulticlassClassificationComparisonMetric::Accuracy,
 						))
 					}
-					metric => Err(format_err!(
+					metric => Err(anyhow!(
 						"{} is an invalid model comparison metric for multiclass classification",
 						metric,
 					)),

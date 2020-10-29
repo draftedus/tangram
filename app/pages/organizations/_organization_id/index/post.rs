@@ -25,13 +25,11 @@ enum Action {
 }
 
 #[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct ChangePlanAction {
 	plan: Plan,
 }
 
 #[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct DeleteMemberAction {
 	member_id: String,
 }

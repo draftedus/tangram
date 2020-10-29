@@ -32,7 +32,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									<ui.TableCell>
 										<form method="post">
 											<input name="action" type="hidden" value="delete_model" />
-											<input name="modelId" type="hidden" value={model.id} />
+											<input name="model_id" type="hidden" value={model.id} />
 											<ui.Button color="var(--red)">{'Delete'}</ui.Button>
 										</form>
 									</ui.TableCell>

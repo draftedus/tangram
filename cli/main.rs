@@ -1,6 +1,6 @@
 //! This module contains the main entrypoint to the tangram cli.
 
-use anyhow::{format_err, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use backtrace::Backtrace;
 use clap::Clap;
 use colored::*;
@@ -65,6 +65,8 @@ struct AppOptions {
 	cookie_domain: Option<String>,
 	#[clap(long, env = "DATABASE_URL")]
 	database_url: Option<Url>,
+	#[clap(long, env = "DATABASE_POOL_SIZE")]
+	database_max_connections: Option<u32>,
 	#[clap(long, default_value = "0.0.0.0")]
 	host: std::net::IpAddr,
 	#[clap(long)]
@@ -131,7 +133,7 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 		Err(_) => {
 			let panic_info = PANIC_INFO.lock().unwrap();
 			let (message, backtrace) = panic_info.as_ref().unwrap();
-			Err(format_err!("{}\n\n{:?}", message, backtrace))
+			Err(anyhow!("{}\n\n{:?}", message, backtrace))
 		}
 	}?;
 
@@ -183,6 +185,7 @@ fn cli_app(options: AppOptions) -> Result<()> {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
 		database_url: options.database_url.unwrap_or_else(default_database_url),
+		database_max_connections: options.database_max_connections,
 		host: options.host,
 		model: options.model,
 		port: options.port,

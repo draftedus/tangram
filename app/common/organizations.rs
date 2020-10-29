@@ -1,4 +1,4 @@
-use anyhow::{format_err, Result};
+use anyhow::{anyhow, Result};
 use sqlx::prelude::*;
 use tangram_util::id::Id;
 
@@ -67,7 +67,7 @@ pub async fn get_organization(
 		"team" => Plan::Team,
 		"startup" => Plan::Startup,
 		"enterprise" => Plan::Enterprise,
-		_ => return Err(format_err!("bad plan {}", plan)),
+		_ => return Err(anyhow!("bad plan {}", plan)),
 	};
 	let user_rows = sqlx::query(
 		"

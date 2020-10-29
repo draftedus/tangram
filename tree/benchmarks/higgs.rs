@@ -18,9 +18,10 @@ fn main() {
 	let _nrows_train = 10_500_000;
 	let _nrows_test = 500_000;
 	let target_column_index = 0;
+	let signal_options = ["false", "true"].iter().map(ToString::to_string).collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-			"signal".to_owned() => DataFrameColumnType::Enum { options: vec!["false".to_owned(), "true".to_owned()] },
+			"signal".to_owned() => DataFrameColumnType::Enum { options: signal_options },
 			"lepton_pt".to_owned() => DataFrameColumnType::Number,
 			"lepton_eta".to_owned() => DataFrameColumnType::Number,
 			"lepton_phi".to_owned() => DataFrameColumnType::Number,

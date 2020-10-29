@@ -13,11 +13,8 @@ fn main() {
 	let _n_rows_train = 242;
 	let n_rows_test = 61;
 	let target_column_index = 13;
-	let gender_options = vec!["male", "female"]
-		.iter()
-		.map(ToString::to_string)
-		.collect();
-	let chest_pain_options = vec![
+	let gender_options = ["male", "female"].iter().map(ToString::to_string).collect();
+	let chest_pain_options = [
 		"typical angina",
 		"asymptomatic",
 		"non-angina pain",
@@ -26,11 +23,9 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let fasting_blood_sugar_greater_than_120_options = vec!["True", "False"]
-		.iter()
-		.map(ToString::to_string)
-		.collect();
-	let resting_ecg_result_options = vec![
+	let fasting_blood_sugar_greater_than_120_options =
+		["True", "False"].iter().map(ToString::to_string).collect();
+	let resting_ecg_result_options = [
 		"probable or definite left ventricular hypertrophy",
 		"normal",
 		"ST-T wave abnormality",
@@ -38,21 +33,20 @@ fn main() {
 	.iter()
 	.map(ToString::to_string)
 	.collect();
-	let exercise_induced_angina_options =
-		vec!["no", "yes"].iter().map(ToString::to_string).collect();
-	let exercise_st_slope_options = vec!["downsloping", "flat", "upsloping"]
+	let exercise_induced_angina_options = ["no", "yes"].iter().map(ToString::to_string).collect();
+	let exercise_st_slope_options = ["downsloping", "flat", "upsloping"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let thallium_stress_test_options = vec!["fixed defect", "normal", "reversible defect"]
+	let thallium_stress_test_options = ["fixed defect", "normal", "reversible defect"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let fluoroscopy_vessels_colored_options = vec!["0", "1", "2", "3"]
+	let fluoroscopy_vessels_colored_options = ["0", "1", "2", "3"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();
-	let diagnosis_options = vec!["Negative", "Positive"]
+	let diagnosis_options = ["Negative", "Positive"]
 		.iter()
 		.map(ToString::to_string)
 		.collect();

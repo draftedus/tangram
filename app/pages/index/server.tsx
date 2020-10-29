@@ -6,6 +6,9 @@ import { AppLayout } from 'layouts/app_layout'
 import { Fragment, h } from 'preact'
 
 export default (pageInfo: PageInfo, props: Props) => {
+	if (Math.random() < 0.0) {
+		throw Error('hello world')
+	}
 	return renderPage(
 		<AppLayout info={props.appLayoutInfo} pageInfo={pageInfo}>
 			<ui.S1>
@@ -42,7 +45,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									<ui.TableCell>
 										<form method="post">
 											<input name="action" type="hidden" value="delete_repo" />
-											<input name="repoId" type="hidden" value={repo.id} />
+											<input name="repo_id" type="hidden" value={repo.id} />
 											<ui.Button color="var(--red)">{'Delete'}</ui.Button>
 										</form>
 									</ui.TableCell>
