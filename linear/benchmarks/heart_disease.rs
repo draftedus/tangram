@@ -1,3 +1,4 @@
+use itertools::izip;
 use ndarray::prelude::*;
 use serde_json::json;
 use std::path::Path;
@@ -6,17 +7,17 @@ use tangram_metrics::{Metric, StreamingMetric};
 
 fn main() {
 	// Load the data.
-	let csv_file_path_train = Path::new("data/boston_train.csv");
-	let csv_file_path_test = Path::new("data/boston_test.csv");
+	let csv_file_path_train = Path::new("data/heart_disease_train.csv");
+	let csv_file_path_test = Path::new("data/heart_disease_test.csv");
 	let target_column_index = 13;
 	let mut features_train =
 		DataFrame::from_path(csv_file_path_train, Default::default(), |_| {}).unwrap();
 	let labels_train = features_train.columns_mut().remove(target_column_index);
-	let labels_train = labels_train.as_number().unwrap();
+	let labels_train = labels_train.as_enum().unwrap();
 	let mut features_test =
 		DataFrame::from_path(csv_file_path_test, Default::default(), |_| {}).unwrap();
 	let labels_test = features_test.columns_mut().remove(target_column_index);
-	let labels_test = labels_test.as_number().unwrap();
+	let labels_test = labels_test.as_enum().unwrap();
 	let feature_groups: Vec<tangram_features::FeatureGroup> = features_train
 		.columns()
 		.iter()
@@ -50,30 +51,35 @@ fn main() {
 	);
 
 	// Train the model.
-	let train_output = tangram_linear::Regressor::train(
+	let train_output = tangram_linear::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.view(),
 		&tangram_linear::TrainOptions {
 			learning_rate: 0.01,
 			max_epochs: 1,
+			n_examples_per_batch: 1,
 			..Default::default()
 		},
 		&mut |_| {},
 	);
 
 	// Make predictions on the test data.
-	let mut predictions = Array::zeros(labels_test.len());
+	let mut probabilities = Array::zeros(labels_test.len());
 	train_output
 		.model
-		.predict(features_test.view(), predictions.view_mut());
+		.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute metrics.
-	let mut metrics = tangram_metrics::RegressionMetrics::new();
-	metrics.update(tangram_metrics::RegressionMetricsInput {
-		predictions: predictions.as_slice().unwrap(),
-		labels: labels_test.view().as_slice(),
+	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
+	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
+		probabilities: probabilities.view().as_slice().unwrap(),
+		labels: labels_test.view().data(),
 	});
 	let metrics = metrics.finalize();
-	let output = json!({"mse": metrics.mse});
+	let input = izip!(probabilities.iter(), labels_test.iter())
+		.map(|(probability, label)| (*probability, label.unwrap()))
+		.collect();
+	let auc_roc = tangram_metrics::AUCROC::compute(input);
+	let output = json!({ "auc_roc": auc_roc, "accuracy": metrics.thresholds[metrics.thresholds.len() / 2].accuracy });
 	println!("{}", output);
 }

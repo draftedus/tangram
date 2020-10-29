@@ -39,21 +39,21 @@ struct MulticlassClassificationBenchmarkOutput {
 }
 
 fn main() {
-	let libraries = &["sklearn", "tangram"];
+	let libraries = &["sklearn", "pytorch", "tangram"];
 	// Test the regression datasets.
 	println!("Regression");
 	run_benchmarks(libraries, &["boston", "allstate"]);
 	println!();
 
-	// // Test the binary classification datasets.
-	// println!("Binary Classification");
-	// run_benchmarks(libraries, &["heart_disease", "census", "higgs", "flights"]);
-	// println!();
+	// Test the binary classification datasets.
+	println!("Binary Classification");
+	run_benchmarks(libraries, &["heart_disease", "census", "higgs", "flights"]);
+	println!();
 
-	// // Test the multiclass classification datasets.
-	// println!("Multiclass Classification");
-	// run_benchmarks(libraries, &["iris"]);
-	// println!();
+	// Test the multiclass classification datasets.
+	println!("Multiclass Classification");
+	run_benchmarks(libraries, &["iris"]);
+	println!();
 }
 
 fn run_benchmarks(libraries: &[&str], datasets: &[&str]) {

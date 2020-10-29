@@ -2313,6 +2313,7 @@ dependencies = [
  "ndarray",
  "num-traits",
  "tangram_dataframe",
+ "tangram_metrics",
  "tangram_util",
 ]
 

@@ -1,45 +1,46 @@
+
 from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.metrics import mean_squared_error
 import argparse
 import numpy as np
 import pandas as pd
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--library', choices=['sklearn', 'pytorch'], required=True)
+parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
 args = parser.parse_args()
 
 # Load the data.
-path_train = 'data/heart_disease_train.csv'
-path_test = 'data/heart_disease_test.csv'
-nrows_train = 242
-nrows_test = 61
-target_column_name = "diagnosis"
-gender_options = ['male', 'female']
-chest_pain_options = ['typical angina', 'asymptomatic', 'non-angina pain', 'atypical angina']
-fasting_blood_sugar_greater_than_120_options = [True, False]
-resting_ecg_result_options = ['probable or definite left ventricular hypertrophy', 'normal', 'ST-T wave abnormality']
-exercise_induced_angina_options = ['no', 'yes']
-exercise_st_slope_options = ['downsloping', 'flat', 'upsloping']
-fluoroscopy_vessels_colored_options = ['0', '1', '2', '3']
-thallium_stress_test_options = ['fixed defect', 'normal', 'reversible defect']
-diagnosis_options = ['Negative', 'Positive']
+path_train = 'data/census_train.csv'
+path_test = 'data/census_test.csv'
+nrows_train = 26049
+nrows_test = 6512
+target_column_name = "income"
+workclass_options = ['State-gov', 'Self-emp-not-inc', 'Private', 'Federal-gov', 'Local-gov', '?', 'Self-emp-inc', 'Without-pay', 'Never-worked']
+education_options = ['Bachelors', 'HS-grad', '11th', 'Masters', '9th', 'Some-college', 'Assoc-acdm', 'Assoc-voc', '7th-8th', 'Doctorate', 'Prof-school', '5th-6th', '10th', '1st-4th', 'Preschool', '12th']
+marital_status_options = ['Never-married', 'Married-civ-spouse', 'Divorced', 'Married-spouse-absent', 'Separated', 'Married-AF-spouse', 'Widowed']
+occupation_options = ['Adm-clerical', 'Exec-managerial', 'Handlers-cleaners','Prof-specialty', 'Other-service', 'Sales', 'Craft-repair', 'Transport-moving', 'Farming-fishing', 'Machine-op-inspct','Tech-support', '?', 'Protective-serv', 'Armed-Forces','Priv-house-serv']
+relationship_options = ['Not-in-family', 'Husband', 'Wife', 'Own-child', 'Unmarried', 'Other-relative']
+race_options = ['White', 'Black', 'Asian-Pac-Islander', 'Amer-Indian-Eskimo', 'Other']
+sex_options = ['Male', 'Female']
+native_country_options = ['United-States', 'Cuba', 'Jamaica', 'India', '?', 'Mexico', 'South', 'Puerto-Rico', 'Honduras', 'England', 'Canada', 'Germany', 'Iran', 'Philippines','Italy', 'Poland', 'Columbia', 'Cambodia', 'Thailand', 'Ecuador', 'Laos', 'Taiwan', 'Haiti', 'Portugal', 'Dominican-Republic', 'El-Salvador', 'France', 'Guatemala', 'China', 'Japan', 'Yugoslavia', 'Peru', 'Outlying-US(Guam-USVI-etc)', 'Scotland', 'Trinadad&Tobago', 'Greece', 'Nicaragua', 'Vietnam', 'Hong', 'Ireland', 'Hungary', 'Holand-Netherlands']
+income_options = ['<=50K', '>50K']
 dtype = {
   'age': np.float64,
-  'gender': CategoricalDtype(categories=gender_options),
-  'chest_pain': CategoricalDtype(categories=chest_pain_options),
-  'resting_blood_pressure': np.float64,
-  'cholesterol': np.float64,
-  'fasting_blood_sugar_greater_than_120': CategoricalDtype(categories=fasting_blood_sugar_greater_than_120_options),
-  'resting_ecg_result': CategoricalDtype(categories=resting_ecg_result_options),
-  'exercise_max_heart_rate': np.float64,
-  'exercise_induced_angina': CategoricalDtype(categories=exercise_induced_angina_options),
-  'exercise_st_depression': np.float64,
-  'exercise_st_slope': CategoricalDtype(categories=exercise_st_slope_options),
-  'fluoroscopy_vessels_colored': CategoricalDtype(categories=fluoroscopy_vessels_colored_options),
-  'thallium_stress_test': CategoricalDtype(categories=thallium_stress_test_options),
-  'diagnosis': CategoricalDtype(categories=diagnosis_options)
+  'workclass': CategoricalDtype(categories=workclass_options),
+  'fnlwgt': np.float64,
+  'education': CategoricalDtype(categories=education_options),
+  'education_num': np.float64,
+  'marital_status': CategoricalDtype(categories=marital_status_options),
+  'occupation': CategoricalDtype(categories=occupation_options),
+  'relationship': CategoricalDtype(categories=relationship_options),
+  'race': CategoricalDtype(categories=race_options),
+  'sex': CategoricalDtype(categories=sex_options),
+  'captial_gain': np.float64,
+  'captial_loss': np.float64,
+  'hours_per_week': np.float64,
+  'native_country': CategoricalDtype(categories=native_country_options),
+  'income': CategoricalDtype(categories=income_options),
 }
 data_train = pd.read_csv(path_train, dtype=dtype)
 data_test = pd.read_csv(path_test, dtype=dtype)

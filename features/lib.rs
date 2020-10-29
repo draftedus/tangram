@@ -8,8 +8,10 @@ use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use tangram_dataframe::{
 	DataFrame, DataFrameColumn, DataFrameColumnView, DataFrameValue, DataFrameView,
-	EnumDataFrameColumn, NumberDataFrameColumn, TextDataFrameColumn, UnknownDataFrameColumn,
+	EnumDataFrameColumn, EnumDataFrameColumnView, NumberDataFrameColumn, TextDataFrameColumn,
+	UnknownDataFrameColumn,
 };
+use tangram_metrics::Metric;
 use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
 
 /// Compute features as an `Array` of `f32`s.
@@ -697,5 +699,26 @@ impl FeatureGroup {
 			FeatureGroup::OneHotEncoded(s) => s.options.len() + 1,
 			FeatureGroup::BagOfWords(s) => s.tokens.len(),
 		}
+	}
+}
+
+pub fn compute_normalized_feature_group_for_enum_column(
+	column: EnumDataFrameColumnView,
+) -> NormalizedFeatureGroup {
+	let values = column
+		.view()
+		.as_slice()
+		.iter()
+		.map(|value| {
+			value
+				.map(|value| value.get().to_f32().unwrap())
+				.unwrap_or(0.0)
+		})
+		.collect::<Vec<_>>();
+	let mean_variance = tangram_metrics::MeanVariance::compute(values.as_slice());
+	NormalizedFeatureGroup {
+		source_column_name: column.name().unwrap().to_owned(),
+		mean: mean_variance.mean,
+		variance: mean_variance.variance,
 	}
 }

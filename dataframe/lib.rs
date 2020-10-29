@@ -227,7 +227,7 @@ impl DataFrame {
 				}
 				DataFrameColumn::Enum(column) => {
 					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
-						*a = b.unwrap().get().to_f32().unwrap();
+						*a = b.map(|b| b.get().to_f32().unwrap()).unwrap_or(0.0);
 					}
 				}
 				_ => return None,

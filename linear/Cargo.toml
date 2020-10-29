@@ -19,6 +19,26 @@ path = "benchmarks/allstate.rs"
 name = "tangram_linear_benchmark_boston"
 path = "benchmarks/boston.rs"
 
+[[bin]]
+name = "tangram_linear_benchmark_census"
+path = "benchmarks/census.rs"
+
+[[bin]]
+name = "tangram_linear_benchmark_flights"
+path = "benchmarks/flights.rs"
+
+[[bin]]
+name = "tangram_linear_benchmark_heart_disease"
+path = "benchmarks/heart_disease.rs"
+
+[[bin]]
+name = "tangram_linear_benchmark_higgs"
+path = "benchmarks/higgs.rs"
+
+[[bin]]
+name = "tangram_linear_benchmark_iris"
+path = "benchmarks/iris.rs"
+
 [dependencies]
 itertools = "0.9"
 maplit = "1"

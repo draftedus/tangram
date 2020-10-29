@@ -7,7 +7,7 @@ import pandas as pd
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--library', choices=['h2o', 'tensorflow', 'pytorch'], required=True)
+parser.add_argument('--library', choices=['sklearn', 'pytorch'], required=True)
 args = parser.parse_args()
 
 # Load the data.
@@ -55,15 +55,14 @@ if args.library == 'pytorch' or args.library == 'sklearn':
   features_test = preprocessor.transform(features_test)
 
 # Train the model.
-if args.library == 'h2o':
-  import h2o
-  pass
+if args.library == 'sklearn':
+  from sklearn.linear_model import LogisticRegression
+  model =  LogisticRegression(max_iter=1, multi_class: 'multinomial')
+  model.fit(features_train, labels_train)
 elif args.library == 'pytorch':
   from pytorch_linear import LinearMulticlassClassifier
-  model = LinearMulticlassClassifier(n_epochs=10, learning_rate=0.1, n_classes=3)
+  model = LinearMulticlassClassifier(n_epochs=1, learning_rate=0.1, n_classes=3)
   model.fit(features_train, labels_train)
-elif args.library == 'tensorflow':
-  pass
 
 # Make predictions on the test data.
 if args.library == 'h2o':

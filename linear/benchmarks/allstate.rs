@@ -1,6 +1,5 @@
 use maplit::btreemap;
 use ndarray::prelude::*;
-use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use serde_json::json;
 use std::fs::File;
@@ -613,26 +612,9 @@ fn main() {
 					},
 				)
 			}
-			DataFrameColumn::Enum(column) => {
-				let values = column
-					.view()
-					.as_slice()
-					.iter()
-					.map(|value| {
-						value
-							.map(|value| value.get().to_f32().unwrap())
-							.unwrap_or(0.0)
-					})
-					.collect::<Vec<_>>();
-				let mean_variance = tangram_metrics::MeanVariance::compute(values.as_slice());
-				tangram_features::FeatureGroup::Normalized(
-					tangram_features::NormalizedFeatureGroup {
-						source_column_name: column.name().clone().unwrap(),
-						mean: mean_variance.mean,
-						variance: mean_variance.variance,
-					},
-				)
-			}
+			DataFrameColumn::Enum(column) => tangram_features::FeatureGroup::Normalized(
+				tangram_features::compute_normalized_feature_group_for_enum_column(column.view()),
+			),
 			_ => unreachable!(),
 		})
 		.collect();
@@ -651,7 +633,7 @@ fn main() {
 	let start = std::time::Instant::now();
 	let train_options = tangram_linear::TrainOptions {
 		learning_rate: 0.01,
-		max_epochs: 10,
+		max_epochs: 1,
 		n_examples_per_batch: 1,
 		..Default::default()
 	};
