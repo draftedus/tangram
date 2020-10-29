@@ -5,16 +5,16 @@ module LibTangram
 	cpu = RbConfig::CONFIG['host_cpu']
 	os = RbConfig::CONFIG['host_os']
 	if cpu == 'x86_64' and os =~ /linux/
-		library_name = 'libtangram-linux-amd64.so'
+		library_path = 'libtangram/linux-amd64/libtangram.so'
 	elsif cpu == 'x86_64' and os =~ /darwin/
-		library_name = 'libtangram-macos-amd64.dylib'
+		library_path = 'libtangram/macos-amd64/libtangram.dylib'
 	elsif cpu == 'x86_64' and os =~ /mingw/
-		library_name = 'tangram-windows-amd64.dll'
+		library_path = 'libtangram/windows-amd64/tangram.dll'
 	else
 		raise 'tangram-ruby does not yet support your combination of operating system and CPU architecture. Want support for your platform? Get in touch at help@tangramhq.com.'
 	end
 	extend FFI::Library
-	ffi_lib File.expand_path("#{library_name}", __dir__)
+	ffi_lib File.expand_path("#{library_path}", __dir__)
 	attach_function :tangram_model_load, [:pointer, :uint, :pointer], :int
 	attach_function :tangram_model_id, [:pointer, :pointer], :int
 	attach_function :tangram_model_predict, [:pointer, :pointer, :pointer, :pointer], :int

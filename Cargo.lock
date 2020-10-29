@@ -1492,7 +1492,7 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pinwheel"
-version = "0.0.0"
+version = "0.1.0-dev"
 dependencies = [
  "anyhow",
  "clap",
@@ -2290,7 +2290,7 @@ dependencies = [
 
 [[package]]
 name = "tangram_dataframe"
-version = "0.0.0"
+version = "0.1.0-dev"
 dependencies = [
  "anyhow",
  "csv",
@@ -2306,7 +2306,7 @@ dependencies = [
 
 [[package]]
 name = "tangram_features"
-version = "0.0.0"
+version = "0.1.0-dev"
 dependencies = [
  "fnv",
  "itertools",
@@ -2318,7 +2318,7 @@ dependencies = [
 
 [[package]]
 name = "tangram_linear"
-version = "0.0.0"
+version = "0.1.0-dev"
 dependencies = [
  "itertools",
  "maplit",
@@ -2335,7 +2335,7 @@ dependencies = [
 
 [[package]]
 name = "tangram_metrics"
-version = "0.0.0"
+version = "0.1.0-dev"
 dependencies = [
  "insta",
  "itertools",
@@ -2359,7 +2359,7 @@ dependencies = [
 
 [[package]]
 name = "tangram_tree"
-version = "0.0.0"
+version = "0.1.0-dev"
 dependencies = [
  "itertools",
  "maplit",
@@ -2375,7 +2375,7 @@ dependencies = [
 
 [[package]]
 name = "tangram_util"
-version = "0.0.0"
+version = "0.1.0-dev"
 dependencies = [
  "num-traits",
  "rand",

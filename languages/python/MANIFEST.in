@@ -1,3 +1,1 @@
-include tangram/libtangram-linux-amd64.so
-include tangram/libtangram-macos-amd64.dylib
-include tangram/tangram-windows-amd64.dll
+include tangram/libtangram

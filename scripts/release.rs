@@ -111,13 +111,13 @@ async fn main() -> Result<()> {
 	));
 	fs::copy(
 		"dist/libtangram.so",
-		"languages/python/tangram/libtangram-linux-amd64.so",
+		"languages/python/tangram/libtangram/linux-amd64/libtangram.so",
 	)
 	.await
 	.unwrap();
 	fs::copy(
 		"dist/libtangram.so",
-		"languages/ruby/lib/tangram/libtangram-linux-amd64.so",
+		"languages/ruby/lib/tangram/libtangram/linux-amd64/libtangram.so",
 	)
 	.await
 	.unwrap();
@@ -131,13 +131,13 @@ async fn main() -> Result<()> {
 	));
 	fs::copy(
 		"dist/libtangram.dylib",
-		"languages/python/tangram/libtangram-macos-amd64.dylib",
+		"languages/python/tangram/libtangram/macos-amd64/libtangram.dylib",
 	)
 	.await
 	.unwrap();
 	fs::copy(
 		"dist/libtangram.dylib",
-		"languages/ruby/lib/tangram/libtangram-macos-amd64.dylib",
+		"languages/ruby/lib/tangram/libtangram/macos-amd64/libtangram.dylib",
 	)
 	.await
 	.unwrap();
@@ -151,13 +151,13 @@ async fn main() -> Result<()> {
 	));
 	fs::copy(
 		"dist/tangram.dll",
-		"languages/python/tangram/tangram-windows-amd64.dll",
+		"languages/python/tangram/libtangram/windows-amd64/tangram.dll",
 	)
 	.await
 	.unwrap();
 	fs::copy(
 		"dist/tangram.dll",
-		"languages/ruby/lib/tangram/tangram-windows-amd64.dll",
+		"languages/ruby/lib/tangram/libtangram/windows-amd64/tangram.dll",
 	)
 	.await
 	.unwrap();
@@ -169,12 +169,15 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-staticlib-linux-amd64-{}.zip dist/libtangram.a",
 		version
 	));
-	fs::copy("dist/libtangram.a", "languages/go/libtangram-linux-amd64.a")
-		.await
-		.unwrap();
 	fs::copy(
 		"dist/libtangram.a",
-		"languages/node/packages/tangram-node/libtangram-linux-amd64.a",
+		"languages/go/libtangram/linux-amd64/libtangram.a",
+	)
+	.await
+	.unwrap();
+	fs::copy(
+		"dist/libtangram.a",
+		"languages/node/packages/tangram-node/libtangram/linux-amd64/libtangram.a",
 	)
 	.await
 	.unwrap();
@@ -186,12 +189,15 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-staticlib-macos-amd64-{}.zip dist/libtangram.a",
 		version
 	));
-	fs::copy("dist/libtangram.a", "languages/go/libtangram-macos-amd64.a")
-		.await
-		.unwrap();
 	fs::copy(
 		"dist/libtangram.a",
-		"languages/node/packages/tangram-node/libtangram-macos-amd64.a",
+		"languages/go/libtangram/macos-amd64/libtangram.a",
+	)
+	.await
+	.unwrap();
+	fs::copy(
+		"dist/libtangram.a",
+		"languages/node/packages/tangram-node/libtangram/macos-amd64/libtangram.a",
 	)
 	.await
 	.unwrap();
@@ -203,12 +209,15 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-staticlib-windows-amd64-{}.zip dist/tangram.lib",
 		version
 	));
-	fs::copy("dist/tangram.lib", "languages/go/tangram-windows-amd64.lib")
-		.await
-		.unwrap();
 	fs::copy(
 		"dist/tangram.lib",
-		"languages/node/packages/tangram-node/tangram-windows-amd64.lib",
+		"languages/go/libtangram/windows-amd64/tangram.lib",
+	)
+	.await
+	.unwrap();
+	fs::copy(
+		"dist/tangram.lib",
+		"languages/node/packages/tangram-node/libtangram/windows-amd64/tangram.lib",
 	)
 	.await
 	.unwrap();

@@ -2,7 +2,7 @@
 edition = "2018"
 license = "MIT"
 name = "tangram_linear"
-version = "0.0.0"
+version = "0.1.0-dev"
 
 [lib]
 path = "lib.rs"
