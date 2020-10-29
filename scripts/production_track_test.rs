@@ -46,9 +46,19 @@ async fn main() -> Result<()> {
 		|_| {},
 	)
 	.unwrap();
+	let mut rng = rand::thread_rng();
 	for i in 0usize..NUM_EXAMPLES_TO_TRACK {
 		let mut record = get_random_row(dataframe.view());
 		let target = record.remove(dataset.target).unwrap();
+		if dataset.name == "heart_disease" {
+			// Rewrite asymptomatic to asx in 50% of rows.
+			if rng.gen::<bool>() {
+				let chest_pain = record.get_mut("chest_pain").unwrap();
+				if chest_pain == "asymptomatic" {
+					*chest_pain = serde_json::Value::String("asx".to_string());
+				}
+			}
+		}
 		let output = generate_fake_prediction(&target, &dataset);
 		let model_id: &str = options.model_id.as_str();
 		let date = get_random_date();
@@ -60,8 +70,6 @@ async fn main() -> Result<()> {
 			model_id: model_id.parse().unwrap(),
 		});
 		track_event(event).await;
-
-		let mut rng = rand::thread_rng();
 		if rng.gen::<f32>() > 0.4 {
 			let event = MonitorEvent::TrueValue(TrueValueMonitorEvent {
 				model_id: model_id.parse().unwrap(),
