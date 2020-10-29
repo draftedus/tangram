@@ -2225,6 +2225,7 @@ dependencies = [
  "bytes",
  "chrono",
  "chrono-tz",
+ "colored",
  "futures",
  "hyper",
  "include_dir",

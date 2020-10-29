@@ -1,6 +1,6 @@
 use anyhow::Result;
 use serde::{de::DeserializeOwned, Deserialize};
-use std::io::Write;
+use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use url::Url;

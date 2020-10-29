@@ -36,23 +36,6 @@ pub async fn get(
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id, search_params).await?;
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/production_stats/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Props> {
 	let (date_window, date_window_interval) = get_date_window_and_interval(&search_params)?;
 	let timezone = get_timezone(&request);
 	let mut db = context
@@ -267,7 +250,7 @@ pub async fn props(
 	};
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
-	Ok(Props {
+	let props = Props {
 		overall_column_stats_table,
 		model_id: model_id.to_string(),
 		date_window,
@@ -276,7 +259,15 @@ pub async fn props(
 		prediction_stats_chart,
 		prediction_stats_interval_chart,
 		model_layout_info,
-	})
+	};
+	let html = context
+		.pinwheel
+		.render_with("/repos/_repo_id/models/_model_id/production_stats/", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 fn compute_production_training_quantiles(

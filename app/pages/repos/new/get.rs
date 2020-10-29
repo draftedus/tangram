@@ -1,4 +1,4 @@
-use super::props::*;
+use super::props::{Owner, Props};
 use crate::{
 	common::user::User,
 	common::{error::Error, user::authorize_user},

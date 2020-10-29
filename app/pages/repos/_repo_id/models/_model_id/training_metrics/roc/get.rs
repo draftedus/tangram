@@ -1,4 +1,4 @@
-use super::props::*;
+use super::props::{Props, ROCCurveData};
 use crate::{
 	common::{
 		error::Error,

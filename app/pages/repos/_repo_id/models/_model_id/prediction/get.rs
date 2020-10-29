@@ -1,4 +1,6 @@
-use super::props::*;
+use super::props::{
+	Column, Enum, Inner, Number, PredictForm, PredictionForm, Props, Text, Unknown,
+};
 use crate::{
 	common::{
 		error::Error,

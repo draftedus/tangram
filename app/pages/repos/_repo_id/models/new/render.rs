@@ -1,4 +1,4 @@
-use super::props::*;
+use super::props::Props;
 use crate::{layouts::app_layout::get_app_layout_info, Context};
 use anyhow::Result;
 

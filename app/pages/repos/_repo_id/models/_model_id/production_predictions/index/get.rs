@@ -1,4 +1,4 @@
-use super::props::*;
+use super::props::{Pagination, PredictionTable, PredictionTableRow, Props};
 use crate::{
 	common::{
 		error::Error,

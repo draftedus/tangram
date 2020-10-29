@@ -23,24 +23,6 @@ pub async fn get(
 	model_id: &str,
 	identifier: &str,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id, identifier).await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/production_predictions/predictions/_identifier",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	model_id: &str,
-	identifier: &str,
-) -> Result<Props> {
 	let timezone = get_timezone(&request);
 	let mut db = context
 		.pool
@@ -94,11 +76,20 @@ pub async fn props(
 		}
 		None => Inner::NotFound,
 	};
-	Ok(Props {
+	let props = Props {
 		model_layout_info,
 		identifier: identifier.to_owned(),
 		inner,
-	})
+	};
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/production_predictions/predictions/_identifier",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 struct PredictionOutput {

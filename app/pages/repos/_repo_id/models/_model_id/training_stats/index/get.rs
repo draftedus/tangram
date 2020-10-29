@@ -1,4 +1,4 @@
-use super::props::*;
+use super::props::{ColumnStats, ColumnType, Props};
 use crate::{
 	common::{
 		error::Error,

@@ -3,7 +3,7 @@
 use anyhow::{anyhow, Context, Result};
 use backtrace::Backtrace;
 use clap::Clap;
-use colored::*;
+use colored::Colorize;
 use once_cell::sync::Lazy;
 use progress_view::ProgressView;
 use std::{
@@ -90,8 +90,8 @@ fn main() {
 		Options::App(options) => cli_app(*options),
 	};
 	if let Err(error) = result {
-		eprintln!("{}: {}", "error".red().bold(), error);
-		for cause in error.chain().skip(1) {
+		eprintln!("{}: {}", "error".red().bold(), error.root_cause());
+		for cause in error.chain().rev().skip(1) {
 			eprintln!("  {} {}", "->".red().bold(), cause);
 		}
 		std::process::exit(1);
@@ -99,7 +99,7 @@ fn main() {
 }
 
 fn cli_train(options: TrainOptions) -> Result<()> {
-	// Start the progress view if enabled and train the model. However, we need to do some extra work to make panic messages display properly. The problem is that the progress view enables the terminal's alternative screen and returns to the default screen when it is dropped. However, if a panic occurs during training, it will be printed by the default panic hook while the alternative screen is active, and then the progress view will be dropped, causing the panic message to be immediately erased. To work around this, we create a custom panic hook that stores the panic message, wrap the progress view and training with `catch_unwind`, and then print the panic message if `catch_unwind` returns an `Err`. This ensure the progress view will be dropped before the panic message is displayed.
+	// Start the progress view if enabled and train the model. However, we need to do some extra work to make panic messages display properly. The problem is that the progress view enables the terminal's alternative screen and returns to the default screen when it is dropped. However, if a panic occurs during training, it will be printed by the default panic hook while the alternative screen is active, and then the progress view will be dropped, causing the panic message to be immediately erased. To work around this, we create a custom panic hook that stores the panic message, wrap the progress view and training with `catch_unwind`, and then print the panic message if `catch_unwind` returns an `Err`. This ensures that the progress view will be dropped before the panic message is displayed.
 	pub static PANIC_INFO: Lazy<Mutex<Option<(String, Backtrace)>>> =
 		Lazy::new(|| Mutex::new(None));
 	let hook = std::panic::take_hook();
@@ -221,9 +221,8 @@ fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
 
 /// Retrieve the user data directory using the `dirs` crate.
 fn data_dir() -> PathBuf {
-	let tangram_data_dir = dirs::data_dir()
-		.expect("failed to find user data directory")
-		.join("tangram");
+	let data_dir = dirs::data_dir().expect("failed to find user data directory");
+	let tangram_data_dir = data_dir.join("tangram");
 	std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
 		panic!(
 			"failed to create tangram data directory in {}",

@@ -1,4 +1,7 @@
-use super::props::*;
+use super::props::{
+	ClassMetricsEntry, Comparison, ConfusionMatrix, IntervalEntry, OverallClassMetrics,
+	OverallClassMetricsEntry, Props, TrainingProductionMetrics,
+};
 use crate::Context;
 use crate::{
 	common::{

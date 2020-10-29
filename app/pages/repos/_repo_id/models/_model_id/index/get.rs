@@ -1,4 +1,8 @@
-use super::props::*;
+use super::props::{
+	BinaryClassifierInnerMetrics, BinaryClassifierProps, Inner,
+	MulticlassClassifierInnerClassMetrics, MulticlassClassifierInnerMetrics,
+	MulticlassClassifierProps, Props, RegressorInnerMetrics, RegressorProps, TrainingSummary,
+};
 use crate::{
 	common::{
 		error::Error,

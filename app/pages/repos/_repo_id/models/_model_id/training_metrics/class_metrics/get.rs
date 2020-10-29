@@ -1,4 +1,4 @@
-use super::props::*;
+use super::props::Props;
 use crate::{
 	common::{
 		error::Error,
@@ -19,24 +19,6 @@ pub async fn get(
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id, search_params).await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/training_metrics/class_metrics",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Props> {
 	let mut db = context
 		.pool
 		.begin()
@@ -72,7 +54,7 @@ pub async fn props(
 	let false_positives = class_metrics.false_positives;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
-	Ok(Props {
+	let props = Props {
 		id: model_id.to_string(),
 		model_layout_info,
 		class,
@@ -84,5 +66,14 @@ pub async fn props(
 		recall,
 		true_negatives,
 		true_positives,
-	})
+	};
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/training_metrics/class_metrics",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }

@@ -1,4 +1,8 @@
-use super::props::*;
+use super::props::{
+	EnumOverallHistogramEntry, EnumProps, Inner, IntervalBoxChartDataPoint,
+	IntervalBoxChartDataPointStats, NumberProps, NumberTrainingProductionComparison,
+	OverallBoxChartData, OverallBoxChartDataStats, Props, TextProps,
+};
 use crate::{
 	common::{
 		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
@@ -28,25 +32,6 @@ pub async fn get(
 	column_name: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id, column_name, search_params).await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	model_id: &str,
-	column_name: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Props> {
 	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
 	let (date_window, date_window_interval) = get_date_window_and_interval(&search_params)?;
 	let timezone = get_timezone(&request);
@@ -107,13 +92,22 @@ pub async fn props(
 		_ => return Err(Error::BadRequest.into()),
 	};
 	db.commit().await?;
-	Ok(Props {
+	let props = Props {
 		date_window,
 		column_name: column_name.to_owned(),
 		id: model_id.to_string(),
 		inner,
 		model_layout_info,
-	})
+	};
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 fn number_props(

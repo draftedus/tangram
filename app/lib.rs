@@ -1,5 +1,6 @@
 use self::{common::error::Error, context::Context};
 use anyhow::{anyhow, Result};
+use colored::Colorize;
 use futures::FutureExt;
 use hyper::{
 	header,
@@ -301,7 +302,10 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 						.unwrap(),
 				}
 			} else {
-				eprintln!("{}", error);
+				eprintln!("{}: {}", "error".red().bold(), error.root_cause());
+				for cause in error.chain().rev().skip(1) {
+					eprintln!("  {} {}", "->".red().bold(), cause);
+				}
 				let body: Cow<str> = if cfg!(debug_assertions) {
 					error.to_string().into()
 				} else {
