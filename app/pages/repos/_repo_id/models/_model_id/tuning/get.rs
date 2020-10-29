@@ -17,18 +17,6 @@ pub async fn get(
 	request: Request<Body>,
 	model_id: &str,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id).await?;
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/tuning", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(context: &Context, request: Request<Body>, model_id: &str) -> Result<Props> {
 	let mut db = context
 		.pool
 		.begin()
@@ -45,7 +33,22 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 	let tuning = match model {
 		tangram_core::model::Model::Regressor(_) => None,
 		tangram_core::model::Model::BinaryClassifier(model) => {
-			let metrics = build_threshold_metrics(model.test_metrics);
+			let metrics = model
+				.test_metrics
+				.thresholds
+				.iter()
+				.map(|metrics| Metrics {
+					threshold: metrics.threshold,
+					precision: metrics.precision,
+					recall: metrics.recall,
+					accuracy: metrics.accuracy,
+					f1_score: metrics.f1_score,
+					false_negatives: metrics.false_negatives,
+					false_positives: metrics.false_positives,
+					true_negatives: metrics.true_negatives,
+					true_positives: metrics.true_positives,
+				})
+				.collect::<Vec<Metrics>>();
 			Some(Inner {
 				baseline_threshold: 0.5,
 				metrics,
@@ -56,28 +59,16 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 	};
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
-	Ok(Props {
+	let props = Props {
 		tuning,
 		model_layout_info,
-	})
-}
-
-fn build_threshold_metrics(
-	metrics: tangram_core::model::BinaryClassificationMetrics,
-) -> Vec<Metrics> {
-	metrics
-		.thresholds
-		.iter()
-		.map(|metrics| Metrics {
-			threshold: metrics.threshold,
-			precision: metrics.precision,
-			recall: metrics.recall,
-			accuracy: metrics.accuracy,
-			f1_score: metrics.f1_score,
-			false_negatives: metrics.false_negatives,
-			false_positives: metrics.false_positives,
-			true_negatives: metrics.true_negatives,
-			true_positives: metrics.true_positives,
-		})
-		.collect::<Vec<Metrics>>()
+	};
+	let html = context
+		.pinwheel
+		.render_with("/repos/_repo_id/models/_model_id/tuning", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }

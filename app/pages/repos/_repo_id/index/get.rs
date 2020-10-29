@@ -30,21 +30,6 @@ pub async fn get(
 	authorize_user_for_repo(&mut db, &user, repo_id)
 		.await
 		.map_err(|_| Error::NotFound)?;
-	let props = props(&mut db, context, repo_id).await?;
-	db.commit().await?;
-	let html = context.pinwheel.render_with("/repos/_repo_id/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	context: &Context,
-	repo_id: Id,
-) -> Result<Props> {
 	let app_layout_info = get_app_layout_info(context).await?;
 	let rows = sqlx::query(
 		"
@@ -57,7 +42,7 @@ pub async fn props(
 		",
 	)
 	.bind(&repo_id.to_string())
-	.fetch_all(db)
+	.fetch_all(&mut db)
 	.await?;
 	let models = rows
 		.iter()
@@ -72,8 +57,15 @@ pub async fn props(
 			}
 		})
 		.collect();
-	Ok(Props {
+	let props = Props {
 		app_layout_info,
 		models,
-	})
+	};
+	db.commit().await?;
+	let html = context.pinwheel.render_with("/repos/_repo_id/", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }

@@ -25,7 +25,28 @@ pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<B
 	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
 		.await?
 		.map_err(|_| Error::Unauthorized)?;
-	let props = props(&mut db, context, user).await?;
+	let app_layout_info = get_app_layout_info(context).await?;
+	let props = match user {
+		User::Root => {
+			let repos = get_root_user_repositories(&mut db).await?;
+			Props {
+				app_layout_info,
+				inner: Inner::NoAuth(NoAuthProps { repos }),
+			}
+		}
+		User::Normal(user) => {
+			let organizations = get_organizations(&mut db, user.id).await?;
+			let repos = get_user_repositories(&mut db, user.id).await?;
+			Props {
+				app_layout_info,
+				inner: Inner::Auth(AuthProps {
+					email: user.email,
+					organizations,
+					repos,
+				}),
+			}
+		}
+	};
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/user", props)?;
 	let response = Response::builder()
@@ -33,35 +54,6 @@ pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<B
 		.body(Body::from(html))
 		.unwrap();
 	Ok(response)
-}
-
-pub async fn props(
-	mut db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	context: &Context,
-	user: User,
-) -> Result<Props> {
-	let app_layout_info = get_app_layout_info(context).await?;
-	match user {
-		User::Root => {
-			let repos = get_root_user_repositories(&mut db).await?;
-			Ok(Props {
-				app_layout_info,
-				inner: Inner::NoAuth(NoAuthProps { repos }),
-			})
-		}
-		User::Normal(user) => {
-			let organizations = get_organizations(&mut db, user.id).await?;
-			let repos = get_user_repositories(&mut db, user.id).await?;
-			Ok(Props {
-				app_layout_info,
-				inner: Inner::Auth(AuthProps {
-					email: user.email,
-					organizations,
-					repos,
-				}),
-			})
-		}
-	}
 }
 
 async fn get_user_repositories(

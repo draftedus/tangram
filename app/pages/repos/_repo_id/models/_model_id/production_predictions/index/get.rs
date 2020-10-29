@@ -16,41 +16,22 @@ use sqlx::prelude::*;
 use std::collections::BTreeMap;
 use tangram_util::id::Id;
 
+const N_PREDICTIONS_PER_PAGE: i64 = 10;
+
 pub async fn get(
 	context: &Context,
 	request: Request<Body>,
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let after = search_params
+	let after: Option<i64> = search_params
 		.as_ref()
 		.and_then(|s| s.get("after"))
 		.and_then(|t| t.parse().ok());
-	let before = search_params
+	let before: Option<i64> = search_params
 		.as_ref()
 		.and_then(|s| s.get("before"))
 		.and_then(|t| t.parse().ok());
-	let props = props(context, request, model_id, before, after).await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/production_predictions/",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-const N_PREDICTIONS_PER_PAGE: i64 = 10;
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	model_id: &str,
-	before: Option<i64>,
-	after: Option<i64>,
-) -> Result<Props> {
 	let mut db = context
 		.pool
 		.begin()
@@ -207,7 +188,7 @@ pub async fn props(
 			None
 		},
 	};
-	Ok(Props {
+	let props = Props {
 		model_layout_info,
 		prediction_table: if prediction_table_rows.is_empty() {
 			None
@@ -217,5 +198,14 @@ pub async fn props(
 			})
 		},
 		pagination,
-	})
+	};
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/production_predictions/",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }

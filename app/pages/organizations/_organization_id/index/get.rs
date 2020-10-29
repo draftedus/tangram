@@ -21,25 +21,6 @@ pub async fn get(
 	if !context.options.auth_enabled {
 		return Err(Error::NotFound.into());
 	}
-	let props = props(context, request, organization_id).await?;
-	let html = context
-		.pinwheel
-		.render_with("/organizations/_organization_id/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	organization_id: &str,
-) -> Result<Props> {
-	if !context.options.auth_enabled {
-		return Err(Error::NotFound.into());
-	}
 	let app_layout_info = get_app_layout_info(context).await?;
 	let mut db = context
 		.pool
@@ -90,7 +71,7 @@ pub async fn props(
 		.as_ref()
 		.unwrap()
 		.to_owned();
-	Ok(Props {
+	let props = Props {
 		app_layout_info,
 		card,
 		id: organization_id.to_string(),
@@ -100,7 +81,15 @@ pub async fn props(
 		repos,
 		stripe_publishable_key,
 		user_id: user.id.to_string(),
-	})
+	};
+	let html = context
+		.pinwheel
+		.render_with("/organizations/_organization_id/", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 async fn get_card(

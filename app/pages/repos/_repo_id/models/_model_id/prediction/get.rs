@@ -20,23 +20,6 @@ pub async fn get(
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id, search_params).await?;
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/prediction", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Props> {
 	let mut db = context
 		.pool
 		.begin()
@@ -151,11 +134,19 @@ pub async fn props(
 		})
 	};
 	db.commit().await?;
-	Ok(Props {
+	let props = Props {
 		model_layout_info,
 		id: model_id.to_string(),
 		inner,
-	})
+	};
+	let html = context
+		.pinwheel
+		.render_with("/repos/_repo_id/models/_model_id/prediction", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 fn predict(

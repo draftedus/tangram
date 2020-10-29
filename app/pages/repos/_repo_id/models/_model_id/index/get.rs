@@ -18,18 +18,6 @@ pub async fn get(
 	request: Request<Body>,
 	model_id: &str,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id).await?;
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(context: &Context, request: Request<Body>, model_id: &str) -> Result<Props> {
 	let mut db = context
 		.pool
 		.begin()
@@ -122,11 +110,19 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 	};
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
-	Ok(Props {
+	let props = Props {
 		id: model_id.to_string(),
 		inner,
 		model_layout_info,
-	})
+	};
+	let html = context
+		.pinwheel
+		.render_with("/repos/_repo_id/models/_model_id/", props)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 fn training_summary(model: &tangram_core::model::Model) -> TrainingSummary {

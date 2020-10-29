@@ -26,24 +26,6 @@ pub async fn get(
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id, search_params).await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/production_metrics/class_metrics",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	model_id: &str,
-	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Props> {
 	let (date_window, date_window_interval) = get_date_window_and_interval(&search_params)?;
 	let timezone = get_timezone(&request);
 	let mut db = context
@@ -224,7 +206,7 @@ pub async fn props(
 		1
 	};
 	let class = class.unwrap_or_else(|| classes.get(class_index).unwrap().to_owned());
-	Ok(Props {
+	let props = Props {
 		id: model_id.to_string(),
 		class_metrics,
 		date_window,
@@ -233,5 +215,14 @@ pub async fn props(
 		overall,
 		model_layout_info,
 		class,
-	})
+	};
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/production_metrics/class_metrics",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }

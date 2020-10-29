@@ -7,7 +7,7 @@ use super::props::{
 };
 use crate::{
 	common::{
-		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
+		date_window::get_date_window_and_interval,
 		error::Error,
 		model::get_model,
 		production_metrics::get_production_metrics,
@@ -32,32 +32,6 @@ pub async fn get(
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
 	let (date_window, date_window_interval) = get_date_window_and_interval(&search_params)?;
-	let props = props(
-		context,
-		request,
-		model_id,
-		date_window,
-		date_window_interval,
-	)
-	.await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/production_metrics/",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(
-	context: &Context,
-	request: Request<Body>,
-	model_id: &str,
-	date_window: DateWindow,
-	date_window_interval: DateWindowInterval,
-) -> Result<Props> {
 	let timezone = get_timezone(&request);
 	let mut db = context
 		.pool
@@ -352,9 +326,18 @@ pub async fn props(
 	};
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	db.commit().await?;
-	Ok(Props {
+	let props = Props {
 		id: model_id.to_string(),
 		inner,
 		model_layout_info,
-	})
+	};
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/production_metrics/",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
