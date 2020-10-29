@@ -2349,10 +2349,15 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "base64 0.13.0",
+ "chrono",
+ "clap",
+ "num-traits",
+ "rand",
  "reqwest",
  "rustyline",
  "serde",
  "serde_json",
+ "tangram_dataframe",
  "tokio",
  "url",
 ]
