@@ -8,7 +8,7 @@ import (
 
 func main() {
 	// Load the model from the file.
-	model, err := tangram.LoadModelFromFile("./heart_disease.tangram", nil)
+	model, err := tangram.LoadModelFromFile("heart_disease.tangram", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
