@@ -1,0 +1,3 @@
+pushd packages/tangram-node
+npm publish
+popd

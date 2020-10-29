@@ -1,0 +1,4 @@
+npm install
+pushd packages/tangram-node
+npm run build
+popd
