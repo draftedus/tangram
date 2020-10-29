@@ -2357,7 +2357,9 @@ dependencies = [
  "rustyline",
  "serde",
  "serde_json",
+ "tangram_app",
  "tangram_dataframe",
+ "tangram_util",
  "tokio",
  "url",
 ]

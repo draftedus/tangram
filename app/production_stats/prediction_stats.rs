@@ -159,11 +159,12 @@ impl StreamingMetric<'_> for ClassificationProductionPredictionStats {
 	type Output = ClassificationProductionPredictionStatsOutput;
 
 	fn update(&mut self, value: PredictOutput) {
-		let value = match value {
-			PredictOutput::MulticlassClassification(value) => value,
+		let class_name = match value {
+			PredictOutput::BinaryClassification(value) => value.class_name,
+			PredictOutput::MulticlassClassification(value) => value.class_name,
 			_ => unreachable!(),
 		};
-		if let Some(count) = self.histogram.get_mut(&value.class_name) {
+		if let Some(count) = self.histogram.get_mut(&class_name) {
 			*count += 1;
 		}
 	}

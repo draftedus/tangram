@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::BTreeMap};
+use std::{borrow::Cow, collections::HashMap};
 use tangram_util::finite::NotFiniteError;
 use tangram_util::id::Id;
 
@@ -16,7 +16,7 @@ pub enum MonitorEvent {
 pub struct PredictionMonitorEvent {
 	pub model_id: Id,
 	pub identifier: NumberOrString,
-	pub input: BTreeMap<String, serde_json::Value>,
+	pub input: HashMap<String, serde_json::Value>,
 	pub output: PredictOutput,
 	pub date: chrono::DateTime<chrono::Utc>,
 }
@@ -26,7 +26,7 @@ pub struct PredictionMonitorEvent {
 pub struct TrueValueMonitorEvent {
 	pub model_id: Id,
 	pub identifier: NumberOrString,
-	pub true_value: NumberOrString,
+	pub true_value: serde_json::Value,
 	pub date: chrono::DateTime<chrono::Utc>,
 }
 
@@ -55,7 +55,7 @@ pub struct BinaryClassificationPredictOutput {
 #[serde(rename_all = "camelCase")]
 pub struct MulticlassClassificationPredictOutput {
 	pub class_name: String,
-	pub probabilities: Option<BTreeMap<String, f32>>,
+	pub probabilities: Option<HashMap<String, f32>>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

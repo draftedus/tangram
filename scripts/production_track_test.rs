@@ -3,12 +3,18 @@ use chrono::{TimeZone, Utc};
 use clap::Clap;
 use num_traits::ToPrimitive;
 use rand::Rng;
-use reqwest::Response;
-use serde_json::json;
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::SystemTime;
+use tangram_app::common::monitor_event::{
+	BinaryClassificationPredictOutput, MonitorEvent, MulticlassClassificationPredictOutput,
+	NumberOrString, PredictOutput, PredictionMonitorEvent, RegressionPredictOutput,
+	TrueValueMonitorEvent,
+};
+use tangram_dataframe::DataFrameView;
 use url::Url;
+
+const NUM_EXAMPLES_TO_TRACK: usize = 1000;
 
 #[derive(Clap)]
 #[clap(
@@ -34,25 +40,124 @@ async fn main() -> Result<()> {
 		"boston" => BOSTON,
 		_ => unimplemented!(),
 	};
-	track(TrackOptions {
-		dataset,
-		model_id: options.model_id,
-	})
-	.await;
+	let dataframe = tangram_dataframe::DataFrame::from_path(
+		Path::new(dataset.csv_path),
+		Default::default(),
+		|_| {},
+	)
+	.unwrap();
+	for i in 0usize..NUM_EXAMPLES_TO_TRACK {
+		let mut record = get_random_row(dataframe.view());
+		let target = record.remove(dataset.target).unwrap();
+		let output = generate_fake_prediction(&target, &dataset);
+		let model_id: &str = options.model_id.as_str();
+		let date = get_random_date();
+		let event: MonitorEvent = MonitorEvent::Prediction(PredictionMonitorEvent {
+			date,
+			identifier: NumberOrString::String(i.to_string()),
+			input: record,
+			output,
+			model_id: model_id.parse().unwrap(),
+		});
+		track_event(event).await;
+
+		let mut rng = rand::thread_rng();
+		if rng.gen::<f32>() > 0.4 {
+			let event = MonitorEvent::TrueValue(TrueValueMonitorEvent {
+				model_id: model_id.parse().unwrap(),
+				identifier: NumberOrString::String(i.to_string()),
+				true_value: target,
+				date,
+			});
+			track_event(event).await;
+		}
+	}
 	Ok(())
 }
 
-struct TrackOptions {
-	dataset: DatasetConfig,
-	model_id: String,
+fn generate_fake_prediction(target: &serde_json::Value, dataset: &DatasetConfig) -> PredictOutput {
+	match dataset.name {
+		"heart_disease" => generate_fake_prediction_heart_disease(target, dataset),
+		"mpg" => generate_fake_prediction_mpg(target),
+		"iris" => generate_fake_prediction_iris(target, dataset),
+		"boston" => generate_fake_prediction_boston(target),
+		_ => unimplemented!(),
+	}
 }
 
-async fn track(options: TrackOptions) {
-	let _dataframe = tangram_dataframe::DataFrame::from_path(
-		Path::new(options.dataset.csv_path),
-		Default::default(),
-		|_| {},
-	);
+fn generate_fake_prediction_heart_disease(
+	target_value: &serde_json::Value,
+	dataset: &DatasetConfig,
+) -> PredictOutput {
+	let mut rng = rand::thread_rng();
+	let target_value = target_value.as_str().unwrap();
+	let target_value = if rng.gen::<f32>() > 0.6 {
+		target_value
+	} else {
+		let class_names = dataset.class_names.unwrap();
+		let random_target_value_index = (rng.gen::<f32>() * class_names.len().to_f32().unwrap())
+			.to_usize()
+			.unwrap();
+		class_names[random_target_value_index]
+	};
+	PredictOutput::BinaryClassification(BinaryClassificationPredictOutput {
+		class_name: target_value.to_string(),
+		probability: 0.95,
+	})
+}
+
+fn generate_fake_prediction_mpg(target_value: &serde_json::Value) -> PredictOutput {
+	let mut rng = rand::thread_rng();
+	let target_value = target_value.as_f64().unwrap();
+	let target_value = target_value + rng.gen::<f64>() * 5.0;
+	PredictOutput::Regression(RegressionPredictOutput {
+		value: target_value.to_f32().unwrap(),
+	})
+}
+
+fn generate_fake_prediction_iris(
+	target_value: &serde_json::Value,
+	dataset: &DatasetConfig,
+) -> PredictOutput {
+	let mut rng = rand::thread_rng();
+	let target_value = target_value.as_str().unwrap();
+	let target_value = if rng.gen::<f32>() > 0.6 {
+		target_value
+	} else {
+		let class_names = dataset.class_names.unwrap();
+		let random_target_value_index = (rng.gen::<f32>() * class_names.len().to_f32().unwrap())
+			.to_usize()
+			.unwrap();
+		class_names[random_target_value_index]
+	};
+	let probabilities = dataset
+		.class_names
+		.unwrap()
+		.iter()
+		.map(|class_name| {
+			if class_name == &target_value {
+				(class_name.to_string(), 0.95)
+			} else {
+				(class_name.to_string(), 0.025)
+			}
+		})
+		.collect::<HashMap<String, f32>>();
+	PredictOutput::MulticlassClassification(MulticlassClassificationPredictOutput {
+		class_name: target_value.to_string(),
+		probabilities: Some(probabilities),
+	})
+}
+
+fn generate_fake_prediction_boston(target_value: &serde_json::Value) -> PredictOutput {
+	let mut rng = rand::thread_rng();
+	let target_value = target_value.as_f64().unwrap();
+	let target_value = target_value + rng.gen::<f64>() * 5.0;
+	PredictOutput::Regression(RegressionPredictOutput {
+		value: target_value.to_f32().unwrap(),
+	})
+}
+
+fn get_random_date() -> chrono::DateTime<Utc> {
 	let start_time: u64 = 1577836800; // Jan 1 2020 00:00:00
 	let mut rng = rand::thread_rng();
 	let end_time = SystemTime::now()
@@ -60,87 +165,81 @@ async fn track(options: TrackOptions) {
 		.unwrap()
 		.as_secs();
 	let time_range = (end_time - start_time).to_f32().unwrap();
-	let time: i64 = (rng.gen::<f32>() * (time_range).trunc()).to_i64().unwrap();
-
-	let date = Utc.timestamp(time, 0);
-	for i in 0usize..1 {
-		let event: Event = Event::Prediction(Prediction {
-			date: date.to_rfc3339(),
-			identifier: i.to_string(),
-			input: json!({}),
-			output: json!({}),
-			model_id: options.model_id.to_string(),
-		});
-		track_event(event).await;
-	}
+	let time: i64 =
+		start_time.to_i64().unwrap() + (rng.gen::<f32>() * (time_range).trunc()).to_i64().unwrap();
+	Utc.timestamp(time, 0)
 }
 
-async fn track_event(event: Event) {
+fn get_random_row(dataframe: DataFrameView) -> HashMap<String, serde_json::Value> {
+	let mut rng = rand::thread_rng();
+	let random_row_index = (dataframe.nrows().to_f32().unwrap() * rng.gen::<f32>())
+		.to_usize()
+		.unwrap();
+	dataframe
+		.columns()
+		.iter()
+		.map(|column| match column {
+			tangram_dataframe::DataFrameColumnView::Enum(column) => {
+				let column_name = column.name().unwrap().to_owned();
+				let value = column.data()[random_row_index];
+				let value = match value {
+					Some(value) => {
+						serde_json::Value::String(column.options()[value.get() - 1].to_owned())
+					}
+					None => serde_json::Value::Null,
+				};
+				(column_name, value)
+			}
+			tangram_dataframe::DataFrameColumnView::Number(column) => {
+				let column_name = column.name().unwrap().to_owned();
+				let value = column.data()[random_row_index].to_f64().unwrap();
+				let value = serde_json::Number::from_f64(value).unwrap();
+				(column_name, serde_json::Value::Number(value))
+			}
+			_ => unimplemented!(),
+		})
+		.collect::<HashMap<String, serde_json::Value>>()
+}
+
+async fn track_event(event: MonitorEvent) {
 	let client = reqwest::Client::new();
-	let json_str = serde_json::to_string(&event).unwrap();
 	let res = client
 		.post("http://localhost:8080/track")
-		.json(&json_str)
+		.json(&event)
 		.send()
 		.await
 		.unwrap();
 	println!("{:?}", res);
 }
 
-#[derive(serde::Serialize)]
-#[serde(tag = "type")]
-enum Event {
-	#[serde(rename = "prediction")]
-	Prediction(Prediction),
-	#[serde(rename = "true_value")]
-	TrueValue(TrueValue),
-}
-
-#[derive(serde::Serialize)]
-struct Prediction {
-	date: String,
-	identifier: String,
-	input: serde_json::Value,
-	model_id: String,
-	output: serde_json::Value,
-}
-
-#[derive(serde::Serialize)]
-struct TrueValue {
-	date: String,
-	identifier: String,
-	model_id: String,
-	true_value: String,
-}
-
 struct DatasetConfig {
 	csv_path: &'static str,
 	name: &'static str,
 	target: &'static str,
-	target_values: Option<&'static [&'static str]>,
+	class_names: Option<&'static [&'static str]>,
 }
 
 const HEART_DISEASE: DatasetConfig = DatasetConfig {
 	csv_path: "data/heart_disease.csv",
 	name: "heart_disease",
 	target: "diagnosis",
-	target_values: Some(&["Positive", "Negative"]),
+	class_names: Some(&["Positive", "Negative"]),
 };
 const BOSTON: DatasetConfig = DatasetConfig {
 	csv_path: "data/boston.csv",
 	name: "boston",
 	target: "medv",
-	target_values: None,
+	class_names: None,
 };
 const IRIS: DatasetConfig = DatasetConfig {
 	csv_path: "data/iris.csv",
 	name: "iris",
 	target: "species",
-	target_values: Some(&["Iris Setosa", "Iris Virginica", "Iris Versicolor"]),
+	class_names: Some(&["Iris Setosa", "Iris Virginica", "Iris Versicolor"]),
 };
 const MPG: DatasetConfig = DatasetConfig {
 	csv_path: "data/mpg.csv",
 	name: "mpg",
 	target: "mpg",
-	target_values: None,
+	class_names: None,
 };

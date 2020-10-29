@@ -15,7 +15,7 @@ use tangram_util::id::Id;
 use url::Url;
 
 mod api;
-mod common;
+pub mod common;
 mod layouts;
 mod migrations;
 mod pages;

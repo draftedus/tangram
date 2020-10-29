@@ -737,6 +737,10 @@ impl<'a> NumberDataFrameColumnView<'a> {
 		self.name
 	}
 
+	pub fn data(&self) -> &[f32] {
+		self.data
+	}
+
 	pub fn is_empty(&self) -> bool {
 		self.data.len() == 0
 	}
@@ -761,6 +765,10 @@ impl<'a> NumberDataFrameColumnView<'a> {
 impl<'a> EnumDataFrameColumnView<'a> {
 	pub fn name(&self) -> Option<&str> {
 		self.name
+	}
+
+	pub fn data(&self) -> &[Option<NonZeroUsize>] {
+		self.data
 	}
 
 	pub fn options(&self) -> &[String] {
@@ -791,6 +799,10 @@ impl<'a> EnumDataFrameColumnView<'a> {
 impl<'a> TextDataFrameColumnView<'a> {
 	pub fn name(&self) -> Option<&str> {
 		self.name
+	}
+
+	pub fn data(&self) -> &'a [String] {
+		self.data
 	}
 
 	pub fn is_empty(&self) -> bool {

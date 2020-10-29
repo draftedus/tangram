@@ -15,6 +15,7 @@ use crate::{
 use anyhow::{format_err, Result};
 use chrono::prelude::*;
 use hyper::{body::to_bytes, Body, Request, Response, StatusCode};
+use num_traits::ToPrimitive;
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
 use tangram_metrics::StreamingMetric;
@@ -151,7 +152,7 @@ async fn write_true_value_monitor_event(
 	let now = Utc::now().timestamp();
 	let date = monitor_event.date;
 	let identifier = monitor_event.identifier.as_string();
-	let true_value = &monitor_event.true_value.as_string();
+	let true_value = &monitor_event.true_value.to_string();
 	sqlx::query(
 		"
 			insert into true_values
@@ -292,6 +293,13 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 			..
 		}) => NumberOrString::String(class_name),
 	};
+	let true_value = match &monitor_event.true_value {
+		serde_json::Value::Number(value) => {
+			NumberOrString::Number(value.as_f64().unwrap().to_f32().unwrap())
+		}
+		serde_json::Value::String(value) => NumberOrString::String(value.to_owned()),
+		_ => unimplemented!(),
+	};
 	let rows = sqlx::query(
 		"
 			select
@@ -311,7 +319,7 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 		let data: String = row.get(0);
 		let data: Vec<u8> = base64::decode(data)?;
 		let mut production_metrics: ProductionMetrics = serde_json::from_slice(&data)?;
-		production_metrics.update((prediction, monitor_event.true_value));
+		production_metrics.update((prediction, true_value));
 		let data = serde_json::to_vec(&production_metrics)?;
 		sqlx::query(
 			"
@@ -334,7 +342,7 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 		let start_date = hour;
 		let end_date = hour + chrono::Duration::hours(1);
 		let mut production_metrics = ProductionMetrics::new(&model, start_date, end_date);
-		production_metrics.update((prediction, monitor_event.true_value));
+		production_metrics.update((prediction, true_value));
 		let data = serde_json::to_vec(&production_metrics)?;
 		sqlx::query(
 			"
