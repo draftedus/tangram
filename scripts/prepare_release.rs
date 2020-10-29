@@ -1,7 +1,7 @@
 use anyhow::Result;
 use serde::{de::DeserializeOwned, Deserialize};
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tokio::fs;
 use url::Url;
 
@@ -109,18 +109,16 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-dynamiclib-linux-amd64-{}.zip dist/libtangram.so",
 		version
 	));
-	fs::copy(
+	copy(
 		"dist/libtangram.so",
 		"languages/python/tangram/libtangram/linux-amd64/libtangram.so",
 	)
-	.await
-	.unwrap();
-	fs::copy(
+	.await;
+	copy(
 		"dist/libtangram.so",
 		"languages/ruby/lib/tangram/libtangram/linux-amd64/libtangram.so",
 	)
-	.await
-	.unwrap();
+	.await;
 	fs::remove_file("dist/libtangram.so").await.unwrap();
 
 	// Create the dynamic library macos amd64 archive.
@@ -129,18 +127,16 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-dynamiclib-macos-amd64-{}.zip dist/libtangram.dylib",
 		version
 	));
-	fs::copy(
+	copy(
 		"dist/libtangram.dylib",
 		"languages/python/tangram/libtangram/macos-amd64/libtangram.dylib",
 	)
-	.await
-	.unwrap();
-	fs::copy(
+	.await;
+	copy(
 		"dist/libtangram.dylib",
 		"languages/ruby/lib/tangram/libtangram/macos-amd64/libtangram.dylib",
 	)
-	.await
-	.unwrap();
+	.await;
 	fs::remove_file("dist/libtangram.dylib").await.unwrap();
 
 	// Create the dynamic library windows amd64 archive.
@@ -149,18 +145,16 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-dynamiclib-windows-amd64-{}.zip dist/tangram.dll",
 		version
 	));
-	fs::copy(
+	copy(
 		"dist/tangram.dll",
 		"languages/python/tangram/libtangram/windows-amd64/tangram.dll",
 	)
-	.await
-	.unwrap();
-	fs::copy(
+	.await;
+	copy(
 		"dist/tangram.dll",
 		"languages/ruby/lib/tangram/libtangram/windows-amd64/tangram.dll",
 	)
-	.await
-	.unwrap();
+	.await;
 	fs::remove_file("dist/tangram.dll").await.unwrap();
 
 	// Create the static library linux amd64 archive.
@@ -169,18 +163,16 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-staticlib-linux-amd64-{}.zip dist/libtangram.a",
 		version
 	));
-	fs::copy(
+	copy(
 		"dist/libtangram.a",
 		"languages/go/libtangram/linux-amd64/libtangram.a",
 	)
-	.await
-	.unwrap();
-	fs::copy(
+	.await;
+	copy(
 		"dist/libtangram.a",
 		"languages/node/packages/tangram-node/libtangram/linux-amd64/libtangram.a",
 	)
-	.await
-	.unwrap();
+	.await;
 	fs::remove_file("dist/libtangram.a").await.unwrap();
 
 	// Create the static library macos amd64 archive.
@@ -189,18 +181,16 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-staticlib-macos-amd64-{}.zip dist/libtangram.a",
 		version
 	));
-	fs::copy(
+	copy(
 		"dist/libtangram.a",
 		"languages/go/libtangram/macos-amd64/libtangram.a",
 	)
-	.await
-	.unwrap();
-	fs::copy(
+	.await;
+	copy(
 		"dist/libtangram.a",
 		"languages/node/packages/tangram-node/libtangram/macos-amd64/libtangram.a",
 	)
-	.await
-	.unwrap();
+	.await;
 	fs::remove_file("dist/libtangram.a").await.unwrap();
 
 	// Create the static library windows amd64 archive.
@@ -209,18 +199,16 @@ async fn main() -> Result<()> {
 		"zip -qj dist/tangram-staticlib-windows-amd64-{}.zip dist/tangram.lib",
 		version
 	));
-	fs::copy(
+	copy(
 		"dist/tangram.lib",
 		"languages/go/libtangram/windows-amd64/tangram.lib",
 	)
-	.await
-	.unwrap();
-	fs::copy(
+	.await;
+	copy(
 		"dist/tangram.lib",
 		"languages/node/packages/tangram-node/libtangram/windows-amd64/tangram.lib",
 	)
-	.await
-	.unwrap();
+	.await;
 	fs::remove_file("dist/tangram.lib").await.unwrap();
 
 	// Delete all the downloaded artifacts.
@@ -250,6 +238,13 @@ where
 	if !exit_status.success() {
 		panic!();
 	}
+}
+
+async fn copy(src: impl AsRef<Path>, dst: impl AsRef<Path>) {
+	fs::create_dir_all(dst.as_ref().parent().unwrap())
+		.await
+		.unwrap();
+	fs::copy(src, dst).await.unwrap();
 }
 
 struct GitHubClient {

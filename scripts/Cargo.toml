@@ -5,8 +5,8 @@ name = "tangram_scripts"
 version = "0.0.0"
 
 [[bin]]
-name = "tangram_script_release"
-path = "release.rs"
+name = "tangram_script_prepare_release"
+path = "prepare_release.rs"
 
 [[bin]]
 name = "tangram_script_production_track_test"
