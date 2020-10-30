@@ -112,7 +112,7 @@ if args.library == 'pytorch' or args.library == 'sklearn':
 start = time()
 if args.library == 'pytorch':
   from pytorch_linear import LinearRegressor
-  model = LinearRegressor(n_epochs=1, learning_rate=0.01)
+  model = LinearRegressor(batch_size=1000, n_epochs=1, learning_rate=0.01)
   model.fit(features_train, labels_train)
 elif args.library == 'sklearn':
   from sklearn.linear_model import SGDRegressor

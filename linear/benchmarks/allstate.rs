@@ -634,7 +634,7 @@ fn main() {
 	let train_options = tangram_linear::TrainOptions {
 		learning_rate: 0.01,
 		max_epochs: 1,
-		n_examples_per_batch: 1,
+		n_examples_per_batch: 1000,
 		..Default::default()
 	};
 	let train_output = tangram_linear::Regressor::train(
