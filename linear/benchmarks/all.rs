@@ -39,20 +39,33 @@ struct MulticlassClassificationBenchmarkOutput {
 }
 
 fn main() {
+	let regression_datasets = &["boston", "allstate"];
+	let binary_classification_datasets = &["heart_disease", "census", "flights", "higgs"];
+	let multiclass_classification_datasets = &["iris"];
 	let libraries = &["sklearn", "pytorch", "tangram"];
+
+	// Build tangram binaries.
+	for dataset in regression_datasets.iter().chain(
+		binary_classification_datasets
+			.iter()
+			.chain(multiclass_classification_datasets),
+	) {
+		build_tangram_linear_benchmark(dataset);
+	}
+
 	// Test the regression datasets.
-	// println!("Regression");
-	// run_benchmarks(libraries, &["boston", "allstate"]);
-	// println!();
+	println!("Regression");
+	run_benchmarks(libraries, regression_datasets);
+	println!();
 
 	// Test the binary classification datasets.
 	println!("Binary Classification");
-	run_benchmarks(libraries, &["heart_disease", "census", "higgs", "flights"]);
+	run_benchmarks(libraries, binary_classification_datasets);
 	println!();
 
 	// Test the multiclass classification datasets.
 	println!("Multiclass Classification");
-	run_benchmarks(libraries, &["iris"]);
+	run_benchmarks(libraries, multiclass_classification_datasets);
 	println!();
 }
 
@@ -72,14 +85,23 @@ fn run_benchmarks(libraries: &[&str], datasets: &[&str]) {
 	}
 }
 
-fn run_tangram_linear_benchmark(dataset: &str) -> BenchmarkOutput {
-	let output = std::process::Command::new("cargo")
-		.arg("run")
+fn build_tangram_linear_benchmark(dataset: &str) {
+	std::process::Command::new("cargo")
+		.arg("build")
 		.arg("--release")
 		.arg("--bin")
 		.arg(format!("tangram_linear_benchmark_{}", dataset))
 		.output()
-		.expect("failed to execute process");
+		.unwrap();
+}
+
+fn run_tangram_linear_benchmark(dataset: &str) -> BenchmarkOutput {
+	let output = std::process::Command::new(format!(
+		"build/cargo/release/tangram_linear_benchmark_{}",
+		dataset
+	))
+	.output()
+	.unwrap();
 	let output = serde_json::from_slice(output.stdout.as_slice()).unwrap();
 	output
 }
@@ -90,7 +112,7 @@ fn run_python_benchmark(dataset: &str, library: &str) -> BenchmarkOutput {
 		.arg("--library")
 		.arg(library)
 		.output()
-		.expect("failed to execute process");
+		.unwrap();
 	let output = serde_json::from_slice(output.stdout.as_slice()).unwrap();
 	output
 }
