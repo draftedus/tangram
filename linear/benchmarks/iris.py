@@ -57,7 +57,7 @@ if args.library == 'pytorch' or args.library == 'sklearn':
 # Train the model.
 if args.library == 'sklearn':
   from sklearn.linear_model import LogisticRegression
-  model =  LogisticRegression(max_iter=1, multi_class: 'multinomial')
+  model =  LogisticRegression(max_iter=100, multi_class='multinomial')
   model.fit(features_train, labels_train)
 elif args.library == 'pytorch':
   from pytorch_linear import LinearMulticlassClassifier

@@ -1,4 +1,3 @@
-use itertools::izip;
 use ndarray::prelude::*;
 use serde_json::json;
 use std::path::Path;
@@ -12,7 +11,12 @@ fn main() {
 	let target_column_index = 4;
 	let mut features_train =
 		DataFrame::from_path(csv_file_path_train, Default::default(), |_| {}).unwrap();
-
+	let labels_train = features_train.columns_mut().remove(target_column_index);
+	let labels_train = labels_train.as_enum().unwrap();
+	let mut features_test =
+		DataFrame::from_path(csv_file_path_test, Default::default(), |_| {}).unwrap();
+	let labels_test = features_test.columns_mut().remove(target_column_index);
+	let labels_test = labels_test.as_enum().unwrap();
 	let feature_groups: Vec<tangram_features::FeatureGroup> = features_train
 		.columns()
 		.iter()
@@ -28,58 +32,22 @@ fn main() {
 					},
 				)
 			}
-			DataFrameColumn::Enum(column) => {
-				tangram_features::FeatureGroup::Identity(tangram_features::IdentityFeatureGroup {
-					source_column_name: column.name().clone().unwrap(),
-				})
-			}
+			DataFrameColumn::Enum(column) => tangram_features::FeatureGroup::Normalized(
+				tangram_features::compute_normalized_feature_group_for_enum_column(column.view()),
+			),
 			_ => unreachable!(),
 		})
 		.collect();
-
-	let labels_train = features_train.columns_mut().remove(target_column_index);
-	let labels_train = labels_train.as_enum().unwrap();
-	for (column, feature_group) in izip!(
-		features_train.columns_mut().iter_mut(),
-		feature_groups.iter()
-	) {
-		match feature_group {
-			tangram_features::FeatureGroup::Normalized(feature_group) => match column {
-				tangram_dataframe::DataFrameColumn::Number(column) => {
-					feature_group.compute_dataframe(column.data_mut());
-				}
-				_ => unreachable!(),
-			},
-			tangram_features::FeatureGroup::Identity(_) => {
-				// nothing to do
-			}
-			_ => unreachable!(),
-		}
-	}
-	let features_train = features_train.to_rows_f32().unwrap();
-
-	let mut features_test =
-		DataFrame::from_path(csv_file_path_test, Default::default(), |_| {}).unwrap();
-	let labels_test = features_test.columns_mut().remove(target_column_index);
-	let labels_test = labels_test.as_enum().unwrap();
-	for (column, feature_group) in izip!(
-		features_test.columns_mut().iter_mut(),
-		feature_groups.iter()
-	) {
-		match feature_group {
-			tangram_features::FeatureGroup::Normalized(feature_group) => match column {
-				tangram_dataframe::DataFrameColumn::Number(column) => {
-					feature_group.compute_dataframe(column.data_mut());
-				}
-				_ => unreachable!(),
-			},
-			tangram_features::FeatureGroup::Identity(_) => {
-				// nothing to do
-			}
-			_ => unreachable!(),
-		}
-	}
-	let features_test = features_test.to_rows_f32().unwrap();
+	let features_train = tangram_features::compute_features_array_f32(
+		&features_train.view(),
+		feature_groups.as_slice(),
+		&|| {},
+	);
+	let features_test = tangram_features::compute_features_array_f32(
+		&features_test.view(),
+		feature_groups.as_slice(),
+		&|| {},
+	);
 
 	// Train the model.
 	let train_output = tangram_linear::MulticlassClassifier::train(
@@ -87,8 +55,8 @@ fn main() {
 		labels_train.view(),
 		&tangram_linear::TrainOptions {
 			learning_rate: 0.1,
-			max_epochs: 1,
-			n_examples_per_batch: features_train.len(),
+			max_epochs: 10,
+			n_examples_per_batch: 1,
 			..Default::default()
 		},
 		&mut |_| {},

@@ -638,14 +638,14 @@ fn main() {
 	let metrics = metrics.finalize();
 
 	// Compute memory usage.
-	let mut vmhwm = String::new();
+	let mut memory = String::new();
 	let file = File::open("/proc/self/status").unwrap();
 	for line in BufReader::new(file).lines().map(|l| l.unwrap()) {
 		if line.starts_with("VmHWM") {
-			vmhwm = line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap();
+			memory = line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap();
 		}
 	}
 
-	let output = json!({"mse": metrics.mse, "duration": duration, "vmhwm": vmhwm});
+	let output = json!({"mse": metrics.mse, "duration": duration, "memory": memory});
 	println!("{}", output);
 }

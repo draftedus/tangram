@@ -7,7 +7,7 @@ import pandas as pd
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
+parser.add_argument('--library', choices=['sklearn', 'pytorch'], required=True)
 args = parser.parse_args()
 
 # Load the data.

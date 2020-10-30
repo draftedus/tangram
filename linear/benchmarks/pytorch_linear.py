@@ -64,7 +64,6 @@ class LinearBinaryClassifier(nn.Module):
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.SGD(self.parameters(), self.learning_rate)
     for epoch in range(self.n_epochs):
-      print('epoch: ', epoch)
       for batch in train_loader:
         inputs, labels = batch
         optimizer.zero_grad()
