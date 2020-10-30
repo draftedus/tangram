@@ -78,14 +78,12 @@ if args.library == 'pytorch' or args.library == 'sklearn':
   ])
   features_train = preprocessor.fit_transform(features_train)
   features_test = preprocessor.transform(features_test)
-print('data preprocessed')
 
 # Train the model.
 if args.library == 'pytorch':
   from pytorch_linear import LinearBinaryClassifier
   model = LinearBinaryClassifier(batch_size=1000, n_epochs=1, learning_rate=0.01)
   model.fit(features_train, labels_train)
-  print('model trained')
 elif args.library == 'sklearn':
   from sklearn.linear_model import SGDClassifier
   model = SGDClassifier(

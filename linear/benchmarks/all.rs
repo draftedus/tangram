@@ -41,9 +41,9 @@ struct MulticlassClassificationBenchmarkOutput {
 fn main() {
 	let libraries = &["sklearn", "pytorch", "tangram"];
 	// Test the regression datasets.
-	println!("Regression");
-	run_benchmarks(libraries, &["boston", "allstate"]);
-	println!();
+	// println!("Regression");
+	// run_benchmarks(libraries, &["boston", "allstate"]);
+	// println!();
 
 	// Test the binary classification datasets.
 	println!("Binary Classification");
