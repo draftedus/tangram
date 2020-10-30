@@ -1470,8 +1470,8 @@ fn choose_best_model_binary_classification(
 			};
 			match comparison_metric {
 				BinaryClassificationComparisonMetric::AUCROC => task_metrics_a
-					.auc_roc
-					.partial_cmp(&task_metrics_b.auc_roc)
+					.auc_roc_approx
+					.partial_cmp(&task_metrics_b.auc_roc_approx)
 					.unwrap(),
 			}
 		})
@@ -1809,7 +1809,7 @@ impl Into<model::BinaryClassificationMetrics>
 {
 	fn into(self) -> model::BinaryClassificationMetrics {
 		model::BinaryClassificationMetrics {
-			auc_roc: self.auc_roc,
+			auc_roc: self.auc_roc_approx,
 			thresholds: self.thresholds.into_iter().map(Into::into).collect(),
 		}
 	}

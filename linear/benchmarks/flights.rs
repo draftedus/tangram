@@ -2,6 +2,9 @@ use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use serde_json::json;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{Metric, StreamingMetric};
@@ -153,7 +156,7 @@ fn main() {
 		&tangram_linear::TrainOptions {
 			learning_rate: 0.01,
 			max_epochs: 1,
-			n_examples_per_batch: 1,
+			n_examples_per_batch: 1000,
 			..Default::default()
 		},
 		&mut |_| {},
@@ -176,6 +179,20 @@ fn main() {
 		.map(|(probability, label)| (*probability, label.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
-	let output = json!({ "auc_roc": auc_roc, "accuracy": metrics.thresholds[metrics.thresholds.len() / 2].accuracy });
+
+	// Compute memory usage.
+	let mut memory = String::new();
+	let file = File::open("/proc/self/status").unwrap();
+	for line in BufReader::new(file).lines().map(|l| l.unwrap()) {
+		if line.starts_with("VmHWM") {
+			memory = line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap();
+		}
+	}
+
+	let output = json!({
+		"auc_roc": auc_roc,
+		"accuracy": metrics.thresholds[metrics.thresholds.len() / 2].accuracy,
+		"memory": memory
+	});
 	println!("{}", output);
 }

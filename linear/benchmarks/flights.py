@@ -166,7 +166,15 @@ else:
 # Compute metrics.
 auc_roc = roc_auc_score(labels_test, predictions_proba)
 accuracy = accuracy_score(labels_test, [1 if p > 0.5 else 0 for p in predictions_proba])
+
+# Compute memory usage.
+f = open("/proc/self/status", "r")
+for line in f.readlines():
+	if line.startswith("VmHWM"):
+		memory = line.split(":")[1].strip()
+
 print(json.dumps({
   'auc_roc': auc_roc,
   'accuracy': accuracy,
+	'memory': memory
 }))

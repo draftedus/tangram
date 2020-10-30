@@ -42,7 +42,7 @@ pub struct BinaryClassificationMetricsInput<'a> {
 #[derive(Debug)]
 pub struct BinaryClassificationMetricsOutput {
 	/// The area under the receiver operating characteristic curve is computed using a fixed number of thresholds equal to `n_thresholds` which is passed to[BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
-	pub auc_roc: f32,
+	pub auc_roc_approx: f32,
 	/// This contains metrics specific to each classification threshold.
 	pub thresholds: Vec<BinaryClassificationMetricsOutputForThreshold>,
 }
@@ -175,7 +175,7 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 			})
 			.sum::<f32>();
 		BinaryClassificationMetricsOutput {
-			auc_roc,
+			auc_roc_approx: auc_roc,
 			thresholds,
 		}
 	}
