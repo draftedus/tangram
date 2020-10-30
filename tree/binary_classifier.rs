@@ -62,18 +62,17 @@ impl BinaryClassifier {
 		mut probabilities: ArrayViewMut1<f32>,
 	) {
 		probabilities.fill(self.bias);
-		for (example_index, logit) in probabilities.iter_mut().enumerate() {
-			for tree in self.trees.iter() {
-				let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
-				for (v, feature) in izip!(row.iter_mut(), features.row(example_index)) {
-					*v = *feature;
-				}
-				*logit += tree.predict(&row);
-			}
+		let probabilities = probabilities.as_slice_mut().unwrap();
+		for tree in self.trees.iter() {
+			pzip!(features.axis_iter(Axis(0)), probabilities.par_iter_mut()).for_each(
+				|(example, logit)| {
+					*logit += tree.predict(example.as_slice().unwrap());
+				},
+			);
 		}
-		for probability in probabilities {
+		probabilities.par_iter_mut().for_each(|probability| {
 			*probability = 1.0 / (probability.neg().exp() + 1.0);
-		}
+		});
 	}
 
 	/// Compute SHAP values.

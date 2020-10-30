@@ -116,52 +116,58 @@ impl Tree {
 		// Start at the root node.
 		let mut node_index = 0;
 		// Traverse the tree until we get to a leaf.
-		loop {
-			match self.nodes.get(node_index).unwrap() {
-				// This branch uses a continuous split.
-				Node::Branch(BranchNode {
-					left_child_index,
-					right_child_index,
-					split:
-						BranchSplit::Continuous(BranchSplitContinuous {
-							feature_index,
-							split_value,
-							..
-						}),
-					..
-				}) => {
-					node_index = if example[*feature_index].as_number().unwrap() <= split_value {
-						*left_child_index
-					} else {
-						*right_child_index
-					};
-				}
-				// This branch uses a discrete split.
-				Node::Branch(BranchNode {
-					left_child_index,
-					right_child_index,
-					split:
-						BranchSplit::Discrete(BranchSplitDiscrete {
-							feature_index,
-							directions,
-							..
-						}),
-					..
-				}) => {
-					let bin_index =
-						if let Some(bin_index) = example[*feature_index].as_enum().unwrap() {
+		unsafe {
+			loop {
+				match self.nodes.get_unchecked(node_index) {
+					// We made it to a leaf! The prediction is the leaf's value.
+					Node::Leaf(LeafNode { value, .. }) => return *value,
+					// This branch uses a continuous split.
+					Node::Branch(BranchNode {
+						left_child_index,
+						right_child_index,
+						split:
+							BranchSplit::Continuous(BranchSplitContinuous {
+								feature_index,
+								split_value,
+								..
+							}),
+						..
+					}) => {
+						node_index = if example.get_unchecked(*feature_index).as_number().unwrap()
+							<= split_value
+						{
+							*left_child_index
+						} else {
+							*right_child_index
+						};
+					}
+					// This branch uses a discrete split.
+					Node::Branch(BranchNode {
+						left_child_index,
+						right_child_index,
+						split:
+							BranchSplit::Discrete(BranchSplitDiscrete {
+								feature_index,
+								directions,
+								..
+							}),
+						..
+					}) => {
+						let bin_index = if let Some(bin_index) =
+							example.get_unchecked(*feature_index).as_enum().unwrap()
+						{
 							bin_index.get()
 						} else {
 							0
 						};
-					node_index = if *directions.get(bin_index).unwrap() == SplitDirection::Left {
-						*left_child_index
-					} else {
-						*right_child_index
-					};
+						node_index = if *directions.get(bin_index).unwrap() == SplitDirection::Left
+						{
+							*left_child_index
+						} else {
+							*right_child_index
+						};
+					}
 				}
-				// We made it to a leaf! The prediction is the leaf's value.
-				Node::Leaf(LeafNode { value, .. }) => return *value,
 			}
 		}
 	}

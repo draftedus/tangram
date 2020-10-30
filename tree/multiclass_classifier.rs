@@ -70,18 +70,14 @@ impl MulticlassClassifier {
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
 		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
-		for (mut logits, features) in izip!(
+		for (mut logits, example) in izip!(
 			probabilities.axis_iter_mut(Axis(0)),
 			features.axis_iter(Axis(0))
 		) {
-			let mut row = vec![DataFrameValue::Number(0.0); features.len()];
-			for (v, feature) in izip!(row.iter_mut(), features.iter()) {
-				*v = *feature;
-			}
 			logits.assign(&biases);
 			for trees in trees.axis_iter(Axis(0)) {
 				for (logit, tree) in izip!(logits.iter_mut(), trees.iter()) {
-					*logit += tree.predict(&row);
+					*logit += tree.predict(&example.as_slice().unwrap());
 				}
 			}
 			softmax(logits.as_slice_mut().unwrap());

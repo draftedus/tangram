@@ -60,14 +60,13 @@ impl Regressor {
 		mut predictions: ArrayViewMut1<f32>,
 	) {
 		predictions.fill(self.bias);
-		let mut row = vec![DataFrameValue::Number(0.0); features.ncols()];
-		for (i, prediction) in predictions.iter_mut().enumerate() {
-			for tree in self.trees.iter() {
-				for (v, feature) in izip!(row.iter_mut(), features.row(i)) {
-					*v = *feature;
-				}
-				*prediction += tree.predict(&row);
-			}
+		let predictions = predictions.as_slice_mut().unwrap();
+		for tree in self.trees.iter() {
+			pzip!(features.axis_iter(Axis(0)), predictions.par_iter_mut()).for_each(
+				|(example, prediction)| {
+					*prediction += tree.predict(example.as_slice().unwrap());
+				},
+			)
 		}
 	}
 
