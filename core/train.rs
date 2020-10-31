@@ -2,12 +2,12 @@ use crate::{
 	config::{self, Config},
 	features, grid, model, stats, test,
 };
-use anyhow::{anyhow, Context, Result};
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::{collections::BTreeMap, path::Path};
 use tangram_dataframe::prelude::*;
 use tangram_metrics::StreamingMetric;
+use tangram_util::{err, error::Result};
 use tangram_util::{id::Id, progress_counter::ProgressCounter};
 
 /**
@@ -146,7 +146,7 @@ pub fn train(
 		.iter()
 		.position(|column_name| *column_name == target_column_name)
 		.ok_or_else(|| {
-			anyhow!(
+			err!(
 				"did not find target column \"{}\" among column names \"{}\"",
 				target_column_name,
 				column_names.join(", ")
@@ -165,7 +165,7 @@ pub fn train(
 			2 => Task::BinaryClassification,
 			_ => Task::MulticlassClassification,
 		},
-		_ => return Err(anyhow!("invalid target column type")),
+		_ => return Err(err!("invalid target column type")),
 	};
 
 	// Compute the baseline metrics.
@@ -653,10 +653,8 @@ pub enum ModelTestProgress {
 
 fn load_config(config_path: Option<&Path>) -> Result<Option<Config>> {
 	if let Some(config_path) = config_path {
-		let config = std::fs::read_to_string(config_path)
-			.with_context(|| format!("failed to read config file {}", config_path.display()))?;
-		let config = serde_yaml::from_str(&config)
-			.with_context(|| format!("failed to parse config file {}", config_path.display()))?;
+		let config = std::fs::read_to_string(config_path)?;
+		let config = serde_yaml::from_str(&config)?;
 		Ok(Some(config))
 	} else {
 		Ok(None)
@@ -1245,7 +1243,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 					config::ComparisonMetric::R2 => {
 						Ok(ComparisonMetric::Regression(RegressionComparisonMetric::R2))
 					}
-					metric => Err(anyhow!(
+					metric => Err(err!(
 						"{} is an invalid model comparison metric for regression",
 						metric
 					)),
@@ -1267,7 +1265,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 							BinaryClassificationComparisonMetric::AUCROC,
 						))
 					}
-					metric => Err(anyhow!(
+					metric => Err(err!(
 						"{} is an invalid model comparison metric for binary classification",
 						metric,
 					)),
@@ -1289,7 +1287,7 @@ fn choose_comparison_metric(config: &Option<Config>, task: &Task) -> Result<Comp
 							MulticlassClassificationComparisonMetric::Accuracy,
 						))
 					}
-					metric => Err(anyhow!(
+					metric => Err(err!(
 						"{} is an invalid model comparison metric for multiclass classification",
 						metric,
 					)),

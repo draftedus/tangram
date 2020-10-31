@@ -5,9 +5,9 @@ use crate::{
 	},
 	Context,
 };
-use anyhow::Result;
 use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 #[derive(serde::Deserialize, Clone, Debug)]

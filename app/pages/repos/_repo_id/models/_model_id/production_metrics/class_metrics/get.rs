@@ -16,11 +16,11 @@ use crate::{
 	layouts::model_layout::get_model_layout_info,
 	production_metrics::ProductionPredictionMetricsOutput,
 };
-use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use itertools::izip;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 pub async fn get(

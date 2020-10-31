@@ -8,9 +8,9 @@ use crate::{
 	layouts::app_layout::get_app_layout_info,
 	Context,
 };
-use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<Body>> {

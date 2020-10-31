@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Result};
 use hyper::{header, Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use rusty_v8 as v8;
 use sourcemap::SourceMap;
 use std::fmt::Write;
 use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc};
+use tangram_util::{err, error::Result};
 use url::Url;
 use which::which;
 
@@ -138,11 +138,9 @@ impl Pinwheel {
 			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_literal)
-				.ok_or_else(|| anyhow!("failed to get default export from {}", page_js_url))?;
+				.ok_or_else(|| err!("failed to get default export from {}", page_js_url))?;
 			if !page_module_default_export.is_function() {
-				return Err(anyhow!(
-					"default export from page module must be a functiuon"
-				));
+				return Err(err!("default export from page module must be a functiuon"));
 			}
 			let page_module_default_export_function: v8::Local<v8::Function> =
 				unsafe { v8::Local::cast(page_module_default_export) };
@@ -179,7 +177,7 @@ impl Pinwheel {
 				let exception = try_catch_scope.exception().unwrap();
 				let mut scope = v8::HandleScope::new(&mut try_catch_scope);
 				let exception_string = exception_to_string(&mut scope, exception);
-				return Err(anyhow!("{}", exception_string));
+				return Err(err!("{}", exception_string));
 			}
 			let html = html.unwrap();
 			drop(try_catch_scope);
@@ -307,7 +305,7 @@ fn run_module<'s>(
 		let exception = try_catch_scope.exception().unwrap();
 		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
 		let exception_string = exception_to_string(&mut scope, exception);
-		return Err(anyhow!("{}", exception_string));
+		return Err(err!("{}", exception_string));
 	}
 	drop(try_catch_scope);
 	let mut try_catch_scope = v8::TryCatch::new(scope);
@@ -316,7 +314,7 @@ fn run_module<'s>(
 		let exception = try_catch_scope.exception().unwrap();
 		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
 		let exception_string = exception_to_string(&mut scope, exception);
-		return Err(anyhow!("{}", exception_string));
+		return Err(err!("{}", exception_string));
 	}
 	drop(try_catch_scope);
 	let namespace = module.get_module_namespace();
@@ -383,7 +381,7 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn FileSystem, url: Url) -> Re
 		let exception = try_catch_scope.exception().unwrap();
 		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
 		let exception_string = exception_to_string(&mut scope, exception);
-		return Err(anyhow!("{}", exception_string));
+		return Err(err!("{}", exception_string));
 	}
 	let module = module.unwrap();
 	drop(try_catch_scope);
@@ -513,7 +511,7 @@ impl FileSystem for IncludedFileSystem {
 		self.dir
 			.get_file(url.path().strip_prefix('/').unwrap())
 			.map(|d| d.contents.into())
-			.ok_or_else(|| anyhow!("no file found at url {}", url))
+			.ok_or_else(|| err!("no file found at url {}", url))
 	}
 }
 
@@ -634,7 +632,7 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 		.unwrap();
 	let status = process.wait().unwrap();
 	if !status.success() {
-		return Err(anyhow!("esbuild {}", status.to_string()));
+		return Err(err!("esbuild {}", status.to_string()));
 	}
 	let collect_css = |css_src_dir: &Path, output_file_name: &str| {
 		let mut css = String::new();

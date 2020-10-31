@@ -6,8 +6,8 @@ use crate::{
 	},
 	Context,
 };
-use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 pub async fn get(

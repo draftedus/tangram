@@ -21,10 +21,10 @@ use crate::{
 	},
 	Context,
 };
-use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;

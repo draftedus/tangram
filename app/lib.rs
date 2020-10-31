@@ -1,6 +1,5 @@
 use self::{common::error::Error, context::Context};
-use anyhow::{anyhow, Result};
-use colored::Colorize;
+use backtrace::Backtrace;
 use futures::FutureExt;
 use hyper::{
 	header,
@@ -9,10 +8,11 @@ use hyper::{
 };
 use pinwheel::Pinwheel;
 use std::{
-	borrow::Cow, collections::BTreeMap, convert::Infallible, panic::AssertUnwindSafe,
-	path::PathBuf, str::FromStr, sync::Arc,
+	borrow::Cow, cell::RefCell, collections::BTreeMap, convert::Infallible,
+	panic::AssertUnwindSafe, path::PathBuf, str::FromStr, sync::Arc,
 };
 use tangram_util::id::Id;
+use tangram_util::{err, error::Result};
 use url::Url;
 
 mod api;
@@ -302,12 +302,9 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 						.unwrap(),
 				}
 			} else {
-				eprintln!("{}: {}", "error".red().bold(), error.root_cause());
-				for cause in error.chain().rev().skip(1) {
-					eprintln!("  {} {}", "->".red().bold(), cause);
-				}
+				eprintln!("{}", error);
 				let body: Cow<str> = if cfg!(debug_assertions) {
-					error.to_string().into()
+					format!("{}", error).into()
 				} else {
 					"internal server error".into()
 				};
@@ -322,7 +319,16 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 	response
 }
 
-pub async fn run(options: Options) -> Result<()> {
+pub fn run(options: Options) -> Result<()> {
+	tokio::runtime::Builder::new()
+		.threaded_scheduler()
+		.enable_all()
+		.build()
+		.unwrap()
+		.block_on(run_impl(options))
+}
+
+async fn run_impl(options: Options) -> Result<()> {
 	// Create the pinwheel.
 	#[cfg(debug_assertions)]
 	fn pinwheel() -> Pinwheel {
@@ -372,14 +378,24 @@ pub async fn run(options: Options) -> Result<()> {
 		let model = tangram_core::model::Model::from_slice(&model_data)?;
 		let title = model_path
 			.file_stem()
-			.ok_or_else(|| anyhow!("bad model path"))?
+			.ok_or_else(|| err!("bad model path"))?
 			.to_str()
-			.ok_or_else(|| anyhow!("bad model path"))?;
+			.ok_or_else(|| err!("bad model path"))?;
 		crate::common::repos::create_root_repo(&mut db, repo_id, title).await?;
 		crate::common::repos::add_model_version(&mut db, repo_id, model.id(), &model_data).await?;
 		db.commit().await?;
 	}
 	// Run the server.
+	tokio::task_local! {
+		static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
+	}
+	let hook = std::panic::take_hook();
+	std::panic::set_hook(Box::new(|panic_info| {
+		let value = (panic_info.to_string(), Backtrace::new());
+		PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+			panic_message_and_backtrace.borrow_mut().replace(value);
+		})
+	}));
 	let context = Arc::new(Context {
 		options,
 		pinwheel,
@@ -389,23 +405,33 @@ pub async fn run(options: Options) -> Result<()> {
 		let context = context.clone();
 		async move {
 			Ok::<_, Infallible>(service_fn(move |request| {
+				// let request_id = Id::new();
 				let method = request.method().to_owned();
 				let path = request.uri().path_and_query().unwrap().path().to_owned();
 				let context = context.clone();
-				async move {
+				PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
 					Ok::<_, Infallible>(
 						AssertUnwindSafe(handle(request, context))
 							.catch_unwind()
 							.await
 							.unwrap_or_else(|_| {
+								let backtrace = PANIC_MESSAGE_AND_BACKTRACE.with(
+									|panic_message_and_backtrace| {
+										let panic_message_and_backtrace =
+											panic_message_and_backtrace.borrow();
+										let (message, backtrace) =
+											panic_message_and_backtrace.as_ref().unwrap();
+										format!("{}\n{:?}", message, backtrace)
+									},
+								);
 								eprintln!("{} {} 500", method, path);
 								Response::builder()
 									.status(StatusCode::INTERNAL_SERVER_ERROR)
-									.body(Body::from("internal server error"))
+									.body(Body::from(backtrace))
 									.unwrap()
 							}),
 					)
-				}
+				})
 			}))
 		}
 	});
@@ -413,5 +439,6 @@ pub async fn run(options: Options) -> Result<()> {
 	let listener = std::net::TcpListener::bind(&addr)?;
 	eprintln!("🚀 serving on port {}", context.options.port);
 	hyper::Server::from_tcp(listener)?.serve(service).await?;
+	std::panic::set_hook(hook);
 	Ok(())
 }

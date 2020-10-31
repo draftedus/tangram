@@ -1,6 +1,6 @@
 use super::props::Props;
 use crate::{layouts::app_layout::get_app_layout_info, Context};
-use anyhow::Result;
+use tangram_util::error::Result;
 
 pub async fn render(context: &Context, error: Option<String>) -> Result<String> {
 	let props = props(context, error).await?;

@@ -19,10 +19,10 @@ use crate::{
 	production_metrics::ProductionPredictionMetricsOutput,
 	Context,
 };
-use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
 use itertools::izip;
 use std::collections::BTreeMap;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 pub async fn get(

@@ -1,14 +1,17 @@
 use super::props::Props;
-use crate::Context;
-use anyhow::Result;
+use crate::{Context, Error};
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
+use tangram_util::error::Result;
 
 pub async fn get(
 	context: &Context,
 	_request: Request<Body>,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
+	if !context.options.auth_enabled {
+		return Err(Error::NotFound.into());
+	}
 	let email = search_params.as_ref().and_then(|s| s.get("email").cloned());
 	let props = Props {
 		code: email.is_some(),

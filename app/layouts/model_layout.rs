@@ -1,6 +1,6 @@
 use crate::Context;
-use anyhow::Result;
 use sqlx::prelude::*;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 #[derive(serde::Serialize, Clone, Debug)]

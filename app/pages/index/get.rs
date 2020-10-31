@@ -7,20 +7,11 @@ use crate::{
 	layouts::app_layout::get_app_layout_info,
 	Context,
 };
-use anyhow::Result;
 use chrono::prelude::*;
 use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
-
-// macro_rules! err {
-// 	($msg:expr) => {
-// 		bail!("{}:{} {}", file!(), line!(), $msg)
-// 	};
-// 	($fmt:expr, $($arg:tt)*) => {
-// 		bail!("{}:{} {}", file!(), line!(), format!($fmt, $($arg)*))
-// 	};
-// }
 
 pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<Body>> {
 	let mut db = context

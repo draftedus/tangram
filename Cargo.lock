@@ -2,9 +2,9 @@
 # It is not intended for manual editing.
 [[package]]
 name = "addr2line"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b6a2d3371669ab3ca9797670853d61402b03d0b4b9ebf33d677dfa720203072"
+checksum = "7c0929d69e78dd9bf5408269919fcbcaeb2e35e5d43e5815517cdc6a8e11a423"
 dependencies = [
  "gimli",
 ]
@@ -86,9 +86,9 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "backtrace"
-version = "0.3.53"
+version = "0.3.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "707b586e0e2f247cbde68cdd2c3ce69ea7b7be43e1c5b426e37c9319c4b9838e"
+checksum = "2baad346b2d4e94a24347adeee9c7a93f412ee94b9cc26e5b59dea23848e9f28"
 dependencies = [
  "addr2line",
  "cfg-if 1.0.0",
@@ -708,9 +708,9 @@ dependencies = [
 
 [[package]]
 name = "gimli"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aaf91faf136cb47367fa430cd46e37a788775e7fa104f8b4bcb3861dc389b724"
+checksum = "f6503fe142514ca4799d4c26297c4248239fe8838d827db6bd6065c6ed29a6ce"
 
 [[package]]
 name = "glob"
@@ -1037,7 +1037,6 @@ dependencies = [
 name = "libtangram"
 version = "0.2.0-dev"
 dependencies = [
- "anyhow",
  "serde",
  "serde_json",
  "tangram_core",
@@ -1313,9 +1312,9 @@ dependencies = [
 
 [[package]]
 name = "num-integer"
-version = "0.1.43"
+version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d59457e662d541ba17869cf51cf177c0b5f0cbf476c66bdc90bf1edac4f875b"
+checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
 dependencies = [
  "autocfg",
  "num-traits",
@@ -1323,9 +1322,9 @@ dependencies = [
 
 [[package]]
 name = "num-traits"
-version = "0.2.12"
+version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac267bcc07f48ee5f8935ab0d24f316fb722d7a1292e2913f0cc196b29ffd611"
+checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
 dependencies = [
  "autocfg",
 ]
@@ -1342,9 +1341,9 @@ dependencies = [
 
 [[package]]
 name = "object"
-version = "0.21.1"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37fd5004feb2ce328a52b0b3d01dbf4ffff72583493900ed15f22d4111c51693"
+checksum = "8d3b63360ec3cb337817c2dbd47ab4a0f170d285d8e5a2064600f3def1402397"
 
 [[package]]
 name = "once_cell"
@@ -1494,7 +1493,6 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 name = "pinwheel"
 version = "0.1.0-dev"
 dependencies = [
- "anyhow",
  "clap",
  "futures",
  "hyper",
@@ -1504,6 +1502,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sourcemap",
+ "tangram_util",
  "tokio",
  "url",
  "walkdir",
@@ -1828,9 +1827,9 @@ dependencies = [
 
 [[package]]
 name = "rusty_v8"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c11463988ec37b3f8cb84e4c2fe8f63058c46e07348b6d1d27b114a2b981304"
+checksum = "692dddfb8ae9915b19774a05cadc71363c98bad4fafc13636579da5a7a110016"
 dependencies = [
  "bitflags",
  "cargo_gn",
@@ -2100,7 +2099,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#5f793c6e957d2b21ac3e1fe055f7c78274619b66"
+source = "git+https://github.com/launchbadge/sqlx#4fda8be005f83aba3bc5c7c5f591dd2ad4fc4c40"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -2109,7 +2108,7 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#5f793c6e957d2b21ac3e1fe055f7c78274619b66"
+source = "git+https://github.com/launchbadge/sqlx#4fda8be005f83aba3bc5c7c5f591dd2ad4fc4c40"
 dependencies = [
  "ahash",
  "atoi",
@@ -2152,7 +2151,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#5f793c6e957d2b21ac3e1fe055f7c78274619b66"
+source = "git+https://github.com/launchbadge/sqlx#4fda8be005f83aba3bc5c7c5f591dd2ad4fc4c40"
 dependencies = [
  "dotenv",
  "either",
@@ -2169,7 +2168,7 @@ dependencies = [
 [[package]]
 name = "sqlx-rt"
 version = "0.1.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#5f793c6e957d2b21ac3e1fe055f7c78274619b66"
+source = "git+https://github.com/launchbadge/sqlx#4fda8be005f83aba3bc5c7c5f591dd2ad4fc4c40"
 dependencies = [
  "native-tls",
  "once_cell",
@@ -2220,12 +2219,11 @@ dependencies = [
 name = "tangram_app"
 version = "0.0.0"
 dependencies = [
- "anyhow",
+ "backtrace",
  "base64 0.13.0",
  "bytes",
  "chrono",
  "chrono-tz",
- "colored",
  "futures",
  "hyper",
  "include_dir",
@@ -2246,6 +2244,7 @@ dependencies = [
  "tangram_core",
  "tangram_metrics",
  "tangram_util",
+ "tokio",
  "url",
 ]
 
@@ -2253,18 +2252,15 @@ dependencies = [
 name = "tangram_cli"
 version = "0.2.0-dev"
 dependencies = [
- "anyhow",
  "backtrace",
  "clap",
  "colored",
  "dirs",
- "hyper",
  "once_cell",
  "tangram_app",
  "tangram_core",
  "tangram_util",
  "term-ui",
- "tokio",
  "url",
 ]
 
@@ -2272,7 +2268,6 @@ dependencies = [
 name = "tangram_core"
 version = "0.2.0-dev"
 dependencies = [
- "anyhow",
  "fnv",
  "itertools",
  "ndarray",
@@ -2293,7 +2288,6 @@ dependencies = [
 name = "tangram_dataframe"
 version = "0.1.0-dev"
 dependencies = [
- "anyhow",
  "csv",
  "fnv",
  "insta",
@@ -2303,6 +2297,7 @@ dependencies = [
  "num-traits",
  "rand",
  "rand_xoshiro",
+ "tangram_util",
 ]
 
 [[package]]
@@ -2349,7 +2344,6 @@ dependencies = [
 name = "tangram_scripts"
 version = "0.0.0"
 dependencies = [
- "anyhow",
  "base64 0.13.0",
  "chrono",
  "clap",
@@ -2386,6 +2380,7 @@ dependencies = [
 name = "tangram_util"
 version = "0.1.0-dev"
 dependencies = [
+ "backtrace",
  "num-traits",
  "rand",
  "rayon",

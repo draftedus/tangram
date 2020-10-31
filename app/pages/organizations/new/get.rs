@@ -1,7 +1,7 @@
 use super::props::Props;
 use crate::{layouts::app_layout::get_app_layout_info, Context};
-use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
+use tangram_util::error::Result;
 
 pub async fn get(context: &Context, _request: Request<Body>) -> Result<Response<Body>> {
 	let app_layout_info = get_app_layout_info(context).await?;

@@ -14,12 +14,11 @@ pinwheel = { path = "../pinwheel" }
 insta = "1"
 
 [dependencies]
-anyhow = "1"
+backtrace = "0.3"
 base64 = "0.13"
 bytes = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.5", features = ["serde"] }
-colored = "2"
 futures = "0.3"
 hyper = { version = "0.13", features = ["stream"] }
 itertools = "0.9"
@@ -39,4 +38,5 @@ sqlx = { git = "https://github.com/launchbadge/sqlx", branch = "master", default
 tangram_core = { path = "../core" }
 tangram_metrics = { path = "../metrics" }
 tangram_util = { path = "../util" }
+tokio = { version = "0.2" }
 url = "2"

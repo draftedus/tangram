@@ -12,14 +12,13 @@ use crate::{
 	production_stats::ProductionStats,
 	Context,
 };
-use anyhow::{anyhow, Result};
 use chrono::prelude::*;
 use hyper::{body::to_bytes, Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
 use tangram_metrics::StreamingMetric;
-use tangram_util::id::Id;
+use tangram_util::{err, error::Result, id::Id};
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(untagged)]
@@ -276,7 +275,7 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 	.await?;
 	let row = rows
 		.get(0)
-		.ok_or_else(|| anyhow!("no prediction with identifier {}", identifier))?;
+		.ok_or_else(|| err!("no prediction with identifier {}", identifier))?;
 	let output: String = row.get(0);
 	let output: Vec<u8> = base64::decode(output)?;
 	let output: PredictOutput = serde_json::from_slice(output.as_slice())?;

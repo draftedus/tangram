@@ -8,12 +8,12 @@ use crate::{
 	layouts::model_layout::get_model_layout_info,
 	Context,
 };
-use anyhow::Result;
 use chrono::prelude::*;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 const N_PREDICTIONS_PER_PAGE: i64 = 10;

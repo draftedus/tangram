@@ -2,12 +2,12 @@ use crate::{
 	common::date_window::{DateWindow, DateWindowInterval},
 	production_metrics::{ProductionMetrics, ProductionMetricsOutput},
 };
-use anyhow::Result;
 use chrono::prelude::*;
 use chrono_tz::Tz;
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
 use tangram_metrics::StreamingMetric;
+use tangram_util::error::Result;
 
 #[derive(Debug)]
 pub struct GetProductionMetricsOutput {

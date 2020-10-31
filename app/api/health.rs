@@ -1,6 +1,6 @@
 use crate::{Context, Error};
-use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
+use tangram_util::error::Result;
 
 pub(crate) async fn get(context: &Context, _request: Request<Body>) -> Result<Response<Body>> {
 	match context.pool.acquire().await {

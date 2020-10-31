@@ -1,6 +1,5 @@
 //! This module contains the main entrypoint to the tangram cli.
 
-use anyhow::{anyhow, Context, Result};
 use backtrace::Backtrace;
 use clap::Clap;
 use colored::Colorize;
@@ -11,6 +10,7 @@ use std::{
 	path::{Path, PathBuf},
 	sync::Mutex,
 };
+use tangram_util::{err, error::Result};
 use url::Url;
 
 mod progress_view;
@@ -90,22 +90,19 @@ fn main() {
 		Options::App(options) => cli_app(*options),
 	};
 	if let Err(error) = result {
-		eprintln!("{}: {}", "error".red().bold(), error.root_cause());
-		for cause in error.chain().rev().skip(1) {
-			eprintln!("  {} {}", "->".red().bold(), cause);
-		}
+		eprintln!("{}: {}", "error".red().bold(), error);
 		std::process::exit(1);
 	}
 }
 
 fn cli_train(options: TrainOptions) -> Result<()> {
 	// Start the progress view if enabled and train the model. However, we need to do some extra work to make panic messages display properly. The problem is that the progress view enables the terminal's alternative screen and returns to the default screen when it is dropped. However, if a panic occurs during training, it will be printed by the default panic hook while the alternative screen is active, and then the progress view will be dropped, causing the panic message to be immediately erased. To work around this, we create a custom panic hook that stores the panic message, wrap the progress view and training with `catch_unwind`, and then print the panic message if `catch_unwind` returns an `Err`. This ensures that the progress view will be dropped before the panic message is displayed.
-	pub static PANIC_INFO: Lazy<Mutex<Option<(String, Backtrace)>>> =
+	static PANIC_MESSAGE_AND_BACKTRACE: Lazy<Mutex<Option<(String, Backtrace)>>> =
 		Lazy::new(|| Mutex::new(None));
 	let hook = std::panic::take_hook();
 	std::panic::set_hook(Box::new(|panic_info| {
 		let value = (panic_info.to_string(), Backtrace::new());
-		PANIC_INFO.lock().unwrap().replace(value);
+		PANIC_MESSAGE_AND_BACKTRACE.lock().unwrap().replace(value);
 	}));
 	let result = std::panic::catch_unwind(|| {
 		let mut progress_view = if options.progress {
@@ -131,9 +128,9 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 	let model = match result {
 		Ok(result) => result,
 		Err(_) => {
-			let panic_info = PANIC_INFO.lock().unwrap();
+			let panic_info = PANIC_MESSAGE_AND_BACKTRACE.lock().unwrap();
 			let (message, backtrace) = panic_info.as_ref().unwrap();
-			Err(anyhow!("{}\n\n{:?}", message, backtrace))
+			Err(err!("{}\n{:?}", message, backtrace))
 		}
 	}?;
 
@@ -155,9 +152,7 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 	};
 
 	// Write the model to the output path.
-	model
-		.to_file(&output_path)
-		.context("failed to write model to file")?;
+	model.to_file(&output_path)?;
 
 	// Announce that everything worked!
 	eprintln!("Your model was written to {}.", output_path.display());
@@ -172,16 +167,7 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 }
 
 fn cli_app(options: AppOptions) -> Result<()> {
-	let hook = std::panic::take_hook();
-	std::panic::set_hook(Box::new(|panic_info| {
-		eprintln!("{}", panic_info.to_string());
-	}));
-	let mut runtime = tokio::runtime::Builder::new()
-		.threaded_scheduler()
-		.enable_all()
-		.build()
-		.unwrap();
-	runtime.block_on(tangram_app::run(tangram_app::Options {
+	tangram_app::run(tangram_app::Options {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
 		database_url: options.database_url.unwrap_or_else(default_database_url),
@@ -193,9 +179,7 @@ fn cli_app(options: AppOptions) -> Result<()> {
 		stripe_publishable_key: options.stripe_publishable_key,
 		stripe_secret_key: options.stripe_secret_key,
 		url: options.url,
-	}))?;
-	std::panic::set_hook(hook);
-	Ok(())
+	})
 }
 
 /// This function checks if a file with the given name and extension already exists at the path `base`, and if it does, it appends " 1", " 2", etc. to it until it finds a name that will not overwrite an existing file.

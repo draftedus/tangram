@@ -5,9 +5,9 @@ use crate::{
 	},
 	Context,
 };
-use anyhow::Result;
 use hyper::{header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 pub mod index;

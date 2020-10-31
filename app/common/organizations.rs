@@ -1,6 +1,6 @@
-use anyhow::{anyhow, Result};
 use sqlx::prelude::*;
 use tangram_util::id::Id;
+use tangram_util::{err, error::Result};
 
 #[derive(serde::Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -67,7 +67,7 @@ pub async fn get_organization(
 		"team" => Plan::Team,
 		"startup" => Plan::Startup,
 		"enterprise" => Plan::Enterprise,
-		_ => return Err(anyhow!("bad plan {}", plan)),
+		_ => return Err(err!("bad plan {}", plan)),
 	};
 	let user_rows = sqlx::query(
 		"

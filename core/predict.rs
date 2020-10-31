@@ -1,5 +1,4 @@
 use crate::{features, model};
-use anyhow::Result;
 use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -8,6 +7,7 @@ use std::{
 	convert::{TryFrom, TryInto},
 };
 use tangram_dataframe::prelude::*;
+use tangram_util::error::Result;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct PredictOptions {
@@ -638,7 +638,7 @@ fn compute_feature_contributions<'a>(
 }
 
 impl TryFrom<model::Model> for Model {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::Model) -> Result<Model> {
 		match value {
 			model::Model::Regressor(model) => Ok(Model::Regressor(model.try_into()?)),
@@ -651,7 +651,7 @@ impl TryFrom<model::Model> for Model {
 }
 
 impl TryFrom<model::Regressor> for Regressor {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::Regressor) -> Result<Regressor> {
 		let id = value.id;
 		let columns = value
@@ -702,7 +702,7 @@ impl TryFrom<model::Regressor> for Regressor {
 }
 
 impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::BinaryClassifier) -> Result<BinaryClassifier> {
 		let id = value.id;
 		let columns = value
@@ -759,7 +759,7 @@ impl TryFrom<model::BinaryClassifier> for BinaryClassifier {
 }
 
 impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(model: model::MulticlassClassifier) -> Result<MulticlassClassifier> {
 		let id = model.id;
 		let columns = model
@@ -823,7 +823,7 @@ impl TryFrom<model::MulticlassClassifier> for MulticlassClassifier {
 }
 
 impl TryFrom<model::ColumnStats> for Column {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::ColumnStats) -> Result<Column> {
 		match value {
 			model::ColumnStats::Unknown(value) => Ok(Column::Unknown(UnknownColumn {
@@ -844,7 +844,7 @@ impl TryFrom<model::ColumnStats> for Column {
 }
 
 impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::FeatureGroup) -> Result<features::FeatureGroup> {
 		match value {
 			model::FeatureGroup::Identity(feature_group) => {
@@ -864,7 +864,7 @@ impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
 }
 
 impl TryFrom<model::IdentityFeatureGroup> for features::IdentityFeatureGroup {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::IdentityFeatureGroup) -> Result<features::IdentityFeatureGroup> {
 		Ok(features::IdentityFeatureGroup {
 			source_column_name: value.source_column_name,
@@ -873,7 +873,7 @@ impl TryFrom<model::IdentityFeatureGroup> for features::IdentityFeatureGroup {
 }
 
 impl TryFrom<model::NormalizedFeatureGroup> for features::NormalizedFeatureGroup {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::NormalizedFeatureGroup) -> Result<features::NormalizedFeatureGroup> {
 		Ok(features::NormalizedFeatureGroup {
 			source_column_name: value.source_column_name,
@@ -884,7 +884,7 @@ impl TryFrom<model::NormalizedFeatureGroup> for features::NormalizedFeatureGroup
 }
 
 impl TryFrom<model::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatureGroup {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(
 		value: model::OneHotEncodedFeatureGroup,
 	) -> Result<features::OneHotEncodedFeatureGroup> {
@@ -896,7 +896,7 @@ impl TryFrom<model::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatur
 }
 
 impl TryFrom<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::BagOfWordsFeatureGroup) -> Result<features::BagOfWordsFeatureGroup> {
 		let tokens = value
 			.tokens
@@ -921,7 +921,7 @@ impl TryFrom<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup
 }
 
 impl TryFrom<model::Tokenizer> for features::Tokenizer {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::Tokenizer) -> Result<features::Tokenizer> {
 		match value {
 			model::Tokenizer::Alphanumeric => Ok(features::Tokenizer::Alphanumeric),
@@ -930,7 +930,7 @@ impl TryFrom<model::Tokenizer> for features::Tokenizer {
 }
 
 impl TryFrom<model::Tree> for tangram_tree::Tree {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::Tree) -> Result<tangram_tree::Tree> {
 		Ok(tangram_tree::Tree {
 			nodes: value
@@ -943,7 +943,7 @@ impl TryFrom<model::Tree> for tangram_tree::Tree {
 }
 
 impl TryFrom<model::Node> for tangram_tree::Node {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::Node) -> Result<tangram_tree::Node> {
 		match value {
 			model::Node::Branch(value) => {
@@ -963,7 +963,7 @@ impl TryFrom<model::Node> for tangram_tree::Node {
 }
 
 impl TryFrom<model::BranchSplit> for tangram_tree::BranchSplit {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::BranchSplit) -> Result<tangram_tree::BranchSplit> {
 		match value {
 			model::BranchSplit::Continuous(value) => Ok(tangram_tree::BranchSplit::Continuous(
@@ -992,7 +992,7 @@ impl TryFrom<model::BranchSplit> for tangram_tree::BranchSplit {
 }
 
 impl TryFrom<model::SplitDirection> for tangram_tree::SplitDirection {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::SplitDirection) -> Result<tangram_tree::SplitDirection> {
 		Ok(match value {
 			model::SplitDirection::Left => tangram_tree::SplitDirection::Left,

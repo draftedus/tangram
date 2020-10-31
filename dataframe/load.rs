@@ -1,9 +1,9 @@
 use super::*;
-use anyhow::Result;
 use std::{
 	collections::{BTreeMap, BTreeSet},
 	path::Path,
 };
+use tangram_util::error::Result;
 
 #[derive(Clone)]
 pub struct FromCsvOptions<'a> {

@@ -13,7 +13,6 @@ name = "tangram_script_production_track_test"
 path = "production_track_test.rs"
 
 [dependencies]
-anyhow = "1"
 base64 = "0.13"
 chrono = { version = "0.4.19" }
 clap = { version = "3.0.0-beta.2", features = ["color"] }

@@ -1,4 +1,5 @@
 pub mod alphanumeric_tokenizer;
+pub mod error;
 pub mod finite;
 pub mod id;
 pub mod pool;

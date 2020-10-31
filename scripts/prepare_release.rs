@@ -1,7 +1,7 @@
-use anyhow::Result;
 use serde::{de::DeserializeOwned, Deserialize};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
+use tangram_util::error::Result;
 use tokio::fs;
 use url::Url;
 
@@ -78,117 +78,117 @@ async fn main() -> Result<()> {
 	}
 
 	// Create the cli linux amd64 archive.
-	sh("unzip dist/tangram-cli-linux-amd64 -d dist");
+	sh("unzip dist/tangram-cli-linux_amd64 -d dist");
 	sh("chmod +x dist/tangram");
 	sh(format!(
-		"tar czf dist/tangram-cli-linux-amd64-{}.tar.gz -C dist tangram",
+		"tar czf dist/tangram-cli-linux_amd64-{}.tar.gz -C dist tangram",
 		version
 	));
 	fs::remove_file("dist/tangram").await.unwrap();
 
 	// Create the cli macos amd64 archive.
-	sh("unzip dist/tangram-cli-macos-amd64 -d dist");
+	sh("unzip dist/tangram_cli_macos_amd64 -d dist");
 	sh("chmod +x dist/tangram");
 	sh(format!(
-		"tar czf dist/tangram-cli-macos-amd64-{}.tar.gz -C dist tangram",
+		"tar czf dist/tangram_cli_macos_amd64-{}.tar.gz -C dist tangram",
 		version
 	));
 	fs::remove_file("dist/tangram").await.unwrap();
 
 	// Create the windows amd64 cli archive.
-	sh("unzip dist/tangram-cli-windows-amd64 -d dist");
+	sh("unzip dist/tangram_cli_windows_amd64 -d dist");
 	sh(format!(
-		"zip -qj dist/tangram-cli-windows-amd64-{}.zip dist/tangram.exe",
+		"zip -qj dist/tangram_cli_windows_amd64-{}.zip dist/tangram.exe",
 		version
 	));
 	fs::remove_file("dist/tangram.exe").await.unwrap();
 
 	// Create the dynamic library linux amd64 archive.
-	sh("unzip dist/tangram-dynamiclib-linux-amd64 -d dist");
+	sh("unzip dist/tangram_dynamiclib_linux_amd64 -d dist");
 	sh(format!(
-		"zip -qj dist/tangram-dynamiclib-linux-amd64-{}.zip dist/libtangram.so",
+		"zip -qj dist/tangram_dynamiclib_linux_amd64-{}.zip dist/libtangram.so",
 		version
 	));
 	copy(
 		"dist/libtangram.so",
-		"languages/python/tangram/libtangram/linux-amd64/libtangram.so",
+		"languages/python/tangram/libtangram/linux_amd64/libtangram.so",
 	)
 	.await;
 	copy(
 		"dist/libtangram.so",
-		"languages/ruby/lib/tangram/libtangram/linux-amd64/libtangram.so",
+		"languages/ruby/lib/tangram/libtangram/linux_amd64/libtangram.so",
 	)
 	.await;
 	fs::remove_file("dist/libtangram.so").await.unwrap();
 
 	// Create the dynamic library macos amd64 archive.
-	sh("unzip dist/tangram-dynamiclib-macos-amd64 -d dist");
+	sh("unzip dist/tangram-dynamiclib_macos_amd64 -d dist");
 	sh(format!(
-		"zip -qj dist/tangram-dynamiclib-macos-amd64-{}.zip dist/libtangram.dylib",
+		"zip -qj dist/tangram_dynamiclib_macos_amd64_{}.zip dist/libtangram.dylib",
 		version
 	));
 	copy(
 		"dist/libtangram.dylib",
-		"languages/python/tangram/libtangram/macos-amd64/libtangram.dylib",
+		"languages/python/tangram/libtangram/macos_amd64/libtangram.dylib",
 	)
 	.await;
 	copy(
 		"dist/libtangram.dylib",
-		"languages/ruby/lib/tangram/libtangram/macos-amd64/libtangram.dylib",
+		"languages/ruby/lib/tangram/libtangram/macos_amd64/libtangram.dylib",
 	)
 	.await;
 	fs::remove_file("dist/libtangram.dylib").await.unwrap();
 
 	// Create the dynamic library windows amd64 archive.
-	sh("unzip dist/tangram-dynamiclib-windows-amd64 -d dist");
+	sh("unzip dist/tangram_dynamiclib_windows_amd64 -d dist");
 	sh(format!(
-		"zip -qj dist/tangram-dynamiclib-windows-amd64-{}.zip dist/tangram.dll",
+		"zip -qj dist/tangram_dynamiclib_windows_amd64-{}.zip dist/tangram.dll",
 		version
 	));
 	copy(
 		"dist/tangram.dll",
-		"languages/python/tangram/libtangram/windows-amd64/tangram.dll",
+		"languages/python/tangram/libtangram/windows_amd64/tangram.dll",
 	)
 	.await;
 	copy(
 		"dist/tangram.dll",
-		"languages/ruby/lib/tangram/libtangram/windows-amd64/tangram.dll",
+		"languages/ruby/lib/tangram/libtangram/windows_amd64/tangram.dll",
 	)
 	.await;
 	fs::remove_file("dist/tangram.dll").await.unwrap();
 
 	// Create the static library linux amd64 archive.
-	sh("unzip dist/tangram-staticlib-linux-amd64 -d dist");
+	sh("unzip dist/tangram_staticlib_linux_amd64 -d dist");
 	sh(format!(
-		"zip -qj dist/tangram-staticlib-linux-amd64-{}.zip dist/libtangram.a",
+		"zip -qj dist/tangram_staticlib_linux_amd64-{}.zip dist/libtangram.a",
 		version
 	));
 	copy(
 		"dist/libtangram.a",
-		"languages/go/libtangram/linux-amd64/libtangram.a",
+		"languages/go/libtangram/linux_amd64/libtangram.a",
 	)
 	.await;
 	copy(
 		"dist/libtangram.a",
-		"languages/node/packages/tangram-node/libtangram/linux-amd64/libtangram.a",
+		"languages/node/packages/tangram-node/libtangram/linux_amd64/libtangram.a",
 	)
 	.await;
 	fs::remove_file("dist/libtangram.a").await.unwrap();
 
 	// Create the static library macos amd64 archive.
-	sh("unzip dist/tangram-staticlib-macos-amd64 -d dist");
+	sh("unzip dist/tangram_staticlib_macos_amd64 -d dist");
 	sh(format!(
-		"zip -qj dist/tangram-staticlib-macos-amd64-{}.zip dist/libtangram.a",
+		"zip -qj dist/tangram_staticlib_macos_amd64-{}.zip dist/libtangram.a",
 		version
 	));
 	copy(
 		"dist/libtangram.a",
-		"languages/go/libtangram/macos-amd64/libtangram.a",
+		"languages/go/libtangram/macos_amd64/libtangram.a",
 	)
 	.await;
 	copy(
 		"dist/libtangram.a",
-		"languages/node/packages/tangram-node/libtangram/macos-amd64/libtangram.a",
+		"languages/node/packages/tangram-node/libtangram/macos_amd64/libtangram.a",
 	)
 	.await;
 	fs::remove_file("dist/libtangram.a").await.unwrap();

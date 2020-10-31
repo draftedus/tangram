@@ -1,6 +1,6 @@
-use anyhow::Result;
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
+use tangram_util::error::Result;
 
 fn migrations() -> BTreeMap<&'static str, &'static str> {
 	let mut migrations: BTreeMap<&str, &str> = BTreeMap::new();

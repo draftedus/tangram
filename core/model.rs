@@ -1,9 +1,9 @@
-use anyhow::{anyhow, Result};
 use std::{
 	io::{Read, Write},
 	path::Path,
 };
 use tangram_util::id::Id;
+use tangram_util::{err, error::Result};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum Model {
@@ -20,7 +20,7 @@ impl Model {
 	pub fn from_slice(slice: &[u8]) -> Result<Model> {
 		let major_version = slice[0];
 		if major_version != 0 {
-			return Err(anyhow!("unknown major version {}", major_version));
+			return Err(err!("unknown major version {}", major_version));
 		}
 		let slice = &slice[1..];
 		let model = rmp_serde::from_slice(slice)?;
@@ -35,7 +35,7 @@ impl Model {
 		reader.read_exact(&mut major_version)?;
 		let major_version = major_version[0];
 		if major_version != 0 {
-			return Err(anyhow!("unknown major version {}", major_version));
+			return Err(err!("unknown major version {}", major_version));
 		}
 		let model = rmp_serde::from_read(&mut reader)?;
 		Ok(model)

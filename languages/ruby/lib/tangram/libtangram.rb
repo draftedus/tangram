@@ -5,11 +5,11 @@ module LibTangram
 	cpu = RbConfig::CONFIG['host_cpu']
 	os = RbConfig::CONFIG['host_os']
 	if cpu == 'x86_64' and os =~ /linux/
-		library_path = 'libtangram/linux-amd64/libtangram.so'
+		library_path = 'libtangram/linux_amd64/libtangram.so'
 	elsif cpu == 'x86_64' and os =~ /darwin/
-		library_path = 'libtangram/macos-amd64/libtangram.dylib'
+		library_path = 'libtangram/macos_amd64/libtangram.dylib'
 	elsif cpu == 'x86_64' and os =~ /mingw/
-		library_path = 'libtangram/windows-amd64/tangram.dll'
+		library_path = 'libtangram/windows_amd64/tangram.dll'
 	else
 		raise 'tangram-ruby does not yet support your combination of operating system and CPU architecture. Want support for your platform? Get in touch at help@tangramhq.com.'
 	end

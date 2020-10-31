@@ -1,10 +1,10 @@
-use anyhow::Result;
 use std::{
 	sync::mpsc::{channel, Receiver, Sender, TryRecvError},
 	thread::{sleep, spawn, JoinHandle},
 	time::Duration,
 };
 use tangram_core::Progress;
+use tangram_util::error::Result;
 use term_ui::{Screen, Style};
 
 pub struct ProgressView {

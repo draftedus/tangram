@@ -1,4 +1,3 @@
-use anyhow::Result;
 use chrono::{TimeZone, Utc};
 use clap::Clap;
 use num_traits::ToPrimitive;
@@ -12,6 +11,7 @@ use tangram_app::common::monitor_event::{
 	TrueValueMonitorEvent,
 };
 use tangram_dataframe::DataFrameView;
+use tangram_util::error::Result;
 use url::Url;
 
 const NUM_EXAMPLES_TO_TRACK: usize = 1000;

@@ -1,7 +1,7 @@
 use super::props::Props;
 use crate::{common::error::Error, layouts::app_layout::get_app_layout_info, Context};
-use anyhow::Result;
 use hyper::{Body, Request, Response, StatusCode};
+use tangram_util::error::Result;
 
 pub async fn get(
 	context: &Context,

@@ -1,7 +1,7 @@
 use crate::common::cookies::parse_cookies;
-use anyhow::Result;
 use hyper::{header, Body, Request};
 use sqlx::prelude::*;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 #[derive(Debug)]
