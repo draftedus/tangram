@@ -8,10 +8,20 @@ use tangram_util::{err, error::Result};
 use url::Url;
 use which::which;
 
-pub struct Pinwheel {
-	src_dir: Option<PathBuf>,
-	dst_dir: Option<PathBuf>,
-	fs: Box<dyn FileSystem>,
+pub enum Pinwheel {
+	Dev {
+		src_dir: PathBuf,
+		dst_dir: PathBuf,
+		fs: RealFileSystem,
+	},
+	Prod {
+		fs: ProdFileSystem,
+	},
+}
+
+pub enum ProdFileSystem {
+	Real(RealFileSystem),
+	Included(IncludedFileSystem),
 }
 
 #[derive(Debug)]
@@ -38,18 +48,29 @@ impl std::error::Error for JSError {}
 
 impl Pinwheel {
 	pub fn dev(src_dir: PathBuf, dst_dir: PathBuf) -> Pinwheel {
-		Pinwheel {
-			src_dir: Some(src_dir),
-			dst_dir: Some(dst_dir.clone()),
-			fs: Box::new(RealFileSystem { dst_dir }),
+		let fs = RealFileSystem {
+			dst_dir: dst_dir.clone(),
+		};
+		Pinwheel::Dev {
+			src_dir,
+			dst_dir,
+			fs,
 		}
 	}
 
 	pub fn prod(dir: include_dir::Dir<'static>) -> Pinwheel {
-		Pinwheel {
-			src_dir: None,
-			dst_dir: None,
-			fs: Box::new(IncludedFileSystem { dir }),
+		Pinwheel::Prod {
+			fs: ProdFileSystem::Included(IncludedFileSystem { dir }),
+		}
+	}
+
+	fn fs(&self) -> &dyn FileSystem {
+		match self {
+			Pinwheel::Dev { fs, .. } => fs,
+			Pinwheel::Prod { fs, .. } => match fs {
+				ProdFileSystem::Real(fs) => fs,
+				ProdFileSystem::Included(fs) => fs,
+			},
 		}
 	}
 
@@ -70,16 +91,15 @@ impl Pinwheel {
 		let page_entry = page_entry.strip_prefix('/').unwrap().to_owned();
 
 		// In dev mode, compile the page.
-		if self.src_dir.is_some() {
-			esbuild_single_page(
-				self.src_dir.as_ref().unwrap(),
-				self.dst_dir.as_ref().unwrap(),
-				page_entry.clone(),
-			)?;
+		if let Pinwheel::Dev {
+			src_dir, dst_dir, ..
+		} = self
+		{
+			esbuild_single_page(src_dir, dst_dir, page_entry.clone())?;
 		}
 
 		// Determine the output URLs.
-		let page_prefix = if self.src_dir.is_some() {
+		let page_prefix = if let Pinwheel::Dev { .. } = self {
 			""
 		} else {
 			&page_entry
@@ -92,9 +112,9 @@ impl Pinwheel {
 			.unwrap()
 			.join(&format!("{}/server.js", page_prefix))
 			.unwrap();
-		let page_js_url = if self.fs.exists(&static_js_url) {
+		let page_js_url = if self.fs().exists(&static_js_url) {
 			static_js_url
-		} else if self.fs.exists(&server_js_url) {
+		} else if self.fs().exists(&server_js_url) {
 			server_js_url
 		} else {
 			return Err(NotFoundError.into());
@@ -103,8 +123,8 @@ impl Pinwheel {
 			.unwrap()
 			.join(&format!("{}/client.js", page_prefix))
 			.unwrap();
-		let client_js_src = if self.fs.exists(&client_js_url) {
-			if self.src_dir.is_some() {
+		let client_js_src = if self.fs().exists(&client_js_url) {
+			if let Pinwheel::Dev { .. } = self {
 				Some("/client.js".to_owned())
 			} else {
 				Some(format!("/{}/client.js", page_entry))
@@ -115,7 +135,7 @@ impl Pinwheel {
 
 		THREAD_LOCAL_ISOLATE.with(|isolate| {
 			let mut isolate = isolate.borrow_mut();
-			if self.src_dir.is_some() {
+			if let Pinwheel::Dev { .. } = self {
 				isolate.set_slot(Rc::new(RefCell::new(State::default())));
 			}
 			let mut scope = v8::HandleScope::new(&mut *isolate);
@@ -133,8 +153,7 @@ impl Pinwheel {
 				.set(&mut scope, console_literal.into(), console.into());
 
 			// Get the default export from page.
-			let page_module_namespace =
-				run_module(&mut scope, self.fs.as_ref(), page_js_url.clone())?;
+			let page_module_namespace = run_module(&mut scope, self.fs(), page_js_url.clone())?;
 			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_literal)
@@ -201,7 +220,7 @@ impl Pinwheel {
 		}
 		let static_path = static_path.strip_prefix('/').unwrap();
 		// Serve from the static directory in dev.
-		if let Some(src_dir) = self.src_dir.as_ref() {
+		if let Pinwheel::Dev { src_dir, .. } = self {
 			let static_path = src_dir.join("static").join(static_path);
 			if static_path.exists() {
 				let body = std::fs::read(&static_path)?;
@@ -215,8 +234,8 @@ impl Pinwheel {
 		}
 		// Serve from the `dst_dir`.
 		let url = Url::parse(&format!("dst:/{}", static_path)).unwrap();
-		if self.fs.exists(&url) {
-			let data = self.fs.read(&url)?;
+		if self.fs().exists(&url) {
+			let data = self.fs().read(&url)?;
 			let mut response = Response::builder();
 			if let Some(content_type) = content_type(static_path) {
 				response = response.header("content-type", content_type);
@@ -482,7 +501,7 @@ trait FileSystem: Send + Sync {
 	fn read(&self, url: &Url) -> Result<Cow<'static, [u8]>>;
 }
 
-struct RealFileSystem {
+pub struct RealFileSystem {
 	dst_dir: PathBuf,
 }
 
@@ -499,7 +518,7 @@ impl FileSystem for RealFileSystem {
 	}
 }
 
-struct IncludedFileSystem {
+pub struct IncludedFileSystem {
 	dir: include_dir::Dir<'static>,
 }
 
@@ -556,10 +575,8 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 		}
 	}
 	// Statically render the pages.
-	let pinwheel = Pinwheel {
-		src_dir: None,
-		dst_dir: None,
-		fs: Box::new(RealFileSystem {
+	let pinwheel = Pinwheel::Prod {
+		fs: ProdFileSystem::Real(RealFileSystem {
 			dst_dir: dst_dir.to_owned(),
 		}),
 	};
