@@ -13,8 +13,8 @@ use crate::{
 };
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
-use tangram_util::error::Result;
 use tangram_util::id::Id;
+use tangram_util::{err, error::Result};
 
 pub async fn get(
 	context: &Context,
@@ -107,7 +107,7 @@ pub async fn get(
 		.collect();
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let inner = if let Some(search_params) = search_params {
-		let prediction = predict(model, columns.as_slice(), search_params);
+		let prediction = predict(model, columns.as_slice(), search_params)?;
 		let input_table_rows = columns
 			.into_iter()
 			.map(|column| {
@@ -155,7 +155,7 @@ fn predict(
 	model: tangram_core::model::Model,
 	columns: &[Column],
 	search_params: BTreeMap<String, String>,
-) -> Prediction {
+) -> Result<Prediction> {
 	let mut column_lookup = BTreeMap::new();
 	for column in columns.iter() {
 		match column {
@@ -173,33 +173,33 @@ fn predict(
 	}
 	let mut example: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
 	for (key, value) in search_params.into_iter() {
-		match column_lookup.get(&key) {
-			Some(column) => match column {
-				Column::Text(_) => {
-					example.insert(key, serde_json::Value::String(value));
+		let column = match column_lookup.get(&key) {
+			Some(column) => column,
+			None => continue,
+		};
+		match column {
+			Column::Unknown(_) => {
+				return Err(err!("encountered unknown column"));
+			}
+			Column::Text(_) => {
+				example.insert(key, serde_json::Value::String(value));
+			}
+			Column::Enum(_) => {
+				example.insert(key, serde_json::Value::String(value));
+			}
+			Column::Number(_) => {
+				if value == "" {
+					continue;
 				}
-				Column::Enum(_) => {
-					example.insert(key, serde_json::Value::String(value));
-				}
-				Column::Number(_) => {
-					if value == "" {
-						continue;
-					}
-					let value = match lexical::parse::<f64, _>(value) {
-						Ok(value) => value,
-						Err(_) => {
-							panic!();
-						}
-					};
-					example.insert(
-						key,
-						serde_json::Value::Number(serde_json::Number::from_f64(value).unwrap()),
-					);
-				}
-				_ => unreachable!(),
-			},
-			None => panic!(),
+				let value = lexical::parse::<f64, _>(&value)
+					.map_err(|_| err!("unable to parse \"{}\" as a number", value))?;
+				example.insert(
+					key,
+					serde_json::Value::Number(serde_json::Number::from_f64(value).unwrap()),
+				);
+			}
 		}
 	}
-	crate::common::predict::predict(model, example)
+	let prediction = crate::common::predict::predict(model, example);
+	Ok(prediction)
 }

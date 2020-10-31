@@ -1,1 +1,1 @@
-include tangram/libtangram/**/*
+recursive-include tangram/libtangram *

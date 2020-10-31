@@ -1,1 +1,1 @@
-gem build -o tangram.gem tangram.gemspec
+gem build tangram.gemspec

@@ -170,7 +170,7 @@ async fn main() -> Result<()> {
 	.await;
 	copy(
 		"dist/libtangram.a",
-		"languages/node/packages/tangram-node/libtangram/linux_amd64/libtangram.a",
+		"languages/node/libtangram/linux_amd64/libtangram.a",
 	)
 	.await;
 	fs::remove_file("dist/libtangram.a").await.unwrap();
@@ -188,7 +188,7 @@ async fn main() -> Result<()> {
 	.await;
 	copy(
 		"dist/libtangram.a",
-		"languages/node/packages/tangram-node/libtangram/macos_amd64/libtangram.a",
+		"languages/node/libtangram/macos_amd64/libtangram.a",
 	)
 	.await;
 	fs::remove_file("dist/libtangram.a").await.unwrap();
@@ -206,7 +206,7 @@ async fn main() -> Result<()> {
 	.await;
 	copy(
 		"dist/tangram.lib",
-		"languages/node/packages/tangram-node/libtangram/windows-amd64/tangram.lib",
+		"languages/node/libtangram/windows-amd64/tangram.lib",
 	)
 	.await;
 	fs::remove_file("dist/tangram.lib").await.unwrap();

@@ -5,8 +5,8 @@ use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use rand::Rng;
 use serde_json::json;
 use sqlx::prelude::*;
-use tangram_util::error::Result;
 use tangram_util::id::Id;
+use tangram_util::{err, error::Result};
 
 #[derive(serde::Deserialize)]
 struct Action {
@@ -248,10 +248,10 @@ async fn send_code_email(email: String, code: String, sendgrid_api_token: String
 		.send()
 		.await?;
 	if !response.status().is_success() {
-		panic!(
+		return Err(err!(
 			"Non-2xx response from sengrid: {:?}",
 			response.text().await?
-		);
+		));
 	}
 	Ok(())
 }

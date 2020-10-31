@@ -51,13 +51,13 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 	let uri = request.uri().clone();
 	let path_and_query = uri.path_and_query().unwrap();
 	let path = path_and_query.path();
+	let query = path_and_query.query();
 	let path_components: Vec<_> = path.split('/').skip(1).collect();
-	let search_params: Option<BTreeMap<String, String>> =
-		path_and_query.query().map(|search_params| {
-			url::form_urlencoded::parse(search_params.as_bytes())
-				.into_owned()
-				.collect()
-		});
+	let search_params: Option<BTreeMap<String, String>> = query.map(|search_params| {
+		url::form_urlencoded::parse(search_params.as_bytes())
+			.into_owned()
+			.collect()
+	});
 	let result = match (&method, path_components.as_slice()) {
 		(&Method::GET, &["health"]) => self::api::health::get(&context, request).await,
 		(&Method::POST, &["track"]) => self::api::track::post(&context, request).await,
@@ -344,25 +344,25 @@ async fn run_impl(options: Options) -> Result<()> {
 	let pinwheel = pinwheel();
 	// Configure the database pool.
 	let database_url = options.database_url.to_string();
-	let (pool_options, pool_max_connections) = match database_url {
-		_ if database_url.starts_with("sqlite:") => {
-			let pool_options = sqlx::any::AnyConnectOptions::from(
-				sqlx::sqlite::SqliteConnectOptions::from_str(&database_url)?
-					.create_if_missing(true)
-					.foreign_keys(true)
-					.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),
-			);
-			let pool_max_connections = options.database_max_connections.unwrap_or(1);
-			(pool_options, pool_max_connections)
-		}
-		_ if database_url.starts_with("postgres:") => {
-			let pool_options = sqlx::any::AnyConnectOptions::from(
-				sqlx::postgres::PgConnectOptions::from_str(&database_url)?,
-			);
-			let pool_max_connections = options.database_max_connections.unwrap_or(10);
-			(pool_options, pool_max_connections)
-		}
-		_ => panic!("DATABASE_URL must be a sqlite or postgres database url"),
+	let (pool_options, pool_max_connections) = if database_url.starts_with("sqlite:") {
+		let pool_options = sqlx::any::AnyConnectOptions::from(
+			sqlx::sqlite::SqliteConnectOptions::from_str(&database_url)?
+				.create_if_missing(true)
+				.foreign_keys(true)
+				.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal),
+		);
+		let pool_max_connections = options.database_max_connections.unwrap_or(1);
+		(pool_options, pool_max_connections)
+	} else if database_url.starts_with("postgres:") {
+		let pool_options = sqlx::any::AnyConnectOptions::from(
+			sqlx::postgres::PgConnectOptions::from_str(&database_url)?,
+		);
+		let pool_max_connections = options.database_max_connections.unwrap_or(10);
+		(pool_options, pool_max_connections)
+	} else {
+		return Err(err!(
+			"DATABASE_URL must be a sqlite or postgres database url"
+		));
 	};
 	let pool = sqlx::any::AnyPoolOptions::new()
 		.max_connections(pool_max_connections)
@@ -410,27 +410,25 @@ async fn run_impl(options: Options) -> Result<()> {
 				let path = request.uri().path_and_query().unwrap().path().to_owned();
 				let context = context.clone();
 				PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
-					Ok::<_, Infallible>(
-						AssertUnwindSafe(handle(request, context))
-							.catch_unwind()
-							.await
-							.unwrap_or_else(|_| {
-								let backtrace = PANIC_MESSAGE_AND_BACKTRACE.with(
-									|panic_message_and_backtrace| {
-										let panic_message_and_backtrace =
-											panic_message_and_backtrace.borrow();
-										let (message, backtrace) =
-											panic_message_and_backtrace.as_ref().unwrap();
-										format!("{}\n{:?}", message, backtrace)
-									},
-								);
-								eprintln!("{} {} 500", method, path);
-								Response::builder()
-									.status(StatusCode::INTERNAL_SERVER_ERROR)
-									.body(Body::from(backtrace))
-									.unwrap()
-							}),
-					)
+					let response = AssertUnwindSafe(handle(request, context))
+						.catch_unwind()
+						.await
+						.unwrap_or_else(|_| {
+							let backtrace =
+								PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+									let panic_message_and_backtrace =
+										panic_message_and_backtrace.borrow();
+									let (message, backtrace) =
+										panic_message_and_backtrace.as_ref().unwrap();
+									format!("{}\n{:?}", message, backtrace)
+								});
+							eprintln!("{} {} 500", method, path);
+							Response::builder()
+								.status(StatusCode::INTERNAL_SERVER_ERROR)
+								.body(Body::from(backtrace))
+								.unwrap()
+						});
+					Ok::<_, Infallible>(response)
 				})
 			}))
 		}
