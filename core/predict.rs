@@ -921,7 +921,7 @@ impl TryFrom<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup
 }
 
 impl TryFrom<model::Token> for tangram_features::Token {
-	type Error = anyhow::Error;
+	type Error = tangram_util::error::Error;
 	fn try_from(value: model::Token) -> Result<tangram_features::Token> {
 		match value {
 			model::Token::Unigram(token) => Ok(tangram_features::Token::Unigram(token)),
