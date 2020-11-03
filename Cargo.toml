@@ -20,7 +20,3 @@ debug = true
 
 # [patch.'https://github.com/tangram-hq/term-ui']
 # term-ui = { path = "../term-ui" }
-
-[patch.'https://github.com/launchbadge/sqlx']
-sqlx = { path = "../sqlx" }
-
