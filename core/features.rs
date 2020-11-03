@@ -2,44 +2,11 @@
 This module implements Tangram's feature engineering that prepares datasets for machine learning.
 */
 
-use crate::{model, stats};
+use crate::stats;
 pub use tangram_features::{
 	BagOfWordsFeatureGroup, BagOfWordsFeatureGroupToken, FeatureGroup, IdentityFeatureGroup,
-	NormalizedFeatureGroup, OneHotEncodedFeatureGroup, Token, Tokenizer,
+	NormalizedFeatureGroup, OneHotEncodedFeatureGroup, Tokenizer,
 };
-
-impl From<stats::Token> for tangram_features::Token {
-	fn from(value: stats::Token) -> tangram_features::Token {
-		match value {
-			stats::Token::Unigram(token) => tangram_features::Token::Unigram(token),
-			stats::Token::Bigram(token_a, token_b) => {
-				tangram_features::Token::Bigram(token_a, token_b)
-			}
-		}
-	}
-}
-
-impl From<model::Token> for tangram_features::Token {
-	fn from(value: model::Token) -> tangram_features::Token {
-		match value {
-			model::Token::Unigram(token) => tangram_features::Token::Unigram(token),
-			model::Token::Bigram(token_a, token_b) => {
-				tangram_features::Token::Bigram(token_a, token_b)
-			}
-		}
-	}
-}
-
-impl Into<model::Token> for tangram_features::Token {
-	fn into(self) -> model::Token {
-		match self {
-			tangram_features::Token::Unigram(token) => model::Token::Unigram(token),
-			tangram_features::Token::Bigram(token_a, token_b) => {
-				model::Token::Bigram(token_a, token_b)
-			}
-		}
-	}
-}
 
 /// Choose feature groups for linear models based on the column stats.
 pub fn choose_feature_groups_linear(
@@ -126,7 +93,7 @@ fn bag_of_words_feature_group_for_column(
 		.iter()
 		.map(
 			|token_stats| tangram_features::BagOfWordsFeatureGroupToken {
-				token: token_stats.token.clone().into(),
+				token: token_stats.token.clone(),
 				idf: token_stats.idf,
 			},
 		)

@@ -102,11 +102,11 @@ pub enum Token {
 	Bigram(String, String),
 }
 
-impl From<features::Token> for Token {
-	fn from(value: features::Token) -> Token {
+impl From<tangram_util::text::Token> for Token {
+	fn from(value: tangram_util::text::Token) -> Token {
 		match value {
-			features::Token::Unigram(token) => Token::Unigram(token),
-			features::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
+			tangram_util::text::Token::Unigram(token) => Token::Unigram(token),
+			tangram_util::text::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
 		}
 	}
 }
@@ -902,7 +902,7 @@ impl TryFrom<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup
 			.tokens
 			.into_iter()
 			.map(|token| features::BagOfWordsFeatureGroupToken {
-				token: token.token.into(),
+				token: token.token.try_into().unwrap(),
 				idf: token.idf,
 			})
 			.collect::<Vec<_>>();
@@ -917,6 +917,18 @@ impl TryFrom<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup
 			tokens,
 			tokens_map,
 		})
+	}
+}
+
+impl TryFrom<model::Token> for tangram_features::Token {
+	type Error = anyhow::Error;
+	fn try_from(value: model::Token) -> Result<tangram_features::Token> {
+		match value {
+			model::Token::Unigram(token) => Ok(tangram_features::Token::Unigram(token)),
+			model::Token::Bigram(token_a, token_b) => {
+				Ok(tangram_features::Token::Bigram(token_a, token_b))
+			}
+		}
 	}
 }
 

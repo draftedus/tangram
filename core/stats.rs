@@ -5,6 +5,8 @@ use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
 use tangram_dataframe::prelude::*;
 use tangram_metrics as metrics;
+use tangram_util::text::TokenEntry;
+pub use tangram_util::text::{Token, TokenStats};
 use tangram_util::{alphanumeric_tokenizer::AlphanumericTokenizer, finite::Finite};
 
 /// This struct holds column stats.
@@ -73,12 +75,6 @@ pub struct TextColumnStats {
 	/// A map from token to the number of examples with at least one occurrence.
 	pub token_example_histogram: FnvHashMap<Token, usize>,
 	pub tokenizer: Tokenizer,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Token {
-	Unigram(String),
-	Bigram(String, String),
 }
 
 #[derive(Clone, Debug)]
@@ -184,18 +180,6 @@ pub struct TextColumnStatsOutput {
 	pub top_tokens: Vec<TokenStats>,
 	// This enum is used to determine the method to split text into tokens.
 	pub tokenizer: Tokenizer,
-}
-
-/// This struct contains stats for individual tokens
-#[derive(Debug)]
-pub struct TokenStats {
-	pub token: Token,
-	/// This is the total number of occurrences of this token.
-	pub count: usize,
-	/// This is the total number of examples that contain this token.
-	pub examples_count: usize,
-	/// This is the inverse document frequency. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
-	pub idf: f32,
 }
 
 impl Stats {
@@ -490,23 +474,6 @@ impl TextColumnStats {
 	}
 
 	fn finalize(self, settings: &StatsSettings) -> TextColumnStatsOutput {
-		#[derive(Clone, Debug, Eq)]
-		struct TokenEntry(Token, usize);
-		impl std::cmp::Ord for TokenEntry {
-			fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-				self.1.cmp(&other.1)
-			}
-		}
-		impl std::cmp::PartialOrd for TokenEntry {
-			fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-				self.1.partial_cmp(&other.1)
-			}
-		}
-		impl std::cmp::PartialEq for TokenEntry {
-			fn eq(&self, other: &Self) -> bool {
-				self.1.eq(&other.1)
-			}
-		}
 		let mut top_tokens = std::collections::BinaryHeap::new();
 		for (token, count) in self.token_occurrence_histogram.iter() {
 			top_tokens.push(TokenEntry(token.clone(), *count));

@@ -1680,6 +1680,15 @@ impl Into<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
 	}
 }
 
+impl Into<model::Token> for tangram_features::Token {
+	fn into(self) -> model::Token {
+		match self {
+			Self::Unigram(token) => model::Token::Unigram(token),
+			Self::Bigram(token_a, token_b) => model::Token::Bigram(token_a, token_b),
+		}
+	}
+}
+
 impl Into<model::Tokenizer> for features::Tokenizer {
 	fn into(self) -> model::Tokenizer {
 		match self {
@@ -1778,15 +1787,6 @@ impl Into<model::TokenStats> for stats::TokenStats {
 			token: self.token.into(),
 			occurrence_count: self.count.to_u64().unwrap(),
 			examples_count: self.examples_count.to_u64().unwrap(),
-		}
-	}
-}
-
-impl Into<model::Token> for stats::Token {
-	fn into(self) -> model::Token {
-		match self {
-			stats::Token::Unigram(token) => model::Token::Unigram(token),
-			stats::Token::Bigram(token_a, token_b) => model::Token::Bigram(token_a, token_b),
 		}
 	}
 }

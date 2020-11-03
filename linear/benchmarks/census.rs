@@ -192,22 +192,10 @@ fn main() {
 	let feature_groups: Vec<tangram_features::FeatureGroup> = features_train
 		.columns()
 		.iter()
-		.map(|column| match column {
-			DataFrameColumn::Number(column) => {
-				let mean_variance =
-					tangram_metrics::MeanVariance::compute(column.view().as_slice());
-				tangram_features::FeatureGroup::Normalized(
-					tangram_features::NormalizedFeatureGroup {
-						source_column_name: column.name().clone().unwrap(),
-						mean: mean_variance.mean,
-						variance: mean_variance.variance,
-					},
-				)
-			}
-			DataFrameColumn::Enum(column) => tangram_features::FeatureGroup::Normalized(
-				tangram_features::compute_normalized_feature_group_for_enum_column(column.view()),
-			),
-			_ => unreachable!(),
+		.map(|column| {
+			tangram_features::FeatureGroup::Normalized(
+				tangram_features::NormalizedFeatureGroup::new(column.view()),
+			)
 		})
 		.collect();
 	let features_train = tangram_features::compute_features_array_f32(
