@@ -1,8 +1,8 @@
 use crate::common::monitor_event::NumberOrString;
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_metrics::StreamingMetric;
+use tangram_util::zip;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 pub struct MulticlassClassificationProductionPredictionMetrics {
@@ -115,13 +115,13 @@ impl StreamingMetric<'_> for MulticlassClassificationProductionPredictionMetrics
 		let recall_unweighted = class_metrics.iter().map(|class| class.recall).sum::<f32>()
 			/ n_classes.to_f32().unwrap();
 		let n_examples_per_class = confusion_matrix.sum_axis(Axis(0));
-		let precision_weighted = izip!(class_metrics.iter(), n_examples_per_class.iter())
+		let precision_weighted = zip!(class_metrics.iter(), n_examples_per_class.iter())
 			.map(|(class, n_examples_in_class)| {
 				class.precision * n_examples_in_class.to_f32().unwrap()
 			})
 			.sum::<f32>()
 			/ n_examples.to_f32().unwrap();
-		let recall_weighted = izip!(class_metrics.iter(), n_examples_per_class.iter())
+		let recall_weighted = zip!(class_metrics.iter(), n_examples_per_class.iter())
 			.map(|(class, n_examples_in_class)| {
 				class.recall * n_examples_in_class.to_f32().unwrap()
 			})
@@ -165,7 +165,7 @@ fn test_binary() {
 	let predictions = vec![
 		"Cat", "Cat", "Cat", "Cat", "Dog", "Dog", "Dog", "Dog", "Dog", "Dog", "Cat", "Cat",
 	];
-	for (label, prediction) in izip!(labels, predictions) {
+	for (label, prediction) in zip!(labels, predictions) {
 		metrics.update((
 			NumberOrString::String(prediction.to_owned()),
 			NumberOrString::String(label.to_owned()),
@@ -229,7 +229,7 @@ fn test_multiclass() {
 		"Dog", "Rabbit", "Rabbit", "Rabbit", "Rabbit", "Rabbit", "Rabbit", "Rabbit", "Rabbit",
 		"Rabbit", "Rabbit", "Rabbit", "Rabbit",
 	];
-	for (label, prediction) in izip!(labels, predictions) {
+	for (label, prediction) in zip!(labels, predictions) {
 		metrics.update((
 			NumberOrString::String(prediction.to_owned()),
 			NumberOrString::String(label.to_owned()),

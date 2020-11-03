@@ -1,10 +1,10 @@
 use crate::TrainOptions;
-use itertools::{izip, Itertools};
+use itertools::Itertools;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use std::{cmp::Ordering, collections::BTreeMap};
 use tangram_dataframe::{DataFrameColumnView, DataFrameView, NumberDataFrameColumnView};
-use tangram_util::finite::Finite;
+use tangram_util::{finite::Finite, zip};
 
 /*
 This struct specifies how to produce a binned feature from a feature.
@@ -135,7 +135,7 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 	while let Some((value, count)) = iter.next() {
 		let value = value.get();
 		current_count += count;
-		let quantiles_iter = izip!(
+		let quantiles_iter = zip!(
 			quantiles.iter_mut(),
 			quantile_indexes.iter(),
 			quantile_fracts.iter()

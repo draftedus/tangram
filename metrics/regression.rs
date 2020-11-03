@@ -1,7 +1,7 @@
 use super::mean_variance::{MeanVariance, MeanVarianceOutput};
 use super::StreamingMetric;
-use itertools::izip;
 use num_traits::ToPrimitive;
+use tangram_util::zip;
 
 /// RegressionMetrics computes metrics used to evaluate regressors.
 pub struct RegressionMetrics {
@@ -50,7 +50,7 @@ impl<'a> StreamingMetric<'a> for RegressionMetrics {
 	type Output = RegressionMetricsOutput;
 
 	fn update(&mut self, input: RegressionMetricsInput) {
-		for (prediction, label) in izip!(input.predictions.iter(), input.labels.iter()) {
+		for (prediction, label) in zip!(input.predictions.iter(), input.labels.iter()) {
 			self.mean_variance.update(*label);
 			let absolute_error = prediction - label;
 			let squared_error = absolute_error * absolute_error;

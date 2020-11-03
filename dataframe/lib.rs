@@ -3,13 +3,13 @@ This crate provides a basic implementation of dataframes, which are two dimensio
 */
 
 use fnv::FnvHashMap;
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256Plus;
 use std::num::NonZeroUsize;
+use tangram_util::zip;
 
 mod load;
 
@@ -162,7 +162,7 @@ impl DataFrame {
 		column_names: Vec<Option<String>>,
 		column_types: Vec<DataFrameColumnType>,
 	) -> DataFrame {
-		let columns = izip!(column_names, column_types)
+		let columns = zip!(column_names, column_types)
 			.map(|(column_name, column_type)| match column_type {
 				DataFrameColumnType::Unknown => {
 					DataFrameColumn::Unknown(UnknownDataFrameColumn::new(column_name))
@@ -217,16 +217,16 @@ impl DataFrame {
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
 		let mut features_train = Array::zeros((self.nrows(), self.ncols()));
 		for (mut ndarray_column, dataframe_column) in
-			izip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
+			zip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
 				DataFrameColumn::Number(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data.as_slice()) {
 						*a = *b;
 					}
 				}
 				DataFrameColumn::Enum(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data.as_slice()) {
 						*a = b.map(|b| b.get().to_f32().unwrap()).unwrap_or(0.0);
 					}
 				}
@@ -239,22 +239,22 @@ impl DataFrame {
 	pub fn to_rows(&self) -> Array2<DataFrameValue> {
 		let mut rows = Array::from_elem((self.nrows(), self.ncols()), DataFrameValue::Unknown);
 		for (mut ndarray_column, dataframe_column) in
-			izip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
+			zip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
 				DataFrameColumn::Unknown(_) => ndarray_column.fill(DataFrameValue::Unknown),
 				DataFrameColumn::Number(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data.as_slice()) {
 						*a = DataFrameValue::Number(*b);
 					}
 				}
 				DataFrameColumn::Enum(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data.as_slice()) {
 						*a = DataFrameValue::Enum(*b);
 					}
 				}
 				DataFrameColumn::Text(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data.as_slice()) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data.as_slice()) {
 						*a = DataFrameValue::Text(b);
 					}
 				}
@@ -514,7 +514,7 @@ impl<'a> DataFrameView<'a> {
 	}
 
 	pub fn read_row(&self, index: usize, row: &mut [DataFrameValue<'a>]) {
-		for (value, column) in izip!(row.iter_mut(), self.columns.iter()) {
+		for (value, column) in zip!(row.iter_mut(), self.columns.iter()) {
 			*value = match column {
 				DataFrameColumnView::Unknown(_) => DataFrameValue::Unknown,
 				DataFrameColumnView::Number(column) => DataFrameValue::Number(column.data[index]),
@@ -541,16 +541,16 @@ impl<'a> DataFrameView<'a> {
 	pub fn to_rows_f32(&self) -> Option<Array2<f32>> {
 		let mut features_train = Array::zeros((self.nrows(), self.ncols()));
 		for (mut ndarray_column, dataframe_column) in
-			izip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
+			zip!(features_train.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
 				DataFrameColumnView::Number(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data) {
 						*a = *b;
 					}
 				}
 				DataFrameColumnView::Enum(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data) {
 						*a = b.unwrap().get().to_f32().unwrap();
 					}
 				}
@@ -563,22 +563,22 @@ impl<'a> DataFrameView<'a> {
 	pub fn to_rows(&self) -> Array2<DataFrameValue<'a>> {
 		let mut rows = Array::from_elem((self.nrows(), self.ncols()), DataFrameValue::Unknown);
 		for (mut ndarray_column, dataframe_column) in
-			izip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
+			zip!(rows.axis_iter_mut(Axis(1)), self.columns.iter())
 		{
 			match dataframe_column {
 				DataFrameColumnView::Unknown(_) => ndarray_column.fill(DataFrameValue::Unknown),
 				DataFrameColumnView::Number(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data) {
 						*a = DataFrameValue::Number(*b);
 					}
 				}
 				DataFrameColumnView::Enum(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data) {
 						*a = DataFrameValue::Enum(*b);
 					}
 				}
 				DataFrameColumnView::Text(column) => {
-					for (a, b) in izip!(ndarray_column.iter_mut(), column.data) {
+					for (a, b) in zip!(ndarray_column.iter_mut(), column.data) {
 						*a = DataFrameValue::Text(b);
 					}
 				}

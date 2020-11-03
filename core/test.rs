@@ -1,10 +1,9 @@
 use crate::{features, train::ModelTestProgress};
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{self as metrics, StreamingMetric};
-use tangram_util::progress_counter::ProgressCounter;
+use tangram_util::{progress_counter::ProgressCounter, zip};
 
 pub fn test_linear_regressor(
 	dataframe_test: &DataFrameView,
@@ -29,7 +28,7 @@ pub fn test_linear_regressor(
 		predictions: Array1<f32>,
 		test_metrics: metrics::RegressionMetrics,
 	}
-	let State { test_metrics, .. } = izip!(
+	let State { test_metrics, .. } = zip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		labels.as_slice().chunks(n_examples_per_batch),
 	)
@@ -111,7 +110,7 @@ pub fn test_linear_binary_classifier(
 		test_metrics: metrics::BinaryClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
-	let State { test_metrics, .. } = izip!(
+	let State { test_metrics, .. } = zip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		ArrayView1::from(labels.as_slice()).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)
@@ -200,7 +199,7 @@ pub fn test_linear_multiclass_classifier(
 		test_metrics: metrics::MulticlassClassificationMetrics,
 	}
 	update_progress(ModelTestProgress::Testing);
-	let State { test_metrics, .. } = izip!(
+	let State { test_metrics, .. } = zip!(
 		features.axis_chunks_iter(Axis(0), n_examples_per_batch),
 		ArrayView1::from(labels.as_slice()).axis_chunks_iter(Axis(0), n_examples_per_batch),
 	)

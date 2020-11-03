@@ -2,13 +2,12 @@ use super::{
 	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
 	train_early_stopping_split, EarlyStoppingMonitor, TrainOptions,
 };
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{MeanSquaredError, StreamingMetric};
-use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperUnsafe};
+use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperUnsafe, zip};
 
 /// This struct describes a linear regressor model. You can train one by calling `Regressor::train`.
 #[derive(Debug)]
@@ -139,13 +138,13 @@ impl Regressor {
 	) {
 		let learning_rate = train_options.learning_rate;
 		let p = features.dot(&self.weights) + self.bias;
-		for (prediction, p) in izip!(predictions.iter_mut(), p.iter()) {
+		for (prediction, p) in zip!(predictions.iter_mut(), p.iter()) {
 			*prediction = *p;
 		}
 		let py = (p - labels).insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
 		let bias_gradient = py.mean_axis(Axis(0)).unwrap()[0];
-		for (weight, weight_gradient) in izip!(self.weights.iter_mut(), weight_gradients.iter()) {
+		for (weight, weight_gradient) in zip!(self.weights.iter_mut(), weight_gradients.iter()) {
 			*weight += -learning_rate * weight_gradient;
 		}
 		self.bias += -learning_rate * bias_gradient;
@@ -153,7 +152,7 @@ impl Regressor {
 
 	fn compute_loss(predictions: ArrayView1<f32>, labels: ArrayView1<f32>) -> f32 {
 		let mut loss = 0.0;
-		for (label, prediction) in izip!(labels, predictions.iter()) {
+		for (label, prediction) in zip!(labels, predictions.iter()) {
 			loss += 0.5 * (label - prediction) * (label - prediction)
 		}
 		loss / labels.len().to_f32().unwrap()
@@ -180,7 +179,7 @@ impl Regressor {
 				let slice = s![0..features.nrows()];
 				let mut predictions_slice = predictions.slice_mut(slice);
 				self.predict(features, predictions_slice.view_mut());
-				for (prediction, label) in izip!(predictions_slice.iter(), labels.iter()) {
+				for (prediction, label) in zip!(predictions_slice.iter(), labels.iter()) {
 					metric.update((*prediction, *label));
 				}
 				(predictions, metric)

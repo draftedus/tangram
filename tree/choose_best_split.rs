@@ -13,7 +13,6 @@ use crate::{
 	train_tree::{TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete},
 	BinnedFeaturesLayout, SplitDirection, TrainOptions,
 };
-use itertools::izip;
 use num_traits::NumCast;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
@@ -21,6 +20,7 @@ use tangram_util::{
 	pool::{Pool, PoolItem},
 	pzip,
 	super_unsafe::SuperUnsafe,
+	zip,
 };
 
 pub struct ChooseBestSplitRootOptions<'a> {
@@ -315,7 +315,7 @@ fn choose_best_split_root_row_major(
 		.reduce(
 			|| bin_stats.iter().map(|_| BinStatsEntry::default()).collect(),
 			|mut res, chunk| {
-				for (res, chunk) in izip!(res.iter_mut(), chunk.iter()) {
+				for (res, chunk) in zip!(res.iter_mut(), chunk.iter()) {
 					res.sum_gradients += chunk.sum_gradients;
 					res.sum_hessians += chunk.sum_hessians;
 				}
@@ -802,7 +802,7 @@ fn compute_bin_stats_and_choose_best_splits_not_root_row_major(
 						.collect()
 				},
 				|mut res, chunk| {
-					for (res, chunk) in izip!(res.iter_mut(), chunk.iter()) {
+					for (res, chunk) in zip!(res.iter_mut(), chunk.iter()) {
 						res.sum_gradients += chunk.sum_gradients;
 						res.sum_hessians += chunk.sum_hessians;
 					}
@@ -1238,7 +1238,7 @@ fn fill_gradients_and_hessians_ordered_buffers(
 	#[allow(clippy::collapsible_if)]
 	if !hessians_are_constant {
 		if smaller_child_examples_index.len() < 1024 {
-			for (example_index, ordered_gradient, ordered_hessian) in izip!(
+			for (example_index, ordered_gradient, ordered_hessian) in zip!(
 				smaller_child_examples_index,
 				gradients_ordered_buffer.iter_mut(),
 				hessians_ordered_buffer.iter_mut(),
@@ -1260,7 +1260,7 @@ fn fill_gradients_and_hessians_ordered_buffers(
 			.for_each(
 				|(example_index_for_node, ordered_gradients, ordered_hessians)| {
 					for (example_index, ordered_gradient, ordered_hessian) in
-						izip!(example_index_for_node, ordered_gradients, ordered_hessians)
+						zip!(example_index_for_node, ordered_gradients, ordered_hessians)
 					{
 						unsafe {
 							let example_index = example_index.to_usize().unwrap();
@@ -1273,7 +1273,7 @@ fn fill_gradients_and_hessians_ordered_buffers(
 		}
 	} else {
 		if smaller_child_examples_index.len() < 1024 {
-			for (example_index, ordered_gradient) in izip!(
+			for (example_index, ordered_gradient) in zip!(
 				smaller_child_examples_index,
 				gradients_ordered_buffer.iter_mut()
 			) {
@@ -1291,7 +1291,7 @@ fn fill_gradients_and_hessians_ordered_buffers(
 			)
 			.for_each(|(example_index_for_node, ordered_gradients)| unsafe {
 				for (example_index, ordered_gradient) in
-					izip!(example_index_for_node, ordered_gradients)
+					zip!(example_index_for_node, ordered_gradients)
 				{
 					let example_index = example_index.to_usize().unwrap();
 					*ordered_gradient = *gradients.get_unchecked(example_index);

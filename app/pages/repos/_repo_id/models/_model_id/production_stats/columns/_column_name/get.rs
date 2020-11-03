@@ -19,11 +19,9 @@ use crate::{
 };
 use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
-use itertools::izip;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
 	context: &Context,
@@ -237,7 +235,7 @@ fn enum_props(
 		_ => unreachable!(),
 	};
 	let production_row_count = get_production_stats_output.overall.row_count;
-	let overall_chart_data = izip!(
+	let overall_chart_data = zip!(
 		overall.histogram.iter(),
 		train_column_stats.histogram.iter(),
 	)

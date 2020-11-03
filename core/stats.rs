@@ -1,13 +1,16 @@
 use crate::stats;
 use fnv::{FnvHashMap, FnvHashSet};
-use itertools::{izip, Itertools};
+use itertools::Itertools;
 use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
 use tangram_dataframe::prelude::*;
 use tangram_metrics as metrics;
-use tangram_util::text::TokenEntry;
-pub use tangram_util::text::{Token, TokenStats};
-use tangram_util::{alphanumeric_tokenizer::AlphanumericTokenizer, finite::Finite};
+use tangram_util::{
+	alphanumeric_tokenizer::AlphanumericTokenizer,
+	finite::Finite,
+	text::{Token, TokenEntry, TokenStats},
+	zip,
+};
 
 /// This struct holds column stats.
 #[derive(Clone, Debug)]
@@ -194,7 +197,7 @@ impl Stats {
 
 	pub fn merge(self, other: Stats) -> Stats {
 		let column_stats: Vec<ColumnStats> =
-			izip!(self.0, other.0).map(|(a, b)| a.merge(b)).collect();
+			zip!(self.0, other.0).map(|(a, b)| a.merge(b)).collect();
 		Stats(column_stats)
 	}
 
@@ -336,7 +339,7 @@ impl NumberColumnStats {
 			mean = new_mean;
 			m2 = new_m2;
 			current_count += count;
-			let quantiles_iter = izip!(
+			let quantiles_iter = zip!(
 				quantiles.iter_mut(),
 				quantile_indexes.iter(),
 				quantile_fracts.iter(),
@@ -404,7 +407,7 @@ impl EnumColumnStats {
 	}
 
 	fn merge(mut self, other: EnumColumnStats) -> EnumColumnStats {
-		for (a, b) in izip!(self.histogram.iter_mut(), other.histogram.iter()) {
+		for (a, b) in zip!(self.histogram.iter_mut(), other.histogram.iter()) {
 			*a += b;
 		}
 		self.count += other.count;
@@ -419,7 +422,7 @@ impl EnumColumnStats {
 			count: self.count.to_u64().unwrap(),
 			invalid_count: self.invalid_count,
 			unique_count: self.options.len(),
-			histogram: izip!(self.options, self.histogram.into_iter().skip(1))
+			histogram: zip!(self.options, self.histogram.into_iter().skip(1))
 				.map(|(value, count)| (value, count))
 				.collect(),
 		}

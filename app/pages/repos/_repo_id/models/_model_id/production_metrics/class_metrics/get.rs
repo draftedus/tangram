@@ -2,7 +2,6 @@ use super::props::{
 	ClassMetricsEntry, Comparison, ConfusionMatrix, IntervalEntry, OverallClassMetrics,
 	OverallClassMetricsEntry, Props, TrainingProductionMetrics,
 };
-use crate::Context;
 use crate::{
 	common::{
 		date_window::get_date_window_and_interval,
@@ -15,13 +14,12 @@ use crate::{
 	},
 	layouts::model_layout::get_model_layout_info,
 	production_metrics::ProductionPredictionMetricsOutput,
+	Context,
 };
 use hyper::{Body, Request, Response, StatusCode};
-use itertools::izip;
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
 	context: &Context,
@@ -68,7 +66,7 @@ pub async fn get(
 			});
 	let training_class_metrics = &model.test_metrics.class_metrics;
 	let overall_class_metrics: Vec<OverallClassMetricsEntry> =
-		izip!(training_class_metrics, classes.iter())
+		zip!(training_class_metrics, classes.iter())
 			.enumerate()
 			.map(|(class_index, (training_class_metrics, class_name))| {
 				let production_class_metrics = overall_prediction_metrics

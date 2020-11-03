@@ -2,14 +2,13 @@ use super::{
 	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
 	train_early_stopping_split, EarlyStoppingMonitor, TrainOptions, TrainProgress,
 };
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{CrossEntropy, CrossEntropyInput, StreamingMetric};
-use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperUnsafe};
+use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperUnsafe, zip};
 
 /// This struct describes a linear multiclass classifier model. You can train one by calling `MulticlassClassifier::train`.
 #[derive(Debug)]
@@ -156,11 +155,11 @@ impl MulticlassClassifier {
 		let n_classes = self.weights.ncols();
 		let mut logits = features.dot(&self.weights) + &self.biases;
 		softmax(logits.view_mut());
-		for (probability, logit) in izip!(probabilities.iter_mut(), logits.iter()) {
+		for (probability, logit) in zip!(probabilities.iter_mut(), logits.iter()) {
 			*probability = *logit;
 		}
 		let mut predictions = logits;
-		for (mut predictions, label) in izip!(predictions.axis_iter_mut(Axis(0)), labels) {
+		for (mut predictions, label) in zip!(predictions.axis_iter_mut(Axis(0)), labels) {
 			for (class_index, prediction) in predictions.iter_mut().enumerate() {
 				*prediction -= if class_index == label.unwrap().get() - 1 {
 					1.0
@@ -174,7 +173,7 @@ impl MulticlassClassifier {
 			let weight_gradients = (&features * &py.column(class_index).insert_axis(Axis(1)))
 				.mean_axis(Axis(0))
 				.unwrap();
-			for (weight, weight_gradient) in izip!(
+			for (weight, weight_gradient) in zip!(
 				self.weights.column_mut(class_index),
 				weight_gradients.iter()
 			) {
@@ -194,7 +193,7 @@ impl MulticlassClassifier {
 		labels: ArrayView1<Option<NonZeroUsize>>,
 	) -> f32 {
 		let mut loss = 0.0;
-		for (label, probabilities) in izip!(labels.into_iter(), probabilities.axis_iter(Axis(0))) {
+		for (label, probabilities) in zip!(labels.into_iter(), probabilities.axis_iter(Axis(0))) {
 			for (index, &probability) in probabilities.indexed_iter() {
 				let probability = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
 				if index == (label.unwrap().get() - 1) {
@@ -228,8 +227,7 @@ impl MulticlassClassifier {
 				let slice = s![0..features.nrows(), ..];
 				let mut predictions_slice = predictions.slice_mut(slice);
 				self.predict(features, predictions_slice.view_mut());
-				for (prediction, label) in
-					izip!(predictions_slice.axis_iter(Axis(0)), labels.iter())
+				for (prediction, label) in zip!(predictions_slice.axis_iter(Axis(0)), labels.iter())
 				{
 					metric.update(CrossEntropyInput {
 						probabilities: prediction,
@@ -265,7 +263,7 @@ impl MulticlassClassifier {
 		features
 			.axis_iter(Axis(0))
 			.map(|features| {
-				izip!(self.weights.axis_iter(Axis(0)), self.biases.view())
+				zip!(self.weights.axis_iter(Axis(0)), self.biases.view())
 					.map(|(weights, bias)| {
 						compute_shap_values_for_example(
 							features.as_slice().unwrap(),

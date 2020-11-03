@@ -4,14 +4,13 @@ use crate::{
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use std::ops::Neg;
 use tangram_dataframe::prelude::*;
-use tangram_util::pzip;
+use tangram_util::{pzip, zip};
 
 /// `BinaryClassifier`s predict binary target values, for example whether a patient has heart disease or not.
 #[derive(Debug)]
@@ -98,7 +97,7 @@ pub fn update_logits(
 ) {
 	for tree in trees_for_round {
 		for (prediction, features) in
-			izip!(predictions.iter_mut(), binned_features.axis_iter(Axis(0)))
+			zip!(predictions.iter_mut(), binned_features.axis_iter(Axis(0)))
 		{
 			*prediction += tree.predict(features.as_slice().unwrap());
 		}
@@ -108,7 +107,7 @@ pub fn update_logits(
 /// This function is used by the common train function to compute the loss after each tree is trained for binary classification.
 pub fn compute_loss(logits: ArrayView2<f32>, labels: ArrayView1<Option<NonZeroUsize>>) -> f32 {
 	let mut total = 0.0;
-	for (label, logit) in izip!(labels.iter(), logits) {
+	for (label, logit) in zip!(labels.iter(), logits) {
 		let label = (label.unwrap().get() - 1).to_f32().unwrap();
 		let probability = 1.0 / (logit.neg().exp() + 1.0);
 		let probability_clamped = clamp(probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);

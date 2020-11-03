@@ -1,15 +1,15 @@
-use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
 use serde_json::json;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
-use std::path::Path;
+use std::{
+	fs::File,
+	io::{prelude::*, BufReader},
+	path::Path,
+};
 use tangram_dataframe::prelude::*;
 use tangram_metrics::Metric;
-use tangram_util::pzip;
+use tangram_util::{pzip, zip};
 
 fn main() {
 	// Load the data.
@@ -95,7 +95,7 @@ fn main() {
 	});
 
 	// Compute metrics.
-	let input = izip!(probabilities.iter(), labels_test.iter())
+	let input = zip!(probabilities.iter(), labels_test.iter())
 		.map(|(probability, label)| (*probability, label.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);

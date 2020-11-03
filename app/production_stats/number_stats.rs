@@ -1,8 +1,8 @@
-use itertools::izip;
 use num_traits::ToPrimitive;
 use rand::random;
 use std::num::NonZeroU64;
 use tangram_metrics::StreamingMetric;
+use tangram_util::zip;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct NumberStats {
@@ -96,7 +96,7 @@ impl StreamingMetric<'_> for NumberStats {
 		let mut quantiles: Vec<f32> = vec![0.0; quantiles.len()];
 		let mut samples = self.reservoir;
 		samples.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-		for (quantile, index, fract) in izip!(
+		for (quantile, index, fract) in zip!(
 			quantiles.iter_mut(),
 			quantile_indexes.iter(),
 			quantile_fracts.iter(),

@@ -2,14 +2,13 @@ use super::{
 	shap::{compute_shap_values_for_example, ComputeShapValuesForExampleOutput},
 	train_early_stopping_split, EarlyStoppingMonitor, TrainOptions, TrainProgress,
 };
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::{num::NonZeroUsize, ops::Neg};
 use tangram_dataframe::prelude::*;
 use tangram_metrics::{BinaryCrossEntropy, BinaryCrossEntropyInput, StreamingMetric};
-use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperUnsafe};
+use tangram_util::{progress_counter::ProgressCounter, pzip, super_unsafe::SuperUnsafe, zip};
 
 /// This struct describes a linear binary classifier model. You can train one by calling `BinaryClassifier::train`.
 #[derive(Debug)]
@@ -148,11 +147,11 @@ impl BinaryClassifier {
 	) {
 		let learning_rate = train_options.learning_rate;
 		let mut py = features.dot(&self.weights) + self.bias;
-		for (probability, py) in izip!(probabilities.iter_mut(), py.iter_mut()) {
+		for (probability, py) in zip!(probabilities.iter_mut(), py.iter_mut()) {
 			*probability = 1.0 / (py.neg().exp() + 1.0);
 			*py = *probability;
 		}
-		for (py, label) in izip!(py.view_mut(), labels) {
+		for (py, label) in zip!(py.view_mut(), labels) {
 			let label = match label.map(|l| l.get()) {
 				Some(1) => 0.0,
 				Some(2) => 1.0,
@@ -163,7 +162,7 @@ impl BinaryClassifier {
 		let py = py.insert_axis(Axis(1));
 		let weight_gradients = (&features * &py).mean_axis(Axis(0)).unwrap();
 		let bias_gradient = py.mean_axis(Axis(0)).unwrap()[0];
-		for (weight, weight_gradient) in izip!(self.weights.view_mut(), weight_gradients.view()) {
+		for (weight, weight_gradient) in zip!(self.weights.view_mut(), weight_gradients.view()) {
 			*weight += -learning_rate * weight_gradient;
 		}
 		self.bias += -learning_rate * bias_gradient;
@@ -174,7 +173,7 @@ impl BinaryClassifier {
 		labels: ArrayView1<Option<NonZeroUsize>>,
 	) -> f32 {
 		let mut total = 0.0;
-		for (label, probability) in izip!(labels.iter(), probabilities) {
+		for (label, probability) in zip!(labels.iter(), probabilities) {
 			let label = (label.unwrap().get() - 1).to_f32().unwrap();
 			let probability_clamped =
 				clamp(*probability, std::f32::EPSILON, 1.0 - std::f32::EPSILON);
@@ -205,7 +204,7 @@ impl BinaryClassifier {
 				let slice = s![0..features.nrows()];
 				let mut predictions_slice = predictions.slice_mut(slice);
 				self.predict(features, predictions_slice.view_mut());
-				for (prediction, label) in izip!(predictions_slice.iter(), labels.iter()) {
+				for (prediction, label) in zip!(predictions_slice.iter(), labels.iter()) {
 					metric.update(BinaryCrossEntropyInput {
 						probability: *prediction,
 						label: *label,

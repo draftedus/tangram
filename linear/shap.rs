@@ -1,4 +1,4 @@
-use itertools::izip;
+use tangram_util::zip;
 
 pub struct ComputeShapValuesForExampleOutput {
 	pub baseline_value: f32,
@@ -14,10 +14,10 @@ pub fn compute_shap_values_for_example(
 	means: &[f32],
 ) -> ComputeShapValuesForExampleOutput {
 	let baseline_value = bias
-		+ izip!(weights, means)
+		+ zip!(weights, means)
 			.map(|(weight, mean)| weight * mean)
 			.sum::<f32>();
-	let feature_contributions: Vec<f32> = izip!(weights, features, means)
+	let feature_contributions: Vec<f32> = zip!(weights, features, means)
 		.map(|(weight, feature, mean)| weight * (feature - mean))
 		.collect();
 	let output_value = baseline_value + feature_contributions.iter().sum::<f32>();

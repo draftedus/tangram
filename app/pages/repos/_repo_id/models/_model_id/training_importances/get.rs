@@ -13,9 +13,7 @@ use crate::{
 	Context,
 };
 use hyper::{Body, Request, Response, StatusCode};
-use itertools::izip;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
 	context: &Context,
@@ -53,7 +51,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 			tangram_core::model::RegressionModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut feature_importances =
-					izip!(feature_names, inner_model.feature_importances.iter())
+					zip!(feature_names, inner_model.feature_importances.iter())
 						.map(
 							|(feature_name, feature_importance_value)| FeatureImportance {
 								feature_name,
@@ -74,7 +72,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 			tangram_core::model::RegressionModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut feature_importances =
-					izip!(feature_names, inner_model.feature_importances.iter())
+					zip!(feature_names, inner_model.feature_importances.iter())
 						.map(
 							|(feature_name, feature_importance_value)| FeatureImportance {
 								feature_name,
@@ -97,7 +95,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 			tangram_core::model::BinaryClassificationModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut feature_importances =
-					izip!(feature_names, inner_model.feature_importances.iter())
+					zip!(feature_names, inner_model.feature_importances.iter())
 						.map(
 							|(feature_name, feature_importance_value)| FeatureImportance {
 								feature_name,
@@ -118,7 +116,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 			tangram_core::model::BinaryClassificationModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut feature_importances =
-					izip!(feature_names, inner_model.feature_importances.iter())
+					zip!(feature_names, inner_model.feature_importances.iter())
 						.map(
 							|(feature_name, feature_importance_value)| FeatureImportance {
 								feature_name,
@@ -141,7 +139,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 			tangram_core::model::MulticlassClassificationModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut feature_importances =
-					izip!(feature_names, inner_model.feature_importances.iter())
+					zip!(feature_names, inner_model.feature_importances.iter())
 						.map(
 							|(feature_name, feature_importance_value)| FeatureImportance {
 								feature_name,
@@ -162,7 +160,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 			tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
 				let mut feature_importances =
-					izip!(feature_names, inner_model.feature_importances.iter())
+					zip!(feature_names, inner_model.feature_importances.iter())
 						.map(
 							|(feature_name, feature_importance_value)| FeatureImportance {
 								feature_name,

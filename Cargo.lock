@@ -2456,6 +2456,7 @@ dependencies = [
  "itertools",
  "ndarray",
  "num-traits",
+ "tangram_util",
 ]
 
 [[package]]

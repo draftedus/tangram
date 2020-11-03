@@ -1,5 +1,4 @@
 use crate::{features, model};
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::{
@@ -7,7 +6,7 @@ use std::{
 	convert::{TryFrom, TryInto},
 };
 use tangram_dataframe::prelude::*;
-use tangram_util::error::Result;
+use tangram_util::{error::Result, zip};
 
 #[derive(serde::Deserialize, Debug)]
 pub struct PredictOptions {
@@ -295,7 +294,7 @@ fn predict_regressor(
 			);
 			inner_model.predict(features.view(), predictions.view_mut());
 			let feature_contributions = inner_model.compute_feature_contributions(features.view());
-			izip!(
+			zip!(
 				features.axis_iter(Axis(0)),
 				predictions.iter(),
 				feature_contributions,
@@ -331,7 +330,7 @@ fn predict_regressor(
 			let mut predictions = Array::zeros(n_examples);
 			inner_model.predict(features.view(), predictions.view_mut());
 			let feature_contributions = inner_model.compute_feature_contributions(features.view());
-			izip!(
+			zip!(
 				features.axis_iter(Axis(0)),
 				predictions.iter(),
 				feature_contributions
@@ -387,7 +386,7 @@ fn predict_binary_classifier(
 				Some(options) => options.threshold,
 				None => 0.5,
 			};
-			izip!(probabilities.iter(), feature_contributions)
+			zip!(probabilities.iter(), feature_contributions)
 				.map(|(probability, feature_contributions)| {
 					let (probability, class_name) = if *probability >= threshold {
 						(*probability, model.positive_class.clone())
@@ -429,7 +428,7 @@ fn predict_binary_classifier(
 				Some(options) => options.threshold,
 				None => 0.5,
 			};
-			izip!(probabilities.iter(), feature_contributions)
+			zip!(probabilities.iter(), feature_contributions)
 				.map(|(probability, feature_contributions)| {
 					let (probability, class_name) = if *probability >= threshold {
 						(*probability, model.positive_class.clone())
@@ -484,16 +483,16 @@ fn predict_multiclass_classifier(
 			);
 			inner_model.predict(features.view(), probabilities.view_mut());
 			let feature_contributions = inner_model.compute_feature_contributions(features.view());
-			izip!(probabilities.axis_iter(Axis(0)), feature_contributions)
+			zip!(probabilities.axis_iter(Axis(0)), feature_contributions)
 				.map(|(probabilities, feature_contributions)| {
 					let (probability, class_name) =
-						izip!(probabilities.iter(), model.classes.iter())
+						zip!(probabilities.iter(), model.classes.iter())
 							.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
 							.unwrap();
-					let probabilities = izip!(probabilities, model.classes.iter())
+					let probabilities = zip!(probabilities, model.classes.iter())
 						.map(|(p, c)| (c.clone(), *p))
 						.collect();
-					let feature_contributions = izip!(model.classes.iter(), feature_contributions)
+					let feature_contributions = zip!(model.classes.iter(), feature_contributions)
 						.map(|(class, feature_contributions)| {
 							let baseline_value = feature_contributions.baseline_value;
 							let output_value = feature_contributions.output_value;
@@ -530,16 +529,16 @@ fn predict_multiclass_classifier(
 			let mut probabilities = Array::zeros((n_examples, n_classes));
 			inner_model.predict(features.view(), probabilities.view_mut());
 			let feature_contributions = inner_model.compute_feature_contributions(features.view());
-			izip!(probabilities.axis_iter(Axis(0)), feature_contributions)
+			zip!(probabilities.axis_iter(Axis(0)), feature_contributions)
 				.map(|(probabilities, feature_contributions)| {
 					let (probability, class_name) =
-						izip!(probabilities.iter(), model.classes.iter())
+						zip!(probabilities.iter(), model.classes.iter())
 							.max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap())
 							.unwrap();
-					let probabilities = izip!(probabilities.iter(), model.classes.iter())
+					let probabilities = zip!(probabilities.iter(), model.classes.iter())
 						.map(|(probability, class)| (class.clone(), *probability))
 						.collect();
-					let feature_contributions = izip!(model.classes.iter(), feature_contributions)
+					let feature_contributions = zip!(model.classes.iter(), feature_contributions)
 						.map(|(class, feature_contributions)| {
 							let baseline_value = feature_contributions.baseline_value;
 							let output_value = feature_contributions.output_value;

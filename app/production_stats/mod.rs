@@ -1,7 +1,7 @@
 use crate::common::monitor_event::PredictionMonitorEvent;
 use chrono::prelude::*;
-use itertools::izip;
 use tangram_metrics::StreamingMetric;
+use tangram_util::zip;
 
 mod column_stats;
 mod number_stats;
@@ -76,7 +76,7 @@ impl StreamingMetric<'_> for ProductionStats {
 		self.start_date = self.start_date.min(other.start_date);
 		self.end_date = self.end_date.max(other.end_date);
 		self.row_count += other.row_count;
-		for (this, other) in izip!(self.column_stats.iter_mut(), other.column_stats) {
+		for (this, other) in zip!(self.column_stats.iter_mut(), other.column_stats) {
 			this.merge(other)
 		}
 		self.prediction_stats.merge(other.prediction_stats);

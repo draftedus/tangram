@@ -131,7 +131,7 @@ impl StreamingMetric<'_> for BinaryClassificationProductionPredictionMetrics {
 
 #[test]
 fn test_binary() {
-	use itertools::izip;
+	use tangram_util::zip;
 	let mut metrics =
 		BinaryClassificationProductionPredictionMetrics::new("Cat".to_owned(), "Dog".to_owned());
 	metrics.update((
@@ -144,7 +144,7 @@ fn test_binary() {
 	let predictions = vec![
 		"Cat", "Cat", "Cat", "Cat", "Dog", "Dog", "Dog", "Dog", "Dog", "Dog", "Cat", "Cat",
 	];
-	for (label, prediction) in izip!(labels, predictions) {
+	for (label, prediction) in zip!(labels, predictions) {
 		metrics.update((
 			NumberOrString::String(prediction.to_owned()),
 			NumberOrString::String(label.to_owned()),

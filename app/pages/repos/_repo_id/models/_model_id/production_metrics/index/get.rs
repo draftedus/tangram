@@ -20,10 +20,8 @@ use crate::{
 	Context,
 };
 use hyper::{Body, Request, Response, StatusCode};
-use itertools::izip;
 use std::collections::BTreeMap;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
 	context: &Context,
@@ -284,7 +282,7 @@ pub async fn get(
 				.map(|metrics| metrics.accuracy);
 			let production_class_metrics = overall_production_metrics
 				.map(|production_metrics| production_metrics.class_metrics);
-			let class_metrics_table = izip!(training_class_metrics, model.classes.iter())
+			let class_metrics_table = zip!(training_class_metrics, model.classes.iter())
 				.enumerate()
 				.map(|(class_index, (training_class_metrics, class_name))| {
 					let precision = production_class_metrics

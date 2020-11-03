@@ -1,7 +1,8 @@
 use super::StreamingMetric;
-use itertools::{izip, Itertools};
+use itertools::Itertools;
 use num_traits::ToPrimitive;
 use std::num::NonZeroUsize;
+use tangram_util::zip;
 
 /// `BinaryClassificationMetrics` computes common metrics used to evaluate binary classifiers at a number of classification thresholds.
 pub struct BinaryClassificationMetrics {
@@ -95,7 +96,7 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 
 	fn update(&mut self, input: BinaryClassificationMetricsInput) {
 		for (threshold, confusion_matrix) in self.confusion_matrices_for_thresholds.iter_mut() {
-			for (probability, label) in izip!(input.probabilities.iter(), input.labels.iter()) {
+			for (probability, label) in zip!(input.probabilities.iter(), input.labels.iter()) {
 				let predicted = *probability >= *threshold;
 				let actual = label.unwrap().get() == 2;
 				match (predicted, actual) {
@@ -109,7 +110,7 @@ impl<'a> StreamingMetric<'a> for BinaryClassificationMetrics {
 	}
 
 	fn merge(&mut self, other: Self) {
-		for ((_, confusion_matrix_a), (_, confusion_matrix_b)) in izip!(
+		for ((_, confusion_matrix_a), (_, confusion_matrix_b)) in zip!(
 			self.confusion_matrices_for_thresholds.iter_mut(),
 			other.confusion_matrices_for_thresholds.iter()
 		) {
@@ -199,7 +200,7 @@ fn test() {
 	let metrics = metrics.finalize();
 	insta::assert_debug_snapshot!(metrics, @r###"
  BinaryClassificationMetricsOutput {
-     auc_roc: 0.0,
+     auc_roc_approx: 0.0,
      thresholds: [
          BinaryClassificationMetricsOutputForThreshold {
              threshold: 0.25,

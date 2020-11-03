@@ -4,13 +4,12 @@ use crate::{
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::{clamp, ToPrimitive};
 use rayon::prelude::*;
 use std::num::NonZeroUsize;
 use tangram_dataframe::prelude::*;
-use tangram_util::pzip;
+use tangram_util::{pzip, zip};
 
 /// `MulticlasClassifier`s predict multiclass target values, for example which of several species a flower is.
 #[derive(Debug)]
@@ -70,13 +69,13 @@ impl MulticlassClassifier {
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
 		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
-		for (mut logits, example) in izip!(
+		for (mut logits, example) in zip!(
 			probabilities.axis_iter_mut(Axis(0)),
 			features.axis_iter(Axis(0))
 		) {
 			logits.assign(&biases);
 			for trees in trees.axis_iter(Axis(0)) {
-				for (logit, tree) in izip!(logits.iter_mut(), trees.iter()) {
+				for (logit, tree) in zip!(logits.iter_mut(), trees.iter()) {
 					*logit += tree.predict(&example.as_slice().unwrap());
 				}
 			}
@@ -96,7 +95,7 @@ impl MulticlassClassifier {
 		features
 			.axis_iter(Axis(0))
 			.map(|features| {
-				izip!(trees.axis_iter(Axis(1)), biases.iter())
+				zip!(trees.axis_iter(Axis(1)), biases.iter())
 					.map(|(tree, bias)| {
 						compute_shap_values_for_example(features.as_slice().unwrap(), tree, *bias)
 					})
@@ -114,8 +113,8 @@ pub fn update_logits(
 ) {
 	let features_rows = binned_features.axis_iter(Axis(0));
 	let logits_rows = predictions.axis_iter_mut(Axis(1));
-	for (features, mut logits) in izip!(features_rows, logits_rows) {
-		for (logit, tree) in izip!(logits.iter_mut(), trees_for_round.iter()) {
+	for (features, mut logits) in zip!(features_rows, logits_rows) {
+		for (logit, tree) in zip!(logits.iter_mut(), trees_for_round.iter()) {
 			*logit += tree.predict(features.as_slice().unwrap());
 		}
 	}
@@ -124,7 +123,7 @@ pub fn update_logits(
 /// This function is used by the common train function to compute the loss after each tree is trained for multiclass classification.
 pub fn compute_loss(logits: ArrayView2<f32>, labels: ArrayView1<Option<NonZeroUsize>>) -> f32 {
 	let mut loss = 0.0;
-	for (label, logits) in izip!(labels.into_iter(), logits.axis_iter(Axis(0))) {
+	for (label, logits) in zip!(labels.into_iter(), logits.axis_iter(Axis(0))) {
 		let mut probabilities = logits.to_owned();
 		softmax(probabilities.as_slice_mut().unwrap());
 		for (index, &probability) in probabilities.indexed_iter() {

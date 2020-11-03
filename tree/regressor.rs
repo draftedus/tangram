@@ -4,12 +4,11 @@ use crate::{
 	train_tree::TrainTree,
 	TrainOptions, TrainProgress, Tree,
 };
-use itertools::izip;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use rayon::prelude::*;
 use tangram_dataframe::prelude::*;
-use tangram_util::pzip;
+use tangram_util::{pzip, zip};
 
 /// `Regressor`s predict continuous target values, for example the selling price of a home.
 #[derive(Debug)]
@@ -91,7 +90,7 @@ pub fn update_logits(
 	features: ArrayView2<DataFrameValue>,
 	mut predictions: ArrayViewMut2<f32>,
 ) {
-	for (prediction, features) in izip!(predictions.row_mut(0), features.axis_iter(Axis(0))) {
+	for (prediction, features) in zip!(predictions.row_mut(0), features.axis_iter(Axis(0))) {
 		for tree in trees_for_round {
 			*prediction += tree.predict(features.as_slice().unwrap());
 		}
@@ -101,7 +100,7 @@ pub fn update_logits(
 /// This function is used by the common train function to compute the loss after each tree is trained for regression.
 pub fn compute_loss(predictions: ArrayView2<f32>, labels: ArrayView1<f32>) -> f32 {
 	let mut loss = 0.0;
-	for (label, prediction) in izip!(labels, predictions) {
+	for (label, prediction) in zip!(labels, predictions) {
 		loss += 0.5 * (label - prediction) * (label - prediction)
 	}
 	loss / labels.len().to_f32().unwrap()

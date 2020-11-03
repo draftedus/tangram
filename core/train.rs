@@ -7,8 +7,7 @@ use num_traits::ToPrimitive;
 use std::{collections::BTreeMap, path::Path};
 use tangram_dataframe::prelude::*;
 use tangram_metrics::StreamingMetric;
-use tangram_util::{err, error::Result};
-use tangram_util::{id::Id, progress_counter::ProgressCounter};
+use tangram_util::{err, error::Result, id::Id, progress_counter::ProgressCounter};
 
 /**
 Train a model.
@@ -1781,7 +1780,7 @@ impl Into<model::Tokenizer> for stats::Tokenizer {
 	}
 }
 
-impl Into<model::TokenStats> for stats::TokenStats {
+impl Into<model::TokenStats> for tangram_util::text::TokenStats {
 	fn into(self) -> model::TokenStats {
 		model::TokenStats {
 			token: self.token.into(),

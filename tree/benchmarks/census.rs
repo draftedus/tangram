@@ -1,10 +1,10 @@
-use itertools::izip;
 use maplit::btreemap;
 use ndarray::prelude::*;
 use serde_json::json;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::Metric;
+use tangram_util::zip;
 
 fn main() {
 	// Load the data.
@@ -201,7 +201,7 @@ fn main() {
 		.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute metrics.
-	let input = izip!(probabilities.iter(), labels_test.iter())
+	let input = zip!(probabilities.iter(), labels_test.iter())
 		.map(|(probability, label)| (*probability, label.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);

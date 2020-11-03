@@ -1,6 +1,6 @@
 use crate::compute_binned_features::{BinnedFeaturesColumnMajorColumn, BinnedFeaturesRowMajor};
-use itertools::izip;
 use num_traits::ToPrimitive;
+use tangram_util::zip;
 
 /// This struct tracks the sum of gradients and hessians for all examples across all bins for all features.
 #[derive(Clone, Debug)]
@@ -154,7 +154,7 @@ pub fn compute_bin_stats_subtraction(
 	smaller_child_bin_stats_for_feature: &[BinStatsEntry],
 	larger_child_bin_stats_for_feature: &mut [BinStatsEntry],
 ) {
-	for (smaller_child_bin_stats, larger_child_bin_stats) in izip!(
+	for (smaller_child_bin_stats, larger_child_bin_stats) in zip!(
 		smaller_child_bin_stats_for_feature,
 		larger_child_bin_stats_for_feature,
 	) {
