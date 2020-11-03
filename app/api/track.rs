@@ -127,7 +127,7 @@ async fn write_prediction_monitor_event(
 			insert into predictions
 				(id, model_id, date, created_at, identifier, input, output)
 			values
-				(?1, ?2, ?3, ?4, ?5, ?6, ?7)
+				($1, $2, $3, $4, $5, $6, $7)
 		",
 	)
 	.bind(&prediction_monitor_event_id.to_string())
@@ -157,7 +157,7 @@ async fn write_true_value_monitor_event(
 			insert into true_values
 				(id, model_id, date, created_at, identifier, value)
 			values
-				(?1, ?2, ?3, ?4, ?5, ?6)
+				($1, $2, $3, $4, $5, $6)
 		",
 	)
 	.bind(&true_value_monitor_event_id.to_string())
@@ -187,9 +187,9 @@ async fn insert_or_update_production_stats_for_monitor_event(
 				data
 			from production_stats
 			where
-				model_id = ?1
+				model_id = $1
 			and
-				hour = ?2
+				hour = $2
 		",
 	)
 	.bind(&model_id.to_string())
@@ -207,11 +207,11 @@ async fn insert_or_update_production_stats_for_monitor_event(
 				update
 					production_stats
 				set
-					data = ?1
+					data = $1
 				where
-					model_id = ?2
+					model_id = $2
 				and
-					hour = ?3
+					hour = $3
 			",
 		)
 		.bind(&base64::encode(data))
@@ -230,7 +230,7 @@ async fn insert_or_update_production_stats_for_monitor_event(
 				insert into production_stats
 					(model_id, data, hour)
 				values
-					(?1, ?2, ?3)
+					($1, $2, $3)
 			",
 		)
 		.bind(&model_id.to_string())
@@ -264,9 +264,9 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 			from
 				predictions
 			where
-				predictions.model_id = ?1
+				predictions.model_id = $1
 			and
-				predictions.identifier = ?2
+				predictions.identifier = $2
 		",
 	)
 	.bind(&model_id.to_string())
@@ -305,9 +305,9 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 				data
 			from production_metrics
 			where
-				model_id = ?1
+				model_id = $1
 			and
-				hour = ?2
+				hour = $2
 		",
 	)
 	.bind(&model_id.to_string())
@@ -325,11 +325,11 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 				update
 					production_metrics
 				set
-					data = ?1
+					data = $1
 				where
-					model_id = ?2
+					model_id = $2
 				and
-					hour = ?3
+					hour = $3
 			",
 		)
 		.bind(&base64::encode(data))
@@ -348,7 +348,7 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 				insert into production_metrics
 					(model_id, data, hour)
 				values
-					(?1, ?2, ?3)
+					($1, $2, $3)
 			",
 		)
 		.bind(&model_id.to_string())

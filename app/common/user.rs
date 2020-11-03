@@ -80,7 +80,7 @@ pub async fn authorize_normal_user(
 			join users
 				on users.id = tokens.user_id
 			where
-				tokens.token = ?1 and
+				tokens.token = $1 and
 				tokens.deleted_at is null
 		",
 	)
@@ -122,8 +122,8 @@ pub async fn authorize_normal_user_for_organization(
 			select
 				count(*) > 0
 			from organizations_users
-			where organizations_users.user_id = ?1
-				and organizations_users.organization_id = ?2
+			where organizations_users.user_id = $1
+				and organizations_users.organization_id = $2
 		",
 	)
 	.bind(&user.id.to_string())
@@ -159,9 +159,9 @@ pub async fn authorize_normal_user_for_repo(
 			left join organizations_users
 				on organizations_users.organization_id = repos.organization_id
 			and
-				organizations_users.user_id = ?1
+				organizations_users.user_id = $1
 			where
-				repos.id = ?2
+				repos.id = $2
 		",
 	)
 	.bind(&user.id.to_string())
@@ -199,9 +199,9 @@ pub async fn authorize_normal_user_for_model(
 			left join organizations_users on
 				organizations_users.organization_id = repos.organization_id
 			and
-				organizations_users.user_id = ?1
+				organizations_users.user_id = $1
 			where
-				models.id = ?2
+				models.id = $2
 		",
 	)
 	.bind(&user.id.to_string())

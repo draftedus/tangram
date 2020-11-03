@@ -13,7 +13,7 @@ pub async fn create_root_repo(
 			insert into repos (
 				id, title, created_at
 			) values (
-				?, ?, ?
+				$1, $2, $3
 			)
 		",
 	)
@@ -36,7 +36,7 @@ pub async fn create_user_repo(
 			insert into repos (
 				id, title, user_id, created_at
 			) values (
-				?, ?, ?, ?
+				$1, $2, $3, $4
 			)
 		",
 	)
@@ -60,7 +60,7 @@ pub async fn create_org_repo(
 			insert into repos (
 				id, title, organization_id, created_at
 			) values (
-				?, ?, ?, ?
+				$1, $2, $3, $4
 			)
 		",
 	)
@@ -84,7 +84,7 @@ pub async fn add_model_version(
 			insert into models
 				(id, repo_id, data, created_at)
 			values (
-				?, ?, ?, ?
+				$1, $2, $3, $4
 			)
 		",
 	)
@@ -109,7 +109,7 @@ pub async fn get_model_version_ids(
 			join repos
 				on models.repo_id = repos.id
 			where
-			repos.id = ?1
+			repos.id = $1
 		",
 	)
 	.bind(&repo_id.to_string())

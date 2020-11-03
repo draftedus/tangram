@@ -13,7 +13,7 @@ pub async fn get_model(
 				data
 			from models
 			where
-				models.id = ?1
+				models.id = $1
 		",
 	)
 	.bind(&model_id.to_string())

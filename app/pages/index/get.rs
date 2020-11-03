@@ -83,7 +83,7 @@ async fn repos_for_user(
 				repos.title,
 				repos.created_at
 			from repos
-			where repos.user_id = ?1
+			where repos.user_id = $1
 		",
 	)
 	.bind(&user.id.to_string())
@@ -114,7 +114,7 @@ async fn repos_for_user(
 				on organizations.id = repos.organization_id
 			inner join organizations_users
 				on organizations_users.organization_id = repos.organization_id
-				and organizations_users.user_id = ?1
+				and organizations_users.user_id = $1
 		",
 	)
 	.bind(&user.id.to_string())

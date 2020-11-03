@@ -37,7 +37,7 @@ pub async fn get(
 				models.id,
 				models.created_at
 			from models
-			where models.repo_id = ?1
+			where models.repo_id = $1
 			order by models.created_at
 		",
 	)

@@ -66,7 +66,7 @@ async fn get_user_repositories(
 				repos.id,
 				repos.title
 			from repos
-			where repos.user_id = ?1
+			where repos.user_id = $1
 		",
 	)
 	.bind(&user_id.to_string())

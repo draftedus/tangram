@@ -54,7 +54,7 @@ pub async fn get_organization(
 				organizations.name,
 				organizations.plan
 			from organizations
-				where organizations.id = ?1
+				where organizations.id = $1
 		",
 	)
 	.bind(&organization_id.to_string())
@@ -77,7 +77,7 @@ pub async fn get_organization(
 				organizations_users.is_admin
 			from users
 			join organizations_users
-				on organizations_users.organization_id = ?1
+				on organizations_users.organization_id = $1
 				and organizations_users.user_id = users.id
 		",
 	)
@@ -115,7 +115,7 @@ pub async fn get_organizations(
 			from organizations
 			join organizations_users
 				on organizations_users.organization_id = organizations.id
-				and organizations_users.user_id = ?1
+				and organizations_users.user_id = $1
 		",
 	)
 	.bind(&user_id.to_string())

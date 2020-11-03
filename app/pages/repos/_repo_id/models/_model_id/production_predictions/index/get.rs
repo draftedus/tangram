@@ -62,10 +62,10 @@ pub async fn get(
 							output
 						from predictions
 						where
-								model_id = ?1
-						and date > ?2
+								model_id = $1
+						and date > $2
 						order by date asc
-						limit ?3
+						limit $3
 					)
 					order by date desc
 				",
@@ -87,10 +87,10 @@ pub async fn get(
 					output
 				from predictions
 					where
-						model_id = ?1
-				and date < ?2
+						model_id = $1
+				and date < $2
 				order by date desc
-				limit ?3
+				limit $3
 			",
 			)
 			.bind(&model_id.to_string())
@@ -109,9 +109,9 @@ pub async fn get(
 						output
 					from predictions
 						where
-							model_id = ?1
+							model_id = $1
 					order by date desc
-					limit ?2
+					limit $2
 				",
 			)
 			.bind(&model_id.to_string())
@@ -130,7 +130,7 @@ pub async fn get(
 					"
 						select count(*) > 0
 							from predictions
-							where model_id = ?1 and date > ?2
+							where model_id = $1 and date > $2
 					",
 				)
 				.bind(&model_id.to_string())
@@ -142,7 +142,7 @@ pub async fn get(
 					"
 					select count(*) > 0
 						from predictions
-						where model_id = ?1 and date < ?2
+						where model_id = $1 and date < $2
 				",
 				)
 				.bind(&model_id.to_string())

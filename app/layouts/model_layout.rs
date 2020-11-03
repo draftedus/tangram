@@ -50,7 +50,7 @@ pub async fn get_model_layout_info(
 				on users.id = repos.user_id
 			left join organizations
 				on organizations.id = repos.organization_id
-			where models.id = ?1
+			where models.id = $1
 		",
 	)
 	.bind(&model_id.to_string())

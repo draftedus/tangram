@@ -42,8 +42,8 @@ pub async fn post(
 	sqlx::query(
 		"
 			update organizations
-				set name = ?1
-			where organizations.id = ?2
+				set name = $1
+			where organizations.id = $2
 		",
 	)
 	.bind(&name)

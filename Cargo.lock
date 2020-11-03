@@ -2199,7 +2199,6 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx#4fda8be005f83aba3bc5c7c5f591dd2ad4fc4c40"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -2208,7 +2207,6 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx#4fda8be005f83aba3bc5c7c5f591dd2ad4fc4c40"
 dependencies = [
  "ahash",
  "atoi",
@@ -2251,7 +2249,6 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx#4fda8be005f83aba3bc5c7c5f591dd2ad4fc4c40"
 dependencies = [
  "dotenv",
  "either",
@@ -2268,7 +2265,6 @@ dependencies = [
 [[package]]
 name = "sqlx-rt"
 version = "0.1.1"
-source = "git+https://github.com/launchbadge/sqlx#4fda8be005f83aba3bc5c7c5f591dd2ad4fc4c40"
 dependencies = [
  "native-tls",
  "once_cell",

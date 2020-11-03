@@ -35,7 +35,7 @@ pub async fn run(database_pool: &sqlx::AnyPool) -> Result<()> {
 					count(*) > 0
 				from _migrations
 				where
-					name = ?1
+					name = $1
 			",
 		)
 		.bind(&name)
@@ -46,7 +46,7 @@ pub async fn run(database_pool: &sqlx::AnyPool) -> Result<()> {
 			db.execute(sql).await?;
 			sqlx::query(
 				"
-					insert into _migrations (name) values (?1)
+					insert into _migrations (name) values ($1)
 				",
 			)
 			.bind(&name)

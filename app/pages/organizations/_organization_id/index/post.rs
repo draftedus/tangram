@@ -93,7 +93,7 @@ async fn delete_organization(
 		"
 		delete from organizations
 		where
-			id = ?1
+			id = $1
 	",
 	)
 	.bind(&organization_id.to_string())
@@ -118,8 +118,8 @@ async fn delete_member(
 		"
 		delete from organizations_users
 		where
-			organization_id = ?1
-			and user_id = ?2
+			organization_id = $1
+			and user_id = $2
 	",
 	)
 	.bind(&organization_id.to_string())
@@ -149,8 +149,8 @@ async fn change_plan(
 	sqlx::query(
 		"
 		update organizations
-			set plan = ?1
-		where organizations.id = ?2
+			set plan = $1
+		where organizations.id = $2
 	",
 	)
 	.bind(&plan)
@@ -181,7 +181,7 @@ async fn start_stripe_checkout(
 				organizations.stripe_customer_id
 			from organizations
 			where
-				id = ?1
+				id = $1
 			and organizations.stripe_customer_id is not null
 		",
 	)
@@ -211,9 +211,9 @@ async fn start_stripe_checkout(
 			sqlx::query(
 				"
 					update organizations
-						set stripe_customer_id = ?1
+						set stripe_customer_id = $1
 					where
-						id = ?2
+						id = $2
 				",
 			)
 			.bind(&stripe_customer_id)
@@ -288,9 +288,9 @@ async fn finish_stripe_checkout(
 	sqlx::query(
 		"
 			update organizations set
-				stripe_payment_method_id = ?1
+				stripe_payment_method_id = $1
 			where
-				id = ?2
+				id = $2
 		",
 	)
 	.bind(&stripe_payment_method_id)

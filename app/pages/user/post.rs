@@ -49,9 +49,9 @@ async fn logout(
 			update
 				tokens
 			set
-				deleted_at = ?1
+				deleted_at = $1
 			where
-				token = ?2
+				token = $2
 		",
 	)
 	.bind(&now)

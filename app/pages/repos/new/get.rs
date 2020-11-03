@@ -34,7 +34,7 @@ pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<B
 				from organizations
 				join organizations_users
 					on organizations_users.organization_id = organizations.id
-					and organizations_users.user_id = ?1
+					and organizations_users.user_id = $1
 			",
 			)
 			.bind(&user.id.to_string())

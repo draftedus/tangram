@@ -34,7 +34,7 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 			insert into users (
 				id, created_at, email
 			) values (
-				?1, ?2, ?3
+				$1, $2, $3
 			)
 			on conflict (email) do update set email = excluded.email
 		",
@@ -51,7 +51,7 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 				id
 			from users
 			where
-				email = ?1
+				email = $1
 		",
 	)
 	.bind(&email)
@@ -73,9 +73,9 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 					on codes.user_id = users.id
 					where
 						codes.deleted_at is null and
-						?1 - codes.created_at < ?2 and
-						users.email = ?3 and
-						codes.code = ?4
+						$1 - codes.created_at < $2 and
+						users.email = $3 and
+						codes.code = $4
 				",
 			)
 			.bind(&now)
@@ -106,9 +106,9 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 				"
 					update codes
 					set
-						deleted_at = ?1
+						deleted_at = $1
 					where
-						id = ?2
+						id = $2
 				",
 			)
 			.bind(&now)
@@ -126,7 +126,7 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 					insert into codes (
 						id, created_at, user_id, code
 					) values (
-						?1, ?2, ?3, ?4
+						$1, $2, $3, $4
 					)
 				",
 			)
@@ -171,7 +171,7 @@ async fn create_token(db: &mut sqlx::Transaction<'_, sqlx::Any>, user_id: Id) ->
 			insert into tokens (
 				id, created_at, token, user_id
 			) values (
-				?1, ?2, ?3, ?4
+				$1, $2, $3, $4
 			)
 		",
 	)

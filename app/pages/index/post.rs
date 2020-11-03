@@ -43,7 +43,7 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 			sqlx::query(
 				"
 					delete from repos
-					where id = ?1
+					where id = $1
 				",
 			)
 			.bind(&repo_id.to_string())

@@ -47,7 +47,7 @@ pub async fn post(
 			sqlx::query(
 				"
 					delete from models
-					where id = ?1
+					where id = $1
 				",
 			)
 			.bind(&model_id.to_string())

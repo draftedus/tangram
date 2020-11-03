@@ -106,7 +106,7 @@ pub async fn post(
 			insert into models
 				(id, repo_id, created_at, data)
 			values
-				(?1, ?2, ?3, ?4)
+				($1, $2, $3, $4)
 		",
 	)
 	.bind(&model.id().to_string())

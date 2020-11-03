@@ -51,7 +51,7 @@ pub async fn get(
 			from repos
 			join models
 				on models.repo_id = repos.id
-			where repos.organization_id = ?1
+			where repos.organization_id = $1
 		",
 	)
 	.bind(&organization_id.to_string())
@@ -103,7 +103,7 @@ async fn get_card(
 				organizations.stripe_payment_method_id
 			from organizations
 			where
-				id = ?1
+				id = $1
 			and organizations.stripe_payment_method_id is not null
 		",
 	)

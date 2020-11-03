@@ -54,8 +54,8 @@ pub async fn get_production_metrics(
 				hour
 			from production_metrics
 			where
-				model_id = ?1 and
-				hour >= ?2
+				model_id = $1 and
+				hour >= $2
 			order by hour
 		",
 	)

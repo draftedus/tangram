@@ -50,7 +50,7 @@ async fn create_organization(
 			insert into organizations
 				(id, name, created_at, plan)
 			values
-				(?1, ?2, ?3, 'trial')
+				($1, $2, $3, 'trial')
 			",
 	)
 	.bind(&organization_id.to_string())
@@ -64,7 +64,7 @@ async fn create_organization(
 			insert into organizations_users
 				(organization_id, user_id, is_admin)
 			values
-				(?1, ?2, 1)
+				($1, $2, 1)
 		",
 	)
 	.bind(&organization_id.to_string())

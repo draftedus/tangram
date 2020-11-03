@@ -60,7 +60,7 @@ async fn add_member(
 			insert into users (
 				id, created_at, email
 			) values (
-				?1, ?2, ?2
+				$1, $2, $2
 			)
 			on conflict (email) do update set email = excluded.email
 		",
@@ -81,7 +81,7 @@ async fn add_member(
 			insert into organizations_users
 				(organization_id, user_id, is_admin)
 			values
-				(?1, ?2, ?3)
+				($1, $2, $3)
 			on conflict (organization_id, user_id) do nothing
 		",
 	)

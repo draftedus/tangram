@@ -59,7 +59,7 @@ async fn delete_model(
 		"
 		delete from models
 		where
-			models.id = ?1
+			models.id = $1
 	",
 	)
 	.bind(&model_id.to_string())
@@ -96,7 +96,7 @@ pub async fn download(
 			data
 		from models
 		where
-			models.id = ?1
+			models.id = $1
 		",
 	)
 	.bind(&model_id.to_string())
