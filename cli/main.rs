@@ -1,10 +1,10 @@
 //! This module contains the main entrypoint to the tangram cli.
 
+use self::{license::verify_license, progress_view::ProgressView};
 use backtrace::Backtrace;
 use clap::Clap;
 use colored::Colorize;
 use once_cell::sync::Lazy;
-use progress_view::ProgressView;
 use std::{
 	borrow::Cow,
 	path::{Path, PathBuf},
@@ -13,6 +13,7 @@ use std::{
 use tangram_util::{err, error::Result};
 use url::Url;
 
+mod license;
 mod progress_view;
 
 #[derive(Clap)]
@@ -69,12 +70,12 @@ struct AppOptions {
 	database_max_connections: Option<u32>,
 	#[clap(long, default_value = "0.0.0.0")]
 	host: std::net::IpAddr,
-	#[clap(long)]
-	model: Option<PathBuf>,
 	#[clap(long, env = "PORT", default_value = "8080")]
 	port: u16,
 	#[clap(long, env = "SENDGRID_API_TOKEN")]
 	sendgrid_api_token: Option<String>,
+	#[clap(long, env = "LICENSE")]
+	license: Option<PathBuf>,
 	#[clap(hidden = true, long, env = "STRIPE_PUBLISHABLE_KEY")]
 	stripe_publishable_key: Option<String>,
 	#[clap(hidden = true, long, env = "STRIPE_SECRET_KEY")]
@@ -167,13 +168,21 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 }
 
 fn cli_app(options: AppOptions) -> Result<()> {
+	let license_verified: Option<bool> = if let Some(license_file_path) = options.license {
+		Some(verify_license(&license_file_path)?)
+	} else {
+		None
+	};
+	let license_verified = license_verified.unwrap_or(true);
+	if !license_verified {
+		return Err(err!("failed to verify license"));
+	}
 	tangram_app::run(tangram_app::Options {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
 		database_url: options.database_url.unwrap_or_else(default_database_url),
 		database_max_connections: options.database_max_connections,
 		host: options.host,
-		model: options.model,
 		port: options.port,
 		sendgrid_api_token: options.sendgrid_api_token,
 		stripe_publishable_key: options.stripe_publishable_key,

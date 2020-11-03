@@ -5,6 +5,10 @@ name = "tangram_scripts"
 version = "0.0.0"
 
 [[bin]]
+name = "tangram_script_generate_license"
+path = "generate_license.rs"
+
+[[bin]]
 name = "tangram_script_prepare_release"
 path = "prepare_release.rs"
 
@@ -19,9 +23,11 @@ clap = { version = "3.0.0-beta.2", features = ["color"] }
 num-traits = "0.2"
 rand = "0.7"
 reqwest = { version = "0.10", features = ["json"] }
+rsa = "0.3"
 rustyline = "6"
 serde = "1"
 serde_json = "1"
+sha2 = "0.9"
 tokio = { version = "0.2", features = ["full"] }
 tangram_dataframe = { path = "../dataframe" }
 tangram_util = { path = "../util" }

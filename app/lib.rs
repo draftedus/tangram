@@ -9,9 +9,8 @@ use hyper::{
 use pinwheel::Pinwheel;
 use std::{
 	borrow::Cow, cell::RefCell, collections::BTreeMap, convert::Infallible,
-	panic::AssertUnwindSafe, path::PathBuf, str::FromStr, sync::Arc,
+	panic::AssertUnwindSafe, str::FromStr, sync::Arc,
 };
-use tangram_util::id::Id;
 use tangram_util::{err, error::Result};
 use url::Url;
 
@@ -29,7 +28,6 @@ pub struct Options {
 	pub database_url: Url,
 	pub database_max_connections: Option<u32>,
 	pub host: std::net::IpAddr,
-	pub model: Option<PathBuf>,
 	pub port: u16,
 	pub sendgrid_api_token: Option<String>,
 	pub stripe_publishable_key: Option<String>,
@@ -370,21 +368,6 @@ async fn run_impl(options: Options) -> Result<()> {
 		.await?;
 	// Run any pending migrations.
 	migrations::run(&pool).await?;
-	// If a model was included in the options, add it to the database now.
-	if let Some(model_path) = &options.model {
-		let mut db = pool.begin().await?;
-		let repo_id = Id::new();
-		let model_data = std::fs::read(model_path)?;
-		let model = tangram_core::model::Model::from_slice(&model_data)?;
-		let title = model_path
-			.file_stem()
-			.ok_or_else(|| err!("bad model path"))?
-			.to_str()
-			.ok_or_else(|| err!("bad model path"))?;
-		crate::common::repos::create_root_repo(&mut db, repo_id, title).await?;
-		crate::common::repos::add_model_version(&mut db, repo_id, model.id(), &model_data).await?;
-		db.commit().await?;
-	}
 	// Run the server.
 	tokio::task_local! {
 		static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;

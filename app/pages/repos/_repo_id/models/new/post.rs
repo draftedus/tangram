@@ -103,10 +103,10 @@ pub async fn post(
 	let now = Utc::now().timestamp();
 	let result = sqlx::query(
 		"
-		insert into models
-			(id, repo_id, created_at, data)
-		values
-			(?1, ?2, ?3, ?4)
+			insert into models
+				(id, repo_id, created_at, data)
+			values
+				(?1, ?2, ?3, ?4)
 		",
 	)
 	.bind(&model.id().to_string())
@@ -122,7 +122,7 @@ pub async fn post(
 		)
 		.await?;
 		let response = Response::builder()
-			.status(StatusCode::INTERNAL_SERVER_ERROR)
+			.status(StatusCode::BAD_REQUEST)
 			.body(Body::from(html))
 			.unwrap();
 		return Ok(response);
