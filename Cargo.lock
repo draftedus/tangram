@@ -2364,7 +2364,6 @@ dependencies = [
 name = "tangram_cli"
 version = "0.2.0-dev"
 dependencies = [
- "anyhow",
  "backtrace",
  "base64 0.13.0",
  "clap",
@@ -2409,7 +2408,6 @@ dependencies = [
  "csv",
  "fnv",
  "insta",
- "itertools",
  "lexical",
  "ndarray",
  "num-traits",
