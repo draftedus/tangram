@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"esbuild": "0.7.21"
+		"esbuild": "0.8.3"
 	},
 	"license": "MIT",
 	"main": "lib.ts",
