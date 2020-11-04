@@ -2,18 +2,21 @@ use super::props::{Props, Repo};
 use crate::{
 	common::{
 		error::Error,
+		timezone::get_timezone,
 		user::{authorize_user, NormalUser, User},
 	},
 	layouts::app_layout::get_app_layout_info,
 	Context,
 };
 use chrono::prelude::*;
+use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use tangram_util::error::Result;
 use tangram_util::id::Id;
 
 pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<Body>> {
+	let timezone = get_timezone(&request);
 	let mut db = context
 		.pool
 		.begin()
@@ -24,8 +27,8 @@ pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<B
 		.map_err(|_| Error::Unauthorized)?;
 	let app_layout_info = get_app_layout_info(context).await?;
 	let repos = match user {
-		User::Root => repos_for_root(&mut db).await?,
-		User::Normal(user) => repos_for_user(&mut db, &user).await?,
+		User::Root => repos_for_root(&mut db, &timezone).await?,
+		User::Normal(user) => repos_for_user(&mut db, &timezone, &user).await?,
 	};
 	let props = Props {
 		app_layout_info,
@@ -40,7 +43,10 @@ pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<B
 	Ok(response)
 }
 
-async fn repos_for_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Vec<Repo>> {
+async fn repos_for_root(
+	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	timezone: &Tz,
+) -> Result<Vec<Repo>> {
 	let rows = sqlx::query(
 		"
 			select
@@ -59,10 +65,10 @@ async fn repos_for_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Vec
 			let id: String = row.get(0);
 			let id: Id = id.parse().unwrap();
 			let created_at: i64 = row.get(1);
-			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+			let created_at: DateTime<Tz> = Utc.timestamp(created_at, 0).with_timezone(&timezone);
 			let title = row.get(2);
 			Repo {
-				created_at: created_at.to_rfc3339(),
+				created_at: created_at.to_string(),
 				id: id.to_string(),
 				owner_name: None,
 				title,
@@ -71,8 +77,10 @@ async fn repos_for_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Vec
 		.collect();
 	Ok(repos)
 }
+
 async fn repos_for_user(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
+	timezone: &Tz,
 	user: &NormalUser,
 ) -> Result<Vec<Repo>> {
 	let mut repos = Vec::new();
@@ -93,12 +101,12 @@ async fn repos_for_user(
 		let id = row.get(0);
 		let title = row.get(1);
 		let created_at = row.get::<i64, _>(2);
-		let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+		let created_at: DateTime<Tz> = Utc.timestamp(created_at, 0).with_timezone(timezone);
 		let owner_name = user.email.clone();
 		repos.push(Repo {
 			id,
 			title,
-			created_at: created_at.to_rfc3339(),
+			created_at: created_at.to_string(),
 			owner_name: Some(owner_name),
 		});
 	}
@@ -124,12 +132,12 @@ async fn repos_for_user(
 		let id = row.get(0);
 		let title = row.get(1);
 		let created_at = row.get::<i64, _>(2);
-		let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+		let created_at: DateTime<Tz> = Utc.timestamp(created_at, 0).with_timezone(timezone);
 		let owner_name = row.get(3);
 		repos.push(Repo {
 			id,
 			title,
-			created_at: created_at.to_rfc3339(),
+			created_at: created_at.to_string(),
 			owner_name,
 		});
 	}

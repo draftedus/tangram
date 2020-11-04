@@ -11,11 +11,11 @@ use crate::{
 	layouts::model_layout::get_model_layout_info,
 };
 use chrono::prelude::*;
+use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
 	context: &Context,
@@ -60,8 +60,7 @@ pub async fn get(
 	let inner = match row {
 		Some(row) => {
 			let date: i64 = row.get(0);
-			let date: DateTime<Utc> = Utc.timestamp(date, 0);
-			let date = date.with_timezone(&timezone);
+			let date: DateTime<Tz> = Utc.timestamp(date, 0).with_timezone(&timezone);
 			let input: String = row.get(2);
 			let input: Vec<u8> = base64::decode(input).unwrap();
 			let input: serde_json::Map<String, serde_json::Value> =
@@ -71,7 +70,7 @@ pub async fn get(
 			Inner::Found(Found {
 				input_table: prediction_output.input_table,
 				prediction: prediction_output.prediction,
-				date: date.to_rfc3339(),
+				date: date.to_string(),
 			})
 		}
 		None => Inner::NotFound,

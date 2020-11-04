@@ -2,7 +2,6 @@ import './code.css'
 import { Language, SyntaxColors, grammars, highlight } from './syntax'
 import { times } from './util'
 import { ComponentChildren, Fragment, h } from 'preact'
-import { useEffect } from 'preact/hooks'
 
 let syntaxColors: SyntaxColors = {
 	background: 'var(--header-color)',
@@ -57,9 +56,6 @@ type CodeSelectProps = {
 
 export function CodeSelect(props: CodeSelectProps) {
 	let name = Math.random().toString()
-	useEffect(() => {
-		bootCodeSelect()
-	})
 	return (
 		<div class="code code-grid">
 			{props.languages && (
@@ -67,23 +63,23 @@ export function CodeSelect(props: CodeSelectProps) {
 					<CodeOption
 						checked={true}
 						code={props.languages[Language.Go]}
+						id={name}
 						language={Language.Go}
-						name={name}
 					/>
 					<CodeOption
 						code={props.languages[Language.JavaScript]}
+						id={name}
 						language={Language.JavaScript}
-						name={name}
 					/>
 					<CodeOption
 						code={props.languages[Language.Python]}
+						id={name}
 						language={Language.Python}
-						name={name}
 					/>
 					<CodeOption
 						code={props.languages[Language.Ruby]}
+						id={name}
 						language={Language.Ruby}
-						name={name}
 					/>
 				</>
 			)}
@@ -112,8 +108,8 @@ type CodeOptionProps = {
 	checked?: boolean
 	code: string
 	hideLineNumbers?: boolean
+	id: string
 	language: Language
-	name: string
 }
 
 function CodeOption(props: CodeOptionProps) {
@@ -125,7 +121,7 @@ function CodeOption(props: CodeOptionProps) {
 				class="code-radio-input"
 				data-lang={props.language}
 				id={optionId}
-				name={props.name}
+				name={props.id}
 				type="radio"
 				value={props.language}
 			/>

@@ -35,6 +35,7 @@ export function Document(props: DocumentProps) {
 			</head>
 			<body>
 				{props.children}
+				<script src="/timezone.js" />
 				{props.pageInfo.clientJsSrc && (
 					<script src={props.pageInfo.clientJsSrc} type="module" />
 				)}

@@ -1,6 +1,7 @@
 [workspace]
 members = [
 	"app",
+	"app/pages/repos/_repo_id/models/new/client",
 	"cli",
 	"core",
 	"features",

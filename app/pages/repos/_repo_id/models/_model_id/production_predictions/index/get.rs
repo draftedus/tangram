@@ -3,18 +3,19 @@ use crate::{
 	common::{
 		error::Error,
 		monitor_event::PredictOutput,
+		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_model},
 	},
 	layouts::model_layout::get_model_layout_info,
 	Context,
 };
 use chrono::prelude::*;
+use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 const N_PREDICTIONS_PER_PAGE: i64 = 10;
 
@@ -24,6 +25,7 @@ pub async fn get(
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
+	let timezone = get_timezone(&request);
 	let after: Option<i64> = search_params
 		.as_ref()
 		.and_then(|s| s.get("after"))
@@ -158,7 +160,7 @@ pub async fn get(
 		.iter()
 		.map(|row| {
 			let date = row.get::<i64, _>(0);
-			let date: DateTime<Utc> = Utc.timestamp(date, 0);
+			let date: DateTime<Tz> = Utc.timestamp(date, 0).with_timezone(&timezone);
 			let identifier: String = row.get(1);
 			let output: String = row.get(3);
 			let output: Vec<u8> = base64::decode(output).unwrap();
@@ -169,7 +171,7 @@ pub async fn get(
 				PredictOutput::MulticlassClassification(output) => output.class_name,
 			};
 			PredictionTableRow {
-				date: date.to_rfc3339(),
+				date: date.to_string(),
 				identifier,
 				output,
 			}

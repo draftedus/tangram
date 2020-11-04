@@ -21,7 +21,6 @@ export default (pageInfo: PageInfo, props: Props) => {
 						<ui.TableHeader>
 							<ui.TableRow>
 								<ui.TableHeaderCell expand={true}>{'Name'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Owner'}</ui.TableHeaderCell>
 								<ui.TableHeaderCell>{'Created'}</ui.TableHeaderCell>
 								<ui.TableHeaderCell></ui.TableHeaderCell>
 							</ui.TableRow>
@@ -40,7 +39,6 @@ export default (pageInfo: PageInfo, props: Props) => {
 											{repo.title}
 										</ui.Link>
 									</ui.TableCell>
-									<ui.TableCell>{repo.ownerName}</ui.TableCell>
 									<ui.TableCell>{repo.createdAt}</ui.TableCell>
 									<ui.TableCell>
 										<form method="post">

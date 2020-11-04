@@ -2,22 +2,24 @@ use super::props::{Model, Props};
 use crate::{
 	common::{
 		error::Error,
+		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_repo},
 	},
 	layouts::app_layout::get_app_layout_info,
 	Context,
 };
 use chrono::prelude::*;
+use chrono_tz::Tz;
 use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
 	context: &Context,
 	request: Request<Body>,
 	repo_id: &str,
 ) -> Result<Response<Body>> {
+	let timezone = get_timezone(&request);
 	let mut db = context
 		.pool
 		.begin()
@@ -50,9 +52,9 @@ pub async fn get(
 			let id: String = row.get(0);
 			let id: Id = id.parse().unwrap();
 			let created_at: i64 = row.get(1);
-			let created_at: DateTime<Utc> = Utc.timestamp(created_at, 0);
+			let created_at: DateTime<Tz> = Utc.timestamp(created_at, 0).with_timezone(&timezone);
 			Model {
-				created_at: created_at.to_rfc3339(),
+				created_at: created_at.to_string(),
 				id: id.to_string(),
 			}
 		})
