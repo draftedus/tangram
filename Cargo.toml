@@ -1,7 +1,6 @@
 [workspace]
 members = [
 	"app",
-	"app/pages/repos/_repo_id/models/new/client",
 	"cli",
 	"core",
 	"features",
@@ -13,6 +12,9 @@ members = [
 	"tree",
 	"util",
 ]
+
+[profile.dev]
+# opt-level = 2
 
 [profile.release]
 debug = true

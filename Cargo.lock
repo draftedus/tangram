@@ -2349,13 +2349,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tangram_app_repos_repo_id_models_new_client"
-version = "0.0.0"
-dependencies = [
- "wasm-bindgen",
-]
-
-[[package]]
 name = "tangram_cli"
 version = "0.2.0-dev"
 dependencies = [
