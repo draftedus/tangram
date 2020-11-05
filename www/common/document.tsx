@@ -35,7 +35,11 @@ export function Document(props: DocumentProps) {
 			</head>
 			<body>
 				{props.children}
-				<script src="/timezone.js" />
+				<script>
+					{
+						'document.cookie = `tangram-timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone};max-age=31536000`'
+					}
+				</script>
 				{props.pageInfo.clientJsSrc && (
 					<script src={props.pageInfo.clientJsSrc} type="module" />
 				)}
