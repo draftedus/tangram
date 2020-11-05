@@ -300,7 +300,7 @@ pub async fn get(
 							training: training_class_metrics.recall,
 							production: recall,
 						},
-						class_name: class_name.to_owned(),
+						class_name: class_name.clone(),
 					}
 				})
 				.collect();

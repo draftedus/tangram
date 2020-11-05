@@ -537,8 +537,8 @@ impl<'a> StreamingMetric<'a> for TextProductionColumnStats {
 					};
 					token_set.insert(unigram);
 				}
-				for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
-					let bigram = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
+				for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
+					let bigram = Token::Bigram(token_a.into_owned(), token_b.into_owned());
 					match self.token_histogram.get_mut(&bigram) {
 						Some(count) => *count += 1,
 						None => {

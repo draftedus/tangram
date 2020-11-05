@@ -36,14 +36,14 @@ pub async fn get(
 		tangram_core::model::Model::MulticlassClassifier(model) => model,
 		_ => return Err(Error::BadRequest.into()),
 	};
-	let class = search_params.map(|s| s.get("class").unwrap().to_owned());
-	let classes = model.classes.to_owned();
+	let class = search_params.map(|s| s.get("class").unwrap().clone());
+	let classes = model.classes.clone();
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {
 		0
 	};
-	let class = class.unwrap_or_else(|| classes[class_index].to_owned());
+	let class = class.unwrap_or_else(|| classes.get(class_index).unwrap().clone());
 	let class_metrics = &model.test_metrics.class_metrics[class_index];
 	let precision = class_metrics.precision;
 	let recall = class_metrics.recall;

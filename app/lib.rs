@@ -388,8 +388,7 @@ async fn run_impl(options: Options) -> Result<()> {
 		let context = context.clone();
 		async move {
 			Ok::<_, Infallible>(service_fn(move |request| {
-				// let request_id = Id::new();
-				let method = request.method().to_owned();
+				let method = request.method().clone();
 				let path = request.uri().path_and_query().unwrap().path().to_owned();
 				let context = context.clone();
 				PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {

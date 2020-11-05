@@ -52,7 +52,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 					.iter()
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
-				id: model.id.to_owned(),
+				id: model.id.clone(),
 				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				row_count: model.test_row_count.to_usize().unwrap()
@@ -67,7 +67,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 					.iter()
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
-				id: model.id.to_owned(),
+				id: model.id.clone(),
 				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				row_count: model.test_row_count.to_usize().unwrap()
@@ -82,7 +82,7 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 					.iter()
 					.map(|column_stats| build_column_stats(column_stats))
 					.collect(),
-				id: model.id.to_owned(),
+				id: model.id.clone(),
 				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
 				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				row_count: model.test_row_count.to_usize().unwrap()
@@ -100,7 +100,7 @@ fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> Column
 			column_type: ColumnType::Unknown,
 			unique_count: None,
 			invalid_count: None,
-			name: column_stats.column_name.to_owned(),
+			name: column_stats.column_name.clone(),
 			max: None,
 			min: None,
 			std: None,
@@ -111,7 +111,7 @@ fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> Column
 			column_type: ColumnType::Number,
 			unique_count: Some(column_stats.unique_count.to_usize().unwrap()),
 			invalid_count: Some(column_stats.invalid_count.to_usize().unwrap()),
-			name: column_stats.column_name.to_owned(),
+			name: column_stats.column_name.clone(),
 			max: Some(column_stats.max),
 			min: Some(column_stats.min),
 			std: Some(column_stats.std),
@@ -122,7 +122,7 @@ fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> Column
 			column_type: ColumnType::Enum,
 			unique_count: column_stats.unique_count.to_usize(),
 			invalid_count: column_stats.invalid_count.to_usize(),
-			name: column_stats.column_name.to_owned(),
+			name: column_stats.column_name.clone(),
 			max: None,
 			min: None,
 			std: None,
@@ -133,7 +133,7 @@ fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> Column
 			column_type: ColumnType::Text,
 			unique_count: None,
 			invalid_count: None,
-			name: column_stats.column_name.to_owned(),
+			name: column_stats.column_name.clone(),
 			max: None,
 			min: None,
 			std: None,

@@ -109,13 +109,13 @@ fn predict(
 	for column in column_stats.iter() {
 		match column {
 			tangram_core::model::ColumnStats::Number(number_column) => {
-				column_lookup.insert(number_column.column_name.to_owned(), column);
+				column_lookup.insert(number_column.column_name.clone(), column);
 			}
 			tangram_core::model::ColumnStats::Enum(enum_column) => {
-				column_lookup.insert(enum_column.column_name.to_owned(), column);
+				column_lookup.insert(enum_column.column_name.clone(), column);
 			}
 			tangram_core::model::ColumnStats::Text(text_column) => {
-				column_lookup.insert(text_column.column_name.to_owned(), column);
+				column_lookup.insert(text_column.column_name.clone(), column);
 			}
 			_ => unreachable!(),
 		}

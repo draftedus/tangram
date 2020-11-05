@@ -100,16 +100,14 @@ impl ProductionPredictionMetrics {
 			tangram_core::model::Model::BinaryClassifier(model) => {
 				ProductionPredictionMetrics::BinaryClassification(
 					BinaryClassificationProductionPredictionMetrics::new(
-						model.negative_class.to_owned(),
-						model.positive_class.to_owned(),
+						model.negative_class.clone(),
+						model.positive_class.clone(),
 					),
 				)
 			}
 			tangram_core::model::Model::MulticlassClassifier(model) => {
 				ProductionPredictionMetrics::MulticlassClassification(
-					MulticlassClassificationProductionPredictionMetrics::new(
-						model.classes.to_owned(),
-					),
+					MulticlassClassificationProductionPredictionMetrics::new(model.classes.clone()),
 				)
 			}
 		}

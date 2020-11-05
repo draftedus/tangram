@@ -354,12 +354,12 @@ pub enum ColumnStats {
 }
 
 impl ColumnStats {
-	pub fn column_name(&self) -> String {
+	pub fn column_name(&self) -> &str {
 		match &self {
-			ColumnStats::Unknown(c) => c.column_name.to_owned(),
-			ColumnStats::Number(c) => c.column_name.to_owned(),
-			ColumnStats::Enum(c) => c.column_name.to_owned(),
-			ColumnStats::Text(c) => c.column_name.to_owned(),
+			ColumnStats::Unknown(c) => &c.column_name,
+			ColumnStats::Number(c) => &c.column_name,
+			ColumnStats::Enum(c) => &c.column_name,
+			ColumnStats::Text(c) => &c.column_name,
 		}
 	}
 

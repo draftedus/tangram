@@ -70,7 +70,7 @@ pub async fn get(
 		.stripe_publishable_key
 		.as_ref()
 		.unwrap()
-		.to_owned();
+		.clone();
 	let props = Props {
 		app_layout_info,
 		card,

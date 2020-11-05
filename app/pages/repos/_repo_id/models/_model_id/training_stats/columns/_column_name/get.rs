@@ -79,11 +79,11 @@ pub async fn props(
 	let inner = match column {
 		tangram_core::model::ColumnStats::Unknown(_) => todo!(),
 		tangram_core::model::ColumnStats::Number(column) => Inner::Number(Number {
-			invalid_count: column.invalid_count.to_owned(),
+			invalid_count: column.invalid_count,
 			min: column.min,
 			max: column.max,
 			mean: column.mean,
-			name: column.column_name.to_owned(),
+			name: column.column_name.clone(),
 			p25: column.p25,
 			p50: column.p50,
 			p75: column.p75,
@@ -92,12 +92,12 @@ pub async fn props(
 		}),
 		tangram_core::model::ColumnStats::Enum(column) => Inner::Enum(Enum {
 			histogram: Some(column.histogram),
-			invalid_count: column.invalid_count.to_owned(),
-			name: column.column_name.to_owned(),
+			invalid_count: column.invalid_count,
+			name: column.column_name.clone(),
 			unique_count: column.unique_count,
 		}),
 		tangram_core::model::ColumnStats::Text(column) => Inner::Text(Text {
-			name: column.column_name.to_owned(),
+			name: column.column_name.clone(),
 			tokens: column
 				.top_tokens
 				.into_iter()

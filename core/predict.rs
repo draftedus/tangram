@@ -508,11 +508,11 @@ fn predict_multiclass_classifier(
 								output_value,
 								feature_contributions,
 							};
-							(class.to_owned(), feature_contributions)
+							(class.clone(), feature_contributions)
 						})
 						.collect();
 					MulticlassClassificationPredictOutput {
-						class_name: class_name.to_owned(),
+						class_name: class_name.clone(),
 						probability: *probability,
 						probabilities,
 						feature_contributions: Some(feature_contributions),
@@ -560,11 +560,11 @@ fn predict_multiclass_classifier(
 								output_value,
 								feature_contributions,
 							};
-							(class.to_owned(), feature_contributions)
+							(class.clone(), feature_contributions)
 						})
 						.collect();
 					MulticlassClassificationPredictOutput {
-						class_name: class_name.to_owned(),
+						class_name: class_name.clone(),
 						probability: *probability,
 						probabilities,
 						feature_contributions: Some(feature_contributions),
@@ -587,7 +587,7 @@ fn compute_feature_contributions<'a>(
 				let _feature_value = features.next().unwrap();
 				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::Identity {
-					column_name: feature_group.source_column_name.to_owned(),
+					column_name: feature_group.source_column_name.clone(),
 					feature_contribution_value,
 				});
 			}
@@ -595,7 +595,7 @@ fn compute_feature_contributions<'a>(
 				let _feature_value = features.next().unwrap();
 				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::Normalized {
-					column_name: feature_group.source_column_name.to_owned(),
+					column_name: feature_group.source_column_name.clone(),
 					feature_contribution_value,
 				});
 			}
@@ -603,7 +603,7 @@ fn compute_feature_contributions<'a>(
 				let feature_value = features.next().unwrap();
 				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::OneHotEncoded {
-					column_name: feature_group.source_column_name.to_owned(),
+					column_name: feature_group.source_column_name.clone(),
 					option: None,
 					feature_value: feature_value > 0.0,
 					feature_contribution_value,
@@ -612,8 +612,8 @@ fn compute_feature_contributions<'a>(
 					let feature_value = features.next().unwrap();
 					let feature_contribution_value = feature_contribution_values.next().unwrap();
 					feature_contributions.push(FeatureContribution::OneHotEncoded {
-						column_name: feature_group.source_column_name.to_owned(),
-						option: Some(option.to_owned()),
+						column_name: feature_group.source_column_name.clone(),
+						option: Some(option.clone()),
 						feature_value: feature_value > 0.0,
 						feature_contribution_value,
 					});
@@ -624,7 +624,7 @@ fn compute_feature_contributions<'a>(
 					let feature_value = features.next().unwrap();
 					let feature_contribution_value = feature_contribution_values.next().unwrap();
 					feature_contributions.push(FeatureContribution::BagOfWords {
-						column_name: feature_group.source_column_name.to_owned(),
+						column_name: feature_group.source_column_name.clone(),
 						token: token.token.clone().into(),
 						feature_value: feature_value > 0.0,
 						feature_contribution_value,

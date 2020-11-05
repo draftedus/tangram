@@ -296,7 +296,7 @@ async fn insert_or_update_production_metrics_for_monitor_event(
 		serde_json::Value::Number(value) => {
 			NumberOrString::Number(value.as_f64().unwrap().to_f32().unwrap())
 		}
-		serde_json::Value::String(value) => NumberOrString::String(value.to_owned()),
+		serde_json::Value::String(value) => NumberOrString::String(value.clone()),
 		_ => unimplemented!(),
 	};
 	let rows = sqlx::query(

@@ -44,21 +44,21 @@ pub async fn get(
 		.iter()
 		.map(|column_stats| match column_stats {
 			tangram_core::model::ColumnStats::Unknown(column_stats) => {
-				let name = column_stats.column_name.to_owned();
+				let name = column_stats.column_name.clone();
 				let value = search_params
 					.as_ref()
 					.and_then(|s| s.get(&name))
-					.map(|s| s.to_owned())
+					.cloned()
 					.unwrap_or_else(|| "".to_owned());
 				Column::Unknown(Unknown { name, value })
 			}
 			tangram_core::model::ColumnStats::Number(column_stats) => {
-				let name = column_stats.column_name.to_owned();
+				let name = column_stats.column_name.clone();
 				let mean = column_stats.mean;
 				let value = search_params
 					.as_ref()
 					.and_then(|s| s.get(&name))
-					.map(|s| s.to_owned())
+					.cloned()
 					.unwrap_or_else(|| mean.to_string());
 				Column::Number(Number {
 					name,
@@ -72,21 +72,21 @@ pub async fn get(
 			}
 			tangram_core::model::ColumnStats::Enum(column_stats) => {
 				let histogram = &column_stats.histogram;
-				let options = histogram.iter().map(|(key, _)| key.to_owned()).collect();
-				let name = column_stats.column_name.to_owned();
+				let options = histogram.iter().map(|(key, _)| key.clone()).collect();
+				let name = column_stats.column_name.clone();
 				let mode: String = column_stats
 					.histogram
 					.iter()
 					.max_by(|a, b| a.1.cmp(&b.1))
 					.unwrap()
 					.0
-					.to_owned();
+					.clone();
 				let value = search_params
 					.as_ref()
 					.and_then(|s| s.get(&name))
-					.map(|s| s.to_owned())
+					.cloned()
 					.unwrap_or(mode);
-				let histogram = column_stats.histogram.to_owned();
+				let histogram = column_stats.histogram.clone();
 				Column::Enum(Enum {
 					name,
 					options,
@@ -95,11 +95,11 @@ pub async fn get(
 				})
 			}
 			tangram_core::model::ColumnStats::Text(column_stats) => {
-				let name = column_stats.column_name.to_owned();
+				let name = column_stats.column_name.clone();
 				let value = search_params
 					.as_ref()
 					.and_then(|s| s.get(&name))
-					.map(|s| s.to_owned())
+					.cloned()
 					.unwrap_or_else(|| "".to_owned());
 				Column::Text(Text { name, value })
 			}
@@ -160,13 +160,13 @@ fn predict(
 	for column in columns.iter() {
 		match column {
 			Column::Number(number_column) => {
-				column_lookup.insert(number_column.name.to_owned(), column);
+				column_lookup.insert(number_column.name.clone(), column);
 			}
 			Column::Enum(enum_column) => {
-				column_lookup.insert(enum_column.name.to_owned(), column);
+				column_lookup.insert(enum_column.name.clone(), column);
 			}
 			Column::Text(text_column) => {
-				column_lookup.insert(text_column.name.to_owned(), column);
+				column_lookup.insert(text_column.name.clone(), column);
 			}
 			_ => unreachable!(),
 		}

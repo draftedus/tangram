@@ -101,7 +101,7 @@ fn build_inner_binary_classifier(
 fn build_inner_multiclass_classifier(
 	model: tangram_core::model::MulticlassClassifier,
 ) -> MulticlassClassifierProps {
-	let classes = model.classes.to_owned();
+	let classes = model.classes.clone();
 	let class_metrics = model
 		.test_metrics
 		.class_metrics

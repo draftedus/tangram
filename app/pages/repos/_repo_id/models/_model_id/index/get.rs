@@ -98,7 +98,7 @@ pub async fn get(
 					accuracy: model.test_metrics.accuracy,
 					baseline_accuracy: model.baseline_metrics.accuracy,
 					class_metrics,
-					classes: model.classes.to_owned(),
+					classes: model.classes.clone(),
 				},
 				losses_chart_data: match &model.model {
 					tangram_core::model::MulticlassClassificationModel::Linear(model) => {

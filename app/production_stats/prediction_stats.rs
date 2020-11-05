@@ -46,8 +46,8 @@ impl ProductionPredictionStats {
 			tangram_core::model::Model::BinaryClassifier(model) => {
 				ProductionPredictionStats::BinaryClassification(
 					ClassificationProductionPredictionStats::new(&[
-						model.negative_class.to_owned(),
-						model.positive_class.to_owned(),
+						model.negative_class.clone(),
+						model.positive_class.clone(),
 					]),
 				)
 			}

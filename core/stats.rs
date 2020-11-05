@@ -235,7 +235,7 @@ impl ColumnStats {
 		match (self, other) {
 			(ColumnStats::Unknown(a), ColumnStats::Unknown(b)) => {
 				ColumnStats::Unknown(UnknownColumnStats {
-					column_name: a.column_name.to_owned(),
+					column_name: a.column_name.clone(),
 					count: a.count + b.count,
 					invalid_count: a.invalid_count + b.invalid_count,
 				})
@@ -445,8 +445,8 @@ impl TextColumnStats {
 				token_set.insert(unigram.clone());
 				*stats.token_occurrence_histogram.entry(unigram).or_insert(0) += 1;
 			}
-			for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
-				let bigram = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
+			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
+				let bigram = Token::Bigram(token_a.into_owned(), token_b.into_owned());
 				token_set.insert(bigram.clone());
 				*stats.token_occurrence_histogram.entry(bigram).or_insert(0) += 1;
 			}

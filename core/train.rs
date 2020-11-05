@@ -407,8 +407,8 @@ pub fn train(
 			};
 			let (negative_class, positive_class) = match &train_target_column_stats {
 				stats::ColumnStatsOutput::Enum(train_target_column_stats) => (
-					train_target_column_stats.histogram[0].0.to_owned(),
-					train_target_column_stats.histogram[1].0.to_owned(),
+					train_target_column_stats.histogram[0].0.clone(),
+					train_target_column_stats.histogram[1].0.clone(),
 				),
 				_ => unreachable!(),
 			};
@@ -485,7 +485,7 @@ pub fn train(
 					train_target_column_stats
 						.histogram
 						.iter()
-						.map(|(class, _)| class.to_owned())
+						.map(|(class, _)| class.clone())
 						.collect()
 				}
 				_ => unreachable!(),

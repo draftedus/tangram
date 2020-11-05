@@ -194,10 +194,10 @@ fn compute_feature_names(feature_groups: &[tangram_core::model::FeatureGroup]) -
 		.iter()
 		.flat_map(|feature_group| match feature_group {
 			tangram_core::model::FeatureGroup::Identity(feature_group) => {
-				vec![feature_group.source_column_name.to_owned()]
+				vec![feature_group.source_column_name.clone()]
 			}
 			tangram_core::model::FeatureGroup::Normalized(feature_group) => {
-				vec![feature_group.source_column_name.to_owned()]
+				vec![feature_group.source_column_name.clone()]
 			}
 			tangram_core::model::FeatureGroup::OneHotEncoded(feature_group) => {
 				vec!["OOV".to_owned()]
@@ -206,8 +206,8 @@ fn compute_feature_names(feature_groups: &[tangram_core::model::FeatureGroup]) -
 					.map(|option| {
 						format!(
 							"{} = {}",
-							feature_group.source_column_name.to_owned(),
-							option.to_owned(),
+							feature_group.source_column_name.clone(),
+							option.clone(),
 						)
 					})
 					.collect()
@@ -218,7 +218,7 @@ fn compute_feature_names(feature_groups: &[tangram_core::model::FeatureGroup]) -
 				.map(|token| {
 					format!(
 						"{} contains {}",
-						feature_group.source_column_name.to_owned(),
+						feature_group.source_column_name.clone(),
 						token.token,
 					)
 				})

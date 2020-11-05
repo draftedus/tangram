@@ -74,7 +74,7 @@ pub async fn get(
 					column_stats.absent_count,
 					column_stats.invalid_count,
 				),
-				name: column_stats.column_name.to_owned(),
+				name: column_stats.column_name.clone(),
 				column_type: ColumnType::Unknown,
 			},
 			ProductionColumnStatsOutput::Text(column_stats) => OverallColumnStats {
@@ -85,7 +85,7 @@ pub async fn get(
 					column_stats.absent_count,
 					column_stats.invalid_count,
 				),
-				name: column_stats.column_name.to_owned(),
+				name: column_stats.column_name.clone(),
 				column_type: ColumnType::Text,
 			},
 			ProductionColumnStatsOutput::Number(column_stats) => OverallColumnStats {
@@ -96,7 +96,7 @@ pub async fn get(
 					column_stats.absent_count,
 					column_stats.invalid_count,
 				),
-				name: column_stats.column_name.to_owned(),
+				name: column_stats.column_name.clone(),
 				column_type: ColumnType::Number,
 			},
 			ProductionColumnStatsOutput::Enum(column_stats) => OverallColumnStats {
@@ -107,7 +107,7 @@ pub async fn get(
 					column_stats.absent_count,
 					column_stats.invalid_count,
 				),
-				name: column_stats.column_name.to_owned(),
+				name: column_stats.column_name.clone(),
 				column_type: ColumnType::Enum,
 			},
 		})

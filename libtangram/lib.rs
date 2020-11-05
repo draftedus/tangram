@@ -59,7 +59,7 @@ pub extern "C" fn tangram_model_id(
 			tangram_core::predict::Model::BinaryClassifier(model) => &model.id,
 			tangram_core::predict::Model::MulticlassClassifier(model) => &model.id,
 		};
-		let id = CString::new(id.to_owned()).unwrap();
+		let id = CString::new(id.clone()).unwrap();
 		*id_ptr = CString::into_raw(id) as *const u8;
 	});
 	match result {

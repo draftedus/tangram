@@ -137,7 +137,7 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 			.execute(&mut *db)
 			.await?;
 			if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
-				send_code_email(email.to_owned(), code, sendgrid_api_token).await?;
+				send_code_email(email.clone(), code, sendgrid_api_token).await?;
 			}
 			db.commit().await?;
 			let response = Response::builder()
@@ -147,18 +147,14 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 			return Ok(response);
 		}
 	}
-
 	let token = create_token(&mut db, user_id).await?;
-
 	db.commit().await?;
-
 	let set_cookie = set_cookie_header_value(token, context.options.cookie_domain.as_deref());
 	let response = Response::builder()
 		.status(StatusCode::SEE_OTHER)
 		.header(header::LOCATION, "/")
 		.header(header::SET_COOKIE, set_cookie)
 		.body(Body::empty())?;
-
 	Ok(response)
 }
 

@@ -191,9 +191,9 @@ fn get_random_row(dataframe: DataFrameView) -> HashMap<String, serde_json::Value
 				let column_name = column.name().unwrap().to_owned();
 				let value = column.data()[random_row_index];
 				let value = match value {
-					Some(value) => {
-						serde_json::Value::String(column.options()[value.get() - 1].to_owned())
-					}
+					Some(value) => serde_json::Value::String(
+						column.options().get(value.get() - 1).unwrap().clone(),
+					),
 					None => serde_json::Value::Null,
 				};
 				(column_name, value)
