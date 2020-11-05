@@ -124,6 +124,10 @@ impl Pinwheel {
 			None
 		};
 
+		// Read the manifest.
+		let manifest = self.fs().read(&Url::parse("dst:/manifest.json").unwrap())?;
+		let manifest: serde_json::Value = serde_json::from_slice(&manifest)?;
+
 		THREAD_LOCAL_ISOLATE.with(|isolate| {
 			let mut isolate = isolate.borrow_mut();
 			if let Pinwheel::Dev { .. } = self {
@@ -155,8 +159,26 @@ impl Pinwheel {
 			let page_module_default_export_function: v8::Local<v8::Function> =
 				unsafe { v8::Local::cast(page_module_default_export) };
 
-			// create the page info object
+			// Get the CSS sources from the manifest.
+			let css_srcs = manifest
+				.get("outputs")
+				.unwrap()
+				.as_object()
+				.unwrap()
+				.keys()
+				.filter(|output| output.ends_with(".css"))
+				.collect::<Vec<_>>();
+
+			// Create the page info object.
 			let page_info = v8::Object::new(&mut scope);
+			let css_srcs_literal = v8::String::new(&mut scope, "cssSrcs").unwrap();
+			let css_srcs_array = v8::Array::new(&mut scope, css_srcs.len().to_i32().unwrap());
+			for (i, css_src) in css_srcs.iter().enumerate() {
+				let i = v8::Number::new(&mut scope, i.to_f64().unwrap()).into();
+				let css_src = v8::String::new(&mut scope, css_src).unwrap().into();
+				css_srcs_array.set(&mut scope, i, css_src);
+			}
+			page_info.set(&mut scope, css_srcs_literal.into(), css_srcs_array.into());
 			let client_js_src_literal = v8::String::new(&mut scope, "clientJsSrc").unwrap();
 			let client_js_src_string = if let Some(client_js_src) = client_js_src {
 				v8::String::new(&mut scope, &client_js_src).unwrap().into()
@@ -596,20 +618,20 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 	}
 	std::fs::create_dir_all(&dst_dir).unwrap();
 	let manifest_path = dst_dir.join("manifest.json");
-	let cmd = which("npx").unwrap();
+	let cmd = which("../esbuild/esbuild").unwrap();
 	let mut args = vec![
-		"esbuild".to_owned(),
 		"--format=esm".to_owned(),
 		"--minify".to_owned(),
 		"--bundle".to_owned(),
 		"--splitting".to_owned(),
 		format!("--outbase={}/pages", src_dir.display()),
-		"--resolve-extensions=.js,.jsx,.ts,.tsx,.css,.gif,.jpg,.png,.svg".to_owned(),
+		"--resolve-extensions=.js,.jsx,.ts,.tsx,.css,.gif,.jpg,.png,.svg,.woff2".to_owned(),
 		"--public-path=/".to_owned(),
 		"--loader:.gif=file".to_owned(),
 		"--loader:.jpg=file".to_owned(),
 		"--loader:.png=file".to_owned(),
 		"--loader:.svg=dataurl".to_owned(),
+		"--loader:.woff2=file".to_owned(),
 		"--sourcemap".to_owned(),
 		format!("--metafile={}", manifest_path.display()),
 		format!("--outdir={}", dst_dir.display()),
@@ -633,26 +655,35 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 			args.push(format!("{}", client_source_path.display()));
 		}
 	}
-	let mut process = std::process::Command::new(cmd).args(&args).spawn().unwrap();
-	let status = process.wait().unwrap();
+	let mut process = std::process::Command::new(cmd).args(&args).spawn()?;
+	let status = process.wait()?;
 	if !status.success() {
 		return Err(err!("esbuild {}", status.to_string()));
 	}
-	let collect_css = |css_src_dir: &Path, output_file_name: &str| {
-		let mut css = String::new();
-		for path in walkdir::WalkDir::new(&css_src_dir) {
-			let path = path.unwrap();
-			let path = path.path();
-			if path.extension().map(|e| e.to_str().unwrap()) == Some("css") {
-				css.push_str(&std::fs::read_to_string(path).unwrap());
-			}
-		}
-		std::fs::write(dst_dir.join(output_file_name), css).unwrap();
-	};
-	collect_css(&src_dir.join("../app"), "app.css");
-	collect_css(&src_dir.join("../charts"), "charts.css");
-	collect_css(&src_dir.join("../ui"), "ui.css");
-	collect_css(&src_dir.join("../www"), "www.css");
+	// Strip the dst_dir prefix from the paths in the esbuild manifest.
+	let metafile = std::fs::read(&manifest_path)?;
+	let mut metafile: serde_json::Value = serde_json::from_slice(&metafile)?;
+	let outputs = metafile
+		.as_object()
+		.unwrap()
+		.get("outputs")
+		.unwrap()
+		.as_object()
+		.unwrap();
+	let mut new_outputs = serde_json::Map::new();
+	for (key, value) in outputs.iter() {
+		let key = key
+			.strip_prefix(dst_dir.to_str().unwrap())
+			.unwrap()
+			.to_owned();
+		new_outputs.insert(key, value.clone());
+	}
+	metafile
+		.as_object_mut()
+		.unwrap()
+		.insert("outputs".to_owned(), new_outputs.into());
+	let metafile = serde_json::to_vec(&metafile)?;
+	std::fs::write(manifest_path, metafile)?;
 	Ok(())
 }
 
