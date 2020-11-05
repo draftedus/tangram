@@ -43,20 +43,18 @@ async fn create_organization(
 ) -> Result<Response<Body>> {
 	let Action { name } = action;
 	let now = Utc::now().timestamp();
-	let plan = "trial";
 	let organization_id: Id = Id::new();
 	sqlx::query(
 		"
 			insert into organizations
-				(id, name, created_at, plan)
+				(id, name, created_at)
 			values
-				($1, $2, $3, 'trial')
+				($1, $2, $3)
 			",
 	)
 	.bind(&organization_id.to_string())
 	.bind(&name)
 	.bind(&now)
-	.bind(&plan)
 	.execute(&mut *db)
 	.await?;
 	sqlx::query(

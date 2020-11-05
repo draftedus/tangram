@@ -1,4 +1,4 @@
-use super::props::{AuthProps, Inner, NoAuthProps, Props, Repo};
+use super::props::{AuthProps, Inner, NoAuthProps, Organization, Props, Repo};
 use crate::{
 	common::{
 		error::Error,
@@ -35,7 +35,14 @@ pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<B
 			}
 		}
 		User::Normal(user) => {
-			let organizations = get_organizations(&mut db, user.id).await?;
+			let organizations = get_organizations(&mut db, user.id)
+				.await?
+				.into_iter()
+				.map(|organization| Organization {
+					id: organization.id,
+					name: organization.name,
+				})
+				.collect();
 			let repos = get_user_repositories(&mut db, user.id).await?;
 			Props {
 				app_layout_info,

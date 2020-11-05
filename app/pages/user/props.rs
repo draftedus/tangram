@@ -1,4 +1,4 @@
-use crate::{common::organizations::Organization, layouts::app_layout::AppLayoutInfo};
+use crate::layouts::app_layout::AppLayoutInfo;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -22,6 +22,13 @@ pub struct AuthProps {
 	pub email: String,
 	pub organizations: Vec<Organization>,
 	pub repos: Vec<Repo>,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Organization {
+	pub id: String,
+	pub name: String,
 }
 
 #[derive(serde::Serialize)]

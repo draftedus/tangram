@@ -1,7 +1,6 @@
-import { Plan, Props } from './props'
+import { Props } from './props'
 import { PageInfo } from '@tangramhq/pinwheel'
 import * as ui from '@tangramhq/ui'
-import { PricingCards } from '@tangramhq/www'
 import { renderPage } from 'common/render'
 import { AppLayout } from 'layouts/app_layout'
 import { h } from 'preact'
@@ -9,11 +8,6 @@ import { h } from 'preact'
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
 		<AppLayout info={props.appLayoutInfo} pageInfo={pageInfo}>
-			<div
-				data-stripe-publishable-key={props.stripePublishableKey}
-				id="stripe-publishable-key"
-				style="display: none"
-			></div>
 			<ui.S1>
 				<ui.H1>{props.name}</ui.H1>
 				<ui.S2>
@@ -60,7 +54,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 						</ui.Table>
 					) : (
 						<ui.Card>
-							<ui.P>{'Organization does not have any repos.'}</ui.P>
+							<ui.P>{'This organization does not have any repos.'}</ui.P>
 						</ui.Card>
 					)}
 				</ui.S2>
@@ -109,110 +103,6 @@ export default (pageInfo: PageInfo, props: Props) => {
 							))}
 						</ui.TableBody>
 					</ui.Table>
-				</ui.S2>
-				<ui.S2>
-					<ui.H2>{'Plan'}</ui.H2>
-					<ui.P>
-						{'You are currently on the '}
-						{props.plan}
-						{' plan.'}
-					</ui.P>
-					<PricingCards
-						enterpriseCta={
-							<ui.Form post={true}>
-								<input name="action" type="hidden" value="change_plan" />
-								<input name="plan" type="hidden" value={Plan.Enterprise} />
-								<ui.Button
-									color="var(--blue)"
-									disabled={props.plan === Plan.Enterprise}
-									type="submit"
-								>
-									{props.plan === Plan.Enterprise ? 'Selected' : 'Select Plan'}
-								</ui.Button>
-							</ui.Form>
-						}
-						enterpriseSelected={props.plan === Plan.Enterprise}
-						freeCta={
-							<ui.Form post={true}>
-								<input name="action" type="hidden" value="change_plan" />
-								<input name="plan" type="hidden" value={Plan.Free} />
-								<ui.Button
-									color="var(--indigo)"
-									disabled={props.plan === Plan.Free}
-									type="submit"
-								>
-									{props.plan === Plan.Free ? 'Selected' : 'Select Plan'}
-								</ui.Button>
-							</ui.Form>
-						}
-						freeSelected={props.plan === Plan.Free}
-						startupCta={
-							<ui.Form post={true}>
-								<input name="action" type="hidden" value="change_plan" />
-								<input name="plan" type="hidden" value={Plan.Startup} />
-								<ui.Button
-									color="var(--teal)"
-									disabled={props.plan === Plan.Startup}
-									type="submit"
-								>
-									{props.plan === Plan.Startup ? 'Selected' : 'Select Plan'}
-								</ui.Button>
-							</ui.Form>
-						}
-						startupSelected={props.plan === Plan.Startup}
-						teamCta={
-							<ui.Form post={true}>
-								<input name="action" type="hidden" value="change_plan" />
-								<input name="plan" type="hidden" value={Plan.Team} />
-								<ui.Button
-									color="var(--green)"
-									disabled={props.plan === Plan.Team}
-									type="submit"
-								>
-									{props.plan === Plan.Team ? 'Selected' : 'Select Plan'}
-								</ui.Button>
-							</ui.Form>
-						}
-						teamSelected={props.plan === Plan.Team}
-					/>
-				</ui.S2>
-				<ui.S2>
-					<ui.SpaceBetween>
-						<ui.H2>{'Billing'}</ui.H2>
-						<ui.Button color="var(--blue)" id="set-payment-method-button">
-							{'Set Payment Method'}
-						</ui.Button>
-					</ui.SpaceBetween>
-					{props.card ? (
-						<ui.Table width="100%">
-							<ui.TableBody>
-								<ui.TableRow>
-									<ui.TableCell>{'Name'}</ui.TableCell>
-									<ui.TableCell>{props.card.name}</ui.TableCell>
-								</ui.TableRow>
-								<ui.TableRow>
-									<ui.TableCell>{'Brand'}</ui.TableCell>
-									<ui.TableCell>{props.card.brand}</ui.TableCell>
-								</ui.TableRow>
-								<ui.TableRow>
-									<ui.TableCell>{'Last 4 Digits'}</ui.TableCell>
-									<ui.TableCell>{props.card.last4}</ui.TableCell>
-								</ui.TableRow>
-								<ui.TableRow>
-									<ui.TableCell>{'Expiration Date'}</ui.TableCell>
-									<ui.TableCell>
-										{props.card.expMonth}
-										{' / '}
-										{props.card.expYear}
-									</ui.TableCell>
-								</ui.TableRow>
-							</ui.TableBody>
-						</ui.Table>
-					) : (
-						<ui.Card>
-							<ui.P>{'You do not have a payment method.'}</ui.P>
-						</ui.Card>
-					)}
 				</ui.S2>
 				<ui.S2>
 					<ui.H2>{'Danger Zone'}</ui.H2>

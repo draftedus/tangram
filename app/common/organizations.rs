@@ -1,30 +1,16 @@
 use sqlx::prelude::*;
+use tangram_util::error::Result;
 use tangram_util::id::Id;
-use tangram_util::{err, error::Result};
-
-#[derive(serde::Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct OrganizationListResponse {
-	pub organizations: Vec<Organization>,
-}
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Organization {
-	pub id: String,
-	pub name: String,
-}
-
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct OrganizationResponse {
+pub struct GetOrganizationOutput {
 	pub id: String,
 	pub name: String,
 	pub members: Vec<Member>,
-	pub plan: Plan,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Member {
 	pub id: String,
@@ -32,27 +18,14 @@ pub struct Member {
 	pub is_admin: bool,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub enum Plan {
-	#[serde(rename = "trial")]
-	Trial,
-	#[serde(rename = "startup")]
-	Startup,
-	#[serde(rename = "team")]
-	Team,
-	#[serde(rename = "enterprise")]
-	Enterprise,
-}
-
 pub async fn get_organization(
 	organization_id: Id,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-) -> Result<Option<OrganizationResponse>> {
+) -> Result<Option<GetOrganizationOutput>> {
 	let row = sqlx::query(
 		"
 			select
-				organizations.name,
-				organizations.plan
+				organizations.name
 			from organizations
 				where organizations.id = $1
 		",
@@ -61,14 +34,6 @@ pub async fn get_organization(
 	.fetch_one(&mut *db)
 	.await?;
 	let organization_name: String = row.get(0);
-	let plan: String = row.get(1);
-	let plan = match plan.as_str() {
-		"trial" => Plan::Trial,
-		"team" => Plan::Team,
-		"startup" => Plan::Startup,
-		"enterprise" => Plan::Enterprise,
-		_ => return Err(err!("bad plan {}", plan)),
-	};
 	let user_rows = sqlx::query(
 		"
 			select
@@ -95,18 +60,24 @@ pub async fn get_organization(
 			}
 		})
 		.collect();
-	Ok(Some(OrganizationResponse {
+	Ok(Some(GetOrganizationOutput {
 		id: organization_id.to_string(),
 		members,
 		name: organization_name,
-		plan,
 	}))
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct GetOrganizationsOutputItem {
+	pub id: String,
+	pub name: String,
 }
 
 pub async fn get_organizations(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	user_id: Id,
-) -> Result<Vec<Organization>> {
+) -> Result<Vec<GetOrganizationsOutputItem>> {
 	let rows = sqlx::query(
 		"
 			select
@@ -126,7 +97,7 @@ pub async fn get_organizations(
 		.map(|row| {
 			let id: String = row.get(0);
 			let name: String = row.get(1);
-			Organization { id, name }
+			GetOrganizationsOutputItem { id, name }
 		})
 		.collect())
 }

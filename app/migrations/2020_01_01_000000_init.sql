@@ -7,10 +7,7 @@ create table users (
 create table organizations (
 	id char(32) primary key,
 	created_at bigint not null,
-	name text,
-	plan text,
-	stripe_customer_id text,
-	stripe_payment_method_id text
+	name text
 );
 
 create table organizations_users (
