@@ -1,11 +1,81 @@
+use backtrace::Backtrace;
+use futures::FutureExt;
 use num_traits::ToPrimitive;
 use rusty_v8 as v8;
 use sourcemap::SourceMap;
-use std::fmt::Write;
-use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc};
+use std::{
+	borrow::Cow,
+	cell::RefCell,
+	convert::Infallible,
+	fmt::Write,
+	future::Future,
+	panic::AssertUnwindSafe,
+	path::{Path, PathBuf},
+	rc::Rc,
+	sync::Arc,
+};
 use tangram_util::{err, error::Result};
 use url::Url;
 use which::which;
+
+pub async fn serve<C, H, F>(host: std::net::IpAddr, port: u16, context: C, handle: H) -> Result<()>
+where
+	C: Send + Sync + 'static,
+	H: Fn(&C, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
+	F: Future<Output = http::Response<hyper::Body>> + Send,
+{
+	tokio::task_local! {
+		static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
+	}
+	let hook = std::panic::take_hook();
+	std::panic::set_hook(Box::new(|panic_info| {
+		let value = (panic_info.to_string(), Backtrace::new());
+		PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+			panic_message_and_backtrace.borrow_mut().replace(value);
+		})
+	}));
+	let context = Arc::new(context);
+	let handle = Arc::new(handle);
+	let service = hyper::service::make_service_fn(|_| {
+		let context = context.clone();
+		let handle = handle.clone();
+		async move {
+			Ok::<_, Infallible>(hyper::service::service_fn(move |request| {
+				let context = context.clone();
+				let handle = handle.clone();
+				PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
+					let method = request.method().clone();
+					let path = request.uri().path_and_query().unwrap().path().to_owned();
+					let result = AssertUnwindSafe(handle(&context, request))
+						.catch_unwind()
+						.await;
+					let response = result.unwrap_or_else(|_| {
+						eprintln!("{} {} 500", method, path);
+						let body =
+							PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+								let panic_message_and_backtrace =
+									panic_message_and_backtrace.borrow();
+								let (message, backtrace) =
+									panic_message_and_backtrace.as_ref().unwrap();
+								format!("{}\n{:?}", message, backtrace)
+							});
+						http::Response::builder()
+							.status(http::StatusCode::INTERNAL_SERVER_ERROR)
+							.body(hyper::Body::from(body))
+							.unwrap()
+					});
+					Ok::<_, Infallible>(response)
+				})
+			}))
+		}
+	});
+	let addr = std::net::SocketAddr::new(host, port);
+	let listener = std::net::TcpListener::bind(&addr)?;
+	eprintln!("🚀 serving on port {}", port);
+	hyper::Server::from_tcp(listener)?.serve(service).await?;
+	std::panic::set_hook(hook);
+	Ok(())
+}
 
 pub enum Pinwheel {
 	Dev {

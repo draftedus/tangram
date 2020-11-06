@@ -14,7 +14,6 @@ pinwheel = { path = "../pinwheel" }
 insta = "1"
 
 [dependencies]
-backtrace = "0.3"
 base64 = "0.13"
 bytes = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
