@@ -1,4 +1,3 @@
-use hyper::{header, Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use rusty_v8 as v8;
 use sourcemap::SourceMap;
@@ -200,7 +199,10 @@ impl Pinwheel {
 		})
 	}
 
-	pub async fn handle(&self, request: Request<Body>) -> Result<Response<Body>> {
+	pub async fn handle(
+		&self,
+		request: http::Request<hyper::Body>,
+	) -> Result<http::Response<hyper::Body>> {
 		let uri = request.uri();
 		let path_and_query = uri.path_and_query().unwrap();
 		let path = path_and_query.path();
@@ -215,11 +217,11 @@ impl Pinwheel {
 			let static_path = src_dir.join("static").join(static_path);
 			if static_path.exists() {
 				let body = std::fs::read(&static_path)?;
-				let mut response = Response::builder();
+				let mut response = http::Response::builder();
 				if let Some(content_type) = content_type(static_path.to_str().unwrap()) {
-					response = response.header(header::CONTENT_TYPE, content_type);
+					response = response.header(http::header::CONTENT_TYPE, content_type);
 				}
-				let response = response.body(Body::from(body)).unwrap();
+				let response = response.body(hyper::Body::from(body)).unwrap();
 				return Ok(response);
 			}
 		}
@@ -227,17 +229,17 @@ impl Pinwheel {
 		let url = Url::parse(&format!("dst:/{}", static_path)).unwrap();
 		if self.fs().exists(&url) {
 			let data = self.fs().read(&url)?;
-			let mut response = Response::builder();
+			let mut response = http::Response::builder();
 			if let Some(content_type) = content_type(static_path) {
 				response = response.header("content-type", content_type);
 			}
-			let response = response.body(Body::from(data)).unwrap();
+			let response = response.body(hyper::Body::from(data)).unwrap();
 			return Ok(response);
 		}
 		let html = self.render(path)?;
-		let response = Response::builder()
-			.status(StatusCode::OK)
-			.body(Body::from(html))
+		let response = http::Response::builder()
+			.status(http::StatusCode::OK)
+			.body(hyper::Body::from(html))
 			.unwrap();
 		Ok(response)
 	}

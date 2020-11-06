@@ -1551,6 +1551,7 @@ version = "0.1.0-dev"
 dependencies = [
  "clap",
  "futures",
+ "http",
  "hyper",
  "include_dir",
  "num-traits",
