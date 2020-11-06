@@ -1,4 +1,3 @@
-use self::context::Context;
 use backtrace::Backtrace;
 use futures::FutureExt;
 use pinwheel::Pinwheel;
@@ -30,12 +29,10 @@ pub struct Options {
 	pub url: Option<Url>,
 }
 
-mod context {
-	pub struct Context {
-		pub options: super::Options,
-		pub pinwheel: pinwheel::Pinwheel,
-		pub pool: sqlx::AnyPool,
-	}
+pub struct Context {
+	pub options: Options,
+	pub pinwheel: pinwheel::Pinwheel,
+	pub pool: sqlx::AnyPool,
 }
 
 #[allow(clippy::cognitive_complexity)]
