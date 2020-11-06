@@ -38,7 +38,7 @@ export function FeatureImportancesTable(props: Props) {
 					<ui.TableHeaderCell>{'Feature Name'}</ui.TableHeaderCell>
 					<ui.TableHeaderCell>{'Feature Importance Value'}</ui.TableHeaderCell>
 				</ui.TableHeader>
-				<ui.Tablehyper::Body>
+				<ui.TableBody>
 					{props.featureImportances.map(
 						({ featureImportanceValue, featureName }, i) => (
 							<ui.TableRow key={i}>
@@ -47,7 +47,7 @@ export function FeatureImportancesTable(props: Props) {
 							</ui.TableRow>
 						),
 					)}
-				</ui.Tablehyper::Body>
+				</ui.TableBody>
 			</ui.Table>
 		</>
 	)

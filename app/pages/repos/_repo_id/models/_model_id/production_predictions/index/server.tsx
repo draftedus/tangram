@@ -36,7 +36,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									<ui.TableHeaderCell>{'Output'}</ui.TableHeaderCell>
 								</ui.TableRow>
 							</ui.TableHeader>
-							<ui.Tablehyper::Body>
+							<ui.TableBody>
 								{props.predictionTable.rows.map(prediction => (
 									<ui.TableRow key={prediction.identifier}>
 										<ui.TableCell>
@@ -48,7 +48,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 										<ui.TableCell>{prediction.output}</ui.TableCell>
 									</ui.TableRow>
 								))}
-							</ui.Tablehyper::Body>
+							</ui.TableBody>
 						</ui.Table>
 						<div class="pagination-buttons">
 							<ui.Form>

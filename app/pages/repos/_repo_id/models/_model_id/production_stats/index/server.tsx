@@ -103,7 +103,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 							<ui.TableHeaderCell>{'Invalid Count'}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
-					<ui.Tablehyper::Body>
+					<ui.TableBody>
 						{props.overallColumnStatsTable.map(column => (
 							<ui.TableRow key={column.name}>
 								<ui.TableCell>
@@ -135,7 +135,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 								<ui.TableCell>{column.invalidCount}</ui.TableCell>
 							</ui.TableRow>
 						))}
-					</ui.Tablehyper::Body>
+					</ui.TableBody>
 				</ui.Table>
 			</ui.S1>
 		</ModelLayout>,

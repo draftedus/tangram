@@ -50,7 +50,7 @@ export function MulticlassClassifierTrainingMetricsIndexPage(
 							<ui.TableHeaderCell>{'Recall'}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
-					<ui.Tablehyper::Body>
+					<ui.TableBody>
 						{props.classes.map((className, i) => (
 							<ui.TableRow key={className}>
 								<ui.TableCell>{className}</ui.TableCell>
@@ -62,7 +62,7 @@ export function MulticlassClassifierTrainingMetricsIndexPage(
 								</ui.TableCell>
 							</ui.TableRow>
 						))}
-					</ui.Tablehyper::Body>
+					</ui.TableBody>
 				</ui.Table>
 			</ui.S2>
 		</ui.S1>

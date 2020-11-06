@@ -25,7 +25,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 								<ui.TableHeaderCell></ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.Tablehyper::Body>
+						<ui.TableBody>
 							{props.repos.map(repo => (
 								<ui.TableRow key={repo.id}>
 									<ui.TableCell>
@@ -49,7 +49,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									</ui.TableCell>
 								</ui.TableRow>
 							))}
-						</ui.Tablehyper::Body>
+						</ui.TableBody>
 					</ui.Table>
 				) : (
 					<ui.Card>

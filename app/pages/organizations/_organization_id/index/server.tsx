@@ -40,7 +40,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									<ui.TableHeaderCell>{'Repo Title'}</ui.TableHeaderCell>
 								</ui.TableRow>
 							</ui.TableHeader>
-							<ui.Tablehyper::Body>
+							<ui.TableBody>
 								{props.repos.map(repo => (
 									<ui.TableRow key={repo.id}>
 										<ui.TableCell>
@@ -50,7 +50,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 										</ui.TableCell>
 									</ui.TableRow>
 								))}
-							</ui.Tablehyper::Body>
+							</ui.TableBody>
 						</ui.Table>
 					) : (
 						<ui.Card>
@@ -73,7 +73,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 								<ui.TableHeaderCell>{'Remove'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.Tablehyper::Body>
+						<ui.TableBody>
 							{props.members.map(member => (
 								<ui.TableRow key={member.id}>
 									<ui.TableCell expand={true}>{member.email}</ui.TableCell>
@@ -101,7 +101,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									</ui.TableCell>
 								</ui.TableRow>
 							))}
-						</ui.Tablehyper::Body>
+						</ui.TableBody>
 					</ui.Table>
 				</ui.S2>
 				<ui.S2>

@@ -75,7 +75,7 @@ export function Enum(props: EnumProps) {
 						<ui.TableHeaderCell>{'Production Fraction'}</ui.TableHeaderCell>
 					</ui.TableRow>
 				</ui.TableHeader>
-				<ui.Tablehyper::Body>
+				<ui.TableBody>
 					{props.overallChartData.map(([value, entry]) => (
 						<ui.TableRow key={value}>
 							<ui.TableCell>{value}</ui.TableCell>
@@ -93,7 +93,7 @@ export function Enum(props: EnumProps) {
 							</ui.TableCell>
 						</ui.TableRow>
 					))}
-				</ui.Tablehyper::Body>
+				</ui.TableBody>
 			</ui.Table>
 			{props.overallInvalidChartData && (
 				<>
@@ -105,14 +105,14 @@ export function Enum(props: EnumProps) {
 								<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.Tablehyper::Body>
+						<ui.TableBody>
 							{props.overallInvalidChartData.map(([value, count], i) => (
 								<ui.TableRow key={i}>
 									<ui.TableCell>{value}</ui.TableCell>
 									<ui.TableCell>{ui.formatNumber(count)}</ui.TableCell>
 								</ui.TableRow>
 							))}
-						</ui.Tablehyper::Body>
+						</ui.TableBody>
 					</ui.Table>
 				</>
 			)}

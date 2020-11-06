@@ -32,12 +32,12 @@ export default (pageInfo: PageInfo, props: Props) => {
 									<ui.TableHeaderCell>{'Date'}</ui.TableHeaderCell>
 								</ui.TableRow>
 							</ui.TableHeader>
-							<ui.Tablehyper::Body>
+							<ui.TableBody>
 								<ui.TableRow>
 									<ui.TableCell>{props.identifier}</ui.TableCell>
 									<ui.TableCell>{props.inner.value.date}</ui.TableCell>
 								</ui.TableRow>
-							</ui.Tablehyper::Body>
+							</ui.TableBody>
 						</ui.Table>
 						<PredictionResult
 							inputTable={props.inner.value.inputTable}

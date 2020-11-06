@@ -34,14 +34,14 @@ export function TextColumnDetail(props: TextProps) {
 						<ui.TableHeaderCell>{'Token'}</ui.TableHeaderCell>
 						<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
 					</ui.TableHeader>
-					<ui.Tablehyper::Body>
+					<ui.TableBody>
 						{props.tokens.map((token, i) => (
 							<ui.TableRow key={i}>
 								<ui.TableCell>{token.token}</ui.TableCell>
 								<ui.TableCell>{token.count}</ui.TableCell>
 							</ui.TableRow>
 						))}
-					</ui.Tablehyper::Body>
+					</ui.TableBody>
 				</ui.Table>
 			</ui.S2>
 		</ui.S1>

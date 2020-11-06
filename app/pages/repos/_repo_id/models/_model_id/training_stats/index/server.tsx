@@ -41,7 +41,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 								)}
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.Tablehyper::Body>
+						<ui.TableBody>
 							<ui.TableRow key={props.targetColumnStats.name}>
 								<ui.TableCell>
 									<ui.Link href={`./columns/${props.targetColumnStats.name}`}>
@@ -69,7 +69,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									</>
 								)}
 							</ui.TableRow>
-						</ui.Tablehyper::Body>
+						</ui.TableBody>
 					</ui.Table>
 				</ui.S2>
 				<ui.S2>
@@ -99,7 +99,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 								<ui.TableHeaderCell>{'Std'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.Tablehyper::Body>
+						<ui.TableBody>
 							{props.columnStats.map(columnStats => {
 								return (
 									<ui.TableRow key={columnStats.name}>
@@ -140,7 +140,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									</ui.TableRow>
 								)
 							})}
-						</ui.Tablehyper::Body>
+						</ui.TableBody>
 					</ui.Table>
 				</ui.S2>
 			</ui.S1>
