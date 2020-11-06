@@ -21,21 +21,19 @@ use crate::{
 	},
 	Context,
 };
-use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
 const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
 
 pub async fn get(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let (date_window, date_window_interval) = match get_date_window_and_interval(&search_params) {
 		Some((date_window, date_window_interval)) => (date_window, date_window_interval),
 		None => return Ok(bad_request()),
@@ -269,9 +267,9 @@ pub async fn get(
 	let html = context
 		.pinwheel
 		.render_with("/repos/_repo_id/models/_model_id/production_stats/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

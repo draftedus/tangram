@@ -74,7 +74,7 @@ export function MulticlassClassifierIndexPage(
 							<ui.TableHeaderCell>{'Recall'}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
-					<ui.TableBody>
+					<ui.Tablehyper::Body>
 						{props.metrics.classMetrics.map((classMetrics, i) => {
 							let className = props.metrics.classes[i]
 							let precision = ui.formatPercent(classMetrics.precision, 2)
@@ -87,7 +87,7 @@ export function MulticlassClassifierIndexPage(
 								</ui.TableRow>
 							)
 						})}
-					</ui.TableBody>
+					</ui.Tablehyper::Body>
 				</ui.Table>
 				{lossesChartData && (
 					<LineChart

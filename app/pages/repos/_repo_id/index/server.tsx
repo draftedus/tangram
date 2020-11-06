@@ -22,7 +22,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 								<ui.TableHeaderCell></ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.TableBody>
+						<ui.Tablehyper::Body>
 							{props.models.map(model => (
 								<ui.TableRow key={model.id}>
 									<ui.TableCell>
@@ -38,7 +38,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									</ui.TableCell>
 								</ui.TableRow>
 							))}
-						</ui.TableBody>
+						</ui.Tablehyper::Body>
 					</ui.Table>
 				) : (
 					<ui.Card>

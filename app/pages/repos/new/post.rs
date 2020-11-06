@@ -5,9 +5,7 @@ use crate::{
 	},
 	Context,
 };
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -16,7 +14,10 @@ struct Action {
 	owner: Option<String>,
 }
 
-pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
+pub async fn post(
+	context: &Context,
+	mut request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>> {
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
 		Err(_) => return Ok(service_unavailable()),
@@ -25,7 +26,7 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 		Ok(user) => user,
 		Err(_) => return Ok(redirect_to_login()),
 	};
-	let data = match to_bytes(request.body_mut()).await {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(data) => data,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -66,10 +67,10 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 		crate::common::repos::create_root_repo(&mut db, repo_id, title.as_str()).await?;
 	};
 	db.commit().await?;
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, format!("/repos/{}/", repo_id))
-		.body(Body::empty())
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
+		.header(http::header::LOCATION, format!("/repos/{}/", repo_id))
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }

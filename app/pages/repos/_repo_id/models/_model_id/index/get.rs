@@ -12,16 +12,14 @@ use crate::{
 	layouts::model_layout::get_model_layout_info,
 	Context,
 };
-use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	model_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
 		Err(_) => return Ok(service_unavailable()),
@@ -125,9 +123,9 @@ pub async fn get(
 	let html = context
 		.pinwheel
 		.render_with("/repos/_repo_id/models/_model_id/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

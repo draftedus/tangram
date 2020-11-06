@@ -7,11 +7,13 @@ use crate::{
 	layouts::app_layout::get_app_layout_info,
 	Context,
 };
-use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use tangram_util::error::Result;
 
-pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<Body>> {
+pub async fn get(
+	context: &Context,
+	request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>> {
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
 		Err(_) => return Ok(service_unavailable()),
@@ -62,9 +64,9 @@ pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<B
 	};
 	let html = context.pinwheel.render_with("/repos/new", props)?;
 	db.commit().await?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

@@ -5,9 +5,7 @@ use crate::{
 	},
 	Context,
 };
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize)]
 struct Action {
@@ -16,13 +14,13 @@ struct Action {
 
 pub async fn post(
 	context: &Context,
-	mut request: Request<Body>,
+	mut request: http::Request<hyper::Body>,
 	organization_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	if !context.options.auth_enabled {
 		return Ok(not_found());
 	}
-	let data = match to_bytes(request.body_mut()).await {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(data) => data,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -58,13 +56,13 @@ pub async fn post(
 	.execute(&mut *db)
 	.await?;
 	db.commit().await?;
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
 		.header(
-			header::LOCATION,
+			http::header::LOCATION,
 			format!("/organizations/{}/", organization_id),
 		)
-		.body(Body::empty())
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }

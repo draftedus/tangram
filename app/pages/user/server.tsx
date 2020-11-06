@@ -57,7 +57,7 @@ function Auth(props: AuthProps) {
 								<ui.TableHeaderCell>{'Repo Title'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.TableBody>
+						<ui.Tablehyper::Body>
 							{props.repos.map(repo => (
 								<ui.TableRow key={repo.id}>
 									<ui.TableCell>
@@ -65,7 +65,7 @@ function Auth(props: AuthProps) {
 									</ui.TableCell>
 								</ui.TableRow>
 							))}
-						</ui.TableBody>
+						</ui.Tablehyper::Body>
 					</ui.Table>
 				) : (
 					<ui.Card>
@@ -87,7 +87,7 @@ function Auth(props: AuthProps) {
 								<ui.TableHeaderCell>{'Organization Name'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.TableBody>
+						<ui.Tablehyper::Body>
 							{props.organizations.map(organization => (
 								<ui.TableRow key={organization.id}>
 									<ui.TableCell>
@@ -97,7 +97,7 @@ function Auth(props: AuthProps) {
 									</ui.TableCell>
 								</ui.TableRow>
 							))}
-						</ui.TableBody>
+						</ui.Tablehyper::Body>
 					</ui.Table>
 				) : (
 					<ui.Card>

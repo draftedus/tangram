@@ -5,9 +5,7 @@ use crate::{
 	},
 	Context,
 };
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize)]
 struct Action {
@@ -16,9 +14,9 @@ struct Action {
 
 pub async fn post(
 	context: &Context,
-	mut request: Request<Body>,
+	mut request: http::Request<hyper::Body>,
 	model_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
 		Err(_) => return Ok(service_unavailable()),
@@ -34,7 +32,7 @@ pub async fn post(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Ok(not_found());
 	}
-	let data = match to_bytes(request.body_mut()).await {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(data) => data,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -44,8 +42,8 @@ pub async fn post(
 	};
 	// Redirect.
 	let path = format!("predictions/{}", identifier);
-	Ok(Response::builder()
-		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, path)
-		.body(Body::empty())?)
+	Ok(http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
+		.header(http::header::LOCATION, path)
+		.body(hyper::Body::empty())?)
 }

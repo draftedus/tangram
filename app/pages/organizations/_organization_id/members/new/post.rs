@@ -4,7 +4,6 @@ use crate::common::{
 };
 use crate::{common::user::NormalUser, Context};
 use chrono::prelude::*;
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use serde_json::json;
 use tangram_util::id::Id;
 use tangram_util::{err, error::Result};
@@ -18,9 +17,9 @@ struct Action {
 
 pub async fn post(
 	context: &Context,
-	mut request: Request<Body>,
+	mut request: http::Request<hyper::Body>,
 	organization_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	if !context.options.auth_enabled {
 		return Ok(not_found());
 	}
@@ -39,7 +38,7 @@ pub async fn post(
 	if !authorize_normal_user_for_organization(&mut db, &user, organization_id).await? {
 		return Ok(not_found());
 	};
-	let data = match to_bytes(request.body_mut()).await {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(data) => data,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -58,7 +57,7 @@ async fn add_member(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	context: &Context,
 	organization_id: Id,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	// Create the new user.
 	let user_id = Id::new();
 	let now = Utc::now().timestamp();
@@ -101,13 +100,13 @@ async fn add_member(
 	if let Some(sendgrid_api_token) = context.options.sendgrid_api_token.clone() {
 		send_invitation_email(action.email.clone(), user.email.clone(), sendgrid_api_token).await?;
 	}
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
 		.header(
-			header::LOCATION,
+			http::header::LOCATION,
 			format!("/organizations/{}/", organization_id),
 		)
-		.body(Body::empty())
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }
@@ -148,7 +147,7 @@ async fn send_invitation_email(
 	let response = client
 		.post("https://api.sendgrid.com/v3/mail/send")
 		.header(
-			reqwest::header::AUTHORIZATION,
+			http::header::AUTHORIZATION,
 			format!("Bearer {}", sendgrid_api_token),
 		)
 		.json(&json)

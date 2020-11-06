@@ -11,7 +11,6 @@ use crate::{
 };
 use chrono::prelude::*;
 use chrono_tz::Tz;
-use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
@@ -21,10 +20,10 @@ const N_PREDICTIONS_PER_PAGE: i64 = 10;
 
 pub async fn get(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let timezone = get_timezone(&request);
 	let after: Option<i64> = search_params
 		.as_ref()
@@ -208,9 +207,9 @@ pub async fn get(
 		"/repos/_repo_id/models/_model_id/production_predictions/",
 		props,
 	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

@@ -5,10 +5,8 @@ use crate::{
 	},
 	Context,
 };
-use hyper::{header, Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 pub mod index;
 pub mod prediction;
@@ -31,9 +29,9 @@ enum Action {
 
 pub async fn post(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	model_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
 		Err(_) => return Ok(service_unavailable()),
@@ -57,7 +55,7 @@ pub async fn post(
 async fn delete_model(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	model_id: Id,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	sqlx::query(
 		"
 		delete from models
@@ -68,19 +66,19 @@ async fn delete_model(
 	.bind(&model_id.to_string())
 	.execute(&mut *db)
 	.await?;
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, "/")
-		.body(Body::empty())
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
+		.header(http::header::LOCATION, "/")
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }
 
 pub async fn download(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	model_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
 		Err(_) => return Ok(service_unavailable()),
@@ -111,9 +109,9 @@ pub async fn download(
 	let data: String = row.get(0);
 	let data = base64::decode(data)?;
 	db.commit().await?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(data))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(data))
 		.unwrap();
 	Ok(response)
 }

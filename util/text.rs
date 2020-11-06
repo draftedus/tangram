@@ -5,11 +5,13 @@ impl std::cmp::Ord for TokenEntry {
 		self.1.cmp(&other.1)
 	}
 }
+
 impl std::cmp::PartialOrd for TokenEntry {
 	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
 		self.1.partial_cmp(&other.1)
 	}
 }
+
 impl std::cmp::PartialEq for TokenEntry {
 	fn eq(&self, other: &Self) -> bool {
 		self.1.eq(&other.1)

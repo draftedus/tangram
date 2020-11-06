@@ -6,7 +6,6 @@ use crate::{
 	Context,
 };
 use chrono::prelude::*;
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use tangram_util::error::Result;
 
 #[derive(serde::Deserialize, Debug)]
@@ -16,7 +15,10 @@ enum Action {
 	Logout,
 }
 
-pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
+pub async fn post(
+	context: &Context,
+	mut request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>> {
 	if !context.options.auth_enabled {
 		return Ok(not_found());
 	}
@@ -28,7 +30,7 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 		Ok(user) => user,
 		Err(_) => return Ok(unauthorized()),
 	};
-	let data = match to_bytes(request.body_mut()).await {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(data) => data,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -46,7 +48,7 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 async fn logout(
 	user: &NormalUser,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let now = Utc::now().timestamp();
 	sqlx::query(
 		"
@@ -62,11 +64,11 @@ async fn logout(
 	.bind(&user.token)
 	.execute(&mut *db)
 	.await?;
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, "/login")
-		.header(header::SET_COOKIE, "auth=; Path=/; Max-Age=0")
-		.body(Body::empty())
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
+		.header(http::header::LOCATION, "/login")
+		.header(http::header::SET_COOKIE, "auth=; Path=/; Max-Age=0")
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }

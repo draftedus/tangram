@@ -18,18 +18,17 @@ use crate::{
 	Context,
 };
 use chrono_tz::Tz;
-use hyper::{Body, Request, Response, StatusCode};
 use num_traits::ToPrimitive;
 use std::collections::BTreeMap;
 use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	model_id: &str,
 	column_name: &str,
 	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let model_id: Id = match model_id.parse() {
 		Ok(model_id) => model_id,
 		Err(_) => return Ok(bad_request()),
@@ -107,9 +106,9 @@ pub async fn get(
 		"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
 		props,
 	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

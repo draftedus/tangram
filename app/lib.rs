@@ -356,28 +356,28 @@ async fn run_impl(options: Options) -> Result<()> {
 		let context = context.clone();
 		async move {
 			Ok::<_, Infallible>(hyper::service::service_fn(move |request| {
-				let method = request.method().clone();
-				let path = request.uri().path_and_query().unwrap().path().to_owned();
 				let context = context.clone();
 				PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
-					let response = AssertUnwindSafe(handle(request, context))
+					let method = request.method().clone();
+					let path = request.uri().path_and_query().unwrap().path().to_owned();
+					let result = AssertUnwindSafe(handle(request, context))
 						.catch_unwind()
-						.await
-						.unwrap_or_else(|_| {
-							let backtrace =
-								PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
-									let panic_message_and_backtrace =
-										panic_message_and_backtrace.borrow();
-									let (message, backtrace) =
-										panic_message_and_backtrace.as_ref().unwrap();
-									format!("{}\n{:?}", message, backtrace)
-								});
-							eprintln!("{} {} 500", method, path);
-							http::Response::builder()
-								.status(http::StatusCode::INTERNAL_SERVER_ERROR)
-								.body(hyper::Body::from(backtrace))
-								.unwrap()
-						});
+						.await;
+					let response = result.unwrap_or_else(|_| {
+						eprintln!("{} {} 500", method, path);
+						let body =
+							PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+								let panic_message_and_backtrace =
+									panic_message_and_backtrace.borrow();
+								let (message, backtrace) =
+									panic_message_and_backtrace.as_ref().unwrap();
+								format!("{}\n{:?}", message, backtrace)
+							});
+						http::Response::builder()
+							.status(http::StatusCode::INTERNAL_SERVER_ERROR)
+							.body(hyper::Body::from(body))
+							.unwrap()
+					});
 					Ok::<_, Infallible>(response)
 				})
 			}))

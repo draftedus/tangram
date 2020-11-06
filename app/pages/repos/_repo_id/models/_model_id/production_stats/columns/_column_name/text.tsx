@@ -61,14 +61,14 @@ export function Text(props: TextProps) {
 						<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
 					</ui.TableRow>
 				</ui.TableHeader>
-				<ui.TableBody>
+				<ui.Tablehyper::Body>
 					{props.overallTokenHistogram.map(([value, count]) => (
 						<ui.TableRow key={value}>
 							<ui.TableCell>{value}</ui.TableCell>
 							<ui.TableCell>{ui.formatNumber(count)}</ui.TableCell>
 						</ui.TableRow>
 					))}
-				</ui.TableBody>
+				</ui.Tablehyper::Body>
 			</ui.Table>
 		</ui.S2>
 	)

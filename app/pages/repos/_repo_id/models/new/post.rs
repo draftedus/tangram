@@ -8,16 +8,14 @@ use crate::{
 };
 use bytes::Buf;
 use chrono::prelude::*;
-use hyper::{header, Body, Request, Response, StatusCode};
 use multer::Multipart;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 pub async fn post(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	repo_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
 		Err(_) => return Ok(service_unavailable()),
@@ -35,16 +33,16 @@ pub async fn post(
 	}
 	let boundary = match request
 		.headers()
-		.get(header::CONTENT_TYPE)
+		.get(http::header::CONTENT_TYPE)
 		.and_then(|ct| ct.to_str().ok())
 		.and_then(|ct| multer::parse_boundary(ct).ok())
 	{
 		Some(boundary) => boundary,
 		None => {
 			let html = render(context, Some("Failed to parse request body.".to_owned())).await?;
-			let response = Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(Body::from(html))
+			let response = http::Response::builder()
+				.status(http::StatusCode::BAD_REQUEST)
+				.body(hyper::Body::from(html))
 				.unwrap();
 			return Ok(response);
 		}
@@ -57,9 +55,9 @@ pub async fn post(
 			None => {
 				let html =
 					render(context, Some("Failed to parse request body.".to_owned())).await?;
-				let response = Response::builder()
-					.status(StatusCode::BAD_REQUEST)
-					.body(Body::from(html))
+				let response = http::Response::builder()
+					.status(http::StatusCode::BAD_REQUEST)
+					.body(hyper::Body::from(html))
 					.unwrap();
 				return Ok(response);
 			}
@@ -73,9 +71,9 @@ pub async fn post(
 			_ => {
 				let html =
 					render(context, Some("Failed to parse request body.".to_owned())).await?;
-				let response = Response::builder()
-					.status(StatusCode::BAD_REQUEST)
-					.body(Body::from(html))
+				let response = http::Response::builder()
+					.status(http::StatusCode::BAD_REQUEST)
+					.body(hyper::Body::from(html))
 					.unwrap();
 				return Ok(response);
 			}
@@ -85,9 +83,9 @@ pub async fn post(
 		Some(file) => file,
 		None => {
 			let html = render(context, Some("A file is required.".to_owned())).await?;
-			let response = Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(Body::from(html))
+			let response = http::Response::builder()
+				.status(http::StatusCode::BAD_REQUEST)
+				.body(hyper::Body::from(html))
 				.unwrap();
 			return Ok(response);
 		}
@@ -96,9 +94,9 @@ pub async fn post(
 		Ok(model) => model,
 		Err(_) => {
 			let html = render(context, Some("Invalid tangram model file.".to_owned())).await?;
-			let response = Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(Body::from(html))
+			let response = http::Response::builder()
+				.status(http::StatusCode::BAD_REQUEST)
+				.body(hyper::Body::from(html))
 				.unwrap();
 			return Ok(response);
 		}
@@ -124,20 +122,20 @@ pub async fn post(
 			Some("There was an error uploading your model.".to_owned()),
 		)
 		.await?;
-		let response = Response::builder()
-			.status(StatusCode::BAD_REQUEST)
-			.body(Body::from(html))
+		let response = http::Response::builder()
+			.status(http::StatusCode::BAD_REQUEST)
+			.body(hyper::Body::from(html))
 			.unwrap();
 		return Ok(response);
 	};
 	db.commit().await?;
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
 		.header(
-			header::LOCATION,
+			http::header::LOCATION,
 			format!("/repos/{}/models/{}/", repo_id, model.id()),
 		)
-		.body(Body::empty())
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }

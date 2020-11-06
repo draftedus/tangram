@@ -4,7 +4,6 @@ use crate::{
 	Context,
 };
 use chrono::prelude::*;
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use rand::Rng;
 use serde_json::json;
 use sqlx::prelude::*;
@@ -17,9 +16,12 @@ struct Action {
 	code: Option<String>,
 }
 
-pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
+pub async fn post(
+	context: &Context,
+	mut request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>> {
 	// Read the post data.
-	let data = match to_bytes(request.body_mut()).await {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(data) => data,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -98,9 +100,9 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 					email: Some(email),
 				};
 				let html = context.pinwheel.render_with("/login", props)?;
-				let response = Response::builder()
-					.status(StatusCode::BAD_REQUEST)
-					.body(Body::from(html))?;
+				let response = http::Response::builder()
+					.status(http::StatusCode::BAD_REQUEST)
+					.body(hyper::Body::from(html))?;
 				return Ok(response);
 			};
 			let code_id: String = row.get(0);
@@ -145,21 +147,21 @@ pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Respo
 				send_code_email(email.clone(), code, sendgrid_api_token).await?;
 			}
 			db.commit().await?;
-			let response = Response::builder()
-				.status(StatusCode::SEE_OTHER)
-				.header(header::LOCATION, format!("/login?email={}", email))
-				.body(Body::empty())?;
+			let response = http::Response::builder()
+				.status(http::StatusCode::SEE_OTHER)
+				.header(http::header::LOCATION, format!("/login?email={}", email))
+				.body(hyper::Body::empty())?;
 			return Ok(response);
 		}
 	}
 	let token = create_token(&mut db, user_id).await?;
 	db.commit().await?;
 	let set_cookie = set_cookie_header_value(token, context.options.cookie_domain.as_deref());
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, "/")
-		.header(header::SET_COOKIE, set_cookie)
-		.body(Body::empty())?;
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
+		.header(http::header::LOCATION, "/")
+		.header(http::header::SET_COOKIE, set_cookie)
+		.body(hyper::Body::empty())?;
 	Ok(response)
 }
 
@@ -242,7 +244,7 @@ async fn send_code_email(email: String, code: String, sendgrid_api_token: String
 	let response = client
 		.post("https://api.sendgrid.com/v3/mail/send")
 		.header(
-			reqwest::header::AUTHORIZATION,
+			http::header::AUTHORIZATION,
 			format!("Bearer {}", sendgrid_api_token),
 		)
 		.json(&json)

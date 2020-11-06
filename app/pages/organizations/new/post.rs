@@ -6,20 +6,21 @@ use crate::{
 	Context,
 };
 use chrono::prelude::*;
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize, Clone, Debug)]
 struct Action {
 	name: String,
 }
 
-pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
+pub async fn post(
+	context: &Context,
+	mut request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>> {
 	if !context.options.auth_enabled {
 		return Ok(bad_request());
 	}
-	let data = match to_bytes(request.body_mut()).await {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(data) => data,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -44,7 +45,7 @@ async fn create_organization(
 	action: Action,
 	user: &NormalUser,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let Action { name } = action;
 	let now = Utc::now().timestamp();
 	let organization_id: Id = Id::new();
@@ -73,13 +74,13 @@ async fn create_organization(
 	.bind(&user.id.to_string())
 	.execute(&mut *db)
 	.await?;
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
 		.header(
-			header::LOCATION,
+			http::header::LOCATION,
 			format!("/organizations/{}/", organization_id),
 		)
-		.body(Body::empty())
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }

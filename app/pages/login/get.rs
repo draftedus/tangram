@@ -1,14 +1,13 @@
 use super::props::Props;
 use crate::{common::error::not_found, Context};
-use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use tangram_util::error::Result;
 
 pub async fn get(
 	context: &Context,
-	_request: Request<Body>,
+	_request: http::Request<hyper::Body>,
 	search_params: Option<BTreeMap<String, String>>,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	if !context.options.auth_enabled {
 		return Ok(not_found());
 	}
@@ -19,9 +18,9 @@ pub async fn get(
 		email,
 	};
 	let html = context.pinwheel.render_with("/login", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

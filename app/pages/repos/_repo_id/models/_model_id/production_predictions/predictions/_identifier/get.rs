@@ -12,17 +12,16 @@ use crate::{
 };
 use chrono::prelude::*;
 use chrono_tz::Tz;
-use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
 use std::collections::BTreeMap;
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	model_id: &str,
 	identifier: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let timezone = get_timezone(&request);
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
@@ -87,9 +86,9 @@ pub async fn get(
 		"/repos/_repo_id/models/_model_id/production_predictions/predictions/_identifier",
 		props,
 	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

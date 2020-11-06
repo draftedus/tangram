@@ -8,16 +8,14 @@ use crate::{
 	layouts::app_layout::get_app_layout_info,
 	Context,
 };
-use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
 	context: &Context,
-	request: Request<Body>,
+	request: http::Request<hyper::Body>,
 	organization_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	if !context.options.auth_enabled {
 		return Ok(not_found());
 	}
@@ -74,9 +72,9 @@ pub async fn get(
 	let html = context
 		.pinwheel
 		.render_with("/organizations/_organization_id/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

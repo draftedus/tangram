@@ -111,7 +111,7 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 								<ui.TableHeaderCell>{'Production Recall'}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
-						<ui.TableBody>
+						<ui.Tablehyper::Body>
 							{props.overall.classMetricsTable.map(c => {
 								return (
 									<ui.TableRow key={c.className}>
@@ -135,7 +135,7 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 									</ui.TableRow>
 								)
 							})}
-						</ui.TableBody>
+						</ui.Tablehyper::Body>
 					</ui.Table>
 				</ui.S2>
 			) : null}

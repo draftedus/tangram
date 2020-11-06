@@ -10,12 +10,13 @@ use crate::{
 };
 use chrono::prelude::*;
 use chrono_tz::Tz;
-use hyper::{Body, Request, Response, StatusCode};
 use sqlx::prelude::*;
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
-pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<Body>> {
+pub async fn get(
+	context: &Context,
+	request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>> {
 	let timezone = get_timezone(&request);
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
@@ -36,9 +37,9 @@ pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<B
 	};
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/", props)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
+	let response = http::Response::builder()
+		.status(http::StatusCode::OK)
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }

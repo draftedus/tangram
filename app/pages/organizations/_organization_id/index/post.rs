@@ -5,7 +5,6 @@ use crate::{
 	},
 	Context,
 };
-use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize)]
@@ -24,13 +23,13 @@ struct DeleteMemberAction {
 
 pub async fn post(
 	context: &Context,
-	mut request: Request<Body>,
+	mut request: http::Request<hyper::Body>,
 	organization_id: &str,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	if !context.options.auth_enabled {
 		return Ok(not_found());
 	}
-	let data = match to_bytes(request.body_mut()).await {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(data) => data,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -64,7 +63,7 @@ pub async fn post(
 async fn delete_organization(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	sqlx::query(
 		"
 		delete from organizations
@@ -75,10 +74,10 @@ async fn delete_organization(
 	.bind(&organization_id.to_string())
 	.execute(&mut *db)
 	.await?;
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, "/user")
-		.body(Body::empty())
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
+		.header(http::header::LOCATION, "/user")
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }
@@ -87,7 +86,7 @@ async fn delete_member(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 	organization_id: Id,
 	action: DeleteMemberAction,
-) -> Result<Response<Body>> {
+) -> Result<http::Response<hyper::Body>> {
 	let DeleteMemberAction { member_id } = action;
 	let member_id: Id = match member_id.parse() {
 		Ok(member_id) => member_id,
@@ -105,10 +104,10 @@ async fn delete_member(
 	.bind(&member_id.to_string())
 	.execute(&mut *db)
 	.await?;
-	let response = Response::builder()
-		.status(StatusCode::SEE_OTHER)
-		.header(header::LOCATION, "/user")
-		.body(Body::empty())
+	let response = http::Response::builder()
+		.status(http::StatusCode::SEE_OTHER)
+		.header(http::header::LOCATION, "/user")
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }
