@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		error::Error,
+		error::{bad_request, not_found, service_unavailable, unauthorized},
 		user::{authorize_normal_user, authorize_normal_user_for_organization},
 	},
 	Context,
@@ -28,23 +28,30 @@ pub async fn post(
 	organization_id: &str,
 ) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_normal_user(&request, &mut db)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
+	let data = match to_bytes(request.body_mut()).await {
+		Ok(data) => data,
+		Err(_) => return Ok(bad_request()),
+	};
+	let action: Action = match serde_urlencoded::from_bytes(&data) {
+		Ok(action) => action,
+		Err(_) => return Ok(bad_request()),
+	};
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_normal_user(&request, &mut db).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(unauthorized()),
+	};
+	let organization_id: Id = match organization_id.parse() {
+		Ok(organization_id) => organization_id,
+		Err(_) => return Ok(bad_request()),
+	};
 	if !authorize_normal_user_for_organization(&mut db, &user, organization_id).await? {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let response = match action {
 		Action::DeleteOrganization => delete_organization(&mut db, organization_id).await?,
@@ -82,7 +89,10 @@ async fn delete_member(
 	action: DeleteMemberAction,
 ) -> Result<Response<Body>> {
 	let DeleteMemberAction { member_id } = action;
-	let member_id: Id = member_id.parse().map_err(|_| Error::NotFound)?;
+	let member_id: Id = match member_id.parse() {
+		Ok(member_id) => member_id,
+		Err(_) => return Ok(not_found()),
+	};
 	sqlx::query(
 		"
 		delete from organizations_users

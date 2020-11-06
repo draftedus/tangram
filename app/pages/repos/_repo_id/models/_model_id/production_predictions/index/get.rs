@@ -1,7 +1,7 @@
 use super::props::{Pagination, PredictionTable, PredictionTableRow, Props};
 use crate::{
 	common::{
-		error::Error,
+		error::{bad_request, not_found, redirect_to_login, service_unavailable},
 		monitor_event::PredictOutput,
 		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_model},
@@ -34,17 +34,20 @@ pub async fn get(
 		.as_ref()
 		.and_then(|s| s.get("before"))
 		.and_then(|t| t.parse().ok());
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
+	let model_id: Id = match model_id.parse() {
+		Ok(model_id) => model_id,
+		Err(_) => return Ok(bad_request()),
+	};
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let rows = match (after, before) {

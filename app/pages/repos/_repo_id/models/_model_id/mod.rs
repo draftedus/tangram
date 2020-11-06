@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		error::Error,
+		error::{bad_request, not_found, redirect_to_login, service_unavailable},
 		user::{authorize_user, authorize_user_for_model},
 	},
 	Context,
@@ -34,17 +34,20 @@ pub async fn post(
 	request: Request<Body>,
 	model_id: &str,
 ) -> Result<Response<Body>> {
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
+	let model_id: Id = match model_id.parse() {
+		Ok(model_id) => model_id,
+		Err(_) => return Ok(bad_request()),
+	};
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let response = delete_model(&mut db, model_id).await?;
 	db.commit().await?;
@@ -78,17 +81,20 @@ pub async fn download(
 	request: Request<Body>,
 	model_id: &str,
 ) -> Result<Response<Body>> {
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
+	let model_id: Id = match model_id.parse() {
+		Ok(model_id) => model_id,
+		Err(_) => return Ok(bad_request()),
+	};
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let row = sqlx::query(
 		"

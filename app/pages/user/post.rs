@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		error::Error,
+		error::{bad_request, not_found, service_unavailable, unauthorized},
 		user::{authorize_normal_user, NormalUser},
 	},
 	Context,
@@ -18,20 +18,24 @@ enum Action {
 
 pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_normal_user(&request, &mut db)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_normal_user(&request, &mut db).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(unauthorized()),
+	};
+	let data = match to_bytes(request.body_mut()).await {
+		Ok(data) => data,
+		Err(_) => return Ok(bad_request()),
+	};
+	let action: Action = match serde_urlencoded::from_bytes(&data) {
+		Ok(action) => action,
+		Err(_) => return Ok(bad_request()),
+	};
 	let response = match action {
 		Action::Logout => logout(&user, &mut db).await?,
 	};

@@ -24,28 +24,6 @@ pub enum ProdFileSystem {
 	Included(IncludedFileSystem),
 }
 
-#[derive(Debug)]
-pub struct NotFoundError;
-
-impl std::fmt::Display for NotFoundError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "Not Found")
-	}
-}
-
-impl std::error::Error for NotFoundError {}
-
-#[derive(Debug)]
-pub struct JSError(String);
-
-impl std::fmt::Display for JSError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}", self.0)
-	}
-}
-
-impl std::error::Error for JSError {}
-
 impl Pinwheel {
 	pub fn dev(src_dir: PathBuf, dst_dir: PathBuf) -> Pinwheel {
 		let fs = RealFileSystem {
@@ -112,7 +90,7 @@ impl Pinwheel {
 		} else if self.fs().exists(&server_js_url) {
 			server_js_url
 		} else {
-			return Err(NotFoundError.into());
+			return Err(err!("could not find page {}", pagename));
 		};
 		let client_js_url = Url::parse("dst:/")
 			.unwrap()
@@ -644,7 +622,10 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 		let server_source_path_exists = server_source_path.exists();
 		let client_source_path_exists = client_source_path.exists();
 		if !static_source_path_exists && !server_source_path_exists {
-			return Err(NotFoundError.into());
+			return Err(err!(
+				"could not find static.tsx or server.tsx for {}",
+				page_entry
+			));
 		}
 		if static_source_path_exists {
 			args.push(format!("{}", static_source_path.display()));

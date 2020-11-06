@@ -1,7 +1,7 @@
 use super::render::render;
 use crate::{
 	common::{
-		error::Error,
+		error::{not_found, redirect_to_login, service_unavailable},
 		user::{authorize_user, authorize_user_for_repo},
 	},
 	Context,
@@ -15,17 +15,20 @@ pub async fn get(
 	request: Request<Body>,
 	repo_id: &str,
 ) -> Result<Response<Body>> {
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
+	let repo_id: Id = match repo_id.parse() {
+		Ok(repo_id) => repo_id,
+		Err(_) => return Ok(not_found()),
+	};
 	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let html = render(context, None).await?;
 	let response = Response::builder()

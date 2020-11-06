@@ -1,5 +1,5 @@
 use super::props::Props;
-use crate::{common::error::Error, layouts::app_layout::get_app_layout_info, Context};
+use crate::{common::error::not_found, layouts::app_layout::get_app_layout_info, Context};
 use hyper::{Body, Request, Response, StatusCode};
 use tangram_util::error::Result;
 
@@ -9,7 +9,7 @@ pub async fn get(
 	_organization_id: &str,
 ) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let app_layout_info = get_app_layout_info(context).await?;
 	let props = Props {

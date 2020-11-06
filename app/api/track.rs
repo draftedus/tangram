@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		error::Error,
+		error::{bad_request, service_unavailable},
 		model::get_model,
 		monitor_event::{
 			BinaryClassificationPredictOutput, MonitorEvent, MulticlassClassificationPredictOutput,
@@ -28,20 +28,22 @@ enum MonitorEventSet {
 }
 
 pub(crate) async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let monitor_events: MonitorEventSet =
-		serde_json::from_slice(&data).map_err(|_| Error::BadRequest)?;
+	let data = match to_bytes(request.body_mut()).await {
+		Ok(bytes) => bytes,
+		Err(_) => return Ok(bad_request()),
+	};
+	let monitor_events: MonitorEventSet = match serde_json::from_slice(&data) {
+		Ok(monitor_events) => monitor_events,
+		Err(_) => return Ok(bad_request()),
+	};
 	let monitor_events = match monitor_events {
 		MonitorEventSet::Single(monitor_event) => vec![monitor_event],
 		MonitorEventSet::Multiple(monitor_event) => monitor_event,
 	};
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
 	let mut models = BTreeMap::new();
 	for monitor_event in monitor_events {
 		match monitor_event {
@@ -49,16 +51,14 @@ pub(crate) async fn post(context: &Context, mut request: Request<Body>) -> Resul
 				let handle_prediction_result =
 					handle_prediction_monitor_event(&mut db, &mut models, monitor_event).await;
 				if handle_prediction_result.is_err() {
-					println!("{:?}", handle_prediction_result);
-					return Err(Error::BadRequest.into());
+					return Ok(bad_request());
 				}
 			}
 			MonitorEvent::TrueValue(monitor_event) => {
 				let handle_true_value_result =
 					handle_true_value_monitor_event(&mut db, &mut models, monitor_event).await;
 				if handle_true_value_result.is_err() {
-					println!("{:?}", handle_true_value_result);
-					return Err(Error::BadRequest.into());
+					return Ok(bad_request());
 				}
 			}
 		}

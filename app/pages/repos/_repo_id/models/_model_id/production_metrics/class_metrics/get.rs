@@ -5,7 +5,7 @@ use super::props::{
 use crate::{
 	common::{
 		date_window::get_date_window_and_interval,
-		error::Error,
+		error::{bad_request, not_found, redirect_to_login, service_unavailable},
 		model::get_model,
 		production_metrics::{get_production_metrics, GetProductionMetricsOutput},
 		time::format_date_window_interval,
@@ -27,19 +27,25 @@ pub async fn get(
 	model_id: &str,
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
-	let (date_window, date_window_interval) = get_date_window_and_interval(&search_params)?;
+	let (date_window, date_window_interval) = match get_date_window_and_interval(&search_params) {
+		Some((date_window, date_window_interval)) => (date_window, date_window_interval),
+		None => return Ok(bad_request()),
+	};
 	let timezone = get_timezone(&request);
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
+	let model_id: Id = match model_id.parse() {
+		Ok(model_id) => model_id,
+		Err(_) => return Ok(bad_request()),
+	};
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
@@ -48,7 +54,7 @@ pub async fn get(
 			.await?;
 	let model = match model {
 		tangram_core::model::Model::MulticlassClassifier(model) => model,
-		_ => return Err(Error::BadRequest.into()),
+		_ => return Ok(bad_request()),
 	};
 	let classes = model.classes;
 	let GetProductionMetricsOutput {

@@ -2325,6 +2325,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "futures",
+ "http",
  "hyper",
  "include_dir",
  "insta",

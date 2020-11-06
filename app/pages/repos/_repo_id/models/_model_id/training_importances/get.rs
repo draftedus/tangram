@@ -5,7 +5,7 @@ use super::props::{
 };
 use crate::{
 	common::{
-		error::Error,
+		error::{bad_request, not_found, redirect_to_login, service_unavailable},
 		model::get_model,
 		user::{authorize_user, authorize_user_for_model},
 	},
@@ -20,30 +20,20 @@ pub async fn get(
 	request: Request<Body>,
 	model_id: &str,
 ) -> Result<Response<Body>> {
-	let props = props(context, request, model_id).await?;
-	let html = context.pinwheel.render_with(
-		"/repos/_repo_id/models/_model_id/training_importances",
-		props,
-	)?;
-	let response = Response::builder()
-		.status(StatusCode::OK)
-		.body(Body::from(html))
-		.unwrap();
-	Ok(response)
-}
-
-pub async fn props(context: &Context, request: Request<Body>, model_id: &str) -> Result<Props> {
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
+	let model_id: Id = match model_id.parse() {
+		Ok(model_id) => model_id,
+		Err(_) => return Ok(bad_request()),
+	};
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let inner = match model {
@@ -181,12 +171,21 @@ pub async fn props(context: &Context, request: Request<Body>, model_id: &str) ->
 		},
 	};
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
-	db.commit().await?;
-	Ok(Props {
+	let props = Props {
 		id: model_id.to_string(),
 		inner,
 		model_layout_info,
-	})
+	};
+	db.commit().await?;
+	let html = context.pinwheel.render_with(
+		"/repos/_repo_id/models/_model_id/training_importances",
+		props,
+	)?;
+	let response = Response::builder()
+		.status(StatusCode::OK)
+		.body(Body::from(html))
+		.unwrap();
+	Ok(response)
 }
 
 fn compute_feature_names(feature_groups: &[tangram_core::model::FeatureGroup]) -> Vec<String> {

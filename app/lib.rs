@@ -1,11 +1,6 @@
-use self::{common::error::Error, context::Context};
+use self::context::Context;
 use backtrace::Backtrace;
 use futures::FutureExt;
-use hyper::{
-	header,
-	service::{make_service_fn, service_fn},
-	Body, Method, Request, Response, StatusCode,
-};
 use pinwheel::Pinwheel;
 use std::{
 	borrow::Cow, cell::RefCell, collections::BTreeMap, convert::Infallible,
@@ -44,7 +39,10 @@ mod context {
 }
 
 #[allow(clippy::cognitive_complexity)]
-async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body> {
+async fn handle(
+	request: http::Request<hyper::Body>,
+	context: Arc<Context>,
+) -> http::Response<hyper::Body> {
 	let method = request.method().clone();
 	let uri = request.uri().clone();
 	let path_and_query = uri.path_and_query().unwrap();
@@ -57,43 +55,43 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			.collect()
 	});
 	let result = match (&method, path_components.as_slice()) {
-		(&Method::GET, &["health"]) => self::api::health::get(&context, request).await,
-		(&Method::POST, &["track"]) => self::api::track::post(&context, request).await,
-		(&Method::GET, &["login"]) => self::pages::login::get(&context, request, search_params).await,
-		(&Method::POST, &["login"]) => self::pages::login::post(&context, request).await,
-		(&Method::GET, &[""]) => self::pages::index::get(&context, request).await,
-		(&Method::POST, &[""]) => self::pages::index::post(&context, request).await,
-		(&Method::GET, &["repos", "new"]) => self::pages::repos::new::get(&context, request).await,
-		(&Method::POST, &["repos", "new"]) => self::pages::repos::new::post(&context, request).await,
-		(&Method::GET, &["repos", repo_id, ""]) => {
+		(&http::Method::GET, &["health"]) => self::api::health::get(&context, request).await,
+		(&http::Method::POST, &["track"]) => self::api::track::post(&context, request).await,
+		(&http::Method::GET, &["login"]) => self::pages::login::get(&context, request, search_params).await,
+		(&http::Method::POST, &["login"]) => self::pages::login::post(&context, request).await,
+		(&http::Method::GET, &[""]) => self::pages::index::get(&context, request).await,
+		(&http::Method::POST, &[""]) => self::pages::index::post(&context, request).await,
+		(&http::Method::GET, &["repos", "new"]) => self::pages::repos::new::get(&context, request).await,
+		(&http::Method::POST, &["repos", "new"]) => self::pages::repos::new::post(&context, request).await,
+		(&http::Method::GET, &["repos", repo_id, ""]) => {
 			self::pages::repos::_repo_id::index::get(&context, request, repo_id).await
 		}
-		(&Method::POST, &["repos", repo_id, ""]) => {
+		(&http::Method::POST, &["repos", repo_id, ""]) => {
 			self::pages::repos::_repo_id::index::post(&context, request, repo_id).await
 		}
-		(&Method::GET, &["repos", repo_id, "models", "new"]) => {
+		(&http::Method::GET, &["repos", repo_id, "models", "new"]) => {
 			self::pages::repos::_repo_id::models::new::get(&context, request, repo_id).await
 		}
-		(&Method::POST, &["repos", repo_id, "models", "new"]) => {
+		(&http::Method::POST, &["repos", repo_id, "models", "new"]) => {
 			self::pages::repos::_repo_id::models::new::post(&context, request, repo_id).await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, ""]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::index::get(&context, request, model_id).await
 		}
-		(&Method::POST, &["repos", _repo_id, "models", model_id]) => {
+		(&http::Method::POST, &["repos", _repo_id, "models", model_id]) => {
 			self::pages::repos::_repo_id::models::_model_id::post(&context, request, model_id).await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "download"]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "download"]) => {
 			self::pages::repos::_repo_id::models::_model_id::download(&context, request, model_id).await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_stats", ""]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_stats", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::training_stats::index::get(
 				&context, request, model_id,
 			)
 			.await
 		}
 		(
-			&Method::GET,
+			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "training_stats", "columns", column_name],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::training_stats::columns::_column_name::get(
@@ -104,13 +102,13 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_importances"]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_importances"]) => {
 			self::pages::repos::_repo_id::models::_model_id::training_importances::get(
 				&context, request, model_id,
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "prediction"]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "prediction"]) => {
 			self::pages::repos::_repo_id::models::_model_id::prediction::get(
 				&context,
 				request,
@@ -119,14 +117,14 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::training_metrics::index::get(
 				&context, request, model_id,
 			)
 			.await
 		}
 		(
-			&Method::GET,
+			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "training_metrics", "class_metrics"],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::training_metrics::class_metrics::get(
@@ -138,7 +136,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			.await
 		}
 		(
-			&Method::GET,
+			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "training_metrics", "precision_recall"],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::training_metrics::precision_recall::get(
@@ -148,7 +146,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", "roc"]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", "roc"]) => {
 			self::pages::repos::_repo_id::models::_model_id::training_metrics::roc::get(
 				&context,
 				request,
@@ -156,11 +154,11 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "tuning"]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "tuning"]) => {
 			self::pages::repos::_repo_id::models::_model_id::tuning::get(&context, request, model_id)
 				.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_predictions::index::get(
 				&context,
 				request,
@@ -169,7 +167,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::POST, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
+		(&http::Method::POST, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_predictions::index::post(
 				&context,
 				request,
@@ -177,7 +175,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", "predictions", identifier]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", "predictions", identifier]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_predictions::predictions::_identifier::get(
 				&context,
 				request,
@@ -186,7 +184,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", ""]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_stats::index::get(
 				&context,
 				request,
@@ -196,7 +194,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			.await
 		}
 		(
-			&Method::GET,
+			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "production_stats", "columns", column_name],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::production_stats::columns::_column_name::get(
@@ -208,7 +206,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", ""]) => {
+		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", ""]) => {
 			self::pages::repos::_repo_id::models::_model_id::production_metrics::index::get(
 				&context,
 				request,
@@ -218,7 +216,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			.await
 		}
 		(
-			&Method::GET,
+			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"],
 		) => {
 			self::pages::repos::_repo_id::models::_model_id::production_metrics::class_metrics::get(
@@ -229,27 +227,27 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::GET, &["user"]) => self::pages::user::get(&context, request).await,
-		(&Method::POST, &["user"]) => self::pages::user::post(&context, request).await,
-		(&Method::GET, &["organizations", "new"]) => {
+		(&http::Method::GET, &["user"]) => self::pages::user::get(&context, request).await,
+		(&http::Method::POST, &["user"]) => self::pages::user::post(&context, request).await,
+		(&http::Method::GET, &["organizations", "new"]) => {
 			self::pages::organizations::new::get(&context, request).await
 		}
-		(&Method::POST, &["organizations", "new"]) => {
+		(&http::Method::POST, &["organizations", "new"]) => {
 			self::pages::organizations::new::post(&context, request).await
 		}
-		(&Method::GET, &["organizations", organization_id, ""]) => {
+		(&http::Method::GET, &["organizations", organization_id, ""]) => {
 			self::pages::organizations::_organization_id::index::get(&context, request, organization_id)
 				.await
 		}
-		(&Method::POST, &["organizations", organization_id, ""]) => {
+		(&http::Method::POST, &["organizations", organization_id, ""]) => {
 			self::pages::organizations::_organization_id::index::post(&context, request, organization_id)
 				.await
 		}
-		(&Method::GET, &["organizations", organization_id, "edit"]) => {
+		(&http::Method::GET, &["organizations", organization_id, "edit"]) => {
 			self::pages::organizations::_organization_id::edit::get(&context, request, organization_id)
 				.await
 		}
-		(&Method::GET, &["organizations", organization_id, "members", "new"]) => {
+		(&http::Method::GET, &["organizations", organization_id, "members", "new"]) => {
 			self::pages::organizations::_organization_id::members::new::get(
 				&context,
 				request,
@@ -257,7 +255,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::POST, &["organizations", organization_id, "members", "new"]) => {
+		(&http::Method::POST, &["organizations", organization_id, "members", "new"]) => {
 			self::pages::organizations::_organization_id::members::new::post(
 				&context,
 				request,
@@ -265,7 +263,7 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 			)
 			.await
 		}
-		(&Method::POST, &["organizations", organization_id, "edit"]) => {
+		(&http::Method::POST, &["organizations", organization_id, "edit"]) => {
 			self::pages::organizations::_organization_id::edit::post(&context, request, organization_id)
 				.await
 		}
@@ -274,43 +272,16 @@ async fn handle(request: Request<Body>, context: Arc<Context>) -> Response<Body>
 	let response = match result {
 		Ok(response) => response,
 		Err(error) => {
-			if error.downcast_ref::<pinwheel::NotFoundError>().is_some() {
-				Response::builder()
-					.status(StatusCode::NOT_FOUND)
-					.body(Body::from("not found"))
-					.unwrap()
-			} else if let Some(error) = error.downcast_ref::<Error>() {
-				match error {
-					Error::BadRequest => Response::builder()
-						.status(StatusCode::BAD_REQUEST)
-						.body(Body::from("bad request"))
-						.unwrap(),
-					Error::Unauthorized => Response::builder()
-						.status(StatusCode::SEE_OTHER)
-						.header(header::LOCATION, "/login")
-						.body(Body::from("unauthorized"))
-						.unwrap(),
-					Error::NotFound => Response::builder()
-						.status(StatusCode::NOT_FOUND)
-						.body(Body::from("not found"))
-						.unwrap(),
-					Error::ServiceUnavailable => Response::builder()
-						.status(StatusCode::SERVICE_UNAVAILABLE)
-						.body(Body::from("service unavailable"))
-						.unwrap(),
-				}
+			eprintln!("{}", error);
+			let body: Cow<str> = if cfg!(debug_assertions) {
+				format!("{}", error).into()
 			} else {
-				eprintln!("{}", error);
-				let body: Cow<str> = if cfg!(debug_assertions) {
-					format!("{}", error).into()
-				} else {
-					"internal server error".into()
-				};
-				Response::builder()
-					.status(StatusCode::INTERNAL_SERVER_ERROR)
-					.body(Body::from(body))
-					.unwrap()
-			}
+				"internal server error".into()
+			};
+			http::Response::builder()
+				.status(http::StatusCode::INTERNAL_SERVER_ERROR)
+				.body(hyper::Body::from(body))
+				.unwrap()
 		}
 	};
 	eprintln!("{} {} {}", method, path, response.status());
@@ -384,10 +355,10 @@ async fn run_impl(options: Options) -> Result<()> {
 		pinwheel,
 		pool,
 	});
-	let service = make_service_fn(|_| {
+	let service = hyper::service::make_service_fn(|_| {
 		let context = context.clone();
 		async move {
-			Ok::<_, Infallible>(service_fn(move |request| {
+			Ok::<_, Infallible>(hyper::service::service_fn(move |request| {
 				let method = request.method().clone();
 				let path = request.uri().path_and_query().unwrap().path().to_owned();
 				let context = context.clone();
@@ -405,9 +376,9 @@ async fn run_impl(options: Options) -> Result<()> {
 									format!("{}\n{:?}", message, backtrace)
 								});
 							eprintln!("{} {} 500", method, path);
-							Response::builder()
-								.status(StatusCode::INTERNAL_SERVER_ERROR)
-								.body(Body::from(backtrace))
+							http::Response::builder()
+								.status(http::StatusCode::INTERNAL_SERVER_ERROR)
+								.body(hyper::Body::from(backtrace))
 								.unwrap()
 						});
 					Ok::<_, Infallible>(response)

@@ -1,6 +1,4 @@
-use crate::common::error::Error;
 use std::collections::BTreeMap;
-use tangram_util::error::Result;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Copy, Debug)]
 pub enum DateWindow {
@@ -24,7 +22,7 @@ pub enum DateWindowInterval {
 
 pub fn get_date_window_and_interval(
 	search_params: &Option<BTreeMap<String, String>>,
-) -> Result<(DateWindow, DateWindowInterval)> {
+) -> Option<(DateWindow, DateWindowInterval)> {
 	let date_window = search_params
 		.as_ref()
 		.and_then(|query| query.get("date_window"));
@@ -33,12 +31,12 @@ pub fn get_date_window_and_interval(
 		"today" => DateWindow::Today,
 		"this_month" => DateWindow::ThisMonth,
 		"this_year" => DateWindow::ThisYear,
-		_ => return Err(Error::BadRequest.into()),
+		_ => return None,
 	};
 	let date_window_interval = match date_window {
 		DateWindow::Today => DateWindowInterval::Hourly,
 		DateWindow::ThisMonth => DateWindowInterval::Daily,
 		DateWindow::ThisYear => DateWindowInterval::Monthly,
 	};
-	Ok((date_window, date_window_interval))
+	Some((date_window, date_window_interval))
 }

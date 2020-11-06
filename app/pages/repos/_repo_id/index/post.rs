@@ -1,6 +1,6 @@
 use crate::{
 	common::{
-		error::Error,
+		error::{bad_request, not_found, redirect_to_login, service_unavailable},
 		user::{authorize_user, authorize_user_for_model},
 	},
 	Context,
@@ -26,24 +26,31 @@ pub async fn post(
 	mut request: Request<Body>,
 	repo_id: &str,
 ) -> Result<Response<Body>> {
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let action: Action = serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
+	let data = match to_bytes(request.body_mut()).await {
+		Ok(data) => data,
+		Err(_) => return Ok(bad_request()),
+	};
+	let action: Action = match serde_urlencoded::from_bytes(&data) {
+		Ok(action) => action,
+		Err(_) => return Ok(bad_request()),
+	};
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
 	match action {
 		Action::DeleteModel(DeleteModelAction { model_id, .. }) => {
-			let model_id: Id = model_id.parse().map_err(|_| Error::NotFound)?;
-			authorize_user_for_model(&mut db, &user, model_id)
-				.await
-				.map_err(|_| Error::NotFound)?;
+			let model_id: Id = match model_id.parse() {
+				Ok(model_id) => model_id,
+				Err(_) => return Ok(bad_request()),
+			};
+			if !authorize_user_for_model(&mut db, &user, model_id).await? {
+				return Ok(not_found());
+			};
 			sqlx::query(
 				"
 					delete from models

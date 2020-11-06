@@ -1,7 +1,7 @@
 use super::props::{Props, Repo};
 use crate::{
 	common::{
-		error::Error,
+		error::{bad_request, not_found, service_unavailable, unauthorized},
 		organizations::get_organization,
 		user::{authorize_normal_user, authorize_normal_user_for_organization},
 	},
@@ -19,24 +19,28 @@ pub async fn get(
 	organization_id: &str,
 ) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let app_layout_info = get_app_layout_info(context).await?;
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_normal_user(&request, &mut db)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let organization_id: Id = organization_id.parse().map_err(|_| Error::NotFound)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_normal_user(&request, &mut db).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(unauthorized()),
+	};
+	let organization_id: Id = match organization_id.parse() {
+		Ok(organization_id) => organization_id,
+		Err(_) => return Ok(bad_request()),
+	};
 	if !authorize_normal_user_for_organization(&mut db, &user, organization_id).await? {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
-	let organization = get_organization(organization_id, &mut db)
-		.await?
-		.ok_or(Error::NotFound)?;
+	let organization = match get_organization(organization_id, &mut db).await? {
+		Some(organization) => organization,
+		None => return Ok(not_found()),
+	};
 	let rows = sqlx::query(
 		"
 			select

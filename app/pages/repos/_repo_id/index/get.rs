@@ -1,7 +1,7 @@
 use super::props::{Model, Props};
 use crate::{
 	common::{
-		error::Error,
+		error::{not_found, redirect_to_login, service_unavailable},
 		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_repo},
 	},
@@ -20,18 +20,21 @@ pub async fn get(
 	repo_id: &str,
 ) -> Result<Response<Body>> {
 	let timezone = get_timezone(&request);
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
-	let repo_id: Id = repo_id.parse().map_err(|_| Error::NotFound)?;
-	authorize_user_for_repo(&mut db, &user, repo_id)
-		.await
-		.map_err(|_| Error::NotFound)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
+	let repo_id: Id = match repo_id.parse() {
+		Ok(repo_id) => repo_id,
+		Err(_) => return Ok(not_found()),
+	};
+	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
+		return Ok(not_found());
+	};
 	let app_layout_info = get_app_layout_info(context).await?;
 	let rows = sqlx::query(
 		"

@@ -1,5 +1,8 @@
 use super::props::Props;
-use crate::{common::error::Error, Context};
+use crate::{
+	common::error::{bad_request, service_unavailable},
+	Context,
+};
 use chrono::prelude::*;
 use hyper::{body::to_bytes, header, Body, Request, Response, StatusCode};
 use rand::Rng;
@@ -16,16 +19,18 @@ struct Action {
 
 pub async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
 	// Read the post data.
-	let data = to_bytes(request.body_mut())
-		.await
-		.map_err(|_| Error::BadRequest)?;
-	let Action { email, code } =
-		serde_urlencoded::from_bytes(&data).map_err(|_| Error::BadRequest)?;
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
+	let data = match to_bytes(request.body_mut()).await {
+		Ok(data) => data,
+		Err(_) => return Ok(bad_request()),
+	};
+	let Action { email, code } = match serde_urlencoded::from_bytes(&data) {
+		Ok(data) => data,
+		Err(_) => return Ok(bad_request()),
+	};
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
 	// Upsert the user.
 	let user_id = Id::new();
 	let now = Utc::now().timestamp();

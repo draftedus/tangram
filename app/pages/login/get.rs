@@ -1,5 +1,5 @@
 use super::props::Props;
-use crate::{Context, Error};
+use crate::{common::error::not_found, Context};
 use hyper::{Body, Request, Response, StatusCode};
 use std::collections::BTreeMap;
 use tangram_util::error::Result;
@@ -10,7 +10,7 @@ pub async fn get(
 	search_params: Option<BTreeMap<String, String>>,
 ) -> Result<Response<Body>> {
 	if !context.options.auth_enabled {
-		return Err(Error::NotFound.into());
+		return Ok(not_found());
 	}
 	let email = search_params.as_ref().and_then(|s| s.get("email").cloned());
 	let props = Props {

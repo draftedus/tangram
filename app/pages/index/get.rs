@@ -1,7 +1,7 @@
 use super::props::{Props, Repo};
 use crate::{
 	common::{
-		error::Error,
+		error::{redirect_to_login, service_unavailable},
 		timezone::get_timezone,
 		user::{authorize_user, NormalUser, User},
 	},
@@ -17,14 +17,14 @@ use tangram_util::id::Id;
 
 pub async fn get(context: &Context, request: Request<Body>) -> Result<Response<Body>> {
 	let timezone = get_timezone(&request);
-	let mut db = context
-		.pool
-		.begin()
-		.await
-		.map_err(|_| Error::ServiceUnavailable)?;
-	let user = authorize_user(&request, &mut db, context.options.auth_enabled)
-		.await?
-		.map_err(|_| Error::Unauthorized)?;
+	let mut db = match context.pool.begin().await {
+		Ok(db) => db,
+		Err(_) => return Ok(service_unavailable()),
+	};
+	let user = match authorize_user(&request, &mut db, context.options.auth_enabled).await? {
+		Ok(user) => user,
+		Err(_) => return Ok(redirect_to_login()),
+	};
 	let app_layout_info = get_app_layout_info(context).await?;
 	let repos = match user {
 		User::Root => repos_for_root(&mut db, &timezone).await?,
