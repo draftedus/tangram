@@ -1,5 +1,5 @@
 use pinwheel::Pinwheel;
-use std::{borrow::Cow, collections::BTreeMap};
+use std::{borrow::Cow, collections::BTreeMap, sync::Arc};
 use tangram_util::{err, error::Result};
 use url::Url;
 
@@ -30,9 +30,68 @@ pub struct Context {
 	pub pool: sqlx::AnyPool,
 }
 
+pub fn run(options: Options) -> Result<()> {
+	tokio::runtime::Builder::new()
+		.threaded_scheduler()
+		.enable_all()
+		.build()
+		.unwrap()
+		.block_on(run_inner(options))
+}
+
+async fn run_inner(options: Options) -> Result<()> {
+	// Create the pinwheel.
+	let pinwheel = if cfg!(debug_assertions) {
+		Pinwheel::dev(
+			std::path::PathBuf::from("app"),
+			std::path::PathBuf::from("build/pinwheel/app"),
+		)
+	} else {
+		Pinwheel::prod(include_dir::include_dir!("../build/pinwheel/app"))
+	};
+	// Configure the database pool.
+	let database_url = options.database_url.to_string();
+	let (pool_options, pool_max_connections) = if database_url.starts_with("sqlite:") {
+		let pool_options = database_url
+			.parse::<sqlx::sqlite::SqliteConnectOptions>()?
+			.create_if_missing(true)
+			.foreign_keys(true)
+			.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
+			.into();
+		let pool_max_connections = options.database_max_connections.unwrap_or(1);
+		(pool_options, pool_max_connections)
+	} else if database_url.starts_with("postgres:") {
+		let pool_options = database_url
+			.parse::<sqlx::postgres::PgConnectOptions>()?
+			.into();
+		let pool_max_connections = options.database_max_connections.unwrap_or(10);
+		(pool_options, pool_max_connections)
+	} else {
+		return Err(err!(
+			"DATABASE_URL must be a sqlite or postgres database url"
+		));
+	};
+	let pool = sqlx::any::AnyPoolOptions::new()
+		.max_connections(pool_max_connections)
+		.connect_with(pool_options)
+		.await?;
+	// Run any pending migrations.
+	migrations::run(&pool).await?;
+	// Serve!
+	let host = options.host;
+	let port = options.port;
+	let context = Context {
+		options,
+		pinwheel,
+		pool,
+	};
+	pinwheel::serve(host, port, context, handle).await?;
+	Ok(())
+}
+
 #[allow(clippy::cognitive_complexity)]
 async fn handle(
-	context: &Context,
+	context: Arc<Context>,
 	request: http::Request<hyper::Body>,
 ) -> http::Response<hyper::Body> {
 	let method = request.method().clone();
@@ -46,6 +105,7 @@ async fn handle(
 			.into_owned()
 			.collect()
 	});
+	let context = &context;
 	let result = match (&method, path_components.as_slice()) {
 		(&http::Method::GET, &["health"]) => self::api::health::get(context, request).await,
 		(&http::Method::POST, &["track"]) => self::api::track::post(context, request).await,
@@ -278,63 +338,4 @@ async fn handle(
 	};
 	eprintln!("{} {} {}", method, path, response.status());
 	response
-}
-
-pub fn run(options: Options) -> Result<()> {
-	tokio::runtime::Builder::new()
-		.threaded_scheduler()
-		.enable_all()
-		.build()
-		.unwrap()
-		.block_on(run_impl(options))
-}
-
-async fn run_impl(options: Options) -> Result<()> {
-	// Create the pinwheel.
-	let pinwheel = if cfg!(debug_assertions) {
-		Pinwheel::dev(
-			std::path::PathBuf::from("app"),
-			std::path::PathBuf::from("build/pinwheel/app"),
-		)
-	} else {
-		Pinwheel::prod(include_dir::include_dir!("../build/pinwheel/app"))
-	};
-	// Configure the database pool.
-	let database_url = options.database_url.to_string();
-	let (pool_options, pool_max_connections) = if database_url.starts_with("sqlite:") {
-		let pool_options = database_url
-			.parse::<sqlx::sqlite::SqliteConnectOptions>()?
-			.create_if_missing(true)
-			.foreign_keys(true)
-			.journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
-			.into();
-		let pool_max_connections = options.database_max_connections.unwrap_or(1);
-		(pool_options, pool_max_connections)
-	} else if database_url.starts_with("postgres:") {
-		let pool_options = database_url
-			.parse::<sqlx::postgres::PgConnectOptions>()?
-			.into();
-		let pool_max_connections = options.database_max_connections.unwrap_or(10);
-		(pool_options, pool_max_connections)
-	} else {
-		return Err(err!(
-			"DATABASE_URL must be a sqlite or postgres database url"
-		));
-	};
-	let pool = sqlx::any::AnyPoolOptions::new()
-		.max_connections(pool_max_connections)
-		.connect_with(pool_options)
-		.await?;
-	// Run any pending migrations.
-	migrations::run(&pool).await?;
-	// Serve!
-	let host = options.host;
-	let port = options.port;
-	let context = Context {
-		options,
-		pinwheel,
-		pool,
-	};
-	pinwheel::serve(host, port, context, handle).await?;
-	Ok(())
 }

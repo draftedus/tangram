@@ -21,12 +21,14 @@ use which::which;
 pub async fn serve<C, H, F>(host: std::net::IpAddr, port: u16, context: C, handle: H) -> Result<()>
 where
 	C: Send + Sync + 'static,
-	H: Fn(&C, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
+	H: Fn(Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
 	F: Future<Output = http::Response<hyper::Body>> + Send,
 {
+	// Create a task local that will store the panic message and backtrace if one occurs.
 	tokio::task_local! {
 		static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
 	}
+	// Install a new panic hook that records the panic message and backtrace.
 	let hook = std::panic::take_hook();
 	std::panic::set_hook(Box::new(|panic_info| {
 		let value = (panic_info.to_string(), Backtrace::new());
@@ -46,7 +48,7 @@ where
 				PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
 					let method = request.method().clone();
 					let path = request.uri().path_and_query().unwrap().path().to_owned();
-					let result = AssertUnwindSafe(handle(&context, request))
+					let result = AssertUnwindSafe(handle(context, request))
 						.catch_unwind()
 						.await;
 					let response = result.unwrap_or_else(|_| {
