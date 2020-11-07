@@ -156,6 +156,8 @@ struct QueueItem {
 	pub right_sum_gradients: f64,
 	/// This is the sum of the hessians for the training examples that were sent to the right child.
 	pub right_sum_hessians: f64,
+	/// These are the features that are still splittable.
+	pub splittable_features: Vec<bool>,
 }
 
 impl PartialEq for QueueItem {
@@ -354,6 +356,7 @@ pub fn train_tree(options: TrainTreeOptions) -> TrainTree {
 				hessians_ordered_buffer,
 				hessians,
 				left_child_examples_index,
+				splittable_features: queue_item.splittable_features.as_slice(),
 				left_child_n_examples: queue_item.left_n_examples,
 				left_child_sum_gradients: queue_item.left_sum_gradients,
 				left_child_sum_hessians: queue_item.left_sum_hessians,
@@ -456,6 +459,7 @@ struct AddQueueItemOptions<'a> {
 fn add_queue_item(options: AddQueueItemOptions) {
 	options.queue.push(QueueItem {
 		gain: options.output.gain,
+		splittable_features: options.output.splittable_features,
 		parent_index: options.parent_index,
 		split_direction: options.split_direction,
 		depth: options.depth,

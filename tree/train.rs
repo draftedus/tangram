@@ -96,20 +96,29 @@ pub fn train(
 	update_progress(TrainProgress::Initializing(progress_counter.clone()));
 	#[cfg(feature = "timing")]
 	let start = std::time::Instant::now();
+	let compute_binned_features_column_major_output = compute_binned_features_column_major(
+		&features_train,
+		&binning_instructions,
+		train_options,
+		&|| progress_counter.inc(1),
+	);
+	let features_train =
+		features_train.subview(&compute_binned_features_column_major_output.used_feature_indexes);
+	let used_features_binning_instructions = compute_binned_features_column_major_output
+		.used_feature_indexes
+		.iter()
+		.map(|original_feature_index| binning_instructions[*original_feature_index].clone())
+		.collect::<Vec<_>>();
 	let binned_features_row_major =
 		if let BinnedFeaturesLayout::RowMajor = train_options.binned_features_layout {
 			Some(compute_binned_features_row_major(
 				&features_train,
-				&binning_instructions,
+				&used_features_binning_instructions,
 				&|| progress_counter.inc(1),
 			))
 		} else {
 			None
 		};
-	let binned_features_column_major =
-		compute_binned_features_column_major(&features_train, &binning_instructions, &|| {
-			progress_counter.inc(1)
-		});
 	#[cfg(feature = "timing")]
 	timing.compute_binned_features.inc(start.elapsed());
 
@@ -173,7 +182,7 @@ pub fn train(
 	} else {
 		None
 	};
-	let binning_instructions_for_pool = binning_instructions.clone();
+	let binning_instructions_for_pool = used_features_binning_instructions.clone();
 	let bin_stats_pool = match binned_features_layout {
 		BinnedFeaturesLayout::ColumnMajor => Pool::new(
 			train_options.max_leaf_nodes,
@@ -273,9 +282,10 @@ pub fn train(
 				});
 			// Train the tree.
 			let tree = train_tree(TrainTreeOptions {
-				binning_instructions: &binning_instructions,
+				binning_instructions: &used_features_binning_instructions,
 				binned_features_row_major: &binned_features_row_major,
-				binned_features_column_major: &binned_features_column_major,
+				binned_features_column_major: &compute_binned_features_column_major_output
+					.binned_features,
 				gradients: gradients.as_slice().unwrap(),
 				hessians: hessians.as_slice().unwrap(),
 				gradients_ordered_buffer: gradients_ordered_buffer.as_slice_mut().unwrap(),
@@ -357,7 +367,17 @@ pub fn train(
 	eprintln!("{:?}", timing);
 
 	// Assemble the model.
-	let trees: Vec<Tree> = trees.into_iter().map(Into::into).collect();
+	let trees: Vec<Tree> = trees
+		.into_iter()
+		.map(|train_tree| {
+			tree_from_train_tree(
+				train_tree,
+				compute_binned_features_column_major_output
+					.used_feature_indexes
+					.as_slice(),
+			)
+		})
+		.collect();
 	match task {
 		Task::Regression => TrainOutput::Regressor(RegressorTrainOutput {
 			model: Regressor {
@@ -517,55 +537,61 @@ fn compute_early_stopping_metric(
 	}
 }
 
-impl From<TrainTree> for Tree {
-	fn from(value: TrainTree) -> Tree {
-		let nodes = value.nodes.into_iter().map(Into::into).collect();
-		Tree { nodes }
-	}
+fn tree_from_train_tree(
+	train_tree: TrainTree,
+	train_feature_index_to_feature_index: &[usize],
+) -> Tree {
+	let nodes = train_tree
+		.nodes
+		.into_iter()
+		.map(|node| node_from_train_node(node, train_feature_index_to_feature_index))
+		.collect();
+	Tree { nodes }
 }
 
-impl From<TrainNode> for Node {
-	fn from(value: TrainNode) -> Node {
-		match value {
-			TrainNode::Branch(TrainBranchNode {
-				left_child_index,
-				right_child_index,
-				split,
-				examples_fraction,
-				..
-			}) => Node::Branch(BranchNode {
-				left_child_index: left_child_index.unwrap(),
-				right_child_index: right_child_index.unwrap(),
-				split: match split {
-					TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
-						feature_index,
-						invalid_values_direction,
-						split_value,
-						..
-					}) => BranchSplit::Continuous(BranchSplitContinuous {
-						feature_index,
-						split_value,
-						invalid_values_direction,
-					}),
-					TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
-						feature_index,
-						directions,
-						..
-					}) => BranchSplit::Discrete(BranchSplitDiscrete {
-						feature_index,
-						directions,
-					}),
-				},
-				examples_fraction,
-			}),
-			TrainNode::Leaf(TrainLeafNode {
-				value,
-				examples_fraction,
-				..
-			}) => Node::Leaf(LeafNode {
-				value,
-				examples_fraction,
-			}),
-		}
+fn node_from_train_node(
+	train_node: TrainNode,
+	train_feature_index_to_feature_index: &[usize],
+) -> Node {
+	match train_node {
+		TrainNode::Branch(TrainBranchNode {
+			left_child_index,
+			right_child_index,
+			split,
+			examples_fraction,
+			..
+		}) => Node::Branch(BranchNode {
+			left_child_index: left_child_index.unwrap(),
+			right_child_index: right_child_index.unwrap(),
+			split: match split {
+				TrainBranchSplit::Continuous(TrainBranchSplitContinuous {
+					feature_index,
+					invalid_values_direction,
+					split_value,
+					..
+				}) => BranchSplit::Continuous(BranchSplitContinuous {
+					feature_index: train_feature_index_to_feature_index[feature_index],
+					split_value,
+					invalid_values_direction,
+				}),
+				TrainBranchSplit::Discrete(TrainBranchSplitDiscrete {
+					feature_index,
+					directions,
+					..
+				}) => BranchSplit::Discrete(BranchSplitDiscrete {
+					feature_index: train_feature_index_to_feature_index[feature_index],
+					directions,
+				}),
+			},
+			examples_fraction,
+		}),
+		TrainNode::Leaf(TrainLeafNode {
+			value,
+			examples_fraction,
+			..
+		}) => Node::Leaf(LeafNode {
+			value,
+			examples_fraction,
+		}),
 	}
 }

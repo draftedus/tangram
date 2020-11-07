@@ -501,6 +501,14 @@ impl<'a> DataFrameView<'a> {
 		&self.columns
 	}
 
+	pub fn subview(&self, indexes: &[usize]) -> DataFrameView {
+		let mut columns = Vec::with_capacity(indexes.len());
+		for index in indexes {
+			columns.push(self.columns[*index].clone())
+		}
+		Self { columns }
+	}
+
 	pub fn ncols(&self) -> usize {
 		self.columns.len()
 	}

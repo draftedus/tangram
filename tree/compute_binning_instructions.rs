@@ -69,7 +69,7 @@ fn compute_binning_instructions_for_number_feature(
 ) -> BinningInstruction {
 	// Create a histogram of values in the number feature.
 	let mut histogram: BTreeMap<Finite<f32>, usize> = BTreeMap::new();
-	let mut histogram_values_count = 0;
+	let mut n_finite_values = 0;
 	let max = usize::min(
 		column.len(),
 		train_options.max_examples_for_computing_bin_thresholds,
@@ -77,7 +77,7 @@ fn compute_binning_instructions_for_number_feature(
 	for value in column.iter().take(max) {
 		if let Ok(value) = Finite::new(*value) {
 			*histogram.entry(value).or_insert(0) += 1;
-			histogram_values_count += 1;
+			n_finite_values += 1;
 		}
 	}
 	// If the number of unique values is less than `max_valid_bins_for_number_features`, then create one bin per unique value. Otherwise, create bins at quantiles.
@@ -95,7 +95,7 @@ fn compute_binning_instructions_for_number_feature(
 	} else {
 		compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_histogram(
 			histogram,
-			histogram_values_count,
+			n_finite_values,
 			train_options,
 		)
 	};
@@ -108,7 +108,14 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 	histogram_values_count: usize,
 	train_options: &TrainOptions,
 ) -> Vec<f32> {
-	let total_values_count = histogram_values_count.to_f32().unwrap();
+	let first_hist_entry = histogram.iter().next().unwrap();
+	let num_zeros = if first_hist_entry.0.get() == 0.0 {
+		*first_hist_entry.1
+	} else {
+		0
+	};
+	let total_non_zero_values_count = histogram_values_count - num_zeros;
+	let total_non_zero_values_count = total_non_zero_values_count.to_f32().unwrap();
 	let quantiles: Vec<f32> = (1..train_options
 		.max_valid_bins_for_number_features
 		.to_usize()
@@ -123,15 +130,23 @@ fn compute_binning_instruction_thresholds_for_number_feature_as_quantiles_from_h
 		.collect();
 	let quantile_indexes: Vec<usize> = quantiles
 		.iter()
-		.map(|q| ((total_values_count - 1.0) * q).trunc().to_usize().unwrap())
+		.map(|q| {
+			((total_non_zero_values_count - 1.0) * q)
+				.trunc()
+				.to_usize()
+				.unwrap()
+		})
 		.collect();
 	let quantile_fracts: Vec<f32> = quantiles
 		.iter()
-		.map(|q| ((total_values_count - 1.0) * q).fract())
+		.map(|q| ((total_non_zero_values_count - 1.0) * q).fract())
 		.collect();
 	let mut quantiles: Vec<Option<f32>> = vec![None; quantiles.len()];
 	let mut current_count: usize = 0;
 	let mut iter = histogram.iter().peekable();
+	if num_zeros > 0 {
+		iter.next();
+	}
 	while let Some((value, count)) = iter.next() {
 		let value = value.get();
 		current_count += count;

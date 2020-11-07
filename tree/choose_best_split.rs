@@ -39,6 +39,7 @@ pub struct ChooseBestSplitRootOptions<'a> {
 
 pub struct ChooseBestSplitsNotRootOptions<'a> {
 	pub bin_stats_pool: &'a Pool<BinStats>,
+	pub splittable_features: &'a [bool],
 	pub binned_features_column_major: &'a BinnedFeaturesColumnMajor,
 	pub binned_features_row_major: &'a Option<BinnedFeaturesRowMajor>,
 	pub binning_instructions: &'a [BinningInstruction],
@@ -79,6 +80,7 @@ pub struct ChooseBestSplitSuccess {
 	pub right_sum_gradients: f64,
 	pub right_sum_hessians: f64,
 	pub bin_stats: PoolItem<BinStats>,
+	pub splittable_features: Vec<bool>,
 }
 
 pub struct ChooseBestSplitFailure {
@@ -146,7 +148,7 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 	let start = std::time::Instant::now();
 	// For each feature, compute bin stats and use them to choose the best split.
 	let mut bin_stats = bin_stats_pool.get().unwrap();
-	let best_split_output: Option<ChooseBestSplitForFeatureOutput> =
+	let best_split_output: (Option<ChooseBestSplitForFeatureOutput>, Vec<bool>) =
 		match train_options.binned_features_layout {
 			BinnedFeaturesLayout::ColumnMajor => {
 				let bin_stats = bin_stats.as_column_major_mut().unwrap();
@@ -183,20 +185,23 @@ pub fn choose_best_split_root(options: ChooseBestSplitRootOptions) -> ChooseBest
 
 	// Assemble the output.
 	match best_split_output {
-		Some(best_split) => ChooseBestSplitOutput::Success(ChooseBestSplitSuccess {
-			gain: best_split.gain,
-			split: best_split.split,
-			sum_gradients,
-			sum_hessians,
-			left_n_examples: best_split.left_approximate_n_examples,
-			left_sum_gradients: best_split.left_sum_gradients,
-			left_sum_hessians: best_split.left_sum_hessians,
-			right_n_examples: best_split.right_approximate_n_examples,
-			right_sum_gradients: best_split.right_sum_gradients,
-			right_sum_hessians: best_split.right_sum_hessians,
-			bin_stats,
-		}),
-		None => ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
+		(Some(best_split), splittable_features) => {
+			ChooseBestSplitOutput::Success(ChooseBestSplitSuccess {
+				gain: best_split.gain,
+				split: best_split.split,
+				sum_gradients,
+				sum_hessians,
+				left_n_examples: best_split.left_approximate_n_examples,
+				left_sum_gradients: best_split.left_sum_gradients,
+				left_sum_hessians: best_split.left_sum_hessians,
+				right_n_examples: best_split.right_approximate_n_examples,
+				right_sum_gradients: best_split.right_sum_gradients,
+				right_sum_hessians: best_split.right_sum_hessians,
+				bin_stats,
+				splittable_features,
+			})
+		}
+		(None, _) => ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 			sum_gradients,
 			sum_hessians,
 		}),
@@ -217,7 +222,7 @@ struct ChooseBestSplitRootColumnMajorOptions<'a> {
 
 fn choose_best_split_root_column_major(
 	options: ChooseBestSplitRootColumnMajorOptions,
-) -> Option<ChooseBestSplitForFeatureOutput> {
+) -> (Option<ChooseBestSplitForFeatureOutput>, Vec<bool>) {
 	let ChooseBestSplitRootColumnMajorOptions {
 		bin_stats,
 		binned_features_column_major,
@@ -229,14 +234,24 @@ fn choose_best_split_root_column_major(
 		sum_hessians,
 		train_options,
 	} = options;
-	pzip!(
+	let mut splittable_features = vec![false; binned_features_column_major.columns.len()];
+	let best_split = pzip!(
 		binning_instructions,
 		&binned_features_column_major.columns,
-		bin_stats
+		bin_stats,
+		splittable_features.par_iter_mut(),
 	)
 	.enumerate()
 	.map(
-		|(feature_index, (binning_instructions, binned_feature_column, bin_stats_for_feature))| {
+		|(
+			feature_index,
+			(
+				binning_instructions,
+				binned_feature_column,
+				bin_stats_for_feature,
+				is_feature_splittable,
+			),
+		)| {
 			// Compute the bin stats.
 			compute_bin_stats_column_major_root(
 				bin_stats_for_feature,
@@ -246,7 +261,7 @@ fn choose_best_split_root_column_major(
 				hessians_are_constant,
 			);
 			// Choose the best split for this featue.
-			choose_best_split_for_feature(
+			let best_split_for_feature = choose_best_split_for_feature(
 				feature_index,
 				binning_instructions,
 				bin_stats_for_feature,
@@ -254,11 +269,16 @@ fn choose_best_split_root_column_major(
 				sum_gradients,
 				sum_hessians,
 				train_options,
-			)
+			);
+			if best_split_for_feature.is_some() {
+				*is_feature_splittable = true;
+			}
+			best_split_for_feature
 		},
 	)
 	.filter_map(|split| split)
-	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
+	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap());
+	(best_split, splittable_features)
 }
 
 struct ChooseBestSplitRootRowMajorOptions<'a> {
@@ -276,7 +296,7 @@ struct ChooseBestSplitRootRowMajorOptions<'a> {
 
 fn choose_best_split_root_row_major(
 	options: ChooseBestSplitRootRowMajorOptions,
-) -> Option<ChooseBestSplitForFeatureOutput> {
+) -> (Option<ChooseBestSplitForFeatureOutput>, Vec<bool>) {
 	let ChooseBestSplitRootRowMajorOptions {
 		bin_stats,
 		binned_features_row_major,
@@ -366,7 +386,7 @@ where
 
 fn choose_best_split_root_row_major_for_features<T>(
 	options: ChooseBestSplitRootRowMajorForFeaturesOptions<T>,
-) -> Option<ChooseBestSplitForFeatureOutput>
+) -> (Option<ChooseBestSplitForFeatureOutput>, Vec<bool>)
 where
 	T: NumCast + Send + Sync,
 {
@@ -380,27 +400,37 @@ where
 		train_options,
 	} = options;
 	let bin_stats = SuperUnsafe::new(bin_stats);
-	pzip!(
+	let mut splittable_features =
+		vec![false; binned_features_row_major_inner.values_with_offsets.ncols()];
+	let best_split = pzip!(
 		binning_instructions,
-		&binned_features_row_major_inner.offsets
+		&binned_features_row_major_inner.offsets,
+		splittable_features.par_iter_mut(),
 	)
 	.enumerate()
-	.map(|(feature_index, (binning_instructions, offset))| {
-		let offset = offset.to_usize().unwrap();
-		let bin_stats_range = offset..offset + binning_instructions.n_bins();
-		let bin_stats_for_feature = unsafe { &mut bin_stats.get()[bin_stats_range] };
-		choose_best_split_for_feature(
-			feature_index,
-			binning_instructions,
-			bin_stats_for_feature,
-			n_examples,
-			sum_gradients,
-			sum_hessians,
-			train_options,
-		)
-	})
+	.map(
+		|(feature_index, (binning_instructions, offset, is_feature_splittable))| {
+			let offset = offset.to_usize().unwrap();
+			let bin_stats_range = offset..offset + binning_instructions.n_bins();
+			let bin_stats_for_feature = unsafe { &mut bin_stats.get()[bin_stats_range] };
+			let best_split_for_feature = choose_best_split_for_feature(
+				feature_index,
+				binning_instructions,
+				bin_stats_for_feature,
+				n_examples,
+				sum_gradients,
+				sum_hessians,
+				train_options,
+			);
+			if best_split_for_feature.is_some() {
+				*is_feature_splittable = true;
+			}
+			best_split_for_feature
+		},
+	)
 	.filter_map(|split| split)
-	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap())
+	.max_by(|a, b| a.gain.partial_cmp(&b.gain).unwrap());
+	(best_split, splittable_features)
 }
 
 pub fn choose_best_splits_not_root(
@@ -426,6 +456,7 @@ pub fn choose_best_splits_not_root(
 		right_child_n_examples,
 		right_child_sum_gradients,
 		right_child_sum_hessians,
+		splittable_features,
 		train_options,
 		..
 	} = options;
@@ -508,6 +539,7 @@ pub fn choose_best_splits_not_root(
 					smaller_child_examples_index,
 					should_try_to_split_left_child,
 					smaller_child_direction,
+					splittable_features,
 				},
 			)
 		}
@@ -534,10 +566,15 @@ pub fn choose_best_splits_not_root(
 					smaller_child_examples_index,
 					should_try_to_split_left_child,
 					smaller_child_direction,
+					splittable_features,
 				},
 			)
 		}
 	};
+
+	// Choose the features that are still able to be split by children of the current nodes.
+	let (left_child_splittable_features, right_child_splittable_features) =
+		compute_splittable_features_for_children(&children_best_splits_for_features);
 
 	// Choose the splits for the left and right children with the highest gain.
 	let (left_child_best_split, right_child_best_split) =
@@ -563,6 +600,7 @@ pub fn choose_best_splits_not_root(
 			right_sum_gradients: best_split.right_sum_gradients,
 			right_sum_hessians: best_split.right_sum_hessians,
 			bin_stats: left_child_bin_stats,
+			splittable_features: left_child_splittable_features,
 		}),
 		None => ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 			sum_gradients: left_child_sum_gradients,
@@ -582,6 +620,7 @@ pub fn choose_best_splits_not_root(
 			right_sum_gradients: best_split.right_sum_gradients,
 			right_sum_hessians: best_split.right_sum_hessians,
 			bin_stats: right_child_bin_stats,
+			splittable_features: right_child_splittable_features,
 		}),
 		None => ChooseBestSplitOutput::Failure(ChooseBestSplitFailure {
 			sum_gradients: right_child_sum_gradients,
@@ -609,6 +648,7 @@ struct ComputeBinStatsAndChooseBestSplitsNotRootColumnMajorOptions<'a> {
 	smaller_child_bin_stats: &'a mut Vec<Vec<BinStatsEntry>>,
 	smaller_child_direction: SplitDirection,
 	smaller_child_examples_index: &'a [u32],
+	splittable_features: &'a [bool],
 	train_options: &'a TrainOptions,
 }
 
@@ -636,6 +676,7 @@ fn compute_bin_stats_and_choose_best_splits_not_root_column_major(
 		smaller_child_bin_stats,
 		smaller_child_direction,
 		smaller_child_examples_index,
+		splittable_features,
 		train_options,
 	} = options;
 	pzip!(
@@ -643,6 +684,7 @@ fn compute_bin_stats_and_choose_best_splits_not_root_column_major(
 		&binned_features_column_major.columns,
 		smaller_child_bin_stats,
 		larger_child_bin_stats,
+		splittable_features
 	)
 	.enumerate()
 	.map(
@@ -653,8 +695,12 @@ fn compute_bin_stats_and_choose_best_splits_not_root_column_major(
 				binned_features_column,
 				smaller_child_bin_stats_for_feature,
 				mut larger_child_bin_stats_for_feature,
+				is_feature_splittable,
 			),
 		)| {
+			if !is_feature_splittable {
+				return (None, None);
+			}
 			// Compute the bin stats for the child with fewer examples.
 			compute_bin_stats_column_major_not_root(
 				smaller_child_bin_stats_for_feature,
@@ -669,7 +715,6 @@ fn compute_bin_stats_and_choose_best_splits_not_root_column_major(
 				&smaller_child_bin_stats_for_feature,
 				&mut larger_child_bin_stats_for_feature,
 			);
-			// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
 			let (left_child_bin_stats_for_feature, right_child_bin_stats_for_feature) =
 				match smaller_child_direction {
 					SplitDirection::Left => (
@@ -735,6 +780,7 @@ struct ComputeBinStatsAndChooseBestSplitsNotRootRowMajorOptions<'a> {
 	smaller_child_bin_stats: &'a mut Vec<BinStatsEntry>,
 	smaller_child_direction: SplitDirection,
 	smaller_child_examples_index: &'a [u32],
+	splittable_features: &'a [bool],
 	train_options: &'a TrainOptions,
 }
 
@@ -762,6 +808,7 @@ fn compute_bin_stats_and_choose_best_splits_not_root_row_major(
 		smaller_child_bin_stats,
 		smaller_child_direction,
 		smaller_child_examples_index,
+		splittable_features,
 		train_options,
 	} = options;
 	// Compute the bin stats for the child with fewer examples.
@@ -774,6 +821,7 @@ fn compute_bin_stats_and_choose_best_splits_not_root_row_major(
 			gradients,
 			hessians,
 			hessians_are_constant,
+			splittable_features,
 		);
 	} else {
 		let n_threads = rayon::current_num_threads();
@@ -791,6 +839,7 @@ fn compute_bin_stats_and_choose_best_splits_not_root_row_major(
 					gradients,
 					hessians,
 					hessians_are_constant,
+					splittable_features,
 				);
 				smaller_child_bin_stats_chunk
 			})
@@ -827,12 +876,12 @@ fn compute_bin_stats_and_choose_best_splits_not_root_row_major(
 				should_try_to_split_right_child,
 				smaller_child_bin_stats,
 				smaller_child_direction,
+				splittable_features,
 				train_options,
 			})
 		}
 		BinnedFeaturesRowMajor::U32(binned_features_row_major_inner) => {
 			choose_best_splits_not_root_row_major(ChooseBestSplitsNotRootRowMajorOptions {
-				binned_features_row_major_inner,
 				binning_instructions,
 				larger_child_bin_stats,
 				left_child_n_examples,
@@ -845,6 +894,8 @@ fn compute_bin_stats_and_choose_best_splits_not_root_row_major(
 				should_try_to_split_right_child,
 				smaller_child_bin_stats,
 				smaller_child_direction,
+				binned_features_row_major_inner,
+				splittable_features,
 				train_options,
 			})
 		}
@@ -868,6 +919,7 @@ where
 	should_try_to_split_right_child: bool,
 	smaller_child_bin_stats: &'a mut Vec<BinStatsEntry>,
 	smaller_child_direction: SplitDirection,
+	splittable_features: &'a [bool],
 	train_options: &'a TrainOptions,
 }
 
@@ -894,80 +946,88 @@ where
 		should_try_to_split_right_child,
 		smaller_child_bin_stats,
 		smaller_child_direction,
+		splittable_features,
 		train_options,
 	} = options;
 	let smaller_child_bin_stats = SuperUnsafe::new(smaller_child_bin_stats);
 	let larger_child_bin_stats = SuperUnsafe::new(larger_child_bin_stats);
 	pzip!(
 		binning_instructions,
-		&binned_features_row_major_inner.offsets
+		&binned_features_row_major_inner.offsets,
+		splittable_features,
 	)
 	.enumerate()
-	.map(|(feature_index, (binning_instructions, offset))| {
-		let smaller_child_bin_stats_for_feature = unsafe {
-			&mut smaller_child_bin_stats.get()[offset.to_usize().unwrap()
-				..offset.to_usize().unwrap() + binning_instructions.n_bins()]
-		};
-		let larger_child_bin_stats_for_feature = unsafe {
-			&mut larger_child_bin_stats.get()[offset.to_usize().unwrap()
-				..offset.to_usize().unwrap() + binning_instructions.n_bins()]
-		};
-		// Compute the larger child bin stats by subtraction.
-		compute_bin_stats_subtraction(
-			smaller_child_bin_stats_for_feature,
-			larger_child_bin_stats_for_feature,
-		);
-		// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
-		let (left_child_bin_stats_for_feature, right_child_bin_stats_for_feature) =
-			match smaller_child_direction {
-				SplitDirection::Left => (
-					smaller_child_bin_stats_for_feature,
-					larger_child_bin_stats_for_feature,
-				),
-				SplitDirection::Right => (
-					larger_child_bin_stats_for_feature,
-					smaller_child_bin_stats_for_feature,
-				),
+	.map(
+		|(feature_index, (binning_instructions, offset, is_feature_splittable))| {
+			if !is_feature_splittable {
+				return (None, None);
+			}
+			let smaller_child_bin_stats_for_feature = unsafe {
+				&mut smaller_child_bin_stats.get()[offset.to_usize().unwrap()
+					..offset.to_usize().unwrap() + binning_instructions.n_bins()]
 			};
-		// Choose the best splits for the left and right children.
-		let (left_child_best_split_for_feature, right_child_best_split_for_feature) = rayon::join(
-			|| {
-				if should_try_to_split_left_child {
-					choose_best_split_for_feature(
-						feature_index,
-						binning_instructions,
-						left_child_bin_stats_for_feature,
-						left_child_n_examples,
-						left_child_sum_gradients,
-						left_child_sum_hessians,
-						train_options,
-					)
-				} else {
-					None
-				}
-			},
-			|| {
-				if should_try_to_split_right_child {
-					choose_best_split_for_feature(
-						feature_index,
-						binning_instructions,
-						right_child_bin_stats_for_feature,
-						right_child_n_examples,
-						right_child_sum_gradients,
-						right_child_sum_hessians,
-						train_options,
-					)
-				} else {
-					None
-				}
-			},
-		);
-		(
-			left_child_best_split_for_feature,
-			right_child_best_split_for_feature,
-		)
-	})
-	.collect()
+			let larger_child_bin_stats_for_feature = unsafe {
+				&mut larger_child_bin_stats.get()[offset.to_usize().unwrap()
+					..offset.to_usize().unwrap() + binning_instructions.n_bins()]
+			};
+			// Compute the larger child bin stats by subtraction.
+			compute_bin_stats_subtraction(
+				smaller_child_bin_stats_for_feature,
+				larger_child_bin_stats_for_feature,
+			);
+			// Assign the smaller and larger bin stats to the left and right children depending on which direction was smaller.
+			let (left_child_bin_stats_for_feature, right_child_bin_stats_for_feature) =
+				match smaller_child_direction {
+					SplitDirection::Left => (
+						smaller_child_bin_stats_for_feature,
+						larger_child_bin_stats_for_feature,
+					),
+					SplitDirection::Right => (
+						larger_child_bin_stats_for_feature,
+						smaller_child_bin_stats_for_feature,
+					),
+				};
+			// Choose the best splits for the left and right children.
+			let (left_child_best_split_for_feature, right_child_best_split_for_feature) =
+				rayon::join(
+					|| {
+						if should_try_to_split_left_child {
+							choose_best_split_for_feature(
+								feature_index,
+								binning_instructions,
+								left_child_bin_stats_for_feature,
+								left_child_n_examples,
+								left_child_sum_gradients,
+								left_child_sum_hessians,
+								train_options,
+							)
+						} else {
+							None
+						}
+					},
+					|| {
+						if should_try_to_split_right_child {
+							choose_best_split_for_feature(
+								feature_index,
+								binning_instructions,
+								right_child_bin_stats_for_feature,
+								right_child_n_examples,
+								right_child_sum_gradients,
+								right_child_sum_hessians,
+								train_options,
+							)
+						} else {
+							None
+						}
+					},
+				);
+			(
+				left_child_best_split_for_feature,
+				right_child_best_split_for_feature,
+			)
+		},
+	)
+	.collect::<Vec<_>>()
 }
 
 /// Choose the best split for a feature by choosing a continuous split for number features and a discrete split for enum features.
@@ -1338,4 +1398,38 @@ fn choose_split_with_highest_gain(
 			}
 		}
 	}
+}
+
+/// Compute features that are splittable based on whether a valid split was found in this round.
+fn compute_splittable_features_for_children(
+	children_best_splits_for_features: &[(
+		Option<ChooseBestSplitForFeatureOutput>,
+		Option<ChooseBestSplitForFeatureOutput>,
+	)],
+) -> (Vec<bool>, Vec<bool>) {
+	let n_features = children_best_splits_for_features.len();
+	let mut left_child_splittable_features = vec![false; n_features];
+	let mut right_child_splittable_features = vec![false; n_features];
+	for (
+		left_child_splittable_feature,
+		right_child_splittable_feature,
+		children_best_splits_for_feature,
+	) in zip!(
+		left_child_splittable_features.iter_mut(),
+		right_child_splittable_features.iter_mut(),
+		children_best_splits_for_features
+	) {
+		let (left_child_best_split_for_feature, right_child_best_split_for_feature) =
+			children_best_splits_for_feature;
+		if left_child_best_split_for_feature.is_some() {
+			*left_child_splittable_feature = true;
+		}
+		if right_child_best_split_for_feature.is_some() {
+			*right_child_splittable_feature = true;
+		}
+	}
+	(
+		left_child_splittable_features,
+		right_child_splittable_features,
+	)
 }

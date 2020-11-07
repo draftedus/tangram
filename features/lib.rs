@@ -636,7 +636,7 @@ impl BagOfWordsFeatureGroup {
 					.map(|(token, count)| {
 						let examples_count = token_example_histogram[&token];
 						// This is the "inverse document frequency smooth" form of the IDF. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
-						let idf = (n_examples.to_f32().unwrap()
+						let idf = ((1.0 + n_examples.to_f32().unwrap())
 							/ (1.0 + examples_count.to_f32().unwrap()))
 						.ln() + 1.0;
 						TokenStats {
@@ -698,10 +698,22 @@ impl BagOfWordsFeatureGroup {
 								feature_value;
 						}
 					}
+					for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
+						let token = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
+						let token_index = self.tokens_map.get(&token);
+						if let Some(token_index) = token_index {
+							let token = &self.tokens[*token_index];
+							let feature_value = 1.0 * token.idf;
+							feature_values_sum_of_squares += feature_value * feature_value;
+							*features.get_mut([example_index, *token_index]).unwrap() +=
+								feature_value;
+						}
+					}
 					// Normalize the feature values for this example.
 					if feature_values_sum_of_squares > 0.0 {
+						let norm = feature_values_sum_of_squares.sqrt();
 						for feature in features.row_mut(example_index).iter_mut() {
-							*feature /= feature_values_sum_of_squares;
+							*feature /= norm;
 						}
 					}
 				}
@@ -721,10 +733,20 @@ impl BagOfWordsFeatureGroup {
 				Tokenizer::Alphanumeric => {
 					let mut feature_values_sum_of_squares = 0.0;
 					// Set the feature value for each token for this example.
-					for token in
+					for unigram in
 						tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer::new(value)
 					{
-						let token = Token::Unigram(token.into_owned());
+						let token = Token::Unigram(unigram.into_owned());
+						let token_index = self.tokens_map.get(&token);
+						if let Some(token_index) = token_index {
+							let token = &self.tokens[*token_index];
+							let feature_value = 1.0 * token.idf;
+							feature_values_sum_of_squares += feature_value * feature_value;
+							feature_columns[*token_index][example_index] += feature_value;
+						}
+					}
+					for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
+						let token = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
 						let token_index = self.tokens_map.get(&token);
 						if let Some(token_index) = token_index {
 							let token = &self.tokens[*token_index];
@@ -735,8 +757,9 @@ impl BagOfWordsFeatureGroup {
 					}
 					// Normalize the feature values for this example.
 					if feature_values_sum_of_squares > 0.0 {
+						let norm = feature_values_sum_of_squares.sqrt();
 						for feature_column in feature_columns.iter_mut() {
-							feature_column[example_index] /= feature_values_sum_of_squares;
+							feature_column[example_index] /= norm;
 						}
 					}
 				}
@@ -760,10 +783,24 @@ impl BagOfWordsFeatureGroup {
 				Tokenizer::Alphanumeric => {
 					let mut feature_values_sum_of_squares = 0.0;
 					// Set the feature value for each token for this example.
-					for token in
+					for unigram in
 						tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer::new(value)
 					{
-						let token = Token::Unigram(token.into_owned());
+						let token = Token::Unigram(unigram.into_owned());
+						let token_index = self.tokens_map.get(&token);
+						if let Some(token_index) = token_index {
+							let token = &self.tokens[*token_index];
+							let feature_value = 1.0 * token.idf;
+							feature_values_sum_of_squares += feature_value * feature_value;
+							*features
+								.get_mut([example_index, *token_index])
+								.unwrap()
+								.as_number_mut()
+								.unwrap() += feature_value;
+						}
+					}
+					for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
+						let token = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
 						let token_index = self.tokens_map.get(&token);
 						if let Some(token_index) = token_index {
 							let token = &self.tokens[*token_index];
@@ -778,8 +815,9 @@ impl BagOfWordsFeatureGroup {
 					}
 					// Normalize the feature values for this example.
 					if feature_values_sum_of_squares > 0.0 {
+						let norm = feature_values_sum_of_squares.sqrt();
 						for feature in features.row_mut(example_index).iter_mut() {
-							*feature.as_number_mut().unwrap() /= feature_values_sum_of_squares;
+							*feature.as_number_mut().unwrap() /= norm;
 						}
 					}
 				}

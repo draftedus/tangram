@@ -69,10 +69,11 @@ impl MulticlassClassifier {
 		let n_classes = self.n_classes;
 		let trees = ArrayView2::from_shape((n_rounds, n_classes), &self.trees).unwrap();
 		let biases = ArrayView1::from_shape(n_classes, &self.biases).unwrap();
-		for (mut logits, example) in zip!(
+		pzip!(
 			probabilities.axis_iter_mut(Axis(0)),
 			features.axis_iter(Axis(0))
-		) {
+		)
+		.for_each(|(mut logits, example)| {
 			logits.assign(&biases);
 			for trees in trees.axis_iter(Axis(0)) {
 				for (logit, tree) in zip!(logits.iter_mut(), trees.iter()) {
@@ -80,7 +81,7 @@ impl MulticlassClassifier {
 				}
 			}
 			softmax(logits.as_slice_mut().unwrap());
-		}
+		});
 	}
 
 	/// Compute SHAP values.

@@ -360,6 +360,7 @@ pub fn compute_bin_stats_row_major_not_root(
 	gradients: &[f32],
 	hessians: &[f32],
 	hessians_are_constant: bool,
+	_splittable_features: &[bool],
 ) {
 	for entry in smaller_child_bin_stats.iter_mut() {
 		*entry = BinStatsEntry {
