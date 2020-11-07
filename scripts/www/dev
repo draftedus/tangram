@@ -1,1 +1,1 @@
-watchexec --exts rs --restart --watch . -- cargo run -p pinwheel -- dev --port 8081 --src-dir www --dst-dir build/pinwheel/www
+watchexec --exts rs --restart --watch . -- cargo run -p pinwheel -- dev --src-dir www --dst-dir build/pinwheel/www

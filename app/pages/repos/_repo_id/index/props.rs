@@ -5,6 +5,7 @@ use crate::layouts::app_layout::AppLayoutInfo;
 pub struct Props {
 	pub app_layout_info: AppLayoutInfo,
 	pub models: Vec<Model>,
+	pub title: String,
 }
 
 #[derive(serde::Serialize, Debug)]

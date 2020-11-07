@@ -1,11 +1,6 @@
 use clap::Clap;
-use futures::FutureExt;
-use hyper::{
-	service::{make_service_fn, service_fn},
-	Body, Response, StatusCode,
-};
 use pinwheel::Pinwheel;
-use std::{convert::Infallible, panic::AssertUnwindSafe, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 use tangram_util::error::Result;
 
 #[derive(Clap)]
@@ -48,34 +43,16 @@ pub fn main() {
 }
 
 async fn dev(options: DevOptions) -> Result<()> {
-	let pinwheel = Arc::new(Pinwheel::dev(options.src_dir, options.dst_dir));
-	let service = make_service_fn(|_| {
-		let pinwheel = pinwheel.clone();
-		async move {
-			Ok::<_, Infallible>(service_fn(move |request| {
-				let pinwheel = pinwheel.clone();
-				async move {
-					Ok::<_, Infallible>(
-						AssertUnwindSafe(pinwheel.handle(request))
-							.map(|result| result.unwrap())
-							.catch_unwind()
-							.await
-							.unwrap_or_else(|_| {
-								Response::builder()
-									.status(StatusCode::INTERNAL_SERVER_ERROR)
-									.body(Body::from("internal server error"))
-									.unwrap()
-							}),
-					)
-				}
-			}))
-		}
-	});
-	let addr = std::net::SocketAddr::new(options.host, options.port);
-	let listener = std::net::TcpListener::bind(&addr)?;
-	eprintln!("🚀 serving on port {}", options.port);
-	hyper::Server::from_tcp(listener)?.serve(service).await?;
+	let pinwheel = Pinwheel::dev(options.src_dir, options.dst_dir);
+	pinwheel::serve(options.host, options.port, handle, pinwheel).await?;
 	Ok(())
+}
+
+async fn handle(
+	pinwheel: Arc<Pinwheel>,
+	request: http::Request<hyper::Body>,
+) -> http::Response<hyper::Body> {
+	pinwheel.handle(request).await.unwrap()
 }
 
 async fn build(options: BuildOptions) -> Result<()> {

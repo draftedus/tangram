@@ -18,17 +18,23 @@ use tangram_util::{err, error::Result};
 use url::Url;
 use which::which;
 
-pub async fn serve<C, H, F>(host: std::net::IpAddr, port: u16, context: C, handle: H) -> Result<()>
+// Create a task local that will store the panic message and backtrace if a panic occurs.
+tokio::task_local! {
+	static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
+}
+
+pub async fn serve<C, H, F>(
+	host: std::net::IpAddr,
+	port: u16,
+	request_handler: H,
+	request_handler_context: C,
+) -> hyper::Result<()>
 where
 	C: Send + Sync + 'static,
 	H: Fn(Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
 	F: Future<Output = http::Response<hyper::Body>> + Send,
 {
-	// Create a task local that will store the panic message and backtrace if one occurs.
-	tokio::task_local! {
-		static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
-	}
-	// Install a new panic hook that records the panic message and backtrace.
+	// Install a panic hook that will record the panic message and backtrace if a panic occurs.
 	let hook = std::panic::take_hook();
 	std::panic::set_hook(Box::new(|panic_info| {
 		let value = (panic_info.to_string(), Backtrace::new());
@@ -36,47 +42,58 @@ where
 			panic_message_and_backtrace.borrow_mut().replace(value);
 		})
 	}));
-	let context = Arc::new(context);
-	let handle = Arc::new(handle);
+	// Wrap the request handler and context with Arc to allow sharing a reference to it with each task.
+	let request_handler = Arc::new(request_handler);
+	let request_handler_context = Arc::new(request_handler_context);
 	let service = hyper::service::make_service_fn(|_| {
-		let context = context.clone();
-		let handle = handle.clone();
+		let request_handler = request_handler.clone();
+		let request_handler_context = request_handler_context.clone();
 		async move {
 			Ok::<_, Infallible>(hyper::service::service_fn(move |request| {
-				let context = context.clone();
-				let handle = handle.clone();
+				let request_handler = request_handler.clone();
+				let request_handler_context = request_handler_context.clone();
 				PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
-					let method = request.method().clone();
-					let path = request.uri().path_and_query().unwrap().path().to_owned();
-					let result = AssertUnwindSafe(handle(context, request))
-						.catch_unwind()
-						.await;
-					let response = result.unwrap_or_else(|_| {
-						eprintln!("{} {} 500", method, path);
-						let body =
-							PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
-								let panic_message_and_backtrace =
-									panic_message_and_backtrace.borrow();
-								let (message, backtrace) =
-									panic_message_and_backtrace.as_ref().unwrap();
-								format!("{}\n{:?}", message, backtrace)
-							});
-						http::Response::builder()
-							.status(http::StatusCode::INTERNAL_SERVER_ERROR)
-							.body(hyper::Body::from(body))
-							.unwrap()
-					});
-					Ok::<_, Infallible>(response)
+					service(request_handler, request_handler_context, request).await
 				})
 			}))
 		}
 	});
 	let addr = std::net::SocketAddr::new(host, port);
-	let listener = std::net::TcpListener::bind(&addr)?;
+	let listener = std::net::TcpListener::bind(&addr).unwrap();
 	eprintln!("🚀 serving on port {}", port);
 	hyper::Server::from_tcp(listener)?.serve(service).await?;
 	std::panic::set_hook(hook);
 	Ok(())
+}
+
+async fn service<C, H, F>(
+	request_handler: Arc<H>,
+	request_handler_context: Arc<C>,
+	request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>, Infallible>
+where
+	C: Send + Sync + 'static,
+	H: Fn(Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
+	F: Future<Output = http::Response<hyper::Body>> + Send,
+{
+	let method = request.method().clone();
+	let path = request.uri().path_and_query().unwrap().path().to_owned();
+	let result = AssertUnwindSafe(request_handler(request_handler_context, request))
+		.catch_unwind()
+		.await;
+	let response = result.unwrap_or_else(|_| {
+		eprintln!("{} {} 500", method, path);
+		let body = PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+			let panic_message_and_backtrace = panic_message_and_backtrace.borrow();
+			let (message, backtrace) = panic_message_and_backtrace.as_ref().unwrap();
+			format!("{}\n{:?}", message, backtrace)
+		});
+		http::Response::builder()
+			.status(http::StatusCode::INTERNAL_SERVER_ERROR)
+			.body(hyper::Body::from(body))
+			.unwrap()
+	});
+	Ok(response)
 }
 
 pub enum Pinwheel {

@@ -2,6 +2,7 @@ use super::props::{Model, Props};
 use crate::{
 	common::{
 		error::{not_found, redirect_to_login, service_unavailable},
+		repos::get_repo,
 		timezone::get_timezone,
 		user::{authorize_user, authorize_user_for_repo},
 	},
@@ -34,6 +35,7 @@ pub async fn get(
 	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
 		return Ok(not_found());
 	};
+	let repo = get_repo(&mut db, &timezone, repo_id).await?;
 	let app_layout_info = get_app_layout_info(context).await?;
 	let rows = sqlx::query(
 		"
@@ -64,6 +66,7 @@ pub async fn get(
 	let props = Props {
 		app_layout_info,
 		models,
+		title: repo.title,
 	};
 	db.commit().await?;
 	let html = context.pinwheel.render_with("/repos/_repo_id/", props)?;

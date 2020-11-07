@@ -77,7 +77,7 @@ async fn run_inner(options: Options) -> Result<()> {
 		.await?;
 	// Run any pending migrations.
 	migrations::run(&pool).await?;
-	// Serve!
+	// Start the server.
 	let host = options.host;
 	let port = options.port;
 	let context = Context {
@@ -85,12 +85,11 @@ async fn run_inner(options: Options) -> Result<()> {
 		pinwheel,
 		pool,
 	};
-	pinwheel::serve(host, port, context, handle).await?;
+	pinwheel::serve(host, port, request_handler, context).await?;
 	Ok(())
 }
 
-#[allow(clippy::cognitive_complexity)]
-async fn handle(
+async fn request_handler(
 	context: Arc<Context>,
 	request: http::Request<hyper::Body>,
 ) -> http::Response<hyper::Body> {
