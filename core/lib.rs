@@ -1,8 +1,6 @@
 /*!
 */
 
-#![allow(clippy::tabs_in_doc_comments)]
-
 mod config;
 mod features;
 mod grid;

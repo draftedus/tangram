@@ -88,7 +88,7 @@ fn one_hot_encoded_feature_group_for_column(
 fn bag_of_words_feature_group_for_column(
 	column_stats: &stats::TextColumnStatsOutput,
 ) -> tangram_features::FeatureGroup {
-	let mut tokens = column_stats
+	let tokens = column_stats
 		.top_tokens
 		.iter()
 		.map(
@@ -98,20 +98,14 @@ fn bag_of_words_feature_group_for_column(
 			},
 		)
 		.collect::<Vec<_>>();
-	// Tokens must be sorted because we perform a binary search through them later.
-	tokens.sort_by(|a, b| a.token.cmp(&b.token));
 	let tokenizer = match column_stats.tokenizer {
 		stats::Tokenizer::Alphanumeric => tangram_features::Tokenizer::Alphanumeric,
 	};
-	let tokens_map = tokens
-		.iter()
-		.enumerate()
-		.map(|(i, token)| (token.token.clone(), i))
-		.collect();
-	tangram_features::FeatureGroup::BagOfWords(tangram_features::BagOfWordsFeatureGroup {
-		source_column_name: column_stats.column_name.to_owned(),
-		tokenizer,
-		tokens,
-		tokens_map,
-	})
+	tangram_features::FeatureGroup::BagOfWords(
+		tangram_features::BagOfWordsFeatureGroup::from_tokens(
+			column_stats.column_name.to_owned(),
+			tokenizer,
+			tokens,
+		),
+	)
 }

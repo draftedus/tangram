@@ -102,8 +102,8 @@ pub fn train(
 		train_options,
 		&|| progress_counter.inc(1),
 	);
-	let features_train =
-		features_train.subview(&compute_binned_features_column_major_output.used_feature_indexes);
+	let features_train = features_train
+		.view_columns(&compute_binned_features_column_major_output.used_feature_indexes);
 	let used_features_binning_instructions = compute_binned_features_column_major_output
 		.used_feature_indexes
 		.iter()

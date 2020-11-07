@@ -487,9 +487,9 @@ impl TextColumnStats {
 			.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
 			.map(|(token, count)| {
 				let examples_count = self.token_example_histogram[&token];
-				// This is the "inverse document frequency smooth" form of the IDF. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
-				let idf = (n_examples.to_f32().unwrap() / (1.0 + examples_count.to_f32().unwrap()))
-					.ln() + 1.0;
+				let idf = ((1.0 + n_examples.to_f32().unwrap())
+					/ (1.0 + examples_count.to_f32().unwrap()))
+				.ln() + 1.0;
 				TokenStats {
 					token,
 					count,

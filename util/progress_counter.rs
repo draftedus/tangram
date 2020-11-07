@@ -1,5 +1,3 @@
-#![allow(clippy::tabs_in_doc_comments)]
-
 use std::sync::{
 	atomic::{AtomicU64, Ordering},
 	Arc,
@@ -26,8 +24,8 @@ use std::sync::{Arc, Mutex};
 let mut v: Vec<usize> = (0..1_000).collect();
 let progress_counter = Arc::new(Mutex::new(0));
 v.par_iter_mut().for_each(|v| {
-	*v += 1;
-	*progress_counter.lock().unwrap() += 1;
+  *v += 1;
+  *progress_counter.lock().unwrap() += 1;
 });
 ```
 
@@ -40,8 +38,8 @@ use tangram_util::progress_counter::ProgressCounter;
 let mut v: Vec<usize> = (0..1_000).collect();
 let progress_counter = ProgressCounter::new(v.len() as u64);
 v.par_iter_mut().for_each(|v| {
-	*v += 1;
-	progress_counter.inc(1);
+  *v += 1;
+  progress_counter.inc(1);
 });
 ```
 */

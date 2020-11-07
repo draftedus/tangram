@@ -1,5 +1,3 @@
-#![allow(clippy::tabs_in_doc_comments)]
-
 use fnv::{FnvBuildHasher, FnvHashMap, FnvHashSet};
 use itertools::Itertools;
 use ndarray::prelude::*;
@@ -20,7 +18,10 @@ pub fn compute_features_array_f32(
 	feature_groups: &[FeatureGroup],
 	progress: &impl Fn(),
 ) -> Array2<f32> {
-	let n_features = feature_groups.iter().map(|g| g.n_features()).sum::<usize>();
+	let n_features = feature_groups
+		.iter()
+		.map(|feature_group| feature_group.n_features())
+		.sum::<usize>();
 	let mut features = Array::zeros((dataframe.nrows(), n_features));
 	let mut feature_index = 0;
 	for feature_group in feature_groups.iter() {
@@ -274,9 +275,9 @@ use std::num::NonZeroUsize;
 use tangram_dataframe::prelude::*;
 
 EnumDataFrameColumn::new(
-	Some("color".to_string()),
-	vec!["red".to_string(), "green".to_string(), "blue".to_string()],
-	vec![None, Some(NonZeroUsize::new(1).unwrap()), Some(NonZeroUsize::new(2).unwrap()), Some(NonZeroUsize::new(3).unwrap())],
+  Some("color".to_string()),
+  vec!["red".to_string(), "green".to_string(), "blue".to_string()],
+  vec![None, Some(NonZeroUsize::new(1).unwrap()), Some(NonZeroUsize::new(2).unwrap()), Some(NonZeroUsize::new(3).unwrap())],
 );
 ```
 
@@ -387,8 +388,8 @@ A `NormalizedFeatureGroup` transforms a number column to zero mean and unit vari
 use tangram_dataframe::prelude::*;
 
 NumberDataFrameColumn::new(
-		Some("values".to_string()),
-		vec![0.0, 5.2, 1.3, 10.0],
+  Some("values".to_string()),
+  vec![0.0, 5.2, 1.3, 10.0],
 );
 ```
 
@@ -500,9 +501,9 @@ use std::num::NonZeroUsize;
 use tangram_dataframe::prelude::*;
 
 EnumDataFrameColumn::new(
-		Some("color".to_string()),
-		vec!["red".to_string(), "green".to_string(), "blue".to_string()],
-		vec![None, Some(NonZeroUsize::new(1).unwrap()), Some(NonZeroUsize::new(2).unwrap()), Some(NonZeroUsize::new(3).unwrap())],
+  Some("color".to_string()),
+  vec!["red".to_string(), "green".to_string(), "blue".to_string()],
+  vec![None, Some(NonZeroUsize::new(1).unwrap()), Some(NonZeroUsize::new(2).unwrap()), Some(NonZeroUsize::new(3).unwrap())],
 );
 ```
 
@@ -554,8 +555,8 @@ First, during training all the values for the text column are tokenized. Then, [
 use tangram_dataframe::prelude::*;
 
 TextDataFrameColumn::new(
-	Some("book_titles".to_string()),
-	vec!["The Little Prince".to_string(), "Stuart Little".to_string(), "The Cat in the Hat".to_string()]
+  Some("book_titles".to_string()),
+  vec!["The Little Prince".to_string(), "Stuart Little".to_string(), "The Cat in the Hat".to_string()]
 );
 ```
 
@@ -577,6 +578,7 @@ TextDataFrameColumn::new(
 */
 #[derive(Debug)]
 pub struct BagOfWordsFeatureGroup {
+	/// This is the name of the text column used to compute features with this feature group.
 	pub source_column_name: String,
 	/// This is the tokenizer used to split the text into tokens.
 	pub tokenizer: Tokenizer,
@@ -585,22 +587,45 @@ pub struct BagOfWordsFeatureGroup {
 	/// These are the tokens that were produced for the source column in training.
 	pub tokens_map: HashMap<Token, usize, FnvBuildHasher>,
 }
-pub struct BagOfWordsFeatureGroupSettings {
+
+pub struct FitBagOfWordsFeatureGroupSettings {
+	pub include_unigrams: bool,
+	pub include_bigrams: bool,
 	pub top_tokens_count: usize,
 }
 
-impl Default for BagOfWordsFeatureGroupSettings {
-	fn default() -> Self {
-		Self {
+impl Default for FitBagOfWordsFeatureGroupSettings {
+	fn default() -> FitBagOfWordsFeatureGroupSettings {
+		FitBagOfWordsFeatureGroupSettings {
+			include_unigrams: true,
+			include_bigrams: true,
 			top_tokens_count: 20000,
 		}
 	}
 }
 
 impl BagOfWordsFeatureGroup {
-	pub fn new(
+	pub fn from_tokens(
+		source_column_name: String,
+		tokenizer: Tokenizer,
+		tokens: Vec<BagOfWordsFeatureGroupToken>,
+	) -> BagOfWordsFeatureGroup {
+		let tokens_map = tokens
+			.iter()
+			.enumerate()
+			.map(|(i, token)| (token.token.clone(), i))
+			.collect();
+		BagOfWordsFeatureGroup {
+			source_column_name,
+			tokenizer,
+			tokens,
+			tokens_map,
+		}
+	}
+
+	pub fn fit(
 		column: DataFrameColumnView,
-		settings: BagOfWordsFeatureGroupSettings,
+		settings: FitBagOfWordsFeatureGroupSettings,
 	) -> BagOfWordsFeatureGroup {
 		let mut token_occurrence_histogram = FnvHashMap::default();
 		let mut token_example_histogram = FnvHashMap::default();
@@ -635,7 +660,6 @@ impl BagOfWordsFeatureGroup {
 					})
 					.map(|(token, count)| {
 						let examples_count = token_example_histogram[&token];
-						// This is the "inverse document frequency smooth" form of the IDF. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 						let idf = ((1.0 + n_examples.to_f32().unwrap())
 							/ (1.0 + examples_count.to_f32().unwrap()))
 						.ln() + 1.0;
@@ -646,23 +670,20 @@ impl BagOfWordsFeatureGroup {
 							idf,
 						}
 					})
-					.collect::<Vec<TokenStats>>();
-				let mut tokens = top_tokens
+					.collect::<Vec<_>>();
+				let tokens = top_tokens
 					.iter()
 					.map(|token_stats| BagOfWordsFeatureGroupToken {
 						token: token_stats.token.clone(),
 						idf: token_stats.idf,
 					})
 					.collect::<Vec<_>>();
-				// Tokens must be sorted because we perform a binary search through them later.
-				tokens.sort_by(|a, b| a.token.cmp(&b.token));
 				let tokenizer = Tokenizer::Alphanumeric;
 				let tokens_map = tokens
 					.iter()
 					.enumerate()
 					.map(|(i, token)| (token.token.clone(), i))
 					.collect();
-				// Make a FeatureGroup.
 				Self {
 					source_column_name: column.name().unwrap().to_owned(),
 					tokenizer,
@@ -673,6 +694,7 @@ impl BagOfWordsFeatureGroup {
 			_ => unimplemented!(),
 		}
 	}
+
 	pub fn compute_array_f32(
 		&self,
 		mut features: ArrayViewMut2<f32>,
@@ -698,8 +720,8 @@ impl BagOfWordsFeatureGroup {
 								feature_value;
 						}
 					}
-					for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
-						let token = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
+					for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
+						let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
 						let token_index = self.tokens_map.get(&token);
 						if let Some(token_index) = token_index {
 							let token = &self.tokens[*token_index];
@@ -721,6 +743,7 @@ impl BagOfWordsFeatureGroup {
 			progress();
 		}
 	}
+
 	pub fn compute_dataframe(
 		&self,
 		feature_columns: &mut [Vec<f32>],
@@ -745,8 +768,8 @@ impl BagOfWordsFeatureGroup {
 							feature_columns[*token_index][example_index] += feature_value;
 						}
 					}
-					for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
-						let token = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
+					for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
+						let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
 						let token_index = self.tokens_map.get(&token);
 						if let Some(token_index) = token_index {
 							let token = &self.tokens[*token_index];
@@ -767,6 +790,7 @@ impl BagOfWordsFeatureGroup {
 			progress();
 		}
 	}
+
 	pub fn compute_array_value(
 		&self,
 		mut features: ArrayViewMut2<DataFrameValue>,
@@ -799,8 +823,8 @@ impl BagOfWordsFeatureGroup {
 								.unwrap() += feature_value;
 						}
 					}
-					for bigram in AlphanumericTokenizer::new(value).tuple_windows::<(_, _)>() {
-						let token = Token::Bigram(bigram.0.into_owned(), bigram.1.into_owned());
+					for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
+						let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
 						let token_index = self.tokens_map.get(&token);
 						if let Some(token_index) = token_index {
 							let token = &self.tokens[*token_index];

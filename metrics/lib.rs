@@ -2,8 +2,6 @@
 This crate defines the [`Metric`](trait.Metric.html) and [`StreamingMetric`](trait.StreamingMetric.html) traits and and a number of concrete types that implement them such as [`MeanSquaredError`](struct.MeanSquaredError.html) and [`Accuracy`](struct.Accuracy.html).
 */
 
-#![allow(clippy::tabs_in_doc_comments)]
-
 mod accuracy;
 mod auc_roc;
 mod binary_classification;
@@ -60,13 +58,11 @@ use tangram_metrics::StreamingMetric;
 struct Min(f32);
 
 impl StreamingMetric<'_> for Min {
-	type Input = f32;
-	type Output = f32;
-	fn update(&mut self, input: Self::Input) {
-		self.0 = self.0.min(input)
-	}
-	fn merge(&mut self, other: Self) { self.0 = self.0.min(other.0) }
-	fn finalize(self) -> Self::Output { self.0 }
+  type Input = f32;
+  type Output = f32;
+  fn update(&mut self, input: Self::Input) { self.0 = self.0.min(input) }
+  fn merge(&mut self, other: Self) { self.0 = self.0.min(other.0) }
+  fn finalize(self) -> Self::Output { self.0 }
 }
 ```
 

@@ -4,8 +4,6 @@ This crate implements machine learning models for regression and classification 
 For an example of regression, see `benchmarks/boston.rs`.rs`. For an example of binary classification, see `benchmarks/heart_disease.rs`. For an example of multiclass classification, see `benchmarks/iris.rs`.
 */
 
-#![allow(clippy::tabs_in_doc_comments)]
-
 mod binary_classifier;
 mod choose_best_split;
 mod compute_bin_stats;

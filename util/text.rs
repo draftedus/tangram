@@ -1,3 +1,18 @@
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Token {
+	Unigram(String),
+	Bigram(String, String),
+}
+
+impl std::fmt::Display for Token {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Token::Unigram(token) => write!(f, "{}", token),
+			Token::Bigram(token_a, token_b) => write!(f, "{} {}", token_a, token_b),
+		}
+	}
+}
+
 #[derive(Clone, Debug, Eq)]
 pub struct TokenEntry(pub Token, pub usize);
 impl std::cmp::Ord for TokenEntry {
@@ -18,28 +33,13 @@ impl std::cmp::PartialEq for TokenEntry {
 	}
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Token {
-	Unigram(String),
-	Bigram(String, String),
-}
-
-impl std::fmt::Display for Token {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Token::Unigram(token) => write!(f, "{}", token),
-			Token::Bigram(token_a, token_b) => write!(f, "{} {}", token_a, token_b),
-		}
-	}
-}
-
 /// This struct contains stats for individual tokens
 #[derive(Debug)]
 pub struct TokenStats {
 	pub token: Token,
-	/// This is the total number of occurrences of this token.
+	/// This is the number of occurrences of this token across all examples.
 	pub count: usize,
-	/// This is the total number of examples that contain this token.
+	/// This is the number of examples that contain at least one occurrence of this token.
 	pub examples_count: usize,
 	/// This is the inverse document frequency. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 	pub idf: f32,

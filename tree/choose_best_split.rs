@@ -13,8 +13,7 @@ use crate::{
 	train_tree::{TrainBranchSplit, TrainBranchSplitContinuous, TrainBranchSplitDiscrete},
 	BinnedFeaturesLayout, SplitDirection, TrainOptions,
 };
-use num_traits::NumCast;
-use num_traits::ToPrimitive;
+use num_traits::{NumCast, ToPrimitive};
 use rayon::prelude::*;
 use tangram_util::{
 	pool::{Pool, PoolItem},
