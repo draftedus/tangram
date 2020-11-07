@@ -41,14 +41,13 @@ pub fn run(options: Options) -> Result<()> {
 
 async fn run_inner(options: Options) -> Result<()> {
 	// Create the pinwheel.
-	let pinwheel = if cfg!(debug_assertions) {
-		Pinwheel::dev(
-			std::path::PathBuf::from("app"),
-			std::path::PathBuf::from("build/pinwheel/app"),
-		)
-	} else {
-		Pinwheel::prod(include_dir::include_dir!("../build/pinwheel/app"))
-	};
+	#[cfg(debug_assertions)]
+	let pinwheel = Pinwheel::dev(
+		std::path::PathBuf::from("app"),
+		std::path::PathBuf::from("build/pinwheel/app"),
+	);
+	#[cfg(not(debug_assertions))]
+	let pinwheel = Pinwheel::prod(include_dir::include_dir!("../build/pinwheel/app"));
 	// Configure the database pool.
 	let database_url = options.database_url.to_string();
 	let (pool_options, pool_max_connections) = if database_url.starts_with("sqlite:") {

@@ -4,7 +4,7 @@
 
 # Tangram
 
-Tangram is an all-in-one machine learning toolkit for developers. Here's the TLDR:
+Tangram is an all-in-one machine learning toolkit for programmers. Here's the TLDR:
 
 1. Install the `tangram` CLI: [Install Instructions](https://www.tangramhq.com/docs/install).
 2. Train a machine learning model from a CSV file: `tangram train --file heart_disease.csv --target diagnosis`. The CLI automatically performs feature engineering, trains a number of models with a range of hyperparameter settings, and writes the best one to `heart_disease.tangram` in the current directory. Your data stays secure because all training happens on your laptop or your own server. If you want more control, you can configure training with a YAML config file.
