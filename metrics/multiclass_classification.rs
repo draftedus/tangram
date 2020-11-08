@@ -10,7 +10,7 @@ pub struct MulticlassClassificationMetrics {
 	confusion_matrix: Array2<u64>,
 }
 
-/// The input to [MulticlassClassificationMetrics](struct.MulticlassClassificationMetrics.html).
+/// The input to [`MulticlassClassificationMetrics`].
 pub struct MulticlassClassificationMetricsInput<'a> {
 	/// (n_examples, n_classes)
 	pub probabilities: ArrayView2<'a, f32>,
@@ -18,7 +18,7 @@ pub struct MulticlassClassificationMetricsInput<'a> {
 	pub labels: ArrayView1<'a, Option<NonZeroUsize>>,
 }
 
-/// The output from [MulticlassClassificationMetrics](struct.MulticlassClassificationMetrics.html).
+/// The output from [`MulticlassClassificationMetrics`].
 #[derive(Debug)]
 pub struct MulticlassClassificationMetricsOutput {
 	/// The class metrics contain class specific metrics.

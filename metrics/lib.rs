@@ -1,5 +1,5 @@
 /*!
-This crate defines the [`Metric`](trait.Metric.html) and [`StreamingMetric`](trait.StreamingMetric.html) traits and and a number of concrete types that implement them such as [`MeanSquaredError`](struct.MeanSquaredError.html) and [`Accuracy`](struct.Accuracy.html).
+This crate defines the [`Metric`] and [`StreamingMetric`] traits and and a number of concrete types that implement them such as [`MeanSquaredError`](crate::mean_squared_error::MeanSquaredError) and [`Accuracy`](crate::accuracy::Accuracy).
 */
 
 mod accuracy;

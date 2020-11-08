@@ -1,5 +1,5 @@
 /*!
-This module defines the `Config` struct, which is used to configure training a model with [`train`](../train.fn.html).
+This module defines the `Config` struct, which is used to configure training a model with [`train`](crate::train).
 */
 
 use std::collections::BTreeMap;

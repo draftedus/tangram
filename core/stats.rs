@@ -140,7 +140,7 @@ pub struct NumberColumnStatsOutput {
 	pub column_name: String,
 	/// This is the total number of examples that these stats were computed on.
 	pub count: usize,
-	/// This is a histogram mapping unique values to their counts. It is `None` if the number of unique values exceeds [`number_histogram_max_size`](struct.StatsSettings.html#structfield.number_histogram_max_size).
+	/// This is a histogram mapping unique values to their counts. It is `None` if the number of unique values exceeds [`number_histogram_max_size`](StatsSettings#number_histogram_max_size).
 	pub histogram: Option<Vec<(Finite<f32>, usize)>>,
 	/// This is the total number of unique values.
 	pub unique_count: usize,
@@ -186,7 +186,7 @@ pub struct TextColumnStatsOutput {
 	pub column_name: String,
 	/// This is the total number of examples that these stats were computed on.
 	pub count: u64,
-	/// This contains stats for the top [`top_tokens_count`](struct.StatsSettings.html#top_tokens_count) tokens in the column.
+	/// This contains stats for the top [`top_tokens_count`](StatsSettings#top_tokens_count) tokens in the column.
 	pub top_tokens: Vec<TokenStats>,
 	// This enum is used to determine the method to split text into tokens.
 	pub tokenizer: Tokenizer,

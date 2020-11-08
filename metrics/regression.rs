@@ -10,13 +10,13 @@ pub struct RegressionMetrics {
 	squared_error: f64,
 }
 
-/// The input to [RegressionMetrics](struct.RegressionMetrics.html).
+/// The input to [`RegressionMetrics`].
 pub struct RegressionMetricsInput<'a> {
 	pub predictions: &'a [f32],
 	pub labels: &'a [f32],
 }
 
-/// The output from [RegressionMetrics](struct.RegressionMetrics.html).
+/// The output from [`RegressionMetrics`].
 #[derive(Debug)]
 pub struct RegressionMetricsOutput {
 	/// The mean squared error is equal to the mean of the squared errors. For a given example, the error is the difference between the true value and the model's predicted value.

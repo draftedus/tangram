@@ -33,7 +33,7 @@ impl BinaryConfusionMatrix {
 	}
 }
 
-/// The input to [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
+/// The input to [`BinaryClassificationMetrics`].
 pub struct BinaryClassificationMetricsInput<'a> {
 	pub probabilities: &'a [f32],
 	pub labels: &'a [Option<NonZeroUsize>],
@@ -42,13 +42,13 @@ pub struct BinaryClassificationMetricsInput<'a> {
 /// BinaryClassificationMetrics contains common metrics used to evaluate binary classifiers.
 #[derive(Debug)]
 pub struct BinaryClassificationMetricsOutput {
-	/// The area under the receiver operating characteristic curve is computed using a fixed number of thresholds equal to `n_thresholds` which is passed to[BinaryClassificationMetrics::new](struct.BinaryClassificationMetrics.html#method.new).
+	/// The area under the receiver operating characteristic curve is computed using a fixed number of thresholds equal to `n_thresholds` which is passed to [`BinaryClassificationMetrics::new`].
 	pub auc_roc_approx: f32,
 	/// This contains metrics specific to each classification threshold.
 	pub thresholds: Vec<BinaryClassificationMetricsOutputForThreshold>,
 }
 
-/// The output from [BinaryClassificationMetrics](struct.BinaryClassificationMetrics.html).
+/// The output from [`BinaryClassificationMetrics`].
 #[derive(Debug)]
 pub struct BinaryClassificationMetricsOutputForThreshold {
 	/// The classification threshold.

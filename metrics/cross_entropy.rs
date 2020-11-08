@@ -13,14 +13,14 @@ impl CrossEntropy {
 	}
 }
 
-/// The input to [CrossEntropy](struct.CrossEntropy.html).
+/// The input to [`CrossEntropy`].
 pub struct CrossEntropyInput<'a> {
 	/// (n_classes)
 	pub probabilities: ArrayView1<'a, f32>,
 	pub label: Option<NonZeroUsize>,
 }
 
-/// The output from [CrossEntropy](struct.CrossEntropy.html).
+/// The output from [`CrossEntropy`].
 pub struct CrossEntropyOutput(pub Option<f32>);
 
 impl<'a> StreamingMetric<'a> for CrossEntropy {

@@ -13,7 +13,7 @@ impl BinaryCrossEntropy {
 	}
 }
 
-/// The input to [BinaryCrossEntropy](struct.BinaryCrossEntropy.html).
+/// The input to [`BinaryCrossEntropy`].
 pub struct BinaryCrossEntropyInput {
 	pub probability: f32,
 	pub label: Option<NonZeroUsize>,

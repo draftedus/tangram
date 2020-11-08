@@ -12,7 +12,7 @@ pub use identity::*;
 mod one_hot_encoded;
 pub use one_hot_encoded::*;
 
-/// This struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
+/// The `FeatureGroup` struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
 #[derive(Debug)]
 pub enum FeatureGroup {
 	Identity(IdentityFeatureGroup),
