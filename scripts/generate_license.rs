@@ -6,9 +6,9 @@ use tangram_util::id::Id;
 
 #[derive(Clap)]
 struct Options {
-	#[clap(long)]
+	#[clap(long, about = "the path to the tangram license private key file")]
 	private_key: PathBuf,
-	#[clap(long)]
+	#[clap(long, about = "the path to write the license file")]
 	output: PathBuf,
 }
 

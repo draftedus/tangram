@@ -26,10 +26,10 @@ xAmGGm4wQ4FlMAt+Bj/K6rvdG3FJUu5ttQIDAQAB
 	let tangram_license_public_key =
 		rsa::RSAPublicKey::from_pkcs1(&tangram_license_public_key).unwrap();
 	let license_data = std::fs::read(license_file_path)?;
-	let mut lines = license_data.split(|byte| *byte == b':');
-	let license_data = lines.next().ok_or_else(|| err!("invalid license"))?;
+	let mut sections = license_data.split(|byte| *byte == b':');
+	let license_data = sections.next().ok_or_else(|| err!("invalid license"))?;
 	let license_data = base64::decode(&license_data)?;
-	let signature = lines.next().ok_or_else(|| err!("invalid license"))?;
+	let signature = sections.next().ok_or_else(|| err!("invalid license"))?;
 	let signature = base64::decode(&signature)?;
 	let mut digest = sha2::Sha256::new();
 	digest.update(&license_data);

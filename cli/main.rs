@@ -167,14 +167,22 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 }
 
 fn cli_app(options: AppOptions) -> Result<()> {
+	// Verify the license if one was provided.
 	let license_verified: Option<bool> = if let Some(license_file_path) = options.license {
 		Some(verify_license(&license_file_path)?)
 	} else {
 		None
 	};
-	let license_verified = license_verified.unwrap_or(true);
-	if !license_verified {
-		return Err(err!("failed to verify license"));
+	// Require a verified license if auth is enabled.
+	if options.auth_enabled {
+		match license_verified {
+			#[cfg(debug_assertions)]
+			None => {}
+			#[cfg(not(debug_assertions))]
+			None => return Err(err!("a license is required to enable authentication")),
+			Some(false) => return Err(err!("failed to verify license")),
+			Some(true) => {}
+		}
 	}
 	let database_url = match options.database_url {
 		Some(database_url) => database_url,
