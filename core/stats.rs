@@ -5,12 +5,7 @@ use num_traits::ToPrimitive;
 use std::{cmp::Ordering, collections::BTreeMap, num::NonZeroU64};
 use tangram_dataframe::prelude::*;
 use tangram_metrics as metrics;
-use tangram_util::{
-	alphanumeric_tokenizer::AlphanumericTokenizer,
-	finite::Finite,
-	text::{Token, TokenEntry, TokenStats},
-	zip,
-};
+use tangram_util::{alphanumeric_tokenizer::AlphanumericTokenizer, finite::Finite, zip};
 
 /// This struct holds column stats.
 #[derive(Clone, Debug)]
@@ -115,6 +110,18 @@ pub enum ColumnStatsOutput {
 	Number(NumberColumnStatsOutput),
 	Enum(EnumColumnStatsOutput),
 	Text(TextColumnStatsOutput),
+}
+
+impl ColumnStatsOutput {
+	/// Return the name of the source column.
+	pub fn column_name(&self) -> &str {
+		match self {
+			ColumnStatsOutput::Unknown(value) => &value.column_name,
+			ColumnStatsOutput::Number(value) => &value.column_name,
+			ColumnStatsOutput::Enum(value) => &value.column_name,
+			ColumnStatsOutput::Text(value) => &value.column_name,
+		}
+	}
 }
 
 /// This struct contains stats for unknown columns.
@@ -429,6 +436,44 @@ impl EnumColumnStats {
 	}
 }
 
+/// This struct contains stats for individual tokens
+#[derive(Debug)]
+pub struct TokenStats {
+	pub token: Token,
+	/// This is the number of occurrences of this token across all examples.
+	pub count: usize,
+	/// This is the number of examples that contain at least one occurrence of this token.
+	pub examples_count: usize,
+	/// This is the inverse document frequency. [Learn more](https://en.wikipedia.org/wiki/Tf%E2%80%93idf).
+	pub idf: f32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Token {
+	Unigram(String),
+	Bigram(String, String),
+}
+
+#[derive(Clone, Debug, Eq)]
+struct TokenEntry(pub Token, pub usize);
+impl std::cmp::Ord for TokenEntry {
+	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+		self.1.cmp(&other.1)
+	}
+}
+
+impl std::cmp::PartialOrd for TokenEntry {
+	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+		self.1.partial_cmp(&other.1)
+	}
+}
+
+impl std::cmp::PartialEq for TokenEntry {
+	fn eq(&self, other: &Self) -> bool {
+		self.1.eq(&other.1)
+	}
+}
+
 impl TextColumnStats {
 	fn compute(column: TextDataFrameColumnView, _settings: &StatsSettings) -> TextColumnStats {
 		let mut stats = TextColumnStats {
@@ -503,18 +548,6 @@ impl TextColumnStats {
 			count: self.count.to_u64().unwrap(),
 			top_tokens,
 			tokenizer: Tokenizer::Alphanumeric,
-		}
-	}
-}
-
-impl ColumnStatsOutput {
-	/// Return the name of the source column.
-	pub fn column_name(&self) -> &str {
-		match self {
-			ColumnStatsOutput::Unknown(value) => &value.column_name,
-			ColumnStatsOutput::Number(value) => &value.column_name,
-			ColumnStatsOutput::Enum(value) => &value.column_name,
-			ColumnStatsOutput::Text(value) => &value.column_name,
 		}
 	}
 }

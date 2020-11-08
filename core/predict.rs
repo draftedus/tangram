@@ -101,11 +101,11 @@ pub enum Token {
 	Bigram(String, String),
 }
 
-impl From<tangram_util::text::Token> for Token {
-	fn from(value: tangram_util::text::Token) -> Token {
+impl From<tangram_features::Token> for Token {
+	fn from(value: tangram_features::Token) -> Token {
 		match value {
-			tangram_util::text::Token::Unigram(token) => Token::Unigram(token),
-			tangram_util::text::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
+			tangram_features::Token::Unigram(token) => Token::Unigram(token),
+			tangram_features::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
 		}
 	}
 }

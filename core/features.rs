@@ -93,7 +93,12 @@ fn bag_of_words_feature_group_for_column(
 		.iter()
 		.map(
 			|token_stats| tangram_features::BagOfWordsFeatureGroupToken {
-				token: token_stats.token.clone(),
+				token: match &token_stats.token {
+					stats::Token::Unigram(token) => tangram_features::Token::Unigram(token.clone()),
+					stats::Token::Bigram(token_a, token_b) => {
+						tangram_features::Token::Bigram(token_a.clone(), token_b.clone())
+					}
+				},
 				idf: token_stats.idf,
 			},
 		)
@@ -101,11 +106,15 @@ fn bag_of_words_feature_group_for_column(
 	let tokenizer = match column_stats.tokenizer {
 		stats::Tokenizer::Alphanumeric => tangram_features::Tokenizer::Alphanumeric,
 	};
-	tangram_features::FeatureGroup::BagOfWords(
-		tangram_features::BagOfWordsFeatureGroup::from_tokens(
-			column_stats.column_name.to_owned(),
-			tokenizer,
-			tokens,
-		),
-	)
+	let tokens_map = tokens
+		.iter()
+		.enumerate()
+		.map(|(i, token)| (token.token.clone(), i))
+		.collect();
+	tangram_features::FeatureGroup::BagOfWords(tangram_features::BagOfWordsFeatureGroup {
+		source_column_name: column_stats.column_name.clone(),
+		tokenizer,
+		tokens,
+		tokens_map,
+	})
 }

@@ -3,14 +3,33 @@ use itertools::Itertools;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::collections::HashMap;
-use std::num::NonZeroUsize;
 use tangram_dataframe::{
 	DataFrame, DataFrameColumn, DataFrameColumnView, DataFrameValue, DataFrameView,
 	EnumDataFrameColumn, NumberDataFrameColumn, TextDataFrameColumn, UnknownDataFrameColumn,
 };
 use tangram_metrics::Metric;
-pub use tangram_util::text::Token;
-use tangram_util::{alphanumeric_tokenizer::AlphanumericTokenizer, text::TokenStats, zip};
+use tangram_util::{alphanumeric_tokenizer::AlphanumericTokenizer, zip};
+
+/// This struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
+#[derive(Debug)]
+pub enum FeatureGroup {
+	Identity(IdentityFeatureGroup),
+	Normalized(NormalizedFeatureGroup),
+	OneHotEncoded(OneHotEncodedFeatureGroup),
+	BagOfWords(BagOfWordsFeatureGroup),
+}
+
+impl FeatureGroup {
+	/// Return the number of features this feature group will produce.
+	pub fn n_features(&self) -> usize {
+		match self {
+			FeatureGroup::Identity(_) => 1,
+			FeatureGroup::Normalized(_) => 1,
+			FeatureGroup::OneHotEncoded(s) => s.options.len() + 1,
+			FeatureGroup::BagOfWords(s) => s.tokens.len(),
+		}
+	}
+}
 
 /// Compute features as an `Array` of `f32`s.
 pub fn compute_features_array_f32(
@@ -30,91 +49,45 @@ pub fn compute_features_array_f32(
 		let features = features.slice_mut(slice);
 		match &feature_group {
 			FeatureGroup::Identity(feature_group) => {
-				compute_features_identity_array_f32(dataframe, feature_group, features, progress)
+				// Get the source column.
+				let source_column = dataframe
+					.columns()
+					.iter()
+					.find(|column| column.name() == Some(&feature_group.source_column_name))
+					.unwrap();
+				feature_group.compute_array_f32(features, source_column.view(), progress);
 			}
 			FeatureGroup::Normalized(feature_group) => {
-				compute_features_normalized_array_f32(dataframe, feature_group, features, progress)
+				// Get the source column.
+				let source_column = dataframe
+					.columns()
+					.iter()
+					.find(|column| column.name() == Some(&feature_group.source_column_name))
+					.unwrap();
+				feature_group.compute_array_f32(features, source_column.view(), progress)
 			}
 			FeatureGroup::OneHotEncoded(feature_group) => {
-				compute_features_one_hot_encoded_array_f32(
-					dataframe,
-					feature_group,
-					features,
-					progress,
-				)
+				// Get the source column.
+				let source_column = dataframe
+					.columns()
+					.iter()
+					.find(|column| column.name() == Some(&feature_group.source_column_name))
+					.unwrap();
+				feature_group.compute_array_f32(features, source_column.view(), progress);
 			}
-			FeatureGroup::BagOfWords(feature_group) => compute_features_bag_of_words_array_f32(
-				dataframe,
-				feature_group,
-				features,
-				progress,
-			),
-		};
+			FeatureGroup::BagOfWords(feature_group) => {
+				// Get the source column.
+				let source_column = dataframe
+					.columns()
+					.iter()
+					.find(|column| column.name() == Some(&feature_group.source_column_name))
+					.unwrap();
+				feature_group.compute_array_f32(features, source_column.view(), progress);
+			}
+		}
 		feature_index += n_features_in_group;
 	}
 	features
-}
-
-fn compute_features_identity_array_f32(
-	dataframe: &DataFrameView,
-	feature_group: &IdentityFeatureGroup,
-	features: ArrayViewMut2<f32>,
-	progress: &impl Fn(),
-) {
-	// Get the source column.
-	let source_column = dataframe
-		.columns()
-		.iter()
-		.find(|column| column.name() == Some(&feature_group.source_column_name))
-		.unwrap();
-	feature_group.compute_array_f32(features, source_column.view(), progress);
-}
-
-fn compute_features_normalized_array_f32(
-	dataframe: &DataFrameView,
-	feature_group: &NormalizedFeatureGroup,
-	features: ArrayViewMut2<f32>,
-	progress: &impl Fn(),
-) {
-	// Get the source column.
-	let source_column = dataframe
-		.columns()
-		.iter()
-		.find(|column| column.name() == Some(&feature_group.source_column_name))
-		.unwrap();
-	feature_group.compute_array_f32(features, source_column.view(), progress);
-}
-
-fn compute_features_one_hot_encoded_array_f32(
-	dataframe: &DataFrameView,
-	feature_group: &OneHotEncodedFeatureGroup,
-	features: ArrayViewMut2<f32>,
-	progress: &impl Fn(),
-) {
-	// Get the source column.
-	let source_column = dataframe
-		.columns()
-		.iter()
-		.find(|column| column.name() == Some(&feature_group.source_column_name))
-		.unwrap();
-	let source_column = source_column.as_enum().unwrap();
-	feature_group.compute_array_f32(features, source_column.as_slice(), progress);
-}
-
-fn compute_features_bag_of_words_array_f32(
-	dataframe: &DataFrameView,
-	feature_group: &BagOfWordsFeatureGroup,
-	features: ArrayViewMut2<f32>,
-	progress: &impl Fn(),
-) {
-	// Get the source column.
-	let source_column = dataframe
-		.columns()
-		.iter()
-		.find(|column| column.name() == Some(&feature_group.source_column_name))
-		.unwrap();
-	let source_column = source_column.as_text().unwrap();
-	feature_group.compute_array_f32(features, source_column.view().as_slice(), progress);
 }
 
 /// Compute features as a `DataFrame`.
@@ -127,17 +100,36 @@ pub fn compute_features_dataframe(
 	for feature_group in feature_groups.iter() {
 		match &feature_group {
 			FeatureGroup::Identity(feature_group) => {
-				let column =
-					compute_features_identity_dataframe(dataframe, feature_group, progress);
+				let column = dataframe
+					.columns()
+					.iter()
+					.find(|column| column.name().unwrap() == feature_group.source_column_name)
+					.unwrap();
+				let column = feature_group.compute_dataframe(column.view(), progress);
 				features.columns_mut().push(column);
 			}
 			FeatureGroup::Normalized(_) => unimplemented!(),
 			FeatureGroup::OneHotEncoded(_) => unimplemented!(),
 			FeatureGroup::BagOfWords(feature_group) => {
-				let columns =
-					compute_features_bag_of_words_dataframe(dataframe, feature_group, &|| {
-						progress(1)
-					});
+				// Get the data for the source column.
+				let source_column = dataframe
+					.columns()
+					.iter()
+					.find(|column| column.name().unwrap() == feature_group.source_column_name)
+					.unwrap();
+				let mut feature_columns =
+					vec![vec![0.0; source_column.len()]; feature_group.tokens.len()];
+				feature_group.compute_dataframe(
+					source_column.view(),
+					feature_columns.as_mut_slice(),
+					&|| progress(1),
+				);
+				let columns = feature_columns
+					.into_iter()
+					.map(|feature_column| {
+						DataFrameColumn::Number(NumberDataFrameColumn::new(None, feature_column))
+					})
+					.collect::<Vec<_>>();
 				for column in columns {
 					features.columns_mut().push(column);
 				}
@@ -145,45 +137,6 @@ pub fn compute_features_dataframe(
 		};
 	}
 	features
-}
-
-fn compute_features_identity_dataframe(
-	dataframe: &DataFrameView,
-	feature_group: &IdentityFeatureGroup,
-	progress: &impl Fn(u64),
-) -> DataFrameColumn {
-	let column = dataframe
-		.columns()
-		.iter()
-		.find(|column| column.name().unwrap() == feature_group.source_column_name)
-		.unwrap();
-	feature_group.compute_dataframe(column.view(), progress)
-}
-
-fn compute_features_bag_of_words_dataframe(
-	dataframe: &DataFrameView,
-	feature_group: &BagOfWordsFeatureGroup,
-	progress: &impl Fn(),
-) -> Vec<DataFrameColumn> {
-	// Get the data for the source column.
-	let source_column = dataframe
-		.columns()
-		.iter()
-		.find(|column| column.name().unwrap() == feature_group.source_column_name)
-		.unwrap();
-	let source_column = source_column.as_text().unwrap();
-	let mut feature_columns = vec![vec![0.0; source_column.len()]; feature_group.tokens.len()];
-	feature_group.compute_dataframe(
-		feature_columns.as_mut_slice(),
-		source_column.view().as_slice(),
-		progress,
-	);
-	feature_columns
-		.into_iter()
-		.map(|feature_column| {
-			DataFrameColumn::Number(NumberDataFrameColumn::new(None, feature_column))
-		})
-		.collect()
 }
 
 /// Compute features as a `DataFrame`.
@@ -201,59 +154,28 @@ pub fn compute_features_array_value<'a>(
 		let features = features.slice_mut(slice);
 		match &feature_group {
 			FeatureGroup::Identity(feature_group) => {
-				compute_features_identity_array_value(dataframe, feature_group, features, progress)
+				let source_column = dataframe
+					.columns()
+					.iter()
+					.find(|column| column.name().unwrap() == feature_group.source_column_name)
+					.unwrap();
+				feature_group.compute_array_value(features, source_column.view(), progress);
 			}
 			FeatureGroup::Normalized(_) => unimplemented!(),
 			FeatureGroup::OneHotEncoded(_) => unimplemented!(),
-			FeatureGroup::BagOfWords(feature_group) => compute_features_bag_of_words_array_value(
-				dataframe,
-				feature_group,
-				features,
-				progress,
-			),
-		};
+			FeatureGroup::BagOfWords(feature_group) => {
+				// Get the data for the source column.
+				let source_column = dataframe
+					.columns()
+					.iter()
+					.find(|column| column.name().unwrap() == feature_group.source_column_name)
+					.unwrap();
+				feature_group.compute_array_value(features, source_column.view(), progress);
+			}
+		}
 		feature_index += n_features_in_group;
 	}
 	features
-}
-
-fn compute_features_identity_array_value(
-	dataframe: &DataFrameView,
-	feature_group: &IdentityFeatureGroup,
-	features: ArrayViewMut2<DataFrameValue>,
-	progress: &impl Fn(),
-) {
-	let column = dataframe
-		.columns()
-		.iter()
-		.find(|column| column.name().unwrap() == feature_group.source_column_name)
-		.unwrap();
-	feature_group.compute_array_value(features, column.view(), progress);
-}
-
-/// Compute the feature values for a `BagOfWordsFeatureGroup` from `dataframe` and write them to `features`.
-fn compute_features_bag_of_words_array_value(
-	dataframe: &DataFrameView,
-	feature_group: &BagOfWordsFeatureGroup,
-	features: ArrayViewMut2<DataFrameValue>,
-	progress: &impl Fn(),
-) {
-	// Get the data for the source column.
-	let source_column = dataframe
-		.columns()
-		.iter()
-		.find(|column| column.name().unwrap() == feature_group.source_column_name)
-		.unwrap();
-	let source_column = source_column.as_text().unwrap();
-	feature_group.compute_array_value(features, source_column.as_slice(), progress);
-}
-/// This struct describes how to transform one or more columns from the input dataframe to one or more columns in the output features.
-#[derive(Debug)]
-pub enum FeatureGroup {
-	Identity(IdentityFeatureGroup),
-	Normalized(NormalizedFeatureGroup),
-	OneHotEncoded(OneHotEncodedFeatureGroup),
-	BagOfWords(BagOfWordsFeatureGroup),
 }
 
 /**
@@ -325,6 +247,7 @@ impl IdentityFeatureGroup {
 			DataFrameColumnView::Text(_) => todo!(),
 		}
 	}
+
 	pub fn compute_dataframe(
 		&self,
 		column: DataFrameColumnView,
@@ -354,6 +277,7 @@ impl IdentityFeatureGroup {
 		progress(column.len().to_u64().unwrap());
 		column
 	}
+
 	pub fn compute_array_value(
 		&self,
 		mut features: ArrayViewMut2<DataFrameValue>,
@@ -413,7 +337,7 @@ pub struct NormalizedFeatureGroup {
 }
 
 impl NormalizedFeatureGroup {
-	pub fn new(column: DataFrameColumnView) -> NormalizedFeatureGroup {
+	pub fn fit(column: DataFrameColumnView) -> NormalizedFeatureGroup {
 		match column {
 			DataFrameColumnView::Enum(column) => {
 				let values = column
@@ -480,12 +404,43 @@ impl NormalizedFeatureGroup {
 			DataFrameColumnView::Text(_) => todo!(),
 		}
 	}
-	pub fn compute_dataframe(&self, column: &mut Vec<f32>) {
+
+	pub fn compute_dataframe(
+		&self,
+		mut feature: NumberDataFrameColumn,
+		column: DataFrameColumnView,
+		progress: &impl Fn(),
+	) {
 		// Set the feature values to the normalized source column values.
-		for value in column.iter_mut() {
-			*value = (*value - self.mean) / f32::sqrt(self.variance)
+		match column {
+			DataFrameColumnView::Unknown(_) => unimplemented!(),
+			DataFrameColumnView::Number(column) => {
+				for (feature, value) in zip!(feature.iter_mut(), column.iter()) {
+					*feature = if value.is_nan() || self.variance == 0.0 {
+						0.0
+					} else {
+						(*value - self.mean) / f32::sqrt(self.variance)
+					};
+					progress()
+				}
+			}
+			DataFrameColumnView::Enum(column) => {
+				for (feature, value) in zip!(feature.iter_mut(), column.iter()) {
+					let value = value
+						.map(|value| value.get().to_f32().unwrap())
+						.unwrap_or(0.0);
+					*feature = if value.is_nan() || self.variance == 0.0 {
+						0.0
+					} else {
+						(value - self.mean) / f32::sqrt(self.variance)
+					};
+					progress()
+				}
+			}
+			DataFrameColumnView::Text(_) => todo!(),
 		}
 	}
+
 	pub fn compute_array_value() {
 		todo!()
 	}
@@ -521,25 +476,56 @@ pub struct OneHotEncodedFeatureGroup {
 }
 
 impl OneHotEncodedFeatureGroup {
+	pub fn fit(column: DataFrameColumnView) -> OneHotEncodedFeatureGroup {
+		match column {
+			DataFrameColumnView::Enum(column) => Self {
+				source_column_name: column.name().unwrap().to_owned(),
+				options: column.options().to_owned(),
+			},
+			_ => unimplemented!(),
+		}
+	}
+
 	pub fn compute_array_f32(
 		&self,
 		mut features: ArrayViewMut2<f32>,
-		values: &[Option<NonZeroUsize>],
+		column: DataFrameColumnView,
 		progress: &impl Fn(),
 	) {
-		// Fill the features with zeros.
-		features.fill(0.0);
-		// For each example, set the features corresponding to the enum value to one.
-		for (mut features, value) in zip!(features.axis_iter_mut(Axis(0)), values.iter()) {
-			let feature_index = value.map(|v| v.get()).unwrap_or(0);
-			features[feature_index] = 1.0;
-			progress();
+		match column {
+			DataFrameColumnView::Enum(column) => {
+				// Fill the features with zeros.
+				features.fill(0.0);
+				// For each example, set the features corresponding to the enum value to one.
+				for (mut features, value) in
+					zip!(features.axis_iter_mut(Axis(0)), column.as_slice().iter())
+				{
+					let feature_index = value.map(|v| v.get()).unwrap_or(0);
+					features[feature_index] = 1.0;
+					progress();
+				}
+			}
+			DataFrameColumnView::Unknown(_) => unimplemented!(),
+			DataFrameColumnView::Number(_) => unimplemented!(),
+			DataFrameColumnView::Text(_) => unimplemented!(),
 		}
 	}
-	pub fn compute_dataframe() {
+
+	pub fn compute_dataframe(
+		&self,
+		_features: &mut [NumberDataFrameColumn],
+		_column: DataFrameColumnView,
+		_progress: &impl Fn(),
+	) {
 		todo!()
 	}
-	pub fn compute_array_value() {
+
+	pub fn compute_array_value(
+		&self,
+		mut _features: ArrayViewMut2<DataFrameValue>,
+		_column: DataFrameColumnView,
+		_progress: &impl Fn(),
+	) {
 		todo!()
 	}
 }
@@ -588,6 +574,45 @@ pub struct BagOfWordsFeatureGroup {
 	pub tokens_map: HashMap<Token, usize, FnvBuildHasher>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Token {
+	Unigram(String),
+	Bigram(String, String),
+}
+
+#[derive(Debug)]
+pub struct BagOfWordsFeatureGroupToken {
+	pub token: Token,
+	pub idf: f32,
+}
+
+#[derive(Clone, Debug, Eq)]
+pub struct TokenEntry(pub Token, pub usize);
+impl std::cmp::Ord for TokenEntry {
+	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+		self.1.cmp(&other.1)
+	}
+}
+
+impl std::cmp::PartialOrd for TokenEntry {
+	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+		self.1.partial_cmp(&other.1)
+	}
+}
+
+impl std::cmp::PartialEq for TokenEntry {
+	fn eq(&self, other: &Self) -> bool {
+		self.1.eq(&other.1)
+	}
+}
+
+/// A Tokenizer describes how raw text is transformed into tokens.
+#[derive(Debug)]
+pub enum Tokenizer {
+	/// This specifies that an [AlphanumericTokenizer](../util/text/struct.AlphanumericTokenizer.html) should be used.
+	Alphanumeric,
+}
+
 pub struct FitBagOfWordsFeatureGroupSettings {
 	pub include_unigrams: bool,
 	pub include_bigrams: bool,
@@ -605,24 +630,6 @@ impl Default for FitBagOfWordsFeatureGroupSettings {
 }
 
 impl BagOfWordsFeatureGroup {
-	pub fn from_tokens(
-		source_column_name: String,
-		tokenizer: Tokenizer,
-		tokens: Vec<BagOfWordsFeatureGroupToken>,
-	) -> BagOfWordsFeatureGroup {
-		let tokens_map = tokens
-			.iter()
-			.enumerate()
-			.map(|(i, token)| (token.token.clone(), i))
-			.collect();
-		BagOfWordsFeatureGroup {
-			source_column_name,
-			tokenizer,
-			tokens,
-			tokens_map,
-		}
-	}
-
 	pub fn fit(
 		column: DataFrameColumnView,
 		settings: FitBagOfWordsFeatureGroupSettings,
@@ -650,32 +657,20 @@ impl BagOfWordsFeatureGroup {
 				}
 				let mut top_tokens = std::collections::BinaryHeap::new();
 				for (token, count) in token_occurrence_histogram.iter() {
-					top_tokens.push(tangram_util::text::TokenEntry(token.clone(), *count));
+					top_tokens.push(TokenEntry(token.clone(), *count));
 				}
 				let n_examples = column.len();
-				let top_tokens = (0..settings.top_tokens_count)
+				let tokens = (0..settings.top_tokens_count)
 					.map(|_| top_tokens.pop())
 					.filter_map(|token_entry| {
 						token_entry.map(|token_entry| (token_entry.0, token_entry.1))
 					})
-					.map(|(token, count)| {
+					.map(|(token, _)| {
 						let examples_count = token_example_histogram[&token];
 						let idf = ((1.0 + n_examples.to_f32().unwrap())
 							/ (1.0 + examples_count.to_f32().unwrap()))
 						.ln() + 1.0;
-						TokenStats {
-							token,
-							count,
-							examples_count,
-							idf,
-						}
-					})
-					.collect::<Vec<_>>();
-				let tokens = top_tokens
-					.iter()
-					.map(|token_stats| BagOfWordsFeatureGroupToken {
-						token: token_stats.token.clone(),
-						idf: token_stats.idf,
+						BagOfWordsFeatureGroupToken { token, idf }
 					})
 					.collect::<Vec<_>>();
 				let tokenizer = Tokenizer::Alphanumeric;
@@ -698,180 +693,187 @@ impl BagOfWordsFeatureGroup {
 	pub fn compute_array_f32(
 		&self,
 		mut features: ArrayViewMut2<f32>,
-		values: &[String],
+		column: DataFrameColumnView,
 		progress: &impl Fn(),
 	) {
-		// Fill the features with zeros.
-		features.fill(0.0);
-		// Compute the feature values for each example.
-		for (example_index, value) in values.iter().enumerate() {
-			match self.tokenizer {
-				Tokenizer::Alphanumeric => {
-					let mut feature_values_sum_of_squares = 0.0;
-					// Set the feature value for each token for this example.
-					for token in AlphanumericTokenizer::new(value) {
-						let token = Token::Unigram(token.into_owned());
-						let token_index = self.tokens_map.get(&token);
-						if let Some(token_index) = token_index {
-							let token = &self.tokens[*token_index];
-							let feature_value = 1.0 * token.idf;
-							feature_values_sum_of_squares += feature_value * feature_value;
-							*features.get_mut([example_index, *token_index]).unwrap() +=
-								feature_value;
+		match column {
+			DataFrameColumnView::Unknown(_) => unimplemented!(),
+			DataFrameColumnView::Number(_) => unimplemented!(),
+			DataFrameColumnView::Enum(_) => unimplemented!(),
+			DataFrameColumnView::Text(column) => {
+				// Fill the features with zeros.
+				features.fill(0.0);
+				// Compute the feature values for each example.
+				for (example_index, value) in column.iter().enumerate() {
+					match self.tokenizer {
+						Tokenizer::Alphanumeric => {
+							let mut feature_values_sum_of_squares = 0.0;
+							// Set the feature value for each token for this example.
+							for token in AlphanumericTokenizer::new(value) {
+								let token = Token::Unigram(token.into_owned());
+								let token_index = self.tokens_map.get(&token);
+								if let Some(token_index) = token_index {
+									let token = &self.tokens[*token_index];
+									let feature_value = 1.0 * token.idf;
+									feature_values_sum_of_squares += feature_value * feature_value;
+									*features.get_mut([example_index, *token_index]).unwrap() +=
+										feature_value;
+								}
+							}
+							for (token_a, token_b) in
+								AlphanumericTokenizer::new(value).tuple_windows()
+							{
+								let token =
+									Token::Bigram(token_a.into_owned(), token_b.into_owned());
+								let token_index = self.tokens_map.get(&token);
+								if let Some(token_index) = token_index {
+									let token = &self.tokens[*token_index];
+									let feature_value = 1.0 * token.idf;
+									feature_values_sum_of_squares += feature_value * feature_value;
+									*features.get_mut([example_index, *token_index]).unwrap() +=
+										feature_value;
+								}
+							}
+							// Normalize the feature values for this example.
+							if feature_values_sum_of_squares > 0.0 {
+								let norm = feature_values_sum_of_squares.sqrt();
+								for feature in features.row_mut(example_index).iter_mut() {
+									*feature /= norm;
+								}
+							}
 						}
 					}
-					for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
-						let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
-						let token_index = self.tokens_map.get(&token);
-						if let Some(token_index) = token_index {
-							let token = &self.tokens[*token_index];
-							let feature_value = 1.0 * token.idf;
-							feature_values_sum_of_squares += feature_value * feature_value;
-							*features.get_mut([example_index, *token_index]).unwrap() +=
-								feature_value;
-						}
-					}
-					// Normalize the feature values for this example.
-					if feature_values_sum_of_squares > 0.0 {
-						let norm = feature_values_sum_of_squares.sqrt();
-						for feature in features.row_mut(example_index).iter_mut() {
-							*feature /= norm;
-						}
-					}
+					progress();
 				}
 			}
-			progress();
 		}
 	}
 
 	pub fn compute_dataframe(
 		&self,
+		column: DataFrameColumnView,
 		feature_columns: &mut [Vec<f32>],
-		values: &[String],
 		progress: &impl Fn(),
 	) {
-		// Compute the feature values for each example.
-		for (example_index, value) in values.iter().enumerate() {
-			match self.tokenizer {
-				Tokenizer::Alphanumeric => {
-					let mut feature_values_sum_of_squares = 0.0;
-					// Set the feature value for each token for this example.
-					for unigram in
-						tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer::new(value)
-					{
-						let token = Token::Unigram(unigram.into_owned());
-						let token_index = self.tokens_map.get(&token);
-						if let Some(token_index) = token_index {
-							let token = &self.tokens[*token_index];
-							let feature_value = 1.0 * token.idf;
-							feature_values_sum_of_squares += feature_value * feature_value;
-							feature_columns[*token_index][example_index] += feature_value;
+		match column {
+			DataFrameColumnView::Unknown(_) => unimplemented!(),
+			DataFrameColumnView::Number(_) => unimplemented!(),
+			DataFrameColumnView::Enum(_) => unimplemented!(),
+			DataFrameColumnView::Text(column) => {
+				// Compute the feature values for each example.
+				for (example_index, value) in column.iter().enumerate() {
+					match self.tokenizer {
+						Tokenizer::Alphanumeric => {
+							let mut feature_values_sum_of_squares = 0.0;
+							// Set the feature value for each token for this example.
+							for unigram in
+								tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer::new(
+									value,
+								) {
+								let token = Token::Unigram(unigram.into_owned());
+								let token_index = self.tokens_map.get(&token);
+								if let Some(token_index) = token_index {
+									let token = &self.tokens[*token_index];
+									let feature_value = 1.0 * token.idf;
+									feature_values_sum_of_squares += feature_value * feature_value;
+									feature_columns[*token_index][example_index] += feature_value;
+								}
+							}
+							for (token_a, token_b) in
+								AlphanumericTokenizer::new(value).tuple_windows()
+							{
+								let token =
+									Token::Bigram(token_a.into_owned(), token_b.into_owned());
+								let token_index = self.tokens_map.get(&token);
+								if let Some(token_index) = token_index {
+									let token = &self.tokens[*token_index];
+									let feature_value = 1.0 * token.idf;
+									feature_values_sum_of_squares += feature_value * feature_value;
+									feature_columns[*token_index][example_index] += feature_value;
+								}
+							}
+							// Normalize the feature values for this example.
+							if feature_values_sum_of_squares > 0.0 {
+								let norm = feature_values_sum_of_squares.sqrt();
+								for feature_column in feature_columns.iter_mut() {
+									feature_column[example_index] /= norm;
+								}
+							}
 						}
 					}
-					for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
-						let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
-						let token_index = self.tokens_map.get(&token);
-						if let Some(token_index) = token_index {
-							let token = &self.tokens[*token_index];
-							let feature_value = 1.0 * token.idf;
-							feature_values_sum_of_squares += feature_value * feature_value;
-							feature_columns[*token_index][example_index] += feature_value;
-						}
-					}
-					// Normalize the feature values for this example.
-					if feature_values_sum_of_squares > 0.0 {
-						let norm = feature_values_sum_of_squares.sqrt();
-						for feature_column in feature_columns.iter_mut() {
-							feature_column[example_index] /= norm;
-						}
-					}
+					progress();
 				}
 			}
-			progress();
 		}
 	}
 
 	pub fn compute_array_value(
 		&self,
 		mut features: ArrayViewMut2<DataFrameValue>,
-		values: &[String],
+		column: DataFrameColumnView,
 		progress: &impl Fn(),
 	) {
-		// Fill the features with zeros.
-		for feature in features.iter_mut() {
-			*feature = DataFrameValue::Number(0.0);
-		}
-		// Compute the feature values for each example.
-		for (example_index, value) in values.iter().enumerate() {
-			match self.tokenizer {
-				Tokenizer::Alphanumeric => {
-					let mut feature_values_sum_of_squares = 0.0;
-					// Set the feature value for each token for this example.
-					for unigram in
-						tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer::new(value)
-					{
-						let token = Token::Unigram(unigram.into_owned());
-						let token_index = self.tokens_map.get(&token);
-						if let Some(token_index) = token_index {
-							let token = &self.tokens[*token_index];
-							let feature_value = 1.0 * token.idf;
-							feature_values_sum_of_squares += feature_value * feature_value;
-							*features
-								.get_mut([example_index, *token_index])
-								.unwrap()
-								.as_number_mut()
-								.unwrap() += feature_value;
+		match column {
+			DataFrameColumnView::Unknown(_) => unimplemented!(),
+			DataFrameColumnView::Number(_) => unimplemented!(),
+			DataFrameColumnView::Enum(_) => unimplemented!(),
+			DataFrameColumnView::Text(column) => {
+				// Fill the features with zeros.
+				for feature in features.iter_mut() {
+					*feature = DataFrameValue::Number(0.0);
+				}
+				// Compute the feature values for each example.
+				for (example_index, value) in column.iter().enumerate() {
+					match self.tokenizer {
+						Tokenizer::Alphanumeric => {
+							let mut feature_values_sum_of_squares = 0.0;
+							// Set the feature value for each token for this example.
+							for unigram in
+								tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer::new(
+									value,
+								) {
+								let token = Token::Unigram(unigram.into_owned());
+								let token_index = self.tokens_map.get(&token);
+								if let Some(token_index) = token_index {
+									let token = &self.tokens[*token_index];
+									let feature_value = 1.0 * token.idf;
+									feature_values_sum_of_squares += feature_value * feature_value;
+									*features
+										.get_mut([example_index, *token_index])
+										.unwrap()
+										.as_number_mut()
+										.unwrap() += feature_value;
+								}
+							}
+							for (token_a, token_b) in
+								AlphanumericTokenizer::new(value).tuple_windows()
+							{
+								let token =
+									Token::Bigram(token_a.into_owned(), token_b.into_owned());
+								let token_index = self.tokens_map.get(&token);
+								if let Some(token_index) = token_index {
+									let token = &self.tokens[*token_index];
+									let feature_value = 1.0 * token.idf;
+									feature_values_sum_of_squares += feature_value * feature_value;
+									*features
+										.get_mut([example_index, *token_index])
+										.unwrap()
+										.as_number_mut()
+										.unwrap() += feature_value;
+								}
+							}
+							// Normalize the feature values for this example.
+							if feature_values_sum_of_squares > 0.0 {
+								let norm = feature_values_sum_of_squares.sqrt();
+								for feature in features.row_mut(example_index).iter_mut() {
+									*feature.as_number_mut().unwrap() /= norm;
+								}
+							}
 						}
 					}
-					for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
-						let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
-						let token_index = self.tokens_map.get(&token);
-						if let Some(token_index) = token_index {
-							let token = &self.tokens[*token_index];
-							let feature_value = 1.0 * token.idf;
-							feature_values_sum_of_squares += feature_value * feature_value;
-							*features
-								.get_mut([example_index, *token_index])
-								.unwrap()
-								.as_number_mut()
-								.unwrap() += feature_value;
-						}
-					}
-					// Normalize the feature values for this example.
-					if feature_values_sum_of_squares > 0.0 {
-						let norm = feature_values_sum_of_squares.sqrt();
-						for feature in features.row_mut(example_index).iter_mut() {
-							*feature.as_number_mut().unwrap() /= norm;
-						}
-					}
+					progress();
 				}
 			}
-			progress();
-		}
-	}
-}
-
-#[derive(Debug)]
-pub struct BagOfWordsFeatureGroupToken {
-	pub token: Token,
-	pub idf: f32,
-}
-
-/// A Tokenizer describes how raw text is transformed into tokens.
-#[derive(Debug)]
-pub enum Tokenizer {
-	/// This specifies that an [AlphanumericTokenizer](../util/text/struct.AlphanumericTokenizer.html) should be used.
-	Alphanumeric,
-}
-
-impl FeatureGroup {
-	/// Return the number of features this feature group will produce.
-	pub fn n_features(&self) -> usize {
-		match self {
-			FeatureGroup::Identity(_) => 1,
-			FeatureGroup::Normalized(_) => 1,
-			FeatureGroup::OneHotEncoded(s) => s.options.len() + 1,
-			FeatureGroup::BagOfWords(s) => s.tokens.len(),
 		}
 	}
 }

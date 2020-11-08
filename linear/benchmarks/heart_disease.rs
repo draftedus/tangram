@@ -23,7 +23,7 @@ fn main() {
 		.iter()
 		.map(|column| {
 			tangram_features::FeatureGroup::Normalized(
-				tangram_features::NormalizedFeatureGroup::new(column.view()),
+				tangram_features::NormalizedFeatureGroup::fit(column.view()),
 			)
 		})
 		.collect();

@@ -394,6 +394,10 @@ impl NumberDataFrameColumn {
 		self.data.iter()
 	}
 
+	pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut f32> {
+		self.data.iter_mut()
+	}
+
 	pub fn data_mut(&mut self) -> &mut Vec<f32> {
 		&mut self.data
 	}

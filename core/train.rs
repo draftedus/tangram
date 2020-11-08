@@ -1780,12 +1780,21 @@ impl Into<model::Tokenizer> for stats::Tokenizer {
 	}
 }
 
-impl Into<model::TokenStats> for tangram_util::text::TokenStats {
+impl Into<model::TokenStats> for stats::TokenStats {
 	fn into(self) -> model::TokenStats {
 		model::TokenStats {
 			token: self.token.into(),
 			occurrence_count: self.count.to_u64().unwrap(),
 			examples_count: self.examples_count.to_u64().unwrap(),
+		}
+	}
+}
+
+impl Into<model::Token> for stats::Token {
+	fn into(self) -> model::Token {
+		match self {
+			stats::Token::Unigram(token) => model::Token::Unigram(token),
+			stats::Token::Bigram(token_a, token_b) => model::Token::Bigram(token_a, token_b),
 		}
 	}
 }
