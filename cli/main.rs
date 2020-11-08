@@ -6,7 +6,6 @@ use clap::Clap;
 use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::{
-	borrow::Cow,
 	path::{Path, PathBuf},
 	sync::Mutex,
 };
@@ -136,7 +135,8 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 	}?;
 
 	// Retrieve the output path from the command line arguments or generate a default.
-	let output_path = match options.output.as_deref() {
+	let output_path = match options.output {
+		Some(output) => output,
 		None => {
 			let dir = std::env::current_dir()?;
 			let csv_file_name = options
@@ -147,9 +147,8 @@ fn cli_train(options: TrainOptions) -> Result<()> {
 				.unwrap()
 				.to_str()
 				.unwrap();
-			Cow::Owned(available_path(&dir, csv_file_name, "tangram"))
+			available_path(&dir, csv_file_name, "tangram")?
 		}
-		Some(path) => Cow::Borrowed(path),
 	};
 
 	// Write the model to the output path.
@@ -177,10 +176,14 @@ fn cli_app(options: AppOptions) -> Result<()> {
 	if !license_verified {
 		return Err(err!("failed to verify license"));
 	}
+	let database_url = match options.database_url {
+		Some(database_url) => database_url,
+		None => default_database_url()?,
+	};
 	tangram_app::run(tangram_app::Options {
 		auth_enabled: options.auth_enabled,
 		cookie_domain: options.cookie_domain,
-		database_url: options.database_url.unwrap_or_else(default_database_url),
+		database_url,
 		database_max_connections: options.database_max_connections,
 		host: options.host,
 		port: options.port,
@@ -192,10 +195,10 @@ fn cli_app(options: AppOptions) -> Result<()> {
 }
 
 /// This function checks if a file with the given name and extension already exists at the path `base`, and if it does, it appends " 1", " 2", etc. to it until it finds a name that will not overwrite an existing file.
-fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
+fn available_path(dir: &Path, name: &str, extension: &str) -> Result<PathBuf> {
 	let mut i = 0;
 	loop {
-		let mut path = PathBuf::from(base);
+		let mut path = PathBuf::from(dir);
 		let mut filename = String::new();
 		filename.push_str(name);
 		if i > 0 {
@@ -205,32 +208,41 @@ fn available_path(base: &Path, name: &str, extension: &str) -> PathBuf {
 		filename.push('.');
 		filename.push_str(extension);
 		path.push(filename);
-		if !path.exists() {
-			return path;
+		match std::fs::metadata(&path) {
+			// If a file at the path does not exist, return the path.
+			Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+				return Ok(path);
+			}
+			Err(error) => return Err(error.into()),
+			// If a file at the path exists, try the next number.
+			Ok(_) => {
+				i += 1;
+				continue;
+			}
 		}
-		i += 1;
 	}
 }
 
 /// Retrieve the user data directory using the `dirs` crate.
-fn data_dir() -> PathBuf {
-	let data_dir = dirs::data_dir().expect("failed to find user data directory");
+fn data_dir() -> Result<PathBuf> {
+	let data_dir = dirs::data_dir().ok_or_else(|| err!("failed to find user data directory"))?;
 	let tangram_data_dir = data_dir.join("tangram");
-	std::fs::create_dir_all(&tangram_data_dir).unwrap_or_else(|_| {
-		panic!(
+	std::fs::create_dir_all(&tangram_data_dir).map_err(|_| {
+		err!(
 			"failed to create tangram data directory in {}",
 			tangram_data_dir.display()
 		)
-	});
-	tangram_data_dir
+	})?;
+	Ok(tangram_data_dir)
 }
 
 /// Retrieve the default database url, which is a sqlite database in the user data directory.
-fn default_database_url() -> Url {
-	let tangram_database_path = data_dir().join("tangram.db");
+fn default_database_url() -> Result<Url> {
+	let tangram_database_path = data_dir()?.join("tangram.db");
 	let url = format!(
 		"sqlite:{}",
 		tangram_database_path.to_str().unwrap().to_owned()
 	);
-	Url::parse(&url).unwrap()
+	let url = Url::parse(&url)?;
+	Ok(url)
 }
