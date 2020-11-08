@@ -12,7 +12,6 @@ use tangram_app::common::monitor_event::{
 };
 use tangram_dataframe::DataFrameView;
 use tangram_util::error::Result;
-use url::Url;
 
 const NUM_EXAMPLES_TO_TRACK: usize = 1000;
 
@@ -22,23 +21,32 @@ const NUM_EXAMPLES_TO_TRACK: usize = 1000;
 	setting = clap::AppSettings::DisableHelpSubcommand,
 )]
 struct Options {
-	#[clap(name = "track", default_value = "http://localhost:8080/track")]
-	_app_url: Url,
-	#[clap(long)]
-	model_name: String,
+	#[clap(long, arg_enum)]
+	dataset: Dataset,
 	#[clap(long)]
 	model_id: String,
+}
+
+#[derive(Clap)]
+enum Dataset {
+	#[clap(name = "boston")]
+	Boston,
+	#[clap(name = "heart_disease")]
+	HeartDisease,
+	#[clap(name = "iris")]
+	Iris,
+	#[clap(name = "mpg")]
+	Mpg,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
 	let options = Options::parse();
-	let dataset = match options.model_name.as_str() {
-		"heart_disease" => HEART_DISEASE,
-		"mpg" => MPG,
-		"iris" => IRIS,
-		"boston" => BOSTON,
-		_ => unimplemented!(),
+	let dataset = match options.dataset {
+		Dataset::HeartDisease => HEART_DISEASE,
+		Dataset::Mpg => MPG,
+		Dataset::Iris => IRIS,
+		Dataset::Boston => BOSTON,
 	};
 	let dataframe = tangram_dataframe::DataFrame::from_path(
 		Path::new(dataset.csv_path),
