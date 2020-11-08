@@ -27,7 +27,7 @@ enum Options {
 	App(Box<AppOptions>),
 }
 
-#[derive(Clap, Debug)]
+#[derive(Clap)]
 #[clap(about = "train a model")]
 #[clap(long_about = "train a model from a csv file")]
 struct TrainOptions {

@@ -60,8 +60,9 @@ where
 	});
 	let addr = std::net::SocketAddr::new(host, port);
 	let listener = std::net::TcpListener::bind(&addr).unwrap();
+	let server = hyper::Server::from_tcp(listener)?;
 	eprintln!("🚀 serving on port {}", port);
-	hyper::Server::from_tcp(listener)?.serve(service).await?;
+	server.serve(service).await?;
 	std::panic::set_hook(hook);
 	Ok(())
 }

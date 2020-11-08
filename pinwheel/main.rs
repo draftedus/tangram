@@ -31,20 +31,25 @@ struct BuildOptions {
 
 pub fn main() {
 	let options = Options::parse();
-	let mut runtime = tokio::runtime::Builder::new()
-		.threaded_scheduler()
-		.enable_all()
-		.build()
-		.unwrap();
 	match options {
-		Options::Dev(options) => runtime.block_on(dev(options)).unwrap(),
-		Options::Build(options) => runtime.block_on(build(options)).unwrap(),
+		Options::Dev(options) => dev(options).unwrap(),
+		Options::Build(options) => build(options).unwrap(),
 	};
 }
 
-async fn dev(options: DevOptions) -> Result<()> {
+fn dev(options: DevOptions) -> Result<()> {
 	let pinwheel = Pinwheel::dev(options.src_dir, options.dst_dir);
-	pinwheel::serve(options.host, options.port, handle, pinwheel).await?;
+	tokio::runtime::Builder::new()
+		.threaded_scheduler()
+		.enable_all()
+		.build()
+		.unwrap()
+		.block_on(pinwheel::serve(
+			options.host,
+			options.port,
+			handle,
+			pinwheel,
+		))?;
 	Ok(())
 }
 
@@ -55,7 +60,7 @@ async fn handle(
 	pinwheel.handle(request).await.unwrap()
 }
 
-async fn build(options: BuildOptions) -> Result<()> {
+fn build(options: BuildOptions) -> Result<()> {
 	pinwheel::build(options.src_dir.as_path(), options.dst_dir.as_path())?;
 	Ok(())
 }
