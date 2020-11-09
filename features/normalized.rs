@@ -1,8 +1,8 @@
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use tangram_dataframe::{
-	DataFrameColumnView, DataFrameValue, EnumDataFrameColumnView, NumberDataFrameColumn,
-	NumberDataFrameColumnView,
+	DataFrameColumn, DataFrameColumnView, DataFrameValue, EnumDataFrameColumnView,
+	NumberDataFrameColumn, NumberDataFrameColumnView,
 };
 use tangram_metrics::Metric;
 use tangram_util::zip;
@@ -132,18 +132,17 @@ impl NormalizedFeatureGroup {
 
 	pub fn compute_dataframe(
 		&self,
-		feature: NumberDataFrameColumn,
 		column: DataFrameColumnView,
 		progress: &impl Fn(),
-	) {
+	) -> DataFrameColumn {
 		// Set the feature values to the normalized source column values.
 		match column {
 			DataFrameColumnView::Unknown(_) => unimplemented!(),
 			DataFrameColumnView::Number(column) => {
-				self.compute_dataframe_for_number_column(feature, column, progress)
+				DataFrameColumn::Number(self.compute_dataframe_for_number_column(column, progress))
 			}
 			DataFrameColumnView::Enum(column) => {
-				self.compute_dataframe_for_enum_column(feature, column, progress)
+				DataFrameColumn::Number(self.compute_dataframe_for_enum_column(column, progress))
 			}
 			DataFrameColumnView::Text(_) => todo!(),
 		}
@@ -151,37 +150,41 @@ impl NormalizedFeatureGroup {
 
 	fn compute_dataframe_for_number_column(
 		&self,
-		mut feature: NumberDataFrameColumn,
 		column: NumberDataFrameColumnView,
 		progress: &impl Fn(),
-	) {
-		for (feature, value) in zip!(feature.iter_mut(), column.iter()) {
-			*feature = if value.is_nan() || self.variance == 0.0 {
+	) -> NumberDataFrameColumn {
+		let mut feature_values = Vec::with_capacity(column.len());
+		for value in column.iter() {
+			let feature = if value.is_nan() || self.variance == 0.0 {
 				0.0
 			} else {
 				(*value - self.mean) / f32::sqrt(self.variance)
 			};
+			feature_values.push(feature);
 			progress()
 		}
+		NumberDataFrameColumn::new(None, feature_values)
 	}
 
 	fn compute_dataframe_for_enum_column(
 		&self,
-		mut feature: NumberDataFrameColumn,
 		column: EnumDataFrameColumnView,
 		progress: &impl Fn(),
-	) {
-		for (feature, value) in zip!(feature.iter_mut(), column.iter()) {
+	) -> NumberDataFrameColumn {
+		let mut feature_values = Vec::with_capacity(column.len());
+		for value in column.iter() {
 			let value = value
 				.map(|value| value.get().to_f32().unwrap())
 				.unwrap_or(0.0);
-			*feature = if value.is_nan() || self.variance == 0.0 {
+			let feature = if value.is_nan() || self.variance == 0.0 {
 				0.0
 			} else {
 				(value - self.mean) / f32::sqrt(self.variance)
 			};
+			feature_values.push(feature);
 			progress()
 		}
+		NumberDataFrameColumn::new(None, feature_values)
 	}
 
 	pub fn compute_array_value(

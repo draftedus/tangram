@@ -190,7 +190,14 @@ fn compute_features_dataframe_for_feature_group(
 				progress,
 			)
 		}
-		FeatureGroup::Normalized(_) => unimplemented!(),
+		FeatureGroup::Normalized(feature_group) => {
+			compute_features_dataframe_for_normalized_feature_group(
+				dataframe,
+				feature_group,
+				features,
+				progress,
+			)
+		}
 		FeatureGroup::OneHotEncoded(_) => unimplemented!(),
 		FeatureGroup::BagOfWords(feature_group) => {
 			compute_features_dataframe_for_bag_of_words_feature_group(
@@ -214,8 +221,23 @@ fn compute_features_dataframe_for_identity_feature_group(
 		.iter()
 		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap();
-	let column = feature_group.compute_dataframe(column.view(), &|_| progress(1));
-	features.columns_mut().push(column);
+	let feature_column = feature_group.compute_dataframe(column.view(), &|_| progress(1));
+	features.columns_mut().push(feature_column);
+}
+
+fn compute_features_dataframe_for_normalized_feature_group(
+	dataframe: &DataFrameView,
+	feature_group: &NormalizedFeatureGroup,
+	features: &mut DataFrame,
+	progress: &impl Fn(u64),
+) {
+	let column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
+		.unwrap();
+	let feature_column = feature_group.compute_dataframe(column.view(), &|| progress(1));
+	features.columns_mut().push(feature_column);
 }
 
 fn compute_features_dataframe_for_bag_of_words_feature_group(
