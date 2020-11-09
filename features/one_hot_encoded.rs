@@ -1,5 +1,7 @@
 use ndarray::prelude::*;
-use tangram_dataframe::{DataFrameColumnView, DataFrameValue, NumberDataFrameColumn};
+use tangram_dataframe::{
+	DataFrameColumnView, DataFrameValue, EnumDataFrameColumnView, NumberDataFrameColumn,
+};
 use tangram_util::zip;
 
 /**
@@ -44,26 +46,34 @@ impl OneHotEncodedFeatureGroup {
 
 	pub fn compute_array_f32(
 		&self,
-		mut features: ArrayViewMut2<f32>,
+		features: ArrayViewMut2<f32>,
 		column: DataFrameColumnView,
 		progress: &impl Fn(),
 	) {
 		match column {
 			DataFrameColumnView::Enum(column) => {
-				// Fill the features with zeros.
-				features.fill(0.0);
-				// For each example, set the features corresponding to the enum value to one.
-				for (mut features, value) in
-					zip!(features.axis_iter_mut(Axis(0)), column.as_slice().iter())
-				{
-					let feature_index = value.map(|v| v.get()).unwrap_or(0);
-					features[feature_index] = 1.0;
-					progress();
-				}
+				self.compute_array_f32_for_enum_column(features, column, progress)
 			}
 			DataFrameColumnView::Unknown(_) => unimplemented!(),
 			DataFrameColumnView::Number(_) => unimplemented!(),
 			DataFrameColumnView::Text(_) => unimplemented!(),
+		}
+	}
+
+	fn compute_array_f32_for_enum_column(
+		&self,
+		mut features: ArrayViewMut2<f32>,
+		column: EnumDataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		// Fill the features with zeros.
+		features.fill(0.0);
+		// For each example, set the features corresponding to the enum value to one.
+		for (mut features, value) in zip!(features.axis_iter_mut(Axis(0)), column.as_slice().iter())
+		{
+			let feature_index = value.map(|v| v.get()).unwrap_or(0);
+			features[feature_index] = 1.0;
+			progress();
 		}
 	}
 
@@ -73,7 +83,7 @@ impl OneHotEncodedFeatureGroup {
 		_column: DataFrameColumnView,
 		_progress: &impl Fn(),
 	) {
-		todo!()
+		unimplemented!()
 	}
 
 	pub fn compute_array_value(
@@ -82,6 +92,6 @@ impl OneHotEncodedFeatureGroup {
 		_column: DataFrameColumnView,
 		_progress: &impl Fn(),
 	) {
-		todo!()
+		unimplemented!()
 	}
 }
