@@ -1,7 +1,5 @@
 use ndarray::prelude::*;
-use tangram_dataframe::{
-	DataFrame, DataFrameColumn, DataFrameValue, DataFrameView, NumberDataFrameColumn,
-};
+use tangram_dataframe::{DataFrame, DataFrameValue, DataFrameView};
 
 mod bag_of_words;
 pub use bag_of_words::*;
@@ -252,18 +250,7 @@ fn compute_features_dataframe_for_bag_of_words_feature_group(
 		.iter()
 		.find(|column| column.name().unwrap() == feature_group.source_column_name)
 		.unwrap();
-	let mut feature_columns = vec![vec![0.0; source_column.len()]; feature_group.tokens.len()];
-	feature_group.compute_dataframe(
-		source_column.view(),
-		feature_columns.as_mut_slice(),
-		&|| progress(1),
-	);
-	let columns = feature_columns
-		.into_iter()
-		.map(|feature_column| {
-			DataFrameColumn::Number(NumberDataFrameColumn::new(None, feature_column))
-		})
-		.collect::<Vec<_>>();
+	let columns = feature_group.compute_dataframe(source_column.view(), &|| progress(1));
 	for column in columns {
 		features.columns_mut().push(column);
 	}

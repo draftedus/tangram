@@ -3,7 +3,10 @@ use itertools::Itertools;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::collections::HashMap;
-use tangram_dataframe::{DataFrameColumnView, DataFrameValue, TextDataFrameColumnView};
+use tangram_dataframe::{
+	DataFrameColumn, DataFrameColumnView, DataFrameValue, NumberDataFrameColumn,
+	TextDataFrameColumnView,
+};
 use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
 
 /**
@@ -245,15 +248,14 @@ impl BagOfWordsFeatureGroup {
 	pub fn compute_dataframe(
 		&self,
 		column: DataFrameColumnView,
-		feature_columns: &mut [Vec<f32>],
 		progress: &impl Fn(),
-	) {
+	) -> Vec<DataFrameColumn> {
 		match column {
 			DataFrameColumnView::Unknown(_) => unimplemented!(),
 			DataFrameColumnView::Number(_) => unimplemented!(),
 			DataFrameColumnView::Enum(_) => unimplemented!(),
 			DataFrameColumnView::Text(column) => {
-				self.compute_dataframe_for_text_column(column, feature_columns, progress)
+				self.compute_dataframe_for_text_column(column, progress)
 			}
 		}
 	}
@@ -261,25 +263,21 @@ impl BagOfWordsFeatureGroup {
 	fn compute_dataframe_for_text_column(
 		&self,
 		column: TextDataFrameColumnView,
-		feature_columns: &mut [Vec<f32>],
 		progress: &impl Fn(),
-	) {
+	) -> Vec<DataFrameColumn> {
 		match self.tokenizer {
-			Tokenizer::Alphanumeric => self
-				.compute_dataframe_for_text_column_for_alphanumeric_tokenizer(
-					column,
-					feature_columns,
-					progress,
-				),
+			Tokenizer::Alphanumeric => {
+				self.compute_dataframe_for_text_column_for_alphanumeric_tokenizer(column, progress)
+			}
 		}
 	}
 
 	fn compute_dataframe_for_text_column_for_alphanumeric_tokenizer(
 		&self,
 		column: TextDataFrameColumnView,
-		feature_columns: &mut [Vec<f32>],
 		progress: &impl Fn(),
-	) {
+	) -> Vec<DataFrameColumn> {
+		let mut feature_columns = vec![vec![0.0; column.len()]; self.tokens.len()];
 		// Compute the feature values for each example.
 		for (example_index, value) in column.iter().enumerate() {
 			let mut feature_values_sum_of_squares = 0.0;
@@ -313,6 +311,12 @@ impl BagOfWordsFeatureGroup {
 			}
 		}
 		progress();
+		feature_columns
+			.into_iter()
+			.map(|feature_column| {
+				DataFrameColumn::Number(NumberDataFrameColumn::new(None, feature_column))
+			})
+			.collect()
 	}
 
 	pub fn compute_array_value(
