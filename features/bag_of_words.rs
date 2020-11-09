@@ -110,59 +110,62 @@ impl BagOfWordsFeatureGroup {
 		column: DataFrameColumnView,
 		settings: FitBagOfWordsFeatureGroupSettings,
 	) -> BagOfWordsFeatureGroup {
+		match column {
+			DataFrameColumnView::Text(column) => Self::fit_for_text_column(column, settings),
+			_ => unimplemented!(),
+		}
+	}
+
+	fn fit_for_text_column(
+		column: TextDataFrameColumnView,
+		settings: FitBagOfWordsFeatureGroupSettings,
+	) -> Self {
 		let mut token_occurrence_histogram = FnvHashMap::default();
 		let mut token_example_histogram = FnvHashMap::default();
-		match column {
-			DataFrameColumnView::Text(column) => {
-				// Collect statistics about the text in the column.
-				for value in column.iter() {
-					let mut token_set = FnvHashSet::default();
-					for unigram in AlphanumericTokenizer::new(value) {
-						let unigram = Token::Unigram(unigram.into_owned());
-						token_set.insert(unigram.clone());
-						*token_occurrence_histogram.entry(unigram).or_insert(0) += 1;
-					}
-					for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
-						let bigram = Token::Bigram(token_a.into_owned(), token_b.into_owned());
-						token_set.insert(bigram.clone());
-						*token_occurrence_histogram.entry(bigram).or_insert(0) += 1;
-					}
-					for token in token_set.into_iter() {
-						*token_example_histogram.entry(token).or_insert(0) += 1;
-					}
-				}
-				let mut top_tokens = std::collections::BinaryHeap::new();
-				for (token, count) in token_occurrence_histogram.iter() {
-					top_tokens.push(TokenEntry(token.clone(), *count));
-				}
-				let n_examples = column.len();
-				let tokens = (0..settings.top_tokens_count)
-					.map(|_| top_tokens.pop())
-					.filter_map(|token_entry| {
-						token_entry.map(|token_entry| (token_entry.0, token_entry.1))
-					})
-					.map(|(token, _)| {
-						let examples_count = token_example_histogram[&token];
-						let idf = ((1.0 + n_examples.to_f32().unwrap())
-							/ (1.0 + examples_count.to_f32().unwrap()))
-						.ln() + 1.0;
-						BagOfWordsFeatureGroupToken { token, idf }
-					})
-					.collect::<Vec<_>>();
-				let tokenizer = Tokenizer::Alphanumeric;
-				let tokens_map = tokens
-					.iter()
-					.enumerate()
-					.map(|(i, token)| (token.token.clone(), i))
-					.collect();
-				Self {
-					source_column_name: column.name().unwrap().to_owned(),
-					tokenizer,
-					tokens,
-					tokens_map,
-				}
+		// Collect statistics about the text in the column.
+		for value in column.iter() {
+			let mut token_set = FnvHashSet::default();
+			for unigram in AlphanumericTokenizer::new(value) {
+				let unigram = Token::Unigram(unigram.into_owned());
+				token_set.insert(unigram.clone());
+				*token_occurrence_histogram.entry(unigram).or_insert(0) += 1;
 			}
-			_ => unimplemented!(),
+			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
+				let bigram = Token::Bigram(token_a.into_owned(), token_b.into_owned());
+				token_set.insert(bigram.clone());
+				*token_occurrence_histogram.entry(bigram).or_insert(0) += 1;
+			}
+			for token in token_set.into_iter() {
+				*token_example_histogram.entry(token).or_insert(0) += 1;
+			}
+		}
+		let mut top_tokens = std::collections::BinaryHeap::new();
+		for (token, count) in token_occurrence_histogram.iter() {
+			top_tokens.push(TokenEntry(token.clone(), *count));
+		}
+		let n_examples = column.len();
+		let tokens = (0..settings.top_tokens_count)
+			.map(|_| top_tokens.pop())
+			.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
+			.map(|(token, _)| {
+				let examples_count = token_example_histogram[&token];
+				let idf = ((1.0 + n_examples.to_f32().unwrap())
+					/ (1.0 + examples_count.to_f32().unwrap()))
+				.ln() + 1.0;
+				BagOfWordsFeatureGroupToken { token, idf }
+			})
+			.collect::<Vec<_>>();
+		let tokenizer = Tokenizer::Alphanumeric;
+		let tokens_map = tokens
+			.iter()
+			.enumerate()
+			.map(|(i, token)| (token.token.clone(), i))
+			.collect();
+		Self {
+			source_column_name: column.name().unwrap().to_owned(),
+			tokenizer,
+			tokens,
+			tokens_map,
 		}
 	}
 
@@ -192,13 +195,13 @@ impl BagOfWordsFeatureGroup {
 		features.fill(0.0);
 		match self.tokenizer {
 			Tokenizer::Alphanumeric => self
-				.compute_array_f32_for_text_column_alphanumeric_tokenizer(
+				.compute_array_f32_for_text_column_for_alphanumeric_tokenizer(
 					features, column, progress,
 				),
 		}
 	}
 
-	fn compute_array_f32_for_text_column_alphanumeric_tokenizer(
+	fn compute_array_f32_for_text_column_for_alphanumeric_tokenizer(
 		&self,
 		mut features: ArrayViewMut2<f32>,
 		column: TextDataFrameColumnView,
@@ -263,7 +266,7 @@ impl BagOfWordsFeatureGroup {
 	) {
 		match self.tokenizer {
 			Tokenizer::Alphanumeric => self
-				.compute_dataframe_for_text_column_alphanumeric_tokenizer(
+				.compute_dataframe_for_text_column_for_alphanumeric_tokenizer(
 					column,
 					feature_columns,
 					progress,
@@ -271,7 +274,7 @@ impl BagOfWordsFeatureGroup {
 		}
 	}
 
-	fn compute_dataframe_for_text_column_alphanumeric_tokenizer(
+	fn compute_dataframe_for_text_column_for_alphanumeric_tokenizer(
 		&self,
 		column: TextDataFrameColumnView,
 		feature_columns: &mut [Vec<f32>],
@@ -340,14 +343,14 @@ impl BagOfWordsFeatureGroup {
 		}
 		match self.tokenizer {
 			Tokenizer::Alphanumeric => {
-				self.compute_array_value_for_text_column_alphanumeric_tokenizer(
+				self.compute_array_value_for_text_column_for_alphanumeric_tokenizer(
 					features, column, progress,
 				);
 			}
 		}
 	}
 
-	fn compute_array_value_for_text_column_alphanumeric_tokenizer(
+	fn compute_array_value_for_text_column_for_alphanumeric_tokenizer(
 		&self,
 		mut features: ArrayViewMut2<DataFrameValue>,
 		column: TextDataFrameColumnView,
