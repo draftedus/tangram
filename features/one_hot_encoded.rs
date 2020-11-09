@@ -1,7 +1,5 @@
 use ndarray::prelude::*;
-use tangram_dataframe::{
-	DataFrameColumnView, DataFrameValue, EnumDataFrameColumnView, NumberDataFrameColumn,
-};
+use tangram_dataframe::{DataFrameColumnView, EnumDataFrameColumnView};
 use tangram_util::zip;
 
 /**
@@ -77,21 +75,11 @@ impl OneHotEncodedFeatureGroup {
 		}
 	}
 
-	pub fn compute_dataframe(
-		&self,
-		_features: &mut [NumberDataFrameColumn],
-		_column: DataFrameColumnView,
-		_progress: &impl Fn(),
-	) {
+	pub fn compute_dataframe(&self) {
 		unimplemented!()
 	}
 
-	pub fn compute_array_value(
-		&self,
-		mut _features: ArrayViewMut2<DataFrameValue>,
-		_column: DataFrameColumnView,
-		_progress: &impl Fn(),
-	) {
+	pub fn compute_array_value(&self) {
 		unimplemented!()
 	}
 }

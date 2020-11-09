@@ -247,7 +247,6 @@ fn compute_features_dataframe_for_bag_of_words_feature_group(
 	}
 }
 
-/// Compute features as a `DataFrame`.
 pub fn compute_features_array_value<'a>(
 	dataframe: &DataFrameView<'a>,
 	feature_groups: &[FeatureGroup],
@@ -286,7 +285,14 @@ fn compute_features_array_value_for_feature_group(
 				progress,
 			)
 		}
-		FeatureGroup::Normalized(_) => unimplemented!(),
+		FeatureGroup::Normalized(feature_group) => {
+			compute_features_array_value_for_normalized_feature_group(
+				dataframe,
+				feature_group,
+				features,
+				progress,
+			)
+		}
 		FeatureGroup::OneHotEncoded(_) => unimplemented!(),
 		FeatureGroup::BagOfWords(feature_group) => {
 			compute_features_array_value_for_bag_of_words_feature_group(
@@ -302,6 +308,20 @@ fn compute_features_array_value_for_feature_group(
 fn compute_features_array_value_for_identity_feature_group(
 	dataframe: &DataFrameView,
 	feature_group: &IdentityFeatureGroup,
+	features: ArrayViewMut2<tangram_dataframe::DataFrameValue>,
+	progress: &impl Fn(),
+) {
+	let source_column = dataframe
+		.columns()
+		.iter()
+		.find(|column| column.name().unwrap() == feature_group.source_column_name)
+		.unwrap();
+	feature_group.compute_array_value(features, source_column.view(), progress);
+}
+
+fn compute_features_array_value_for_normalized_feature_group(
+	dataframe: &DataFrameView,
+	feature_group: &NormalizedFeatureGroup,
 	features: ArrayViewMut2<tangram_dataframe::DataFrameValue>,
 	progress: &impl Fn(),
 ) {

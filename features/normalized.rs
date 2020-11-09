@@ -1,6 +1,9 @@
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
-use tangram_dataframe::{DataFrameColumnView, NumberDataFrameColumn};
+use tangram_dataframe::{
+	DataFrameColumnView, DataFrameValue, EnumDataFrameColumnView, NumberDataFrameColumn,
+	NumberDataFrameColumnView,
+};
 use tangram_metrics::Metric;
 use tangram_util::zip;
 
@@ -40,75 +43,42 @@ pub struct NormalizedFeatureGroup {
 impl NormalizedFeatureGroup {
 	pub fn fit(column: DataFrameColumnView) -> NormalizedFeatureGroup {
 		match column {
-			DataFrameColumnView::Enum(column) => {
-				let values = column
-					.as_slice()
-					.iter()
-					.map(|value| {
-						value
-							.map(|value| value.get().to_f32().unwrap())
-							.unwrap_or(0.0)
-					})
-					.collect::<Vec<_>>();
-				let mean_variance = tangram_metrics::MeanVariance::compute(values.as_slice());
-				Self {
-					source_column_name: column.name().unwrap().to_owned(),
-					mean: mean_variance.mean,
-					variance: mean_variance.variance,
-				}
-			}
-			DataFrameColumnView::Number(column) => {
-				let mean_variance =
-					tangram_metrics::MeanVariance::compute(column.view().as_slice());
-				Self {
-					source_column_name: column.name().unwrap().to_owned(),
-					mean: mean_variance.mean,
-					variance: mean_variance.variance,
-				}
-			}
+			DataFrameColumnView::Number(column) => Self::fit_for_number_column(column),
+			DataFrameColumnView::Enum(column) => Self::fit_for_enum_column(column),
 			_ => unimplemented!(),
+		}
+	}
+
+	fn fit_for_number_column(column: NumberDataFrameColumnView) -> Self {
+		let mean_variance = tangram_metrics::MeanVariance::compute(column.view().as_slice());
+		Self {
+			source_column_name: column.name().unwrap().to_owned(),
+			mean: mean_variance.mean,
+			variance: mean_variance.variance,
+		}
+	}
+
+	fn fit_for_enum_column(column: EnumDataFrameColumnView) -> Self {
+		let values = column
+			.as_slice()
+			.iter()
+			.map(|value| {
+				value
+					.map(|value| value.get().to_f32().unwrap())
+					.unwrap_or(0.0)
+			})
+			.collect::<Vec<_>>();
+		let mean_variance = tangram_metrics::MeanVariance::compute(values.as_slice());
+		Self {
+			source_column_name: column.name().unwrap().to_owned(),
+			mean: mean_variance.mean,
+			variance: mean_variance.variance,
 		}
 	}
 
 	pub fn compute_array_f32(
 		&self,
-		mut features: ArrayViewMut2<f32>,
-		column: DataFrameColumnView,
-		progress: &impl Fn(),
-	) {
-		// Set the feature values to the normalized source column values.
-		match column {
-			DataFrameColumnView::Unknown(_) => todo!(),
-			DataFrameColumnView::Number(column) => {
-				for (feature, value) in zip!(features.iter_mut(), column.iter()) {
-					*feature = if value.is_nan() || self.variance == 0.0 {
-						0.0
-					} else {
-						(*value - self.mean) / f32::sqrt(self.variance)
-					};
-					progress()
-				}
-			}
-			DataFrameColumnView::Enum(column) => {
-				for (feature, value) in zip!(features.iter_mut(), column.iter()) {
-					let value = value
-						.map(|value| value.get().to_f32().unwrap())
-						.unwrap_or(0.0);
-					*feature = if value.is_nan() || self.variance == 0.0 {
-						0.0
-					} else {
-						(value - self.mean) / f32::sqrt(self.variance)
-					};
-					progress()
-				}
-			}
-			DataFrameColumnView::Text(_) => todo!(),
-		}
-	}
-
-	pub fn compute_dataframe(
-		&self,
-		mut feature: NumberDataFrameColumn,
+		features: ArrayViewMut2<f32>,
 		column: DataFrameColumnView,
 		progress: &impl Fn(),
 	) {
@@ -116,33 +86,153 @@ impl NormalizedFeatureGroup {
 		match column {
 			DataFrameColumnView::Unknown(_) => unimplemented!(),
 			DataFrameColumnView::Number(column) => {
-				for (feature, value) in zip!(feature.iter_mut(), column.iter()) {
-					*feature = if value.is_nan() || self.variance == 0.0 {
-						0.0
-					} else {
-						(*value - self.mean) / f32::sqrt(self.variance)
-					};
-					progress()
-				}
+				self.compute_array_f32_for_number_column(features, column, progress)
 			}
 			DataFrameColumnView::Enum(column) => {
-				for (feature, value) in zip!(feature.iter_mut(), column.iter()) {
-					let value = value
-						.map(|value| value.get().to_f32().unwrap())
-						.unwrap_or(0.0);
-					*feature = if value.is_nan() || self.variance == 0.0 {
-						0.0
-					} else {
-						(value - self.mean) / f32::sqrt(self.variance)
-					};
-					progress()
-				}
+				self.compute_array_f32_for_enum_column(features, column, progress)
+			}
+			DataFrameColumnView::Text(_) => unimplemented!(),
+		}
+	}
+
+	fn compute_array_f32_for_number_column(
+		&self,
+		mut features: ArrayViewMut2<f32>,
+		column: NumberDataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		for (feature, value) in zip!(features.iter_mut(), column.iter()) {
+			*feature = if value.is_nan() || self.variance == 0.0 {
+				0.0
+			} else {
+				(*value - self.mean) / f32::sqrt(self.variance)
+			};
+			progress()
+		}
+	}
+
+	fn compute_array_f32_for_enum_column(
+		&self,
+		mut features: ArrayViewMut2<f32>,
+		column: EnumDataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		for (feature, value) in zip!(features.iter_mut(), column.iter()) {
+			let value = value
+				.map(|value| value.get().to_f32().unwrap())
+				.unwrap_or(0.0);
+			*feature = if value.is_nan() || self.variance == 0.0 {
+				0.0
+			} else {
+				(value - self.mean) / f32::sqrt(self.variance)
+			};
+			progress()
+		}
+	}
+
+	pub fn compute_dataframe(
+		&self,
+		feature: NumberDataFrameColumn,
+		column: DataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		// Set the feature values to the normalized source column values.
+		match column {
+			DataFrameColumnView::Unknown(_) => unimplemented!(),
+			DataFrameColumnView::Number(column) => {
+				self.compute_dataframe_for_number_column(feature, column, progress)
+			}
+			DataFrameColumnView::Enum(column) => {
+				self.compute_dataframe_for_enum_column(feature, column, progress)
 			}
 			DataFrameColumnView::Text(_) => todo!(),
 		}
 	}
 
-	pub fn compute_array_value() {
-		todo!()
+	fn compute_dataframe_for_number_column(
+		&self,
+		mut feature: NumberDataFrameColumn,
+		column: NumberDataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		for (feature, value) in zip!(feature.iter_mut(), column.iter()) {
+			*feature = if value.is_nan() || self.variance == 0.0 {
+				0.0
+			} else {
+				(*value - self.mean) / f32::sqrt(self.variance)
+			};
+			progress()
+		}
+	}
+
+	fn compute_dataframe_for_enum_column(
+		&self,
+		mut feature: NumberDataFrameColumn,
+		column: EnumDataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		for (feature, value) in zip!(feature.iter_mut(), column.iter()) {
+			let value = value
+				.map(|value| value.get().to_f32().unwrap())
+				.unwrap_or(0.0);
+			*feature = if value.is_nan() || self.variance == 0.0 {
+				0.0
+			} else {
+				(value - self.mean) / f32::sqrt(self.variance)
+			};
+			progress()
+		}
+	}
+
+	pub fn compute_array_value(
+		&self,
+		features: ArrayViewMut2<DataFrameValue>,
+		column: DataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		match column {
+			DataFrameColumnView::Unknown(_) => unimplemented!(),
+			DataFrameColumnView::Number(column) => {
+				self.compute_array_value_for_number_column(features, column, progress)
+			}
+			DataFrameColumnView::Enum(column) => {
+				self.compute_array_value_for_enum_column(features, column, progress)
+			}
+			DataFrameColumnView::Text(_) => unimplemented!(),
+		}
+	}
+
+	fn compute_array_value_for_number_column(
+		&self,
+		mut features: ArrayViewMut2<DataFrameValue>,
+		column: NumberDataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		for (feature, value) in zip!(features.column_mut(0), column.iter()) {
+			*feature = if value.is_nan() || self.variance == 0.0 {
+				DataFrameValue::Number(0.0)
+			} else {
+				DataFrameValue::Number((value - self.mean) / f32::sqrt(self.variance))
+			};
+			progress()
+		}
+	}
+
+	fn compute_array_value_for_enum_column(
+		&self,
+		mut features: ArrayViewMut2<DataFrameValue>,
+		column: EnumDataFrameColumnView,
+		progress: &impl Fn(),
+	) {
+		for (feature, value) in zip!(features.column_mut(0), column.iter()) {
+			*feature = if value.is_none() || self.variance == 0.0 {
+				DataFrameValue::Number(0.0)
+			} else {
+				DataFrameValue::Number(
+					(value.unwrap().get().to_f32().unwrap() - self.mean) / f32::sqrt(self.variance),
+				)
+			};
+			progress()
+		}
 	}
 }
