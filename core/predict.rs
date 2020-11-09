@@ -1,4 +1,4 @@
-use crate::{features, model};
+use crate::model;
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
 use std::{
@@ -101,11 +101,13 @@ pub enum Token {
 	Bigram(String, String),
 }
 
-impl From<tangram_features::Token> for Token {
-	fn from(value: tangram_features::Token) -> Token {
+impl From<tangram_features::BagOfWordsFeatureGroupToken> for Token {
+	fn from(value: tangram_features::BagOfWordsFeatureGroupToken) -> Token {
 		match value {
-			tangram_features::Token::Unigram(token) => Token::Unigram(token),
-			tangram_features::Token::Bigram(token_a, token_b) => Token::Bigram(token_a, token_b),
+			tangram_features::BagOfWordsFeatureGroupToken::Unigram(token) => Token::Unigram(token),
+			tangram_features::BagOfWordsFeatureGroupToken::Bigram(token_a, token_b) => {
+				Token::Bigram(token_a, token_b)
+			}
 		}
 	}
 }
@@ -130,7 +132,7 @@ pub enum Model {
 pub struct Regressor {
 	pub id: String,
 	pub columns: Vec<Column>,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub model: RegressionModel,
 }
 
@@ -140,7 +142,7 @@ pub struct BinaryClassifier {
 	pub columns: Vec<Column>,
 	pub negative_class: String,
 	pub positive_class: String,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub model: BinaryClassificationModel,
 }
 
@@ -149,7 +151,7 @@ pub struct MulticlassClassifier {
 	pub id: String,
 	pub columns: Vec<Column>,
 	pub classes: Vec<String>,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub model: MulticlassClassificationModel,
 }
 
@@ -576,14 +578,14 @@ fn predict_multiclass_classifier(
 }
 
 fn compute_feature_contributions<'a>(
-	feature_groups: impl Iterator<Item = &'a features::FeatureGroup>,
+	feature_groups: impl Iterator<Item = &'a tangram_features::FeatureGroup>,
 	mut features: impl Iterator<Item = f32>,
 	mut feature_contribution_values: impl Iterator<Item = f32>,
 ) -> Vec<FeatureContribution> {
 	let mut feature_contributions = Vec::new();
 	for feature_group in feature_groups {
 		match feature_group {
-			features::FeatureGroup::Identity(feature_group) => {
+			tangram_features::FeatureGroup::Identity(feature_group) => {
 				let _feature_value = features.next().unwrap();
 				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::Identity {
@@ -591,7 +593,7 @@ fn compute_feature_contributions<'a>(
 					feature_contribution_value,
 				});
 			}
-			features::FeatureGroup::Normalized(feature_group) => {
+			tangram_features::FeatureGroup::Normalized(feature_group) => {
 				let _feature_value = features.next().unwrap();
 				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::Normalized {
@@ -599,7 +601,7 @@ fn compute_feature_contributions<'a>(
 					feature_contribution_value,
 				});
 			}
-			features::FeatureGroup::OneHotEncoded(feature_group) => {
+			tangram_features::FeatureGroup::OneHotEncoded(feature_group) => {
 				let feature_value = features.next().unwrap();
 				let feature_contribution_value = feature_contribution_values.next().unwrap();
 				feature_contributions.push(FeatureContribution::OneHotEncoded {
@@ -619,7 +621,7 @@ fn compute_feature_contributions<'a>(
 					});
 				}
 			}
-			features::FeatureGroup::BagOfWords(feature_group) => {
+			tangram_features::FeatureGroup::BagOfWords(feature_group) => {
 				for token in feature_group.tokens.iter() {
 					let feature_value = features.next().unwrap();
 					let feature_contribution_value = feature_contribution_values.next().unwrap();
@@ -842,39 +844,43 @@ impl TryFrom<model::ColumnStats> for Column {
 	}
 }
 
-impl TryFrom<model::FeatureGroup> for features::FeatureGroup {
+impl TryFrom<model::FeatureGroup> for tangram_features::FeatureGroup {
 	type Error = tangram_util::error::Error;
-	fn try_from(value: model::FeatureGroup) -> Result<features::FeatureGroup> {
+	fn try_from(value: model::FeatureGroup) -> Result<tangram_features::FeatureGroup> {
 		match value {
-			model::FeatureGroup::Identity(feature_group) => {
-				Ok(features::FeatureGroup::Identity(feature_group.try_into()?))
-			}
+			model::FeatureGroup::Identity(feature_group) => Ok(
+				tangram_features::FeatureGroup::Identity(feature_group.try_into()?),
+			),
 			model::FeatureGroup::Normalized(feature_group) => Ok(
-				features::FeatureGroup::Normalized(feature_group.try_into()?),
+				tangram_features::FeatureGroup::Normalized(feature_group.try_into()?),
 			),
 			model::FeatureGroup::OneHotEncoded(feature_group) => Ok(
-				features::FeatureGroup::OneHotEncoded(feature_group.try_into()?),
+				tangram_features::FeatureGroup::OneHotEncoded(feature_group.try_into()?),
 			),
 			model::FeatureGroup::BagOfWords(feature_group) => Ok(
-				features::FeatureGroup::BagOfWords(feature_group.try_into()?),
+				tangram_features::FeatureGroup::BagOfWords(feature_group.try_into()?),
 			),
 		}
 	}
 }
 
-impl TryFrom<model::IdentityFeatureGroup> for features::IdentityFeatureGroup {
+impl TryFrom<model::IdentityFeatureGroup> for tangram_features::IdentityFeatureGroup {
 	type Error = tangram_util::error::Error;
-	fn try_from(value: model::IdentityFeatureGroup) -> Result<features::IdentityFeatureGroup> {
-		Ok(features::IdentityFeatureGroup {
+	fn try_from(
+		value: model::IdentityFeatureGroup,
+	) -> Result<tangram_features::IdentityFeatureGroup> {
+		Ok(tangram_features::IdentityFeatureGroup {
 			source_column_name: value.source_column_name,
 		})
 	}
 }
 
-impl TryFrom<model::NormalizedFeatureGroup> for features::NormalizedFeatureGroup {
+impl TryFrom<model::NormalizedFeatureGroup> for tangram_features::NormalizedFeatureGroup {
 	type Error = tangram_util::error::Error;
-	fn try_from(value: model::NormalizedFeatureGroup) -> Result<features::NormalizedFeatureGroup> {
-		Ok(features::NormalizedFeatureGroup {
+	fn try_from(
+		value: model::NormalizedFeatureGroup,
+	) -> Result<tangram_features::NormalizedFeatureGroup> {
+		Ok(tangram_features::NormalizedFeatureGroup {
 			source_column_name: value.source_column_name,
 			mean: value.mean,
 			variance: value.variance,
@@ -882,35 +888,39 @@ impl TryFrom<model::NormalizedFeatureGroup> for features::NormalizedFeatureGroup
 	}
 }
 
-impl TryFrom<model::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatureGroup {
+impl TryFrom<model::OneHotEncodedFeatureGroup> for tangram_features::OneHotEncodedFeatureGroup {
 	type Error = tangram_util::error::Error;
 	fn try_from(
 		value: model::OneHotEncodedFeatureGroup,
-	) -> Result<features::OneHotEncodedFeatureGroup> {
-		Ok(features::OneHotEncodedFeatureGroup {
+	) -> Result<tangram_features::OneHotEncodedFeatureGroup> {
+		Ok(tangram_features::OneHotEncodedFeatureGroup {
 			source_column_name: value.source_column_name,
 			options: value.options,
 		})
 	}
 }
 
-impl TryFrom<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
+impl TryFrom<model::BagOfWordsFeatureGroup> for tangram_features::BagOfWordsFeatureGroup {
 	type Error = tangram_util::error::Error;
-	fn try_from(value: model::BagOfWordsFeatureGroup) -> Result<features::BagOfWordsFeatureGroup> {
+	fn try_from(
+		value: model::BagOfWordsFeatureGroup,
+	) -> Result<tangram_features::BagOfWordsFeatureGroup> {
 		let tokens = value
 			.tokens
 			.into_iter()
-			.map(|token| features::BagOfWordsFeatureGroupToken {
-				token: token.token.try_into().unwrap(),
-				idf: token.idf,
-			})
+			.map(
+				|token| tangram_features::BagOfWordsFeatureGroupTokensEntry {
+					token: token.token.try_into().unwrap(),
+					idf: token.idf,
+				},
+			)
 			.collect::<Vec<_>>();
 		let tokens_map = tokens
 			.iter()
 			.enumerate()
 			.map(|(i, token)| (token.token.clone(), i))
 			.collect();
-		Ok(features::BagOfWordsFeatureGroup {
+		Ok(tangram_features::BagOfWordsFeatureGroup {
 			source_column_name: value.source_column_name,
 			tokenizer: value.tokenizer.try_into()?,
 			tokens,
@@ -919,23 +929,29 @@ impl TryFrom<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup
 	}
 }
 
-impl TryFrom<model::Token> for tangram_features::Token {
+impl TryFrom<model::Token> for tangram_features::BagOfWordsFeatureGroupToken {
 	type Error = tangram_util::error::Error;
-	fn try_from(value: model::Token) -> Result<tangram_features::Token> {
+	fn try_from(value: model::Token) -> Result<tangram_features::BagOfWordsFeatureGroupToken> {
 		match value {
-			model::Token::Unigram(token) => Ok(tangram_features::Token::Unigram(token)),
-			model::Token::Bigram(token_a, token_b) => {
-				Ok(tangram_features::Token::Bigram(token_a, token_b))
-			}
+			model::Token::Unigram(token) => Ok(
+				tangram_features::BagOfWordsFeatureGroupToken::Unigram(token),
+			),
+			model::Token::Bigram(token_a, token_b) => Ok(
+				tangram_features::BagOfWordsFeatureGroupToken::Bigram(token_a, token_b),
+			),
 		}
 	}
 }
 
-impl TryFrom<model::Tokenizer> for features::Tokenizer {
+impl TryFrom<model::Tokenizer> for tangram_features::BagOfWordsFeatureGroupTokenizer {
 	type Error = tangram_util::error::Error;
-	fn try_from(value: model::Tokenizer) -> Result<features::Tokenizer> {
+	fn try_from(
+		value: model::Tokenizer,
+	) -> Result<tangram_features::BagOfWordsFeatureGroupTokenizer> {
 		match value {
-			model::Tokenizer::Alphanumeric => Ok(features::Tokenizer::Alphanumeric),
+			model::Tokenizer::Alphanumeric => {
+				Ok(tangram_features::BagOfWordsFeatureGroupTokenizer::Alphanumeric)
+			}
 		}
 	}
 }

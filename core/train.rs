@@ -1,6 +1,6 @@
 use crate::{
 	config::{self, Config},
-	features, grid, model, stats, test,
+	grid, model, stats, test,
 };
 use ndarray::prelude::*;
 use num_traits::ToPrimitive;
@@ -535,7 +535,7 @@ enum RegressionModel {
 struct LinearRegressionModel {
 	pub model: tangram_linear::Regressor,
 	pub train_options: tangram_linear::TrainOptions,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
@@ -543,7 +543,7 @@ struct LinearRegressionModel {
 struct TreeRegressionModel {
 	pub model: tangram_tree::Regressor,
 	pub train_options: tangram_tree::TrainOptions,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
@@ -563,7 +563,7 @@ enum BinaryClassificationModel {
 struct LinearBinaryClassificationModel {
 	pub model: tangram_linear::BinaryClassifier,
 	pub train_options: tangram_linear::TrainOptions,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
@@ -571,7 +571,7 @@ struct LinearBinaryClassificationModel {
 struct TreeBinaryClassificationModel {
 	pub model: tangram_tree::BinaryClassifier,
 	pub train_options: tangram_tree::TrainOptions,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
@@ -584,7 +584,7 @@ enum MulticlassClassificationModel {
 struct LinearMulticlassClassificationModel {
 	pub model: tangram_linear::MulticlassClassifier,
 	pub train_options: tangram_linear::TrainOptions,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
@@ -592,7 +592,7 @@ struct LinearMulticlassClassificationModel {
 struct TreeMulticlassClassificationModel {
 	pub model: tangram_tree::MulticlassClassifier,
 	pub train_options: tangram_tree::TrainOptions,
-	pub feature_groups: Vec<features::FeatureGroup>,
+	pub feature_groups: Vec<tangram_features::FeatureGroup>,
 	pub losses: Option<Vec<f32>>,
 	pub feature_importances: Vec<f32>,
 }
@@ -767,7 +767,7 @@ enum TrainModelOutput {
 
 struct LinearRegressorTrainModelOutput {
 	model: tangram_linear::Regressor,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	target_column_index: usize,
 	losses: Option<Vec<f32>>,
 	train_options: tangram_linear::TrainOptions,
@@ -776,7 +776,7 @@ struct LinearRegressorTrainModelOutput {
 
 struct TreeRegressorTrainModelOutput {
 	model: tangram_tree::Regressor,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	target_column_index: usize,
 	losses: Option<Vec<f32>>,
 	train_options: tangram_tree::TrainOptions,
@@ -785,7 +785,7 @@ struct TreeRegressorTrainModelOutput {
 
 struct LinearBinaryClassifierTrainModelOutput {
 	model: tangram_linear::BinaryClassifier,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	target_column_index: usize,
 	losses: Option<Vec<f32>>,
 	train_options: tangram_linear::TrainOptions,
@@ -794,7 +794,7 @@ struct LinearBinaryClassifierTrainModelOutput {
 
 struct TreeBinaryClassifierTrainModelOutput {
 	model: tangram_tree::BinaryClassifier,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	target_column_index: usize,
 	losses: Option<Vec<f32>>,
 	train_options: tangram_tree::TrainOptions,
@@ -803,7 +803,7 @@ struct TreeBinaryClassifierTrainModelOutput {
 
 struct LinearMulticlassClassifierTrainModelOutput {
 	model: tangram_linear::MulticlassClassifier,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	target_column_index: usize,
 	losses: Option<Vec<f32>>,
 	train_options: tangram_linear::TrainOptions,
@@ -812,7 +812,7 @@ struct LinearMulticlassClassifierTrainModelOutput {
 
 struct TreeMulticlassClassifierTrainModelOutput {
 	model: tangram_tree::MulticlassClassifier,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	target_column_index: usize,
 	losses: Option<Vec<f32>>,
 	train_options: tangram_tree::TrainOptions,
@@ -897,7 +897,7 @@ fn train_model(
 fn train_linear_regressor(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	options: grid::LinearModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
@@ -934,7 +934,7 @@ fn train_linear_regressor(
 fn train_tree_regressor(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
@@ -975,7 +975,7 @@ fn train_tree_regressor(
 fn train_linear_binary_classifier(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	options: grid::LinearModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
@@ -1012,7 +1012,7 @@ fn train_linear_binary_classifier(
 fn train_tree_binary_classifier(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
@@ -1053,7 +1053,7 @@ fn train_tree_binary_classifier(
 fn train_linear_multiclass_classifier(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	options: grid::LinearModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
@@ -1094,7 +1094,7 @@ fn train_linear_multiclass_classifier(
 fn train_tree_multiclass_classifier(
 	dataframe_train: &DataFrameView,
 	target_column_index: usize,
-	feature_groups: Vec<features::FeatureGroup>,
+	feature_groups: Vec<tangram_features::FeatureGroup>,
 	options: grid::TreeModelTrainOptions,
 	update_progress: &mut dyn FnMut(TrainProgress),
 ) -> TrainModelOutput {
@@ -1616,26 +1616,26 @@ impl Into<model::StatsSettings> for stats::StatsSettings {
 	}
 }
 
-impl Into<model::FeatureGroup> for features::FeatureGroup {
+impl Into<model::FeatureGroup> for tangram_features::FeatureGroup {
 	fn into(self) -> model::FeatureGroup {
 		match self {
-			features::FeatureGroup::Identity(feature_group) => {
+			tangram_features::FeatureGroup::Identity(feature_group) => {
 				model::FeatureGroup::Identity(feature_group.into())
 			}
-			features::FeatureGroup::Normalized(feature_group) => {
+			tangram_features::FeatureGroup::Normalized(feature_group) => {
 				model::FeatureGroup::Normalized(feature_group.into())
 			}
-			features::FeatureGroup::OneHotEncoded(feature_group) => {
+			tangram_features::FeatureGroup::OneHotEncoded(feature_group) => {
 				model::FeatureGroup::OneHotEncoded(feature_group.into())
 			}
-			features::FeatureGroup::BagOfWords(feature_group) => {
+			tangram_features::FeatureGroup::BagOfWords(feature_group) => {
 				model::FeatureGroup::BagOfWords(feature_group.into())
 			}
 		}
 	}
 }
 
-impl Into<model::IdentityFeatureGroup> for features::IdentityFeatureGroup {
+impl Into<model::IdentityFeatureGroup> for tangram_features::IdentityFeatureGroup {
 	fn into(self) -> model::IdentityFeatureGroup {
 		model::IdentityFeatureGroup {
 			source_column_name: self.source_column_name,
@@ -1643,7 +1643,7 @@ impl Into<model::IdentityFeatureGroup> for features::IdentityFeatureGroup {
 	}
 }
 
-impl Into<model::NormalizedFeatureGroup> for features::NormalizedFeatureGroup {
+impl Into<model::NormalizedFeatureGroup> for tangram_features::NormalizedFeatureGroup {
 	fn into(self) -> model::NormalizedFeatureGroup {
 		model::NormalizedFeatureGroup {
 			source_column_name: self.source_column_name,
@@ -1653,7 +1653,7 @@ impl Into<model::NormalizedFeatureGroup> for features::NormalizedFeatureGroup {
 	}
 }
 
-impl Into<model::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatureGroup {
+impl Into<model::OneHotEncodedFeatureGroup> for tangram_features::OneHotEncodedFeatureGroup {
 	fn into(self) -> model::OneHotEncodedFeatureGroup {
 		model::OneHotEncodedFeatureGroup {
 			source_column_name: self.source_column_name,
@@ -1662,7 +1662,7 @@ impl Into<model::OneHotEncodedFeatureGroup> for features::OneHotEncodedFeatureGr
 	}
 }
 
-impl Into<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
+impl Into<model::BagOfWordsFeatureGroup> for tangram_features::BagOfWordsFeatureGroup {
 	fn into(self) -> model::BagOfWordsFeatureGroup {
 		model::BagOfWordsFeatureGroup {
 			source_column_name: self.source_column_name,
@@ -1679,7 +1679,7 @@ impl Into<model::BagOfWordsFeatureGroup> for features::BagOfWordsFeatureGroup {
 	}
 }
 
-impl Into<model::Token> for tangram_features::Token {
+impl Into<model::Token> for tangram_features::BagOfWordsFeatureGroupToken {
 	fn into(self) -> model::Token {
 		match self {
 			Self::Unigram(token) => model::Token::Unigram(token),
@@ -1688,10 +1688,12 @@ impl Into<model::Token> for tangram_features::Token {
 	}
 }
 
-impl Into<model::Tokenizer> for features::Tokenizer {
+impl Into<model::Tokenizer> for tangram_features::BagOfWordsFeatureGroupTokenizer {
 	fn into(self) -> model::Tokenizer {
 		match self {
-			features::Tokenizer::Alphanumeric => model::Tokenizer::Alphanumeric,
+			tangram_features::BagOfWordsFeatureGroupTokenizer::Alphanumeric => {
+				model::Tokenizer::Alphanumeric
+			}
 		}
 	}
 }

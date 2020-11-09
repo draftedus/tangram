@@ -46,48 +46,28 @@ pub struct BagOfWordsFeatureGroup {
 	/// This is the name of the text column used to compute features with this feature group.
 	pub source_column_name: String,
 	/// This is the tokenizer used to split the text into tokens.
-	pub tokenizer: Tokenizer,
+	pub tokenizer: BagOfWordsFeatureGroupTokenizer,
 	/// These are the tokens that were produced for the source column in training.
-	pub tokens: Vec<BagOfWordsFeatureGroupToken>,
+	pub tokens: Vec<BagOfWordsFeatureGroupTokensEntry>,
 	/// These are the tokens that were produced for the source column in training.
-	pub tokens_map: HashMap<Token, usize, FnvBuildHasher>,
+	pub tokens_map: HashMap<BagOfWordsFeatureGroupToken, usize, FnvBuildHasher>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Token {
+pub enum BagOfWordsFeatureGroupToken {
 	Unigram(String),
 	Bigram(String, String),
 }
 
 #[derive(Debug)]
-pub struct BagOfWordsFeatureGroupToken {
-	pub token: Token,
+pub struct BagOfWordsFeatureGroupTokensEntry {
+	pub token: BagOfWordsFeatureGroupToken,
 	pub idf: f32,
-}
-
-#[derive(Clone, Debug, Eq)]
-pub struct TokenEntry(pub Token, pub usize);
-impl std::cmp::Ord for TokenEntry {
-	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		self.1.cmp(&other.1)
-	}
-}
-
-impl std::cmp::PartialOrd for TokenEntry {
-	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-		self.1.partial_cmp(&other.1)
-	}
-}
-
-impl std::cmp::PartialEq for TokenEntry {
-	fn eq(&self, other: &Self) -> bool {
-		self.1.eq(&other.1)
-	}
 }
 
 /// A Tokenizer describes how raw text is transformed into tokens.
 #[derive(Debug)]
-pub enum Tokenizer {
+pub enum BagOfWordsFeatureGroupTokenizer {
 	/// This specifies that an [AlphanumericTokenizer](../util/text/struct.AlphanumericTokenizer.html) should be used.
 	Alphanumeric,
 }
@@ -123,18 +103,36 @@ impl BagOfWordsFeatureGroup {
 		column: TextDataFrameColumnView,
 		settings: FitBagOfWordsFeatureGroupSettings,
 	) -> Self {
+		#[derive(Clone, Debug, Eq)]
+		struct TokenEntry(pub BagOfWordsFeatureGroupToken, pub usize);
+		impl std::cmp::Ord for TokenEntry {
+			fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+				self.1.cmp(&other.1)
+			}
+		}
+		impl std::cmp::PartialOrd for TokenEntry {
+			fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+				self.1.partial_cmp(&other.1)
+			}
+		}
+		impl std::cmp::PartialEq for TokenEntry {
+			fn eq(&self, other: &Self) -> bool {
+				self.1.eq(&other.1)
+			}
+		}
 		let mut token_occurrence_histogram = FnvHashMap::default();
 		let mut token_example_histogram = FnvHashMap::default();
 		// Collect statistics about the text in the column.
 		for value in column.iter() {
 			let mut token_set = FnvHashSet::default();
 			for unigram in AlphanumericTokenizer::new(value) {
-				let unigram = Token::Unigram(unigram.into_owned());
+				let unigram = BagOfWordsFeatureGroupToken::Unigram(unigram.into_owned());
 				token_set.insert(unigram.clone());
 				*token_occurrence_histogram.entry(unigram).or_insert(0) += 1;
 			}
 			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
-				let bigram = Token::Bigram(token_a.into_owned(), token_b.into_owned());
+				let bigram =
+					BagOfWordsFeatureGroupToken::Bigram(token_a.into_owned(), token_b.into_owned());
 				token_set.insert(bigram.clone());
 				*token_occurrence_histogram.entry(bigram).or_insert(0) += 1;
 			}
@@ -155,10 +153,10 @@ impl BagOfWordsFeatureGroup {
 				let idf = ((1.0 + n_examples.to_f32().unwrap())
 					/ (1.0 + examples_count.to_f32().unwrap()))
 				.ln() + 1.0;
-				BagOfWordsFeatureGroupToken { token, idf }
+				BagOfWordsFeatureGroupTokensEntry { token, idf }
 			})
 			.collect::<Vec<_>>();
-		let tokenizer = Tokenizer::Alphanumeric;
+		let tokenizer = BagOfWordsFeatureGroupTokenizer::Alphanumeric;
 		let tokens_map = tokens
 			.iter()
 			.enumerate()
@@ -197,7 +195,7 @@ impl BagOfWordsFeatureGroup {
 		// Fill the features with zeros.
 		features.fill(0.0);
 		match self.tokenizer {
-			Tokenizer::Alphanumeric => self
+			BagOfWordsFeatureGroupTokenizer::Alphanumeric => self
 				.compute_array_f32_for_text_column_for_alphanumeric_tokenizer(
 					features, column, progress,
 				),
@@ -215,7 +213,7 @@ impl BagOfWordsFeatureGroup {
 			let mut feature_values_sum_of_squares = 0.0;
 			// Set the feature value for each token for this example.
 			for token in AlphanumericTokenizer::new(value) {
-				let token = Token::Unigram(token.into_owned());
+				let token = BagOfWordsFeatureGroupToken::Unigram(token.into_owned());
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
@@ -225,7 +223,8 @@ impl BagOfWordsFeatureGroup {
 				}
 			}
 			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
-				let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
+				let token =
+					BagOfWordsFeatureGroupToken::Bigram(token_a.into_owned(), token_b.into_owned());
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
@@ -266,7 +265,7 @@ impl BagOfWordsFeatureGroup {
 		progress: &impl Fn(),
 	) -> Vec<DataFrameColumn> {
 		match self.tokenizer {
-			Tokenizer::Alphanumeric => {
+			BagOfWordsFeatureGroupTokenizer::Alphanumeric => {
 				self.compute_dataframe_for_text_column_for_alphanumeric_tokenizer(column, progress)
 			}
 		}
@@ -283,7 +282,7 @@ impl BagOfWordsFeatureGroup {
 			let mut feature_values_sum_of_squares = 0.0;
 			// Set the feature value for each token for this example.
 			for unigram in tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer::new(value) {
-				let token = Token::Unigram(unigram.into_owned());
+				let token = BagOfWordsFeatureGroupToken::Unigram(unigram.into_owned());
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
@@ -293,7 +292,8 @@ impl BagOfWordsFeatureGroup {
 				}
 			}
 			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
-				let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
+				let token =
+					BagOfWordsFeatureGroupToken::Bigram(token_a.into_owned(), token_b.into_owned());
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
@@ -346,7 +346,7 @@ impl BagOfWordsFeatureGroup {
 			*feature = DataFrameValue::Number(0.0);
 		}
 		match self.tokenizer {
-			Tokenizer::Alphanumeric => {
+			BagOfWordsFeatureGroupTokenizer::Alphanumeric => {
 				self.compute_array_value_for_text_column_for_alphanumeric_tokenizer(
 					features, column, progress,
 				);
@@ -365,7 +365,7 @@ impl BagOfWordsFeatureGroup {
 			let mut feature_values_sum_of_squares = 0.0;
 			// Set the feature value for each token for this example.
 			for unigram in tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer::new(value) {
-				let token = Token::Unigram(unigram.into_owned());
+				let token = BagOfWordsFeatureGroupToken::Unigram(unigram.into_owned());
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
@@ -379,7 +379,8 @@ impl BagOfWordsFeatureGroup {
 				}
 			}
 			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
-				let token = Token::Bigram(token_a.into_owned(), token_b.into_owned());
+				let token =
+					BagOfWordsFeatureGroupToken::Bigram(token_a.into_owned(), token_b.into_owned());
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];

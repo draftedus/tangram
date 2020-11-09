@@ -3,10 +3,6 @@ This module implements Tangram's feature engineering that prepares datasets for 
 */
 
 use crate::stats;
-pub use tangram_features::{
-	BagOfWordsFeatureGroup, BagOfWordsFeatureGroupToken, FeatureGroup, IdentityFeatureGroup,
-	NormalizedFeatureGroup, OneHotEncodedFeatureGroup, Tokenizer,
-};
 
 /// Choose feature groups for linear models based on the column stats.
 pub fn choose_feature_groups_linear(
@@ -92,11 +88,16 @@ fn bag_of_words_feature_group_for_column(
 		.top_tokens
 		.iter()
 		.map(
-			|token_stats| tangram_features::BagOfWordsFeatureGroupToken {
+			|token_stats| tangram_features::BagOfWordsFeatureGroupTokensEntry {
 				token: match &token_stats.token {
-					stats::Token::Unigram(token) => tangram_features::Token::Unigram(token.clone()),
+					stats::Token::Unigram(token) => {
+						tangram_features::BagOfWordsFeatureGroupToken::Unigram(token.clone())
+					}
 					stats::Token::Bigram(token_a, token_b) => {
-						tangram_features::Token::Bigram(token_a.clone(), token_b.clone())
+						tangram_features::BagOfWordsFeatureGroupToken::Bigram(
+							token_a.clone(),
+							token_b.clone(),
+						)
 					}
 				},
 				idf: token_stats.idf,
@@ -104,7 +105,9 @@ fn bag_of_words_feature_group_for_column(
 		)
 		.collect::<Vec<_>>();
 	let tokenizer = match column_stats.tokenizer {
-		stats::Tokenizer::Alphanumeric => tangram_features::Tokenizer::Alphanumeric,
+		stats::Tokenizer::Alphanumeric => {
+			tangram_features::BagOfWordsFeatureGroupTokenizer::Alphanumeric
+		}
 	};
 	let tokens_map = tokens
 		.iter()
