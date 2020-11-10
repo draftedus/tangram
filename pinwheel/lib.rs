@@ -326,10 +326,18 @@ impl Pinwheel {
 			let response = response.body(hyper::Body::from(data)).unwrap();
 			return Ok(response);
 		}
-		let html = self.render(path)?;
+		let url = Url::parse(&format!("dst:{}", path)).unwrap();
+		if self.fs().exists(&url) {
+			let html = self.render(path)?;
+			let response = http::Response::builder()
+				.status(http::StatusCode::OK)
+				.body(hyper::Body::from(html))
+				.unwrap();
+			return Ok(response);
+		}
 		let response = http::Response::builder()
-			.status(http::StatusCode::OK)
-			.body(hyper::Body::from(html))
+			.status(http::StatusCode::NOT_FOUND)
+			.body(hyper::Body::from("not found"))
 			.unwrap();
 		Ok(response)
 	}
