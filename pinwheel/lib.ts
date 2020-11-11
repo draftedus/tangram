@@ -2,6 +2,7 @@ import { ComponentType, createElement, hydrate } from 'preact'
 
 export type PageInfo = {
 	clientJsSrc?: string
+	clientWasmJsSrc?: string
 	cssSrcs?: string[]
 	preloadJsSrcs?: string[]
 }

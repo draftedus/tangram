@@ -1,4 +1,4 @@
-use crate::common::cookies::parse_cookies;
+use crate::cookies::parse_cookies;
 use hyper::{header, Body, Request};
 use sqlx::prelude::*;
 use tangram_util::{error::Result, id::Id};

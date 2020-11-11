@@ -1,4 +1,4 @@
-use crate::common::date_window::{DateWindow, DateWindowInterval};
+use crate::date_window::{DateWindow, DateWindowInterval};
 use chrono::prelude::*;
 use chrono_tz::Tz;
 

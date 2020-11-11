@@ -1,4 +1,4 @@
-use crate::layouts::app_layout::AppLayoutInfo;
+use tangram_app_layouts::app_layout::AppLayoutInfo;
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]

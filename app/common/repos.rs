@@ -1,4 +1,4 @@
-use crate::common::user::NormalUser;
+use crate::user::NormalUser;
 use chrono::prelude::*;
 use chrono_tz::Tz;
 use sqlx::prelude::*;

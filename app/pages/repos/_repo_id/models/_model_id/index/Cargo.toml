@@ -1,0 +1,15 @@
+[package]
+edition = "2018"
+name = "tangram_app_pages_repos_repo_id_models_model_id_index"
+version = "0.0.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+tangram_app_common = { path = "../../../../../../common" }
+tangram_app_layouts = { path = "../../../../../../layouts" }
+tangram_core = { path = "../../../../../../../core" }
+tangram_ui = { path = "../../../../../../../ui" }
+tangram_util = { path = "../../../../../../../util" }

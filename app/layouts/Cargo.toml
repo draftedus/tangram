@@ -1,0 +1,12 @@
+[package]
+edition = "2018"
+name = "tangram_app_layouts"
+version = "0.0.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+tangram_util = { path = "../../util" }
+tangram_app_common = { path = "../common" }

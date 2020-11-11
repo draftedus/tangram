@@ -17,9 +17,9 @@ checksum = "ee2a4ec343196209d6594e19543ae87a39f96d5534d7174822a3ad825dd6ed7e"
 
 [[package]]
 name = "ahash"
-version = "0.5.7"
+version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad4243ec6feddc812c0f442d9765374d250aba94e10ecf8b632e1b1c118547e8"
+checksum = "4eb6ec8807cd25b59e6b8100815afc73f54e294f1a425a2e555971969889a8f8"
 dependencies = [
  "getrandom 0.2.0",
  "lazy_static",
@@ -96,6 +96,16 @@ dependencies = [
  "miniz_oxide",
  "object",
  "rustc-demangle",
+]
+
+[[package]]
+name = "base64"
+version = "0.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "489d6c0ed21b11d038c31b6ceccca973e65d73ba3bd8ecb9a2babf5546164643"
+dependencies = [
+ "byteorder",
+ "safemem",
 ]
 
 [[package]]
@@ -581,9 +591,9 @@ checksum = "3dcaa9ae7725d12cdb85b3ad99a434db70b468c09ded17e012d86b5c1010f7a7"
 
 [[package]]
 name = "futures"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95314d38584ffbfda215621d723e0a3906f032e03ae5551e650058dac83d4797"
+checksum = "9b3b0c040a1fe6529d30b3c5944b280c7f0dcb2930d2c3062bca967b602583d0"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -596,9 +606,9 @@ dependencies = [
 
 [[package]]
 name = "futures-channel"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0448174b01148032eed37ac4aed28963aaaa8cfa93569a08e5b479bbc6c2c151"
+checksum = "4b7109687aa4e177ef6fe84553af6280ef2778bdb7783ba44c9dc3399110fe64"
 dependencies = [
  "futures-core",
  "futures-sink",
@@ -606,15 +616,15 @@ dependencies = [
 
 [[package]]
 name = "futures-core"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18eaa56102984bed2c88ea39026cff3ce3b4c7f508ca970cedf2450ea10d4e46"
+checksum = "847ce131b72ffb13b6109a221da9ad97a64cbe48feb1028356b836b47b8f1748"
 
 [[package]]
 name = "futures-executor"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5f8e0c9258abaea85e78ebdda17ef9666d390e987f006be6080dfe354b708cb"
+checksum = "4caa2b2b68b880003057c1dd49f1ed937e38f22fcf6c212188a121f08cf40a65"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -623,15 +633,15 @@ dependencies = [
 
 [[package]]
 name = "futures-io"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e1798854a4727ff944a7b12aa999f58ce7aa81db80d2dfaaf2ba06f065ddd2b"
+checksum = "611834ce18aaa1bd13c4b374f5d653e1027cf99b6b502584ff8c9a64413b30bb"
 
 [[package]]
 name = "futures-macro"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e36fccf3fc58563b4a14d265027c627c3b665d7fed489427e88e7cc929559efe"
+checksum = "77408a692f1f97bcc61dc001d752e00643408fbc922e4d634c655df50d595556"
 dependencies = [
  "proc-macro-hack",
  "proc-macro2",
@@ -641,24 +651,24 @@ dependencies = [
 
 [[package]]
 name = "futures-sink"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e3ca3f17d6e8804ae5d3df7a7d35b2b3a6fe89dac84b31872720fc3060a0b11"
+checksum = "f878195a49cee50e006b02b93cf7e0a95a38ac7b776b4c4d9cc1207cd20fcb3d"
 
 [[package]]
 name = "futures-task"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96d502af37186c4fef99453df03e374683f8a1eec9dcc1e66b3b82dc8278ce3c"
+checksum = "7c554eb5bf48b2426c4771ab68c6b14468b6e76cc90996f528c3338d761a4d0d"
 dependencies = [
  "once_cell",
 ]
 
 [[package]]
 name = "futures-util"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abcb44342f62e6f3e8ac427b8aa815f724fd705dfad060b18ac7866c15bb8e34"
+checksum = "d304cff4a7b99cfb7986f7d43fbe93d175e72e704a8860787cc95e9ffd85cbd2"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -779,6 +789,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "html"
+version = "0.0.0"
+dependencies = [
+ "derive_more",
+ "html-macro",
+]
+
+[[package]]
+name = "html-macro"
+version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "http"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -863,6 +890,12 @@ dependencies = [
  "tokio",
  "tokio-tls",
 ]
+
+[[package]]
+name = "id-arena"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25a2bc672d1148e28034f176e01fffebb08b35768468cc954630da77a1449005"
 
 [[package]]
 name = "idna"
@@ -995,6 +1028,12 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 dependencies = [
  "spin",
 ]
+
+[[package]]
+name = "leb128"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3576a87f2ba00f6f106fdfcd16db1d698d648a26ad8e0573cad8537c3c362d2a"
 
 [[package]]
 name = "lexical"
@@ -1255,9 +1294,9 @@ dependencies = [
 
 [[package]]
 name = "native-tls"
-version = "0.2.5"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a1cda389c26d6b88f3d2dc38aa1b750fe87d298cc5d795ec9e975f402f00372"
+checksum = "6fcc7939b5edc4e4f86b1b4a04bb1498afaaf871b1a6691838ed06fcb48d3a3f"
 dependencies = [
  "lazy_static",
  "libc",
@@ -1397,9 +1436,9 @@ checksum = "8d3b63360ec3cb337817c2dbd47ab4a0f170d285d8e5a2064600f3def1402397"
 
 [[package]]
 name = "once_cell"
-version = "1.4.1"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "260e51e7efe62b592207e9e13a68e43692a7a279171d6ba57abd208bf23645ad"
+checksum = "95c43eba5c640051fbde86a3377842386a94281df3ff0a5f0365c2075ed5c66f"
 
 [[package]]
 name = "opaque-debug"
@@ -1567,8 +1606,10 @@ dependencies = [
  "sourcemap",
  "tangram_util",
  "tokio",
+ "toml",
  "url",
  "walkdir",
+ "wasm-bindgen-cli-support",
  "which",
 ]
 
@@ -1949,6 +1990,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
+name = "safemem"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef703b7cb59335eae2eb93ceb664c0eb7ea6bf567079d843e09420219668e072"
+
+[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2194,7 +2241,7 @@ dependencies = [
 [[package]]
 name = "sqlx"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#12b4250454b13fa2699dee9a4c761154ae60ddb6"
+source = "git+https://github.com/launchbadge/sqlx#12b4250454b13fa2699dee9a4c761154ae60ddb6"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -2203,7 +2250,7 @@ dependencies = [
 [[package]]
 name = "sqlx-core"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#12b4250454b13fa2699dee9a4c761154ae60ddb6"
+source = "git+https://github.com/launchbadge/sqlx#12b4250454b13fa2699dee9a4c761154ae60ddb6"
 dependencies = [
  "ahash",
  "atoi",
@@ -2246,7 +2293,7 @@ dependencies = [
 [[package]]
 name = "sqlx-macros"
 version = "0.4.0-beta.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#12b4250454b13fa2699dee9a4c761154ae60ddb6"
+source = "git+https://github.com/launchbadge/sqlx#12b4250454b13fa2699dee9a4c761154ae60ddb6"
 dependencies = [
  "dotenv",
  "either",
@@ -2263,7 +2310,7 @@ dependencies = [
 [[package]]
 name = "sqlx-rt"
 version = "0.1.1"
-source = "git+https://github.com/launchbadge/sqlx?branch=master#12b4250454b13fa2699dee9a4c761154ae60ddb6"
+source = "git+https://github.com/launchbadge/sqlx#12b4250454b13fa2699dee9a4c761154ae60ddb6"
 dependencies = [
  "native-tls",
  "once_cell",
@@ -2323,7 +2370,59 @@ dependencies = [
 ]
 
 [[package]]
+name = "tangram_api"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_core",
+ "tangram_metrics",
+ "tangram_util",
+]
+
+[[package]]
 name = "tangram_app"
+version = "0.0.0"
+dependencies = [
+ "pinwheel",
+ "tangram_api",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_app_pages_index",
+ "tangram_app_pages_login",
+ "tangram_app_pages_organizations_new",
+ "tangram_app_pages_organizations_organization_id_edit",
+ "tangram_app_pages_organizations_organization_id_index",
+ "tangram_app_pages_organizations_organization_id_members_new",
+ "tangram_app_pages_repos_new",
+ "tangram_app_pages_repos_repo_id_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_prediction",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_stats_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_importances",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_metrics",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_precision_recall",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_stats_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_tuning",
+ "tangram_app_pages_repos_repo_id_models_new",
+ "tangram_app_pages_repos_repo_id_models_new_client",
+ "tangram_app_pages_user",
+ "tangram_core",
+ "tangram_metrics",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_common"
 version = "0.0.0"
 dependencies = [
  "base64 0.13.0",
@@ -2331,6 +2430,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "futures",
+ "html",
  "http",
  "hyper",
  "include_dir",
@@ -2350,9 +2450,328 @@ dependencies = [
  "sqlx",
  "tangram_core",
  "tangram_metrics",
+ "tangram_ui",
  "tangram_util",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "tangram_app_layouts"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_login"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_organizations_new"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_organizations_organization_id_edit"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_organizations_organization_id_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_organizations_organization_id_members_new"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_new"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_prediction"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_stats_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_importances"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_metrics"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_precision_recall"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_stats_index"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_tuning"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_new"
+version = "0.0.0"
+dependencies = [
+ "html",
+ "tangram_app_common",
+ "tangram_core",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_new_client"
+version = "0.0.0"
+dependencies = [
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "tangram_app_pages_user"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_ui",
+ "tangram_util",
 ]
 
 [[package]]
@@ -2467,7 +2886,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "tangram_app",
+ "tangram_app_common",
  "tangram_dataframe",
  "tangram_util",
  "tokio",
@@ -2488,6 +2907,13 @@ dependencies = [
  "tangram_dataframe",
  "tangram_metrics",
  "tangram_util",
+]
+
+[[package]]
+name = "tangram_ui"
+version = "0.0.0"
+dependencies = [
+ "html",
 ]
 
 [[package]]
@@ -2517,8 +2943,8 @@ dependencies = [
 
 [[package]]
 name = "term-ui"
-version = "0.0.1"
-source = "git+https://github.com/tangram-hq/term-ui#ba438253d5a008afe26988a41b7e757714519bc5"
+version = "0.0.0"
+source = "git+https://github.com/tangram-hq/term-ui#ef55302d7af44fe4d4d5df4af363b1e55e8f1685"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -2695,6 +3121,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "toml"
+version = "0.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75cf45bb0bef80604d001caaec0d09da99611b3c0fd39d3080468875cdb65645"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "tower-service"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2858,6 +3293,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "walrus"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d470d0583e65f4cab21a1ff3c1ba3dd23ae49e68f516f0afceaeb001b32af39"
+dependencies = [
+ "anyhow",
+ "id-arena",
+ "leb128",
+ "log",
+ "walrus-macro",
+ "wasmparser",
+]
+
+[[package]]
+name = "walrus-macro"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7c2bb690b44cb1b0fdcc54d4998d21f8bdaf706b93775425e440b174f39ad16"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "want"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2907,6 +3368,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasm-bindgen-cli-support"
+version = "0.2.68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d7ab7ca2bed1686149512473ad17ef25038dbc2d4cd9060a5b9d0430eda57bd"
+dependencies = [
+ "anyhow",
+ "base64 0.9.3",
+ "log",
+ "rustc-demangle",
+ "serde_json",
+ "tempfile",
+ "walrus",
+ "wasm-bindgen-externref-xform",
+ "wasm-bindgen-multi-value-xform",
+ "wasm-bindgen-shared",
+ "wasm-bindgen-threads-xform",
+ "wasm-bindgen-wasm-conventions",
+ "wasm-bindgen-wasm-interpreter",
+ "wit-text",
+ "wit-validator",
+ "wit-walrus",
+]
+
+[[package]]
+name = "wasm-bindgen-externref-xform"
+version = "0.2.68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbda27740b611a84e5e60307d1e4bbe303131ee7dfa06b067c51a9be57694f9a"
+dependencies = [
+ "anyhow",
+ "walrus",
+]
+
+[[package]]
 name = "wasm-bindgen-futures"
 version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2942,10 +3437,68 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasm-bindgen-multi-value-xform"
+version = "0.2.68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75f1045a9ca195e5f5a20b838b9361c26e9a26df1817d69491bd36f5a33c506a"
+dependencies = [
+ "anyhow",
+ "walrus",
+]
+
+[[package]]
 name = "wasm-bindgen-shared"
 version = "0.2.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d649a3145108d7d3fbcde896a468d1bd636791823c9921135218ad89be08307"
+
+[[package]]
+name = "wasm-bindgen-threads-xform"
+version = "0.2.68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a5558ca1936b27999d37ddcfa8c8ac0d1f2d324604a999024a1ea6b5f242533"
+dependencies = [
+ "anyhow",
+ "walrus",
+ "wasm-bindgen-wasm-conventions",
+]
+
+[[package]]
+name = "wasm-bindgen-wasm-conventions"
+version = "0.2.68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a14ec444689948d32ebfa9252651482feee34cb8b371b6f8da15775f07a94289"
+dependencies = [
+ "anyhow",
+ "walrus",
+]
+
+[[package]]
+name = "wasm-bindgen-wasm-interpreter"
+version = "0.2.68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e47e8238a2b05dbaf164a628bbaa43aac4c5a965247a991f7f3248824c784b1b"
+dependencies = [
+ "anyhow",
+ "log",
+ "walrus",
+ "wasm-bindgen-wasm-conventions",
+]
+
+[[package]]
+name = "wasmparser"
+version = "0.59.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a950e6a618f62147fd514ff445b2a0b53120d382751960797f85f058c7eda9b9"
+
+[[package]]
+name = "wast"
+version = "21.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b1844f66a2bc8526d71690104c0e78a8e59ffa1597b7245769d174ebb91deb5"
+dependencies = [
+ "leb128",
+]
 
 [[package]]
 name = "web-sys"
@@ -3054,6 +3607,70 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0120db82e8a1e0b9fb3345a539c478767c0048d842860994d96113d5b667bd69"
 dependencies = [
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "wit-parser"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f5fd97866f4b9c8e1ed57bcf9446f3d0d8ba37e2dd01c3c612c046c053b06f7"
+dependencies = [
+ "anyhow",
+ "leb128",
+ "wit-schema-version",
+]
+
+[[package]]
+name = "wit-schema-version"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfee4a6a4716eefa0682e7a3b836152e894a3e4f34a9d6c2c3e1c94429bfe36a"
+
+[[package]]
+name = "wit-text"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33358e95c77d660f1c7c07f4a93c2bd89768965e844e3c50730bb4b42658df5f"
+dependencies = [
+ "anyhow",
+ "wast",
+ "wit-writer",
+]
+
+[[package]]
+name = "wit-validator"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c11d93d925420e7872b226c4161849c32be38385ccab026b88df99d8ddc6ba6"
+dependencies = [
+ "anyhow",
+ "wasmparser",
+ "wit-parser",
+ "wit-schema-version",
+]
+
+[[package]]
+name = "wit-walrus"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b532d7bc47d02a08463adc934301efbf67e7b1e1284f8a68edc85d1ca84fa125"
+dependencies = [
+ "anyhow",
+ "id-arena",
+ "walrus",
+ "wit-parser",
+ "wit-schema-version",
+ "wit-writer",
+]
+
+[[package]]
+name = "wit-writer"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2ad01ba5e9cbcff799a0689e56a153776ea694cec777f605938cb9880d41a09"
+dependencies = [
+ "leb128",
+ "wit-schema-version",
 ]
 
 [[package]]

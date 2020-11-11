@@ -13,6 +13,8 @@ enum Options {
 struct DevOptions {
 	#[clap(long, default_value = ".")]
 	src_dir: PathBuf,
+	#[clap(long, default_value = "build")]
+	wasm_target_dir: PathBuf,
 	#[clap(long, default_value = "dist")]
 	dst_dir: PathBuf,
 	#[clap(long, default_value = "0.0.0.0")]
@@ -25,6 +27,8 @@ struct DevOptions {
 struct BuildOptions {
 	#[clap(long, default_value = ".")]
 	src_dir: PathBuf,
+	#[clap(long, default_value = "build")]
+	wasm_target_dir: PathBuf,
 	#[clap(long, default_value = "dist")]
 	dst_dir: PathBuf,
 }
@@ -38,7 +42,7 @@ pub fn main() {
 }
 
 fn dev(options: DevOptions) -> Result<()> {
-	let pinwheel = Pinwheel::dev(options.src_dir, options.dst_dir);
+	let pinwheel = Pinwheel::dev(options.src_dir, options.wasm_target_dir, options.dst_dir);
 	tokio::runtime::Builder::new()
 		.threaded_scheduler()
 		.enable_all()
@@ -61,6 +65,10 @@ async fn handle(
 }
 
 fn build(options: BuildOptions) -> Result<()> {
-	pinwheel::build(options.src_dir.as_path(), options.dst_dir.as_path())?;
+	pinwheel::build(
+		options.src_dir.as_path(),
+		options.wasm_target_dir.as_path(),
+		options.dst_dir.as_path(),
+	)?;
 	Ok(())
 }

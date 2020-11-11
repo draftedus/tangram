@@ -1,14 +1,16 @@
-use crate::Context;
-use hyper::{Body, Request, Response, StatusCode};
+use tangram_app_common::{http, hyper, Context};
 use tangram_util::error::Result;
 
-pub(crate) async fn get(context: &Context, _request: Request<Body>) -> Result<Response<Body>> {
+pub async fn get(
+	context: &Context,
+	_request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>> {
 	match context.pool.acquire().await {
-		Ok(_) => Ok(Response::builder()
-			.status(StatusCode::OK)
-			.body(Body::empty())?),
-		Err(_) => Ok(Response::builder()
-			.status(StatusCode::SERVICE_UNAVAILABLE)
-			.body(Body::empty())?),
+		Ok(_) => Ok(http::Response::builder()
+			.status(http::StatusCode::OK)
+			.body(hyper::Body::empty())?),
+		Err(_) => Ok(http::Response::builder()
+			.status(http::StatusCode::SERVICE_UNAVAILABLE)
+			.body(hyper::Body::empty())?),
 	}
 }

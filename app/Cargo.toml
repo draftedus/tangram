@@ -10,39 +10,38 @@ path = "lib.rs"
 [build-dependencies]
 pinwheel = { path = "../pinwheel" }
 
-[dev-dependencies]
-insta = "1"
-
 [dependencies]
-base64 = "0.13"
-bytes = "0.5"
-chrono = { version = "0.4", features = ["serde"] }
-chrono-tz = { version = "0.5", features = ["serde"] }
-futures = "0.3"
-http = "0.2"
-hyper = { version = "0.13", features = ["stream"] }
-itertools = "0.9"
-include_dir = "0.6"
-lexical = "5"
-multer = "1.2"
-ndarray = { version = "0.13", features = ["serde"] }
-num-traits = "0.2"
-pinwheel = { path = "../pinwheel" }
-rand = "0.7"
-reqwest = { version = "0.10", default-features = false, features = ["json", "rustls-tls"] }
-rmp-serde = "0.14"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-serde_urlencoded = "0.7"
-sqlx = { git = "https://github.com/launchbadge/sqlx", branch = "master", default-features = false, features = [
-  "any",
-  "chrono",
-  "postgres",
-  "runtime-tokio",
-  "sqlite",
-] }
+tangram_api = { path = "api" }
+tangram_app_common = { path = "common" }
+tangram_app_pages_index = { path = "pages/index" }
+tangram_app_pages_login = { path = "pages/login" }
+tangram_app_pages_organizations_organization_id_edit = { path = "pages/organizations/_organization_id/edit" }
+tangram_app_pages_organizations_organization_id_index = { path = "pages/organizations/_organization_id/index" }
+tangram_app_pages_organizations_organization_id_members_new = { path = "pages/organizations/_organization_id/members/new" }
+tangram_app_pages_organizations_new = { path = "pages/organizations/new" }
+tangram_app_pages_repos_repo_id_index = { path = "pages/repos/_repo_id/index" }
+tangram_app_pages_repos_repo_id_models_model_id_index = { path = "pages/repos/_repo_id/models/_model_id/index" }
+tangram_app_pages_repos_repo_id_models_model_id_prediction = { path = "pages/repos/_repo_id/models/_model_id/prediction" }
+tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index = { path = "pages/repos/_repo_id/models/_model_id/production_metrics/index" }
+tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics = { path = "pages/repos/_repo_id/models/_model_id/production_metrics/class_metrics" }
+tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index = { path = "pages/repos/_repo_id/models/_model_id/production_predictions/index" }
+tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier = { path = "pages/repos/_repo_id/models/_model_id/production_predictions/predictions/_identifier" }
+tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name = { path = "pages/repos/_repo_id/models/_model_id/production_stats/columns/_column_name" }
+tangram_app_pages_repos_repo_id_models_model_id_production_stats_index = { path = "pages/repos/_repo_id/models/_model_id/production_stats/index" }
+tangram_app_pages_repos_repo_id_models_model_id_training_importances = { path = "pages/repos/_repo_id/models/_model_id/training_importances" }
+tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_metrics = { path = "pages/repos/_repo_id/models/_model_id/training_metrics/class_metrics" }
+tangram_app_pages_repos_repo_id_models_model_id_training_metrics_index = { path = "pages/repos/_repo_id/models/_model_id/training_metrics/index" }
+tangram_app_pages_repos_repo_id_models_model_id_training_metrics_precision_recall = { path = "pages/repos/_repo_id/models/_model_id/training_metrics/precision_recall" }
+tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc = { path = "pages/repos/_repo_id/models/_model_id/training_metrics/roc" }
+tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name = { path = "pages/repos/_repo_id/models/_model_id/training_stats/columns/_column_name" }
+tangram_app_pages_repos_repo_id_models_model_id_training_stats_index = { path = "pages/repos/_repo_id/models/_model_id/training_stats/index" }
+tangram_app_pages_repos_repo_id_models_model_id_tuning = { path = "pages/repos/_repo_id/models/_model_id/tuning" }
+tangram_app_pages_repos_repo_id_models_new = { path = "pages/repos/_repo_id/models/new" }
+tangram_app_pages_repos_repo_id_models_new_client = { path = "pages/repos/_repo_id/models/new/client", optional = true }
+tangram_app_pages_repos_new = { path = "pages/repos/new" }
+tangram_app_pages_user = { path = "pages/user" }
+tangram_app_layouts = { path = "layouts" }
 tangram_core = { path = "../core" }
 tangram_metrics = { path = "../metrics" }
+tangram_ui = { path = "../ui" }
 tangram_util = { path = "../util" }
-tokio = { version = "0.2" }
-url = "2"

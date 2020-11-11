@@ -36,6 +36,11 @@ export function Document(props: DocumentProps) {
 				{props.pageInfo.clientJsSrc && (
 					<script src={props.pageInfo.clientJsSrc} type="module" />
 				)}
+				{props.pageInfo.clientWasmJsSrc && (
+					<script type="module">
+						{`import init from '${props.pageInfo.clientWasmJsSrc}'; init()`}
+					</script>
+				)}
 			</body>
 		</html>
 	)

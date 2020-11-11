@@ -1,4 +1,5 @@
-use crate::{common::organizations::Member, layouts::app_layout::AppLayoutInfo};
+use tangram_app_common::organizations::Member;
+use tangram_app_layouts::app_layout::AppLayoutInfo;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

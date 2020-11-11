@@ -6,9 +6,6 @@ import { AppLayout } from 'layouts/app_layout'
 import { Fragment, h } from 'preact'
 
 export default (pageInfo: PageInfo, props: Props) => {
-	if (Math.random() < 0.0) {
-		throw Error('hello world')
-	}
 	return renderPage(
 		<AppLayout info={props.appLayoutInfo} pageInfo={pageInfo}>
 			<ui.S1>

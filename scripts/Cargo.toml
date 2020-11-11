@@ -31,5 +31,5 @@ sha2 = "0.9"
 tokio = { version = "0.2", features = ["full"] }
 tangram_dataframe = { path = "../dataframe" }
 tangram_util = { path = "../util" }
-tangram_app = { path = "../app" }
+tangram_app_common = { path = "../app/common" }
 url = "2"

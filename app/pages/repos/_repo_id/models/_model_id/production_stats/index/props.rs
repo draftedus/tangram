@@ -1,7 +1,5 @@
-use crate::{
-	common::date_window::{DateWindow, DateWindowInterval},
-	layouts::model_layout::ModelLayoutInfo,
-};
+use tangram_app_common::date_window::{DateWindow, DateWindowInterval};
+use tangram_app_layouts::model_layout::ModelLayoutInfo;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

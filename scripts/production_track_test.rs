@@ -5,7 +5,7 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::SystemTime;
-use tangram_app::common::monitor_event::{
+use tangram_app_common::monitor_event::{
 	BinaryClassificationPredictOutput, MonitorEvent, MulticlassClassificationPredictOutput,
 	NumberOrString, PredictOutput, PredictionMonitorEvent, RegressionPredictOutput,
 	TrueValueMonitorEvent,

@@ -1,0 +1,14 @@
+[package]
+edition = "2018"
+name = "tangram_api"
+version = "0.0.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+tangram_app_common = { path = "../common" }
+tangram_core = { path = "../../core" }
+tangram_metrics = { path = "../../metrics" }
+tangram_util = { path = "../../util" }

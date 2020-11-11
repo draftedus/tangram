@@ -1,22 +1,22 @@
-use crate::{
-	common::{
-		error::{bad_request, service_unavailable},
-		model::get_model,
-		monitor_event::{
-			BinaryClassificationPredictOutput, MonitorEvent, MulticlassClassificationPredictOutput,
-			NumberOrString, PredictOutput, PredictionMonitorEvent, RegressionPredictOutput,
-			TrueValueMonitorEvent,
-		},
+use std::collections::BTreeMap;
+use tangram_app_common::{
+	base64, chrono,
+	chrono::prelude::*,
+	error::{bad_request, service_unavailable},
+	http, hyper,
+	model::get_model,
+	monitor_event::{
+		BinaryClassificationPredictOutput, MonitorEvent, MulticlassClassificationPredictOutput,
+		NumberOrString, PredictOutput, PredictionMonitorEvent, RegressionPredictOutput,
+		TrueValueMonitorEvent,
 	},
+	num_traits::ToPrimitive,
 	production_metrics::ProductionMetrics,
 	production_stats::ProductionStats,
+	serde_json, sqlx,
+	sqlx::prelude::*,
 	Context,
 };
-use chrono::prelude::*;
-use hyper::{body::to_bytes, Body, Request, Response, StatusCode};
-use num_traits::ToPrimitive;
-use sqlx::prelude::*;
-use std::collections::BTreeMap;
 use tangram_metrics::StreamingMetric;
 use tangram_util::{err, error::Result, id::Id};
 
@@ -27,8 +27,11 @@ enum MonitorEventSet {
 	Multiple(Vec<MonitorEvent>),
 }
 
-pub(crate) async fn post(context: &Context, mut request: Request<Body>) -> Result<Response<Body>> {
-	let data = match to_bytes(request.body_mut()).await {
+pub async fn post(
+	context: &Context,
+	mut request: http::Request<hyper::Body>,
+) -> Result<http::Response<hyper::Body>> {
+	let data = match hyper::body::to_bytes(request.body_mut()).await {
 		Ok(bytes) => bytes,
 		Err(_) => return Ok(bad_request()),
 	};
@@ -64,9 +67,9 @@ pub(crate) async fn post(context: &Context, mut request: Request<Body>) -> Resul
 		}
 	}
 	db.commit().await?;
-	let response = Response::builder()
-		.status(StatusCode::ACCEPTED)
-		.body(Body::empty())
+	let response = http::Response::builder()
+		.status(http::StatusCode::ACCEPTED)
+		.body(hyper::Body::empty())
 		.unwrap();
 	Ok(response)
 }

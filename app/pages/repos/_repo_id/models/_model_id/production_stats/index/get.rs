@@ -4,25 +4,24 @@ use super::props::{
 	PredictionStatsIntervalChart, ProductionTrainingHistogram, ProductionTrainingQuantiles, Props,
 	Quantiles, RegressionChartEntry,
 };
-use crate::{
-	common::{
-		date_window::get_date_window_and_interval,
-		error::{bad_request, not_found, redirect_to_login, service_unavailable},
-		model::get_model,
-		production_stats::get_production_stats,
-		time::{format_date_window, format_date_window_interval},
-		timezone::get_timezone,
-		user::{authorize_user, authorize_user_for_model},
-	},
-	layouts::model_layout::get_model_layout_info,
+use std::collections::BTreeMap;
+use tangram_app_common::{
+	date_window::get_date_window_and_interval,
+	error::{bad_request, not_found, redirect_to_login, service_unavailable},
+	http, hyper,
+	model::get_model,
+	num_traits::ToPrimitive,
+	production_stats::get_production_stats,
 	production_stats::{
 		ProductionColumnStatsOutput, ProductionPredictionStatsOutput,
 		RegressionProductionPredictionStatsOutput,
 	},
+	time::{format_date_window, format_date_window_interval},
+	timezone::get_timezone,
+	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use num_traits::ToPrimitive;
-use std::collections::BTreeMap;
+use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_util::{error::Result, id::Id};
 
 const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;

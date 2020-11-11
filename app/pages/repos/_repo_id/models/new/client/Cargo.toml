@@ -1,0 +1,18 @@
+[package]
+edition = "2018"
+name = "tangram_app_pages_repos_repo_id_models_new_client"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+path = "client.rs"
+
+[dependencies]
+wasm-bindgen = "0.2.68"
+web-sys = { version = "0.3.45", features = [
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Node",
+  "Window",
+] }

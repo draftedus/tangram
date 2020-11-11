@@ -3,23 +3,22 @@ use super::props::{
 	IntervalBoxChartDataPointStats, NumberProps, NumberTrainingProductionComparison,
 	OverallBoxChartData, OverallBoxChartDataStats, Props, TextProps,
 };
-use crate::{
-	common::{
-		date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
-		error::{bad_request, not_found, redirect_to_login, service_unavailable},
-		model::get_model,
-		production_stats::{get_production_stats, GetProductionStatsOutput},
-		time::format_date_window_interval,
-		timezone::get_timezone,
-		user::{authorize_user, authorize_user_for_model},
-	},
-	layouts::model_layout::get_model_layout_info,
+use std::collections::BTreeMap;
+use tangram_app_common::{
+	chrono_tz::Tz,
+	date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
+	error::{bad_request, not_found, redirect_to_login, service_unavailable},
+	http, hyper,
+	model::get_model,
+	num_traits::ToPrimitive,
 	production_stats::ProductionColumnStatsOutput,
+	production_stats::{get_production_stats, GetProductionStatsOutput},
+	time::format_date_window_interval,
+	timezone::get_timezone,
+	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use chrono_tz::Tz;
-use num_traits::ToPrimitive;
-use std::collections::BTreeMap;
+use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(

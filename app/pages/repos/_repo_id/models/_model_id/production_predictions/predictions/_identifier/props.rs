@@ -1,7 +1,5 @@
-use crate::{
-	common::predict::{InputTable, Prediction},
-	layouts::model_layout::ModelLayoutInfo,
-};
+use tangram_app_common::predict::{InputTable, Prediction};
+use tangram_app_layouts::model_layout::ModelLayoutInfo;
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]

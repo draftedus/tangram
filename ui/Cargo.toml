@@ -1,0 +1,10 @@
+[package]
+edition = "2018"
+name = "tangram_ui"
+version = "0.0.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+html = { path = "../../html/html" }

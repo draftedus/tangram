@@ -9,6 +9,11 @@ default-run = "tangram"
 name = "tangram"
 path = "main.rs"
 
+[features]
+default = ["app"]
+train = ["tangram_core"]
+app = ["tangram_app"]
+
 [dependencies]
 backtrace = "0.3"
 base64 = "0.13"
@@ -20,8 +25,8 @@ serde = "1"
 serde_json = "1"
 rsa = "0.3"
 sha2 = "0.9"
-tangram_app = { path = "../app" }
-tangram_core = { path = "../core" }
+tangram_app = { path = "../app", optional = true }
+tangram_core = { path = "../core", optional = true }
 tangram_util = { path = "../util" }
 term-ui = { git = "https://github.com/tangram-hq/term-ui" }
 url = "2"

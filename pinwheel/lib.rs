@@ -59,8 +59,7 @@ where
 		}
 	});
 	let addr = std::net::SocketAddr::new(host, port);
-	let listener = std::net::TcpListener::bind(&addr).unwrap();
-	let server = hyper::Server::from_tcp(listener)?;
+	let server = hyper::Server::try_bind(&addr)?;
 	eprintln!("🚀 serving on port {}", port);
 	server.serve(service).await?;
 	std::panic::set_hook(hook);
@@ -100,6 +99,7 @@ where
 pub enum Pinwheel {
 	Dev {
 		src_dir: PathBuf,
+		wasm_target_dir: PathBuf,
 		dst_dir: PathBuf,
 		fs: RealFileSystem,
 	},
@@ -114,12 +114,13 @@ pub enum ProdFileSystem {
 }
 
 impl Pinwheel {
-	pub fn dev(src_dir: PathBuf, dst_dir: PathBuf) -> Pinwheel {
+	pub fn dev(src_dir: PathBuf, wasm_target_dir: PathBuf, dst_dir: PathBuf) -> Pinwheel {
 		let fs = RealFileSystem {
 			dst_dir: dst_dir.clone(),
 		};
 		Pinwheel::Dev {
 			src_dir,
+			wasm_target_dir,
 			dst_dir,
 			fs,
 		}
@@ -159,10 +160,13 @@ impl Pinwheel {
 
 		// In dev mode, compile the page.
 		if let Pinwheel::Dev {
-			src_dir, dst_dir, ..
+			src_dir,
+			wasm_target_dir,
+			dst_dir,
+			..
 		} = self
 		{
-			esbuild_single_page(src_dir, dst_dir, page_entry.clone())?;
+			build_single_page(true, src_dir, wasm_target_dir, dst_dir, page_entry.clone())?;
 		}
 
 		// Determine the output URLs.
@@ -187,6 +191,15 @@ impl Pinwheel {
 			.unwrap();
 		let client_js_src = if self.fs().exists(&client_js_url) {
 			Some(format!("/{}/client.js", page_entry))
+		} else {
+			None
+		};
+		let client_wasm_js_url = Url::parse("dst:/")
+			.unwrap()
+			.join(&format!("{}/client_wasm.js", page_entry))
+			.unwrap();
+		let client_wasm_js_src = if self.fs().exists(&client_wasm_js_url) {
+			Some(format!("/{}/client_wasm.js", page_entry))
 		} else {
 			None
 		};
@@ -256,6 +269,20 @@ impl Pinwheel {
 				&mut scope,
 				client_js_src_literal.into(),
 				client_js_src_string,
+			);
+			let client_wasm_js_src_literal =
+				v8::String::new(&mut scope, "clientWasmJsSrc").unwrap();
+			let client_wasm_js_src_string = if let Some(client_wasm_js_src) = client_wasm_js_src {
+				v8::String::new(&mut scope, &client_wasm_js_src)
+					.unwrap()
+					.into()
+			} else {
+				v8::undefined(&mut scope).into()
+			};
+			page_info.set(
+				&mut scope,
+				client_wasm_js_src_literal.into(),
+				client_wasm_js_src_string,
 			);
 			let page_info = page_info.into();
 
@@ -344,12 +371,14 @@ impl Pinwheel {
 }
 
 fn content_type(path: &str) -> Option<&'static str> {
-	if path.ends_with(".js") {
+	if path.ends_with(".css") {
+		Some("text/css")
+	} else if path.ends_with(".js") {
 		Some("text/javascript")
 	} else if path.ends_with(".svg") {
 		Some("image/svg+xml")
-	} else if path.ends_with(".css") {
-		Some("text/css")
+	} else if path.ends_with(".wasm") {
+		Some("application/wasm")
 	} else {
 		None
 	}
@@ -625,7 +654,7 @@ impl FileSystem for IncludedFileSystem {
 	}
 }
 
-pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
+pub fn build(src_dir: &Path, wasm_target_dir: &Path, dst_dir: &Path) -> Result<()> {
 	// Collect all pages in the pages directory.
 	let mut page_entries = <Vec<String>>::new();
 	let mut static_page_entries = <Vec<String>>::new();
@@ -653,7 +682,7 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 		}
 	}
 	// Build the pages.
-	esbuild_pages(src_dir, dst_dir, &page_entries).unwrap();
+	build_pages(false, src_dir, wasm_target_dir, dst_dir, &page_entries).unwrap();
 	// Copy static files.
 	let static_dir = src_dir.join("static");
 	for path in walkdir::WalkDir::new(&static_dir) {
@@ -685,11 +714,23 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 	Ok(())
 }
 
-pub fn esbuild_single_page(src_dir: &Path, dst_dir: &Path, page_entry: String) -> Result<()> {
-	esbuild_pages(src_dir, dst_dir, &[page_entry])
+pub fn build_single_page(
+	dev: bool,
+	src_dir: &Path,
+	wasm_target_dir: &Path,
+	dst_dir: &Path,
+	page_entry: String,
+) -> Result<()> {
+	build_pages(dev, src_dir, wasm_target_dir, dst_dir, &[page_entry])
 }
 
-pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) -> Result<()> {
+pub fn build_pages(
+	dev: bool,
+	src_dir: &Path,
+	wasm_target_dir: &Path,
+	dst_dir: &Path,
+	page_entries: &[String],
+) -> Result<()> {
 	// Remove the `dst_dir` if it exists and create it.
 	if dst_dir.exists() {
 		std::fs::remove_dir_all(&dst_dir).unwrap();
@@ -766,6 +807,65 @@ pub fn esbuild_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[String]) ->
 		.insert("outputs".to_owned(), new_outputs.into());
 	let metafile = serde_json::to_vec(&metafile)?;
 	std::fs::write(manifest_path, metafile)?;
+	// cargo build clients
+	for page_entry in page_entries {
+		let client_crate_manifest_path = src_dir
+			.join("pages")
+			.join(&page_entry)
+			.join("client/Cargo.toml");
+		if !client_crate_manifest_path.exists() {
+			continue;
+		}
+		let client_crate_manifest = std::fs::read_to_string(&client_crate_manifest_path)?;
+		let client_crate_manifest: toml::Value = toml::from_str(&client_crate_manifest)?;
+		let client_crate_name = client_crate_manifest
+			.as_table()
+			.unwrap()
+			.get("package")
+			.unwrap()
+			.as_table()
+			.unwrap()
+			.get("name")
+			.unwrap()
+			.as_str()
+			.unwrap();
+		let cmd = which("cargo")?;
+		let mut args = vec![
+			"build".to_owned(),
+			"--target".to_owned(),
+			"wasm32-unknown-unknown".to_owned(),
+			"--target-dir".to_owned(),
+			wasm_target_dir.to_str().unwrap().to_owned(),
+			"--package".to_owned(),
+			client_crate_name.to_owned(),
+		];
+		if !dev {
+			args.push("--release".to_owned())
+		}
+		let mut process = std::process::Command::new(cmd).args(&args).spawn()?;
+		let status = process.wait()?;
+		if !status.success() {
+			return Err(err!("cargo {}", status.to_string()));
+		}
+		let input_wasm_path = format!(
+			"{}/wasm32-unknown-unknown/{}/{}.wasm",
+			wasm_target_dir.to_str().unwrap(),
+			if dev { "debug" } else { "release" },
+			client_crate_name,
+		);
+		let output_wasm_path = dst_dir.join(page_entry);
+		let output_wasm_name = "client_wasm";
+		wasm_bindgen_cli_support::Bindgen::new()
+			.web(true)
+			.unwrap()
+			.keep_debug(dev)
+			.remove_producers_section(true)
+			.remove_name_section(true)
+			.input_path(input_wasm_path)
+			.out_name(output_wasm_name)
+			.generate(output_wasm_path)
+			.map_err(|error| err!(error))?;
+	}
 	Ok(())
 }
 

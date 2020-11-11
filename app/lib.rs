@@ -1,34 +1,15 @@
-use pinwheel::Pinwheel;
 use std::{borrow::Cow, collections::BTreeMap, sync::Arc};
+use tangram_app_common::{
+	futures::FutureExt,
+	http, hyper,
+	pinwheel::{serve, Pinwheel},
+	sqlx, tokio, url, Context,
+};
 use tangram_util::{err, error::Result};
-use url::Url;
 
-mod api;
-pub mod common;
-mod layouts;
 mod migrations;
-mod pages;
-mod production_metrics;
-mod production_stats;
 
-pub struct Options {
-	pub auth_enabled: bool,
-	pub cookie_domain: Option<String>,
-	pub database_url: Url,
-	pub database_max_connections: Option<u32>,
-	pub host: std::net::IpAddr,
-	pub port: u16,
-	pub sendgrid_api_token: Option<String>,
-	pub stripe_publishable_key: Option<String>,
-	pub stripe_secret_key: Option<String>,
-	pub url: Option<Url>,
-}
-
-pub struct Context {
-	pub options: Options,
-	pub pinwheel: pinwheel::Pinwheel,
-	pub pool: sqlx::AnyPool,
-}
+pub use tangram_app_common::Options;
 
 pub fn run(options: Options) -> Result<()> {
 	tokio::runtime::Builder::new()
@@ -44,6 +25,7 @@ async fn run_inner(options: Options) -> Result<()> {
 	#[cfg(debug_assertions)]
 	let pinwheel = Pinwheel::dev(
 		std::path::PathBuf::from("app"),
+		std::path::PathBuf::from("build/pinwheel/wasm/app"),
 		std::path::PathBuf::from("build/pinwheel/app"),
 	);
 	#[cfg(not(debug_assertions))]
@@ -75,7 +57,7 @@ async fn run_inner(options: Options) -> Result<()> {
 		.connect_with(pool_options)
 		.await?;
 	// Run any pending migrations.
-	migrations::run(&pool).await?;
+	self::migrations::run(&pool).await?;
 	// Start the server.
 	let host = options.host;
 	let port = options.port;
@@ -84,7 +66,7 @@ async fn run_inner(options: Options) -> Result<()> {
 		pinwheel,
 		pool,
 	};
-	pinwheel::serve(host, port, request_handler, context).await?;
+	serve(host, port, request_handler, context).await?;
 	Ok(())
 }
 
@@ -105,220 +87,235 @@ async fn request_handler(
 	});
 	let context = &context;
 	let result = match (&method, path_components.as_slice()) {
-		(&http::Method::GET, &["health"]) => self::api::health::get(context, request).await,
-		(&http::Method::POST, &["track"]) => self::api::track::post(context, request).await,
-		(&http::Method::GET, &["login"]) => self::pages::login::get(context, request, search_params).await,
-		(&http::Method::POST, &["login"]) => self::pages::login::post(context, request).await,
-		(&http::Method::GET, &[""]) => self::pages::index::get(context, request).await,
-		(&http::Method::POST, &[""]) => self::pages::index::post(context, request).await,
-		(&http::Method::GET, &["repos", "new"]) => self::pages::repos::new::get(context, request).await,
-		(&http::Method::POST, &["repos", "new"]) => self::pages::repos::new::post(context, request).await,
+		(&http::Method::GET, &["health"]) => {
+			tangram_api::health::get(context, request).boxed()
+		}
+		(&http::Method::POST, &["track"]) => {
+			tangram_api::track::post(context, request).boxed()
+		}
+		(&http::Method::GET, &["login"]) => tangram_app_pages_login::get(
+			context,
+			request,
+			search_params,
+		).boxed(),
+		(&http::Method::POST, &["login"]) => {
+			tangram_app_pages_login::post(context, request).boxed()
+		}
+		(&http::Method::GET, &[""]) => tangram_app_pages_index::get(context, request).boxed(),
+		(&http::Method::POST, &[""]) => {
+			tangram_app_pages_index::post(context, request).boxed()
+		}
+		(&http::Method::GET, &["repos", "new"]) => {
+			tangram_app_pages_repos_new::get(context, request).boxed()
+		}
+		(&http::Method::POST, &["repos", "new"]) => {
+			tangram_app_pages_repos_new::post(context, request).boxed()
+		}
 		(&http::Method::GET, &["repos", repo_id, ""]) => {
-			self::pages::repos::_repo_id::index::get(context, request, repo_id).await
+			tangram_app_pages_repos_repo_id_index::get(context, request, repo_id).boxed()
 		}
 		(&http::Method::POST, &["repos", repo_id, ""]) => {
-			self::pages::repos::_repo_id::index::post(context, request, repo_id).await
+			tangram_app_pages_repos_repo_id_index::post(context, request, repo_id).boxed()
 		}
 		(&http::Method::GET, &["repos", repo_id, "models", "new"]) => {
-			self::pages::repos::_repo_id::models::new::get(context, request, repo_id).await
+			tangram_app_pages_repos_repo_id_models_new::get(context, request, repo_id).boxed()
 		}
 		(&http::Method::POST, &["repos", repo_id, "models", "new"]) => {
-			self::pages::repos::_repo_id::models::new::post(context, request, repo_id).await
+			tangram_app_pages_repos_repo_id_models_new::post(context, request, repo_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::index::get(context, request, model_id).await
+			tangram_app_pages_repos_repo_id_models_model_id_index::get(context, request, model_id).boxed()
 		}
 		(&http::Method::POST, &["repos", _repo_id, "models", model_id]) => {
-			self::pages::repos::_repo_id::models::_model_id::post(context, request, model_id).await
+			tangram_app_layouts::model_layout::post(context, request, model_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "download"]) => {
-			self::pages::repos::_repo_id::models::_model_id::download(context, request, model_id).await
+			tangram_app_layouts::model_layout::download(context, request, model_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_stats", ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::training_stats::index::get(
+			tangram_app_pages_repos_repo_id_models_model_id_training_stats_index::get(
 				context, request, model_id,
-			)
-			.await
+			).boxed()
 		}
 		(
 			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "training_stats", "columns", column_name],
 		) => {
-			self::pages::repos::_repo_id::models::_model_id::training_stats::columns::_column_name::get(
+			tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name::get(
 				context,
 				request,
 				model_id,
 				column_name,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_importances"]) => {
-			self::pages::repos::_repo_id::models::_model_id::training_importances::get(
+			tangram_app_pages_repos_repo_id_models_model_id_training_importances::get(
 				context, request, model_id,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "prediction"]) => {
-			self::pages::repos::_repo_id::models::_model_id::prediction::get(
+			tangram_app_pages_repos_repo_id_models_model_id_prediction::get(
 				context,
 				request,
 				model_id,
 				search_params,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::training_metrics::index::get(
+			tangram_app_pages_repos_repo_id_models_model_id_training_metrics_index::get(
 				context, request, model_id,
-			)
-			.await
+			).boxed()
 		}
 		(
 			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "training_metrics", "class_metrics"],
 		) => {
-			self::pages::repos::_repo_id::models::_model_id::training_metrics::class_metrics::get(
+			tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_metrics::get(
 				context,
 				request,
 				model_id,
 				search_params,
-			)
-			.await
+			).boxed()
 		}
 		(
 			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "training_metrics", "precision_recall"],
 		) => {
-			self::pages::repos::_repo_id::models::_model_id::training_metrics::precision_recall::get(
+			tangram_app_pages_repos_repo_id_models_model_id_training_metrics_precision_recall::get(
 				context,
 				request,
 				model_id,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", "roc"]) => {
-			self::pages::repos::_repo_id::models::_model_id::training_metrics::roc::get(
+			tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc::get(
 				context,
 				request,
 				model_id,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "tuning"]) => {
-			self::pages::repos::_repo_id::models::_model_id::tuning::get(context, request, model_id)
-				.await
+			tangram_app_pages_repos_repo_id_models_model_id_tuning::get(context, request, model_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::production_predictions::index::get(
+			tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index::get(
 				context,
 				request,
 				model_id,
 				search_params,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::POST, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::production_predictions::index::post(
+			tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index::post(
 				context,
 				request,
 				model_id,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", "predictions", identifier]) => {
-			self::pages::repos::_repo_id::models::_model_id::production_predictions::predictions::_identifier::get(
+			tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier::get(
 				context,
 				request,
 				model_id,
 				identifier,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::production_stats::index::get(
+			tangram_app_pages_repos_repo_id_models_model_id_production_stats_index::get(
 				context,
 				request,
 				model_id,
 				search_params,
-			)
-			.await
+			).boxed()
 		}
 		(
 			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "production_stats", "columns", column_name],
 		) => {
-			self::pages::repos::_repo_id::models::_model_id::production_stats::columns::_column_name::get(
+			tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name::get(
 				context,
 				request,
 				model_id,
 				column_name,
 				search_params,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", ""]) => {
-			self::pages::repos::_repo_id::models::_model_id::production_metrics::index::get(
+			tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index::get(
 				context,
 				request,
 				model_id,
 				search_params,
-			)
-			.await
+			).boxed()
 		}
 		(
 			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"],
 		) => {
-			self::pages::repos::_repo_id::models::_model_id::production_metrics::class_metrics::get(
+			tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics::get(
 				context,
 				request,
 				model_id,
 				search_params,
-			)
-			.await
+			).boxed()
 		}
-		(&http::Method::GET, &["user"]) => self::pages::user::get(context, request).await,
-		(&http::Method::POST, &["user"]) => self::pages::user::post(context, request).await,
+		(&http::Method::GET, &["user"]) =>{
+			tangram_app_pages_user::get(context, request).boxed()
+		},
+		(&http::Method::POST, &["user"]) => {
+			tangram_app_pages_user::post(context, request).boxed()
+		},
 		(&http::Method::GET, &["organizations", "new"]) => {
-			self::pages::organizations::new::get(context, request).await
-		}
+			tangram_app_pages_organizations_new::get(context, request).boxed()
+		},
 		(&http::Method::POST, &["organizations", "new"]) => {
-			self::pages::organizations::new::post(context, request).await
+			tangram_app_pages_organizations_new::post(context, request).boxed()
 		}
 		(&http::Method::GET, &["organizations", organization_id, ""]) => {
-			self::pages::organizations::_organization_id::index::get(context, request, organization_id)
-				.await
+			tangram_app_pages_organizations_organization_id_index::get(
+				context,
+				request,
+				organization_id,
+			).boxed()
 		}
 		(&http::Method::POST, &["organizations", organization_id, ""]) => {
-			self::pages::organizations::_organization_id::index::post(context, request, organization_id)
-				.await
+			tangram_app_pages_organizations_organization_id_index::post(
+				context,
+				request,
+				organization_id,
+			).boxed()
 		}
 		(&http::Method::GET, &["organizations", organization_id, "edit"]) => {
-			self::pages::organizations::_organization_id::edit::get(context, request, organization_id)
-				.await
+			tangram_app_pages_organizations_organization_id_edit::get(
+				context,
+				request,
+				organization_id,
+			).boxed()
 		}
 		(&http::Method::GET, &["organizations", organization_id, "members", "new"]) => {
-			self::pages::organizations::_organization_id::members::new::get(
+			tangram_app_pages_organizations_organization_id_members_new::get(
 				context,
 				request,
 				organization_id,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::POST, &["organizations", organization_id, "members", "new"]) => {
-			self::pages::organizations::_organization_id::members::new::post(
+			tangram_app_pages_organizations_organization_id_members_new::post(
 				context,
 				request,
 				organization_id,
-			)
-			.await
+			).boxed()
 		}
 		(&http::Method::POST, &["organizations", organization_id, "edit"]) => {
-			self::pages::organizations::_organization_id::edit::post(context, request, organization_id)
-				.await
+			tangram_app_pages_organizations_organization_id_edit::post(
+				context,
+				request,
+				organization_id,
+			).boxed()
 		}
-		_ => context.pinwheel.handle(request).await,
+		_ => context.pinwheel.handle(request).boxed(),
 	};
+	let result = result.await;
 	let response = match result {
 		Ok(response) => response,
 		Err(error) => {

@@ -1,17 +1,17 @@
 use super::props::{
 	Column, Enum, Inner, Number, PredictForm, PredictionForm, Props, Text, Unknown,
 };
-use crate::{
-	common::{
-		error::{bad_request, not_found, redirect_to_login, service_unavailable},
-		model::get_model,
-		predict::{ColumnType, InputTable, InputTableRow, Prediction, PredictionResult},
-		user::{authorize_user, authorize_user_for_model},
-	},
-	layouts::model_layout::get_model_layout_info,
+use std::collections::BTreeMap;
+use tangram_app_common::{
+	error::{bad_request, not_found, redirect_to_login, service_unavailable},
+	http, hyper, lexical,
+	model::get_model,
+	predict::{ColumnType, InputTable, InputTableRow, Prediction, PredictionResult},
+	serde_json,
+	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use std::collections::BTreeMap;
+use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_util::{err, error::Result, id::Id};
 
 pub async fn get(
@@ -201,6 +201,6 @@ fn predict(
 			}
 		}
 	}
-	let prediction = crate::common::predict::predict(model, example);
+	let prediction = tangram_app_common::predict::predict(model, example);
 	Ok(prediction)
 }

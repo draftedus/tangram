@@ -1,19 +1,20 @@
 use super::props::{Found, Inner, Props};
-use crate::Context;
-use crate::{
-	common::{
-		error::{bad_request, not_found, redirect_to_login, service_unavailable},
-		model::get_model,
-		predict::{ColumnType, InputTable, InputTableRow, Prediction},
-		timezone::get_timezone,
-		user::{authorize_user, authorize_user_for_model},
-	},
-	layouts::model_layout::get_model_layout_info,
-};
-use chrono::prelude::*;
-use chrono_tz::Tz;
-use sqlx::prelude::*;
 use std::collections::BTreeMap;
+use tangram_app_common::{
+	base64,
+	chrono::prelude::*,
+	chrono_tz::Tz,
+	error::{bad_request, not_found, redirect_to_login, service_unavailable},
+	http, hyper, lexical,
+	model::get_model,
+	predict::{ColumnType, InputTable, InputTableRow, Prediction},
+	serde_json, sqlx,
+	sqlx::prelude::*,
+	timezone::get_timezone,
+	user::{authorize_user, authorize_user_for_model},
+	Context,
+};
+use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
@@ -193,7 +194,7 @@ fn predict(
 			})
 		}
 	}
-	let prediction = crate::common::predict::predict(model, example);
+	let prediction = tangram_app_common::predict::predict(model, example);
 	PredictionOutput {
 		input_table: InputTable {
 			rows: input_table_rows,
