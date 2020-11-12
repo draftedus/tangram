@@ -47,14 +47,12 @@ export function Topbar() {
 	]
 	return (
 		<ui.Topbar
-			activeTextColor="var(--accent-color)"
 			backgroundColor="transparent"
 			border="none"
 			dropdownBackgroundColor="var(--surface-color)"
 			foregroundColor="var(--text-color)"
 			items={topbarItems}
 			logo={<Logo colorScheme={LogoScheme.Multi} />}
-			menuSeparatorColor="var(--text-color)"
 			title="tangram"
 		/>
 	)

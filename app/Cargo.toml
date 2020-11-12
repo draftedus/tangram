@@ -9,6 +9,7 @@ path = "lib.rs"
 
 [build-dependencies]
 pinwheel = { path = "../pinwheel" }
+walkdir = "2"
 
 [dependencies]
 tangram_api = { path = "api" }

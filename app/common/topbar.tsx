@@ -25,14 +25,12 @@ export function Topbar(props: TopbarProps) {
 	}
 	return (
 		<ui.Topbar
-			activeTextColor="var(--blue)"
 			backgroundColor="var(--header-color)"
 			dropdownBackgroundColor="var(--surface-color)"
 			foregroundColor="var(--text-color)"
 			items={items}
 			logo={<Logo colorScheme={LogoScheme.Multi} />}
 			logoHref="/"
-			menuSeparatorColor="var(--muted-text-color)"
 			title="tangram"
 		/>
 	)

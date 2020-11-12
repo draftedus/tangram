@@ -1,3 +1,5 @@
+use super::document::Document;
+use html::{component, html};
 use tangram_app_common::Context;
 use tangram_util::error::Result;
 
@@ -20,4 +22,21 @@ pub async fn get_app_layout_info(context: &Context) -> Result<AppLayoutInfo> {
 		None
 	};
 	Ok(AppLayoutInfo { topbar_avatar })
+}
+
+#[derive(Clone)]
+struct PageInfo {
+	css_srcs: Vec<String>,
+}
+
+#[component]
+pub fn AppLayout(info: AppLayoutInfo) {
+	html! {
+		<Document>
+			<div class="app-layout-topbar-grid">
+				// <Topbar topbarAvatar={info.topbar_avatar} />
+				<div class="app-layout">{children}</div>
+			</div>
+		</Document>
+	}
 }

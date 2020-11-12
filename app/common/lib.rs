@@ -10,6 +10,7 @@ pub mod production_stats;
 pub mod repos;
 pub mod time;
 pub mod timezone;
+pub mod topbar;
 pub mod user;
 
 pub use base64;

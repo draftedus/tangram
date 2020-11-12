@@ -3,7 +3,6 @@ import './topbar.css'
 import { ComponentChildren, h } from 'preact'
 
 type TopbarProps = {
-	activeTextColor: string
 	backgroundColor: string
 	border?: string
 	dropdownBackgroundColor: string
@@ -12,7 +11,6 @@ type TopbarProps = {
 	logo?: ComponentChildren
 	logoHref?: string
 	logoImgUrl?: string
-	menuSeparatorColor: string
 	title?: string
 }
 
@@ -55,11 +53,9 @@ export function Topbar(props: TopbarProps) {
 					<TopbarHamburger textColor={props.foregroundColor} />
 				</summary>
 				<TopbarDropdown
-					activeTextColor={props.activeTextColor}
 					backgroundColor={props.dropdownBackgroundColor}
 					border={props.border}
 					items={props.items}
-					textColor={props.foregroundColor}
 				/>
 			</details>
 		</div>
@@ -160,12 +156,10 @@ function TopbarHamburger(props: HamburgerMenuProps) {
 }
 
 type TopbarMenuProps = {
-	activeTextColor: string
 	backgroundColor: string
 	border?: string
 	cta?: TopbarItem
 	items?: TopbarItem[]
-	textColor: string
 }
 
 function TopbarDropdown(props: TopbarMenuProps) {

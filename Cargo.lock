@@ -183,12 +183,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e4cec68f03f32e44924783795810fa50a7035d8c8ebe78580ad7e6c703fba38"
 
 [[package]]
-name = "cargo_gn"
-version = "0.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ba7d7f7b201dfcbc314b14f2176c92f8ba521dab538b40e426ffed25ed7cd80"
-
-[[package]]
 name = "cc"
 version = "1.0.62"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1600,7 +1594,6 @@ dependencies = [
  "hyper",
  "include_dir",
  "num-traits",
- "rusty_v8",
  "serde",
  "serde_json",
  "sourcemap",
@@ -1949,19 +1942,6 @@ dependencies = [
  "ring",
  "sct",
  "webpki",
-]
-
-[[package]]
-name = "rusty_v8"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "692dddfb8ae9915b19774a05cadc71363c98bad4fafc13636579da5a7a110016"
-dependencies = [
- "bitflags",
- "cargo_gn",
- "lazy_static",
- "libc",
- "which",
 ]
 
 [[package]]
@@ -2419,6 +2399,7 @@ dependencies = [
  "tangram_metrics",
  "tangram_ui",
  "tangram_util",
+ "walkdir",
 ]
 
 [[package]]
@@ -2460,6 +2441,7 @@ dependencies = [
 name = "tangram_app_layouts"
 version = "0.0.0"
 dependencies = [
+ "html",
  "serde",
  "tangram_app_common",
  "tangram_util",
@@ -2749,7 +2731,9 @@ name = "tangram_app_pages_repos_repo_id_models_new"
 version = "0.0.0"
 dependencies = [
  "html",
+ "serde",
  "tangram_app_common",
+ "tangram_app_layouts",
  "tangram_core",
  "tangram_ui",
  "tangram_util",
