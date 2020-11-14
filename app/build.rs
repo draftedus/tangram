@@ -20,6 +20,11 @@ fn main() {
 		if !path.ends_with("client/Cargo.toml") {
 			continue;
 		}
+		for entry in walkdir::WalkDir::new(path.parent().unwrap()) {
+			let entry = entry.unwrap();
+			let path = entry.path();
+			println!("cargo:rerun-if-changed={}", path.display());
+		}
 		let client_crate_manifest_path = path.strip_prefix(workspace_dir).unwrap();
 		pinwheel::build_client_crate(
 			workspace_dir,

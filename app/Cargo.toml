@@ -42,7 +42,7 @@ tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_na
 tangram_app_pages_repos_repo_id_models_model_id_training_stats_index = { path = "pages/repos/_repo_id/models/_model_id/training_stats/index" }
 tangram_app_pages_repos_repo_id_models_model_id_tuning = { path = "pages/repos/_repo_id/models/_model_id/tuning" }
 tangram_app_pages_repos_repo_id_models_new = { path = "pages/repos/_repo_id/models/new" }
-tangram_app_pages_repos_repo_id_models_new_client = { path = "pages/repos/_repo_id/models/new/client" }
+tangram_app_pages_repos_repo_id_models_new_client = { path = "pages/repos/_repo_id/models/new/client", optional = true }
 tangram_app_pages_user = { path = "pages/user" }
 tangram_core = { path = "../core" }
 tangram_metrics = { path = "../metrics" }
