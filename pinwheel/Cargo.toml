@@ -15,17 +15,19 @@ path = "main.rs"
 backtrace = "0.3"
 clap = { version = "3.0.0-beta.2", features = ["color"] }
 futures = "0.3"
+hex = "0.4"
 http = "0.2"
 hyper = { version = "0.13", features = ["stream"] }
 include_dir = "0.6"
 num-traits = "0.2"
-# rusty_v8 = "0.12"
+rusty_v8 = "0.12"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.9"
 sourcemap = "6"
-toml = "0.5"
 tangram_util = { path = "../util" }
 tokio = { version = "0.2", features = ["full"] }
+toml = "0.5"
 url = "2"
 walkdir = "2"
 wasm-bindgen-cli-support = "0.2.68"

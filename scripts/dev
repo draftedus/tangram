@@ -1,1 +1,1 @@
-watchexec --exts rs --restart -- cargo run -- app $@
+cargo run --bin tangram_script_dev

@@ -5,6 +5,10 @@ name = "tangram_scripts"
 version = "0.0.0"
 
 [[bin]]
+name = "tangram_script_dev"
+path = "dev.rs"
+
+[[bin]]
 name = "tangram_script_generate_license"
 path = "generate_license.rs"
 
@@ -33,3 +37,4 @@ tangram_dataframe = { path = "../dataframe" }
 tangram_util = { path = "../util" }
 tangram_app_common = { path = "../app/common" }
 url = "2"
+watchexec = "1"

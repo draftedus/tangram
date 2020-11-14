@@ -25,7 +25,6 @@ async fn run_inner(options: Options) -> Result<()> {
 	#[cfg(debug_assertions)]
 	let pinwheel = Pinwheel::dev(
 		std::path::PathBuf::from("app"),
-		std::path::PathBuf::from("build/pinwheel/wasm/app"),
 		std::path::PathBuf::from("build/pinwheel/app"),
 	);
 	#[cfg(not(debug_assertions))]

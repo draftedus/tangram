@@ -10,7 +10,7 @@ name = "tangram"
 path = "main.rs"
 
 [features]
-default = ["app"]
+default = ["train", "app"]
 train = ["tangram_core"]
 app = ["tangram_app"]
 

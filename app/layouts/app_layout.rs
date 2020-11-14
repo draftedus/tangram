@@ -1,4 +1,5 @@
 use super::document::Document;
+use super::document::PageInfo;
 use html::{component, html};
 use tangram_app_common::Context;
 use tangram_util::error::Result;
@@ -24,15 +25,10 @@ pub async fn get_app_layout_info(context: &Context) -> Result<AppLayoutInfo> {
 	Ok(AppLayoutInfo { topbar_avatar })
 }
 
-#[derive(Clone)]
-struct PageInfo {
-	css_srcs: Vec<String>,
-}
-
 #[component]
-pub fn AppLayout(info: AppLayoutInfo) {
+pub fn AppLayout(page_info: PageInfo, _info: AppLayoutInfo) {
 	html! {
-		<Document>
+		<Document page_info={page_info}>
 			<div class="app-layout-topbar-grid">
 				// <Topbar topbarAvatar={info.topbar_avatar} />
 				<div class="app-layout">{children}</div>

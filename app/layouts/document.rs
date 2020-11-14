@@ -1,7 +1,12 @@
-use html::{component, html};
+use html::{component, html, raw};
+
+#[derive(Clone)]
+pub struct PageInfo {
+	pub client_wasm_js_src: Option<String>,
+}
 
 #[component]
-pub fn Document() {
+pub fn Document(page_info: PageInfo) {
 	html! {
 		<html lang="en">
 			<head>
@@ -9,10 +14,7 @@ pub fn Document() {
 				<meta content="width=device-width, initial-scale=1" name="viewport" />
 				<link href="/favicon.png" rel="icon" type="image/png" />
 				<title>{"Tangram"}</title>
-				<link href="/ui.css" rel="stylesheet" />
-				<link href="/charts.css" rel="stylesheet" />
-				<link href="/app.css" rel="stylesheet" />
-				<link href="/www.css" rel="stylesheet" />
+				<link href="/styles.css" rel="stylesheet" />
 				<meta
 					content="All-In-One Machine Learning Toolkit for Programmers"
 					name="description"
@@ -23,6 +25,11 @@ pub fn Document() {
 				<script>
 					{"document.cookie = `tangram-timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone};max-age=31536000`"}
 				</script>
+				{page_info.client_wasm_js_src.map(|client_wasm_js_src| html! {
+					<script type="module">
+						{raw!(format!(r#"import init from "{}"; init()"#, client_wasm_js_src))}
+					</script>
+				})}
 			</body>
 		</html>
 	}

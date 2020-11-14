@@ -3,9 +3,9 @@ use web_sys::window;
 
 #[wasm_bindgen(start)]
 pub fn run() -> Result<(), JsValue> {
-	window()
-		.unwrap()
-		.alert_with_message("hello from rust!!!")
-		.unwrap();
+	let document = window().unwrap().document().unwrap();
+	let element = document.create_element("p").unwrap();
+	element.set_inner_html("hello from rust!!!");
+	document.body().unwrap().append_child(&element).unwrap();
 	Ok(())
 }

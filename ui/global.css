@@ -56,11 +56,11 @@
 	}
 }
 
-@font-face {
+/* @font-face {
 	font-family: 'JetBrains Mono';
-	src: url('./jetbrainsmono.woff2') format('woff2');
+	src: url('/jetbrainsmono.woff2') format('woff2');
 	font-display: swap;
-}
+} */
 
 body {
 	background-color: var(--background-color);

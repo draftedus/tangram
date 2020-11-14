@@ -9,22 +9,26 @@ path = "lib.rs"
 
 [build-dependencies]
 pinwheel = { path = "../pinwheel" }
+tangram_util = { path = "../util" }
 walkdir = "2"
 
 [dependencies]
+include_dir = "0.6"
 tangram_api = { path = "api" }
 tangram_app_common = { path = "common" }
+tangram_app_layouts = { path = "layouts" }
 tangram_app_pages_index = { path = "pages/index" }
 tangram_app_pages_login = { path = "pages/login" }
+tangram_app_pages_organizations_new = { path = "pages/organizations/new" }
 tangram_app_pages_organizations_organization_id_edit = { path = "pages/organizations/_organization_id/edit" }
 tangram_app_pages_organizations_organization_id_index = { path = "pages/organizations/_organization_id/index" }
 tangram_app_pages_organizations_organization_id_members_new = { path = "pages/organizations/_organization_id/members/new" }
-tangram_app_pages_organizations_new = { path = "pages/organizations/new" }
+tangram_app_pages_repos_new = { path = "pages/repos/new" }
 tangram_app_pages_repos_repo_id_index = { path = "pages/repos/_repo_id/index" }
 tangram_app_pages_repos_repo_id_models_model_id_index = { path = "pages/repos/_repo_id/models/_model_id/index" }
 tangram_app_pages_repos_repo_id_models_model_id_prediction = { path = "pages/repos/_repo_id/models/_model_id/prediction" }
-tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index = { path = "pages/repos/_repo_id/models/_model_id/production_metrics/index" }
 tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics = { path = "pages/repos/_repo_id/models/_model_id/production_metrics/class_metrics" }
+tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index = { path = "pages/repos/_repo_id/models/_model_id/production_metrics/index" }
 tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index = { path = "pages/repos/_repo_id/models/_model_id/production_predictions/index" }
 tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier = { path = "pages/repos/_repo_id/models/_model_id/production_predictions/predictions/_identifier" }
 tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name = { path = "pages/repos/_repo_id/models/_model_id/production_stats/columns/_column_name" }
@@ -38,10 +42,8 @@ tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_na
 tangram_app_pages_repos_repo_id_models_model_id_training_stats_index = { path = "pages/repos/_repo_id/models/_model_id/training_stats/index" }
 tangram_app_pages_repos_repo_id_models_model_id_tuning = { path = "pages/repos/_repo_id/models/_model_id/tuning" }
 tangram_app_pages_repos_repo_id_models_new = { path = "pages/repos/_repo_id/models/new" }
-tangram_app_pages_repos_repo_id_models_new_client = { path = "pages/repos/_repo_id/models/new/client", optional = true }
-tangram_app_pages_repos_new = { path = "pages/repos/new" }
+tangram_app_pages_repos_repo_id_models_new_client = { path = "pages/repos/_repo_id/models/new/client" }
 tangram_app_pages_user = { path = "pages/user" }
-tangram_app_layouts = { path = "layouts" }
 tangram_core = { path = "../core" }
 tangram_metrics = { path = "../metrics" }
 tangram_ui = { path = "../ui" }
