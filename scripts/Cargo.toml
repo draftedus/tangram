@@ -5,7 +5,7 @@ name = "tangram_scripts"
 version = "0.0.0"
 
 [[bin]]
-name = "tangram_script_dev"
+name = "tangram_scripts"
 path = "main.rs"
 
 [dependencies]
