@@ -1,0 +1,11 @@
+[package]
+name = "html_test"
+version = "0.0.0"
+edition = "2018"
+license = "MIT"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+html = { path = ".." }

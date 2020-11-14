@@ -1,5 +1,5 @@
 use self::license::verify_license;
-use crate::AppOptions;
+use crate::AppArgs;
 use std::path::PathBuf;
 use tangram_util::{err, error::Result};
 use url::Url;
@@ -7,15 +7,15 @@ use url::Url;
 mod license;
 
 #[cfg(feature = "app")]
-pub(crate) fn app(options: AppOptions) -> Result<()> {
+pub(crate) fn app(args: AppArgs) -> Result<()> {
 	// Verify the license if one was provided.
-	let license_verified: Option<bool> = if let Some(license_file_path) = options.license {
+	let license_verified: Option<bool> = if let Some(license_file_path) = args.license {
 		Some(verify_license(&license_file_path)?)
 	} else {
 		None
 	};
 	// Require a verified license if auth is enabled.
-	if options.auth_enabled {
+	if args.auth_enabled {
 		match license_verified {
 			#[cfg(debug_assertions)]
 			None => {}
@@ -25,21 +25,21 @@ pub(crate) fn app(options: AppOptions) -> Result<()> {
 			Some(true) => {}
 		}
 	}
-	let database_url = match options.database_url {
+	let database_url = match args.database_url {
 		Some(database_url) => database_url,
 		None => default_database_url()?,
 	};
 	tangram_app::run(tangram_app::Options {
-		auth_enabled: options.auth_enabled,
-		cookie_domain: options.cookie_domain,
+		auth_enabled: args.auth_enabled,
+		cookie_domain: args.cookie_domain,
 		database_url,
-		database_max_connections: options.database_max_connections,
-		host: options.host,
-		port: options.port,
-		sendgrid_api_token: options.sendgrid_api_token,
-		stripe_publishable_key: options.stripe_publishable_key,
-		stripe_secret_key: options.stripe_secret_key,
-		url: options.url,
+		database_max_connections: args.database_max_connections,
+		host: args.host,
+		port: args.port,
+		sendgrid_api_token: args.sendgrid_api_token,
+		stripe_publishable_key: args.stripe_publishable_key,
+		stripe_secret_key: args.stripe_secret_key,
+		url: args.url,
 	})
 }
 

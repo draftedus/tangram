@@ -5,8 +5,7 @@ use tangram_util::error::Result;
 use tokio::fs;
 use url::Url;
 
-#[tokio::main]
-async fn main() -> Result<()> {
+pub async fn prepare_release() -> Result<()> {
 	// Get the input we need to run the release.
 	let version = std::env::var("VERSION").unwrap_or_else(|_| {
 		rustyline::Editor::<()>::new()

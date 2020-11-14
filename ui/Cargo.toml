@@ -7,4 +7,4 @@ version = "0.0.0"
 path = "lib.rs"
 
 [dependencies]
-html = { path = "../../html/html" }
+html = { path = "../html" }

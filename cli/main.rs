@@ -15,20 +15,20 @@ mod train;
 	about = "Train and deploy a machine learning model in minutes.",
 	setting = clap::AppSettings::DisableHelpSubcommand,
 )]
-enum Options {
+enum Args {
 	#[cfg(feature = "train")]
 	#[clap(name = "train")]
-	Train(Box<TrainOptions>),
+	Train(Box<TrainArgs>),
 	#[cfg(feature = "app")]
 	#[clap(name = "app")]
-	App(Box<AppOptions>),
+	App(Box<AppArgs>),
 }
 
 #[cfg(feature = "train")]
 #[derive(Clap)]
 #[clap(about = "train a model")]
 #[clap(long_about = "train a model from a csv file")]
-struct TrainOptions {
+struct TrainArgs {
 	#[clap(short, long, about = "the path to your .csv file", conflicts_with_all=&["file-train", "file-test"])]
 	file: Option<PathBuf>,
 	#[clap(
@@ -57,7 +57,7 @@ struct TrainOptions {
 #[derive(Clap)]
 #[clap(about = "run the app")]
 #[clap(long_about = "run the reporting and monitoring web app")]
-struct AppOptions {
+struct AppArgs {
 	#[clap(long = "auth", env = "AUTH", takes_value = false)]
 	auth_enabled: bool,
 	#[clap(long, env = "COOKIE_DOMAIN")]
@@ -83,12 +83,12 @@ struct AppOptions {
 }
 
 fn main() {
-	let options = Options::parse();
-	let result = match options {
+	let args = Args::parse();
+	let result = match args {
 		#[cfg(feature = "train")]
-		Options::Train(options) => self::train::train(*options),
+		Args::Train(args) => self::train::train(*args),
 		#[cfg(feature = "app")]
-		Options::App(options) => self::app::app(*options),
+		Args::App(args) => self::app::app(*args),
 	};
 	if let Err(error) = result {
 		eprintln!("{}: {}", "error".red().bold(), error);

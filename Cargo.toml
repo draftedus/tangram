@@ -4,6 +4,7 @@ members = [
 	"cli",
 	"core",
 	"features",
+	"html",
 	"libtangram",
 	"linear",
 	"metrics",

@@ -1,5 +1,4 @@
-use super::document::Document;
-use super::document::PageInfo;
+use super::document::{Document, PageInfo};
 use html::{component, html};
 use tangram_app_common::Context;
 use tangram_util::error::Result;

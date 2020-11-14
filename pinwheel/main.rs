@@ -4,13 +4,13 @@ use std::{path::PathBuf, sync::Arc};
 use tangram_util::error::Result;
 
 #[derive(Clap)]
-enum Options {
-	Dev(DevOptions),
-	Build(BuildOptions),
+enum Args {
+	Dev(DevArgs),
+	Build(BuildArgs),
 }
 
 #[derive(Clap)]
-struct DevOptions {
+struct DevArgs {
 	#[clap(long, default_value = ".")]
 	src_dir: PathBuf,
 	#[clap(long, default_value = "dist")]
@@ -22,7 +22,7 @@ struct DevOptions {
 }
 
 #[derive(Clap)]
-struct BuildOptions {
+struct BuildArgs {
 	#[clap(long, default_value = ".")]
 	src_dir: PathBuf,
 	#[clap(long, default_value = "dist")]
@@ -30,26 +30,21 @@ struct BuildOptions {
 }
 
 pub fn main() {
-	let options = Options::parse();
-	match options {
-		Options::Dev(options) => dev(options).unwrap(),
-		Options::Build(options) => build(options).unwrap(),
+	let args = Args::parse();
+	match args {
+		Args::Dev(args) => dev(args).unwrap(),
+		Args::Build(args) => build(args).unwrap(),
 	};
 }
 
-fn dev(options: DevOptions) -> Result<()> {
-	let pinwheel = Pinwheel::dev(options.src_dir, options.dst_dir);
+fn dev(args: DevArgs) -> Result<()> {
+	let pinwheel = Pinwheel::dev(args.src_dir, args.dst_dir);
 	tokio::runtime::Builder::new()
 		.threaded_scheduler()
 		.enable_all()
 		.build()
 		.unwrap()
-		.block_on(pinwheel::serve(
-			options.host,
-			options.port,
-			handle,
-			pinwheel,
-		))?;
+		.block_on(pinwheel::serve(args.host, args.port, handle, pinwheel))?;
 	Ok(())
 }
 
@@ -60,7 +55,7 @@ async fn handle(
 	pinwheel.handle(request).await.unwrap()
 }
 
-fn build(options: BuildOptions) -> Result<()> {
-	pinwheel::build(options.src_dir.as_path(), options.dst_dir.as_path())?;
+fn build(args: BuildArgs) -> Result<()> {
+	pinwheel::build(args.src_dir.as_path(), args.dst_dir.as_path())?;
 	Ok(())
 }

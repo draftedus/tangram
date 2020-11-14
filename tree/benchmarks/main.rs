@@ -1,5 +1,70 @@
+use clap::Clap;
+
+// mod allstate;
+// mod boston;
+// mod census;
+// mod flights;
+// mod heart_disease;
+// mod higgs;
+// mod iris;
+
+#[derive(Clap)]
+struct Args {
+	// libraries: Vec<Library>,
+// datasets: Vec<Dataset>,
+}
+
+#[derive(Clap)]
+enum Library {
+	#[clap(name = "catboost")]
+	CatBoot,
+	#[clap(name = "lightgbm")]
+	LightGBM,
+	#[clap(name = "sklearn")]
+	SKLearn,
+	#[clap(name = "tangram")]
+	Tangram,
+	#[clap(name = "xgboost")]
+	XGBoost,
+}
+
+#[derive(Clap)]
+enum Dataset {
+	#[clap(name = "allstate")]
+	Allstate,
+	#[clap(name = "boston")]
+	Boston,
+	#[clap(name = "census")]
+	Census,
+	#[clap(name = "flights")]
+	Flights,
+	#[clap(name = "heart_disease")]
+	HeartDisease,
+	#[clap(name = "higgs")]
+	Higgs,
+	#[clap(name = "iris")]
+	Iris,
+}
+
+// enum Task {
+// 	Regression,
+// 	BinaryClassification,
+// 	MulticlassClassification,
+// }
+
+// impl Dataset {
+// 	fn task(&self) -> Task {
+// 		match self {
+// 			Dataset::Allstate | Dataset::Boston => Task::Regression,
+// 			Dataset::Census | Dataset::Flights | Dataset::HeartDisease | Dataset::Higgs => {
+// 				Task::BinaryClassification
+// 			}
+// 			Dataset::Iris => Task::MulticlassClassification,
+// 		}
+// 	}
+// }
+
 #[derive(serde::Deserialize, Debug)]
-#[serde(untagged)]
 enum BenchmarkOutput {
 	Regression(RegressionBenchmarkOutput),
 	BinaryClassification(BinaryClassificationBenchmarkOutput),
@@ -23,23 +88,26 @@ impl std::fmt::Display for BenchmarkOutput {
 #[derive(serde::Deserialize, Debug)]
 struct RegressionBenchmarkOutput {
 	mse: f32,
+	duration: f32,
 	memory: Option<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 struct BinaryClassificationBenchmarkOutput {
 	auc_roc: f32,
+	duration: f32,
 	memory: Option<String>,
 }
 
 #[derive(serde::Deserialize, Debug)]
 struct MulticlassClassificationBenchmarkOutput {
 	accuracy: f32,
+	duration: f32,
 	memory: Option<String>,
 }
 
 fn main() {
-	let libraries = &["lightgbm", "xgboost", "sklearn", "tangram", "catboost"];
+	let libraries = &["catboost", "lightgbm", "sklearn", "tangram", "xgboost"];
 	let regression_datasets = &["boston", "allstate"];
 	let binary_classification_datasets = &["heart_disease", "census", "flights", "higgs"];
 	let multiclass_classification_datasets = &["iris"];
@@ -71,10 +139,10 @@ fn main() {
 
 fn run_benchmarks(libraries: &[&str], datasets: &[&str]) {
 	for dataset in datasets.iter() {
-		println!("Testing {}", dataset);
+		println!("testing {}", dataset);
 		for library in libraries.iter() {
 			let start = std::time::Instant::now();
-			let output = if library == &"tangram" {
+			let output = if *library == "tangram" {
 				run_tangram_tree_benchmark(dataset)
 			} else {
 				run_python_benchmark(dataset, library)

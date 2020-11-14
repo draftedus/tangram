@@ -20,15 +20,15 @@ const NUM_EXAMPLES_TO_TRACK: usize = 1000;
 	about = "Track Predictions",
 	setting = clap::AppSettings::DisableHelpSubcommand,
 )]
-struct Options {
+pub struct Args {
 	#[clap(long, arg_enum)]
-	dataset: Dataset,
+	pub dataset: Dataset,
 	#[clap(long)]
-	model_id: String,
+	pub model_id: String,
 }
 
 #[derive(Clap)]
-enum Dataset {
+pub enum Dataset {
 	#[clap(name = "boston")]
 	Boston,
 	#[clap(name = "heart_disease")]
@@ -39,10 +39,8 @@ enum Dataset {
 	Mpg,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-	let options = Options::parse();
-	let dataset = match options.dataset {
+pub async fn production_track_test(args: Args) -> Result<()> {
+	let dataset = match args.dataset {
 		Dataset::HeartDisease => HEART_DISEASE,
 		Dataset::Mpg => MPG,
 		Dataset::Iris => IRIS,
@@ -68,7 +66,7 @@ async fn main() -> Result<()> {
 			}
 		}
 		let output = generate_fake_prediction(&target, &dataset);
-		let model_id: &str = options.model_id.as_str();
+		let model_id: &str = args.model_id.as_str();
 		let date = get_random_date();
 		let event: MonitorEvent = MonitorEvent::Prediction(PredictionMonitorEvent {
 			date,

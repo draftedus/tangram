@@ -12,38 +12,11 @@ default = []
 timing = []
 
 [[bin]]
-name = "tangram_tree_benchmark_all"
-path = "benchmarks/all.rs"
-
-[[bin]]
-name = "tangram_tree_benchmark_allstate"
-path = "benchmarks/allstate.rs"
-
-[[bin]]
-name = "tangram_tree_benchmark_boston"
-path = "benchmarks/boston.rs"
-
-[[bin]]
-name = "tangram_tree_benchmark_census"
-path = "benchmarks/census.rs"
-
-[[bin]]
-name = "tangram_tree_benchmark_flights"
-path = "benchmarks/flights.rs"
-
-[[bin]]
-name = "tangram_tree_benchmark_heart_disease"
-path = "benchmarks/heart_disease.rs"
-
-[[bin]]
-name = "tangram_tree_benchmark_higgs"
-path = "benchmarks/higgs.rs"
-
-[[bin]]
-name = "tangram_tree_benchmark_iris"
-path = "benchmarks/iris.rs"
+name = "tangram_tree_benchmarks"
+path = "benchmarks/main.rs"
 
 [dependencies]
+clap = { version = "3.0.0-beta.2", features = ["color"] }
 itertools = "0.9"
 maplit = "1"
 ndarray = { version = "0.13", features = ["rayon"] }

@@ -928,11 +928,11 @@ name = "html"
 version = "0.0.0"
 dependencies = [
  "derive_more",
- "html-macro",
+ "html_macro",
 ]
 
 [[package]]
-name = "html-macro"
+name = "html_macro"
 version = "0.0.0"
 dependencies = [
  "proc-macro2",
@@ -3128,6 +3128,7 @@ dependencies = [
 name = "tangram_tree"
 version = "0.1.0-dev"
 dependencies = [
+ "clap 3.0.0-beta.2",
  "itertools",
  "maplit",
  "ndarray",

@@ -1,4 +1,6 @@
-fn main() {
+use tangram_util::{err, error::Result};
+
+pub fn dev() -> Result<()> {
 	watchexec::run::run(
 		watchexec::ArgsBuilder::default()
 			.paths(vec![std::path::PathBuf::from(".")])
@@ -10,7 +12,7 @@ fn main() {
 			])
 			.restart(true)
 			.build()
-			.unwrap(),
-	)
-	.unwrap()
+			.map_err(|error| err!(error))?,
+	)?;
+	Ok(())
 }
