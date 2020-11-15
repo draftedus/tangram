@@ -15,3 +15,6 @@ tangram_app_layouts = { path = "../../../../../layouts" }
 tangram_core = { path = "../../../../../../core" }
 tangram_ui = { path = "../../../../../../ui" }
 tangram_util = { path = "../../../../../../util" }
+
+[target.wasm32-unknown-unknown.dependencies]
+tangram_app_pages_repos_repo_id_models_new_client = { path = "client" }
