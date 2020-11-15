@@ -1,5 +1,5 @@
-import { drawBarChartXAxisLabels } from './bar_chart'
-import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
+import { drawBarChartXAxisLabels } from "./bar_chart"
+import { ActiveHoverRegion, HoverRegion, createChart } from "./chart"
 import {
 	Box,
 	Point,
@@ -11,9 +11,9 @@ import {
 	drawYAxisLabels,
 	drawYAxisTitle,
 	formatNumber,
-} from './common'
-import { chartColors, chartConfig } from './config'
-import { TooltipData, drawTooltip } from './tooltip'
+} from "./common"
+import { chartColors, chartConfig } from "./config"
+import { TooltipData, drawTooltip } from "./tooltip"
 
 export type BoxChartOptions = {
 	data: BoxChartData
@@ -332,7 +332,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 	drawRoundedRect({
 		box,
 		ctx,
-		fillColor: series.color + 'af',
+		fillColor: series.color + "af",
 		radius: Math.min(
 			Math.abs(box.h / 2),
 			Math.abs(box.w / 6),
@@ -373,7 +373,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 			box: medianBox,
 			color: series.color,
 			label: point.label,
-			name: 'median',
+			name: "median",
 			tooltipOriginPixels: { ...medianBox, x: x + boxWidth / 2 },
 			value: point.y.p50,
 		}),
@@ -407,7 +407,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 			x: minWhiskerTipBox.x + minWhiskerTipBox.w,
 			y: minWhiskerTipBox.y,
 		},
-		lineCap: 'round',
+		lineCap: "round",
 		lineWidth,
 		start: { x: minWhiskerTipBox.x, y: minWhiskerTipBox.y },
 	})
@@ -416,7 +416,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 			box: minWhiskerTipBox,
 			color: series.color,
 			label: point.label,
-			name: 'min',
+			name: "min",
 			tooltipOriginPixels: { ...minWhiskerTipBox, x: x + boxWidth / 2 },
 			value: point.y.min,
 		}),
@@ -449,7 +449,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 			x: maxWhiskerTipBox.x + maxWhiskerTipBox.w,
 			y: maxWhiskerTipBox.y,
 		},
-		lineCap: 'round',
+		lineCap: "round",
 		lineWidth,
 		start: { x: maxWhiskerTipBox.x, y: maxWhiskerTipBox.y },
 	})
@@ -458,7 +458,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 			box: maxWhiskerTipBox,
 			color: series.color,
 			label: point.label,
-			name: 'max',
+			name: "max",
 			tooltipOriginPixels: {
 				...maxWhiskerTipBox,
 				x: x + boxWidth / 2,
@@ -479,7 +479,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 			box: p25Box,
 			color: series.color,
 			label: point.label,
-			name: 'p25',
+			name: "p25",
 			tooltipOriginPixels: {
 				...p25Box,
 				x: x + boxWidth / 2,
@@ -500,7 +500,7 @@ function drawBox(options: DrawBoxOptions): DrawBoxOutput {
 			box: p75Box,
 			color: series.color,
 			label: point.label,
-			name: 'p75',
+			name: "p75",
 			tooltipOriginPixels: {
 				...p75Box,
 				x: x + boxWidth / 2,
@@ -561,7 +561,7 @@ export function drawLine(options: DrawLineOptions) {
 	let { color, ctx, dashed, end, lineCap, lineWidth, start } = options
 	lineWidth = lineWidth ?? 1
 	dashed = dashed ?? false
-	lineCap = lineCap ?? 'butt'
+	lineCap = lineCap ?? "butt"
 	ctx.save()
 	if (dashed) {
 		ctx.setLineDash([4, 4])

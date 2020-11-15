@@ -1,4 +1,4 @@
-import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
+import { ActiveHoverRegion, HoverRegion, createChart } from "./chart"
 import {
 	Box,
 	GridLineInterval,
@@ -12,9 +12,9 @@ import {
 	drawYAxisLabels,
 	drawYAxisTitle,
 	formatNumber,
-} from './common'
-import { chartColors, chartConfig } from './config'
-import { drawTooltip } from './tooltip'
+} from "./common"
+import { chartColors, chartConfig } from "./config"
+import { drawTooltip } from "./tooltip"
 
 export type BarChartOptions = {
 	data: BarChartData
@@ -189,7 +189,7 @@ export function drawBarChart(
 			drawBar({
 				box,
 				chartBox,
-				color: series.color + 'af',
+				color: series.color + "af",
 				ctx,
 				point,
 			})
@@ -272,8 +272,8 @@ export function drawBarChartXAxisLabels(
 	let { barGroupGap, box: box, categories, ctx, groupWidth, width } = options
 	ctx.save()
 	ctx.fillStyle = chartColors.current.labelColor
-	ctx.textBaseline = 'bottom'
-	ctx.textAlign = 'center'
+	ctx.textBaseline = "bottom"
+	ctx.textAlign = "center"
 	let labelStepSize = 1
 	// Find the smallest label step size at which labels do not overlap.
 	while (true) {
@@ -350,7 +350,7 @@ export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
 		drawBar({
 			box: activeHoverRegion.info.box,
 			chartBox,
-			color: '#00000022',
+			color: "#00000022",
 			ctx,
 			point: activeHoverRegion.info.point,
 		})

@@ -1,6 +1,6 @@
-import { FieldLabel } from './field_label'
-import './text_field.css'
-import { h } from 'preact'
+import { FieldLabel } from "./field_label"
+import "./text_field.css"
+import { h } from "preact"
 
 type TextFieldProps = {
 	autocomplete?: string

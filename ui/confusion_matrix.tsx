@@ -1,7 +1,7 @@
-import './confusion_matrix.css'
-import { Token } from './token'
-import { cx, formatPercent } from './util'
-import { ComponentChildren, h } from 'preact'
+import "./confusion_matrix.css"
+import { Token } from "./token"
+import { cx, formatPercent } from "./util"
+import { ComponentChildren, h } from "preact"
 
 // |---------------------------------------------------------|
 // |           ||     |                Actual                |
@@ -42,19 +42,19 @@ export function ConfusionMatrix(props: ConfusionMatrixProps) {
 	return (
 		<div class="confusion-matrix-wrapper">
 			<ConfusionMatrixLabel area="actual-true-label">
-				<div>{'Actual'}</div>
+				<div>{"Actual"}</div>
 				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="actual-false-label">
-				<div>{'Actual Not'}</div>
+				<div>{"Actual Not"}</div>
 				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="predicted-true-label" left={true}>
-				<div>{'Predicted'}</div>
+				<div>{"Predicted"}</div>
 				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="predicted-false-label" left={true}>
-				<div>{'Predicted Not'}</div>
+				<div>{"Predicted Not"}</div>
 				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixItem
@@ -102,10 +102,10 @@ function ConfusionMatrixItem(props: ConfusionMatrixItemProps) {
 	return (
 		<div
 			class={cx(
-				'confusion-matrix-item-wrapper',
+				"confusion-matrix-item-wrapper",
 				props.positive
-					? 'confusion-matrix-item-positive-wrapper'
-					: 'confusion-matrix-item-negative-wrapper',
+					? "confusion-matrix-item-positive-wrapper"
+					: "confusion-matrix-item-negative-wrapper",
 			)}
 			style={itemWrapperStyle}
 		>
@@ -115,7 +115,7 @@ function ConfusionMatrixItem(props: ConfusionMatrixItemProps) {
 			</div>
 			<div class="confusion-matrix-item-percent">
 				{props.value === null || props.total === null
-					? 'N/A'
+					? "N/A"
 					: formatPercent(props.value / props.total, 2)}
 			</div>
 		</div>
@@ -123,7 +123,7 @@ function ConfusionMatrixItem(props: ConfusionMatrixItemProps) {
 }
 
 function defaultValueFormatter(value: number | null) {
-	return value === null ? 'N/A' : value.toString()
+	return value === null ? "N/A" : value.toString()
 }
 
 type ConfusionMatrixLabelProps = {
@@ -135,7 +135,7 @@ type ConfusionMatrixLabelProps = {
 function ConfusionMatrixLabel(props: ConfusionMatrixLabelProps) {
 	let style = {
 		gridArea: props.area,
-		justifyItems: props.left ? 'end' : 'auto',
+		justifyItems: props.left ? "end" : "auto",
 	}
 	return (
 		<div class="confusion-matrix-label" style={style}>

@@ -1,10 +1,10 @@
-import { NumberProps } from './props'
-import { BoxChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { MetricsRow } from 'common/metrics_row'
-import { intervalChartTitle, overallChartTitle } from 'common/time'
-import { productionColor, trainingColor } from 'common/tokens'
-import { h } from 'preact'
+import { NumberProps } from "./props"
+import { BoxChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { MetricsRow } from "common/metrics_row"
+import { intervalChartTitle, overallChartTitle } from "common/time"
+import { productionColor, trainingColor } from "common/tokens"
+import { h } from "preact"
 
 export function Number(props: NumberProps) {
 	let intervalBoxChartData = [
@@ -31,7 +31,7 @@ export function Number(props: NumberProps) {
 			color: trainingColor,
 			data: [
 				{
-					label: 'Training',
+					label: "Training",
 					x: 0,
 					y: {
 						max: props.overallBoxChartData.training.max,
@@ -49,7 +49,7 @@ export function Number(props: NumberProps) {
 			data: props.overallBoxChartData.production
 				? [
 						{
-							label: 'Production',
+							label: "Production",
 							x: 0,
 							y: {
 								max: props.overallBoxChartData.production.max,
@@ -64,10 +64,10 @@ export function Number(props: NumberProps) {
 			title: `Production Stats for "${props.columnName}"`,
 		},
 	]
-	let statsOverallChartTitle = overallChartTitle(props.dateWindow, 'Stats')
+	let statsOverallChartTitle = overallChartTitle(props.dateWindow, "Stats")
 	let statsIntervalChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		'Stats',
+		"Stats",
 	)
 	return (
 		<ui.S2>

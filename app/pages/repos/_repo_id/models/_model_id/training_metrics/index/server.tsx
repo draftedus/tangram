@@ -1,11 +1,11 @@
-import { BinaryClassifierTrainingMetricsIndexPage } from './binary_classifier'
-import { MulticlassClassifierTrainingMetricsIndexPage } from './multiclass_classifier'
-import { Props, Type } from './props'
-import { RegressorTrainingMetricsIndexPage } from './regressor'
-import { PageInfo } from '@tangramhq/pinwheel'
-import { renderPage } from 'common/render'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { h } from 'preact'
+import { BinaryClassifierTrainingMetricsIndexPage } from "./binary_classifier"
+import { MulticlassClassifierTrainingMetricsIndexPage } from "./multiclass_classifier"
+import { Props, Type } from "./props"
+import { RegressorTrainingMetricsIndexPage } from "./regressor"
+import { PageInfo } from "@tangramhq/pinwheel"
+import { renderPage } from "common/render"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	let inner

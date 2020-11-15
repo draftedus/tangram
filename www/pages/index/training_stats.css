@@ -3,7 +3,7 @@
 	grid: auto / auto auto;
 	gap: 1rem;
 	grid-template-areas:
-		'mean std'
-		'age age';
+		"mean std"
+		"age age";
 	padding: 1rem;
 }

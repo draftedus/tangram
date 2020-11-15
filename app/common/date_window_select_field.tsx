@@ -1,15 +1,15 @@
-import { DateWindow } from './time'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import { DateWindow } from "./time"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 type DateWindowSelectFieldProps = {
 	dateWindow: DateWindow
 }
 
 let dateWindowSelectFieldOptions = [
-	{ text: 'Today', value: 'today' },
-	{ text: 'This Month', value: 'this_month' },
-	{ text: 'This Year', value: 'this_year' },
+	{ text: "Today", value: "today" },
+	{ text: "This Month", value: "this_month" },
+	{ text: "This Year", value: "this_year" },
 ]
 
 export function DateWindowSelectField(props: DateWindowSelectFieldProps) {
@@ -25,5 +25,5 @@ export function DateWindowSelectField(props: DateWindowSelectFieldProps) {
 }
 
 export function bootDateWindowSelect() {
-	ui.selectFieldSubmitOnChange('date-window-select-field')
+	ui.selectFieldSubmitOnChange("date-window-select-field")
 }

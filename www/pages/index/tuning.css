@@ -12,7 +12,7 @@
 @media (max-width: 1199px) {
 	.tuning-number-chart-grid {
 		grid:
-			'accuracy accuracy' auto 'precision recall' auto /
+			"accuracy accuracy" auto "precision recall" auto /
 			minmax(0, 1fr) minmax(0, 1fr);
 	}
 }
@@ -20,7 +20,7 @@
 @media (min-width: 1200px) {
 	.tuning-number-chart-grid {
 		grid:
-			'accuracy precision recall' auto /
+			"accuracy precision recall" auto /
 			minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 	}
 }

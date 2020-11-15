@@ -1,13 +1,13 @@
 export enum DateWindow {
-	Today = 'today',
-	ThisMonth = 'this_month',
-	ThisYear = 'this_year',
+	Today = "today",
+	ThisMonth = "this_month",
+	ThisYear = "this_year",
 }
 
 export enum DateWindowInterval {
-	Hourly = 'hourly',
-	Daily = 'daily',
-	Monthly = 'monthly',
+	Hourly = "hourly",
+	Daily = "daily",
+	Monthly = "monthly",
 }
 
 export function intervalChartTitle(
@@ -63,18 +63,18 @@ export function formatDateWindow(dateString: string, dateWindow: DateWindow) {
 }
 
 let months = [
-	'Jan',
-	'Feb',
-	'Mar',
-	'Apr',
-	'May',
-	'Jun',
-	'Jul',
-	'Aug',
-	'Sep',
-	'Oct',
-	'Nov',
-	'Dec',
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec",
 ]
 
 function formatHour(date: Date): string {
@@ -86,12 +86,12 @@ function formatHour(date: Date): string {
 		return hours12
 	}
 
-	let meridiem = (hours: number) => (hours < 12 || hours == 24 ? 'AM' : 'PM')
+	let meridiem = (hours: number) => (hours < 12 || hours == 24 ? "AM" : "PM")
 
 	let hours = date.getHours()
 
 	if (hours12(hours) == 0) {
-		return '12AM - 1AM'
+		return "12AM - 1AM"
 	}
 	return `${hours12(hours)}${meridiem(hours)}-${hours12(hours + 1)}${meridiem(
 		hours + 1,

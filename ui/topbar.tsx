@@ -1,6 +1,6 @@
-import { Button } from './button'
-import './topbar.css'
-import { ComponentChildren, h } from 'preact'
+import { Button } from "./button"
+import "./topbar.css"
+import { ComponentChildren, h } from "preact"
 
 type TopbarProps = {
 	backgroundColor: string
@@ -75,7 +75,7 @@ export function TopbarBrand(props: TopbarBrandProps) {
 		color: props.textColor,
 	}
 	return (
-		<a class="topbar-link" href={props.logoHref ?? '/'}>
+		<a class="topbar-link" href={props.logoHref ?? "/"}>
 			<div class="topbar-brand-wrapper">
 				{props.logoImgUrl ? (
 					<img class="topbar-brand-img" srcset={`${props.logoImgUrl} 3x`} />

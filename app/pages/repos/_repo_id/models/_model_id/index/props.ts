@@ -1,4 +1,4 @@
-import { ModelLayoutInfo } from 'layouts/model_layout'
+import { ModelLayoutInfo } from "layouts/model_layout"
 
 export type Props = {
 	inner: Inner
@@ -6,9 +6,9 @@ export type Props = {
 }
 
 export enum Type {
-	Regressor = 'regressor',
-	BinaryClassifier = 'binary_classifier',
-	MulticlassClassifier = 'multiclass_classifier',
+	Regressor = "regressor",
+	BinaryClassifier = "binary_classifier",
+	MulticlassClassifier = "multiclass_classifier",
 }
 
 export type Inner =

@@ -1,4 +1,4 @@
-import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
+import { ActiveHoverRegion, HoverRegion, createChart } from "./chart"
 import {
 	Box,
 	Point,
@@ -7,9 +7,9 @@ import {
 	drawXAxisLabels,
 	drawXAxisTitle,
 	drawYAxisTitle,
-} from './common'
-import { chartColors, chartConfig } from './config'
-import { drawTooltip } from './tooltip'
+} from "./common"
+import { chartColors, chartConfig } from "./config"
+import { drawTooltip } from "./tooltip"
 
 /** These are the options for displaying a feature contributions chart. */
 export type FeatureContributionsChartOptions = {
@@ -170,7 +170,7 @@ export function drawFeatureContributionsChart(
 		y: topPadding,
 	}
 	if (includeXAxisTitle) {
-		drawXAxisTitle({ box: topXAxisTitleBox, ctx, title: 'Contributions' })
+		drawXAxisTitle({ box: topXAxisTitleBox, ctx, title: "Contributions" })
 	}
 
 	let topXAxisLabelsBox = {
@@ -224,7 +224,7 @@ export function drawFeatureContributionsChart(
 	}
 
 	if (includeYAxisTitle) {
-		drawYAxisTitle({ box: yAxisTitlesBox, ctx, title: 'Class' })
+		drawYAxisTitle({ box: yAxisTitlesBox, ctx, title: "Class" })
 	}
 
 	// Compute the grid line info.
@@ -361,11 +361,11 @@ function drawFeatureContributionsSeries(
 	let x = box.x + (series.baseline - min) * valueWidthMultiplier
 	let positiveValuesIndex = 0
 	// Draw the baseline value and label.
-	ctx.textBaseline = 'bottom'
-	ctx.textAlign = 'right'
+	ctx.textBaseline = "bottom"
+	ctx.textAlign = "right"
 	ctx.fillText(`baseline`, x - chartConfig.labelPadding, box.y + boxHeight / 2)
-	ctx.textBaseline = 'top'
-	ctx.textAlign = 'right'
+	ctx.textBaseline = "top"
+	ctx.textAlign = "right"
 	ctx.fillText(
 		series.baselineLabel,
 		x - chartConfig.labelPadding,
@@ -519,13 +519,13 @@ function drawFeatureContributionsSeries(
 		x += width
 	}
 	// Draw the output value and label.
-	ctx.textBaseline = 'bottom'
+	ctx.textBaseline = "bottom"
 	ctx.fillText(
 		`output`,
 		x - chartConfig.labelPadding,
 		box.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
 	)
-	ctx.textBaseline = 'top'
+	ctx.textBaseline = "top"
 	ctx.fillText(
 		series.outputLabel,
 		x - chartConfig.labelPadding,
@@ -548,14 +548,14 @@ function drawFeatureContributionsChartYAxisLabels(
 	options: DrawFeatureContributionsChartYAxisLabelsOptions,
 ) {
 	let { box, categories, ctx } = options
-	ctx.textAlign = 'end'
+	ctx.textAlign = "end"
 	categories.forEach((label, i) => {
 		let labelOffset =
 			chartConfig.featureContributionsSeriesHeight / 2 +
 			(chartConfig.featureContributionsSeriesGap +
 				chartConfig.featureContributionsSeriesHeight) *
 				i
-		ctx.textBaseline = 'middle'
+		ctx.textBaseline = "middle"
 		ctx.fillText(label, box.x + box.w, box.y + labelOffset)
 	})
 }
@@ -582,10 +582,10 @@ export function drawFeatureContributionsChartOverlay(
 	activeHoverRegions.forEach(activeHoverRegion => {
 		drawFeatureContributionBox({
 			box: activeHoverRegion.info.box,
-			color: '#00000022',
+			color: "#00000022",
 			ctx,
 			direction: activeHoverRegion.info.direction,
-			label: '',
+			label: "",
 		})
 	})
 }
@@ -683,7 +683,7 @@ export let drawFeatureContributionBox = (
 	}
 
 	ctx.lineWidth = 1
-	ctx.lineCap = 'butt'
+	ctx.lineCap = "butt"
 
 	let width = box.w
 	ctx.beginPath()
@@ -714,9 +714,9 @@ export let drawFeatureContributionBox = (
 	ctx.fill()
 
 	let labelWidth = ctx.measureText(label).width
-	ctx.textBaseline = 'middle'
-	ctx.textAlign = 'center'
-	ctx.fillStyle = '#fff'
+	ctx.textBaseline = "middle"
+	ctx.textAlign = "center"
+	ctx.fillStyle = "#fff"
 
 	if (
 		labelWidth <=

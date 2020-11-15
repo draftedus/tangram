@@ -1,8 +1,8 @@
-import { MulticlassClassifierProps } from './props'
-import { LineChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { baselineColor, trainingColor } from 'common/tokens'
-import { h } from 'preact'
+import { MulticlassClassifierProps } from "./props"
+import { LineChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { baselineColor, trainingColor } from "common/tokens"
+import { h } from "preact"
 
 export function MulticlassClassifierIndexPage(
 	props: MulticlassClassifierProps,
@@ -14,44 +14,44 @@ export function MulticlassClassifierIndexPage(
 				x: index,
 				y: loss,
 			})),
-			title: 'loss',
+			title: "loss",
 		},
 	]
 	return (
 		<ui.S1>
-			<ui.H1>{'Overview'}</ui.H1>
+			<ui.H1>{"Overview"}</ui.H1>
 			<ui.S2>
-				<ui.H2>{'Training Summary'}</ui.H2>
+				<ui.H2>{"Training Summary"}</ui.H2>
 				<ui.P>
-					{'Your dataset contained '}
+					{"Your dataset contained "}
 					<b>
 						{props.trainingSummary.trainRowCount +
 							props.trainingSummary.testRowCount}
 					</b>
-					{' rows and '}
+					{" rows and "}
 					<b>{props.trainingSummary.columnCount}</b>
-					{' columns. '}
+					{" columns. "}
 					<b>{props.trainingSummary.trainRowCount}</b>
-					{' of the rows were used in training and '}
+					{" of the rows were used in training and "}
 					<b>{props.trainingSummary.testRowCount}</b>
-					{' were used in testing. The model with the highest '}
+					{" were used in testing. The model with the highest "}
 					<b>{props.trainingSummary.modelComparisonMetricTypeName}</b>
-					{' was chosen. The best model is a '}
+					{" was chosen. The best model is a "}
 					<b>{props.trainingSummary.chosenModelTypeName}</b>
-					{'.'}
+					{"."}
 				</ui.P>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>{'Metrics'}</ui.H2>
+				<ui.H2>{"Metrics"}</ui.H2>
 				<ui.P>
 					{
-						'Your model was evaluated on the test dataset and accurately classified '
+						"Your model was evaluated on the test dataset and accurately classified "
 					}
 					<b>{ui.formatPercent(props.metrics.accuracy, 2)}</b>
-					{' of the examples. This is compared with the baseline accuracy of '}
+					{" of the examples. This is compared with the baseline accuracy of "}
 					<b>{ui.formatPercent(props.metrics.baselineAccuracy, 2)}</b>
 					{
-						', which is the accuracy achieved if the model always predicted the majority class.'
+						", which is the accuracy achieved if the model always predicted the majority class."
 					}
 				</ui.P>
 				<ui.Card>
@@ -69,9 +69,9 @@ export function MulticlassClassifierIndexPage(
 				<ui.Table width="100%">
 					<ui.TableHeader>
 						<ui.TableRow>
-							<ui.TableHeaderCell>{'Class'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Precision'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Recall'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Class"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Precision"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Recall"}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>

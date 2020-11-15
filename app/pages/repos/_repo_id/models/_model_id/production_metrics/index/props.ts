@@ -1,4 +1,4 @@
-import { DateWindow, DateWindowInterval } from 'common/time'
+import { DateWindow, DateWindowInterval } from "common/time"
 
 export type RegressorProps = {
 	dateWindow: DateWindow

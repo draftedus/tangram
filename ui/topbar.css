@@ -24,7 +24,7 @@
 .topbar-details[open] > summary::before {
 	background: transparent;
 	bottom: 0;
-	content: ' ';
+	content: " ";
 	cursor: default;
 	display: block;
 	left: 0;

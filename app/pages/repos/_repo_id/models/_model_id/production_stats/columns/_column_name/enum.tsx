@@ -1,10 +1,10 @@
-import { EnumProps } from './props'
-import { BarChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { MetricsRow } from 'common/metrics_row'
-import { overallChartTitle } from 'common/time'
-import { productionColor, trainingColor } from 'common/tokens'
-import { Fragment, h } from 'preact'
+import { EnumProps } from "./props"
+import { BarChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { MetricsRow } from "common/metrics_row"
+import { overallChartTitle } from "common/time"
+import { productionColor, trainingColor } from "common/tokens"
+import { Fragment, h } from "preact"
 
 export function Enum(props: EnumProps) {
 	let overallChartData = [
@@ -15,7 +15,7 @@ export function Enum(props: EnumProps) {
 				x: i,
 				y: entry.trainingFraction,
 			})),
-			title: 'Training',
+			title: "Training",
 		},
 		{
 			color: productionColor,
@@ -24,7 +24,7 @@ export function Enum(props: EnumProps) {
 				x: i,
 				y: entry.productionFraction,
 			})),
-			title: 'Production',
+			title: "Production",
 		},
 	]
 	let overallDistributionChartTitle = overallChartTitle(
@@ -64,15 +64,15 @@ export function Enum(props: EnumProps) {
 					/>
 				</ui.Card>
 			</MetricsRow>
-			<ui.H2>{'Unique Values'}</ui.H2>
+			<ui.H2>{"Unique Values"}</ui.H2>
 			<ui.Table width="100%">
 				<ui.TableHeader>
 					<ui.TableRow>
-						<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Training Count'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Production Count'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Training Fraction'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Production Fraction'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Value"}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Training Count"}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Production Count"}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Training Fraction"}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Production Fraction"}</ui.TableHeaderCell>
 					</ui.TableRow>
 				</ui.TableHeader>
 				<ui.TableBody>
@@ -97,12 +97,12 @@ export function Enum(props: EnumProps) {
 			</ui.Table>
 			{props.overallInvalidChartData && (
 				<>
-					<ui.H2>{'Invalid Values'}</ui.H2>
+					<ui.H2>{"Invalid Values"}</ui.H2>
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Value"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Count"}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>

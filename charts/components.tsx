@@ -1,14 +1,14 @@
-import { BarChartOptions, createBarChart } from './bar_chart'
-import { BoxChartOptions, createBoxChart } from './box_chart'
-import './charts.css'
-import { chartConfig } from './config'
+import { BarChartOptions, createBarChart } from "./bar_chart"
+import { BoxChartOptions, createBoxChart } from "./box_chart"
+import "./charts.css"
+import { chartConfig } from "./config"
 import {
 	FeatureContributionsChartOptions,
 	createFeatureContributionsChart,
-} from './feature_contributions_chart'
-import { LineChartOptions, createLineChart } from './line_chart'
-import { ComponentChildren, h } from 'preact'
-import { useEffect, useRef } from 'preact/hooks'
+} from "./feature_contributions_chart"
+import { LineChartOptions, createLineChart } from "./line_chart"
+import { ComponentChildren, h } from "preact"
+import { useEffect, useRef } from "preact/hooks"
 
 export type BarChartProps = BarChartOptions & {
 	class?: string
@@ -29,8 +29,8 @@ export function BarChart(props: BarChartProps) {
 	useEffect(() => chartRef.current?.draw(props))
 
 	let containerStyle = {
-		paddingTop: '50%',
-		width: '100%',
+		paddingTop: "50%",
+		width: "100%",
 	}
 
 	return (
@@ -47,7 +47,7 @@ export function BarChart(props: BarChartProps) {
 			>
 				<noscript>
 					<div class="chart-noscript">
-						{'Please enable JavaScript to view charts.'}
+						{"Please enable JavaScript to view charts."}
 					</div>
 				</noscript>
 			</div>
@@ -74,8 +74,8 @@ export function BoxChart(props: BoxChartProps) {
 	useEffect(() => chartRef.current?.draw(props))
 
 	let containerStyle = {
-		paddingTop: '50%',
-		width: '100%',
+		paddingTop: "50%",
+		width: "100%",
 	}
 
 	return (
@@ -92,7 +92,7 @@ export function BoxChart(props: BoxChartProps) {
 			>
 				<noscript>
 					<div class="chart-noscript">
-						{'Please enable JavaScript to view charts.'}
+						{"Please enable JavaScript to view charts."}
 					</div>
 				</noscript>
 			</div>
@@ -118,8 +118,8 @@ export function LineChart(props: LineChartProps) {
 	useEffect(() => chartRef.current?.draw(props))
 
 	let containerStyle = {
-		paddingTop: '50%',
-		width: '100%',
+		paddingTop: "50%",
+		width: "100%",
 	}
 
 	return (
@@ -135,7 +135,7 @@ export function LineChart(props: LineChartProps) {
 			>
 				<noscript>
 					<div class="chart-noscript">
-						{'Please enable JavaScript to view charts.'}
+						{"Please enable JavaScript to view charts."}
 					</div>
 				</noscript>
 			</div>
@@ -180,7 +180,7 @@ export function FeatureContributionsChart(
 
 	let containerStyle = {
 		height: `${height}px`,
-		width: '100%',
+		width: "100%",
 	}
 
 	return (
@@ -195,7 +195,7 @@ export function FeatureContributionsChart(
 			>
 				<noscript>
 					<div class="chart-noscript">
-						{'Please enable JavaScript to view charts.'}
+						{"Please enable JavaScript to view charts."}
 					</div>
 				</noscript>
 			</div>

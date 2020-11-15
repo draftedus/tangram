@@ -1,8 +1,8 @@
-import './docs_layout.css'
-import { Layout } from './layout'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { ComponentChildren, h } from 'preact'
+import "./docs_layout.css"
+import { Layout } from "./layout"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { ComponentChildren, h } from "preact"
 
 type DocsLayoutProps = {
 	children?: ComponentChildren
@@ -42,48 +42,48 @@ function PageNav(props: PageNavProps) {
 				href="/docs/"
 				selected={props.selectedPage === DocsPage.Home}
 			>
-				{'Home'}
+				{"Home"}
 			</ui.NestedNavItem>
 			<ui.NestedNavSection>
-				<ui.NestedNavSectionTitle>{'Install'}</ui.NestedNavSectionTitle>
+				<ui.NestedNavSectionTitle>{"Install"}</ui.NestedNavSectionTitle>
 				<ui.NestedNavItem
 					href="/docs/install"
 					selected={props.selectedPage === DocsPage.Install}
 				>
-					{'Install'}
+					{"Install"}
 				</ui.NestedNavItem>
 			</ui.NestedNavSection>
 			<ui.NestedNavSection>
-				<ui.NestedNavSectionTitle>{'Getting Started'}</ui.NestedNavSectionTitle>
+				<ui.NestedNavSectionTitle>{"Getting Started"}</ui.NestedNavSectionTitle>
 				<ui.NestedNavItem
 					href="/docs/getting-started/train"
 					selected={props.selectedPage === DocsPage.Train}
 				>
-					{'Train'}
+					{"Train"}
 				</ui.NestedNavItem>
 				<ui.NestedNavItem
 					href="/docs/getting-started/predict"
 					selected={props.selectedPage === DocsPage.Predict}
 				>
-					{'Predict'}
+					{"Predict"}
 				</ui.NestedNavItem>
 				<ui.NestedNavItem
 					href="/docs/getting-started/report"
 					selected={props.selectedPage === DocsPage.Report}
 				>
-					{'Report'}
+					{"Report"}
 				</ui.NestedNavItem>
 				<ui.NestedNavItem
 					href="/docs/getting-started/tune"
 					selected={props.selectedPage === DocsPage.Tune}
 				>
-					{'Tune'}
+					{"Tune"}
 				</ui.NestedNavItem>
 				<ui.NestedNavItem
 					href="/docs/getting-started/monitor"
 					selected={props.selectedPage === DocsPage.Monitor}
 				>
-					{'Monitor'}
+					{"Monitor"}
 				</ui.NestedNavItem>
 			</ui.NestedNavSection>
 		</ui.NestedNav>

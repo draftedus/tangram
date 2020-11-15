@@ -1,5 +1,5 @@
-import './number_chart.css'
-import { h } from 'preact'
+import "./number_chart.css"
+import { h } from "preact"
 
 type NumberChartProps = {
 	title: string

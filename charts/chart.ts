@@ -3,7 +3,7 @@ import {
 	chartConfig,
 	darkChartColors,
 	lightChartColors,
-} from './config'
+} from "./config"
 
 export type Chart<Options> = {
 	destroy: () => void
@@ -61,30 +61,30 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		overlayInfo: null,
 	}
 
-	container.style.position = 'relative'
+	container.style.position = "relative"
 
-	let chartCanvas = document.createElement('canvas')
-	chartCanvas.style.position = 'absolute'
-	chartCanvas.style.top = '0'
-	chartCanvas.style.bottom = '0'
-	chartCanvas.style.left = '0'
-	chartCanvas.style.right = '0'
+	let chartCanvas = document.createElement("canvas")
+	chartCanvas.style.position = "absolute"
+	chartCanvas.style.top = "0"
+	chartCanvas.style.bottom = "0"
+	chartCanvas.style.left = "0"
+	chartCanvas.style.right = "0"
 	container.appendChild(chartCanvas)
 
-	let overlayDiv = document.createElement('div')
-	overlayDiv.style.position = 'absolute'
-	overlayDiv.style.top = '0'
-	overlayDiv.style.bottom = '0'
-	overlayDiv.style.left = '0'
-	overlayDiv.style.right = '0'
+	let overlayDiv = document.createElement("div")
+	overlayDiv.style.position = "absolute"
+	overlayDiv.style.top = "0"
+	overlayDiv.style.bottom = "0"
+	overlayDiv.style.left = "0"
+	overlayDiv.style.right = "0"
 	container.appendChild(overlayDiv)
 
-	let overlayCanvas = document.createElement('canvas')
-	overlayCanvas.style.position = 'absolute'
-	overlayCanvas.style.top = '0'
-	overlayCanvas.style.bottom = '0'
-	overlayCanvas.style.left = '0'
-	overlayCanvas.style.right = '0'
+	let overlayCanvas = document.createElement("canvas")
+	overlayCanvas.style.position = "absolute"
+	overlayCanvas.style.top = "0"
+	overlayCanvas.style.bottom = "0"
+	overlayCanvas.style.left = "0"
+	overlayCanvas.style.right = "0"
 	container.appendChild(overlayCanvas)
 
 	function updateActiveHoverRegions(x: number, y: number) {
@@ -107,9 +107,9 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		let y = event.clientY - canvasClientRect.top
 		updateActiveHoverRegions(x, y)
 	}
-	overlayCanvas.addEventListener('mouseenter', onMouseEvent)
-	overlayCanvas.addEventListener('mouseleave', onMouseEvent)
-	overlayCanvas.addEventListener('mousemove', onMouseEvent)
+	overlayCanvas.addEventListener("mouseenter", onMouseEvent)
+	overlayCanvas.addEventListener("mouseleave", onMouseEvent)
+	overlayCanvas.addEventListener("mousemove", onMouseEvent)
 
 	function onTouchEvent(event: TouchEvent) {
 		let canvasClientRect = chartCanvas.getBoundingClientRect()
@@ -117,13 +117,13 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		let y = event.touches[0].clientY - canvasClientRect.top
 		updateActiveHoverRegions(x, y)
 	}
-	overlayCanvas.addEventListener('touchstart', onTouchEvent)
+	overlayCanvas.addEventListener("touchstart", onTouchEvent)
 
-	window.addEventListener('resize', render)
+	window.addEventListener("resize", render)
 	let colorSchemeMediaQuery = matchMedia(`(prefers-color-scheme: dark)`)
-	colorSchemeMediaQuery.addEventListener('change', render)
+	colorSchemeMediaQuery.addEventListener("change", render)
 	let dprMediaQuery = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
-	dprMediaQuery.addEventListener('change', render)
+	dprMediaQuery.addEventListener("change", render)
 
 	function renderChart() {
 		if (!state.options) throw Error()
@@ -132,12 +132,12 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		let dpr = window.devicePixelRatio
 		chartCanvas.width = width * dpr
 		chartCanvas.height = height * dpr
-		chartCanvas.style.width = width.toString() + 'px'
-		chartCanvas.style.height = height.toString() + 'px'
+		chartCanvas.style.width = width.toString() + "px"
+		chartCanvas.style.height = height.toString() + "px"
 		chartColors.current = colorSchemeMediaQuery.matches
 			? darkChartColors
 			: lightChartColors
-		let ctx = chartCanvas.getContext('2d')
+		let ctx = chartCanvas.getContext("2d")
 		if (!ctx) {
 			throw Error()
 		}
@@ -156,12 +156,12 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		let dpr = window.devicePixelRatio
 		overlayCanvas.width = width * dpr
 		overlayCanvas.height = height * dpr
-		overlayCanvas.style.width = width.toString() + 'px'
-		overlayCanvas.style.height = height.toString() + 'px'
+		overlayCanvas.style.width = width.toString() + "px"
+		overlayCanvas.style.height = height.toString() + "px"
 		chartColors.current = colorSchemeMediaQuery.matches
 			? darkChartColors
 			: lightChartColors
-		let ctx = overlayCanvas.getContext('2d')
+		let ctx = overlayCanvas.getContext("2d")
 		if (!ctx) {
 			throw Error()
 		}
@@ -183,9 +183,9 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 	}
 
 	function destroy() {
-		window.removeEventListener('resize', render)
-		colorSchemeMediaQuery.removeEventListener('change', render)
-		dprMediaQuery.removeEventListener('change', render)
+		window.removeEventListener("resize", render)
+		colorSchemeMediaQuery.removeEventListener("change", render)
+		dprMediaQuery.removeEventListener("change", render)
 		container.removeChild(chartCanvas)
 		container.removeChild(overlayCanvas)
 	}

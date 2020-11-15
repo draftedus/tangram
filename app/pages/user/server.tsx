@@ -1,9 +1,9 @@
-import { AuthProps, InnerType, NoAuthProps, Props } from './props'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { renderPage } from 'common/render'
-import { AppLayout } from 'layouts/app_layout'
-import { h } from 'preact'
+import { AuthProps, InnerType, NoAuthProps, Props } from "./props"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { renderPage } from "common/render"
+import { AppLayout } from "layouts/app_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
@@ -20,10 +20,10 @@ export default (pageInfo: PageInfo, props: Props) => {
 function NoAuth(_: NoAuthProps) {
 	return (
 		<ui.S1>
-			<ui.H1>{'Root User'}</ui.H1>
+			<ui.H1>{"Root User"}</ui.H1>
 			<ui.P>
 				{
-					'You are using the free version of tangram that does not support user accounts or organizations. Check out the different plans that allow you to collaborate with your team.'
+					"You are using the free version of tangram that does not support user accounts or organizations. Check out the different plans that allow you to collaborate with your team."
 				}
 			</ui.P>
 		</ui.S1>
@@ -34,10 +34,10 @@ function Auth(props: AuthProps) {
 	return (
 		<ui.S1>
 			<ui.SpaceBetween>
-				<ui.H1>{'User'}</ui.H1>
+				<ui.H1>{"User"}</ui.H1>
 				<ui.Form post={true}>
 					<input name="action" type="hidden" value="logout" />
-					<ui.Button color="var(--red)">{'Logout'}</ui.Button>
+					<ui.Button color="var(--red)">{"Logout"}</ui.Button>
 				</ui.Form>
 			</ui.SpaceBetween>
 			<ui.S2>
@@ -47,14 +47,14 @@ function Auth(props: AuthProps) {
 			</ui.S2>
 			<ui.S2>
 				<ui.SpaceBetween>
-					<ui.H2>{'User Repos'}</ui.H2>
-					<ui.Button href="/repos/new">{'Create New Repo'}</ui.Button>
+					<ui.H2>{"User Repos"}</ui.H2>
+					<ui.Button href="/repos/new">{"Create New Repo"}</ui.Button>
 				</ui.SpaceBetween>
 				{props.repos.length > 0 ? (
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>{'Repo Title'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Repo Title"}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>
@@ -69,22 +69,22 @@ function Auth(props: AuthProps) {
 					</ui.Table>
 				) : (
 					<ui.Card>
-						<ui.P>{'You do not have any repos.'}</ui.P>
+						<ui.P>{"You do not have any repos."}</ui.P>
 					</ui.Card>
 				)}
 			</ui.S2>
 			<ui.S2>
 				<ui.SpaceBetween>
-					<ui.H2>{'Organizations'}</ui.H2>
+					<ui.H2>{"Organizations"}</ui.H2>
 					<ui.Button href="/organizations/new">
-						{'Create New Organization'}
+						{"Create New Organization"}
 					</ui.Button>
 				</ui.SpaceBetween>
 				{props.organizations.length > 0 ? (
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>{'Organization Name'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Organization Name"}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>
@@ -101,7 +101,7 @@ function Auth(props: AuthProps) {
 					</ui.Table>
 				) : (
 					<ui.Card>
-						<ui.P>{'You do not have any organizations.'}</ui.P>
+						<ui.P>{"You do not have any organizations."}</ui.P>
 					</ui.Card>
 				)}
 			</ui.S2>

@@ -4,25 +4,25 @@ import {
 	Props,
 	RegressionChartEntry,
 	Task,
-} from './props'
-import { BarChart, BoxChart } from '@tangramhq/charts'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { DateWindowSelectField } from 'common/date_window_select_field'
-import { renderPage } from 'common/render'
+} from "./props"
+import { BarChart, BoxChart } from "@tangramhq/charts"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { DateWindowSelectField } from "common/date_window_select_field"
+import { renderPage } from "common/render"
 import {
 	DateWindow,
 	DateWindowInterval,
 	intervalChartTitle,
 	overallChartTitle,
-} from 'common/time'
+} from "common/time"
 import {
 	EnumColumnToken,
 	NumberColumnToken,
 	TextColumnToken,
-} from 'common/tokens'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { h } from 'preact'
+} from "common/tokens"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	let predictionCountData = [
@@ -33,12 +33,12 @@ export default (pageInfo: PageInfo, props: Props) => {
 				x: i,
 				y: entry.count,
 			})),
-			title: 'Prediction Count',
+			title: "Prediction Count",
 		},
 	]
 	let predictionCountTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		'Prediction Count',
+		"Prediction Count",
 	)
 	return renderPage(
 		<ModelLayout
@@ -47,11 +47,11 @@ export default (pageInfo: PageInfo, props: Props) => {
 			selectedItem={ModelSideNavItem.ProductionStats}
 		>
 			<ui.S1>
-				<ui.H1>{'Production Stats'}</ui.H1>
+				<ui.H1>{"Production Stats"}</ui.H1>
 				<ui.Form>
 					<DateWindowSelectField dateWindow={props.dateWindow} />
 					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
+						<ui.Button>{"Submit"}</ui.Button>
 					</noscript>
 				</ui.Form>
 				{props.predictionStatsIntervalChart.type === Task.Regression ? (
@@ -96,11 +96,11 @@ export default (pageInfo: PageInfo, props: Props) => {
 				<ui.Table width="100%">
 					<ui.TableHeader>
 						<ui.TableRow>
-							<ui.TableHeaderCell>{'Status'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Column'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Type'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Absent Count'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Invalid Count'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Status"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Column"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Type"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Absent Count"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Invalid Count"}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>
@@ -109,11 +109,11 @@ export default (pageInfo: PageInfo, props: Props) => {
 								<ui.TableCell>
 									{column.alert ? (
 										<ui.AlertIcon alert={column.alert} level={ui.Level.Danger}>
-											{'!'}
+											{"!"}
 										</ui.AlertIcon>
 									) : (
 										<ui.AlertIcon alert="All good" level={ui.Level.Success}>
-											{'✓'}
+											{"✓"}
 										</ui.AlertIcon>
 									)}
 								</ui.TableCell>
@@ -162,7 +162,7 @@ function RegressionProductionStatsChart(props: {
 					},
 				},
 			],
-			title: 'training quantiles',
+			title: "training quantiles",
 		},
 		{
 			color: ui.colors.blue,
@@ -182,12 +182,12 @@ function RegressionProductionStatsChart(props: {
 							: null,
 				},
 			],
-			title: 'production quantiles',
+			title: "production quantiles",
 		},
 	]
 	let title = overallChartTitle(
 		props.dateWindow,
-		'Prediction Distribution Stats',
+		"Prediction Distribution Stats",
 	)
 	return <BoxChart data={data} id="quantiles_overall" title={title} />
 }
@@ -214,12 +214,12 @@ function RegressionProductionStatsIntervalChart(props: {
 						  }
 						: null,
 			})),
-			title: 'quantiles',
+			title: "quantiles",
 		},
 	]
 	let title = intervalChartTitle(
 		props.dateWindowInterval,
-		'Prediction Distribution Stats',
+		"Prediction Distribution Stats",
 	)
 	return <BoxChart data={data} id="quantiles_intervals" title={title} />
 }
@@ -254,7 +254,7 @@ function MulticlassClassificationProductionStatsChart(props: {
 		title: options[i],
 	}))
 
-	let title = overallChartTitle(props.dateWindow, 'Prediction Stats')
+	let title = overallChartTitle(props.dateWindow, "Prediction Stats")
 	return <BarChart data={data} id="histogram_overall" title={title} />
 }
 
@@ -283,6 +283,6 @@ function MulticlassClassificationProductionStatsIntervalChart(props: {
 		})),
 		title: options[i],
 	}))
-	let title = intervalChartTitle(props.dateWindowInterval, 'Prediction Stats')
+	let title = intervalChartTitle(props.dateWindowInterval, "Prediction Stats")
 	return <BarChart data={data} id="histogram_intervals" title={title} />
 }

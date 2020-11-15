@@ -1,7 +1,7 @@
-import './confusion_matrix_comparison.css'
-import { Token } from './token'
-import { cx } from './util'
-import { ComponentChildren, h } from 'preact'
+import "./confusion_matrix_comparison.css"
+import { Token } from "./token"
+import { cx } from "./util"
+import { ComponentChildren, h } from "preact"
 
 // |-----------------------------------------------------------|
 // |           ||       |                Actual                |
@@ -46,19 +46,19 @@ export function ConfusionMatrixComparison(
 	return (
 		<div class="confusion-matrix-comparison-wrapper">
 			<ConfusionMatrixLabel area="actual-true-label">
-				<div>{'Actual'}</div>
+				<div>{"Actual"}</div>
 				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="actual-false-label">
-				<div>{'Actual Not'}</div>
+				<div>{"Actual Not"}</div>
 				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="predicted-true-label" left={true}>
-				<div>{'Predicted'}</div>
+				<div>{"Predicted"}</div>
 				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixLabel area="predicted-false-label" left={true}>
-				<div>{'Predicted Not'}</div>
+				<div>{"Predicted Not"}</div>
 				<Token>{props.classLabel}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixComparisonItem
@@ -130,20 +130,20 @@ function ConfusionMatrixComparisonItem(props: ConfusionMatrixItemProps) {
 		gridArea: props.area,
 	}
 	let className = cx(
-		'confusion-matrix-comparison-item-wrapper',
+		"confusion-matrix-comparison-item-wrapper",
 		props.true
-			? 'confusion-matrix-comparison-item-positive-wrapper'
-			: 'confusion-matrix-comparison-item-negative-wrapper',
+			? "confusion-matrix-comparison-item-positive-wrapper"
+			: "confusion-matrix-comparison-item-negative-wrapper",
 	)
 	return (
 		<div class={className} style={wrapperStyle}>
 			<div class="confusion-matrix-comparison-item-title">{props.label}</div>
 			<div class="confusion-matrix-comparison-number-comparison-wrapper">
 				<div class="confusion-matrix-comparison-item-value">
-					{props.valueA === null ? 'N/A' : valueFormatter(props.valueA)}
+					{props.valueA === null ? "N/A" : valueFormatter(props.valueA)}
 				</div>
 				<div class="confusion-matrix-comparison-item-value">
-					{props.valueB === null ? 'N/A' : valueFormatter(props.valueB)}
+					{props.valueB === null ? "N/A" : valueFormatter(props.valueB)}
 				</div>
 				<div>
 					<Token color={props.colorA}>{props.valueATitle}</Token>
@@ -165,7 +165,7 @@ type ConfusionMatrixLabelProps = {
 function ConfusionMatrixLabel(props: ConfusionMatrixLabelProps) {
 	let style = {
 		gridArea: props.area,
-		justifyItems: props.left ? 'end' : 'center',
+		justifyItems: props.left ? "end" : "center",
 	}
 	return (
 		<div class="confusion-matrix-comparison-label" style={style}>

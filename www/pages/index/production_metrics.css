@@ -5,6 +5,6 @@
 @media (max-width: 1199px) {
 	.production-metrics-wrapper {
 		grid: auto / auto;
-		grid-template-areas: 'accuracy' 'monthly';
+		grid-template-areas: "accuracy" "monthly";
 	}
 }

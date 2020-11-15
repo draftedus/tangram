@@ -1,5 +1,5 @@
-import { InputTable, Prediction } from 'common/prediction_result'
-import { ModelLayoutInfo } from 'layouts/model_layout'
+import { InputTable, Prediction } from "common/prediction_result"
+import { ModelLayoutInfo } from "layouts/model_layout"
 
 export type Column = UnknownField | NumberField | EnumField | TextField
 
@@ -9,8 +9,8 @@ export type Props = {
 }
 
 export enum InnerType {
-	PredictionForm = 'prediction_form',
-	PredictionResult = 'prediction_result',
+	PredictionForm = "prediction_form",
+	PredictionResult = "prediction_result",
 }
 
 export type Inner =
@@ -35,10 +35,10 @@ export type PredictionResult = {
 }
 
 export enum FieldType {
-	Unknown = 'unknown',
-	Number = 'number',
-	Enum = 'enum',
-	Text = 'text',
+	Unknown = "unknown",
+	Number = "number",
+	Enum = "enum",
+	Text = "text",
 }
 
 export type UnknownField = {

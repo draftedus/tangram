@@ -1,10 +1,10 @@
-import { TextProps } from './props'
-import { BarChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { MetricsRow } from 'common/metrics_row'
-import { overallChartTitle } from 'common/time'
-import { productionColor } from 'common/tokens'
-import { h } from 'preact'
+import { TextProps } from "./props"
+import { BarChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { MetricsRow } from "common/metrics_row"
+import { overallChartTitle } from "common/time"
+import { productionColor } from "common/tokens"
+import { h } from "preact"
 
 export function Text(props: TextProps) {
 	let overallChartData = [
@@ -15,7 +15,7 @@ export function Text(props: TextProps) {
 				x: i,
 				y: count,
 			})),
-			title: 'Production',
+			title: "Production",
 		},
 	]
 	let overallDistributionChartTitle = overallChartTitle(
@@ -53,12 +53,12 @@ export function Text(props: TextProps) {
 					/>
 				</ui.Card>
 			</MetricsRow>
-			<ui.H2>{'Unique Tokens'}</ui.H2>
+			<ui.H2>{"Unique Tokens"}</ui.H2>
 			<ui.Table width="100%">
 				<ui.TableHeader>
 					<ui.TableRow>
-						<ui.TableHeaderCell>{'Token'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Token"}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Count"}</ui.TableHeaderCell>
 					</ui.TableRow>
 				</ui.TableHeader>
 				<ui.TableBody>

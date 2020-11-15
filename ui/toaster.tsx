@@ -9,19 +9,19 @@ let duration = 2000
 let keyframes: Keyframe[] = [
 	{
 		offset: 0,
-		top: '-4rem',
+		top: "-4rem",
 	},
 	{
 		offset: 0.1,
-		top: '.75rem',
+		top: ".75rem",
 	},
 	{
 		offset: 0.9,
-		top: '.75rem',
+		top: ".75rem",
 	},
 	{
 		offset: 1.0,
-		top: '-4rem',
+		top: "-4rem",
 	},
 ]
 
@@ -29,22 +29,22 @@ async function show(toast: Toast) {
 	if (element) {
 		return
 	}
-	element = document.createElement('div')
-	element.style.zIndex = '1'
-	element.style.position = 'fixed'
-	element.style.top = '0'
-	element.style.left = '0'
-	element.style.bottom = '0'
-	element.style.right = '0'
-	element.style.display = 'grid'
-	element.style.justifyContent = 'center'
-	element.style.alignContent = 'start'
-	element.style.pointerEvents = 'none'
-	let inner = document.createElement('div')
-	inner.style.padding = '1rem'
-	inner.style.borderRadius = 'var(--border-radius)'
+	element = document.createElement("div")
+	element.style.zIndex = "1"
+	element.style.position = "fixed"
+	element.style.top = "0"
+	element.style.left = "0"
+	element.style.bottom = "0"
+	element.style.right = "0"
+	element.style.display = "grid"
+	element.style.justifyContent = "center"
+	element.style.alignContent = "start"
+	element.style.pointerEvents = "none"
+	let inner = document.createElement("div")
+	inner.style.padding = "1rem"
+	inner.style.borderRadius = "var(--border-radius)"
 	inner.style.backgroundColor = toast.backgroundColor
-	inner.style.color = toast.textColor ?? 'var(--fun-text-color)'
+	inner.style.color = toast.textColor ?? "var(--fun-text-color)"
 	inner.appendChild(document.createTextNode(toast.message))
 	element.appendChild(inner)
 	document.body.appendChild(element)
@@ -56,14 +56,14 @@ async function show(toast: Toast) {
 
 function showMessage(message: string) {
 	show({
-		backgroundColor: 'var(--accent-color)',
+		backgroundColor: "var(--accent-color)",
 		message,
 	})
 }
 
 function showError(message: string) {
 	show({
-		backgroundColor: 'var(--red)',
+		backgroundColor: "var(--red)",
 		message,
 	})
 }

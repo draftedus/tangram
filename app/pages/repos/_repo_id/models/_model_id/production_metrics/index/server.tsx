@@ -1,19 +1,19 @@
-import { BinaryClassifierProductionMetricsIndexPage } from './binary_classifier'
-import { MulticlassClassifierProductionMetricsIndexPage } from './multiclass_classifier'
+import { BinaryClassifierProductionMetricsIndexPage } from "./binary_classifier"
+import { MulticlassClassifierProductionMetricsIndexPage } from "./multiclass_classifier"
 import {
 	BinaryClassifierProps,
 	MulticlassClassifierProps,
 	RegressorProps,
-} from './props'
-import { RegressorProductionMetricsPage } from './regressor'
-import { PageInfo } from '@tangramhq/pinwheel'
-import { renderPage } from 'common/render'
+} from "./props"
+import { RegressorProductionMetricsPage } from "./regressor"
+import { PageInfo } from "@tangramhq/pinwheel"
+import { renderPage } from "common/render"
 import {
 	ModelLayout,
 	ModelLayoutInfo,
 	ModelSideNavItem,
-} from 'layouts/model_layout'
-import { h } from 'preact'
+} from "layouts/model_layout"
+import { h } from "preact"
 
 export type Props = {
 	inner: Inner
@@ -35,9 +35,9 @@ export type Inner =
 	  }
 
 export enum Type {
-	Regressor = 'regressor',
-	BinaryClassifier = 'binary_classifer',
-	MulticlassClassifier = 'multiclass_classifier',
+	Regressor = "regressor",
+	BinaryClassifier = "binary_classifer",
+	MulticlassClassifier = "multiclass_classifier",
 }
 
 export default (pageInfo: PageInfo, props: Props) => {

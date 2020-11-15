@@ -2,7 +2,7 @@ details.image-details[open] > summary::before {
 	-webkit-appearance: none;
 	background: transparent;
 	bottom: 0;
-	content: ' ';
+	content: " ";
 	cursor: zoom-out;
 	display: block;
 	left: 0;

@@ -1,6 +1,6 @@
-import './tab_bar.css'
-import { cx } from './util'
-import { ComponentChildren, h } from 'preact'
+import "./tab_bar.css"
+import { cx } from "./util"
+import { ComponentChildren, h } from "preact"
 
 type TabBarProps = { children?: ComponentChildren }
 
@@ -17,9 +17,9 @@ type TabProps = {
 
 export function Tab(props: TabProps) {
 	let className = cx(
-		'tab-bar-tab',
-		props.selected && 'tab-bar-tab-selected',
-		props.disabled && 'tab-bar-tab-disbaled',
+		"tab-bar-tab",
+		props.selected && "tab-bar-tab-selected",
+		props.disabled && "tab-bar-tab-disbaled",
 	)
 	return (
 		<div

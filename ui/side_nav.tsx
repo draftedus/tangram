@@ -1,6 +1,6 @@
-import './side_nav.css'
-import { cx } from './util'
-import { ComponentChildren, h } from 'preact'
+import "./side_nav.css"
+import { cx } from "./util"
+import { ComponentChildren, h } from "preact"
 
 type SideNavProps = { children?: ComponentChildren }
 
@@ -28,8 +28,8 @@ type SideNavItemProps = {
 
 export function SideNavItem(props: SideNavItemProps) {
 	let className = cx(
-		'side-nav-item',
-		props.selected && 'side-nav-item-selected',
+		"side-nav-item",
+		props.selected && "side-nav-item-selected",
 	)
 	return (
 		<a class={className} href={props.href}>

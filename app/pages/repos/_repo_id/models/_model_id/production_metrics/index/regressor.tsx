@@ -1,11 +1,11 @@
-import { RegressorProps } from './props'
-import { LineChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { DateWindowSelectField } from 'common/date_window_select_field'
-import { MetricsRow } from 'common/metrics_row'
-import { intervalChartTitle } from 'common/time'
-import { productionColor, trainingColor } from 'common/tokens'
-import { h } from 'preact'
+import { RegressorProps } from "./props"
+import { LineChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { DateWindowSelectField } from "common/date_window_select_field"
+import { MetricsRow } from "common/metrics_row"
+import { intervalChartTitle } from "common/time"
+import { productionColor, trainingColor } from "common/tokens"
+import { h } from "preact"
 
 export function RegressorProductionMetricsPage(props: RegressorProps) {
 	let mseData = [
@@ -21,7 +21,7 @@ export function RegressorProductionMetricsPage(props: RegressorProps) {
 					y: props.mseChart.trainingMse,
 				},
 			],
-			title: 'Training Root Mean Squared Error',
+			title: "Training Root Mean Squared Error",
 		},
 		{
 			color: productionColor,
@@ -30,27 +30,27 @@ export function RegressorProductionMetricsPage(props: RegressorProps) {
 				x: index,
 				y: entry.mse,
 			})),
-			title: 'Production Mean Squared Error',
+			title: "Production Mean Squared Error",
 		},
 	]
 	let mseChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		'Mean Squared Error',
+		"Mean Squared Error",
 	)
 	return (
 		<ui.S1>
-			<ui.H1>{'Production Metrics'}</ui.H1>
+			<ui.H1>{"Production Metrics"}</ui.H1>
 			<ui.S2>
 				<ui.Form>
 					<DateWindowSelectField dateWindow={props.dateWindow} />
 					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
+						<ui.Button>{"Submit"}</ui.Button>
 					</noscript>
 				</ui.Form>
 				<ui.P>
-					{'You have logged '}
+					{"You have logged "}
 					<b>{props.overall.trueValuesCount}</b>
-					{' true values for this date range.'}
+					{" true values for this date range."}
 				</ui.P>
 				{mseData && (
 					<ui.Card>

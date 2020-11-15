@@ -1,9 +1,9 @@
-import { Props } from './props'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { renderPage } from 'common/render'
-import { AuthLayout } from 'layouts/auth_layout'
-import { h } from 'preact'
+import { Props } from "./props"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { renderPage } from "common/render"
+import { AuthLayout } from "layouts/auth_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
@@ -20,10 +20,10 @@ export default (pageInfo: PageInfo, props: Props) => {
 					value={props.email}
 				/>
 				{props.code && <ui.TextField name="code" placeholder="Code" />}
-				<ui.Button type="submit">{'Login'}</ui.Button>
+				<ui.Button type="submit">{"Login"}</ui.Button>
 				{props.code && (
 					<div class="login-code-message">
-						{'We emailed you a code. Copy and paste it above to log in.'}
+						{"We emailed you a code. Copy and paste it above to log in."}
 					</div>
 				)}
 			</ui.Form>

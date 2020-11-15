@@ -1,6 +1,6 @@
-import './pricing_cards.css'
-import * as ui from '@tangramhq/ui'
-import { JSX, h } from 'preact'
+import "./pricing_cards.css"
+import * as ui from "@tangramhq/ui"
+import { JSX, h } from "preact"
 
 type PricingCardsProps = {
 	enterpriseCta: JSX.Element
@@ -20,8 +20,8 @@ export function PricingCards(props: PricingCardsProps) {
 				color="var(--indigo)"
 				cta={props.freeCta}
 				features={[
-					'Training with the CLI',
-					'Prediction with the language libraries',
+					"Training with the CLI",
+					"Prediction with the language libraries",
 				]}
 				price="$0"
 				priceSubtitle="forever"
@@ -32,11 +32,11 @@ export function PricingCards(props: PricingCardsProps) {
 				color="var(--teal)"
 				cta={props.startupCta}
 				features={[
-					'Everything in the Free plan',
-					'Reporting',
-					'Tuning',
-					'Monitoring',
-					'Single User',
+					"Everything in the Free plan",
+					"Reporting",
+					"Tuning",
+					"Monitoring",
+					"Single User",
 				]}
 				price="$99"
 				priceSubtitle="per month"
@@ -47,11 +47,11 @@ export function PricingCards(props: PricingCardsProps) {
 				color="var(--green)"
 				cta={props.teamCta}
 				features={[
-					'Everything in the Free plan',
-					'Reporting',
-					'Tuning',
-					'Monitoring',
-					'Unlimited Users',
+					"Everything in the Free plan",
+					"Reporting",
+					"Tuning",
+					"Monitoring",
+					"Unlimited Users",
 				]}
 				price="$499"
 				priceSubtitle="per user per month"
@@ -62,8 +62,8 @@ export function PricingCards(props: PricingCardsProps) {
 				color="var(--blue)"
 				cta={props.enterpriseCta}
 				features={[
-					'Everything in the Team plan',
-					'Run reporting and monitoring on your own servers',
+					"Everything in the Team plan",
+					"Run reporting and monitoring on your own servers",
 				]}
 				price="$999"
 				priceSubtitle="per user per month"
@@ -88,8 +88,8 @@ function PricingCard(props: PricingCardProps) {
 	return (
 		<div
 			class={ui.cx(
-				'pricing-card-grid',
-				props.selected && 'pricing-card-grid-selected',
+				"pricing-card-grid",
+				props.selected && "pricing-card-grid-selected",
 			)}
 		>
 			<div class="pricing-card-content-grid">

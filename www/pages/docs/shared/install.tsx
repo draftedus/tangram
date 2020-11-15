@@ -1,20 +1,20 @@
-import * as ui from '@tangramhq/ui'
-import { Fragment, h } from 'preact'
+import * as ui from "@tangramhq/ui"
+import { Fragment, h } from "preact"
 
 export function Install() {
 	return (
 		<>
-			<ui.H2>{'Brew'}</ui.H2>
+			<ui.H2>{"Brew"}</ui.H2>
 			<Brew />
-			<ui.H2>{'Scoop'}</ui.H2>
+			<ui.H2>{"Scoop"}</ui.H2>
 			<Scoop />
-			<ui.H2>{'MacOS'}</ui.H2>
+			<ui.H2>{"MacOS"}</ui.H2>
 			<MacOS />
-			<ui.H2>{'Linux'}</ui.H2>
+			<ui.H2>{"Linux"}</ui.H2>
 			<Linux />
-			<ui.H2>{'Windows'}</ui.H2>
+			<ui.H2>{"Windows"}</ui.H2>
 			<Windows />
-			<ui.H2>{'Docker'}</ui.H2>
+			<ui.H2>{"Docker"}</ui.H2>
 			<Docker />
 		</>
 	)
@@ -35,19 +35,19 @@ function MacOS() {
 		<ui.OrderedList>
 			<ui.ListItem>
 				{
-					'Download the executable for macOS from https://github.com/tangram-hq/tangram/releases/latest.'
+					"Download the executable for macOS from https://github.com/tangram-hq/tangram/releases/latest."
 				}
 			</ui.ListItem>
 			<ui.ListItem>
-				{'Unzip it: '}
+				{"Unzip it: "}
 				<ui.InlineCode>
-					{'tar -xvf tangram_cli_vX.X.X_macos_amd64.tar.gz'}
+					{"tar -xvf tangram_cli_vX.X.X_macos_amd64.tar.gz"}
 				</ui.InlineCode>
 			</ui.ListItem>
-			<ui.ListItem>{'Run the unzipped executable.'}</ui.ListItem>
+			<ui.ListItem>{"Run the unzipped executable."}</ui.ListItem>
 			<ui.ListItem>
 				{
-					'You will probably want to move the executable somewhere in your `$PATH` such as `/usr/local/bin`.'
+					"You will probably want to move the executable somewhere in your `$PATH` such as `/usr/local/bin`."
 				}
 			</ui.ListItem>
 		</ui.OrderedList>
@@ -59,19 +59,19 @@ function Linux() {
 		<ui.OrderedList>
 			<ui.ListItem>
 				{
-					'Download the executable for Linux from https://github.com/tangram-hq/tangram/releases/latest.'
+					"Download the executable for Linux from https://github.com/tangram-hq/tangram/releases/latest."
 				}
 			</ui.ListItem>
 			<ui.ListItem>
-				{'Unzip it: '}
+				{"Unzip it: "}
 				<ui.InlineCode>
-					{'tar -xvf tangram_cli_vX.X.X_linux_amd64.tar.gz'}
+					{"tar -xvf tangram_cli_vX.X.X_linux_amd64.tar.gz"}
 				</ui.InlineCode>
 			</ui.ListItem>
-			<ui.ListItem>{'Run the unzipped executable.'}</ui.ListItem>
+			<ui.ListItem>{"Run the unzipped executable."}</ui.ListItem>
 			<ui.ListItem>
 				{
-					'You will probably want to move the executable somewhere in your `$PATH` such as `/usr/local/bin`.'
+					"You will probably want to move the executable somewhere in your `$PATH` such as `/usr/local/bin`."
 				}
 			</ui.ListItem>
 		</ui.OrderedList>
@@ -83,11 +83,11 @@ function Windows() {
 		<ui.OrderedList>
 			<ui.ListItem>
 				{
-					'Download the executable for Windows from https://github.com/tangram-hq/tangram/releases/latest.'
+					"Download the executable for Windows from https://github.com/tangram-hq/tangram/releases/latest."
 				}
 			</ui.ListItem>
-			<ui.ListItem>{'Unzip it.'}</ui.ListItem>
-			<ui.ListItem>{'Run the unzipped executable.'}</ui.ListItem>
+			<ui.ListItem>{"Unzip it."}</ui.ListItem>
+			<ui.ListItem>{"Run the unzipped executable."}</ui.ListItem>
 		</ui.OrderedList>
 	)
 }

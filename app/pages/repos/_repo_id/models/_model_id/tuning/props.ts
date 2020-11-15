@@ -1,4 +1,4 @@
-import { ModelLayoutInfo } from 'layouts/model_layout'
+import { ModelLayoutInfo } from "layouts/model_layout"
 
 export type Props = {
 	modelLayoutInfo: ModelLayoutInfo

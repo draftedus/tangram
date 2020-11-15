@@ -1,6 +1,6 @@
-import { PageInfo } from '@tangramhq/pinwheel'
-import '@tangramhq/ui/global.css'
-import { ComponentChildren, h } from 'preact'
+import { PageInfo } from "@tangramhq/pinwheel"
+import "@tangramhq/ui/global.css"
+import { ComponentChildren, h } from "preact"
 
 export type DocumentProps = {
 	children?: ComponentChildren
@@ -20,7 +20,7 @@ export function Document(props: DocumentProps) {
 				{props.pageInfo.cssSrcs?.map(cssSrc => (
 					<link href={cssSrc} key={cssSrc} rel="stylesheet" />
 				))}
-				<title>{'Tangram'}</title>
+				<title>{"Tangram"}</title>
 				<meta
 					content="All-In-One Machine Learning Toolkit for Programmers"
 					name="description"
@@ -30,7 +30,7 @@ export function Document(props: DocumentProps) {
 				{props.children}
 				<script>
 					{
-						'document.cookie = `tangram-timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone};max-age=31536000`'
+						"document.cookie = `tangram-timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone};max-age=31536000`"
 					}
 				</script>
 				{props.pageInfo.clientJsSrc && (

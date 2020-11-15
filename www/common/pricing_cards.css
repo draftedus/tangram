@@ -63,7 +63,7 @@
 
 .pricing-card-feature:before {
 	color: var(--blue);
-	content: '✔';
+	content: "✔";
 }
 
 .pricing-card-features-list {

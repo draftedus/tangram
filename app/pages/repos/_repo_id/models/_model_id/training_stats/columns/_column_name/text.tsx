@@ -1,7 +1,7 @@
-import { TextProps } from './props'
-import { BarChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import { TextProps } from "./props"
+import { BarChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 export function TextColumnDetail(props: TextProps) {
 	let data = [
@@ -12,7 +12,7 @@ export function TextColumnDetail(props: TextProps) {
 				x: i,
 				y: token.count,
 			})),
-			title: 'Token Count',
+			title: "Token Count",
 		},
 	]
 	return (
@@ -31,8 +31,8 @@ export function TextColumnDetail(props: TextProps) {
 				</ui.Card>
 				<ui.Table width="100%">
 					<ui.TableHeader>
-						<ui.TableHeaderCell>{'Token'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Token"}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Count"}</ui.TableHeaderCell>
 					</ui.TableHeader>
 					<ui.TableBody>
 						{props.tokens.map((token, i) => (

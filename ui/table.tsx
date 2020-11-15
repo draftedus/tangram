@@ -1,6 +1,6 @@
-import './table.css'
-import { cx } from './util'
-import { ComponentChildren, h } from 'preact'
+import "./table.css"
+import { cx } from "./util"
+import { ComponentChildren, h } from "preact"
 
 export type TableProps = {
 	children?: ComponentChildren
@@ -10,7 +10,7 @@ export type TableProps = {
 export function Table(props: TableProps) {
 	return (
 		<div class="table-wrapper">
-			<table class="table" style={{ width: props.width ?? 'auto' }}>
+			<table class="table" style={{ width: props.width ?? "auto" }}>
 				{props.children}
 			</table>
 		</div>
@@ -50,31 +50,31 @@ export type TableCellProps = {
 	colSpan?: string
 	color?: string
 	expand?: boolean
-	textAlign?: 'left' | 'center' | 'right' | null
+	textAlign?: "left" | "center" | "right" | null
 }
 
 export function TableHeaderCell(props: TableCellProps) {
 	let alignClass
 	switch (props.textAlign) {
-		case 'left': {
-			alignClass = 'table-align-left'
+		case "left": {
+			alignClass = "table-align-left"
 			break
 		}
-		case 'right': {
-			alignClass = 'table-align-right'
+		case "right": {
+			alignClass = "table-align-right"
 			break
 		}
-		case 'center': {
-			alignClass = 'table-align-center'
+		case "center": {
+			alignClass = "table-align-center"
 			break
 		}
 	}
 	return (
 		<th
 			class={cx(
-				'table-header-cell',
-				props.textAlign ? alignClass : 'table-align-left',
-				props.expand && 'table-expand',
+				"table-header-cell",
+				props.textAlign ? alignClass : "table-align-left",
+				props.expand && "table-expand",
 			)}
 		>
 			{props.children}

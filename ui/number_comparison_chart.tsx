@@ -1,7 +1,7 @@
-import './number_comparison_chart.css'
-import { Token } from './token'
-import { cx } from './util'
-import { h } from 'preact'
+import "./number_comparison_chart.css"
+import { Token } from "./token"
+import { cx } from "./util"
+import { h } from "preact"
 
 type NumberComparisonChartProps = {
 	colorA: string
@@ -15,30 +15,30 @@ type NumberComparisonChartProps = {
 }
 
 function defaultValueFormatter(value: number) {
-	return value === null ? 'N/A' : value.toString()
+	return value === null ? "N/A" : value.toString()
 }
 
 export function NumberComparisonChart(props: NumberComparisonChartProps) {
 	let valueFormatter = props.valueFormatter ?? defaultValueFormatter
 	let differenceString =
 		props.valueA === null || props.valueB === null
-			? 'N/A'
+			? "N/A"
 			: props.valueB - props.valueA > 0
-			? '+' + valueFormatter(props.valueB - props.valueA)
+			? "+" + valueFormatter(props.valueB - props.valueA)
 			: props.valueB - props.valueA < 0
 			? valueFormatter(props.valueB - props.valueA)
-			: 'equal'
+			: "equal"
 	let differenceClass = cx(
-		'number-comparison-difference',
+		"number-comparison-difference",
 		props.valueB !== null &&
 			props.valueA !== null &&
 			props.valueB - props.valueA > 0
-			? 'number-comparison-positive'
+			? "number-comparison-positive"
 			: props.valueB !== null &&
 			  props.valueA !== null &&
 			  props.valueB - props.valueA < 0
-			? 'number-comparison-negative'
-			: 'number-comparison-equals',
+			? "number-comparison-negative"
+			: "number-comparison-equals",
 	)
 	return (
 		<div class="number-comparison-wrapper">
@@ -46,10 +46,10 @@ export function NumberComparisonChart(props: NumberComparisonChartProps) {
 			<div class={differenceClass}>{differenceString}</div>
 			<div class="number-comparison-inner-wrapper">
 				<div class="number-comparison-value">
-					{props.valueA !== null ? valueFormatter(props.valueA) : 'N/A'}
+					{props.valueA !== null ? valueFormatter(props.valueA) : "N/A"}
 				</div>
 				<div class="number-comparison-value">
-					{props.valueB !== null ? valueFormatter(props.valueB) : 'N/A'}
+					{props.valueB !== null ? valueFormatter(props.valueB) : "N/A"}
 				</div>
 				<div>
 					<Token color={props.colorA}>{props.valueATitle}</Token>

@@ -1,30 +1,30 @@
-import { MulticlassClassifierProps } from './props'
-import * as ui from '@tangramhq/ui'
-import * as definitions from 'common/definitions'
-import { baselineColor, trainingColor } from 'common/tokens'
-import { h } from 'preact'
+import { MulticlassClassifierProps } from "./props"
+import * as ui from "@tangramhq/ui"
+import * as definitions from "common/definitions"
+import { baselineColor, trainingColor } from "common/tokens"
+import { h } from "preact"
 
 export function MulticlassClassifierTrainingMetricsIndexPage(
 	props: MulticlassClassifierProps,
 ) {
 	return (
 		<ui.S1>
-			<ui.H1>{'Training Metrics'}</ui.H1>
+			<ui.H1>{"Training Metrics"}</ui.H1>
 			<ui.TabBar>
 				<ui.TabLink href="./" selected={true}>
-					{'Overview'}
+					{"Overview"}
 				</ui.TabLink>
-				<ui.TabLink href="class_metrics">{'Class Metrics'}</ui.TabLink>
+				<ui.TabLink href="class_metrics">{"Class Metrics"}</ui.TabLink>
 			</ui.TabBar>
 			<ui.S2>
 				<ui.P>
 					{
-						'At the end of training, your model was evaluated on a test dataset. All metrics in this section are from that evaluation. You can use these metrics to see how your model might perform on unseen production data.'
+						"At the end of training, your model was evaluated on a test dataset. All metrics in this section are from that evaluation. You can use these metrics to see how your model might perform on unseen production data."
 					}
 				</ui.P>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>{'Accuracy'}</ui.H2>
+				<ui.H2>{"Accuracy"}</ui.H2>
 				<ui.P>{definitions.accuracy}</ui.P>
 				<ui.Card>
 					<ui.NumberComparisonChart
@@ -40,14 +40,14 @@ export function MulticlassClassifierTrainingMetricsIndexPage(
 				</ui.Card>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>{'Precision and Recall'}</ui.H2>
+				<ui.H2>{"Precision and Recall"}</ui.H2>
 				<ui.P>{definitions.precisionRecall}</ui.P>
 				<ui.Table width="100%">
 					<ui.TableHeader>
 						<ui.TableRow>
-							<ui.TableHeaderCell>{'Class'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Precision'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Recall'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Class"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Precision"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Recall"}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>

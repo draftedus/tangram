@@ -1,7 +1,7 @@
-import './tuning.css'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
-import { useState } from 'preact/hooks'
+import "./tuning.css"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
+import { useState } from "preact/hooks"
 
 export function Tuning() {
 	let [thresholdIndex, setThresholdIndex] = useState(9)
@@ -29,17 +29,17 @@ export function Tuning() {
 					valueFormatter={formatter}
 				/>
 				<div class="tuning-number-chart-grid">
-					<div style={{ gridArea: 'accuracy' }}>
+					<div style={{ gridArea: "accuracy" }}>
 						<ui.Card>
 							<ui.NumberChart title="Accuracy" value={accuracy} />
 						</ui.Card>
 					</div>
-					<div style={{ gridArea: 'precision' }}>
+					<div style={{ gridArea: "precision" }}>
 						<ui.Card>
 							<ui.NumberChart title="Precision" value={precision} />
 						</ui.Card>
 					</div>
-					<div style={{ gridArea: 'recall' }}>
+					<div style={{ gridArea: "recall" }}>
 						<ui.Card>
 							<ui.NumberChart title="Recall" value={recall} />
 						</ui.Card>

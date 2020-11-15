@@ -1,5 +1,5 @@
-import './metrics_row.css'
-import { ComponentChildren, h } from 'preact'
+import "./metrics_row.css"
+import { ComponentChildren, h } from "preact"
 
 type MetricsRowProps = {
 	children?: ComponentChildren

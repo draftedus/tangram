@@ -1,5 +1,5 @@
-import './card.css'
-import { ComponentChildren, h } from 'preact'
+import "./card.css"
+import { ComponentChildren, h } from "preact"
 
 export type CardProps = {
 	children?: ComponentChildren

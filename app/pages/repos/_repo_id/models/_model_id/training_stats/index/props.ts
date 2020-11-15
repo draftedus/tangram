@@ -1,4 +1,4 @@
-import { ModelLayoutInfo } from 'layouts/model_layout'
+import { ModelLayoutInfo } from "layouts/model_layout"
 
 export type Props = {
 	columnCount: number
@@ -32,8 +32,8 @@ export type Props = {
 }
 
 export enum ColumnType {
-	Unknown = 'unknown',
-	Number = 'number',
-	Enum = 'enum',
-	Text = 'text',
+	Unknown = "unknown",
+	Number = "number",
+	Enum = "enum",
+	Text = "text",
 }

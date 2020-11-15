@@ -1,4 +1,4 @@
-import { Tuning } from './tuning'
-import { hydrateComponent } from '@tangramhq/pinwheel'
+import { Tuning } from "./tuning"
+import { hydrateComponent } from "@tangramhq/pinwheel"
 
-hydrateComponent('tuning', Tuning)
+hydrateComponent("tuning", Tuning)

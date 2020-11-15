@@ -1,5 +1,5 @@
-import './image.css'
-import { Fragment, h } from 'preact'
+import "./image.css"
+import { Fragment, h } from "preact"
 
 type ImageProps = {
 	alt: string

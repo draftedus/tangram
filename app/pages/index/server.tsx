@@ -1,24 +1,24 @@
-import { Props } from './props'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { renderPage } from 'common/render'
-import { AppLayout } from 'layouts/app_layout'
-import { Fragment, h } from 'preact'
+import { Props } from "./props"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { renderPage } from "common/render"
+import { AppLayout } from "layouts/app_layout"
+import { Fragment, h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
 		<AppLayout info={props.appLayoutInfo} pageInfo={pageInfo}>
 			<ui.S1>
 				<ui.SpaceBetween>
-					<ui.H1>{'Repositories'}</ui.H1>
-					<ui.Button href="/repos/new">{'Create Repo'}</ui.Button>
+					<ui.H1>{"Repositories"}</ui.H1>
+					<ui.Button href="/repos/new">{"Create Repo"}</ui.Button>
 				</ui.SpaceBetween>
 				{props.repos.length !== 0 ? (
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell expand={true}>{'Name'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Created'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell expand={true}>{"Name"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Created"}</ui.TableHeaderCell>
 								<ui.TableHeaderCell></ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
@@ -30,7 +30,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 											{repo.ownerName && (
 												<>
 													{repo.ownerName}
-													{'/'}
+													{"/"}
 												</>
 											)}
 											{repo.title}
@@ -41,7 +41,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 										<form method="post">
 											<input name="action" type="hidden" value="delete_repo" />
 											<input name="repo_id" type="hidden" value={repo.id} />
-											<ui.Button color="var(--red)">{'Delete'}</ui.Button>
+											<ui.Button color="var(--red)">{"Delete"}</ui.Button>
 										</form>
 									</ui.TableCell>
 								</ui.TableRow>
@@ -50,7 +50,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 					</ui.Table>
 				) : (
 					<ui.Card>
-						<ui.P>{'You do not have any repositories.'}</ui.P>
+						<ui.P>{"You do not have any repositories."}</ui.P>
 					</ui.Card>
 				)}
 			</ui.S1>

@@ -1,23 +1,23 @@
-import './explanations.css'
-import { BarChart, FeatureContributionsChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import "./explanations.css"
+import { BarChart, FeatureContributionsChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 export function Explanations() {
 	let data = {
 		chartData: [
-			{ label: 'Negative', x: 0, y: 0.02517283 },
-			{ label: 'Positive', x: 1, y: 0.9748272 },
+			{ label: "Negative", x: 0, y: 0.02517283 },
+			{ label: "Positive", x: 1, y: 0.9748272 },
 		],
-		className: 'Positive',
-		classes: ['Negative', 'Positive'],
+		className: "Positive",
+		classes: ["Negative", "Positive"],
 		featureContributionsChartData: [
 			{
 				baseline: 0.02783647,
-				baselineLabel: '51%',
-				label: 'Positive',
+				baselineLabel: "51%",
+				label: "Positive",
 				output: 3.6564934,
-				outputLabel: '97%',
+				outputLabel: "97%",
 				values: [
 					{ feature: "thallium_stress_test = 'normal'", value: -0.39572704 },
 					{ feature: "resting_blood_pressure = '160'", value: -0.14125186 },
@@ -65,7 +65,7 @@ export function Explanations() {
 							{
 								color: ui.colors.blue,
 								data: data.chartData,
-								title: 'probabilities',
+								title: "probabilities",
 							},
 						]}
 						title="Predicted Probabilities"

@@ -1,12 +1,12 @@
-import { Props } from './props'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { ClassSelectField } from 'common/class_select_field'
-import * as definitions from 'common/definitions'
-import { MetricsRow } from 'common/metrics_row'
-import { renderPage } from 'common/render'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { h } from 'preact'
+import { Props } from "./props"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { ClassSelectField } from "common/class_select_field"
+import * as definitions from "common/definitions"
+import { MetricsRow } from "common/metrics_row"
+import { renderPage } from "common/render"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
@@ -16,21 +16,21 @@ export default (pageInfo: PageInfo, props: Props) => {
 			selectedItem={ModelSideNavItem.TrainingMetrics}
 		>
 			<ui.S1>
-				<ui.H1>{'Training Metrics'}</ui.H1>
+				<ui.H1>{"Training Metrics"}</ui.H1>
 				<ui.TabBar>
-					<ui.TabLink href="./">{'Overview'}</ui.TabLink>
+					<ui.TabLink href="./">{"Overview"}</ui.TabLink>
 					<ui.TabLink href="class_metrics" selected={true}>
-						{'Class Metrics'}
+						{"Class Metrics"}
 					</ui.TabLink>
 				</ui.TabBar>
 				<ui.Form>
 					<ClassSelectField class={props.class} classes={props.classes} />
 					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
+						<ui.Button>{"Submit"}</ui.Button>
 					</noscript>
 				</ui.Form>
 				<ui.S2>
-					<ui.H2>{'Precision and Recall'}</ui.H2>
+					<ui.H2>{"Precision and Recall"}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<MetricsRow>
 						<ui.Card>
@@ -59,7 +59,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 					</MetricsRow>
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>{'Confusion Matrix'}</ui.H2>
+					<ui.H2>{"Confusion Matrix"}</ui.H2>
 					<ui.P>{definitions.confusionMatrix}</ui.P>
 					<ui.ConfusionMatrix
 						classLabel={props.class}

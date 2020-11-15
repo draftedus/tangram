@@ -1,10 +1,10 @@
-import { InnerType, Props } from './props'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { PredictionResult } from 'common/prediction_result'
-import { renderPage } from 'common/render'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { Fragment, h } from 'preact'
+import { InnerType, Props } from "./props"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { PredictionResult } from "common/prediction_result"
+import { renderPage } from "common/render"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { Fragment, h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
@@ -14,13 +14,13 @@ export default (pageInfo: PageInfo, props: Props) => {
 			selectedItem={ModelSideNavItem.ProductionPredictions}
 		>
 			<ui.S1>
-				<ui.H1>{'Prediction'}</ui.H1>
+				<ui.H1>{"Prediction"}</ui.H1>
 				{props.inner.type == InnerType.NotFound ? (
 					<ui.P>
 						<ui.Alert level={ui.Level.Danger}>
-							{'Prediction with identifier '}
+							{"Prediction with identifier "}
 							<b>{props.identifier}</b>
-							{' not found'}
+							{" not found"}
 						</ui.Alert>
 					</ui.P>
 				) : (
@@ -28,8 +28,8 @@ export default (pageInfo: PageInfo, props: Props) => {
 						<ui.Table width="100%">
 							<ui.TableHeader>
 								<ui.TableRow>
-									<ui.TableHeaderCell>{'Identifier'}</ui.TableHeaderCell>
-									<ui.TableHeaderCell>{'Date'}</ui.TableHeaderCell>
+									<ui.TableHeaderCell>{"Identifier"}</ui.TableHeaderCell>
+									<ui.TableHeaderCell>{"Date"}</ui.TableHeaderCell>
 								</ui.TableRow>
 							</ui.TableHeader>
 							<ui.TableBody>

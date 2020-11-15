@@ -1,8 +1,8 @@
-import { EnumProps } from './props'
-import { BarChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { MetricsRow } from 'common/metrics_row'
-import { h } from 'preact'
+import { EnumProps } from "./props"
+import { BarChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { MetricsRow } from "common/metrics_row"
+import { h } from "preact"
 
 export function EnumColumnDetail(props: EnumProps) {
 	let histogramData = [
@@ -13,7 +13,7 @@ export function EnumColumnDetail(props: EnumProps) {
 				x: i,
 				y: count,
 			})),
-			title: 'Unique Values',
+			title: "Unique Values",
 		},
 	]
 	return (
@@ -46,8 +46,8 @@ export function EnumColumnDetail(props: EnumProps) {
 				<ui.Table width="100%">
 					<ui.TableHeader>
 						<ui.TableRow>
-							<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
-							<ui.TableHeaderCell>{'Count'}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Value"}</ui.TableHeaderCell>
+							<ui.TableHeaderCell>{"Count"}</ui.TableHeaderCell>
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>

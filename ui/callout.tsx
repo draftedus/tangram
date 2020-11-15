@@ -1,7 +1,7 @@
-import { Level } from './alert'
-import './callout.css'
-import { cx } from './util'
-import { ComponentChildren, h } from 'preact'
+import { Level } from "./alert"
+import "./callout.css"
+import { cx } from "./util"
+import { ComponentChildren, h } from "preact"
 
 type CalloutProps = {
 	children?: ComponentChildren
@@ -13,18 +13,18 @@ export function Callout(props: CalloutProps) {
 	let levelClass
 	switch (props.level) {
 		case Level.Danger:
-			levelClass = 'callout-wrapper-danger'
+			levelClass = "callout-wrapper-danger"
 			break
 		case Level.Info:
-			levelClass = 'callout-wrapper-info'
+			levelClass = "callout-wrapper-info"
 			break
 		case Level.Warning:
-			levelClass = 'callout-wrapper-warning'
+			levelClass = "callout-wrapper-warning"
 			break
 	}
 
 	return (
-		<div class={cx('callout-wrapper', levelClass)}>
+		<div class={cx("callout-wrapper", levelClass)}>
 			{props.title && <div class="callout-title">{props.title}</div>}
 			<div class="callout-inner">{props.children}</div>
 		</div>

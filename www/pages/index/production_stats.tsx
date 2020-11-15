@@ -1,14 +1,14 @@
-import './production_stats.css'
-import { BarChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import "./production_stats.css"
+import { BarChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 export function ProductionStats() {
 	let options: string[] = [
-		'asymptomatic',
-		'atypical angina',
-		'non-angina pain',
-		'typical angina',
+		"asymptomatic",
+		"atypical angina",
+		"non-angina pain",
+		"typical angina",
 	]
 	let series = [
 		{
@@ -19,7 +19,7 @@ export function ProductionStats() {
 				{ label: options[2], x: 2, y: 0.2838 },
 				{ label: options[3], x: 3, y: 0.07591 },
 			],
-			title: 'Training',
+			title: "Training",
 		},
 		{
 			color: ui.colors.green,
@@ -29,16 +29,16 @@ export function ProductionStats() {
 				{ label: options[2], x: 2, y: 0.2903 },
 				{ label: options[3], x: 3, y: 0.07508 },
 			],
-			title: 'Production',
+			title: "Production",
 		},
 	]
 	return (
 		<ui.Window>
 			<div class="production-stats-wrapper">
-				<div style={{ gridArea: 'alert' }}>
-					<ui.Alert level={ui.Level.Danger}>{'High Invalid Count'}</ui.Alert>
+				<div style={{ gridArea: "alert" }}>
+					<ui.Alert level={ui.Level.Danger}>{"High Invalid Count"}</ui.Alert>
 				</div>
-				<div style={{ gridArea: 'comparison' }}>
+				<div style={{ gridArea: "comparison" }}>
 					<ui.Card>
 						<BarChart
 							data={series}

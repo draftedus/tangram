@@ -1,7 +1,7 @@
-import './training_metrics.css'
-import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import "./training_metrics.css"
+import { LineChart, LineStyle, PointStyle } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 export function TrainingMetrics() {
 	let rocData = [
@@ -9,7 +9,7 @@ export function TrainingMetrics() {
 			color: ui.colors.blue,
 			data: data.rocData,
 			pointStyle: PointStyle.Hidden,
-			title: 'ROC',
+			title: "ROC",
 		},
 		{
 			color: ui.colors.gray,
@@ -19,7 +19,7 @@ export function TrainingMetrics() {
 			],
 			lineStyle: LineStyle.Dashed,
 			pointStyle: PointStyle.Hidden,
-			title: 'Reference',
+			title: "Reference",
 		},
 	]
 	let prData = [
@@ -27,13 +27,13 @@ export function TrainingMetrics() {
 			color: ui.colors.blue,
 			data: data.prData,
 			pointStyle: PointStyle.Circle,
-			title: 'PR',
+			title: "PR",
 		},
 	]
 	return (
 		<ui.Window>
 			<div class="training-metrics-wrapper">
-				<div style={{ gridArea: 'accuracy' }}>
+				<div style={{ gridArea: "accuracy" }}>
 					<ui.Card>
 						<ui.NumberComparisonChart
 							colorA="var(--gray)"
@@ -47,7 +47,7 @@ export function TrainingMetrics() {
 						/>
 					</ui.Card>
 				</div>
-				<div style={{ gridArea: 'pr' }}>
+				<div style={{ gridArea: "pr" }}>
 					<ui.Card>
 						<LineChart
 							data={prData}
@@ -62,7 +62,7 @@ export function TrainingMetrics() {
 						/>
 					</ui.Card>
 				</div>
-				<div style={{ gridArea: 'roc' }}>
+				<div style={{ gridArea: "roc" }}>
 					<ui.Card>
 						<LineChart
 							data={rocData}
@@ -89,7 +89,7 @@ let data = {
 	classMetrics: [
 		{
 			accuracy: 0.8567480444908142,
-			className: '<=50K',
+			className: "<=50K",
 			f1Score: 0.909320592880249,
 			falseNegatives: 241,
 			falsePositives: 692,
@@ -100,7 +100,7 @@ let data = {
 		},
 		{
 			accuracy: 0.8567480444908142,
-			className: '>50K',
+			className: ">50K",
 			f1Score: 0.6591158509254456,
 			falseNegatives: 692,
 			falsePositives: 241,
@@ -110,7 +110,7 @@ let data = {
 			truePositives: 902,
 		},
 	],
-	classes: ['<=50K', '>50K'],
+	classes: ["<=50K", ">50K"],
 	loss: 0.309477,
 	prData: [
 		{ x: 0.001829640124924481, y: 1 },

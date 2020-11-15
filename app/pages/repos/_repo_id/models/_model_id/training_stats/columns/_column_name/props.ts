@@ -1,4 +1,4 @@
-import { ModelLayoutInfo } from 'layouts/model_layout'
+import { ModelLayoutInfo } from "layouts/model_layout"
 
 export type Props = {
 	inner: Inner
@@ -20,9 +20,9 @@ export type Inner =
 	  }
 
 export enum Type {
-	Number = 'number',
-	Enum = 'enum',
-	Text = 'text',
+	Number = "number",
+	Enum = "enum",
+	Text = "text",
 }
 
 export type EnumProps = {

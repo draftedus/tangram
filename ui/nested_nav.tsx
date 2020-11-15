@@ -1,6 +1,6 @@
-import './nested_nav.css'
-import { cx } from './util'
-import { ComponentChildren, h } from 'preact'
+import "./nested_nav.css"
+import { cx } from "./util"
+import { ComponentChildren, h } from "preact"
 
 type NestedNavProps = {
 	children?: ComponentChildren
@@ -34,7 +34,7 @@ type NestedNavItemProps = {
 
 export function NestedNavItem(props: NestedNavItemProps) {
 	return (
-		<div class={cx('nested-nav-item', props.selected && 'nested-nav-selected')}>
+		<div class={cx("nested-nav-item", props.selected && "nested-nav-selected")}>
 			<a href={props.href}>{props.children}</a>
 		</div>
 	)

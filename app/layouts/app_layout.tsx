@@ -1,8 +1,8 @@
-import './app_layout.css'
-import { PageInfo } from '@tangramhq/pinwheel'
-import { Document } from '@tangramhq/www'
-import { Topbar, TopbarAvatar } from 'common/topbar'
-import { ComponentChildren, h } from 'preact'
+import "./app_layout.css"
+import { PageInfo } from "@tangramhq/pinwheel"
+import { Document } from "@tangramhq/www"
+import { Topbar, TopbarAvatar } from "common/topbar"
+import { ComponentChildren, h } from "preact"
 
 type AppLayoutProps = {
 	children?: ComponentChildren

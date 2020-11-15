@@ -1,5 +1,5 @@
-let fetch = require('node-fetch')
-let native = require('./build/Release/native.node')
+let fetch = require("node-fetch")
+let native = require("./build/Release/native.node")
 
 export type PredictOptions = {
 	threshold?: number
@@ -28,14 +28,14 @@ export type PredictionMonitorEvent = {
 	input: { [key: string]: string | number | boolean | null | undefined }
 	modelId: string
 	output: MulticlassClassificationOutput | RegressionOutput
-	type: 'prediction'
+	type: "prediction"
 }
 
 export type TrueValueMonitorEvent = {
 	identifier: number | string
 	modelId: string
 	trueValue: number | string
-	type: 'true_value'
+	type: "true_value"
 }
 
 export type ModelOptions = {
@@ -62,7 +62,7 @@ export class Model<InputType extends Input, OutputType extends Output> {
 
 	constructor(data: ArrayBuffer, options?: ModelOptions) {
 		this.model = native.model_load(data)
-		this.tangramUrl = options?.tangramUrl ?? 'https://app.tangramhq.com.com'
+		this.tangramUrl = options?.tangramUrl ?? "https://app.tangramhq.com.com"
 		this.logQueue = []
 	}
 
@@ -88,7 +88,7 @@ export class Model<InputType extends Input, OutputType extends Output> {
 	public async logPrediction(options: LogPredictionOptions): Promise<void> {
 		this.logEvent({
 			modelId: this.id(),
-			type: 'prediction' as const,
+			type: "prediction" as const,
 			...options,
 		})
 	}
@@ -96,7 +96,7 @@ export class Model<InputType extends Input, OutputType extends Output> {
 	public enqueueLogPrediction(options: LogPredictionOptions) {
 		this.logQueue.push({
 			modelId: this.id(),
-			type: 'prediction' as const,
+			type: "prediction" as const,
 			...options,
 		})
 	}
@@ -104,7 +104,7 @@ export class Model<InputType extends Input, OutputType extends Output> {
 	public async logTrueValue(options: LogTrueValueOptions): Promise<void> {
 		this.logEvent({
 			modelId: this.id(),
-			type: 'true_value' as const,
+			type: "true_value" as const,
 			...options,
 		})
 	}
@@ -112,7 +112,7 @@ export class Model<InputType extends Input, OutputType extends Output> {
 	public enqueueLogTrueValue(options: LogTrueValueOptions) {
 		this.logQueue.push({
 			modelId: this.id(),
-			type: 'true_value' as const,
+			type: "true_value" as const,
 			...options,
 		})
 	}
@@ -127,17 +127,17 @@ export class Model<InputType extends Input, OutputType extends Output> {
 	}
 
 	private async logEvents(events: MonitorEvent[]): Promise<void> {
-		let url = this.tangramUrl + '/track'
+		let url = this.tangramUrl + "/track"
 		let body = JSON.stringify(events)
-		if (typeof fetch === 'undefined') {
-			throw Error('Tangram cannot find the fetch function.')
+		if (typeof fetch === "undefined") {
+			throw Error("Tangram cannot find the fetch function.")
 		}
 		let response = await fetch(url, {
 			body,
 			headers: {
-				'Content-Type': 'application/json',
+				"Content-Type": "application/json",
 			},
-			method: 'POST',
+			method: "POST",
 		})
 		if (!response.ok) {
 			throw Error(await response.text())

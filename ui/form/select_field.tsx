@@ -1,6 +1,6 @@
-import { FieldLabel } from './field_label'
-import './select_field.css'
-import { ComponentChildren, h } from 'preact'
+import { FieldLabel } from "./field_label"
+import "./select_field.css"
+import { ComponentChildren, h } from "preact"
 
 export type SelectFieldProps = {
 	children?: ComponentChildren
@@ -51,9 +51,9 @@ export function SelectField(props: SelectFieldProps) {
 export function selectFieldSubmitOnChange(id: string) {
 	let selectElement = document.getElementById(id)
 	if (!(selectElement instanceof HTMLSelectElement)) throw Error()
-	selectElement.addEventListener('change', event => {
+	selectElement.addEventListener("change", event => {
 		if (!(event.currentTarget instanceof HTMLSelectElement)) throw Error()
-		let form = event.currentTarget.closest('form')
+		let form = event.currentTarget.closest("form")
 		if (!(form instanceof HTMLFormElement)) throw Error()
 		form.submit()
 	})

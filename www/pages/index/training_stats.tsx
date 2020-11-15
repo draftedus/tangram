@@ -1,7 +1,7 @@
-import './training_stats.css'
-import { BoxChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import "./training_stats.css"
+import { BoxChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 export function TrainingStats() {
 	let series = [
@@ -9,7 +9,7 @@ export function TrainingStats() {
 			color: ui.colors.blue,
 			data: [
 				{
-					label: 'Age',
+					label: "Age",
 					x: 0,
 					y: {
 						max: 77,
@@ -20,23 +20,23 @@ export function TrainingStats() {
 					},
 				},
 			],
-			title: 'quartiles',
+			title: "quartiles",
 		},
 	]
 	return (
 		<ui.Window>
 			<div class="training-stats-wrapper">
-				<div style={{ gridArea: 'mean' }}>
+				<div style={{ gridArea: "mean" }}>
 					<ui.Card>
 						<ui.NumberChart title="Mean" value="54.4389" />
 					</ui.Card>
 				</div>
-				<div style={{ gridArea: 'std' }}>
+				<div style={{ gridArea: "std" }}>
 					<ui.Card>
 						<ui.NumberChart title="Standard Deviation" value="9.02374" />
 					</ui.Card>
 				</div>
-				<div style={{ gridArea: 'age' }}>
+				<div style={{ gridArea: "age" }}>
 					<ui.Card>
 						<BoxChart
 							data={series}

@@ -1,7 +1,7 @@
-import { Layout } from './layout'
-import './page_layout.css'
-import { PageInfo } from '@tangramhq/pinwheel'
-import { ComponentChildren, h } from 'preact'
+import { Layout } from "./layout"
+import "./page_layout.css"
+import { PageInfo } from "@tangramhq/pinwheel"
+import { ComponentChildren, h } from "preact"
 
 type PageLayoutProps = {
 	background?: boolean

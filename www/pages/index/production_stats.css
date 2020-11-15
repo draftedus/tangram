@@ -2,6 +2,6 @@
 	display: grid;
 	grid: auto auto / auto;
 	gap: 1rem;
-	grid-template-areas: 'alert' 'comparison';
+	grid-template-areas: "alert" "comparison";
 	padding: 1rem;
 }

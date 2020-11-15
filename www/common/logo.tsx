@@ -1,4 +1,4 @@
-import { h } from 'preact'
+import { h } from "preact"
 
 export enum LogoScheme {
 	Multi,
@@ -20,13 +20,13 @@ export function Logo(props: LogoProps) {
 	let largeTriangle1
 	let largeTriangle2
 	if (props.colorScheme === LogoScheme.Multi) {
-		trapezoid = 'var(--pink)'
-		square = 'var(--yellow)'
-		mediumTriangle = 'var(--teal)'
-		smallTriangle1 = 'var(--purple)'
-		smallTriangle2 = 'var(--indigo)'
-		largeTriangle1 = 'var(--blue)'
-		largeTriangle2 = 'var(--green)'
+		trapezoid = "var(--pink)"
+		square = "var(--yellow)"
+		mediumTriangle = "var(--teal)"
+		smallTriangle1 = "var(--purple)"
+		smallTriangle2 = "var(--indigo)"
+		largeTriangle1 = "var(--blue)"
+		largeTriangle2 = "var(--green)"
 	} else {
 		trapezoid = props.color
 		square = props.color
@@ -45,7 +45,7 @@ export function Logo(props: LogoProps) {
 			width="100%"
 			xmlns="http://www.w3.org/2000/svg"
 		>
-			<desc>{'tangram'}</desc>
+			<desc>{"tangram"}</desc>
 			<path d="M0 0L50 50V150L0 100V0Z" fill={trapezoid} />
 			<path d="M100 100L150 150L100 200L50 150L100 100Z" fill={square} />
 			<path d="M0 100L100 200H0V100Z" fill={mediumTriangle} />

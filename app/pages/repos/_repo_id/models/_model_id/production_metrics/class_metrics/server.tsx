@@ -1,16 +1,16 @@
-import { Props } from './props'
-import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { ClassSelectField } from 'common/class_select_field'
-import { DateWindowSelectField } from 'common/date_window_select_field'
-import * as definitions from 'common/definitions'
-import { MetricsRow } from 'common/metrics_row'
-import { renderPage } from 'common/render'
-import { intervalChartTitle } from 'common/time'
-import { productionColor, trainingColor } from 'common/tokens'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { Fragment, h } from 'preact'
+import { Props } from "./props"
+import { LineChart, LineStyle, PointStyle } from "@tangramhq/charts"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { ClassSelectField } from "common/class_select_field"
+import { DateWindowSelectField } from "common/date_window_select_field"
+import * as definitions from "common/definitions"
+import { MetricsRow } from "common/metrics_row"
+import { renderPage } from "common/render"
+import { intervalChartTitle } from "common/time"
+import { productionColor, trainingColor } from "common/tokens"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { Fragment, h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	let selectedClassIndex = props.classes.indexOf(props.class)
@@ -21,17 +21,17 @@ export default (pageInfo: PageInfo, props: Props) => {
 
 	let precisionIntervalChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		'Precision',
+		"Precision",
 	)
 
 	let recallIntervalChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		'Recall',
+		"Recall",
 	)
 
 	let f1ScoreIntervalChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		'F1 Score',
+		"F1 Score",
 	)
 
 	let chartLabels = selectedIntervalClassMetrics.intervals.map(
@@ -46,7 +46,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 			})),
 			lineStyle: LineStyle.Dashed,
 			pointStyle: PointStyle.Hidden,
-			title: 'Training Precision',
+			title: "Training Precision",
 		},
 		{
 			color: productionColor,
@@ -54,7 +54,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 				x: index,
 				y: interval.precision.production,
 			})),
-			title: 'Production Precision',
+			title: "Production Precision",
 		},
 	]
 
@@ -67,7 +67,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 			})),
 			lineStyle: LineStyle.Dashed,
 			pointStyle: PointStyle.Hidden,
-			title: 'Training Recall',
+			title: "Training Recall",
 		},
 		{
 			color: productionColor,
@@ -75,7 +75,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 				x: index,
 				y: interval.recall.production,
 			})),
-			title: 'Production Recall',
+			title: "Production Recall",
 		},
 	]
 
@@ -88,7 +88,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 			})),
 			lineStyle: LineStyle.Dashed,
 			pointStyle: PointStyle.Hidden,
-			title: 'Training F1 Score',
+			title: "Training F1 Score",
 		},
 		{
 			color: productionColor,
@@ -96,7 +96,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 				x: index,
 				y: interval.f1Score.production,
 			})),
-			title: 'Production F1 Score',
+			title: "Production F1 Score",
 		},
 	]
 
@@ -107,24 +107,24 @@ export default (pageInfo: PageInfo, props: Props) => {
 			selectedItem={ModelSideNavItem.ProductionMetrics}
 		>
 			<ui.S1>
-				<ui.H1>{'Production Metrics'}</ui.H1>
+				<ui.H1>{"Production Metrics"}</ui.H1>
 				<ui.TabBar>
-					<ui.TabLink href="./">{'Overview'}</ui.TabLink>
+					<ui.TabLink href="./">{"Overview"}</ui.TabLink>
 					<ui.TabLink href="class_metrics" selected={true}>
-						{'Class Metrics'}
+						{"Class Metrics"}
 					</ui.TabLink>
 				</ui.TabBar>
 				<ui.Form>
 					<DateWindowSelectField dateWindow={props.dateWindow} />
 					<ClassSelectField class={props.class} classes={props.classes} />
 					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
+						<ui.Button>{"Submit"}</ui.Button>
 					</noscript>
 				</ui.Form>
 				{selectedOverallClassMetrics !== null && (
 					<>
 						<ui.S2>
-							<ui.H2>{'Precision and Recall'}</ui.H2>
+							<ui.H2>{"Precision and Recall"}</ui.H2>
 							<ui.P>{definitions.precisionRecall}</ui.P>
 							<MetricsRow>
 								<ui.Card>
@@ -201,7 +201,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 							</ui.Card>
 						</ui.S2>
 						<ui.S2>
-							<ui.H2>{'Confusion Matrix'}</ui.H2>
+							<ui.H2>{"Confusion Matrix"}</ui.H2>
 							<ui.P>{definitions.confusionMatrix}</ui.P>
 							<ui.ConfusionMatrix
 								classLabel={props.class}
@@ -220,7 +220,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 							/>
 						</ui.S2>
 						<ui.S2>
-							<ui.H2>{'Production v. Training Confusion Matrix'}</ui.H2>
+							<ui.H2>{"Production v. Training Confusion Matrix"}</ui.H2>
 							<ui.P>{definitions.confusionMatrix}</ui.P>
 							{selectedOverallClassMetrics.comparison && (
 								<ui.ConfusionMatrixComparison

@@ -1,11 +1,11 @@
-import { Props } from './props'
-import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import * as definitions from 'common/definitions'
-import { renderPage } from 'common/render'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { h } from 'preact'
+import { Props } from "./props"
+import { LineChart, LineStyle, PointStyle } from "@tangramhq/charts"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import * as definitions from "common/definitions"
+import { renderPage } from "common/render"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	let rocData = props.rocCurveData.map(
@@ -19,7 +19,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 		{
 			color: ui.colors.blue,
 			data: rocData,
-			title: 'ROC',
+			title: "ROC",
 		},
 		{
 			color: ui.colors.gray,
@@ -29,7 +29,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 			],
 			lineStyle: LineStyle.Dashed,
 			pointStyle: PointStyle.Hidden,
-			title: 'Reference',
+			title: "Reference",
 		},
 	]
 	return renderPage(
@@ -39,16 +39,16 @@ export default (pageInfo: PageInfo, props: Props) => {
 			selectedItem={ModelSideNavItem.TrainingMetrics}
 		>
 			<ui.S1>
-				<ui.H1>{'Training Metrics'}</ui.H1>
+				<ui.H1>{"Training Metrics"}</ui.H1>
 				<ui.TabBar>
-					<ui.TabLink href="./">{'Overview'}</ui.TabLink>
-					<ui.TabLink href="precision_recall">{'PR Curve'}</ui.TabLink>
+					<ui.TabLink href="./">{"Overview"}</ui.TabLink>
+					<ui.TabLink href="precision_recall">{"PR Curve"}</ui.TabLink>
 					<ui.TabLink href="roc" selected={true}>
-						{'ROC Curve'}
+						{"ROC Curve"}
 					</ui.TabLink>
 				</ui.TabBar>
 				<ui.S2>
-					<ui.H2>{'Area Under the Receiver Operating Characteristic'}</ui.H2>
+					<ui.H2>{"Area Under the Receiver Operating Characteristic"}</ui.H2>
 					<ui.P>{definitions.aucRoc}</ui.P>
 					<ui.Card>
 						<ui.NumberChart
@@ -59,7 +59,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 					</ui.Card>
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>{'Receiver Operating Characteristic Curve'}</ui.H2>
+					<ui.H2>{"Receiver Operating Characteristic Curve"}</ui.H2>
 					<ui.P>{definitions.receiverOperatingCharacteristic}</ui.P>
 					<ui.Card>
 						<LineChart

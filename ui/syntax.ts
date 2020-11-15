@@ -1,9 +1,9 @@
 export enum Language {
-	Go = 'go',
-	JavaScript = 'javascript',
-	Python = 'python',
-	Ruby = 'ruby',
-	Text = 'text',
+	Go = "go",
+	JavaScript = "javascript",
+	Python = "python",
+	Ruby = "ruby",
+	Text = "text",
 }
 
 export function highlight(
@@ -68,13 +68,13 @@ export type SyntaxColors = {
 } & { [S in Scope]: string }
 
 enum Scope {
-	BuiltIn = 'builtin',
-	Comment = 'comment',
-	Function = 'function',
-	Keyword = 'keyword',
-	LiteralBool = 'literalBool',
-	LiteralNumber = 'literalNumber',
-	LiteralString = 'literalString',
+	BuiltIn = "builtin",
+	Comment = "comment",
+	Function = "function",
+	Keyword = "keyword",
+	LiteralBool = "literalBool",
+	LiteralNumber = "literalNumber",
+	LiteralString = "literalString",
 }
 
 type SyntaxGrammar = SyntaxGrammarRule[]

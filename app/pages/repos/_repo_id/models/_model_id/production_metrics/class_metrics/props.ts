@@ -1,5 +1,5 @@
-import { DateWindow, DateWindowInterval } from 'common/time'
-import { ModelLayoutInfo } from 'layouts/model_layout'
+import { DateWindow, DateWindowInterval } from "common/time"
+import { ModelLayoutInfo } from "layouts/model_layout"
 
 export type Props = {
 	class: string

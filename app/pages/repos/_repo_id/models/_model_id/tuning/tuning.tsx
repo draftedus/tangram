@@ -1,9 +1,9 @@
-import { TuningProps } from './props'
-import * as ui from '@tangramhq/ui'
-import { MetricsRow } from 'common/metrics_row'
-import { baselineColor, selectedThresholdColor } from 'common/tokens'
-import { h } from 'preact'
-import { useState } from 'preact/hooks'
+import { TuningProps } from "./props"
+import * as ui from "@tangramhq/ui"
+import { MetricsRow } from "common/metrics_row"
+import { baselineColor, selectedThresholdColor } from "common/tokens"
+import { h } from "preact"
+import { useState } from "preact/hooks"
 
 export function Tuning(props: TuningProps) {
 	let thresholds = props.metrics.map(
@@ -22,11 +22,11 @@ export function Tuning(props: TuningProps) {
 
 	return (
 		<ui.S1>
-			<ui.H1>{'Tuning'}</ui.H1>
+			<ui.H1>{"Tuning"}</ui.H1>
 			<ui.S2>
 				<ui.P>
 					{
-						'Drag the silder to see how metrics change with varying settings of the threshold.'
+						"Drag the silder to see how metrics change with varying settings of the threshold."
 					}
 				</ui.P>
 				<ui.Slider
@@ -42,13 +42,13 @@ export function Tuning(props: TuningProps) {
 			{selectedThreshold == 0.0 ? (
 				<ui.Alert level={ui.Level.Info}>
 					{
-						'A threshold of 0 makes your model predict the same class for every input.'
+						"A threshold of 0 makes your model predict the same class for every input."
 					}
 				</ui.Alert>
 			) : selectedThreshold == 1.0 ? (
 				<ui.Alert level={ui.Level.Info}>
 					{
-						'A threshold of 1 makes your model predict the same class for every input.'
+						"A threshold of 1 makes your model predict the same class for every input."
 					}
 				</ui.Alert>
 			) : null}

@@ -1,14 +1,14 @@
-import { LinearBinaryClassifierTrainingImportancesPage } from './linear_binary_classifier'
-import { LinearMulticlassClassifierTrainingImportancesPage } from './linear_multiclass_classifier'
-import { LinearRegressorTrainingImportancesPage } from './linear_regressor'
-import { Props, Type } from './props'
-import { TreeBinaryClassifierTrainingImportancesPage } from './tree_binary_classifier'
-import { TreeMulticlassClassifierTrainingImportancesPage } from './tree_multiclass_classifier'
-import { TreeRegressorTrainingImportancesPage } from './tree_regressor'
-import { PageInfo } from '@tangramhq/pinwheel'
-import { renderPage } from 'common/render'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { h } from 'preact'
+import { LinearBinaryClassifierTrainingImportancesPage } from "./linear_binary_classifier"
+import { LinearMulticlassClassifierTrainingImportancesPage } from "./linear_multiclass_classifier"
+import { LinearRegressorTrainingImportancesPage } from "./linear_regressor"
+import { Props, Type } from "./props"
+import { TreeBinaryClassifierTrainingImportancesPage } from "./tree_binary_classifier"
+import { TreeMulticlassClassifierTrainingImportancesPage } from "./tree_multiclass_classifier"
+import { TreeRegressorTrainingImportancesPage } from "./tree_regressor"
+import { PageInfo } from "@tangramhq/pinwheel"
+import { renderPage } from "common/render"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	let inner

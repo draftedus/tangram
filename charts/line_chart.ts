@@ -1,4 +1,4 @@
-import { ActiveHoverRegion, HoverRegion, createChart } from './chart'
+import { ActiveHoverRegion, HoverRegion, createChart } from "./chart"
 import {
 	Box,
 	GridLineInterval,
@@ -14,9 +14,9 @@ import {
 	drawYAxisLabels,
 	drawYAxisTitle,
 	formatNumber,
-} from './common'
-import { chartColors, chartConfig } from './config'
-import { TooltipData, drawTooltip } from './tooltip'
+} from "./common"
+import { chartColors, chartConfig } from "./config"
+import { TooltipData, drawTooltip } from "./tooltip"
 
 export type LineChartOptions = {
 	data: LineChartData
@@ -595,7 +595,7 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 		})
 		drawPoint({
 			chartBox,
-			color: '#00000022',
+			color: "#00000022",
 			ctx,
 			point: { x: point.x, y: point.y },
 			pointStyle: PointStyle.Circle,

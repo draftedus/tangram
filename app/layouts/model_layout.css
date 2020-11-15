@@ -13,13 +13,13 @@
 
 @media (max-width: 1199px) {
 	.model-layout {
-		grid: 'topbar' auto 'model' auto / minmax(0, 1fr);
+		grid: "topbar" auto "model" auto / minmax(0, 1fr);
 	}
 }
 
 @media (min-width: 1200px) {
 	.model-layout {
-		grid: 'topbar' auto 'model' 1fr / minmax(0, 1fr);
+		grid: "topbar" auto "model" 1fr / minmax(0, 1fr);
 		height: 100%;
 	}
 }
@@ -34,13 +34,13 @@
 
 @media (max-width: 1199px) {
 	.model-layout-grid {
-		grid: 'side-nav' auto 'content' auto / minmax(0, 1fr);
+		grid: "side-nav" auto "content" auto / minmax(0, 1fr);
 	}
 }
 
 @media (min-width: 1200px) {
 	.model-layout-grid {
-		grid: 'side-nav content' 1fr / auto minmax(0, 1fr);
+		grid: "side-nav content" 1fr / auto minmax(0, 1fr);
 	}
 }
 

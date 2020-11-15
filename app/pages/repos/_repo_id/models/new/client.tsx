@@ -1,3 +1,3 @@
-import * as ui from '@tangramhq/ui'
+import * as ui from "@tangramhq/ui"
 
 ui.bootFileFields()

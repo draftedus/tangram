@@ -1,5 +1,5 @@
-import './button.css'
-import { ComponentChildren, h } from 'preact'
+import "./button.css"
+import { ComponentChildren, h } from "preact"
 
 export type ButtonProps = {
 	block?: boolean
@@ -10,7 +10,7 @@ export type ButtonProps = {
 	href?: string
 	id?: string
 	onClick?: () => void
-	type?: 'submit' | 'button' | 'reset'
+	type?: "submit" | "button" | "reset"
 }
 
 export function Button(props: ButtonProps) {

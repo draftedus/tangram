@@ -1,13 +1,13 @@
-import { Enum } from './enum'
-import { Number } from './number'
-import { Props, Type } from './props'
-import { Text } from './text'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { DateWindowSelectField } from 'common/date_window_select_field'
-import { renderPage } from 'common/render'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { h } from 'preact'
+import { Enum } from "./enum"
+import { Number } from "./number"
+import { Props, Type } from "./props"
+import { Text } from "./text"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { DateWindowSelectField } from "common/date_window_select_field"
+import { renderPage } from "common/render"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	let inner
@@ -33,7 +33,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 				<ui.Form>
 					<DateWindowSelectField dateWindow={props.dateWindow} />
 					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
+						<ui.Button>{"Submit"}</ui.Button>
 					</noscript>
 				</ui.Form>
 				{inner}

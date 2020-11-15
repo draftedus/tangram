@@ -1,5 +1,5 @@
-import { DateWindow, DateWindowInterval } from 'common/time'
-import { ModelLayoutInfo } from 'layouts/model_layout'
+import { DateWindow, DateWindowInterval } from "common/time"
+import { ModelLayoutInfo } from "layouts/model_layout"
 
 export type Props = {
 	dateWindow: DateWindow
@@ -50,9 +50,9 @@ export type PredictionStatsIntervalChart =
 	  }
 
 export enum Task {
-	Regression = 'regression',
-	BinaryClassification = 'binary_classification',
-	MulticlassClassification = 'multiclass_classification',
+	Regression = "regression",
+	BinaryClassification = "binary_classification",
+	MulticlassClassification = "multiclass_classification",
 }
 
 export type RegressionChartEntry = {
@@ -92,7 +92,7 @@ export type MulticlassClassificationChartEntry = {
 }
 
 export enum ColumnType {
-	Number = 'number',
-	Enum = 'enum',
-	Text = 'text',
+	Number = "number",
+	Enum = "enum",
+	Text = "text",
 }

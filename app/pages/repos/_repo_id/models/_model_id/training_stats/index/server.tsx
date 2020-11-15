@@ -1,16 +1,16 @@
-import { ColumnType, Props } from './props'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { MetricsRow } from 'common/metrics_row'
-import { renderPage } from 'common/render'
+import { ColumnType, Props } from "./props"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { MetricsRow } from "common/metrics_row"
+import { renderPage } from "common/render"
 import {
 	EnumColumnToken,
 	NumberColumnToken,
 	TextColumnToken,
 	UnknownColumnToken,
-} from 'common/tokens'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { Fragment, h } from 'preact'
+} from "common/tokens"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { Fragment, h } from "preact"
 
 let description = `The following are statistics for the columns in your dataset. A column is a Number column if every non-null value in the column parses as a finite floating point number. A column is an Enum column if it is not a Number column and the count of unique non-null values is less than 100. A column is a Text column if it is neither a Number column nor an Enum column.`
 
@@ -22,21 +22,21 @@ export default (pageInfo: PageInfo, props: Props) => {
 			selectedItem={ModelSideNavItem.TrainingStats}
 		>
 			<ui.S1>
-				<ui.H1>{'Training Stats'}</ui.H1>
+				<ui.H1>{"Training Stats"}</ui.H1>
 				<ui.S2>
-					<ui.H2>{'Target Column'}</ui.H2>
+					<ui.H2>{"Target Column"}</ui.H2>
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>{'Column'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Type'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Unique Count'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Column"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Type"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Unique Count"}</ui.TableHeaderCell>
 								{props.targetColumnStats.columnType == ColumnType.Number && (
 									<>
-										<ui.TableHeaderCell>{'Min'}</ui.TableHeaderCell>
-										<ui.TableHeaderCell>{'Max'}</ui.TableHeaderCell>
-										<ui.TableHeaderCell>{'Mean'}</ui.TableHeaderCell>
-										<ui.TableHeaderCell>{'Std'}</ui.TableHeaderCell>
+										<ui.TableHeaderCell>{"Min"}</ui.TableHeaderCell>
+										<ui.TableHeaderCell>{"Max"}</ui.TableHeaderCell>
+										<ui.TableHeaderCell>{"Mean"}</ui.TableHeaderCell>
+										<ui.TableHeaderCell>{"Std"}</ui.TableHeaderCell>
 									</>
 								)}
 							</ui.TableRow>
@@ -73,7 +73,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 					</ui.Table>
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>{'Columns'}</ui.H2>
+					<ui.H2>{"Columns"}</ui.H2>
 					<ui.P>{description}</ui.P>
 					<MetricsRow>
 						<ui.Card>
@@ -89,14 +89,14 @@ export default (pageInfo: PageInfo, props: Props) => {
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>{'Column'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Type'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Unique Values Count'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Null Count'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Min'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Max'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Mean'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Std'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Column"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Type"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Unique Values Count"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Null Count"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Min"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Max"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Mean"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Std"}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>

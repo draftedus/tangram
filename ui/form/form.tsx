@@ -1,5 +1,5 @@
-import './form.css'
-import { ComponentChildren, h } from 'preact'
+import "./form.css"
+import { ComponentChildren, h } from "preact"
 
 type FormTitleProps = { children?: ComponentChildren }
 
@@ -25,7 +25,7 @@ export function Form(props: FormProps) {
 			class="form"
 			encType={props.encType}
 			id={props.id}
-			method={props.post ? 'post' : undefined}
+			method={props.post ? "post" : undefined}
 			onSubmit={props.onSubmit}
 		>
 			{props.children}

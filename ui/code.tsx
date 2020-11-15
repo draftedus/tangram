@@ -1,19 +1,19 @@
-import './code.css'
-import { Language, SyntaxColors, grammars, highlight } from './syntax'
-import { times } from './util'
-import { ComponentChildren, Fragment, h } from 'preact'
+import "./code.css"
+import { Language, SyntaxColors, grammars, highlight } from "./syntax"
+import { times } from "./util"
+import { ComponentChildren, Fragment, h } from "preact"
 
 let syntaxColors: SyntaxColors = {
-	background: 'var(--header-color)',
-	builtin: 'var(--indigo)',
-	comment: 'var(--muted-text-color)',
-	foreground: 'var(--text-color)',
-	function: 'var(--blue)',
-	keyword: 'var(--purple)',
-	lineNumbers: 'var(--muted-text-color)',
-	literalBool: 'var(--orange)',
-	literalNumber: 'var(--yellow)',
-	literalString: 'var(--green)',
+	background: "var(--header-color)",
+	builtin: "var(--indigo)",
+	comment: "var(--muted-text-color)",
+	foreground: "var(--text-color)",
+	function: "var(--blue)",
+	keyword: "var(--purple)",
+	lineNumbers: "var(--muted-text-color)",
+	literalBool: "var(--orange)",
+	literalNumber: "var(--yellow)",
+	literalString: "var(--green)",
 }
 
 type CodeForLanguage = {
@@ -88,9 +88,9 @@ export function CodeSelect(props: CodeSelectProps) {
 }
 
 export function bootCodeSelect() {
-	let radioElements = document.querySelectorAll('input[type=radio]')
+	let radioElements = document.querySelectorAll("input[type=radio]")
 	radioElements.forEach(radioElement => {
-		radioElement.addEventListener('click', event => {
+		radioElement.addEventListener("click", event => {
 			if (!(event.currentTarget instanceof HTMLInputElement)) throw Error()
 			let lang = event.currentTarget.dataset.lang
 			let langElements = document.querySelectorAll(
@@ -177,6 +177,6 @@ export function InlineCode(props: InlineCodeProps) {
 function countLines(text: string) {
 	// Trim a trailing newline if one exists.
 	let trimmedText =
-		text[text.length - 1] === '\n' ? text.substr(0, text.length - 1) : text
-	return trimmedText.split('\n').length
+		text[text.length - 1] === "\n" ? text.substr(0, text.length - 1) : text
+	return trimmedText.split("\n").length
 }

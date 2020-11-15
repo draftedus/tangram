@@ -1,12 +1,12 @@
-import { MulticlassClassifierProps } from './props'
-import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { DateWindowSelectField } from 'common/date_window_select_field'
-import * as definitions from 'common/definitions'
-import { MetricsRow } from 'common/metrics_row'
-import { intervalChartTitle } from 'common/time'
-import { productionColor, trainingColor } from 'common/tokens'
-import { h } from 'preact'
+import { MulticlassClassifierProps } from "./props"
+import { LineChart, LineStyle, PointStyle } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { DateWindowSelectField } from "common/date_window_select_field"
+import * as definitions from "common/definitions"
+import { MetricsRow } from "common/metrics_row"
+import { intervalChartTitle } from "common/time"
+import { productionColor, trainingColor } from "common/tokens"
+import { h } from "preact"
 
 export function MulticlassClassifierProductionMetricsIndexPage(
 	props: MulticlassClassifierProps,
@@ -21,7 +21,7 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 			})),
 			lineStyle: LineStyle.Dashed,
 			pointStyle: PointStyle.Hidden,
-			title: 'Training Accuracy',
+			title: "Training Accuracy",
 		},
 		{
 			color: productionColor,
@@ -29,35 +29,35 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 				x: index,
 				y: entry.accuracy,
 			})),
-			title: 'Production Accuracy',
+			title: "Production Accuracy",
 		},
 	]
 	let accuracyChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		'Accuracy',
+		"Accuracy",
 	)
 	return (
 		<ui.S1>
-			<ui.H1>{'Production Metrics'}</ui.H1>
+			<ui.H1>{"Production Metrics"}</ui.H1>
 			<ui.TabBar>
 				<ui.TabLink href="" selected={true}>
-					{'Overview'}
+					{"Overview"}
 				</ui.TabLink>
 				<ui.TabLink href={`class_metrics?date_window=${props.dateWindow}`}>
-					{'Class Metrics'}
+					{"Class Metrics"}
 				</ui.TabLink>
 			</ui.TabBar>
 			<ui.S2>
 				<ui.Form>
 					<DateWindowSelectField dateWindow={props.dateWindow} />
 					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
+						<ui.Button>{"Submit"}</ui.Button>
 					</noscript>
 				</ui.Form>
 				<ui.P>
-					{'You have logged '}
+					{"You have logged "}
 					<b>{props.overall.trueValuesCount}</b>
-					{' true values for this date range.'}
+					{" true values for this date range."}
 				</ui.P>
 				<MetricsRow>
 					<ui.Card>
@@ -69,7 +69,7 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 				</MetricsRow>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>{'Accuracy'}</ui.H2>
+				<ui.H2>{"Accuracy"}</ui.H2>
 				<ui.P>{definitions.accuracy}</ui.P>
 				<ui.Card>
 					<ui.NumberComparisonChart
@@ -97,18 +97,18 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 			</ui.S2>
 			{props.overall.classMetricsTable !== null ? (
 				<ui.S2>
-					<ui.H2>{'Precision and Recall'}</ui.H2>
+					<ui.H2>{"Precision and Recall"}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Table width="100%">
 						<ui.TableHeader>
 							<ui.TableRow>
-								<ui.TableHeaderCell>{'Class'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Training Precision'}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Training Recall'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Class"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Training Precision"}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Training Recall"}</ui.TableHeaderCell>
 								<ui.TableHeaderCell>
-									{'Production Precision'}
+									{"Production Precision"}
 								</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{'Production Recall'}</ui.TableHeaderCell>
+								<ui.TableHeaderCell>{"Production Recall"}</ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
 						<ui.TableBody>
@@ -125,12 +125,12 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 										<ui.TableCell>
 											{c.precision.production
 												? ui.formatPercent(c.precision.production, 2)
-												: 'N/A'}
+												: "N/A"}
 										</ui.TableCell>
 										<ui.TableCell>
 											{c.recall.production
 												? ui.formatPercent(c.recall.production, 2)
-												: 'N/A'}
+												: "N/A"}
 										</ui.TableCell>
 									</ui.TableRow>
 								)

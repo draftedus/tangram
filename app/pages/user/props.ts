@@ -1,4 +1,4 @@
-import { AppLayoutInfo } from 'layouts/app_layout'
+import { AppLayoutInfo } from "layouts/app_layout"
 
 export type Props = {
 	appLayoutInfo: AppLayoutInfo
@@ -6,8 +6,8 @@ export type Props = {
 }
 
 export enum InnerType {
-	NoAuth = 'no_auth',
-	Auth = 'auth',
+	NoAuth = "no_auth",
+	Auth = "auth",
 }
 
 export type Inner =

@@ -1,8 +1,8 @@
-import './auth_layout.css'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { Document, Logo, LogoScheme } from '@tangramhq/www'
-import { ComponentChildren, h } from 'preact'
+import "./auth_layout.css"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { Document, Logo, LogoScheme } from "@tangramhq/www"
+import { ComponentChildren, h } from "preact"
 
 type AuthLayoutProps = {
 	children?: ComponentChildren

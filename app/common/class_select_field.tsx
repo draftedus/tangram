@@ -1,5 +1,5 @@
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 type ClassSelectProps = {
 	class: string
@@ -22,5 +22,5 @@ export function ClassSelectField(props: ClassSelectProps) {
 }
 
 export function bootClassSelect() {
-	ui.selectFieldSubmitOnChange('class-select-field')
+	ui.selectFieldSubmitOnChange("class-select-field")
 }

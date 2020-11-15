@@ -1,5 +1,5 @@
-import './slider.css'
-import { h } from 'preact'
+import "./slider.css"
+import { h } from "preact"
 
 type SliderProps = {
 	color: string

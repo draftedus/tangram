@@ -1,11 +1,11 @@
-import { Props } from './props'
-import { LineChart } from '@tangramhq/charts'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import * as definitions from 'common/definitions'
-import { renderPage } from 'common/render'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { h } from 'preact'
+import { Props } from "./props"
+import { LineChart } from "@tangramhq/charts"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import * as definitions from "common/definitions"
+import { renderPage } from "common/render"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	let prData = ui
@@ -33,19 +33,19 @@ export default (pageInfo: PageInfo, props: Props) => {
 		{
 			color: ui.colors.blue,
 			data: prData,
-			title: 'PR',
+			title: "PR",
 		},
 	]
 	let nonParametricData = [
 		{
 			color: ui.colors.blue,
 			data: precisionData,
-			title: 'Precision',
+			title: "Precision",
 		},
 		{
 			color: ui.colors.green,
 			data: recallData,
-			title: 'Recall',
+			title: "Recall",
 		},
 	]
 	return renderPage(
@@ -55,16 +55,16 @@ export default (pageInfo: PageInfo, props: Props) => {
 			selectedItem={ModelSideNavItem.TrainingMetrics}
 		>
 			<ui.S1>
-				<ui.H1>{'Training Metrics'}</ui.H1>
+				<ui.H1>{"Training Metrics"}</ui.H1>
 				<ui.TabBar>
-					<ui.TabLink href="./">{'Overview'}</ui.TabLink>
+					<ui.TabLink href="./">{"Overview"}</ui.TabLink>
 					<ui.TabLink href="precision_recall" selected={true}>
-						{'PR Curve'}
+						{"PR Curve"}
 					</ui.TabLink>
-					<ui.TabLink href="roc">{'ROC Curve'}</ui.TabLink>
+					<ui.TabLink href="roc">{"ROC Curve"}</ui.TabLink>
 				</ui.TabBar>
 				<ui.S2>
-					<ui.H2>{'Parametric Precision Recall Curve'}</ui.H2>
+					<ui.H2>{"Parametric Precision Recall Curve"}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Card>
 						<LineChart
@@ -82,7 +82,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 					</ui.Card>
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>{'Non-Parametric Precision Recall Curve'}</ui.H2>
+					<ui.H2>{"Non-Parametric Precision Recall Curve"}</ui.H2>
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Card>
 						<LineChart

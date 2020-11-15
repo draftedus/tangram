@@ -10,8 +10,8 @@
 	column-gap: 1rem;
 	row-gap: 0.5rem;
 	grid-template-areas:
-		'go javascript python ruby'
-		'code code code code';
+		"go javascript python ruby"
+		"code code code code";
 	grid-template-columns: auto auto auto 1fr;
 	grid-template-rows: auto;
 	justify-content: start;
@@ -39,40 +39,40 @@
 	width: 0;
 }
 
-.code-radio-input[data-lang='go']:checked ~ label[data-lang='go'] {
+.code-radio-input[data-lang="go"]:checked ~ label[data-lang="go"] {
 	color: var(--accent-color);
 }
 
-.code-radio-input[data-lang='javascript']:checked
-	~ label[data-lang='javascript'] {
+.code-radio-input[data-lang="javascript"]:checked
+	~ label[data-lang="javascript"] {
 	color: var(--accent-color);
 }
 
-.code-radio-input[data-lang='python']:checked ~ label[data-lang='python'] {
+.code-radio-input[data-lang="python"]:checked ~ label[data-lang="python"] {
 	color: var(--accent-color);
 }
 
-.code-radio-input[data-lang='ruby']:checked ~ label[data-lang='ruby'] {
+.code-radio-input[data-lang="ruby"]:checked ~ label[data-lang="ruby"] {
 	color: var(--accent-color);
 }
 
-.code-radio-input[data-lang='go']:checked
-	~ .code-inner-wrapper[data-lang='go'] {
+.code-radio-input[data-lang="go"]:checked
+	~ .code-inner-wrapper[data-lang="go"] {
 	display: grid;
 }
 
-.code-radio-input[data-lang='javascript']:checked
-	~ .code-inner-wrapper[data-lang='javascript'] {
+.code-radio-input[data-lang="javascript"]:checked
+	~ .code-inner-wrapper[data-lang="javascript"] {
 	display: grid;
 }
 
-.code-radio-input[data-lang='python']:checked
-	~ .code-inner-wrapper[data-lang='python'] {
+.code-radio-input[data-lang="python"]:checked
+	~ .code-inner-wrapper[data-lang="python"] {
 	display: grid;
 }
 
-.code-radio-input[data-lang='ruby']:checked
-	~ .code-inner-wrapper[data-lang='ruby'] {
+.code-radio-input[data-lang="ruby"]:checked
+	~ .code-inner-wrapper[data-lang="ruby"] {
 	display: grid;
 }
 

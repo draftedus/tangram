@@ -1,5 +1,5 @@
-import './alert.css'
-import { ComponentChildren, h } from 'preact'
+import "./alert.css"
+import { ComponentChildren, h } from "preact"
 
 export enum Level {
 	Info,
@@ -18,16 +18,16 @@ export function Alert(props: AlertProps) {
 	let levelClass: string
 	switch (props.level) {
 		case Level.Info:
-			levelClass = 'alert-level-info'
+			levelClass = "alert-level-info"
 			break
 		case Level.Success:
-			levelClass = 'alert-level-success'
+			levelClass = "alert-level-success"
 			break
 		case Level.Warning:
-			levelClass = 'alert-level-warning'
+			levelClass = "alert-level-warning"
 			break
 		case Level.Danger:
-			levelClass = 'alert-level-danger'
+			levelClass = "alert-level-danger"
 			break
 	}
 	return (

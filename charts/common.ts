@@ -1,4 +1,4 @@
-import { chartColors, chartConfig } from './config'
+import { chartColors, chartConfig } from "./config"
 
 // |--------------------------------------------------|
 // |  | |                                             |
@@ -176,7 +176,7 @@ export function computeGridLineInterval(
 	let range = max - min
 	let idealN = Math.floor(distancePixels / minGridLineDistancePixels)
 	let idealInterval = range / idealN
-	let [idealK, idealP] = idealInterval.toExponential().split('e').map(Number)
+	let [idealK, idealP] = idealInterval.toExponential().split("e").map(Number)
 	let k: number
 	let p: number
 	if (idealK <= 2) {
@@ -320,7 +320,7 @@ export function drawXAxisGridLines(options: DrawXAxisGridLinesOptions): void {
 		ctx.beginPath()
 		ctx.strokeStyle = chartColors.current.gridLineColor
 		ctx.lineWidth = chartConfig.axisWidth
-		ctx.lineCap = 'square'
+		ctx.lineCap = "square"
 		ctx.moveTo(x, box.y)
 		ctx.lineTo(x, box.y + box.h)
 		ctx.stroke()
@@ -346,7 +346,7 @@ export function drawXAxis(options: DrawXAxisOptions): void {
 			ctx.beginPath()
 			ctx.strokeStyle = chartColors.current.axisColor
 			ctx.lineWidth = chartConfig.axisWidth
-			ctx.lineCap = 'square'
+			ctx.lineCap = "square"
 			ctx.moveTo(box.x, y)
 			ctx.lineTo(box.x + box.w, y)
 			ctx.stroke()
@@ -370,7 +370,7 @@ export function drawYAxisGridLines(options: DrawYAxisGridLinesOptions): void {
 		ctx.beginPath()
 		ctx.strokeStyle = chartColors.current.gridLineColor
 		ctx.lineWidth = chartConfig.axisWidth
-		ctx.lineCap = 'square'
+		ctx.lineCap = "square"
 		ctx.moveTo(box.x, y)
 		ctx.lineTo(box.x + box.w, y)
 		ctx.stroke()
@@ -398,7 +398,7 @@ export function drawYAxis(options: DrawYAxisOptions): void {
 		ctx.beginPath()
 		ctx.strokeStyle = chartColors.current.axisColor
 		ctx.lineWidth = chartConfig.axisWidth
-		ctx.lineCap = 'square'
+		ctx.lineCap = "square"
 		ctx.moveTo(x, box.y)
 		ctx.lineTo(x, box.y + box.h)
 		ctx.stroke()
@@ -416,8 +416,8 @@ type DrawXAxisLabelsOptions = {
 export function drawXAxisLabels(options: DrawXAxisLabelsOptions): void {
 	let { box, ctx, gridLineInfo, labels, width } = options
 	ctx.fillStyle = chartColors.current.labelColor
-	ctx.textBaseline = 'bottom'
-	ctx.textAlign = 'center'
+	ctx.textBaseline = "bottom"
+	ctx.textAlign = "center"
 
 	let previousLabelEndpoint: number | undefined
 	for (let i = 0; i < gridLineInfo.numGridLines; i++) {
@@ -471,8 +471,8 @@ type DrawYAxisLabelsOptions = {
 export function drawYAxisLabels(options: DrawYAxisLabelsOptions): void {
 	let { box, ctx, fontSize, gridLineInfo, height } = options
 	ctx.fillStyle = chartColors.current.labelColor
-	ctx.textBaseline = 'middle'
-	ctx.textAlign = 'right'
+	ctx.textBaseline = "middle"
+	ctx.textAlign = "right"
 	times(gridLineInfo.numGridLines, gridLineIndex => {
 		let gridLineOffsetPixels =
 			gridLineInfo.startPixels + gridLineIndex * gridLineInfo.intervalPixels
@@ -497,10 +497,10 @@ type DrawXAxisTitleOptions = {
 
 export function drawXAxisTitle(options: DrawXAxisTitleOptions): void {
 	let { box, ctx, title } = options
-	ctx.textAlign = 'center'
-	ctx.textBaseline = 'bottom'
+	ctx.textAlign = "center"
+	ctx.textBaseline = "bottom"
 	ctx.fillStyle = chartColors.current.titleColor
-	let truncatedTitle = title ? truncateText(ctx, title, box.w) : ''
+	let truncatedTitle = title ? truncateText(ctx, title, box.w) : ""
 	ctx.fillText(truncatedTitle, box.x + box.w / 2, box.y + box.h)
 }
 
@@ -512,12 +512,12 @@ type DrawYAxisTitleOptions = {
 
 export function drawYAxisTitle(options: DrawYAxisTitleOptions): void {
 	let { box, ctx, title } = options
-	let truncatedTitle = title ? truncateText(ctx, title, box.h) : ''
+	let truncatedTitle = title ? truncateText(ctx, title, box.h) : ""
 	ctx.save()
 	ctx.translate(box.x + box.w / 2, box.y + box.h / 2)
 	ctx.rotate(-Math.PI / 2)
-	ctx.textAlign = 'center'
-	ctx.textBaseline = 'middle'
+	ctx.textAlign = "center"
+	ctx.textBaseline = "middle"
 	ctx.fillStyle = chartColors.current.titleColor
 	ctx.fillText(truncatedTitle, 0, 0)
 	ctx.restore()
@@ -619,11 +619,11 @@ function truncateText(
 	if (ctx.measureText(label).width < width) {
 		return label
 	}
-	let ellipses = '...'
-	let truncatedLabel = ''
+	let ellipses = "..."
+	let truncatedLabel = ""
 	let currentLabelTextWidth =
 		ctx.measureText(truncatedLabel).width + ctx.measureText(ellipses).width
-	let labelChars = label.split('')
+	let labelChars = label.split("")
 	for (let char of labelChars) {
 		let charWidth = ctx.measureText(char).width
 		if (charWidth + currentLabelTextWidth > width) {
@@ -646,12 +646,12 @@ function times<T>(n: number, fn: (index: number) => T): T[] {
 
 export function formatNumber(value: number | null, maxDigits?: number): string {
 	if (value === undefined || value === null) {
-		return ''
+		return ""
 	}
 	let result = value.toPrecision(maxDigits ?? 6)
 	// Remove trailing zeros including the decimal point, for example 12345.000.
-	result = result.replace(/\.(0*)$/, '')
+	result = result.replace(/\.(0*)$/, "")
 	// Remove trailing zeros excluding the decimal point, for example .01234500.
-	result = result.replace(/\.([0-9]*)([1-9])(0*)$/, '.$1$2')
+	result = result.replace(/\.([0-9]*)([1-9])(0*)$/, ".$1$2")
 	return result
 }

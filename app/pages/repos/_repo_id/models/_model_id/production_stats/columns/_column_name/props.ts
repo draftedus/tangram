@@ -1,5 +1,5 @@
-import { DateWindow, DateWindowInterval } from 'common/time'
-import { ModelLayoutInfo } from 'layouts/model_layout'
+import { DateWindow, DateWindowInterval } from "common/time"
+import { ModelLayoutInfo } from "layouts/model_layout"
 
 export type Props = {
 	columnName: string
@@ -24,9 +24,9 @@ export type Inner =
 	  }
 
 export enum Type {
-	Enum = 'enum',
-	Number = 'number',
-	Text = 'text',
+	Enum = "enum",
+	Number = "number",
+	Text = "text",
 }
 
 export type EnumProps = {

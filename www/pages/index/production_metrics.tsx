@@ -1,7 +1,7 @@
-import './production_metrics.css'
-import { LineChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+import "./production_metrics.css"
+import { LineChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 export function ProductionMetrics() {
 	return (
@@ -23,18 +23,18 @@ export function ProductionMetrics() {
 }
 
 let accuracyLabels = [
-	'Jan 2020',
-	'Feb 2020',
-	'Mar 2020',
-	'Apr 2020',
-	'May 2020',
-	'Jun 2020',
-	'Jul 2020',
-	'Aug 2020',
-	'Sep 2020',
-	'Oct 2020',
-	'Nov 2020',
-	'Dec 2020',
+	"Jan 2020",
+	"Feb 2020",
+	"Mar 2020",
+	"Apr 2020",
+	"May 2020",
+	"Jun 2020",
+	"Jul 2020",
+	"Aug 2020",
+	"Sep 2020",
+	"Oct 2020",
+	"Nov 2020",
+	"Dec 2020",
 ]
 
 let accuracyData = [
@@ -56,7 +56,7 @@ let accuracyData = [
 		],
 		lineStyle: 2,
 		pointStyle: 0,
-		title: 'Training Accuracy',
+		title: "Training Accuracy",
 	},
 	{
 		color: ui.colors.green,
@@ -74,6 +74,6 @@ let accuracyData = [
 			{ x: 10, y: null },
 			{ x: 11, y: null },
 		],
-		title: 'Production Accuracy',
+		title: "Production Accuracy",
 	},
 ]

@@ -1,6 +1,6 @@
-import './layout.css'
-import { cx } from './util'
-import { ComponentChildren, h } from 'preact'
+import "./layout.css"
+import { cx } from "./util"
+import { ComponentChildren, h } from "preact"
 
 type Props = { children?: ComponentChildren }
 
@@ -22,11 +22,11 @@ type HProps = {
 }
 
 export function H1(props: HProps) {
-	return <h1 class={cx('h1', props.center && 'center')}>{props.children}</h1>
+	return <h1 class={cx("h1", props.center && "center")}>{props.children}</h1>
 }
 
 export function H2(props: HProps) {
-	return <h2 class={cx('h2', props.center && 'center')}>{props.children}</h2>
+	return <h2 class={cx("h2", props.center && "center")}>{props.children}</h2>
 }
 
 export function P(props: Props) {

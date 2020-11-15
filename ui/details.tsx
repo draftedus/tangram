@@ -1,5 +1,5 @@
-import './details.css'
-import { h } from 'preact'
+import "./details.css"
+import { h } from "preact"
 
 export type DetailsProps = {
 	options?: DetailsOption[]

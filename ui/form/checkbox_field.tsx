@@ -1,6 +1,6 @@
-import './checkbox_field.css'
-import { FieldLabel } from './field_label'
-import { h } from 'preact'
+import "./checkbox_field.css"
+import { FieldLabel } from "./field_label"
+import { h } from "preact"
 
 type CheckboxFieldProps = {
 	autocomplete?: string

@@ -1,3 +1,3 @@
-import { hydrateLineChart } from '@tangramhq/charts'
+import { hydrateLineChart } from "@tangramhq/charts"
 
-hydrateLineChart('loss_curve')
+hydrateLineChart("loss_curve")

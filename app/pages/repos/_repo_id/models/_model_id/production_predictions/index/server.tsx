@@ -1,9 +1,9 @@
-import { Props } from './props'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { renderPage } from 'common/render'
-import { ModelLayout, ModelSideNavItem } from 'layouts/model_layout'
-import { Fragment, h } from 'preact'
+import { Props } from "./props"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { renderPage } from "common/render"
+import { ModelLayout, ModelSideNavItem } from "layouts/model_layout"
+import { Fragment, h } from "preact"
 
 export default (pageInfo: PageInfo, props: Props) => {
 	return renderPage(
@@ -13,9 +13,9 @@ export default (pageInfo: PageInfo, props: Props) => {
 			selectedItem={ModelSideNavItem.ProductionPredictions}
 		>
 			<ui.S1>
-				<ui.H1>{'Production Predictions'}</ui.H1>
+				<ui.H1>{"Production Predictions"}</ui.H1>
 				{props.predictionTable == null ? (
-					<ui.P>{'There are no predictions.'}</ui.P>
+					<ui.P>{"There are no predictions."}</ui.P>
 				) : (
 					<Fragment>
 						<ui.Form post={true}>
@@ -25,15 +25,15 @@ export default (pageInfo: PageInfo, props: Props) => {
 									label="Identifier"
 									name="identifier"
 								/>
-								<ui.Button type="submit">{'Lookup'}</ui.Button>
+								<ui.Button type="submit">{"Lookup"}</ui.Button>
 							</div>
 						</ui.Form>
 						<ui.Table width="100%">
 							<ui.TableHeader>
 								<ui.TableRow>
-									<ui.TableHeaderCell>{'Identifier'}</ui.TableHeaderCell>
-									<ui.TableHeaderCell>{'Date'}</ui.TableHeaderCell>
-									<ui.TableHeaderCell>{'Output'}</ui.TableHeaderCell>
+									<ui.TableHeaderCell>{"Identifier"}</ui.TableHeaderCell>
+									<ui.TableHeaderCell>{"Date"}</ui.TableHeaderCell>
+									<ui.TableHeaderCell>{"Output"}</ui.TableHeaderCell>
 								</ui.TableRow>
 							</ui.TableHeader>
 							<ui.TableBody>
@@ -63,7 +63,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									disabled={props.pagination.after === null}
 									type="submit"
 								>
-									{'Newer'}
+									{"Newer"}
 								</ui.Button>
 							</ui.Form>
 							<ui.Form>
@@ -78,7 +78,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 									disabled={props.pagination.before === null}
 									type="submit"
 								>
-									{'Older'}
+									{"Older"}
 								</ui.Button>
 							</ui.Form>
 						</div>

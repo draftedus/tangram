@@ -2,7 +2,7 @@
 export function cx(
 	...classes: Array<string | null | undefined | false>
 ): string {
-	return classes.filter(c => c).join(' ')
+	return classes.filter(c => c).join(" ")
 }
 
 /**
@@ -12,11 +12,11 @@ export function cx(
  */
 export function formatPercent(value: number, precision?: number) {
 	if (value === 1.0) {
-		return '100%'
+		return "100%"
 	} else {
 		let v = value * 100
 		let p = precision !== undefined ? precision + 2 : 2
-		return v.toPrecision(p) + '%'
+		return v.toPrecision(p) + "%"
 	}
 }
 
@@ -25,13 +25,13 @@ export function formatNumber(
 	maxDigits?: number,
 ): string {
 	if (value === undefined || value === null) {
-		return ''
+		return ""
 	}
 	let result = value.toPrecision(maxDigits ?? 6)
 	// Remove trailing zeros including the decimal point, for example 12345.000.
-	result = result.replace(/\.(0*)$/, '')
+	result = result.replace(/\.(0*)$/, "")
 	// Remove trailing zeros excluding the decimal point, for example .01234500.
-	result = result.replace(/\.([0-9]*)([1-9])(0*)$/, '.$1$2')
+	result = result.replace(/\.([0-9]*)([1-9])(0*)$/, ".$1$2")
 	return result
 }
 

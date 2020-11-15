@@ -1,7 +1,7 @@
-import { FeatureImportance } from './props'
-import { BarChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { Fragment, h } from 'preact'
+import { FeatureImportance } from "./props"
+import { BarChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { Fragment, h } from "preact"
 
 export type Props = {
 	featureImportances: FeatureImportance[]
@@ -18,7 +18,7 @@ export function FeatureImportancesTable(props: Props) {
 					y: featureImportanceValue,
 				}),
 			),
-			title: 'Feature Importance',
+			title: "Feature Importance",
 		},
 	]
 	return (
@@ -35,8 +35,8 @@ export function FeatureImportancesTable(props: Props) {
 			</ui.Card>
 			<ui.Table width="100%">
 				<ui.TableHeader>
-					<ui.TableHeaderCell>{'Feature Name'}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{'Feature Importance Value'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Feature Name"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Feature Importance Value"}</ui.TableHeaderCell>
 				</ui.TableHeader>
 				<ui.TableBody>
 					{props.featureImportances.map(

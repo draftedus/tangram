@@ -1,6 +1,6 @@
-import { FieldLabel } from './field_label'
-import './file_field.css'
-import { h } from 'preact'
+import { FieldLabel } from "./field_label"
+import "./file_field.css"
+import { h } from "preact"
 
 type FileFieldProps = {
 	disabled?: boolean
@@ -15,7 +15,7 @@ export function FileField(props: FileFieldProps) {
 		<FieldLabel>
 			{props.label}
 			<div class="form-file-wrapper">
-				{'Choose File'}
+				{"Choose File"}
 				<input
 					class="form-file-input"
 					name={props.name}
@@ -30,11 +30,11 @@ export function FileField(props: FileFieldProps) {
 
 /** When using a custom 'Choose File' prompt, it is necessary to use JS to update it to show the selected file name. */
 export function bootFileFields() {
-	let fileInputElements = document.querySelectorAll('input[type=file]')
+	let fileInputElements = document.querySelectorAll("input[type=file]")
 	fileInputElements.forEach(fileInputElement => {
 		if (!(fileInputElement instanceof HTMLInputElement)) throw Error()
 		updateFileInputElement(fileInputElement)
-		fileInputElement.addEventListener('change', () =>
+		fileInputElement.addEventListener("change", () =>
 			updateFileInputElement(fileInputElement),
 		)
 	})

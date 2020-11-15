@@ -3,19 +3,19 @@ import {
 	NumberColumnToken,
 	TextColumnToken,
 	UnknownColumnToken,
-} from './tokens'
+} from "./tokens"
 import {
 	BarChart,
 	FeatureContributionsChart,
 	FeatureContributionsChartData,
-} from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { h } from 'preact'
+} from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { h } from "preact"
 
 export enum PredictionType {
-	Regression = 'regression',
-	BinaryClassification = 'binary_classification',
-	MulticlassClassification = 'multiclass_classification',
+	Regression = "regression",
+	BinaryClassification = "binary_classification",
+	MulticlassClassification = "multiclass_classification",
 }
 
 export type Prediction =
@@ -62,10 +62,10 @@ export type InputTable = {
 }
 
 export enum ColumnType {
-	Unknown = 'unknown',
-	Number = 'number',
-	Text = 'text',
-	Enum = 'enum',
+	Unknown = "unknown",
+	Number = "number",
+	Text = "text",
+	Enum = "enum",
 }
 
 export function PredictionResult(props: PredictionResultProps) {
@@ -91,13 +91,13 @@ export function PredictionResult(props: PredictionResultProps) {
 	}
 	return (
 		<ui.S2>
-			<ui.H2>{'Input'}</ui.H2>
+			<ui.H2>{"Input"}</ui.H2>
 			<ui.Table width="100%">
 				<ui.TableHeader>
 					<ui.TableRow>
-						<ui.TableHeaderCell>{'Column Name'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Column Type'}</ui.TableHeaderCell>
-						<ui.TableHeaderCell>{'Value'}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Column Name"}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Column Type"}</ui.TableHeaderCell>
+						<ui.TableHeaderCell>{"Value"}</ui.TableHeaderCell>
 					</ui.TableRow>
 				</ui.TableHeader>
 				<ui.TableBody>
@@ -132,14 +132,14 @@ type RegressionPredictionResultProps = {
 function RegressionPredictionResult(props: RegressionPredictionResultProps) {
 	return (
 		<ui.S2>
-			<ui.H2>{'Output'}</ui.H2>
+			<ui.H2>{"Output"}</ui.H2>
 			<ui.Card>
 				<ui.NumberChart
 					title="Prediction"
 					value={props.prediction.value.toString()}
 				/>
 			</ui.Card>
-			<ui.H2>{'Explanation'}</ui.H2>
+			<ui.H2>{"Explanation"}</ui.H2>
 			<ui.P>
 				{"This chart shows how the input values influenced the model's output."}
 			</ui.P>
@@ -167,7 +167,7 @@ function BinaryClassificationPredictionResult(
 ) {
 	return (
 		<ui.S2>
-			<ui.H2>{'Output'}</ui.H2>
+			<ui.H2>{"Output"}</ui.H2>
 			<ui.Card>
 				<ui.NumberChart title="Prediction" value={props.prediction.className} />
 			</ui.Card>
@@ -177,7 +177,7 @@ function BinaryClassificationPredictionResult(
 					value={ui.formatPercent(props.prediction.probability, 2)}
 				/>
 			</ui.Card>
-			<ui.H2>{'Explanation'}</ui.H2>
+			<ui.H2>{"Explanation"}</ui.H2>
 			<ui.P>
 				{"This chart shows how the input values influenced the model's output."}
 			</ui.P>
@@ -211,12 +211,12 @@ function MulticlassClassificationPredictionResult(
 				x: i,
 				y: probability,
 			})),
-			title: 'Probabilities',
+			title: "Probabilities",
 		},
 	]
 	return (
 		<ui.S2>
-			<ui.H2>{'Output'}</ui.H2>
+			<ui.H2>{"Output"}</ui.H2>
 			<ui.Card>
 				<ui.NumberChart title="Prediction" value={props.prediction.className} />
 			</ui.Card>
@@ -231,7 +231,7 @@ function MulticlassClassificationPredictionResult(
 				id="probabilities"
 				title="Predicted Probabilities"
 			/>
-			<ui.H2>{'Explanation'}</ui.H2>
+			<ui.H2>{"Explanation"}</ui.H2>
 			<ui.P>
 				{"This chart shows how the input values influenced the model's output."}
 			</ui.P>

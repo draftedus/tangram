@@ -1,12 +1,12 @@
-import { BinaryClassifierProps } from './props'
-import { LineChart, LineStyle, PointStyle } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { DateWindowSelectField } from 'common/date_window_select_field'
-import * as definitions from 'common/definitions'
-import { MetricsRow } from 'common/metrics_row'
-import { intervalChartTitle } from 'common/time'
-import { productionColor, trainingColor } from 'common/tokens'
-import { h } from 'preact'
+import { BinaryClassifierProps } from "./props"
+import { LineChart, LineStyle, PointStyle } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { DateWindowSelectField } from "common/date_window_select_field"
+import * as definitions from "common/definitions"
+import { MetricsRow } from "common/metrics_row"
+import { intervalChartTitle } from "common/time"
+import { productionColor, trainingColor } from "common/tokens"
+import { h } from "preact"
 
 export function BinaryClassifierProductionMetricsIndexPage(
 	props: BinaryClassifierProps,
@@ -21,7 +21,7 @@ export function BinaryClassifierProductionMetricsIndexPage(
 			})),
 			lineStyle: LineStyle.Dashed,
 			pointStyle: PointStyle.Hidden,
-			title: 'Training Accuracy',
+			title: "Training Accuracy",
 		},
 		{
 			color: productionColor,
@@ -29,27 +29,27 @@ export function BinaryClassifierProductionMetricsIndexPage(
 				x: index,
 				y: entry.accuracy,
 			})),
-			title: 'Production Accuracy',
+			title: "Production Accuracy",
 		},
 	]
 	let accuracyChartTitle = intervalChartTitle(
 		props.dateWindowInterval,
-		'Accuracy',
+		"Accuracy",
 	)
 	return (
 		<ui.S1>
-			<ui.H1>{'Production Metrics'}</ui.H1>
+			<ui.H1>{"Production Metrics"}</ui.H1>
 			<ui.S2>
 				<ui.Form>
 					<DateWindowSelectField dateWindow={props.dateWindow} />
 					<noscript>
-						<ui.Button>{'Submit'}</ui.Button>
+						<ui.Button>{"Submit"}</ui.Button>
 					</noscript>
 				</ui.Form>
 				<ui.P>
-					{'You have logged '}
+					{"You have logged "}
 					<b>{props.overall.trueValuesCount}</b>
-					{' true values for this date range.'}
+					{" true values for this date range."}
 				</ui.P>
 				<MetricsRow>
 					<ui.Card>
@@ -61,7 +61,7 @@ export function BinaryClassifierProductionMetricsIndexPage(
 				</MetricsRow>
 			</ui.S2>
 			<ui.S2>
-				<ui.H2>{'Accuracy'}</ui.H2>
+				<ui.H2>{"Accuracy"}</ui.H2>
 				<ui.P>{definitions.accuracy}</ui.P>
 				<ui.Card>
 					<ui.NumberComparisonChart

@@ -1,6 +1,6 @@
-import * as ui from '@tangramhq/ui'
-import { Language } from 'layouts/language'
-import { h } from 'preact'
+import * as ui from "@tangramhq/ui"
+import { Language } from "layouts/language"
+import { h } from "preact"
 
 export function LogTrueValue() {
 	return <ui.CodeSelect languages={codeForLanguage} />

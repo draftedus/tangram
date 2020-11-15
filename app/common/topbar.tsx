@@ -1,6 +1,6 @@
-import * as ui from '@tangramhq/ui'
-import { Logo, LogoScheme } from '@tangramhq/www'
-import { h } from 'preact'
+import * as ui from "@tangramhq/ui"
+import { Logo, LogoScheme } from "@tangramhq/www"
+import { h } from "preact"
 
 type TopbarProps = {
 	topbarAvatar: TopbarAvatar | null
@@ -19,8 +19,8 @@ export function Topbar(props: TopbarProps) {
 					<ui.Avatar src={props.topbarAvatar.avatarUrl} />
 				</ui.Link>
 			),
-			href: '/user',
-			title: 'Settings',
+			href: "/user",
+			title: "Settings",
 		})
 	}
 	return (

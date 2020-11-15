@@ -1,6 +1,6 @@
-import './asciicast.css'
-import { h } from 'preact'
-import { useEffect, useRef } from 'preact/hooks'
+import "./asciicast.css"
+import { h } from "preact"
+import { useEffect, useRef } from "preact/hooks"
 
 type AsciicastProps = {
 	asciicast: AsciicastEvent[]
@@ -89,7 +89,7 @@ class AsciicastPlayer {
 	}
 
 	public start = () => {
-		this.element.innerHTML = ''
+		this.element.innerHTML = ""
 		this.startTime = performance.now()
 		this.frameIndex = 0
 		this.render()

@@ -1,8 +1,8 @@
-import { NumberProps } from './props'
-import { BoxChart } from '@tangramhq/charts'
-import * as ui from '@tangramhq/ui'
-import { MetricsRow } from 'common/metrics_row'
-import { h } from 'preact'
+import { NumberProps } from "./props"
+import { BoxChart } from "@tangramhq/charts"
+import * as ui from "@tangramhq/ui"
+import { MetricsRow } from "common/metrics_row"
+import { h } from "preact"
 
 export function NumberColumnDetail(props: NumberProps) {
 	let quantilesData = [
@@ -21,7 +21,7 @@ export function NumberColumnDetail(props: NumberProps) {
 					},
 				},
 			],
-			title: 'quartiles',
+			title: "quartiles",
 		},
 	]
 	return (

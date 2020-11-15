@@ -1,6 +1,6 @@
-import { Button } from './button'
-import './pagination.css'
-import { ComponentChildren, h } from 'preact'
+import { Button } from "./button"
+import "./pagination.css"
+import { ComponentChildren, h } from "preact"
 
 export type PaginationProps = {
 	children?: ComponentChildren
@@ -14,7 +14,7 @@ export type PaginationProps = {
 export function Pagination(props: PaginationProps) {
 	let pageString: string
 	if (props.count === 0) {
-		pageString = '0 of 0'
+		pageString = "0 of 0"
 	} else if (!props.count) {
 		let start = props.offset + 1
 		let end = props.offset + props.limit
@@ -34,14 +34,14 @@ export function Pagination(props: PaginationProps) {
 				disabled={prevButtonDisabled}
 				onClick={props.onPreviousPressed}
 			>
-				{'Previous'}
+				{"Previous"}
 			</PaginationButton>
 			<div>{pageString}</div>
 			<PaginationButton
 				disabled={nextButtonDisabled}
 				onClick={props.onNextPressed}
 			>
-				{'Next'}
+				{"Next"}
 			</PaginationButton>
 		</PaginationWrapper>
 	)

@@ -1,9 +1,9 @@
-import { BarChart } from '@tangramhq/charts'
-import { PageInfo } from '@tangramhq/pinwheel'
-import * as ui from '@tangramhq/ui'
-import { renderPage } from 'common/render'
-import { PageLayout } from 'layouts/page_layout'
-import { h } from 'preact'
+import { BarChart } from "@tangramhq/charts"
+import { PageInfo } from "@tangramhq/pinwheel"
+import * as ui from "@tangramhq/ui"
+import { renderPage } from "common/render"
+import { PageLayout } from "layouts/page_layout"
+import { h } from "preact"
 
 type BenchmarkDatasets = { [key: string]: BenchmarkLibraries }
 type BenchmarkLibraries = {
@@ -14,22 +14,22 @@ export default (pageInfo: PageInfo) => {
 	return renderPage(
 		<PageLayout background={true} pageInfo={pageInfo}>
 			<ui.S1>
-				<ui.H1>{'Benchmarks'}</ui.H1>
+				<ui.H1>{"Benchmarks"}</ui.H1>
 				<ui.P>
 					{
-						'Under the hood, the Tangram CLI uses Tangram Tree and Tangram Linear to train machine learning models. Tangram tree is the fastest gradient boosted decision tree library and has by far lowest memory usage.'
+						"Under the hood, the Tangram CLI uses Tangram Tree and Tangram Linear to train machine learning models. Tangram tree is the fastest gradient boosted decision tree library and has by far lowest memory usage."
 					}
 				</ui.P>
 				<ui.S2>
-					<ui.H2>{'Area Under the Receiver Operating Characteristic'}</ui.H2>
+					<ui.H2>{"Area Under the Receiver Operating Characteristic"}</ui.H2>
 					<TreeAUCBenchmark />
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>{'Time'}</ui.H2>
+					<ui.H2>{"Time"}</ui.H2>
 					<TimeBenchmark />
 				</ui.S2>
 				<ui.S2>
-					<ui.H2>{'Memory Usage'}</ui.H2>
+					<ui.H2>{"Memory Usage"}</ui.H2>
 					<MemoryBenchmark />
 				</ui.S2>
 			</ui.S1>
@@ -42,63 +42,63 @@ function TreeAUCBenchmark() {
 		{
 			color: ui.colors.blue,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.tangram.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.tangram.auc_roc },
+				{ label: "higgs", x: 0, y: data.higgs.tangram.auc_roc },
+				{ label: "flights", x: 1, y: data.flights.tangram.auc_roc },
 			],
-			title: 'tangram',
+			title: "tangram",
 		},
 
 		{
 			color: ui.colors.purple,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.lightgbm.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.lightgbm.auc_roc },
+				{ label: "higgs", x: 0, y: data.higgs.lightgbm.auc_roc },
+				{ label: "flights", x: 1, y: data.flights.lightgbm.auc_roc },
 			],
-			title: 'lightgbm',
+			title: "lightgbm",
 		},
 		{
 			color: ui.colors.green,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.xgboost.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.xgboost.auc_roc },
+				{ label: "higgs", x: 0, y: data.higgs.xgboost.auc_roc },
+				{ label: "flights", x: 1, y: data.flights.xgboost.auc_roc },
 			],
-			title: 'xgboost',
+			title: "xgboost",
 		},
 		{
 			color: ui.colors.yellow,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.sklearn.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.sklearn.auc_roc },
+				{ label: "higgs", x: 0, y: data.higgs.sklearn.auc_roc },
+				{ label: "flights", x: 1, y: data.flights.sklearn.auc_roc },
 			],
-			title: 'sklearn',
+			title: "sklearn",
 		},
 		{
 			color: ui.colors.orange,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.h2o.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.h2o.auc_roc },
+				{ label: "higgs", x: 0, y: data.higgs.h2o.auc_roc },
+				{ label: "flights", x: 1, y: data.flights.h2o.auc_roc },
 			],
-			title: 'h2o',
+			title: "h2o",
 		},
 		{
 			color: ui.colors.red,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.catboost.auc_roc },
-				{ label: 'flights', x: 1, y: data.flights.catboost.auc_roc },
+				{ label: "higgs", x: 0, y: data.higgs.catboost.auc_roc },
+				{ label: "flights", x: 1, y: data.flights.catboost.auc_roc },
 			],
-			title: 'catboost',
+			title: "catboost",
 		},
 	]
 	return (
 		<div className="benchmarks_tables_grid_wrapper">
 			<div className="benchmarks_tables_grid">
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{'Flights'}</div>
-					<AUCTable data={data['flights']} />
+					<div className="benchmarks_table_title">{"Flights"}</div>
+					<AUCTable data={data["flights"]} />
 				</div>
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{'Higgs'}</div>
-					<AUCTable data={data['higgs']} />
+					<div className="benchmarks_table_title">{"Higgs"}</div>
+					<AUCTable data={data["higgs"]} />
 				</div>
 			</div>
 			<BarChart
@@ -126,15 +126,15 @@ function AUCTable(props: AUCTableProps) {
 		<ui.Table width="100%">
 			<ui.TableHeader>
 				<ui.TableRow>
-					<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{'AUC'}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Library"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"AUC"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"v. Tangram"}</ui.TableHeaderCell>
 				</ui.TableRow>
 			</ui.TableHeader>
 			<ui.TableBody>
 				{libraries.map(library => (
 					<ui.TableRow
-						color={library == 'tangram' ? ui.colors.blue : undefined}
+						color={library == "tangram" ? ui.colors.blue : undefined}
 						key={library}
 					>
 						<ui.TableCell>{library}</ui.TableCell>
@@ -143,7 +143,7 @@ function AUCTable(props: AUCTableProps) {
 						</ui.TableCell>
 						<ui.TableCell>
 							{formatAUCDiff(
-								props.data[library].auc_roc / props.data['tangram'].auc_roc,
+								props.data[library].auc_roc / props.data["tangram"].auc_roc,
 							)}
 						</ui.TableCell>
 					</ui.TableRow>
@@ -158,72 +158,72 @@ function TimeBenchmark() {
 		{
 			color: ui.colors.blue,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.tangram.duration },
-				{ label: 'flights', x: 1, y: data.flights.tangram.duration },
-				{ label: 'allstate', x: 2, y: data.allstate.tangram.duration },
+				{ label: "higgs", x: 0, y: data.higgs.tangram.duration },
+				{ label: "flights", x: 1, y: data.flights.tangram.duration },
+				{ label: "allstate", x: 2, y: data.allstate.tangram.duration },
 			],
-			title: 'tangram',
+			title: "tangram",
 		},
 		{
 			color: ui.colors.purple,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.lightgbm.duration },
-				{ label: 'flights', x: 1, y: data.flights.lightgbm.duration },
-				{ label: 'allstate', x: 2, y: data.allstate.lightgbm.duration },
+				{ label: "higgs", x: 0, y: data.higgs.lightgbm.duration },
+				{ label: "flights", x: 1, y: data.flights.lightgbm.duration },
+				{ label: "allstate", x: 2, y: data.allstate.lightgbm.duration },
 			],
-			title: 'lightgbm',
+			title: "lightgbm",
 		},
 		{
 			color: ui.colors.green,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.xgboost.duration },
-				{ label: 'flights', x: 1, y: data.flights.xgboost.duration },
-				{ label: 'allstate', x: 2, y: data.allstate.xgboost.duration },
+				{ label: "higgs", x: 0, y: data.higgs.xgboost.duration },
+				{ label: "flights", x: 1, y: data.flights.xgboost.duration },
+				{ label: "allstate", x: 2, y: data.allstate.xgboost.duration },
 			],
-			title: 'xgboost',
+			title: "xgboost",
 		},
 		{
 			color: ui.colors.yellow,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.sklearn.duration },
-				{ label: 'flights', x: 1, y: data.flights.sklearn.duration },
-				{ label: 'allstate', x: 2, y: data.allstate.sklearn.duration },
+				{ label: "higgs", x: 0, y: data.higgs.sklearn.duration },
+				{ label: "flights", x: 1, y: data.flights.sklearn.duration },
+				{ label: "allstate", x: 2, y: data.allstate.sklearn.duration },
 			],
-			title: 'sklearn',
+			title: "sklearn",
 		},
 		{
 			color: ui.colors.orange,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.h2o.duration },
-				{ label: 'flights', x: 1, y: data.flights.h2o.duration },
-				{ label: 'allstate', x: 2, y: data.allstate.h2o.duration },
+				{ label: "higgs", x: 0, y: data.higgs.h2o.duration },
+				{ label: "flights", x: 1, y: data.flights.h2o.duration },
+				{ label: "allstate", x: 2, y: data.allstate.h2o.duration },
 			],
-			title: 'h2o',
+			title: "h2o",
 		},
 		{
 			color: ui.colors.red,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.catboost.duration },
-				{ label: 'flights', x: 1, y: data.flights.catboost.duration },
-				{ label: 'allstate', x: 2, y: data.allstate.catboost.duration },
+				{ label: "higgs", x: 0, y: data.higgs.catboost.duration },
+				{ label: "flights", x: 1, y: data.flights.catboost.duration },
+				{ label: "allstate", x: 2, y: data.allstate.catboost.duration },
 			],
-			title: 'catboost',
+			title: "catboost",
 		},
 	]
 	return (
 		<div className="benchmarks_tables_grid_wrapper">
 			<div className="benchmarks_tables_grid">
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{'Allstate'}</div>
-					<TimeTable data={data['allstate']} />
+					<div className="benchmarks_table_title">{"Allstate"}</div>
+					<TimeTable data={data["allstate"]} />
 				</div>
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{'Flights'}</div>
-					<TimeTable data={data['flights']} />
+					<div className="benchmarks_table_title">{"Flights"}</div>
+					<TimeTable data={data["flights"]} />
 				</div>
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{'Higgs'}</div>
-					<TimeTable data={data['higgs']} />
+					<div className="benchmarks_table_title">{"Higgs"}</div>
+					<TimeTable data={data["higgs"]} />
 				</div>
 			</div>
 			<BarChart
@@ -249,15 +249,15 @@ function TimeTable(props: TimeTableProps) {
 		<ui.Table width="100%">
 			<ui.TableHeader>
 				<ui.TableRow>
-					<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{'Training'}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Library"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Training"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"v. Tangram"}</ui.TableHeaderCell>
 				</ui.TableRow>
 			</ui.TableHeader>
 			<ui.TableBody>
 				{libraries.map(library => (
 					<ui.TableRow
-						color={library == 'tangram' ? ui.colors.blue : undefined}
+						color={library == "tangram" ? ui.colors.blue : undefined}
 						key={library}
 					>
 						<ui.TableCell>{library}</ui.TableCell>
@@ -266,7 +266,7 @@ function TimeTable(props: TimeTableProps) {
 						</ui.TableCell>
 						<ui.TableCell>
 							{formatTimeDiff(
-								props.data[library].duration / props.data['tangram'].duration,
+								props.data[library].duration / props.data["tangram"].duration,
 							)}
 						</ui.TableCell>
 					</ui.TableRow>
@@ -281,72 +281,72 @@ function MemoryBenchmark() {
 		{
 			color: ui.colors.blue,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.tangram.memory },
-				{ label: 'flights', x: 1, y: data.flights.tangram.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.tangram.memory },
+				{ label: "higgs", x: 0, y: data.higgs.tangram.memory },
+				{ label: "flights", x: 1, y: data.flights.tangram.memory },
+				{ label: "allstate", x: 2, y: data.allstate.tangram.memory },
 			],
-			title: 'tangram',
+			title: "tangram",
 		},
 		{
 			color: ui.colors.purple,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.lightgbm.memory },
-				{ label: 'flights', x: 1, y: data.flights.lightgbm.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.lightgbm.memory },
+				{ label: "higgs", x: 0, y: data.higgs.lightgbm.memory },
+				{ label: "flights", x: 1, y: data.flights.lightgbm.memory },
+				{ label: "allstate", x: 2, y: data.allstate.lightgbm.memory },
 			],
-			title: 'lightgbm',
+			title: "lightgbm",
 		},
 		{
 			color: ui.colors.green,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.xgboost.memory },
-				{ label: 'flights', x: 1, y: data.flights.xgboost.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.xgboost.memory },
+				{ label: "higgs", x: 0, y: data.higgs.xgboost.memory },
+				{ label: "flights", x: 1, y: data.flights.xgboost.memory },
+				{ label: "allstate", x: 2, y: data.allstate.xgboost.memory },
 			],
-			title: 'xgboost',
+			title: "xgboost",
 		},
 		{
 			color: ui.colors.yellow,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.sklearn.memory },
-				{ label: 'flights', x: 1, y: data.flights.sklearn.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.sklearn.memory },
+				{ label: "higgs", x: 0, y: data.higgs.sklearn.memory },
+				{ label: "flights", x: 1, y: data.flights.sklearn.memory },
+				{ label: "allstate", x: 2, y: data.allstate.sklearn.memory },
 			],
-			title: 'sklearn',
+			title: "sklearn",
 		},
 		{
 			color: ui.colors.orange,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.h2o.memory },
-				{ label: 'flights', x: 1, y: data.flights.h2o.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.h2o.memory },
+				{ label: "higgs", x: 0, y: data.higgs.h2o.memory },
+				{ label: "flights", x: 1, y: data.flights.h2o.memory },
+				{ label: "allstate", x: 2, y: data.allstate.h2o.memory },
 			],
-			title: 'h2o',
+			title: "h2o",
 		},
 		{
 			color: ui.colors.red,
 			data: [
-				{ label: 'higgs', x: 0, y: data.higgs.catboost.memory },
-				{ label: 'flights', x: 1, y: data.flights.catboost.memory },
-				{ label: 'allstate', x: 2, y: data.allstate.catboost.memory },
+				{ label: "higgs", x: 0, y: data.higgs.catboost.memory },
+				{ label: "flights", x: 1, y: data.flights.catboost.memory },
+				{ label: "allstate", x: 2, y: data.allstate.catboost.memory },
 			],
-			title: 'catboost',
+			title: "catboost",
 		},
 	]
 	return (
 		<div className="benchmarks_tables_grid_wrapper">
 			<div className="benchmarks_tables_grid">
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{'Allstate'}</div>
-					<MemoryTable data={data['allstate']} />
+					<div className="benchmarks_table_title">{"Allstate"}</div>
+					<MemoryTable data={data["allstate"]} />
 				</div>
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{'Flights'}</div>
-					<MemoryTable data={data['flights']} />
+					<div className="benchmarks_table_title">{"Flights"}</div>
+					<MemoryTable data={data["flights"]} />
 				</div>
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{'Higgs'}</div>
-					<MemoryTable data={data['higgs']} />
+					<div className="benchmarks_table_title">{"Higgs"}</div>
+					<MemoryTable data={data["higgs"]} />
 				</div>
 			</div>
 			<BarChart
@@ -373,22 +373,22 @@ function MemoryTable(props: MemoryTableProps) {
 		<ui.Table>
 			<ui.TableHeader>
 				<ui.TableRow>
-					<ui.TableHeaderCell>{'Library'}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{'Memory'}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{'v. Tangram'}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Library"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Memory"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"v. Tangram"}</ui.TableHeaderCell>
 				</ui.TableRow>
 			</ui.TableHeader>
 			<ui.TableBody>
 				{libraries.map(library => (
 					<ui.TableRow
-						color={library == 'tangram' ? ui.colors.blue : undefined}
+						color={library == "tangram" ? ui.colors.blue : undefined}
 						key={library}
 					>
 						<ui.TableCell>{library}</ui.TableCell>
 						<ui.TableCell>{formatGB(props.data[library].memory)}</ui.TableCell>
 						<ui.TableCell>
 							{formatGBDiff(
-								props.data[library].memory / props.data['tangram'].memory,
+								props.data[library].memory / props.data["tangram"].memory,
 							)}
 						</ui.TableCell>
 					</ui.TableRow>
@@ -398,7 +398,7 @@ function MemoryTable(props: MemoryTableProps) {
 	)
 }
 
-let libraries = ['tangram', 'lightgbm', 'xgboost', 'sklearn', 'h2o', 'catboost']
+let libraries = ["tangram", "lightgbm", "xgboost", "sklearn", "h2o", "catboost"]
 let data: BenchmarkDatasets = {
 	allstate: {
 		catboost: { duration: 1020.302861637, memory: 18.918908, mse: 1579.626 },

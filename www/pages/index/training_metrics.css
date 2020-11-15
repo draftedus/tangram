@@ -8,9 +8,9 @@
 	.training-metrics-wrapper {
 		grid: auto auto auto / auto;
 		grid-template-areas:
-			'accuracy'
-			'pr'
-			'roc';
+			"accuracy"
+			"pr"
+			"roc";
 	}
 }
 
@@ -18,7 +18,7 @@
 	.training-metrics-wrapper {
 		grid: auto auto / minmax(0, 1fr) minmax(0, 1fr);
 		grid-template-areas:
-			'accuracy accuracy'
-			'pr roc';
+			"accuracy accuracy"
+			"pr roc";
 	}
 }
