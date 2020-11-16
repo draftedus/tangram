@@ -23,7 +23,7 @@ export type TopbarItem = {
 export function Topbar(props: TopbarProps) {
 	let wrapperStyle = {
 		backgroundColor: props.backgroundColor,
-		borderBottom: props.border as any,
+		borderBottom: props.border,
 		color: props.foregroundColor,
 	}
 	return (
@@ -165,7 +165,7 @@ type TopbarMenuProps = {
 function TopbarDropdown(props: TopbarMenuProps) {
 	let wrapperStyle = {
 		backgroundColor: props.backgroundColor,
-		borderBottom: props.border as any,
+		borderBottom: props.border,
 	}
 	return (
 		<div class="topbar-dropdown-wrapper" style={wrapperStyle}>

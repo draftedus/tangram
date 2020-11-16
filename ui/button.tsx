@@ -15,7 +15,7 @@ export type ButtonProps = {
 
 export function Button(props: ButtonProps) {
 	let style = {
-		backgroundColor: props.color as any,
+		backgroundColor: props.color,
 	}
 	let onClick = !props.disabled && props.onClick ? props.onClick : undefined
 	if (props.href) {

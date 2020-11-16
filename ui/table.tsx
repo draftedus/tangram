@@ -40,7 +40,7 @@ export type TableRowProps = {
 
 export function TableRow(props: TableRowProps) {
 	let style = {
-		backgroundColor: props.color as any,
+		backgroundColor: props.color,
 	}
 	return <tr style={style}>{props.children}</tr>
 }
@@ -84,7 +84,7 @@ export function TableHeaderCell(props: TableCellProps) {
 
 export function TableCell(props: TableCellProps) {
 	let style = {
-		backgroundColor: props.color as any,
+		backgroundColor: props.color,
 	}
 	return (
 		<td class="table-cell" style={style}>

@@ -1,7 +1,7 @@
 {
 	"dependencies": {
 		"@tangramhq/pinwheel": "*",
-		"preact": "10.5.5"
+		"preact": "10.5.7"
 	},
 	"license": "UNLICENSED",
 	"main": "lib.ts",

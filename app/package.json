@@ -4,8 +4,8 @@
 		"@tangramhq/pinwheel": "*",
 		"@tangramhq/ui": "*",
 		"@tangramhq/www": "*",
-		"preact": "10.5.5",
-		"preact-render-to-string": "5.1.11"
+		"preact": "10.5.7",
+		"preact-render-to-string": "5.1.12"
 	},
 	"license": "UNLICENSED",
 	"name": "@tangramhq/app",
