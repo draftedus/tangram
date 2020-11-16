@@ -12,6 +12,7 @@ rayon = "1.4"
 
 [dependencies]
 backtrace = "0.3"
+ndarray = "0.13"
 num-traits = "0.2"
 rand = "0.7"
 serde = "1"

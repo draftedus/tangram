@@ -1,12 +1,9 @@
 use maplit::btreemap;
 use ndarray::prelude::*;
 use serde_json::json;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
-use tangram_metrics::{Metric, StreamingMetric};
+use tangram_metrics::Metric;
 use tangram_util::zip;
 
 fn main() {
@@ -157,30 +154,23 @@ fn main() {
 		.predict(features_test.view(), probabilities.view_mut());
 
 	// Compute metrics.
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
-	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-		probabilities: probabilities.view().as_slice().unwrap(),
-		labels: labels_test.view().data(),
-	});
-	let metrics = metrics.finalize();
 	let input = zip!(probabilities.iter(), labels_test.iter())
 		.map(|(probability, label)| (*probability, label.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 
 	// Compute memory usage.
-	let mut memory = String::new();
-	let file = File::open("/proc/self/status").unwrap();
-	for line in BufReader::new(file).lines().map(|l| l.unwrap()) {
+	let mut memory = None;
+	let file = std::fs::read_to_string("/proc/self/status").unwrap();
+	for line in file.lines() {
 		if line.starts_with("VmHWM") {
-			memory = line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap();
+			memory = Some(line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap());
 		}
 	}
 
 	let output = json!({
 		"auc_roc": auc_roc,
-		"accuracy": metrics.thresholds[metrics.thresholds.len() / 2].accuracy,
-		"memory": memory
+		"memory": memory,
 	});
 	println!("{}", output);
 }

@@ -42,26 +42,20 @@ impl std::fmt::Display for Dataset {
 
 #[derive(Clap, Clone, PartialEq)]
 enum Library {
-	#[clap(name = "catboost")]
-	CatBoot,
-	#[clap(name = "lightgbm")]
-	LightGBM,
+	#[clap(name = "pytorch")]
+	PyTorch,
 	#[clap(name = "sklearn")]
 	SKLearn,
 	#[clap(name = "tangram")]
 	Tangram,
-	#[clap(name = "xgboost")]
-	XGBoost,
 }
 
 impl std::fmt::Display for Library {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			Library::CatBoot => write!(f, "catboost"),
-			Library::LightGBM => write!(f, "lightgbm"),
+			Library::PyTorch => write!(f, "pytorch"),
 			Library::SKLearn => write!(f, "sklearn"),
 			Library::Tangram => write!(f, "tangram"),
-			Library::XGBoost => write!(f, "xgboost"),
 		}
 	}
 }
@@ -160,16 +154,16 @@ fn main() {
 }
 
 fn build_tangram_benchmark(dataset: &Dataset) {
-	let output = std::process::Command::new("cargo")
+	let status = std::process::Command::new("cargo")
 		.arg("build")
 		.arg("--release")
 		.arg("--bin")
-		.arg(format!("tangram_tree_benchmark_{}", dataset))
-		.output()
+		.arg(format!("tangram_linear_benchmark_{}", dataset))
+		.spawn()
+		.unwrap()
+		.wait()
 		.unwrap();
-	if !output.status.success() {
-		panic!(output);
-	}
+	assert!(status.success());
 }
 
 fn run_benchmarks(libraries: &[Library], datasets: &[Dataset]) {
@@ -199,7 +193,7 @@ fn run_benchmarks(libraries: &[Library], datasets: &[Dataset]) {
 fn run_benchmark(dataset: &Dataset, library: &Library) -> BenchmarkOutput {
 	if *library == Library::Tangram {
 		let output = std::process::Command::new(format!(
-			"build/cargo/release/tangram_tree_benchmark_{}",
+			"build/cargo/release/tangram_linear_benchmark_{}",
 			dataset
 		))
 		.output()
@@ -211,7 +205,7 @@ fn run_benchmark(dataset: &Dataset, library: &Library) -> BenchmarkOutput {
 		output
 	} else {
 		let output = std::process::Command::new("python")
-			.arg(format!("tree/benchmarks/{}.py", dataset))
+			.arg(format!("linear/benchmarks/{}.py", dataset))
 			.arg("--library")
 			.arg(format!("{}", library))
 			.output()

@@ -13,8 +13,6 @@ args = parser.parse_args()
 # Load the data.
 path_train = 'data/heart_disease_train.csv'
 path_test = 'data/heart_disease_test.csv'
-nrows_train = 242
-nrows_test = 61
 target_column_name = "diagnosis"
 gender_options = ['male', 'female']
 chest_pain_options = ['typical angina', 'asymptomatic', 'non-angina pain', 'atypical angina']
@@ -122,6 +120,14 @@ else:
 
 # Compute metrics.
 auc_roc = roc_auc_score(labels_test, predictions_proba)
+
+# Compute memory usage.
+f = open("/proc/self/status", "r")
+for line in f.readlines():
+	if line.startswith("VmHWM"):
+		memory = line.split(":")[1].strip()
+
 print(json.dumps({
-	'auc_roc': auc_roc
+	'auc_roc': auc_roc,
+	'memory': memory,
 }))

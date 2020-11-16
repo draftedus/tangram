@@ -2,20 +2,15 @@ use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
 use serde_json::json;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
 use std::path::Path;
 use tangram_dataframe::prelude::*;
-use tangram_metrics::{Metric, StreamingMetric};
+use tangram_metrics::Metric;
 use tangram_util::{pzip, zip};
 
 fn main() {
 	// Load the data.
 	let csv_file_path_train = Path::new("data/higgs_train.csv");
 	let csv_file_path_test = Path::new("data/higgs_test.csv");
-	let _nrows_train = 10_500_000;
-	let _nrows_test = 500_000;
 	let target_column_index = 0;
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
@@ -89,8 +84,6 @@ fn main() {
 	);
 
 	// Train the model.
-	let start = std::time::Instant::now();
-	// Train the model.
 	let train_output = tangram_linear::BinaryClassifier::train(
 		features_train.view(),
 		labels_train.view(),
@@ -102,7 +95,6 @@ fn main() {
 		},
 		&mut |_| {},
 	);
-	let duration = start.elapsed().as_secs_f32();
 
 	// Make predictions on the test data.
 	let chunk_size =
@@ -119,26 +111,23 @@ fn main() {
 	});
 
 	// Compute metrics.
-	let mut metrics = tangram_metrics::BinaryClassificationMetrics::new(3);
-	metrics.update(tangram_metrics::BinaryClassificationMetricsInput {
-		probabilities: probabilities.view().as_slice().unwrap(),
-		labels: labels_test.view().data(),
-	});
-	let metrics = metrics.finalize();
 	let input = zip!(probabilities.iter(), labels_test.iter())
 		.map(|(probability, label)| (*probability, label.unwrap()))
 		.collect();
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 
 	// Compute memory usage.
-	let mut memory = String::new();
-	let file = File::open("/proc/self/status").unwrap();
-	for line in BufReader::new(file).lines().map(|l| l.unwrap()) {
+	let mut memory = None;
+	let file = std::fs::read_to_string("/proc/self/status").unwrap();
+	for line in file.lines() {
 		if line.starts_with("VmHWM") {
-			memory = line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap();
+			memory = Some(line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap());
 		}
 	}
 
-	let output = json!({ "auc_roc": auc_roc, "accuracy": metrics.thresholds[metrics.thresholds.len() / 2].accuracy, "duration": duration , "memory": memory});
+	let output = json!({
+		"auc_roc": auc_roc,
+		"memory": memory,
+	});
 	println!("{}", output);
 }

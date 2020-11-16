@@ -12,8 +12,6 @@ args = parser.parse_args()
 # Load the data.
 path_train = 'data/census_train.csv'
 path_test = 'data/census_test.csv'
-nrows_train = 26049
-nrows_test = 6512
 target_column_name = "income"
 workclass_options = ['State-gov', 'Self-emp-not-inc', 'Private', 'Federal-gov', 'Local-gov', '?', 'Self-emp-inc', 'Without-pay', 'Never-worked']
 education_options = ['Bachelors', 'HS-grad', '11th', 'Masters', '9th', 'Some-college', 'Assoc-acdm', 'Assoc-voc', '7th-8th', 'Doctorate', 'Prof-school', '5th-6th', '10th', '1st-4th', 'Preschool', '12th']
@@ -123,6 +121,14 @@ else:
 
 # Compute metrics.
 auc_roc = roc_auc_score(labels_test, predictions_proba)
+
+# Compute memory usage.
+f = open("/proc/self/status", "r")
+for line in f.readlines():
+	if line.startswith("VmHWM"):
+		memory = line.split(":")[1].strip()
+
 print(json.dumps({
-	'auc_roc': auc_roc
+	'auc_roc': auc_roc,
+	'memory': memory,
 }))

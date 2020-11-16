@@ -11,8 +11,6 @@ args = parser.parse_args()
 # Load the data.
 path_train = 'data/iris_train.csv'
 path_test = 'data/iris_test.csv'
-nrows_train = 120
-nrows_test = 30
 target_column_name = "species"
 data_train = pd.read_csv(path_train)
 data_test = pd.read_csv(path_test)
@@ -87,6 +85,14 @@ else:
 
 # Compute metrics.
 accuracy = accuracy_score(predictions, labels_test)
+
+# Compute memory usage.
+f = open("/proc/self/status", "r")
+for line in f.readlines():
+	if line.startswith("VmHWM"):
+		memory = line.split(":")[1].strip()
+
 print(json.dumps({
-	'accuracy': accuracy
+	'accuracy': accuracy,
+	'memory': memory,
 }))

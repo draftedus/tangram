@@ -2,11 +2,7 @@ use maplit::btreemap;
 use ndarray::prelude::*;
 use rayon::prelude::*;
 use serde_json::json;
-use std::{
-	fs::File,
-	io::{prelude::*, BufReader},
-	path::Path,
-};
+use std::path::Path;
 use tangram_dataframe::prelude::*;
 use tangram_metrics::Metric;
 use tangram_util::{pzip, zip};
@@ -121,7 +117,6 @@ fn main() {
 	let labels_test = labels_test.as_enum().unwrap();
 
 	// Train the model.
-	let start = std::time::Instant::now();
 	let train_options = tangram_tree::TrainOptions {
 		binned_features_layout: tangram_tree::BinnedFeaturesLayout::RowMajor,
 		learning_rate: 0.1,
@@ -135,7 +130,6 @@ fn main() {
 		&train_options,
 		&mut |_| {},
 	);
-	let duration = start.elapsed().as_secs_f32();
 
 	// Make predictions on the test data.
 	let features_test = features_test.to_rows();
@@ -159,14 +153,17 @@ fn main() {
 	let auc_roc = tangram_metrics::AUCROC::compute(input);
 
 	// Compute memory usage.
-	let mut memory = String::new();
-	let file = File::open("/proc/self/status").unwrap();
-	for line in BufReader::new(file).lines().map(|l| l.unwrap()) {
+	let mut memory = None;
+	let file = std::fs::read_to_string("/proc/self/status").unwrap();
+	for line in file.lines() {
 		if line.starts_with("VmHWM") {
-			memory = line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap();
+			memory = Some(line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap());
 		}
 	}
 
-	let output = json!({ "auc_roc": auc_roc, "duration": duration , "memory": memory});
+	let output = json!({
+		"auc_roc": auc_roc,
+		"memory": memory,
+	});
 	println!("{}", output);
 }

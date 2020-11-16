@@ -4,7 +4,6 @@ import argparse
 import numpy as np
 import pandas as pd
 import json
-from time import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
@@ -79,7 +78,6 @@ features_test = data_test.loc[:, data_test.columns != target_column_name]
 labels_test = data_test[target_column_name]
 
 # Train the model.
-start = time()
 if args.library == 'h2o':
 	import h2o
 	from h2o.estimators import H2OGradientBoostingEstimator
@@ -140,7 +138,6 @@ elif args.library == 'catboost':
 		verbose=False
 	)
 	model.fit(features_train, labels_train,)
-duration = time() - start
 
 # Make predictions on the test data.
 if args.library == 'h2o':
@@ -150,7 +147,6 @@ else:
 
 # Compute metrics.
 mse = mean_squared_error(predictions, labels_test)
-mae = mean_absolute_error(predictions, labels_test)
 
 # Compute memory usage.
 f = open("/proc/self/status", "r")
@@ -160,7 +156,5 @@ for line in f.readlines():
 
 print(json.dumps({
 	'mse': mse,
-	'mae': mae,
 	'memory': memory,
-	'duration': duration,
 }))

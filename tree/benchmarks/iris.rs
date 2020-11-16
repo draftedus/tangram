@@ -43,6 +43,19 @@ fn main() {
 		labels: labels_test.view().as_slice().into(),
 	});
 	let metrics = metrics.finalize();
-	let output = json!({"accuracy": metrics.accuracy});
+
+	// Compute memory usage.
+	let mut memory = None;
+	let file = std::fs::read_to_string("/proc/self/status").unwrap();
+	for line in file.lines() {
+		if line.starts_with("VmHWM") {
+			memory = Some(line.split(':').nth(1).map(|x| x.trim().to_owned()).unwrap());
+		}
+	}
+
+	let output = json!({
+		"accuracy": metrics.accuracy,
+		"memory": memory,
+	});
 	println!("{}", output);
 }

@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - h2oai
 dependencies:
+  - catboost
   - h2o
   - lightgbm
   - numpy
@@ -10,4 +11,3 @@ dependencies:
   - pandas
   - scikit-learn
   - xgboost
-  - catboost

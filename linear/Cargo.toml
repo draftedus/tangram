@@ -8,8 +8,8 @@ version = "0.1.0-dev"
 path = "lib.rs"
 
 [[bin]]
-name = "tangram_linear_benchmark_all"
-path = "benchmarks/all.rs"
+name = "tangram_linear_benchmarks"
+path = "benchmarks/main.rs"
 
 [[bin]]
 name = "tangram_linear_benchmark_allstate"
@@ -40,14 +40,15 @@ name = "tangram_linear_benchmark_iris"
 path = "benchmarks/iris.rs"
 
 [dependencies]
+clap = { version = "3.0.0-beta.2", features = ["color"] }
 itertools = "0.9"
 maplit = "1"
 ndarray = "0.13"
 num-traits = "0.2"
 rayon = "1.4"
-tangram_dataframe = { path = "../dataframe" }
-tangram_metrics = { path = "../metrics" }
-tangram_features = { path = "../features" }
-tangram_util = { path = "../util" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tangram_dataframe = { path = "../dataframe" }
+tangram_features = { path = "../features" }
+tangram_metrics = { path = "../metrics" }
+tangram_util = { path = "../util" }

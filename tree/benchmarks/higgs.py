@@ -1,6 +1,5 @@
 from pandas.api.types import CategoricalDtype
 from sklearn.metrics import accuracy_score, roc_auc_score
-from time import time
 import argparse
 import numpy as np
 import pandas as pd
@@ -13,12 +12,8 @@ args = parser.parse_args()
 # Load the data.
 # path_train = 'data/higgs_500k_train.csv'
 # path_test = 'data/higgs_500k_test.csv'
-# nrows_train = 450_000
-# nrows_test = 50_000
 path_train = 'data/higgs_train.csv'
 path_test = 'data/higgs_test.csv'
-nrows_train = 10_500_000
-nrows_test = 500_000
 target_column_name = "signal"
 dtype = {
 	'signal': np.bool,
@@ -59,7 +54,6 @@ features_test = data_test.loc[:, data_test.columns != target_column_name]
 labels_test = data_test[target_column_name]
 
 # Train the model.
-start = time()
 if args.library == 'h2o':
 	import h2o
 	from h2o.estimators import H2OGradientBoostingEstimator
@@ -119,7 +113,6 @@ elif args.library == 'catboost':
 		verbose=False
 	)
 	model.fit(features_train, labels_train, silent=True)
-duration = time() - start
 
 # Make predictions on the test data.
 if args.library == 'h2o':
@@ -138,6 +131,5 @@ for line in f.readlines():
 
 print(json.dumps({
 	'auc_roc': auc_roc,
-	'duration': duration,
 	'memory': memory,
 }))

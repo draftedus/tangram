@@ -4,7 +4,6 @@ import argparse
 import numpy as np
 import pandas as pd
 import json
-from time import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--library', choices=['h2o', 'lightgbm', 'sklearn', 'xgboost', 'catboost'], required=True)
@@ -13,16 +12,10 @@ args = parser.parse_args()
 # Load the data.
 # path_train = 'data/flights_100k_train.csv'
 # path_test = 'data/flights_test.csv'
-# nrows_train=100_000
-# nrows_test=100_000
 # path_train = 'data/flights_1m_train.csv'
 # path_test = 'data/flights_test.csv'
-# nrows_train=1_000_000
-# nrows_test=100_000
 path_train = 'data/flights_10m_train.csv'
 path_test = 'data/flights_test.csv'
-nrows_train=10_000_000
-nrows_test=100_000
 target_column_name = "dep_delayed_15min"
 month_options = [
 	"c-1", "c-10", "c-11", "c-12", "c-2", "c-3", "c-4", "c-5", "c-6", "c-7", "c-8", "c-9",
@@ -111,7 +104,6 @@ labels_test = data_test[target_column_name]
 
 
 # Train the model.
-start = time()
 if args.library == 'h2o':
 	import h2o
 	from h2o.estimators import H2OGradientBoostingEstimator
@@ -151,7 +143,7 @@ elif args.library == 'sklearn':
 		learning_rate=0.1,
 		max_iter=100,
 		max_leaf_nodes=255,
-    validation_fraction=None,
+		validation_fraction=None,
 	)
 	model.fit(features_train, labels_train)
 elif args.library == 'xgboost':
@@ -166,24 +158,23 @@ elif args.library == 'xgboost':
 	)
 	model.fit(features_train, labels_train)
 elif args.library == 'catboost':
-  from catboost import CatBoostClassifier
-  categorical_columns = [column for column in categorical_columns if column != target_column_name]
-  model = CatBoostClassifier(
-    learning_rate=0.1,
-    n_estimators=100,
-    num_leaves=255,
-    cat_features=categorical_columns,
-    grow_policy='Lossguide',
-    verbose=False
-  )
-  model.fit(features_train, labels_train, silent=True)
-duration = time() - start
+	from catboost import CatBoostClassifier
+	categorical_columns = [column for column in categorical_columns if column != target_column_name]
+	model = CatBoostClassifier(
+		learning_rate=0.1,
+		n_estimators=100,
+		num_leaves=255,
+		cat_features=categorical_columns,
+		grow_policy='Lossguide',
+		verbose=False
+	)
+	model.fit(features_train, labels_train, silent=True)
 
 # Make predictions on the test data.
 if args.library == 'h2o':
-  predictions_proba = model.predict(data_test).as_data_frame()['Y']
+	predictions_proba = model.predict(data_test).as_data_frame()['Y']
 else:
-  predictions_proba = model.predict_proba(features_test)[:, 1]
+	predictions_proba = model.predict_proba(features_test)[:, 1]
 
 # Compute metrics.
 auc_roc = roc_auc_score(labels_test, predictions_proba)
@@ -195,7 +186,6 @@ for line in f.readlines():
 		memory = line.split(":")[1].strip()
 
 print(json.dumps({
-  'auc_roc': auc_roc,
-  'duration': duration,
-  'memory': memory,
+	'auc_roc': auc_roc,
+	'memory': memory,
 }))

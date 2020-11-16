@@ -12,8 +12,6 @@ args = parser.parse_args()
 # Load the data.
 path_train = 'data/boston_train.csv'
 path_test = 'data/boston_test.csv'
-nrows_train = 405
-nrows_test = 101
 target_column_name = "medv"
 chas_options = ["0", "1"]
 dtype = {
@@ -109,6 +107,14 @@ else:
 
 # Compute metrics.
 mse = mean_squared_error(predictions, labels_test)
+
+# Compute memory usage.
+f = open("/proc/self/status", "r")
+for line in f.readlines():
+	if line.startswith("VmHWM"):
+		memory = line.split(":")[1].strip()
+
 print(json.dumps({
-	'mse': mse
+	'mse': mse,
+	'memory': memory,
 }))

@@ -2,7 +2,6 @@ use super::{Metric, StreamingMetric};
 use num_traits::ToPrimitive;
 use std::num::NonZeroU64;
 
-/// MeanVariance holds the information needed to compute streaming mean and variance. It is required that `n` be >= 1, so we use `Option<MeanVariance>` if `n` may be zero.
 pub struct MeanVariance(Option<MeanVarianceInner>);
 
 impl Default for MeanVariance {
