@@ -1,6 +1,7 @@
 pub mod cookies;
 pub mod date_window;
 pub mod error;
+pub mod logo;
 pub mod model;
 pub mod monitor_event;
 pub mod organizations;

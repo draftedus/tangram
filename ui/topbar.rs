@@ -1,4 +1,4 @@
-use super::Button;
+use super::{Button, ButtonType};
 use html::{component, html};
 
 #[derive(Clone)]
@@ -178,6 +178,7 @@ fn TopbarDropdown(
 							download={None}
 							id={None}
 							href={Some(cta.href)}
+							button_type={ButtonType::Reset}
 						>
 							{cta.title}
 						</Button>

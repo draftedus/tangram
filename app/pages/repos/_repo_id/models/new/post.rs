@@ -40,7 +40,12 @@ pub async fn post(
 	{
 		Some(boundary) => boundary,
 		None => {
-			let html = render(context, Some("Failed to parse request body.".to_owned())).await?;
+			let error = Some(format!(
+				"Failed to parse request body.\n{}:{}",
+				file!(),
+				line!()
+			));
+			let html = render(context, error).await?;
 			let response = http::Response::builder()
 				.status(http::StatusCode::BAD_REQUEST)
 				.body(hyper::Body::from(html))
@@ -54,8 +59,12 @@ pub async fn post(
 		let name = match field.name() {
 			Some(name) => name.to_owned(),
 			None => {
-				let html =
-					render(context, Some("Failed to parse request body.".to_owned())).await?;
+				let error = Some(format!(
+					"Failed to parse request body.\n{}:{}",
+					file!(),
+					line!()
+				));
+				let html = render(context, error).await?;
 				let response = http::Response::builder()
 					.status(http::StatusCode::BAD_REQUEST)
 					.body(hyper::Body::from(html))
@@ -70,8 +79,12 @@ pub async fn post(
 		match name.as_str() {
 			"file" => file = Some(field_data),
 			_ => {
-				let html =
-					render(context, Some("Failed to parse request body.".to_owned())).await?;
+				let error = Some(format!(
+					"Failed to parse request body.\n{}:{}",
+					file!(),
+					line!()
+				));
+				let html = render(context, error).await?;
 				let response = http::Response::builder()
 					.status(http::StatusCode::BAD_REQUEST)
 					.body(hyper::Body::from(html))

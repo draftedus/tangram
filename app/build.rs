@@ -4,6 +4,7 @@ fn main() {
 	let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 	let workspace_dir = crate_dir.parent().unwrap();
 	let pages_dir = crate_dir.join("pages");
+	let build_dir = workspace_dir.join("build");
 	let dst_dir = workspace_dir.join("build/pinwheel/app");
 	let cargo_wasm_dir = workspace_dir.join("build/cargo-wasm");
 	// Remove the `dst_dir` if it exists and create it.
@@ -13,17 +14,20 @@ fn main() {
 	std::fs::create_dir_all(&dst_dir).unwrap();
 	std::fs::create_dir(dst_dir.join("assets")).unwrap();
 	std::fs::create_dir(dst_dir.join("js")).unwrap();
+	// Re-run this script if any file in the workspace changes
+	for entry in walkdir::WalkDir::new(workspace_dir) {
+		let entry = entry.unwrap();
+		let path = entry.path();
+		if !path.starts_with(&build_dir) {
+			println!("cargo:rerun-if-changed={}", path.display());
+		}
+	}
 	// Build all the client crates.
 	for entry in walkdir::WalkDir::new(&pages_dir) {
 		let entry = entry.unwrap();
 		let path = entry.path();
 		if !path.ends_with("client/Cargo.toml") {
 			continue;
-		}
-		for entry in walkdir::WalkDir::new(path.parent().unwrap()) {
-			let entry = entry.unwrap();
-			let path = entry.path();
-			println!("cargo:rerun-if-changed={}", path.display());
 		}
 		let client_crate_manifest_path = path.strip_prefix(workspace_dir).unwrap();
 		pinwheel::build_client_crate(
@@ -41,11 +45,7 @@ fn main() {
 		for entry in walkdir::WalkDir::new(&css_src_dir) {
 			let entry = entry.unwrap();
 			let path = entry.path();
-			if entry.file_type().is_dir() {
-				println!("cargo:rerun-if-changed={}", path.display());
-			}
 			if path.extension().map(|e| e.to_str().unwrap()) == Some("css") {
-				println!("cargo:rerun-if-changed={}", path.display());
 				css.push_str(&std::fs::read_to_string(path).unwrap());
 			}
 		}
@@ -82,7 +82,6 @@ fn main() {
 			if !asset_extensions.contains(&extension) {
 				continue;
 			}
-			println!("cargo:rerun-if-changed={}", path.display());
 			let asset_path = path.strip_prefix(workspace_dir).unwrap();
 			let hash = pinwheel::hash(asset_path.to_str().unwrap());
 			let asset_dst_path = dst_dir

@@ -298,6 +298,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "console_error_panic_hook"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8d976903543e0c48546a91908f21588a680a8c8f984df9a5d69feccb2b2a211"
+dependencies = [
+ "cfg-if 0.1.10",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "const_fn"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2559,6 +2569,7 @@ dependencies = [
  "html",
  "serde",
  "tangram_app_common",
+ "tangram_ui",
  "tangram_util",
 ]
 
@@ -2632,6 +2643,7 @@ dependencies = [
 name = "tangram_app_pages_repos_new"
 version = "0.0.0"
 dependencies = [
+ "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2860,6 +2872,8 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_new_client"
 version = "0.0.0"
 dependencies = [
+ "console_error_panic_hook",
+ "tangram_ui",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -3017,6 +3031,8 @@ name = "tangram_ui"
 version = "0.0.0"
 dependencies = [
  "html",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

@@ -1,4 +1,5 @@
 use super::props::{Owner, Props};
+use super::render::render;
 use tangram_app_common::{
 	error::{redirect_to_login, service_unavailable},
 	http, hyper, sqlx,
@@ -61,7 +62,7 @@ pub async fn get(
 		owner: None,
 		title: None,
 	};
-	let html = context.pinwheel.render_with("/repos/new", props)?;
+	let html = render(props).await?;
 	db.commit().await?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)

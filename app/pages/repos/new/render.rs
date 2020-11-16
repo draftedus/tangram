@@ -1,32 +1,21 @@
 use super::props::Props;
 use html::html;
-use pinwheel::client;
-use tangram_app_common::Context;
-use tangram_app_layouts::{
-	app_layout::{get_app_layout_info, AppLayout},
-	document::PageInfo,
-};
+use tangram_app_layouts::{app_layout::AppLayout, document::PageInfo};
 use tangram_ui as ui;
 use tangram_util::error::Result;
 
-pub async fn render(context: &Context, error: Option<String>) -> Result<String> {
-	let app_layout_info = get_app_layout_info(context).await?;
-	let props = Props {
-		app_layout_info,
-		error,
-	};
-	let client_wasm_js_src = client!("client/Cargo.toml");
+pub async fn render(props: Props) -> Result<String> {
 	let page_info = PageInfo {
-		client_wasm_js_src: Some(client_wasm_js_src),
+		client_wasm_js_src: None,
 	};
 	let html = html! {
 		<AppLayout page_info={page_info} info={props.app_layout_info}>
 			<ui::S1>
-				<ui::H1 center={None}>{"Upload Model"}</ui::H1>
+				<ui::H1 center={None}>{"Create New Repo Rust"}</ui::H1>
 				<ui::Form
 					id={None}
 					auto_complete={None}
-					enc_type={Some("multipart/form-data".into())}
+					enc_type={None}
 					action={None}
 					post={Some(true)}
 				>
@@ -42,12 +31,28 @@ pub async fn render(context: &Context, error: Option<String>) -> Result<String> 
 							}
 						})
 					}
-					<ui::FileField
+					<ui::TextField
+						label={Some("Title".to_owned())}
+						name={Some("title".to_owned())}
+						value={props.title}
+						autocomplete={None}
+						read_only={None}
 						disabled={None}
-						label={Some("File".into())}
-						name={Some("file".into())}
-						required={Some(true)}
+						required={None}
+						placeholder={None}
 					/>
+					{props.owner.map(|owner| html! {
+						<ui::SelectField
+							placeholder={None}
+							id={None}
+							label={Some("Owner".to_owned())}
+							name={Some("owner".to_owned())}
+							required={Some(true)}
+							value={Some(owner)}
+							options={None}
+							disabled={None}
+						/>
+					})}
 					<ui::Button
 						disabled={None}
 						download={None}
@@ -55,7 +60,7 @@ pub async fn render(context: &Context, error: Option<String>) -> Result<String> 
 						id={None}
 						button_type={ui::ButtonType::Submit}
 					>
-						{"Upload"}
+						{"Submit"}
 					</ui::Button>
 				</ui::Form>
 			</ui::S1>
