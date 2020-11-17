@@ -27,7 +27,6 @@
 
 .pricing-card-grid-selected {
 	border: var(--border);
-	/* border-color: var(--accent-color); */
 	background-color: var(--header-color);
 }
 

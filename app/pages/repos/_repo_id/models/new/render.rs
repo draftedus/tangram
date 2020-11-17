@@ -26,7 +26,7 @@ pub async fn render(context: &Context, error: Option<String>) -> Result<String> 
 				<ui::Form
 					id={None}
 					auto_complete={None}
-					enc_type={Some("multipart/form-data".into())}
+					enc_type={Some("multipart/form-data".to_owned())}
 					action={None}
 					post={Some(true)}
 				>
@@ -44,8 +44,8 @@ pub async fn render(context: &Context, error: Option<String>) -> Result<String> 
 					}
 					<ui::FileField
 						disabled={None}
-						label={Some("File".into())}
-						name={Some("file".into())}
+						label={Some("File".to_owned())}
+						name={Some("file".to_owned())}
 						required={Some(true)}
 					/>
 					<ui::Button

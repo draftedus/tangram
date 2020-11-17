@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::BTreeMap, sync::Arc};
+use std::{collections::BTreeMap, sync::Arc};
 use tangram_app_common::{
 	futures::FutureExt,
 	http, hyper,
@@ -319,10 +319,10 @@ async fn request_handler(
 		Ok(response) => response,
 		Err(error) => {
 			eprintln!("{}", error);
-			let body: Cow<str> = if cfg!(debug_assertions) {
-				format!("{}", error).into()
+			let body = if cfg!(debug_assertions) {
+				format!("{}", error)
 			} else {
-				"internal server error".into()
+				"internal server error".to_owned()
 			};
 			http::Response::builder()
 				.status(http::StatusCode::INTERNAL_SERVER_ERROR)

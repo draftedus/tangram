@@ -96,15 +96,15 @@ fn main() {
 	let target_options = ["N", "Y"].iter().map(ToString::to_string).collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-		  "month".to_owned() => DataFrameColumnType::Enum {options: month_options },
-		  "day_of_week".to_owned() => DataFrameColumnType::Enum {options: day_of_week_options },
-		  "day_of_month".to_owned() => DataFrameColumnType::Enum {options: day_of_month_options },
-		  "dep_time".to_owned() => DataFrameColumnType::Number,
-		  "unique_carrier".to_owned() => DataFrameColumnType::Enum { options: carrier_options },
-		  "origin".to_owned() => DataFrameColumnType::Enum { options: origin_options },
-		  "dest".to_owned() => DataFrameColumnType::Enum { options: dest_options },
-		  "distance".to_owned() => DataFrameColumnType::Number,
-		  "dep_delayed_15min".to_owned() => DataFrameColumnType::Enum { options: target_options }
+			"month".to_owned() => DataFrameColumnType::Enum {options: month_options },
+			"day_of_week".to_owned() => DataFrameColumnType::Enum {options: day_of_week_options },
+			"day_of_month".to_owned() => DataFrameColumnType::Enum {options: day_of_month_options },
+			"dep_time".to_owned() => DataFrameColumnType::Number,
+			"unique_carrier".to_owned() => DataFrameColumnType::Enum { options: carrier_options },
+			"origin".to_owned() => DataFrameColumnType::Enum { options: origin_options },
+			"dest".to_owned() => DataFrameColumnType::Enum { options: dest_options },
+			"distance".to_owned() => DataFrameColumnType::Number,
+			"dep_delayed_15min".to_owned() => DataFrameColumnType::Enum { options: target_options }
 		}),
 		..Default::default()
 	};

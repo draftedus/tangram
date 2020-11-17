@@ -1,0 +1,13 @@
+[package]
+edition = "2018"
+name = "tangram_www"
+version = "0.0.0"
+
+[[bin]]
+name = "www"
+main = "main.rs"
+
+[dependencies]
+tangram_ui = { path = "../ui" }
+tangram_util = { path = "../util" }
+tangram_www_pages_index = { path = "pages/index" }

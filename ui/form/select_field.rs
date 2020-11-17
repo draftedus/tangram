@@ -5,8 +5,8 @@ use wasm_bindgen::JsCast;
 
 #[derive(Clone)]
 pub struct SelectFieldOption {
-	text: String,
-	value: String,
+	pub text: String,
+	pub value: String,
 }
 
 #[component]
@@ -15,7 +15,7 @@ pub fn SelectField(
 	id: Option<String>,
 	label: Option<String>,
 	name: Option<String>,
-	options: Option<Vec<SelectFieldOption>>,
+	options: Vec<SelectFieldOption>,
 	placeholder: Option<String>,
 	required: Option<bool>,
 	value: Option<String>,
@@ -33,16 +33,13 @@ pub fn SelectField(
 				value={value}
 			>
 				{
-					options.map(|options| {
-						options.iter().map(|option| {
-							html! {
-								<option key={option.value.clone()} value={option.value.clone()}>
-									{option.text.clone()}
-								</option>
-							}
-						}).collect::<Vec<_>>()
-					})
-					.unwrap_or_else(|| children)
+					options.iter().map(|option| {
+						html! {
+							<option key={option.value.clone()} value={option.value.clone()}>
+								{option.text.clone()}
+							</option>
+						}
+					}).collect::<Vec<_>>()
 				}
 			</select>
 		</FieldLabel>

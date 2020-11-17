@@ -1,4 +1,4 @@
-use html::{component, html};
+use html::{classes, component, html};
 
 #[component]
 pub fn S1() {
@@ -25,13 +25,10 @@ pub fn SpaceBetween() {
 
 #[component]
 pub fn H1(center: Option<bool>) {
+	let center = center.and_then(|center| if center { Some("center") } else { None });
+	let class = classes!(Some("h1"), center);
 	html! {
-		<h1 class={
-			if center.is_some() {
-				"h1 center"
-			} else {
-				"h1"
-		}}>
+		<h1 class={class}>
 			{children}
 		</h1>
 	}
@@ -39,13 +36,10 @@ pub fn H1(center: Option<bool>) {
 
 #[component]
 pub fn H2(center: Option<bool>) {
+	let center = center.and_then(|center| if center { Some("center") } else { None });
+	let class = classes!(Some("h2"), center);
 	html! {
-		<h2 class={
-			if center.is_some() {
-				"h2 center"
-			} else {
-				"h2"
-		}}>
+		<h2 class={class}>
 			{children}
 		</h2>
 	}

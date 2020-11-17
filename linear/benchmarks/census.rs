@@ -158,24 +158,19 @@ fn main() {
 		.collect();
 	let options = tangram_dataframe::FromCsvOptions {
 		column_types: Some(btreemap! {
-		  "age".to_owned() => DataFrameColumnType::Number ,
+			"age".to_owned() => DataFrameColumnType::Number ,
 			"workclass".to_owned() => DataFrameColumnType::Enum {options: workclass_options },
-			"fnlwgt".to_owned() =>
-		   DataFrameColumnType::Number,
+			"fnlwgt".to_owned() => DataFrameColumnType::Number,
 			"education".to_owned() => DataFrameColumnType::Enum {options: education_options },
-			"education_num".to_owned() =>
-		   DataFrameColumnType::Number,
+			"education_num".to_owned() => DataFrameColumnType::Number,
 			"marital_status".to_owned() => DataFrameColumnType::Enum {options: marital_status_options },
 			"occupation".to_owned() => DataFrameColumnType::Enum {options: occupation_options },
 			"relationship".to_owned() => DataFrameColumnType::Enum {options: relationship_options },
 			"race".to_owned() => DataFrameColumnType::Enum {options: race_options },
 			"sex".to_owned() => DataFrameColumnType::Enum {options: sex_options },
-			"capital_gain".to_owned() =>
-		   DataFrameColumnType::Number,
-			"capital_loss".to_owned() =>
-		   DataFrameColumnType::Number,
-			"hours_per_week".to_owned() =>
-		   DataFrameColumnType::Number,
+			"capital_gain".to_owned() => DataFrameColumnType::Number,
+			"capital_loss".to_owned() => DataFrameColumnType::Number,
+			"hours_per_week".to_owned() => DataFrameColumnType::Number,
 			"native_country".to_owned() => DataFrameColumnType::Enum {options: native_country_options },
 			"income".to_owned() => DataFrameColumnType::Enum {options: income_options },
 		}),

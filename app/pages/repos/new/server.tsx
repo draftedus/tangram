@@ -24,15 +24,13 @@ export default (pageInfo: PageInfo, props: Props) => {
 						<ui.SelectField
 							label="Owner"
 							name="owner"
+							options={props.owners.map(({ title, value }) => ({
+								text: title,
+								value,
+							}))}
 							required={true}
 							value={props.owner}
-						>
-							{props.owners.map(({ title, value }) => (
-								<option key={value} value={value}>
-									{title}
-								</option>
-							))}
-						</ui.SelectField>
+						/>
 					)}
 					<ui.Button type="submit">{"Submit"}</ui.Button>
 				</ui.Form>

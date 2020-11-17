@@ -245,6 +245,12 @@ impl From<&'static str> for AttributeValue {
 	}
 }
 
+impl From<bool> for AttributeValue {
+	fn from(value: bool) -> AttributeValue {
+		AttributeValue::Bool(Some(value))
+	}
+}
+
 impl From<String> for Node {
 	fn from(value: String) -> Node {
 		Node::EscapedText(EscapedTextNode(value.into()))
@@ -264,6 +270,81 @@ where
 	fn from(value: Option<T>) -> Node {
 		Node::Option(value.map(|value| Box::new(value.into())))
 	}
+}
+
+pub trait AsOptionStr<'a> {
+	fn as_option_str(&'a self) -> Option<&'a str>;
+}
+
+impl<'a> AsOptionStr<'a> for String {
+	fn as_option_str(&'a self) -> Option<&'a str> {
+		Some(self.as_ref())
+	}
+}
+
+impl<'a> AsOptionStr<'a> for &'a str {
+	fn as_option_str(&'a self) -> Option<&'a str> {
+		Some(self)
+	}
+}
+
+impl<'a> AsOptionStr<'a> for Option<String> {
+	fn as_option_str(&'a self) -> Option<&'a str> {
+		self.as_deref()
+	}
+}
+
+impl<'a> AsOptionStr<'a> for Option<&'a str> {
+	fn as_option_str(&'a self) -> Option<&'a str> {
+		*self
+	}
+}
+
+#[macro_export]
+macro_rules! style {
+	($($key:expr => $value:expr,)*) => {
+		{
+			let mut first = true;
+			let mut style = String::new();
+			$(
+				let value = &$value;
+				let value = ::html::AsOptionStr::as_option_str(value);
+				if let Some(value) = value {
+					if !first {
+						style.push(' ');
+						first = false;
+					}
+					style.push_str($key);
+					style.push_str(": ");
+					style.push_str(value);
+					style.push(';');
+				}
+			)*
+			style
+		}
+	};
+}
+
+#[macro_export]
+macro_rules! classes {
+	($($class:expr),*$(,)?) => {
+		{
+			let mut first = true;
+			let mut classes = String::new();
+			$(
+				let class = &$class;
+				let class = ::html::AsOptionStr::as_option_str(class);
+				if let Some(class) = class {
+					if !first {
+						classes.push(' ');
+						first = false;
+					}
+					classes.push_str(class);
+				}
+			)*
+			classes
+		}
+	};
 }
 
 #[macro_export]

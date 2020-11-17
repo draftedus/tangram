@@ -38,7 +38,7 @@ fn watch(
 			notify::DebouncedEvent::Chmod(path) => vec![path],
 			notify::DebouncedEvent::Remove(path) => vec![path],
 			notify::DebouncedEvent::Rename(path_a, path_b) => vec![path_a, path_b],
-			notify::DebouncedEvent::Rescan => vec![],
+			notify::DebouncedEvent::Rescan => Vec::new(),
 			notify::DebouncedEvent::Error(_, path) => {
 				path.map(|path| vec![path]).unwrap_or_else(Vec::new)
 			}

@@ -1,4 +1,10 @@
-use html::{component, html};
+use html::{classes, component, html};
+
+#[derive(Clone)]
+pub struct AlertProps {
+	pub level: Level,
+	pub title: Option<String>,
+}
 
 #[derive(Clone)]
 pub enum Level {
@@ -11,13 +17,14 @@ pub enum Level {
 #[component]
 pub fn Alert(level: Level, title: Option<String>) {
 	let level_class: String = match level {
-		Level::Info => "alert-level-info".into(),
-		Level::Success => "alert-level-success".into(),
-		Level::Warning => "alert-level-warning".into(),
-		Level::Danger => "alert-level-danger".into(),
+		Level::Info => "alert-level-info".to_owned(),
+		Level::Success => "alert-level-success".to_owned(),
+		Level::Warning => "alert-level-warning".to_owned(),
+		Level::Danger => "alert-level-danger".to_owned(),
 	};
+	let class = classes!("alert-wrapper", level_class);
 	html! {
-		<div class={format!("alert-wrapper {}", level_class)}>
+		<div class={class}>
 		{
 			 title.map(|title|  {
 				html! {

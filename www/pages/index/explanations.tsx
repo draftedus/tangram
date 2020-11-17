@@ -44,7 +44,6 @@ export function Explanations() {
 		],
 		probability: 0.9748272,
 	}
-
 	return (
 		<ui.Window>
 			<div class="explanations-wrapper">

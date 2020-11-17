@@ -1,14 +1,10 @@
-use html::{component, html};
+use html::{classes, component, html};
 
 #[component]
-pub fn Link(class_name: Option<String>, href: Option<String>, title: Option<String>) {
-	let class_name = if let Some(class_name) = class_name {
-		format!("link {}", class_name)
-	} else {
-		"link".into()
-	};
+pub fn Link(class: Option<String>, href: Option<String>, title: Option<String>) {
+	let class = classes!("link", class);
 	html! {
-		<a class={class_name} href={href} title={title}>
+		<a class={class} href={href} title={title}>
 			{children}
 		</a>
 	}

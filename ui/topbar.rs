@@ -1,5 +1,18 @@
 use super::{Button, ButtonType};
-use html::{component, html};
+use html::{component, html, style};
+
+#[derive(Clone)]
+pub struct TopbarProps {
+	pub background_color: String,
+	pub border: Option<String>,
+	pub dropdown_background_color: String,
+	pub foreground_color: String,
+	pub items: Option<Vec<TopbarItem>>,
+	pub logo: Option<html::Node>,
+	pub logo_href: Option<String>,
+	pub logo_img_url: Option<String>,
+	pub title: Option<String>,
+}
 
 #[derive(Clone)]
 pub struct TopbarItem {
@@ -20,11 +33,11 @@ pub fn Topbar(
 	logo_img_url: Option<String>,
 	title: Option<String>,
 ) {
-	let mut wrapper_style = format!("background-color: {};", background_color);
-	if let Some(border) = border.clone() {
-		wrapper_style.push_str(&format!(" border-bottom: {};", border));
-	}
-	wrapper_style.push_str(&format!(" color: {};", foreground_color));
+	let wrapper_style = style! {
+		"background-color" => background_color,
+		"border-bottom" => border,
+		"color" => foreground_color,
+	};
 	html! {
 		<div class="topbar-wrapper" style={wrapper_style}>
 			<TopbarBrand
@@ -72,7 +85,9 @@ fn TopbarBrand(
 	text_color: String,
 	title: Option<String>,
 ) {
-	let title_style = format!("color: {};", text_color);
+	let title_style = style! {
+		"color" => text_color,
+	};
 	html! {
 		<a class="topbar-link" href={logo_href.unwrap_or_else(|| "/".to_owned())}>
 			<div class="topbar-brand-wrapper">
@@ -157,10 +172,10 @@ fn TopbarDropdown(
 	cta: Option<TopbarItem>,
 	items: Option<Vec<TopbarItem>>,
 ) {
-	let mut wrapper_style = format!("background-color: {};", background_color);
-	if let Some(border) = border {
-		wrapper_style.push_str(&format!(" border-bottom: {};", border));
-	}
+	let wrapper_style = style! {
+		"background-color" => background_color,
+		"border-bottom" => border,
+	};
 	html! {
 		<div class="topbar-dropdown-wrapper" style={wrapper_style}>
 			{items.map(|items| items.into_iter().map(|item| html! {
@@ -174,11 +189,11 @@ fn TopbarDropdown(
 				html! {
 					<div class="topbar-dropdown-item">
 						<Button
+							button_type={ButtonType::Reset}
 							disabled={None}
 							download={None}
-							id={None}
 							href={Some(cta.href)}
-							button_type={ButtonType::Reset}
+							id={None}
 						>
 							{cta.title}
 						</Button>
@@ -188,3 +203,25 @@ fn TopbarDropdown(
 		</div>
 	}
 }
+
+// fn component_transform(ast: syn::ItemFn) -> TokenStream {
+// 	let visibility = ast.vis;
+// 	let struct_name = ast.sig.ident;
+// 	let (impl_generics, ty_generics, where_clause) = ast.sig.generics.split_for_impl();
+// 	let props_input = ast.sig.inputs.first().unwrap();
+// 	let props_type = match props_input {
+// 		syn::FnArg::Typed(typed) => &typed.ty,
+// 		_ => panic!(),
+// 	};
+// 	let block = ast.block;
+// 	let ast = quote! {
+// 		#[derive(Clone)] #visibility struct #struct_name#ty_generics(#visibility #props_type#ty_generics);
+// 		impl#impl_generics ::html::Component for #struct_name#ty_generics #where_clause {
+// 			fn render(self: Box<Self>, children: Vec<html::Node>) -> html::Node {
+// 				let props = self.0;
+// 				#block
+// 			}
+// 		}
+// 	};
+// 	ast.into()
+// }

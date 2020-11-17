@@ -135,7 +135,7 @@ pub fn predict(
 		}
 		tangram_core::predict::PredictOutput::MulticlassClassification(mut output) => {
 			let output = output.remove(0);
-			let feature_contributions_chart_data = output
+			let feature_contributions_chart_data: Vec<FeatureContributionsChartSeries> = output
 				.feature_contributions
 				.unwrap()
 				.into_iter()
@@ -153,7 +153,7 @@ pub fn predict(
 							.collect(),
 					},
 				)
-				.collect::<Vec<_>>();
+				.collect();
 			let prediction = MulticlassClassificationProductionPrediction {
 				class_name: output.class_name,
 				probability: output.probability,

@@ -19,16 +19,16 @@ pub fn Logo(class: Option<String>, color: Option<String>, color_scheme: LogoSche
 	}
 	let shapes_colors = if color_scheme == LogoScheme::Multi {
 		ShapesColors {
-			trapezoid: "var(--pink)".into(),
-			square: "var(--yellow)".into(),
-			medium_triangle: "var(--teal)".into(),
-			small_triangle1: "var(--purple)".into(),
-			small_triangle2: "var(--indigo)".into(),
-			large_triangle1: "var(--blue)".into(),
-			large_triangle2: "var(--green)".into(),
+			trapezoid: "var(--pink)".to_owned(),
+			square: "var(--yellow)".to_owned(),
+			medium_triangle: "var(--teal)".to_owned(),
+			small_triangle1: "var(--purple)".to_owned(),
+			small_triangle2: "var(--indigo)".to_owned(),
+			large_triangle1: "var(--blue)".to_owned(),
+			large_triangle2: "var(--green)".to_owned(),
 		}
 	} else {
-		let color = color.unwrap_or_else(|| "var(--accent-color)".into());
+		let color = color.unwrap_or_else(|| "var(--accent-color)".to_owned());
 		ShapesColors {
 			trapezoid: color.clone(),
 			square: color.clone(),

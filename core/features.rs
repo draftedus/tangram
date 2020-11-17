@@ -84,7 +84,7 @@ fn one_hot_encoded_feature_group_for_column(
 fn bag_of_words_feature_group_for_column(
 	column_stats: &stats::TextColumnStatsOutput,
 ) -> tangram_features::FeatureGroup {
-	let tokens = column_stats
+	let tokens: Vec<tangram_features::BagOfWordsFeatureGroupTokensEntry> = column_stats
 		.top_tokens
 		.iter()
 		.map(
@@ -103,7 +103,7 @@ fn bag_of_words_feature_group_for_column(
 				idf: token_stats.idf,
 			},
 		)
-		.collect::<Vec<_>>();
+		.collect();
 	let tokenizer = match column_stats.tokenizer {
 		stats::Tokenizer::Alphanumeric => {
 			tangram_features::BagOfWordsFeatureGroupTokenizer::Alphanumeric

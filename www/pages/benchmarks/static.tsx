@@ -47,7 +47,6 @@ function TreeAUCBenchmark() {
 			],
 			title: "tangram",
 		},
-
 		{
 			color: ui.colors.purple,
 			data: [

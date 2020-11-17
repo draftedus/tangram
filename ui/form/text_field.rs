@@ -18,11 +18,12 @@ pub fn TextField(
 			<input
 				autocomplete={autocomplete}
 				class="form-text-field"
+				disabled={disabled}
 				name={name}
 				placeholder={placeholder}
-				// readOnly={read_only}
-				// required={required}
-				// spellcheck={false}
+				readonly={read_only}
+				required={required}
+				spellcheck={false}
 				value={value}
 			/>
 		</FieldLabel>

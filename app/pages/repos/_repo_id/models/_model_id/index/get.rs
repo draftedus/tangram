@@ -83,7 +83,7 @@ pub async fn get(
 			})
 		}
 		tangram_core::model::Model::MulticlassClassifier(model) => {
-			let class_metrics = model
+			let class_metrics: Vec<MulticlassClassifierInnerClassMetrics> = model
 				.test_metrics
 				.class_metrics
 				.iter()
@@ -91,7 +91,7 @@ pub async fn get(
 					precision: class_metrics.precision,
 					recall: class_metrics.recall,
 				})
-				.collect::<Vec<MulticlassClassifierInnerClassMetrics>>();
+				.collect();
 			Inner::MulticlassClassifier(MulticlassClassifierProps {
 				id: model_id.to_string(),
 				metrics: MulticlassClassifierInnerMetrics {

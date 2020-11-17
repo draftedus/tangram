@@ -1,5 +1,6 @@
 mod field_label;
 mod file_field;
+#[allow(clippy::module_inception)]
 mod form;
 mod select_field;
 mod text_field;

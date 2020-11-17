@@ -33,7 +33,7 @@ pub async fn get(
 	let tuning = match model {
 		tangram_core::model::Model::Regressor(_) => None,
 		tangram_core::model::Model::BinaryClassifier(model) => {
-			let metrics = model
+			let metrics: Vec<Metrics> = model
 				.test_metrics
 				.thresholds
 				.iter()
@@ -48,7 +48,7 @@ pub async fn get(
 					true_negatives: metrics.true_negatives,
 					true_positives: metrics.true_positives,
 				})
-				.collect::<Vec<Metrics>>();
+				.collect();
 			Some(Inner {
 				baseline_threshold: 0.5,
 				metrics,

@@ -1,15 +1,14 @@
 import { FieldLabel } from "./field_label"
 import "./select_field.css"
-import { ComponentChildren, h } from "preact"
+import { h } from "preact"
 
 export type SelectFieldProps = {
-	children?: ComponentChildren
 	disabled?: boolean
 	id?: string
 	label?: string
 	name?: string
 	onChange?: (newValue: string) => void
-	options?: SelectFieldOption[]
+	options: SelectFieldOption[]
 	placeholder?: string
 	required?: boolean
 	value?: string
@@ -36,13 +35,11 @@ export function SelectField(props: SelectFieldProps) {
 				required={props.required}
 				value={props.value}
 			>
-				{props.options
-					? props.options.map(({ text, value }) => (
-							<option key={value} value={value}>
-								{text}
-							</option>
-					  ))
-					: props.children}
+				{props.options.map(({ text, value }) => (
+					<option key={value} value={value}>
+						{text}
+					</option>
+				))}
 			</select>
 		</FieldLabel>
 	)
