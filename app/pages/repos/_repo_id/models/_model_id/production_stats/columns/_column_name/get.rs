@@ -5,12 +5,9 @@ use super::props::{
 };
 use std::collections::BTreeMap;
 use tangram_app_common::{
-	chrono_tz::Tz,
 	date_window::{get_date_window_and_interval, DateWindow, DateWindowInterval},
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
-	http, hyper,
 	model::get_model,
-	num_traits::ToPrimitive,
 	production_stats::ProductionColumnStatsOutput,
 	production_stats::{get_production_stats, GetProductionStatsOutput},
 	time::format_date_window_interval,
@@ -19,6 +16,7 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
+use tangram_deps::{chrono_tz::Tz, http, hyper, num_traits::ToPrimitive};
 use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(

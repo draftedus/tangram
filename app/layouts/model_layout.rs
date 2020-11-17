@@ -1,13 +1,10 @@
 use tangram_app_common::{
-	base64,
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
-	http, hyper,
 	repos::get_model_version_ids,
-	sqlx,
-	sqlx::prelude::*,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
+use tangram_deps::{base64, http, hyper, sqlx, sqlx::prelude::*};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Serialize, Clone, Debug)]

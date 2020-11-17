@@ -1,10 +1,10 @@
 use super::render::render;
 use tangram_app_common::{
 	error::{not_found, redirect_to_login, service_unavailable},
-	http, hyper,
 	user::{authorize_user, authorize_user_for_repo},
 	Context,
 };
+use tangram_deps::{http, hyper};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(

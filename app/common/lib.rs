@@ -1,3 +1,5 @@
+use tangram_deps::{pinwheel, sqlx, url};
+
 pub mod cookies;
 pub mod date_window;
 pub mod error;
@@ -13,27 +15,6 @@ pub mod time;
 pub mod timezone;
 pub mod topbar;
 pub mod user;
-
-pub use base64;
-pub use bytes;
-pub use chrono;
-pub use chrono_tz;
-pub use futures;
-pub use html;
-pub use http;
-pub use hyper;
-pub use lexical;
-pub use multer;
-pub use num_traits;
-pub use pinwheel;
-pub use rand;
-pub use reqwest;
-pub use serde;
-pub use serde_json;
-pub use serde_urlencoded;
-pub use sqlx;
-pub use tokio;
-pub use url;
 
 pub struct Options {
 	pub auth_enabled: bool,

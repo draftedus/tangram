@@ -10,5 +10,6 @@ path = "lib.rs"
 serde = { version = "1", features = ["derive"] }
 tangram_app_common = { path = "../common" }
 tangram_core = { path = "../../core" }
+tangram_deps = { path = "../../deps" }
 tangram_metrics = { path = "../../metrics" }
 tangram_util = { path = "../../util" }

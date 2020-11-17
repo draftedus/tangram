@@ -1,7 +1,5 @@
 use crate::user::NormalUser;
-use chrono::prelude::*;
-use chrono_tz::Tz;
-use sqlx::prelude::*;
+use tangram_deps::{base64, chrono::prelude::*, chrono_tz::Tz, sqlx, sqlx::prelude::*};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Serialize, Debug)]

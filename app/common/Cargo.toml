@@ -10,37 +10,10 @@ path = "lib.rs"
 insta = "1"
 
 [dependencies]
-base64 = "0.13"
-bytes = "0.5"
-chrono = { version = "0.4", features = ["serde"] }
-chrono-tz = { version = "0.5", features = ["serde"] }
-futures = "0.3"
 html = { path = "../../html" }
-http = "0.2"
-hyper = { version = "0.13", features = ["stream"] }
-itertools = "0.9"
-include_dir = "0.6"
-lexical = "5"
-multer = "1.2"
-ndarray = { version = "0.13", features = ["serde"] }
-num-traits = "0.2"
-pinwheel = { path = "../../pinwheel" }
-rand = "0.7"
-reqwest = { version = "0.10", default-features = false, features = ["json", "rustls-tls"] }
-rmp-serde = "0.14"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-serde_urlencoded = "0.7"
-sqlx = { version = "0.4", default-features = false, features = [
-  "any",
-  "chrono",
-  "postgres",
-  "runtime-tokio-rustls",
-  "sqlite",
-] }
 tangram_core = { path = "../../core" }
+tangram_deps = { path = "../../deps" }
 tangram_metrics = { path = "../../metrics" }
 tangram_ui = { path = "../../ui" }
 tangram_util = { path = "../../util" }
-tokio = { version = "0.2" }
-url = "2"

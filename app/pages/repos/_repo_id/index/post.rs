@@ -1,9 +1,9 @@
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
-	http, hyper, serde_urlencoded, sqlx,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
+use tangram_deps::{http, hyper, serde_urlencoded, sqlx};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize)]

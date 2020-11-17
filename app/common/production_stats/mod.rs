@@ -1,12 +1,11 @@
 use crate::date_window::{DateWindow, DateWindowInterval};
 use crate::monitor_event::PredictionMonitorEvent;
-use chrono::prelude::*;
-use chrono_tz::Tz;
-use num_traits::ToPrimitive;
-use sqlx::prelude::*;
+use tangram_deps::{
+	base64, chrono, chrono::prelude::*, chrono_tz::Tz, num_traits::ToPrimitive, serde_json, sqlx,
+	sqlx::prelude::*,
+};
 use tangram_metrics::StreamingMetric;
-use tangram_util::error::Result;
-use tangram_util::zip;
+use tangram_util::{error::Result, zip};
 
 mod column_stats;
 mod number_stats;

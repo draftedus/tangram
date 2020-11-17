@@ -1,4 +1,5 @@
-use tangram_app_common::{http, hyper, Context};
+use tangram_app_common::Context;
+use tangram_deps::{http, hyper};
 use tangram_util::error::Result;
 
 pub async fn get(

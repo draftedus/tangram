@@ -1,4 +1,4 @@
-use sqlx::prelude::*;
+use tangram_deps::{base64, sqlx, sqlx::prelude::*};
 use tangram_util::error::Result;
 use tangram_util::id::Id;
 

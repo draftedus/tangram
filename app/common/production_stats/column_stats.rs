@@ -1,8 +1,7 @@
 use super::number_stats::{NumberStats, NumberStatsOutput};
-use itertools::Itertools;
-use num_traits::ToPrimitive;
 use serde::ser::SerializeSeq;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use tangram_deps::{itertools::Itertools, lexical, num_traits::ToPrimitive, serde_json};
 use tangram_metrics::StreamingMetric;
 use tangram_util::alphanumeric_tokenizer::AlphanumericTokenizer;
 

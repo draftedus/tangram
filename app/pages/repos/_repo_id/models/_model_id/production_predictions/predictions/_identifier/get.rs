@@ -1,20 +1,18 @@
 use super::props::{Found, Inner, Props};
 use std::collections::BTreeMap;
 use tangram_app_common::{
-	base64,
-	chrono::prelude::*,
-	chrono_tz::Tz,
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
-	http, hyper, lexical,
 	model::get_model,
 	predict::{ColumnType, InputTable, InputTableRow, Prediction},
-	serde_json, sqlx,
-	sqlx::prelude::*,
 	timezone::get_timezone,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
+use tangram_deps::{
+	base64, chrono::prelude::*, chrono_tz::Tz, http, hyper, lexical, serde_json, sqlx,
+	sqlx::prelude::*,
+};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(

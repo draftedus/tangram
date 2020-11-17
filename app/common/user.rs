@@ -1,6 +1,9 @@
 use crate::cookies::parse_cookies;
-use hyper::{header, Body, Request};
-use sqlx::prelude::*;
+use tangram_deps::{
+	hyper::{header, Body, Request},
+	sqlx,
+	sqlx::prelude::*,
+};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(Debug)]

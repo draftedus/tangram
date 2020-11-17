@@ -1,6 +1,8 @@
 use super::cookies::parse_cookies;
-use chrono_tz::Tz;
-use hyper::{header, Body, Request};
+use tangram_deps::{
+	chrono_tz::Tz,
+	hyper::{header, Body, Request},
+};
 
 pub fn get_timezone(request: &Request<Body>) -> Tz {
 	request

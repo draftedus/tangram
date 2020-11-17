@@ -5,7 +5,7 @@ version = "0.0.0"
 
 [[bin]]
 name = "www"
-main = "main.rs"
+path = "main.rs"
 
 [dependencies]
 tangram_ui = { path = "../ui" }

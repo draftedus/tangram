@@ -2519,6 +2519,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_core",
+ "tangram_deps",
  "tangram_metrics",
  "tangram_util",
 ]
@@ -2559,6 +2560,7 @@ dependencies = [
  "tangram_app_pages_repos_repo_id_models_new",
  "tangram_app_pages_user",
  "tangram_core",
+ "tangram_deps",
  "tangram_metrics",
  "tangram_ui",
  "tangram_util",
@@ -2569,35 +2571,14 @@ dependencies = [
 name = "tangram_app_common"
 version = "0.0.0"
 dependencies = [
- "base64 0.13.0",
- "bytes",
- "chrono",
- "chrono-tz",
- "futures",
  "html",
- "http",
- "hyper",
- "include_dir",
  "insta",
- "itertools",
- "lexical",
- "multer",
- "ndarray",
- "num-traits",
- "pinwheel",
- "rand",
- "reqwest",
- "rmp-serde",
  "serde",
- "serde_json",
- "serde_urlencoded 0.7.0",
- "sqlx",
  "tangram_core",
+ "tangram_deps",
  "tangram_metrics",
  "tangram_ui",
  "tangram_util",
- "tokio",
- "url",
 ]
 
 [[package]]
@@ -2607,6 +2588,7 @@ dependencies = [
  "html",
  "serde",
  "tangram_app_common",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2618,6 +2600,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2629,6 +2612,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2640,6 +2624,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2651,6 +2636,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2662,6 +2648,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2673,6 +2660,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2685,6 +2673,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2696,6 +2685,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2708,6 +2698,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2720,6 +2711,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2732,6 +2724,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2744,6 +2737,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2755,6 +2749,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2767,6 +2762,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2779,6 +2775,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2791,6 +2788,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2803,6 +2801,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2815,6 +2814,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2827,6 +2827,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2839,6 +2840,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2851,6 +2853,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2863,6 +2866,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2875,6 +2879,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2887,6 +2892,7 @@ dependencies = [
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2902,6 +2908,7 @@ dependencies = [
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_new_client",
  "tangram_core",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2911,6 +2918,7 @@ name = "tangram_app_pages_repos_repo_id_models_new_client"
 version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
+ "tangram_deps",
  "tangram_ui",
  "wasm-bindgen",
  "web-sys",
@@ -2923,6 +2931,7 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_deps",
  "tangram_ui",
  "tangram_util",
 ]
@@ -2981,6 +2990,36 @@ dependencies = [
  "rand",
  "rand_xoshiro",
  "tangram_util",
+]
+
+[[package]]
+name = "tangram_deps"
+version = "0.0.0"
+dependencies = [
+ "base64 0.13.0",
+ "bytes",
+ "chrono",
+ "chrono-tz",
+ "futures",
+ "html",
+ "http",
+ "hyper",
+ "include_dir",
+ "itertools",
+ "lexical",
+ "multer",
+ "ndarray",
+ "num-traits",
+ "pinwheel",
+ "rand",
+ "reqwest",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "serde_urlencoded 0.7.0",
+ "sqlx",
+ "tokio",
+ "url",
 ]
 
 [[package]]
@@ -3085,6 +3124,19 @@ dependencies = [
  "rayon",
  "serde",
 ]
+
+[[package]]
+name = "tangram_www"
+version = "0.0.0"
+dependencies = [
+ "tangram_ui",
+ "tangram_util",
+ "tangram_www_pages_index",
+]
+
+[[package]]
+name = "tangram_www_pages_index"
+version = "0.0.0"
 
 [[package]]
 name = "tap"

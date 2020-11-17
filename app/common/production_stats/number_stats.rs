@@ -1,6 +1,5 @@
-use num_traits::ToPrimitive;
-use rand::random;
 use std::num::NonZeroU64;
+use tangram_deps::{num_traits::ToPrimitive, rand::random};
 use tangram_metrics::StreamingMetric;
 use tangram_util::zip;
 

@@ -1,6 +1,5 @@
 use crate::monitor_event::NumberOrString;
-use ndarray::prelude::*;
-use num_traits::ToPrimitive;
+use tangram_deps::{ndarray::prelude::*, num_traits::ToPrimitive};
 use tangram_metrics::StreamingMetric;
 use tangram_util::zip;
 

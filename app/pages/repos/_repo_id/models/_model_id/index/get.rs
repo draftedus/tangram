@@ -5,13 +5,12 @@ use super::props::{
 };
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
-	http, hyper,
 	model::get_model,
-	num_traits::ToPrimitive,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
+use tangram_deps::{http, hyper, num_traits::ToPrimitive};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(

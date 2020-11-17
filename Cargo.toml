@@ -3,6 +3,7 @@ members = [
 	"app",
 	"cli",
 	"core",
+	"deps",
 	"features",
 	"html",
 	"libtangram",
@@ -12,6 +13,7 @@ members = [
 	"scripts",
 	"tree",
 	"util",
+	"www",
 ]
 
 [profile.dev]

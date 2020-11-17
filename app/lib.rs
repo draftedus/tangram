@@ -1,5 +1,5 @@
 use std::{collections::BTreeMap, sync::Arc};
-use tangram_app_common::{
+use tangram_deps::{
 	futures::FutureExt,
 	http, hyper,
 	pinwheel::{serve, Pinwheel},

@@ -1,5 +1,5 @@
 use crate::monitor_event::NumberOrString;
-use num_traits::ToPrimitive;
+use tangram_deps::num_traits::ToPrimitive;
 use tangram_metrics::StreamingMetric;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]

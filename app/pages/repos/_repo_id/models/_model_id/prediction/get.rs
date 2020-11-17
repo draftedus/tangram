@@ -4,14 +4,13 @@ use super::props::{
 use std::collections::BTreeMap;
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
-	http, hyper, lexical,
 	model::get_model,
 	predict::{ColumnType, InputTable, InputTableRow, Prediction, PredictionResult},
-	serde_json,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
+use tangram_deps::{http, hyper, lexical, serde_json};
 use tangram_util::{err, error::Result, id::Id};
 
 pub async fn get(

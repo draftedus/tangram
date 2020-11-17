@@ -1,6 +1,7 @@
 use super::props::Props;
 use std::collections::BTreeMap;
-use tangram_app_common::{error::not_found, http, hyper, Context};
+use tangram_app_common::{error::not_found, Context};
+use tangram_deps::{http, hyper};
 use tangram_util::error::Result;
 
 pub async fn get(
