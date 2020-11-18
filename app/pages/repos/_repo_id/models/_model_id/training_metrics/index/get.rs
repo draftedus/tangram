@@ -51,7 +51,8 @@ pub async fn get(
 		model_layout_info,
 	};
 	db.commit().await?;
-	let html = pinwheel.render_with("/repos/_repo_id/models/_model_id/training_metrics/", props)?;
+	let html =
+		pinwheel.render_with_props("/repos/_repo_id/models/_model_id/training_metrics/", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

@@ -68,21 +68,21 @@ pub enum ProdFileSystem {
 }
 
 impl Pinwheel {
-	pub fn dev(src_dir: PathBuf, dst_dir: PathBuf) -> Pinwheel {
+	pub fn dev(src_dir: PathBuf, dst_dir: PathBuf) -> Arc<Pinwheel> {
 		let fs = RealFileSystem {
 			dst_dir: dst_dir.clone(),
 		};
-		Pinwheel::Dev {
+		Arc::new(Pinwheel::Dev {
 			src_dir,
 			dst_dir,
 			fs,
-		}
+		})
 	}
 
-	pub fn prod(dir: include_dir::Dir<'static>) -> Pinwheel {
-		Pinwheel::Prod {
+	pub fn prod(dir: include_dir::Dir<'static>) -> Arc<Pinwheel> {
+		Arc::new(Pinwheel::Prod {
 			fs: ProdFileSystem::Included(IncludedFileSystem { dir }),
-		}
+		})
 	}
 
 	fn fs(&self) -> &dyn FileSystem {
@@ -92,6 +92,16 @@ impl Pinwheel {
 				ProdFileSystem::Real(fs) => fs,
 				ProdFileSystem::Included(fs) => fs,
 			},
+		}
+	}
+
+	pub fn exists(&self, pagename: &str) -> bool {
+		if let Pinwheel::Dev { src_dir, .. } = self {
+			let page_entry = page_entry_for_pagename(pagename);
+			js_sources_for_page_entry(src_dir, &page_entry).is_some()
+		} else {
+			let url = Url::parse(&format!("dst:{}", pagename)).unwrap();
+			self.fs().exists(&url)
 		}
 	}
 
@@ -114,10 +124,10 @@ impl Pinwheel {
 	}
 
 	pub fn render(&self, pagename: &str) -> Result<String> {
-		self.render_with(pagename, serde_json::Value::Object(Default::default()))
+		self.render_with_props(pagename, serde_json::Value::Object(Default::default()))
 	}
 
-	pub fn render_with<T>(&self, pagename: &str, props: T) -> Result<String>
+	pub fn render_with_props<T>(&self, pagename: &str, props: T) -> Result<String>
 	where
 		T: serde::Serialize,
 	{
@@ -173,8 +183,11 @@ impl Pinwheel {
 		};
 
 		// Read the manifest.
-		let manifest = self.fs().read(&Url::parse("dst:/manifest.json").unwrap())?;
-		let manifest: serde_json::Value = serde_json::from_slice(&manifest)?;
+		let manifest = self
+			.fs()
+			.read(&Url::parse("dst:/manifest.json").unwrap())
+			.unwrap();
+		let manifest: serde_json::Value = serde_json::from_slice(&manifest).unwrap();
 
 		THREAD_LOCAL_ISOLATE.with(|isolate| {
 			let mut isolate = isolate.borrow_mut();
@@ -202,7 +215,7 @@ impl Pinwheel {
 				.get(&mut scope, default_literal)
 				.ok_or_else(|| err!("failed to get default export from {}", page_js_url))?;
 			if !page_module_default_export.is_function() {
-				return Err(err!("default export from page module must be a functiuon"));
+				return Err(err!("default export from page module must be a function"));
 			}
 			let page_module_default_export_function: v8::Local<v8::Function> =
 				unsafe { v8::Local::cast(page_module_default_export) };
@@ -284,13 +297,15 @@ impl Pinwheel {
 		})
 	}
 
-	pub async fn serve(&self, host: std::net::IpAddr, port: u16) -> hyper::Result<()> {
-		self.serve_with(host, port, (), |_, _, _| futures::future::ready(None))
-			.await
+	pub async fn serve(self: Arc<Self>, host: std::net::IpAddr, port: u16) -> hyper::Result<()> {
+		self.serve_with_handler(host, port, (), |pinwheel, _, request| {
+			pinwheel.handle(request)
+		})
+		.await
 	}
 
-	pub async fn serve_with<C, H, F>(
-		&self,
+	pub async fn serve_with_handler<C, H, F>(
+		self: Arc<Self>,
 		host: std::net::IpAddr,
 		port: u16,
 		request_handler_context: C,
@@ -299,137 +314,188 @@ impl Pinwheel {
 	where
 		C: Send + Sync + 'static,
 		H: Fn(Arc<Pinwheel>, Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
-		F: Future<Output = Option<http::Response<hyper::Body>>> + Send,
+		F: Future<Output = http::Response<hyper::Body>> + Send,
 	{
-		// // Create a task local that will store the panic message and backtrace if a panic occurs.
-		// tokio::task_local! {
-		// 	static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
-		// }
-		// async fn service<C, H, F>(
-		// 	request_handler: Arc<H>,
-		// 	request_handler_context: Arc<C>,
-		// 	request: http::Request<hyper::Body>,
-		// ) -> Result<http::Response<hyper::Body>, Infallible>
-		// where
-		// 	C: Send + Sync + 'static,
-		// 	H: Fn(Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
-		// 	F: Future<Output = Option<http::Response<hyper::Body>>> + Send,
-		// {
-		// 	let method = request.method().clone();
-		// 	let path = request.uri().path_and_query().unwrap().path().to_owned();
-		// 	let result = AssertUnwindSafe(request_handler(request_handler_context, request))
-		// 		.catch_unwind()
-		// 		.await;
-		// 	let response = result.unwrap_or_else(|_| {
-		// 		eprintln!("{} {} 500", method, path);
-		// 		let body = PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
-		// 			let panic_message_and_backtrace = panic_message_and_backtrace.borrow();
-		// 			let (message, backtrace) = panic_message_and_backtrace.as_ref().unwrap();
-		// 			format!("{}\n{:?}", message, backtrace)
-		// 		});
-		// 		http::Response::builder()
-		// 			.status(http::StatusCode::INTERNAL_SERVER_ERROR)
-		// 			.body(hyper::Body::from(body))
-		// 			.unwrap()
-		// 	});
-		// 	Ok(response)
-		// }
-		// // Install a panic hook that will record the panic message and backtrace if a panic occurs.
-		// let hook = std::panic::take_hook();
-		// std::panic::set_hook(Box::new(|panic_info| {
-		// 	let value = (panic_info.to_string(), Backtrace::new());
-		// 	PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
-		// 		panic_message_and_backtrace.borrow_mut().replace(value);
-		// 	})
-		// }));
-		// // Wrap the request handler and context with Arc to allow sharing a reference to it with each task.
-		// let request_handler = Arc::new(request_handler);
-		// let request_handler_context = Arc::new(request_handler_context);
-		// let service = hyper::service::make_service_fn(|_| {
-		// 	let request_handler = request_handler.clone();
-		// 	let request_handler_context = request_handler_context.clone();
-		// 	async move {
-		// 		Ok::<_, Infallible>(hyper::service::service_fn(move |request| {
-		// 			let request_handler = request_handler.clone();
-		// 			let request_handler_context = request_handler_context.clone();
-		// 			PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
-		// 				service(request_handler, request_handler_context, request).await
-		// 			})
-		// 		}))
-		// 	}
-		// });
-		// let addr = std::net::SocketAddr::new(host, port);
-		// let server = hyper::Server::try_bind(&addr)?;
-		// eprintln!("🚀 serving on port {}", port);
-		// server.serve(service).await?;
-		// std::panic::set_hook(hook);
-		// Ok(())
-		todo!()
+		// Create a task local that will store the panic message and backtrace if a panic occurs.
+		tokio::task_local! {
+			static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
+		}
+		async fn service<C, H, F>(
+			pinwheel: Arc<Pinwheel>,
+			request_handler: Arc<H>,
+			request_handler_context: Arc<C>,
+			request: http::Request<hyper::Body>,
+		) -> Result<http::Response<hyper::Body>, Infallible>
+		where
+			C: Send + Sync + 'static,
+			H: Fn(Arc<Pinwheel>, Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
+			F: Future<Output = http::Response<hyper::Body>> + Send,
+		{
+			let method = request.method().clone();
+			let path = request.uri().path_and_query().unwrap().path().to_owned();
+			let result =
+				AssertUnwindSafe(request_handler(pinwheel, request_handler_context, request))
+					.catch_unwind()
+					.await;
+			let response = result.unwrap_or_else(|_| {
+				eprintln!("{} {} 500", method, path);
+				let body = PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+					let panic_message_and_backtrace = panic_message_and_backtrace.borrow();
+					let (message, backtrace) = panic_message_and_backtrace.as_ref().unwrap();
+					format!("{}\n{:?}", message, backtrace)
+				});
+				http::Response::builder()
+					.status(http::StatusCode::INTERNAL_SERVER_ERROR)
+					.body(hyper::Body::from(body))
+					.unwrap()
+			});
+			Ok(response)
+		}
+		// Install a panic hook that will record the panic message and backtrace if a panic occurs.
+		let hook = std::panic::take_hook();
+		std::panic::set_hook(Box::new(|panic_info| {
+			let value = (panic_info.to_string(), Backtrace::new());
+			PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+				panic_message_and_backtrace.borrow_mut().replace(value);
+			})
+		}));
+		// Wrap the request handler and context with Arc to allow sharing a reference to it with each task.
+		let request_handler = Arc::new(request_handler);
+		let pinwheel = self.clone();
+		let request_handler_context = Arc::new(request_handler_context);
+		let service = hyper::service::make_service_fn(|_| {
+			let request_handler = request_handler.clone();
+			let pinwheel = pinwheel.clone();
+			let request_handler_context = request_handler_context.clone();
+			async move {
+				Ok::<_, Infallible>(hyper::service::service_fn(move |request| {
+					let request_handler = request_handler.clone();
+					let pinwheel = pinwheel.clone();
+					let request_handler_context = request_handler_context.clone();
+					PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
+						service(pinwheel, request_handler, request_handler_context, request).await
+					})
+				}))
+			}
+		});
+		let addr = std::net::SocketAddr::new(host, port);
+		let server = hyper::Server::try_bind(&addr)?;
+		eprintln!("🚀 serving on port {}", port);
+		server.serve(service).await?;
+		std::panic::set_hook(hook);
+		Ok(())
 	}
 
 	pub async fn handle(
-		&self,
+		self: Arc<Pinwheel>,
 		request: http::Request<hyper::Body>,
-	) -> Result<http::Response<hyper::Body>> {
+	) -> http::Response<hyper::Body> {
 		let uri = request.uri();
 		let path_and_query = uri.path_and_query().unwrap();
 		let path = path_and_query.path();
+		// Check if there is a page for this path. If there is, render it.
+		if self.exists(path) {
+			let html = self.render(path).unwrap();
+			let response = http::Response::builder()
+				.status(http::StatusCode::OK)
+				.body(hyper::Body::from(html))
+				.unwrap();
+			return response;
+		}
 		// Serve static files from the static directory in dev.
-		if let Pinwheel::Dev { src_dir, .. } = self {
+		if let Pinwheel::Dev { src_dir, .. } = self.as_ref() {
 			let static_path = src_dir.join("static").join(path.strip_prefix('/').unwrap());
 			if static_path.exists() {
-				let body = std::fs::read(&static_path)?;
+				let body = std::fs::read(&static_path).unwrap();
 				let mut response = http::Response::builder();
 				if let Some(content_type) = content_type(&static_path) {
 					response = response.header(http::header::CONTENT_TYPE, content_type);
 				}
 				let response = response.body(hyper::Body::from(body)).unwrap();
-				return Ok(response);
+				return response;
 			}
 		}
 		// Serve assets from the src_dir in dev.
-		if let Pinwheel::Dev { .. } = self {
+		if let Pinwheel::Dev { .. } = self.as_ref() {
 			if let Some(path) = path.strip_prefix("/assets") {
 				let asset_path = Path::new(path.strip_prefix('/').unwrap());
 				if asset_path.exists() {
-					let body = std::fs::read(&asset_path)?;
+					let body = std::fs::read(&asset_path).unwrap();
 					let mut response = http::Response::builder();
 					if let Some(content_type) = content_type(&asset_path) {
 						response = response.header(http::header::CONTENT_TYPE, content_type);
 					}
 					let response = response.body(hyper::Body::from(body)).unwrap();
-					return Ok(response);
+					return response;
 				}
 			}
 		}
 		// Serve from the dst_dir.
 		let url = Url::parse(&format!("dst:{}", path)).unwrap();
 		if self.fs().exists(&url) {
-			let data = self.fs().read(&url)?;
+			let data = self.fs().read(&url).unwrap();
 			let mut response = http::Response::builder();
 			if let Some(content_type) = content_type(Path::new(path)) {
 				response = response.header(http::header::CONTENT_TYPE, content_type);
 			}
 			let response = response.body(hyper::Body::from(data)).unwrap();
-			return Ok(response);
-		}
-		// Render a page if one exists.
-		let url = Url::parse(&format!("dst:{}", path)).unwrap();
-		if self.fs().exists(&url) {
-			let html = self.render(path)?;
-			let response = http::Response::builder()
-				.status(http::StatusCode::OK)
-				.body(hyper::Body::from(html))
-				.unwrap();
-			return Ok(response);
+			return response;
 		}
 		// Otherwise, 404.
-		let response = http::Response::builder()
+		http::Response::builder()
 			.status(http::StatusCode::NOT_FOUND)
 			.body(hyper::Body::from("not found"))
-			.unwrap();
-		Ok(response)
+			.unwrap()
 	}
+}
+
+/// Compute the page entry from the pagename.
+fn page_entry_for_pagename(pagename: &str) -> String {
+	let page_entry = if pagename.ends_with('/') {
+		pagename.to_owned() + "index"
+	} else {
+		pagename.to_owned()
+	};
+	let page_entry = page_entry.strip_prefix('/').unwrap().to_owned();
+	page_entry
+}
+
+struct JsSourcesForPageEntryOutput {
+	static_source_path: Option<PathBuf>,
+	server_source_path: Option<PathBuf>,
+	client_source_path: Option<PathBuf>,
+}
+
+fn js_sources_for_page_entry(
+	src_dir: &Path,
+	page_entry: &str,
+) -> Option<JsSourcesForPageEntryOutput> {
+	let static_source_path = src_dir.join("pages").join(&page_entry).join("static.tsx");
+	let static_source_path = if static_source_path.exists() {
+		Some(static_source_path)
+	} else {
+		None
+	};
+	let server_source_path = src_dir.join("pages").join(&page_entry).join("server.tsx");
+	let server_source_path = if server_source_path.exists() {
+		Some(server_source_path)
+	} else {
+		None
+	};
+	let client_source_path = src_dir.join("pages").join(&page_entry).join("client.tsx");
+	let client_source_path = if client_source_path.exists() {
+		Some(client_source_path)
+	} else {
+		None
+	};
+	if static_source_path.is_none() && server_source_path.is_none() {
+		return None;
+	}
+	Some(JsSourcesForPageEntryOutput {
+		static_source_path,
+		server_source_path,
+		client_source_path,
+	})
 }
 
 fn content_type(path: &Path) -> Option<&'static str> {
@@ -830,24 +896,19 @@ pub fn build_js_pages(
 		format!("--outdir={}", dst_dir.display()),
 	];
 	for page_entry in page_entries {
-		let static_source_path = src_dir.join("pages").join(&page_entry).join("static.tsx");
-		let server_source_path = src_dir.join("pages").join(&page_entry).join("server.tsx");
-		let client_source_path = src_dir.join("pages").join(&page_entry).join("client.tsx");
-		let static_source_path_exists = static_source_path.exists();
-		let server_source_path_exists = server_source_path.exists();
-		let client_source_path_exists = client_source_path.exists();
-		if !static_source_path_exists && !server_source_path_exists {
-			return Err(err!(
-				"could not find static.tsx or server.tsx for {}",
+		let js_sources = js_sources_for_page_entry(src_dir, page_entry).ok_or_else(|| {
+			err!(
+				"Could not find static.tsx or server.tsx for page entry {}",
 				page_entry
-			));
-		}
-		if static_source_path_exists {
+			)
+		})?;
+		if let Some(static_source_path) = js_sources.static_source_path {
 			args.push(format!("{}", static_source_path.display()));
-		} else if server_source_path_exists {
+		}
+		if let Some(server_source_path) = js_sources.server_source_path {
 			args.push(format!("{}", server_source_path.display()));
 		}
-		if client_source_path_exists {
+		if let Some(client_source_path) = js_sources.client_source_path {
 			args.push(format!("{}", client_source_path.display()));
 		}
 	}

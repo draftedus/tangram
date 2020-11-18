@@ -142,7 +142,7 @@ pub async fn get(
 		id: model_id.to_string(),
 		inner,
 	};
-	let html = pinwheel.render_with("/repos/_repo_id/models/_model_id/prediction", props)?;
+	let html = pinwheel.render_with_props("/repos/_repo_id/models/_model_id/prediction", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

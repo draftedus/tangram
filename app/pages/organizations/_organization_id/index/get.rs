@@ -68,7 +68,7 @@ pub async fn get(
 		repos,
 		user_id: user.id.to_string(),
 	};
-	let html = pinwheel.render_with("/organizations/_organization_id/", props)?;
+	let html = pinwheel.render_with_props("/organizations/_organization_id/", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

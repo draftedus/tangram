@@ -4,7 +4,7 @@ name = "tangram_www"
 version = "0.0.0"
 
 [[bin]]
-name = "www"
+name = "tangram_www"
 path = "main.rs"
 
 [build-dependencies]

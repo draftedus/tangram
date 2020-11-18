@@ -10,13 +10,9 @@ async fn main() {
 	);
 	#[cfg(not(debug_assertions))]
 	let pinwheel = Pinwheel::prod(tangram_deps::include_dir::include_dir!(
-		"../build/pinwheel/app"
+		"../build/pinwheel/www"
 	));
 	let host = "0.0.0.0".parse().unwrap();
 	let port = 8080;
 	pinwheel.serve(host, port).await.unwrap();
 }
-
-// async fn request_handler(pinwheel: Arc<Pinwheel>, request: http::Request<hyper::Body>) -> http::Response<hyper::Body> {
-// 	pinwheel.handle().await
-// }

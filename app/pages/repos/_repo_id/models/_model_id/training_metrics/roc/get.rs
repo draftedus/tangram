@@ -58,7 +58,7 @@ pub async fn get(
 			return Ok(bad_request());
 		}
 	};
-	let html = pinwheel.render_with(
+	let html = pinwheel.render_with_props(
 		"/repos/_repo_id/models/_model_id/training_metrics/roc",
 		props,
 	)?;

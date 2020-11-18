@@ -64,7 +64,7 @@ pub async fn get(
 		tuning,
 		model_layout_info,
 	};
-	let html = pinwheel.render_with("/repos/_repo_id/models/_model_id/tuning", props)?;
+	let html = pinwheel.render_with_props("/repos/_repo_id/models/_model_id/tuning", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

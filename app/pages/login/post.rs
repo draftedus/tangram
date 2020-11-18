@@ -99,7 +99,7 @@ pub async fn post(
 					error: Some("invalid code".to_owned()),
 					email: Some(email),
 				};
-				let html = pinwheel.render_with("/login", props)?;
+				let html = pinwheel.render_with_props("/login", props)?;
 				let response = http::Response::builder()
 					.status(http::StatusCode::BAD_REQUEST)
 					.body(hyper::Body::from(html))?;

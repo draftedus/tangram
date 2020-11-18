@@ -221,7 +221,7 @@ pub async fn get(
 		model_layout_info,
 		class,
 	};
-	let html = pinwheel.render_with(
+	let html = pinwheel.render_with_props(
 		"/repos/_repo_id/models/_model_id/production_metrics/class_metrics",
 		props,
 	)?;

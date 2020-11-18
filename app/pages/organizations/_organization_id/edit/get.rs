@@ -18,7 +18,7 @@ pub async fn get(
 		app_layout_info,
 		error: None,
 	};
-	let html = pinwheel.render_with("/organizations/_organization_id/edit", props)?;
+	let html = pinwheel.render_with_props("/organizations/_organization_id/edit", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

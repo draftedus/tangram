@@ -19,7 +19,7 @@ pub async fn get(
 		error: None,
 		email,
 	};
-	let html = pinwheel.render_with("/login", props)?;
+	let html = pinwheel.render_with_props("/login", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

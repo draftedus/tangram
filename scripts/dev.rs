@@ -1,4 +1,4 @@
-use super::watch::watch;
+use crate::watch::watch;
 use tangram_util::error::Result;
 
 pub fn dev() -> Result<()> {

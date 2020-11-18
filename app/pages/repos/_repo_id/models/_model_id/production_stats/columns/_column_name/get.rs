@@ -100,7 +100,7 @@ pub async fn get(
 		inner,
 		model_layout_info,
 	};
-	let html = pinwheel.render_with(
+	let html = pinwheel.render_with_props(
 		"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
 		props,
 	)?;

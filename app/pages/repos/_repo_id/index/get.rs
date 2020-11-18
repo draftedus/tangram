@@ -68,7 +68,7 @@ pub async fn get(
 		title: repo.title,
 	};
 	db.commit().await?;
-	let html = pinwheel.render_with("/repos/_repo_id/", props)?;
+	let html = pinwheel.render_with_props("/repos/_repo_id/", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

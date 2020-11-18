@@ -6,6 +6,7 @@ mod generate_license;
 mod prepare_release;
 mod production_track_test;
 mod watch;
+mod www;
 
 #[derive(Clap)]
 enum Args {
@@ -13,6 +14,7 @@ enum Args {
 	GenerateLicense(self::generate_license::Args),
 	PrepareRelease,
 	ProductionTrackTest(self::production_track_test::Args),
+	WwwDev,
 }
 
 #[tokio::main]
@@ -25,6 +27,7 @@ async fn main() -> Result<()> {
 		Args::ProductionTrackTest(args) => {
 			self::production_track_test::production_track_test(args).await?
 		}
+		Args::WwwDev => self::www::dev::dev()?,
 	}
 	Ok(())
 }

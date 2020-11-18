@@ -55,7 +55,7 @@ pub async fn get(
 		}
 	};
 	db.commit().await?;
-	let html = pinwheel.render_with("/user", props)?;
+	let html = pinwheel.render_with_props("/user", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

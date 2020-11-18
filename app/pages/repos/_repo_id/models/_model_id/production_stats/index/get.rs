@@ -263,7 +263,8 @@ pub async fn get(
 		prediction_stats_interval_chart,
 		model_layout_info,
 	};
-	let html = pinwheel.render_with("/repos/_repo_id/models/_model_id/production_stats/", props)?;
+	let html =
+		pinwheel.render_with_props("/repos/_repo_id/models/_model_id/production_stats/", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

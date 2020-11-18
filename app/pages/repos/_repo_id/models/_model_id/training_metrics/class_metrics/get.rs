@@ -68,7 +68,7 @@ pub async fn get(
 		true_negatives,
 		true_positives,
 	};
-	let html = pinwheel.render_with(
+	let html = pinwheel.render_with_props(
 		"/repos/_repo_id/models/_model_id/training_metrics/class_metrics",
 		props,
 	)?;
