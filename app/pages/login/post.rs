@@ -4,8 +4,8 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_deps::{
-	chrono::prelude::*, http, hyper, rand, rand::Rng, reqwest, serde_json::json, serde_urlencoded,
-	sqlx, sqlx::prelude::*,
+	chrono::prelude::*, http, hyper, pinwheel::Pinwheel, rand, rand::Rng, reqwest,
+	serde_json::json, serde_urlencoded, sqlx, sqlx::prelude::*,
 };
 use tangram_util::{err, error::Result, id::Id};
 
@@ -16,6 +16,7 @@ struct Action {
 }
 
 pub async fn post(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	mut request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {
@@ -98,7 +99,7 @@ pub async fn post(
 					error: Some("invalid code".to_owned()),
 					email: Some(email),
 				};
-				let html = context.pinwheel.render_with("/login", props)?;
+				let html = pinwheel.render_with("/login", props)?;
 				let response = http::Response::builder()
 					.status(http::StatusCode::BAD_REQUEST)
 					.body(hyper::Body::from(html))?;

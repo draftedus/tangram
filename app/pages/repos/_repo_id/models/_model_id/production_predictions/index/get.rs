@@ -9,14 +9,15 @@ use tangram_app_common::{
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_deps::{
-	base64, chrono::prelude::*, chrono_tz::Tz, http, hyper, num_traits::ToPrimitive, serde_json,
-	sqlx, sqlx::prelude::*,
+	base64, chrono::prelude::*, chrono_tz::Tz, http, hyper, num_traits::ToPrimitive,
+	pinwheel::Pinwheel, serde_json, sqlx, sqlx::prelude::*,
 };
 use tangram_util::{error::Result, id::Id};
 
 const N_PREDICTIONS_PER_PAGE: i64 = 10;
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -201,7 +202,7 @@ pub async fn get(
 		},
 		pagination,
 	};
-	let html = context.pinwheel.render_with(
+	let html = pinwheel.render_with(
 		"/repos/_repo_id/models/_model_id/production_predictions/",
 		props,
 	)?;

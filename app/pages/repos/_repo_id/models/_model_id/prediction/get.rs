@@ -10,10 +10,11 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, lexical, serde_json};
+use tangram_deps::{http, hyper, lexical, pinwheel::Pinwheel, serde_json};
 use tangram_util::{err, error::Result, id::Id};
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -141,9 +142,7 @@ pub async fn get(
 		id: model_id.to_string(),
 		inner,
 	};
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/prediction", props)?;
+	let html = pinwheel.render_with("/repos/_repo_id/models/_model_id/prediction", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

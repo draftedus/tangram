@@ -6,10 +6,11 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, num_traits::ToPrimitive};
+use tangram_deps::{http, hyper, num_traits::ToPrimitive, pinwheel::Pinwheel};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -78,9 +79,7 @@ pub async fn get(
 		}
 	};
 	db.commit().await?;
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/training_stats/", props)?;
+	let html = pinwheel.render_with("/repos/_repo_id/models/_model_id/training_stats/", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

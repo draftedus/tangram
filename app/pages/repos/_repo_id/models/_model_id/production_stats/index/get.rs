@@ -20,13 +20,14 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, num_traits::ToPrimitive};
+use tangram_deps::{http, hyper, num_traits::ToPrimitive, pinwheel::Pinwheel};
 use tangram_util::{error::Result, id::Id};
 
 const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
 const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -262,9 +263,7 @@ pub async fn get(
 		prediction_stats_interval_chart,
 		model_layout_info,
 	};
-	let html = context
-		.pinwheel
-		.render_with("/repos/_repo_id/models/_model_id/production_stats/", props)?;
+	let html = pinwheel.render_with("/repos/_repo_id/models/_model_id/production_stats/", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

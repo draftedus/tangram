@@ -6,10 +6,11 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper};
+use tangram_deps::{http, hyper, pinwheel::Pinwheel};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -57,7 +58,7 @@ pub async fn get(
 			return Ok(bad_request());
 		}
 	};
-	let html = context.pinwheel.render_with(
+	let html = pinwheel.render_with(
 		"/repos/_repo_id/models/_model_id/training_metrics/roc",
 		props,
 	)?;

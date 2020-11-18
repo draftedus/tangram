@@ -1,4 +1,4 @@
-use tangram_deps::{pinwheel, sqlx, url};
+use tangram_deps::{sqlx, url};
 
 pub mod cookies;
 pub mod date_window;
@@ -31,6 +31,5 @@ pub struct Options {
 
 pub struct Context {
 	pub options: Options,
-	pub pinwheel: pinwheel::Pinwheel,
 	pub pool: sqlx::AnyPool,
 }

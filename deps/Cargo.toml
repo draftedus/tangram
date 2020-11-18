@@ -18,9 +18,11 @@ hyper = { version = "0.13", features = ["stream"] }
 itertools = "0.9"
 include_dir = "0.6"
 lexical = "5"
+maplit = "1"
 multer = "1.2"
 ndarray = { version = "0.13", features = ["serde"] }
 num-traits = "0.2"
+once_cell = "1"
 pinwheel = { path = "../pinwheel" }
 rand = "0.7"
 reqwest = { version = "0.10", default-features = false, features = ["json", "rustls-tls"] }

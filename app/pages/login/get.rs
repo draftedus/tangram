@@ -1,10 +1,11 @@
 use super::props::Props;
 use std::collections::BTreeMap;
 use tangram_app_common::{error::not_found, Context};
-use tangram_deps::{http, hyper};
+use tangram_deps::{http, hyper, pinwheel::Pinwheel};
 use tangram_util::error::Result;
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	_request: http::Request<hyper::Body>,
 	search_params: Option<BTreeMap<String, String>>,
@@ -18,7 +19,7 @@ pub async fn get(
 		error: None,
 		email,
 	};
-	let html = context.pinwheel.render_with("/login", props)?;
+	let html = pinwheel.render_with("/login", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

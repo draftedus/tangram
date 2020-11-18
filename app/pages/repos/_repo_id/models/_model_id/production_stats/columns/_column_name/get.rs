@@ -16,10 +16,11 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{chrono_tz::Tz, http, hyper, num_traits::ToPrimitive};
+use tangram_deps::{chrono_tz::Tz, http, hyper, num_traits::ToPrimitive, pinwheel::Pinwheel};
 use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -99,7 +100,7 @@ pub async fn get(
 		inner,
 		model_layout_info,
 	};
-	let html = context.pinwheel.render_with(
+	let html = pinwheel.render_with(
 		"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
 		props,
 	)?;

@@ -1,10 +1,6 @@
 use std::{collections::BTreeMap, sync::Arc};
-use tangram_deps::{
-	futures::FutureExt,
-	http, hyper,
-	pinwheel::{serve, Pinwheel},
-	sqlx, tokio, url, Context,
-};
+use tangram_app_common::Context;
+use tangram_deps::{futures::FutureExt, http, hyper, pinwheel::Pinwheel, sqlx, tokio, url};
 use tangram_util::{err, error::Result};
 
 mod migrations;
@@ -60,19 +56,18 @@ async fn run_inner(options: Options) -> Result<()> {
 	// Start the server.
 	let host = options.host;
 	let port = options.port;
-	let context = Context {
-		options,
-		pinwheel,
-		pool,
-	};
-	serve(host, port, request_handler, context).await?;
+	let context = Context { options, pool };
+	pinwheel
+		.serve_with(host, port, context, request_handler)
+		.await?;
 	Ok(())
 }
 
 async fn request_handler(
+	pinwheel: Arc<Pinwheel>,
 	context: Arc<Context>,
 	request: http::Request<hyper::Body>,
-) -> http::Response<hyper::Body> {
+) -> Option<http::Response<hyper::Body>> {
 	let method = request.method().clone();
 	let uri = request.uri().clone();
 	let path_and_query = uri.path_and_query().unwrap();
@@ -84,6 +79,7 @@ async fn request_handler(
 			.into_owned()
 			.collect()
 	});
+	let pinwheel = &pinwheel;
 	let context = &context;
 	let result = match (&method, path_components.as_slice()) {
 		(&http::Method::GET, &["health"]) => {
@@ -92,68 +88,77 @@ async fn request_handler(
 		(&http::Method::POST, &["track"]) => {
 			tangram_api::track::post(context, request).boxed()
 		}
-		(&http::Method::GET, &["login"]) => tangram_app_pages_login::get(
-			context,
-			request,
-			search_params,
-		).boxed(),
+		(&http::Method::GET, &["login"]) => {
+			tangram_app_pages_login::get(
+				pinwheel,
+				context,
+				request,
+				search_params
+			).boxed()
+		},
 		(&http::Method::POST, &["login"]) => {
-			tangram_app_pages_login::post(context, request).boxed()
+			tangram_app_pages_login::post(
+				pinwheel,
+				context,
+				request
+			).boxed()
 		}
-		(&http::Method::GET, &[""]) => tangram_app_pages_index::get(context, request).boxed(),
+		(&http::Method::GET, &[""]) => {
+			tangram_app_pages_index::get(
+				pinwheel,
+				context,
+				request
+			).boxed()
+		},
 		(&http::Method::POST, &[""]) => {
-			tangram_app_pages_index::post(context, request).boxed()
+			tangram_app_pages_index::post(
+				pinwheel,
+				context,
+				request
+			).boxed()
 		}
 		(&http::Method::GET, &["repos", "new"]) => {
-			tangram_app_pages_repos_new::get(context, request).boxed()
+			tangram_app_pages_repos_new::get(pinwheel, context, request).boxed()
 		}
 		(&http::Method::POST, &["repos", "new"]) => {
-			tangram_app_pages_repos_new::post(context, request).boxed()
+			tangram_app_pages_repos_new::post(pinwheel, context, request).boxed()
 		}
 		(&http::Method::GET, &["repos", repo_id, ""]) => {
-			tangram_app_pages_repos_repo_id_index::get(context, request, repo_id).boxed()
+			tangram_app_pages_repos_repo_id_index::get(pinwheel, context, request, repo_id).boxed()
 		}
 		(&http::Method::POST, &["repos", repo_id, ""]) => {
-			tangram_app_pages_repos_repo_id_index::post(context, request, repo_id).boxed()
+			tangram_app_pages_repos_repo_id_index::post(pinwheel, context, request, repo_id).boxed()
 		}
 		(&http::Method::GET, &["repos", repo_id, "models", "new"]) => {
-			tangram_app_pages_repos_repo_id_models_new::get(context, request, repo_id).boxed()
+			tangram_app_pages_repos_repo_id_models_new::get(pinwheel, context, request, repo_id).boxed()
 		}
 		(&http::Method::POST, &["repos", repo_id, "models", "new"]) => {
-			tangram_app_pages_repos_repo_id_models_new::post(context, request, repo_id).boxed()
+			tangram_app_pages_repos_repo_id_models_new::post(pinwheel, context, request, repo_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, ""]) => {
-			tangram_app_pages_repos_repo_id_models_model_id_index::get(context, request, model_id).boxed()
+			tangram_app_pages_repos_repo_id_models_model_id_index::get(pinwheel, context, request, model_id).boxed()
 		}
 		(&http::Method::POST, &["repos", _repo_id, "models", model_id]) => {
-			tangram_app_layouts::model_layout::post(context, request, model_id).boxed()
+			tangram_app_layouts::model_layout::post(pinwheel, context, request, model_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "download"]) => {
-			tangram_app_layouts::model_layout::download(context, request, model_id).boxed()
+			tangram_app_layouts::model_layout::download(pinwheel, context, request, model_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_stats", ""]) => {
-			tangram_app_pages_repos_repo_id_models_model_id_training_stats_index::get(
-				context, request, model_id,
-			).boxed()
+			tangram_app_pages_repos_repo_id_models_model_id_training_stats_index::get(pinwheel, context, request, model_id).boxed()
 		}
 		(
 			&http::Method::GET,
 			&["repos", _repo_id, "models", model_id, "training_stats", "columns", column_name],
 		) => {
-			tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name::get(
-				context,
-				request,
-				model_id,
-				column_name,
-			).boxed()
+			tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name::get(pinwheel, context, request, model_id, column_name).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_importances"]) => {
-			tangram_app_pages_repos_repo_id_models_model_id_training_importances::get(
-				context, request, model_id,
-			).boxed()
+			tangram_app_pages_repos_repo_id_models_model_id_training_importances::get(pinwheel, context, request, model_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "prediction"]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_prediction::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -162,7 +167,10 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", ""]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_training_metrics_index::get(
-				context, request, model_id,
+				pinwheel,
+				context,
+				request,
+				model_id,
 			).boxed()
 		}
 		(
@@ -170,6 +178,7 @@ async fn request_handler(
 			&["repos", _repo_id, "models", model_id, "training_metrics", "class_metrics"],
 		) => {
 			tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_metrics::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -181,6 +190,7 @@ async fn request_handler(
 			&["repos", _repo_id, "models", model_id, "training_metrics", "precision_recall"],
 		) => {
 			tangram_app_pages_repos_repo_id_models_model_id_training_metrics_precision_recall::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -188,16 +198,18 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_metrics", "roc"]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
 			).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "tuning"]) => {
-			tangram_app_pages_repos_repo_id_models_model_id_tuning::get(context, request, model_id).boxed()
+			tangram_app_pages_repos_repo_id_models_model_id_tuning::get(pinwheel, context, request, model_id).boxed()
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -206,6 +218,7 @@ async fn request_handler(
 		}
 		(&http::Method::POST, &["repos", _repo_id, "models", model_id, "production_predictions", ""]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index::post(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -213,6 +226,7 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", "predictions", identifier]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -221,6 +235,7 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", ""]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_stats_index::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -232,6 +247,7 @@ async fn request_handler(
 			&["repos", _repo_id, "models", model_id, "production_stats", "columns", column_name],
 		) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -241,6 +257,7 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", ""]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -248,10 +265,10 @@ async fn request_handler(
 			).boxed()
 		}
 		(
-			&http::Method::GET,
-			&["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"],
+			&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"],
 		) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics::get(
+				pinwheel,
 				context,
 				request,
 				model_id,
@@ -259,19 +276,36 @@ async fn request_handler(
 			).boxed()
 		}
 		(&http::Method::GET, &["user"]) =>{
-			tangram_app_pages_user::get(context, request).boxed()
+			tangram_app_pages_user::get(
+				pinwheel,
+				context,
+				request
+			).boxed()
 		},
 		(&http::Method::POST, &["user"]) => {
-			tangram_app_pages_user::post(context, request).boxed()
+			tangram_app_pages_user::post(
+				pinwheel,
+				context,
+				request
+			).boxed()
 		},
 		(&http::Method::GET, &["organizations", "new"]) => {
-			tangram_app_pages_organizations_new::get(context, request).boxed()
+			tangram_app_pages_organizations_new::get(
+				pinwheel,
+				context,
+				request
+			).boxed()
 		},
 		(&http::Method::POST, &["organizations", "new"]) => {
-			tangram_app_pages_organizations_new::post(context, request).boxed()
+			tangram_app_pages_organizations_new::post(
+				pinwheel,
+				context,
+				request
+			).boxed()
 		}
 		(&http::Method::GET, &["organizations", organization_id, ""]) => {
 			tangram_app_pages_organizations_organization_id_index::get(
+				pinwheel,
 				context,
 				request,
 				organization_id,
@@ -279,6 +313,7 @@ async fn request_handler(
 		}
 		(&http::Method::POST, &["organizations", organization_id, ""]) => {
 			tangram_app_pages_organizations_organization_id_index::post(
+				pinwheel,
 				context,
 				request,
 				organization_id,
@@ -286,6 +321,7 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["organizations", organization_id, "edit"]) => {
 			tangram_app_pages_organizations_organization_id_edit::get(
+				pinwheel,
 				context,
 				request,
 				organization_id,
@@ -293,6 +329,7 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["organizations", organization_id, "members", "new"]) => {
 			tangram_app_pages_organizations_organization_id_members_new::get(
+				pinwheel,
 				context,
 				request,
 				organization_id,
@@ -300,6 +337,7 @@ async fn request_handler(
 		}
 		(&http::Method::POST, &["organizations", organization_id, "members", "new"]) => {
 			tangram_app_pages_organizations_organization_id_members_new::post(
+				pinwheel,
 				context,
 				request,
 				organization_id,
@@ -307,12 +345,13 @@ async fn request_handler(
 		}
 		(&http::Method::POST, &["organizations", organization_id, "edit"]) => {
 			tangram_app_pages_organizations_organization_id_edit::post(
+				pinwheel,
 				context,
 				request,
 				organization_id,
 			).boxed()
 		}
-		_ => context.pinwheel.handle(request).boxed(),
+		_ => return None,
 	};
 	let result = result.await;
 	let response = match result {
@@ -331,5 +370,5 @@ async fn request_handler(
 		}
 	};
 	eprintln!("{} {} {}", method, path, response.status());
-	response
+	Some(response)
 }

@@ -6,10 +6,11 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::app_layout::get_app_layout_info;
-use tangram_deps::{http, hyper, sqlx, sqlx::prelude::*};
+use tangram_deps::{http, hyper, pinwheel::Pinwheel, sqlx, sqlx::prelude::*};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {
@@ -54,7 +55,7 @@ pub async fn get(
 		}
 	};
 	db.commit().await?;
-	let html = context.pinwheel.render_with("/user", props)?;
+	let html = pinwheel.render_with("/user", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

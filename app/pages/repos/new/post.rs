@@ -4,7 +4,7 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_organization},
 	Context,
 };
-use tangram_deps::{http, hyper, serde_urlencoded};
+use tangram_deps::{http, hyper, pinwheel::Pinwheel, serde_urlencoded};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize, Clone, Debug)]
@@ -15,6 +15,7 @@ struct Action {
 }
 
 pub async fn post(
+	_pinwheel: &Pinwheel,
 	context: &Context,
 	mut request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {

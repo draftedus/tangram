@@ -2528,7 +2528,6 @@ dependencies = [
 name = "tangram_app"
 version = "0.0.0"
 dependencies = [
- "include_dir",
  "pinwheel",
  "tangram_api",
  "tangram_app_common",
@@ -2918,7 +2917,6 @@ name = "tangram_app_pages_repos_repo_id_models_new_client"
 version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
- "tangram_deps",
  "tangram_ui",
  "wasm-bindgen",
  "web-sys",
@@ -3007,9 +3005,11 @@ dependencies = [
  "include_dir",
  "itertools",
  "lexical",
+ "maplit",
  "multer",
  "ndarray",
  "num-traits",
+ "once_cell",
  "pinwheel",
  "rand",
  "reqwest",
@@ -3129,7 +3129,7 @@ dependencies = [
 name = "tangram_www"
 version = "0.0.0"
 dependencies = [
- "tangram_ui",
+ "tangram_deps",
  "tangram_util",
  "tangram_www_pages_index",
 ]
@@ -3137,6 +3137,9 @@ dependencies = [
 [[package]]
 name = "tangram_www_pages_index"
 version = "0.0.0"
+dependencies = [
+ "tangram_deps",
+]
 
 [[package]]
 name = "tap"

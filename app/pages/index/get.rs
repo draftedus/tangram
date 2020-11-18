@@ -7,10 +7,11 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::app_layout::get_app_layout_info;
-use tangram_deps::{http, hyper};
+use tangram_deps::{http, hyper, pinwheel::Pinwheel};
 use tangram_util::error::Result;
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {
@@ -33,7 +34,7 @@ pub async fn get(
 		repos,
 	};
 	db.commit().await?;
-	let html = context.pinwheel.render_with("/", props)?;
+	let html = pinwheel.render_with("/", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

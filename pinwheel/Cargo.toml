@@ -7,10 +7,6 @@ version = "0.1.0-dev"
 [lib]
 path = "lib.rs"
 
-[[bin]]
-name = "pinwheel"
-path = "main.rs"
-
 [dependencies]
 backtrace = "0.3"
 clap = { version = "3.0.0-beta.2", features = ["color"] }

@@ -19,6 +19,10 @@ use tangram_util::{err, error::Result};
 use url::Url;
 use which::which;
 
+pub trait StaticPage {
+	fn render(&self) -> String;
+}
+
 #[macro_export]
 macro_rules! asset {
 	($asset_relative_path:literal) => {{
@@ -45,84 +49,6 @@ macro_rules! client {
 		let hash = ::pinwheel::hash(client_crate_manifest_path.to_str().unwrap());
 		format!("/js/{}.js", hash)
 		}};
-}
-
-// Create a task local that will store the panic message and backtrace if a panic occurs.
-tokio::task_local! {
-	static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
-}
-
-pub async fn serve<C, H, F>(
-	host: std::net::IpAddr,
-	port: u16,
-	request_handler: H,
-	request_handler_context: C,
-) -> hyper::Result<()>
-where
-	C: Send + Sync + 'static,
-	H: Fn(Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
-	F: Future<Output = http::Response<hyper::Body>> + Send,
-{
-	// Install a panic hook that will record the panic message and backtrace if a panic occurs.
-	let hook = std::panic::take_hook();
-	std::panic::set_hook(Box::new(|panic_info| {
-		let value = (panic_info.to_string(), Backtrace::new());
-		PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
-			panic_message_and_backtrace.borrow_mut().replace(value);
-		})
-	}));
-	// Wrap the request handler and context with Arc to allow sharing a reference to it with each task.
-	let request_handler = Arc::new(request_handler);
-	let request_handler_context = Arc::new(request_handler_context);
-	let service = hyper::service::make_service_fn(|_| {
-		let request_handler = request_handler.clone();
-		let request_handler_context = request_handler_context.clone();
-		async move {
-			Ok::<_, Infallible>(hyper::service::service_fn(move |request| {
-				let request_handler = request_handler.clone();
-				let request_handler_context = request_handler_context.clone();
-				PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
-					service(request_handler, request_handler_context, request).await
-				})
-			}))
-		}
-	});
-	let addr = std::net::SocketAddr::new(host, port);
-	let server = hyper::Server::try_bind(&addr)?;
-	eprintln!("🚀 serving on port {}", port);
-	server.serve(service).await?;
-	std::panic::set_hook(hook);
-	Ok(())
-}
-
-async fn service<C, H, F>(
-	request_handler: Arc<H>,
-	request_handler_context: Arc<C>,
-	request: http::Request<hyper::Body>,
-) -> Result<http::Response<hyper::Body>, Infallible>
-where
-	C: Send + Sync + 'static,
-	H: Fn(Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
-	F: Future<Output = http::Response<hyper::Body>> + Send,
-{
-	let method = request.method().clone();
-	let path = request.uri().path_and_query().unwrap().path().to_owned();
-	let result = AssertUnwindSafe(request_handler(request_handler_context, request))
-		.catch_unwind()
-		.await;
-	let response = result.unwrap_or_else(|_| {
-		eprintln!("{} {} 500", method, path);
-		let body = PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
-			let panic_message_and_backtrace = panic_message_and_backtrace.borrow();
-			let (message, backtrace) = panic_message_and_backtrace.as_ref().unwrap();
-			format!("{}\n{:?}", message, backtrace)
-		});
-		http::Response::builder()
-			.status(http::StatusCode::INTERNAL_SERVER_ERROR)
-			.body(hyper::Body::from(body))
-			.unwrap()
-	});
-	Ok(response)
 }
 
 pub enum Pinwheel {
@@ -356,6 +282,89 @@ impl Pinwheel {
 
 			Ok(html)
 		})
+	}
+
+	pub async fn serve(&self, host: std::net::IpAddr, port: u16) -> hyper::Result<()> {
+		self.serve_with(host, port, (), |_, _, _| futures::future::ready(None))
+			.await
+	}
+
+	pub async fn serve_with<C, H, F>(
+		&self,
+		host: std::net::IpAddr,
+		port: u16,
+		request_handler_context: C,
+		request_handler: H,
+	) -> hyper::Result<()>
+	where
+		C: Send + Sync + 'static,
+		H: Fn(Arc<Pinwheel>, Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
+		F: Future<Output = Option<http::Response<hyper::Body>>> + Send,
+	{
+		// // Create a task local that will store the panic message and backtrace if a panic occurs.
+		// tokio::task_local! {
+		// 	static PANIC_MESSAGE_AND_BACKTRACE: RefCell<Option<(String, Backtrace)>>;
+		// }
+		// async fn service<C, H, F>(
+		// 	request_handler: Arc<H>,
+		// 	request_handler_context: Arc<C>,
+		// 	request: http::Request<hyper::Body>,
+		// ) -> Result<http::Response<hyper::Body>, Infallible>
+		// where
+		// 	C: Send + Sync + 'static,
+		// 	H: Fn(Arc<C>, http::Request<hyper::Body>) -> F + Send + Sync + 'static,
+		// 	F: Future<Output = Option<http::Response<hyper::Body>>> + Send,
+		// {
+		// 	let method = request.method().clone();
+		// 	let path = request.uri().path_and_query().unwrap().path().to_owned();
+		// 	let result = AssertUnwindSafe(request_handler(request_handler_context, request))
+		// 		.catch_unwind()
+		// 		.await;
+		// 	let response = result.unwrap_or_else(|_| {
+		// 		eprintln!("{} {} 500", method, path);
+		// 		let body = PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+		// 			let panic_message_and_backtrace = panic_message_and_backtrace.borrow();
+		// 			let (message, backtrace) = panic_message_and_backtrace.as_ref().unwrap();
+		// 			format!("{}\n{:?}", message, backtrace)
+		// 		});
+		// 		http::Response::builder()
+		// 			.status(http::StatusCode::INTERNAL_SERVER_ERROR)
+		// 			.body(hyper::Body::from(body))
+		// 			.unwrap()
+		// 	});
+		// 	Ok(response)
+		// }
+		// // Install a panic hook that will record the panic message and backtrace if a panic occurs.
+		// let hook = std::panic::take_hook();
+		// std::panic::set_hook(Box::new(|panic_info| {
+		// 	let value = (panic_info.to_string(), Backtrace::new());
+		// 	PANIC_MESSAGE_AND_BACKTRACE.with(|panic_message_and_backtrace| {
+		// 		panic_message_and_backtrace.borrow_mut().replace(value);
+		// 	})
+		// }));
+		// // Wrap the request handler and context with Arc to allow sharing a reference to it with each task.
+		// let request_handler = Arc::new(request_handler);
+		// let request_handler_context = Arc::new(request_handler_context);
+		// let service = hyper::service::make_service_fn(|_| {
+		// 	let request_handler = request_handler.clone();
+		// 	let request_handler_context = request_handler_context.clone();
+		// 	async move {
+		// 		Ok::<_, Infallible>(hyper::service::service_fn(move |request| {
+		// 			let request_handler = request_handler.clone();
+		// 			let request_handler_context = request_handler_context.clone();
+		// 			PANIC_MESSAGE_AND_BACKTRACE.scope(RefCell::new(None), async move {
+		// 				service(request_handler, request_handler_context, request).await
+		// 			})
+		// 		}))
+		// 	}
+		// });
+		// let addr = std::net::SocketAddr::new(host, port);
+		// let server = hyper::Server::try_bind(&addr)?;
+		// eprintln!("🚀 serving on port {}", port);
+		// server.serve(service).await?;
+		// std::panic::set_hook(hook);
+		// Ok(())
+		todo!()
 	}
 
 	pub async fn handle(

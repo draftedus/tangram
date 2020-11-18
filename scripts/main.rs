@@ -5,6 +5,7 @@ mod dev;
 mod generate_license;
 mod prepare_release;
 mod production_track_test;
+mod watch;
 
 #[derive(Clap)]
 enum Args {

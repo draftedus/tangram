@@ -13,7 +13,6 @@ tangram_util = { path = "../util" }
 walkdir = "2"
 
 [dependencies]
-include_dir = "0.6"
 tangram_api = { path = "api" }
 tangram_app_common = { path = "common" }
 tangram_app_layouts = { path = "layouts" }

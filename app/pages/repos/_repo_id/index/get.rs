@@ -7,10 +7,13 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::app_layout::get_app_layout_info;
-use tangram_deps::{chrono::prelude::*, chrono_tz::Tz, http, hyper, sqlx, sqlx::prelude::*};
+use tangram_deps::{
+	chrono::prelude::*, chrono_tz::Tz, http, hyper, pinwheel::Pinwheel, sqlx, sqlx::prelude::*,
+};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
+	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	repo_id: &str,
@@ -65,7 +68,7 @@ pub async fn get(
 		title: repo.title,
 	};
 	db.commit().await?;
-	let html = context.pinwheel.render_with("/repos/_repo_id/", props)?;
+	let html = pinwheel.render_with("/repos/_repo_id/", props)?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

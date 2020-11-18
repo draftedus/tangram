@@ -4,10 +4,11 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_repo},
 	Context,
 };
-use tangram_deps::{http, hyper};
+use tangram_deps::{http, hyper, pinwheel::Pinwheel};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
+	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	repo_id: &str,

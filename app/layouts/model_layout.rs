@@ -4,7 +4,7 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_deps::{base64, http, hyper, sqlx, sqlx::prelude::*};
+use tangram_deps::{base64, http, hyper, pinwheel::Pinwheel, sqlx, sqlx::prelude::*};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Serialize, Clone, Debug)]
@@ -106,6 +106,7 @@ enum Action {
 }
 
 pub async fn post(
+	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -153,6 +154,7 @@ async fn delete_model(
 }
 
 pub async fn download(
+	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,

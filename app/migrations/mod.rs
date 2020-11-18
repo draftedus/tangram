@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use tangram_app_common::{sqlx, sqlx::prelude::*};
+use tangram_deps::{sqlx, sqlx::prelude::*};
 use tangram_util::error::Result;
 
 fn migrations() -> BTreeMap<&'static str, &'static str> {
