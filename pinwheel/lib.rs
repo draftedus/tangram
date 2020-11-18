@@ -2,6 +2,7 @@ use backtrace::Backtrace;
 use futures::FutureExt;
 use num_traits::ToPrimitive;
 use rusty_v8 as v8;
+use serde_json::json;
 use sha2::Digest;
 use sourcemap::SourceMap;
 use std::{
@@ -124,7 +125,7 @@ impl Pinwheel {
 	}
 
 	pub fn render(&self, pagename: &str) -> Result<String> {
-		self.render_with_props(pagename, serde_json::Value::Object(Default::default()))
+		self.render_with_props(pagename, json!({}))
 	}
 
 	pub fn render_with_props<T>(&self, pagename: &str, props: T) -> Result<String>
@@ -209,7 +210,8 @@ impl Pinwheel {
 				.set(&mut scope, console_literal.into(), console.into());
 
 			// Get the default export from page.
-			let page_module_namespace = run_module(&mut scope, self.fs(), page_js_url.clone())?;
+			let page_module_namespace =
+				evaluate_module(&mut scope, self.fs(), page_js_url.clone())?;
 			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_literal)
@@ -556,40 +558,6 @@ fn get_module_handle_for_url<'a>(state: &'a State, url: &Url) -> Option<&'a Modu
 		.find(|module_handle| &module_handle.url == url)
 }
 
-fn run_module<'s>(
-	scope: &mut v8::HandleScope<'s>,
-	fs: &dyn FileSystem,
-	url: Url,
-) -> Result<v8::Local<'s, v8::Object>> {
-	let module_id = load_module(scope, fs, url)?;
-	let state = get_state(scope);
-	let state = state.borrow();
-	let module = &get_module_handle_with_id(&state, module_id).unwrap().module;
-	let module = v8::Local::new(scope, module);
-	drop(state);
-	let mut try_catch_scope = v8::TryCatch::new(scope);
-	let _ = module.instantiate_module(&mut try_catch_scope, module_resolve_callback);
-	if try_catch_scope.has_caught() {
-		let exception = try_catch_scope.exception().unwrap();
-		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
-		let exception_string = exception_to_string(&mut scope, exception);
-		return Err(err!("{}", exception_string));
-	}
-	drop(try_catch_scope);
-	let mut try_catch_scope = v8::TryCatch::new(scope);
-	let _ = module.evaluate(&mut try_catch_scope);
-	if try_catch_scope.has_caught() {
-		let exception = try_catch_scope.exception().unwrap();
-		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
-		let exception_string = exception_to_string(&mut scope, exception);
-		return Err(err!("{}", exception_string));
-	}
-	drop(try_catch_scope);
-	let namespace = module.get_module_namespace();
-	let object = namespace.to_object(scope).unwrap();
-	Ok(object)
-}
-
 /// Load a module at the specified path and return the module id.
 fn load_module(scope: &mut v8::HandleScope, fs: &dyn FileSystem, url: Url) -> Result<i32> {
 	// Return the id for an existing module if a module at the specified path has alread been loaded.
@@ -682,7 +650,41 @@ fn load_module(scope: &mut v8::HandleScope, fs: &dyn FileSystem, url: Url) -> Re
 	Ok(id)
 }
 
-fn module_resolve_callback<'s>(
+fn evaluate_module<'s>(
+	scope: &mut v8::HandleScope<'s>,
+	fs: &dyn FileSystem,
+	url: Url,
+) -> Result<v8::Local<'s, v8::Object>> {
+	let module_id = load_module(scope, fs, url)?;
+	let state = get_state(scope);
+	let state = state.borrow();
+	let module = &get_module_handle_with_id(&state, module_id).unwrap().module;
+	let module = v8::Local::new(scope, module);
+	drop(state);
+	let mut try_catch_scope = v8::TryCatch::new(scope);
+	let _ = module.instantiate_module(&mut try_catch_scope, resolve_module_callback);
+	if try_catch_scope.has_caught() {
+		let exception = try_catch_scope.exception().unwrap();
+		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
+		let exception_string = exception_to_string(&mut scope, exception);
+		return Err(err!("{}", exception_string));
+	}
+	drop(try_catch_scope);
+	let mut try_catch_scope = v8::TryCatch::new(scope);
+	let _ = module.evaluate(&mut try_catch_scope);
+	if try_catch_scope.has_caught() {
+		let exception = try_catch_scope.exception().unwrap();
+		let mut scope = v8::HandleScope::new(&mut try_catch_scope);
+		let exception_string = exception_to_string(&mut scope, exception);
+		return Err(err!("{}", exception_string));
+	}
+	drop(try_catch_scope);
+	let namespace = module.get_module_namespace();
+	let object = namespace.to_object(scope).unwrap();
+	Ok(object)
+}
+
+fn resolve_module_callback<'s>(
 	context: v8::Local<'s, v8::Context>,
 	specifier: v8::Local<'s, v8::String>,
 	referrer: v8::Local<'s, v8::Module>,

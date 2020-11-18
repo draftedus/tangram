@@ -203,25 +203,3 @@ fn TopbarDropdown(
 		</div>
 	}
 }
-
-// fn component_transform(ast: syn::ItemFn) -> TokenStream {
-// 	let visibility = ast.vis;
-// 	let struct_name = ast.sig.ident;
-// 	let (impl_generics, ty_generics, where_clause) = ast.sig.generics.split_for_impl();
-// 	let props_input = ast.sig.inputs.first().unwrap();
-// 	let props_type = match props_input {
-// 		syn::FnArg::Typed(typed) => &typed.ty,
-// 		_ => panic!(),
-// 	};
-// 	let block = ast.block;
-// 	let ast = quote! {
-// 		#[derive(Clone)] #visibility struct #struct_name#ty_generics(#visibility #props_type#ty_generics);
-// 		impl#impl_generics ::html::Component for #struct_name#ty_generics #where_clause {
-// 			fn render(self: Box<Self>, children: Vec<html::Node>) -> html::Node {
-// 				let props = self.0;
-// 				#block
-// 			}
-// 		}
-// 	};
-// 	ast.into()
-// }
