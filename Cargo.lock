@@ -2555,9 +2555,11 @@ dependencies = [
  "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc",
  "tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name",
  "tangram_app_pages_repos_repo_id_models_model_id_training_stats_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_summary",
  "tangram_app_pages_repos_repo_id_models_model_id_tuning",
  "tangram_app_pages_repos_repo_id_models_new",
  "tangram_app_pages_user",
+ "tangram_charts",
  "tangram_core",
  "tangram_deps",
  "tangram_metrics",
@@ -2884,6 +2886,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_summary"
+version = "0.0.0"
+dependencies = [
+ "html",
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_core",
+ "tangram_deps",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
 name = "tangram_app_pages_repos_repo_id_models_model_id_tuning"
 version = "0.0.0"
 dependencies = [
@@ -2932,6 +2948,16 @@ dependencies = [
  "tangram_deps",
  "tangram_ui",
  "tangram_util",
+]
+
+[[package]]
+name = "tangram_charts"
+version = "0.0.0"
+dependencies = [
+ "html",
+ "num-traits",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

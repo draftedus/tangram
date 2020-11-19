@@ -335,9 +335,10 @@ macro_rules! classes {
 				let class = &$class;
 				let class = ::html::AsOptionStr::as_option_str(class);
 				if let Some(class) = class {
-					if !first {
-						classes.push(' ');
+					if first {
 						first = false;
+					} else {
+						classes.push(' ');
 					}
 					classes.push_str(class);
 				}

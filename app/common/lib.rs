@@ -4,6 +4,7 @@ pub mod cookies;
 pub mod date_window;
 pub mod error;
 pub mod logo;
+pub mod metrics_row;
 pub mod model;
 pub mod monitor_event;
 pub mod organizations;
@@ -13,6 +14,7 @@ pub mod production_stats;
 pub mod repos;
 pub mod time;
 pub mod timezone;
+pub mod tokens;
 pub mod topbar;
 pub mod user;
 

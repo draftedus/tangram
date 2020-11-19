@@ -1,10 +1,15 @@
+use super::document::{Document, PageInfo};
+use html::{component, html};
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	repos::get_model_version_ids,
+	topbar,
+	// <<<<<<< Updated upstream
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
 use tangram_deps::{base64, http, hyper, pinwheel::Pinwheel, sqlx, sqlx::prelude::*};
+use tangram_ui as ui;
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Serialize, Clone, Debug)]
@@ -194,4 +199,207 @@ pub async fn download(
 		.body(hyper::Body::from(data))
 		.unwrap();
 	Ok(response)
+}
+
+#[derive(Clone, PartialEq)]
+pub enum ModelSideNavItem {
+	Overview,
+	TrainingSummary,
+	TrainingStats,
+	TrainingMetrics,
+	TrainingImportances,
+	Prediction,
+	Tuning,
+	ProductionPredictions,
+	ProductionStats,
+	ProductionMetrics,
+}
+
+#[component]
+pub fn ModelLayout(info: ModelLayoutInfo, page_info: PageInfo, selected_item: ModelSideNavItem) {
+	let selected_model_version_id = info
+		.model_version_ids
+		.iter()
+		.find(|model_version_id| *model_version_id == &info.model_id)
+		.unwrap();
+	html! {
+		<Document page_info={page_info}>
+			<div class="model-layout-topbar-grid">
+				<topbar::Topbar
+					topbar_avatar={
+						info.topbar_avatar.as_ref().map(|topbar_avatar| topbar::TopbarAvatar {
+							avatar_url: topbar_avatar.avatar_url.to_owned(),
+						})
+					}
+				/>
+				<div class="model-layout">
+					<ModelLayoutTopbar
+						model_layout_info={info.clone()}
+						selected_model_version_id={selected_model_version_id.to_string()}
+					/>
+					<div class="model-layout-grid">
+						<div class="model-layout-side-nav-wrapper">
+							<ModelSideNav
+								id={info.model_id.to_string()}
+								repo_title={info.repo_title}
+								selected_item={selected_item}
+							/>
+						</div>
+						<div class="model-layout-content">{children}</div>
+					</div>
+				</div>
+			</div>
+		</Document>
+	}
+}
+
+#[component]
+pub fn ModelLayoutTopbar(model_layout_info: ModelLayoutInfo, selected_model_version_id: String) {
+	struct OwnerInfo {
+		title: String,
+		url: String,
+	}
+	let owner = model_layout_info.owner.clone();
+	let owner_info = owner.map(|owner| match owner {
+		Owner::Organization { name, id } => OwnerInfo {
+			title: name,
+			url: format!("/organizations/{}", id),
+		},
+		Owner::User { email, .. } => OwnerInfo {
+			title: email,
+			url: "/user".to_owned(),
+		},
+	});
+	html! {
+		<div class="model-layout-topbar">
+			<div class="model-layout-owner-slash-repo-slash-model-wrapper">
+				<div class="model-layout-owner-slash-repo-wrapper">
+					{owner_info.map(|owner_info| {
+						html! {
+							<>
+								<a
+									class="model-layout-owner-slash-repo-link"
+									href={owner_info.url}
+									title="owner"
+								>
+									{owner_info.title}
+								</a>
+								<span class="model-layout-owner-slash-repo-slash">{"/"}</span>
+							</>
+						}
+					})
+				}
+				<a
+					class="model-layout-owner-slash-repo-link"
+					href={format!("/repos/{}/", model_layout_info.repo_id)}
+					title="repo"
+				>
+					{model_layout_info.repo_title.clone()}
+				</a>
+			</div>
+		</div>
+		<div class="model-layout-topbar-actions-wrapper">
+			<div class="model-layout-topbar-version-select-wrapper">
+				<ui::Details
+					options={
+						Some(model_layout_info.model_version_ids.iter().map(|model_version_id| ui::DetailsOption {
+							href: format!("/repos/{}/", model_layout_info.repo_id.clone()),
+							title: model_version_id.to_string(),
+						}).collect::<Vec<_>>())
+					}
+					summary={Some(format!("Version: {}", selected_model_version_id))}
+				/>
+			</div>
+			<ui::Button
+				button_type={ui::ButtonType::Button}
+				disabled={None}
+				id={None}
+				download={Some(format!("{}.tangram", model_layout_info.repo_title))}
+				href={Some(format!("/repos/{}/models/{}/download", model_layout_info.repo_id, model_layout_info.model_id))}
+			>
+				{"Download"}
+			</ui::Button>
+			<ui::Button
+				button_type={ui::ButtonType::Button}
+				disabled={None}
+				id={None}
+				download={None}
+				href={Some(format!("/repos/{}/models/new", model_layout_info.repo_id))}>
+				{"Upload New Version"}
+			</ui::Button>
+		</div>
+	</div>
+	}
+}
+
+#[component]
+pub fn ModelSideNav(id: String, repo_title: String, selected_item: ModelSideNavItem) {
+	html! {
+		<ui::SideNav>
+			<ui::SideNavSection>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::Overview)}
+				>
+					{"Overview"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/training_summary", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::TrainingSummary)}
+				>
+					{"Training Summary"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/training_stats/", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::TrainingStats)}
+				>
+					{"Training Stats"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/training_metrics/", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::TrainingMetrics)}
+				>
+					{"Training Metrics"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/training_importances", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::TrainingImportances)}
+				>
+					{"Training Importances"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/prediction", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::Prediction)}
+				>
+					{"Prediction"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/tuning", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::Tuning)}
+				>
+					{"Tuning"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/production_predictions/", id, id)}
+					selected={Some(
+						selected_item == ModelSideNavItem::ProductionPredictions
+					)}
+				>
+					{"Production Predictions"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/production_stats/", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::ProductionStats)}
+				>
+					{"Production Stats"}
+				</ui::SideNavItem>
+				<ui::SideNavItem
+					href={format!("/repos/{}/models/{}/production_metrics/", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::ProductionMetrics)}
+				>
+					{"Production Metrics"}
+				</ui::SideNavItem>
+			</ui::SideNavSection>
+		</ui::SideNav>
+	}
 }
