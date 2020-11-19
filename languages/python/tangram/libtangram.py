@@ -25,13 +25,13 @@ ffi.cdef("""
 	int tangram_model_free(tangram_model* model);
 """)
 
-machine = platform.machine()
-platform = sys.platform
-if machine == 'x86_64' and (platform == "linux" or platform == "linux2"):
+operating_system = sys.platform
+cpu = platform.machine()
+if (operating_system == "linux" or operating_system == "linux2") and (cpu == 'x86_64' or cpu == 'AMD64'):
 	library_path = "libtangram/linux_amd64/libtangram.so"
-elif machine == 'x86_64' and platform == "darwin":
+elif operating_system == "darwin" and (cpu == 'x86_64' or cpu == 'AMD64'):
 	library_path = "libtangram/macos_amd64/libtangram.dylib"
-elif machine == 'x86_64' and platform == "win32":
+elif operating_system == "win32" and (cpu == 'x86_64' or cpu == 'AMD64'):
 	library_path = "libtangram/windows_amd64/tangram.dll"
 else:
 	raise Exception('tangram-python does not yet support your combination of operating system and CPU architecture. Want support for your platform? Get in touch at help@tangramhq.com.')

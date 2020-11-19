@@ -80,7 +80,7 @@ pub async fn prepare_release() -> Result<()> {
 	sh("unzip dist/tangram-cli-linux_amd64 -d dist");
 	sh("chmod +x dist/tangram");
 	sh(format!(
-		"tar czf dist/tangram-cli-linux_amd64-{}.tar.gz -C dist tangram",
+		"zip -qj dist/tangram-cli-linux_amd64-{}.zip tangram",
 		version
 	));
 	fs::remove_file("dist/tangram").await.unwrap();
@@ -89,7 +89,7 @@ pub async fn prepare_release() -> Result<()> {
 	sh("unzip dist/tangram_cli_macos_amd64 -d dist");
 	sh("chmod +x dist/tangram");
 	sh(format!(
-		"tar czf dist/tangram_cli_macos_amd64-{}.tar.gz -C dist tangram",
+		"zip -qj dist/tangram_cli_macos_amd64-{}.zip tangram",
 		version
 	));
 	fs::remove_file("dist/tangram").await.unwrap();
