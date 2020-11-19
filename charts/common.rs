@@ -19,4 +19,6 @@ pub struct GridLineInterval {
 	p: usize,
 }
 
+pub struct ComputeBoxesOptions {}
+
 pub fn compute_boxes(options: ComputeBoxesOptions) {}

@@ -2763,21 +2763,11 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
- "tangram_app_pages_repos_repo_id_models_model_id_training_summary_client",
  "tangram_charts",
  "tangram_core",
  "tangram_deps",
  "tangram_ui",
  "tangram_util",
-]
-
-[[package]]
-name = "tangram_app_pages_repos_repo_id_models_model_id_training_summary_client"
-version = "0.0.0"
-dependencies = [
- "console_error_panic_hook",
- "tangram_charts",
- "wasm-bindgen",
 ]
 
 [[package]]

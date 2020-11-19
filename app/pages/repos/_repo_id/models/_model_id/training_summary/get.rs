@@ -52,23 +52,6 @@ pub async fn get(
 		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingSummary}>
 			<ui::S1>
 				<ui::H1 center={None}>{"Training Summary"}</ui::H1>
-				<div>
-				<tangram_charts::BarChart
-					group_gap={None}
-					class={None}
-					data={vec![]}
-					id={Some("bar-chart".to_owned())}
-					title={Some("Test".to_owned())}
-					hide_legend={Some(false)}
-					should_draw_x_axis_labels={None}
-					should_draw_y_axis_labels={None}
-					x_axis_title={None}
-					y_axis_title={None}
-					y_axis_grid_line_interval={None}
-					y_max={None}
-					y_min={None}
-				/>
-				</div>
 				<ui::S2>
 					<ui::Table width={Some("100%".to_owned())}>
 						<ui::TableHeader>
