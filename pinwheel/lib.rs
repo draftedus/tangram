@@ -47,7 +47,7 @@ macro_rules! client {
 			.parent()
 			.unwrap()
 			.join($client_crate_relative_path);
-		let hash = ::pinwheel::hash(client_crate_manifest_path.to_str().unwrap());
+		let hash = pinwheel::hash(client_crate_manifest_path.to_str().unwrap());
 		format!("/js/{}.js", hash)
 		}};
 }

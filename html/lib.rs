@@ -78,6 +78,7 @@ impl Node {
 	pub fn render_to_string(mut self) -> String {
 		self.render().to_string()
 	}
+
 	fn render(&mut self) -> &mut Node {
 		match self {
 			Node::Fragment(node) => {
@@ -175,7 +176,7 @@ impl std::fmt::Display for HostNode {
 				}
 				AttributeValue::String(value) => {
 					if let Some(value) = value {
-						write!(f, r#" {}="{}""#, key, value)?;
+						write!(f, r#" {}="{}""#, key, EscapedText(&value))?;
 					}
 				}
 			}
@@ -212,6 +213,14 @@ impl std::fmt::Display for RawTextNode {
 }
 
 impl std::fmt::Display for EscapedTextNode {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", EscapedText(&self.0))
+	}
+}
+
+struct EscapedText<'a>(&'a str);
+
+impl<'a> std::fmt::Display for EscapedText<'a> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		for c in self.0.chars() {
 			match c {

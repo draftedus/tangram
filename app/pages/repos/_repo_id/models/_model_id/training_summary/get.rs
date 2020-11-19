@@ -6,15 +6,14 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
+use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelSideNavItem},
 };
-use tangram_deps::{http, hyper};
+use tangram_deps::{http, hyper, pinwheel::client};
 use tangram_ui as ui;
 use tangram_util::error::Result;
-
-use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_util::id::Id;
 
 pub async fn get(
@@ -40,18 +39,36 @@ pub async fn get(
 	let model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let page_info = PageInfo {
-		client_wasm_js_src: None,
+		client_wasm_js_src: Some(client!("client/Cargo.toml")),
 	};
 	let props = Props {
 		id: model_id.to_string(),
 		// inner,
 		model_layout_info,
 	};
+	let comparison_metric = "auc_roc";
 	db.commit().await?;
 	let html = html! {
 		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingSummary}>
 			<ui::S1>
 				<ui::H1 center={None}>{"Training Summary"}</ui::H1>
+				<div>
+				<tangram_charts::BarChart
+					group_gap={None}
+					class={None}
+					data={vec![]}
+					id={Some("bar-chart".to_owned())}
+					title={Some("Test".to_owned())}
+					hide_legend={Some(false)}
+					should_draw_x_axis_labels={None}
+					should_draw_y_axis_labels={None}
+					x_axis_title={None}
+					y_axis_title={None}
+					y_axis_grid_line_interval={None}
+					y_max={None}
+					y_min={None}
+				/>
+				</div>
 				<ui::S2>
 					<ui::Table width={Some("100%".to_owned())}>
 						<ui::TableHeader>
@@ -63,7 +80,7 @@ pub async fn get(
 									"Model Type"
 								</ui::TableHeaderCell>
 								<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-									"Comparison Metric"
+									{comparison_metric}
 								</ui::TableHeaderCell>
 							</ui::TableRow>
 						</ui::TableHeader>

@@ -86,4 +86,4 @@ pub const DARK_CHART_COLORS: ChartColors = ChartColors {
 	tooltip_shadow_color: "rgba(0, 0, 0, .1)",
 };
 
-pub const chart_colors: ChartColors = LIGHT_CHART_COLORS;
+pub const CHART_COLORS: ChartColors = LIGHT_CHART_COLORS;
