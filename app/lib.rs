@@ -24,7 +24,9 @@ async fn run_inner(options: Options) -> Result<()> {
 		std::path::PathBuf::from("build/pinwheel/app"),
 	);
 	#[cfg(not(debug_assertions))]
-	let pinwheel = Pinwheel::prod(include_dir::include_dir!("../build/pinwheel/app"));
+	let pinwheel = Pinwheel::prod(tangram_deps::include_dir::include_dir!(
+		"../build/pinwheel/app"
+	));
 	// Configure the database pool.
 	let database_url = options.database_url.to_string();
 	let (pool_options, pool_max_connections) = if database_url.starts_with("sqlite:") {

@@ -68,7 +68,7 @@ pub struct BagOfWordsFeatureGroupTokensEntry {
 /// A Tokenizer describes how raw text is transformed into tokens.
 #[derive(Debug)]
 pub enum BagOfWordsFeatureGroupTokenizer {
-	/// This specifies that an [AlphanumericTokenizer](../util/text/struct.AlphanumericTokenizer.html) should be used.
+	/// This specifies that an [`AlphanumericTokenizer`] should be used.
 	Alphanumeric,
 }
 

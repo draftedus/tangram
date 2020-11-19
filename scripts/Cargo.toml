@@ -15,7 +15,7 @@ clap = { version = "3.0.0-beta.2", features = ["color"] }
 notify = "4"
 num-traits = "0.2"
 rand = "0.7"
-reqwest = { version = "0.10", features = ["json"] }
+reqwest = { version = "0.10", default-features = false, features = ["json", "rustls-tls"] }
 rsa = "0.3"
 rustyline = "6"
 serde = "1"
