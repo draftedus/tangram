@@ -64,9 +64,7 @@ pub fn TableHeaderCell(
 	let expand = expand.and_then(|expand| if expand { Some("table-expand") } else { None });
 	let th_class = classes!("table-header-cell", text_align_class, expand);
 	html! {
-		<th
-			class={th_class}
-		>
+		<th class={th_class}>
 			{children}
 		</th>
 	}

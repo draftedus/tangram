@@ -1,10 +1,10 @@
 use html::{component, html};
 use tangram_ui as ui;
 
-pub const training_color: &str = ui::colors::BLUE;
-pub const production_color: &str = ui::colors::GREEN;
-pub const baseline_color: &str = ui::colors::GRAY;
-pub const selected_threshold_color: &str = ui::colors::BLUE;
+pub const TRAINING_COLOR: &str = ui::colors::BLUE;
+pub const PRODUCTION_COLOR: &str = ui::colors::GREEN;
+pub const BASELINE_COLOR: &str = ui::colors::GRAY;
+pub const SELECTED_THRESHOLD_COLOR: &str = ui::colors::BLUE;
 
 #[component]
 pub fn UnknownColumnToken() {
