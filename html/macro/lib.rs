@@ -159,7 +159,7 @@ impl quote::ToTokens for Element {
 					.iter()
 					.map(|key| key.to_string())
 					.collect::<Vec<_>>()
-					.join("");
+					.join("-");
 				quote! { (#key, #value) }
 			});
 			let attributes = quote! { vec![#(#attributes),*] };
