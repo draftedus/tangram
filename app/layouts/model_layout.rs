@@ -4,7 +4,6 @@ use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	repos::get_model_version_ids,
 	topbar,
-	// <<<<<<< Updated upstream
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };

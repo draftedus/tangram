@@ -56,36 +56,36 @@ pub async fn get(
 					<ui::Table width={Some("100%".to_owned())}>
 						<ui::TableHeader>
 							<ui::TableRow color={None}>
-								<ui::TableHeaderCell color={None} text_align={None} expand={None} col_span={None}>
+								<ui::TableHeaderCell color={None} text_align={None} expand={None}>
 									"Model Number"
 								</ui::TableHeaderCell>
-								<ui::TableHeaderCell color={None} text_align={None} expand={None} col_span={None}>
+								<ui::TableHeaderCell color={None} text_align={None} expand={None}>
 									"Model Type"
 								</ui::TableHeaderCell>
-								<ui::TableHeaderCell color={None} text_align={None} expand={None} col_span={None}>
+								<ui::TableHeaderCell color={None} text_align={None} expand={None}>
 									"Comparison Metric"
 								</ui::TableHeaderCell>
 							</ui::TableRow>
 						</ui::TableHeader>
 						<ui::TableRow color={None}>
-							<ui::TableCell color={None} text_align={None} expand={None} col_span={None}>
+							<ui::TableCell color={None}>
 								"1"
 							</ui::TableCell>
-							<ui::TableCell color={None} text_align={None} expand={None} col_span={None}>
+							<ui::TableCell color={None}>
 								"gradient boosted decision tree"
 							</ui::TableCell>
-							<ui::TableCell color={None} text_align={None} expand={None} col_span={None}>
+							<ui::TableCell color={None}>
 								"87.7"
 							</ui::TableCell>
 						</ui::TableRow>
 						<ui::TableRow color={None}>
-							<ui::TableCell color={None} text_align={None} expand={None} col_span={None}>
+							<ui::TableCell color={None}>
 								"2"
 							</ui::TableCell>
-							<ui::TableCell color={None} text_align={None} expand={None} col_span={None}>
+							<ui::TableCell color={None}>
 								"linear model"
 							</ui::TableCell>
-							<ui::TableCell color={None} text_align={None} expand={None} col_span={None}>
+							<ui::TableCell color={None}>
 								"83.7"
 							</ui::TableCell>
 						</ui::TableRow>

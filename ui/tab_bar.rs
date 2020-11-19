@@ -4,7 +4,7 @@ use html::{classes, component, html};
 pub fn TabBar() {
 	html! {
 	  <div class="tab-bar">
-		{children}
+			{children}
 	  </div>
 	}
 }
@@ -25,11 +25,9 @@ pub fn Tab(disabled: Option<bool>, selected: Option<bool>) {
 			None
 		}
 	});
-	let className = classes!("tab-bar-tab", selected, disabled,);
+	let class = classes!("tab-bar-tab", selected, disabled,);
 	html! {
-		<div
-			class={className}
-		>
+		<div class={class}>
 			{children}
 		</div>
 	}
@@ -38,7 +36,7 @@ pub fn Tab(disabled: Option<bool>, selected: Option<bool>) {
 #[component]
 pub fn TabLink(disabled: Option<bool>, href: String, selected: Option<bool>) {
 	html! {
-		<Tab selected={selected} disabled={None}>
+		<Tab selected={selected} disabled={disabled}>
 			<a class="tab-bar-tab-link" href={href}>
 				{children}
 			</a>

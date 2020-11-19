@@ -130,11 +130,12 @@ elif args.library == 'catboost':
 	from catboost import CatBoostRegressor
 	categorical_columns = [column for column in categorical_columns if column != target_column_name]
 	model = CatBoostRegressor(
+		cat_features=categorical_columns,
+		grow_policy='Lossguide',
 		learning_rate=0.1,
 		n_estimators=100,
 		num_leaves=255,
-		cat_features=categorical_columns,
-		grow_policy='Lossguide',
+		train_dir='data/catboost_info',
 		verbose=False
 	)
 	model.fit(features_train, labels_train,)

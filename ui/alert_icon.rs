@@ -9,12 +9,12 @@ pub fn AlertIcon(alert: String, level: Level) {
 		Level::Warning => "alert-icon-level-warning",
 		Level::Danger => "alert-icon-level-danger",
 	};
-	let alertMessageClass = classes!("alert-icon-message", level_class);
-	let alertIconClass = classes!("alert-icon", level_class);
+	let alert_message_class = classes!("alert-icon-message", level_class);
+	let alert_icon_class = classes!("alert-icon", level_class);
 	html! {
 		<div class="alert-icon-container">
-			<div class={alertMessageClass}>{alert}</div>
-			<div class={alertIconClass}>{children}</div>
+			<div class={alert_message_class}>{alert}</div>
+			<div class={alert_icon_class}>{children}</div>
 		</div>
 	}
 }

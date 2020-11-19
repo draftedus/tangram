@@ -47,8 +47,6 @@ export function TableRow(props: TableRowProps) {
 
 export type TableCellProps = {
 	children?: ComponentChildren
-	colSpan?: string
-	color?: string
 	expand?: boolean
 	textAlign?: "left" | "center" | "right" | null
 }
@@ -83,12 +81,5 @@ export function TableHeaderCell(props: TableCellProps) {
 }
 
 export function TableCell(props: TableCellProps) {
-	let style = {
-		backgroundColor: props.color,
-	}
-	return (
-		<td class="table-cell" style={style}>
-			{props.children}
-		</td>
-	)
+	return <td class="table-cell">{props.children}</td>
 }

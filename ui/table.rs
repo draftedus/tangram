@@ -18,14 +18,16 @@ pub fn Table(width: Option<String>) {
 pub fn TableHeader() {
 	html! {
 		<thead class="table-header">
-		{children}
+			{children}
 		</thead>
 	}
 }
 
 #[component]
 pub fn TableBody() {
-	html! { <tbody>{children}</tbody> }
+	html! {
+		<tbody>{children}</tbody>
+	}
 }
 
 #[component]
@@ -48,12 +50,10 @@ pub enum TextAlign {
 }
 
 #[component]
-pub fn TableHeaderCell(
-	col_span: Option<String>,
-	color: Option<String>,
-	expand: Option<bool>,
-	text_align: Option<TextAlign>,
-) {
+pub fn TableHeaderCell(color: Option<String>, expand: Option<bool>, text_align: Option<TextAlign>) {
+	let style = style! {
+		"background-color" => color,
+	};
 	let text_align_class = text_align
 		.map(|text_align| match text_align {
 			TextAlign::Left => "table-align-left",
@@ -62,21 +62,16 @@ pub fn TableHeaderCell(
 		})
 		.unwrap_or("table-align-left");
 	let expand = expand.and_then(|expand| if expand { Some("table-expand") } else { None });
-	let th_class = classes!("table-header-cell", text_align_class, expand);
+	let class = classes!("table-header-cell", text_align_class, expand);
 	html! {
-		<th class={th_class}>
+		<th class={class} style={style}>
 			{children}
 		</th>
 	}
 }
 
 #[component]
-pub fn TableCell(
-	col_span: Option<String>,
-	color: Option<String>,
-	expand: Option<bool>,
-	text_align: Option<TextAlign>,
-) {
+pub fn TableCell(color: Option<String>) {
 	let style = style! {
 		"background-color" => color,
 	};

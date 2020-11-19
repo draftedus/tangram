@@ -106,10 +106,11 @@ elif args.library == 'xgboost':
 elif args.library == 'catboost':
 	from catboost import CatBoostClassifier
 	model = CatBoostClassifier(
+		grow_policy='Lossguide',
 		learning_rate=0.1,
 		n_estimators=100,
 		num_leaves=255,
-		grow_policy='Lossguide',
+		train_dir='data/catboost_info',
 		verbose=False
 	)
 	model.fit(features_train, labels_train, silent=True)
