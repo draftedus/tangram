@@ -2843,6 +2843,7 @@ name = "tangram_charts"
 version = "0.0.0"
 dependencies = [
  "html",
+ "num-traits",
  "serde",
  "serde_json",
  "wasm-bindgen",
