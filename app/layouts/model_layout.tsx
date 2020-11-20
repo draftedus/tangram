@@ -164,7 +164,7 @@ function ModelSideNav(props: ModelSideNavProps) {
 					{"Overview"}
 				</ui.SideNavItem>
 				<ui.SideNavItem
-					href={`/repos/${props.id}/models/${props.id}/training_summary`}
+					href={`/repos/${props.id}/models/${props.id}/training_summary/`}
 					selected={props.selectedItem === ModelSideNavItem.TrainingSummary}
 				>
 					{"Training Summary"}

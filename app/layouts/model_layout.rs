@@ -343,7 +343,7 @@ pub fn ModelSideNav(id: String, repo_title: String, selected_item: ModelSideNavI
 					{"Overview"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/training_summary", id, id)}
+					href={format!("/repos/{}/models/{}/training_summary/", id, id)}
 					selected={Some(selected_item == ModelSideNavItem::TrainingSummary)}
 				>
 					{"Training Summary"}
