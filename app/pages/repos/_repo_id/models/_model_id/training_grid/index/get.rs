@@ -11,7 +11,7 @@ use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelSideNavItem},
 };
-use tangram_deps::{http, hyper, pinwheel::client};
+use tangram_deps::{http, hyper};
 use tangram_ui as ui;
 use tangram_util::error::Result;
 use tangram_util::id::Id;
@@ -36,7 +36,7 @@ pub async fn get(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Ok(not_found());
 	}
-	let model = get_model(&mut db, model_id).await?;
+	let _model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let page_info = PageInfo {
 		client_wasm_js_src: None,
@@ -91,7 +91,7 @@ pub async fn get(
 		props.inner.num_models, props.inner.total_training_time
 	);
 	let html = html! {
-		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingSummary}>
+		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingGrid}>
 			<ui::S1>
 				<ui::H1 center={None}>{"Training Summary"}</ui::H1>
 				<ui::P>
@@ -144,18 +144,18 @@ fn OverviewTable(trained_models: Vec<TrainedModel>) {
 			{trained_models.into_iter().map(|trained_model| {
 				html! {
 					<ui::TableRow color={None}>
-						<ui::TableCell color={None}>
+						<ui::TableCell color={None} expand={None}>
 							<ui::Link title={None} href={Some(format!("./trained_models/{}", trained_model.identifier))} class={None}>
 								{trained_model.identifier}
 							</ui::Link>
 						</ui::TableCell>
-						<ui::TableCell color={None}>
+						<ui::TableCell color={None} expand={None}>
 							{trained_model.model_type}
 						</ui::TableCell>
-						<ui::TableCell color={None}>
+						<ui::TableCell color={None} expand={None}>
 							{trained_model.time}
 						</ui::TableCell>
-						<ui::TableCell color={None}>
+						<ui::TableCell color={None} expand={None}>
 							{trained_model.metric.to_string()}
 						</ui::TableCell>
 					</ui::TableRow>
@@ -168,19 +168,19 @@ fn OverviewTable(trained_models: Vec<TrainedModel>) {
 #[component]
 fn ModelHyperparametersTable(hyperparameters: Vec<(String, String)>) {
 	html! {
-		  <ui::Table width={None}>
+		<ui::Table width={Some("100%".to_owned())}>
 		{hyperparameters.into_iter().map(|(hyperparam_name, hyperparam_value)| {
-		  html! {
-			<ui::TableRow color={None}>
-			  <ui::TableHeaderCell color={None} text_align={None} expand={Some(false)}>
-				{hyperparam_name}
-			  </ui::TableHeaderCell>
-			  <ui::TableCell color={None}>
-				{hyperparam_value}
-			  </ui::TableCell>
-			</ui::TableRow>
-		  }
+			html! {
+				<ui::TableRow color={None}>
+					<ui::TableHeaderCell color={None} text_align={None} expand={Some(false)}>
+						{hyperparam_name}
+					</ui::TableHeaderCell>
+					<ui::TableCell color={None} expand={Some(true)}>
+						{hyperparam_value}
+					</ui::TableCell>
+				</ui::TableRow>
+			}
 		}).collect::<Vec<_>>()}
-	  </ui::Table>
+		</ui::Table>
 	}
 }

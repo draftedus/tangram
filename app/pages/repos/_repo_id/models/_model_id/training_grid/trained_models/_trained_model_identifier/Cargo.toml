@@ -1,6 +1,6 @@
 [package]
 edition = "2018"
-name = "tangram_app_pages_repos_repo_id_models_model_id_training_summary_trained_models_trained_model_identifier"
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_grid_trained_models_trained_model_identifier"
 version = "0.0.0"
 
 [lib]

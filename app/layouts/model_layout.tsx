@@ -39,7 +39,7 @@ type OrganizationOwner = {
 
 export enum ModelSideNavItem {
 	Overview = "overview",
-	TrainingSummary = "training_summary",
+	TrainingGrid = "training_grid",
 	TrainingStats = "training_stats",
 	TrainingMetrics = "training_metrics",
 	TrainingImportances = "training_importances",
@@ -164,8 +164,8 @@ function ModelSideNav(props: ModelSideNavProps) {
 					{"Overview"}
 				</ui.SideNavItem>
 				<ui.SideNavItem
-					href={`/repos/${props.id}/models/${props.id}/training_summary/`}
-					selected={props.selectedItem === ModelSideNavItem.TrainingSummary}
+					href={`/repos/${props.id}/models/${props.id}/training_grid/`}
+					selected={props.selectedItem === ModelSideNavItem.TrainingGrid}
 				>
 					{"Training Summary"}
 				</ui.SideNavItem>

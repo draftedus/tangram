@@ -203,7 +203,7 @@ pub async fn download(
 #[derive(Clone, PartialEq)]
 pub enum ModelSideNavItem {
 	Overview,
-	TrainingSummary,
+	TrainingGrid,
 	TrainingStats,
 	TrainingMetrics,
 	TrainingImportances,
@@ -240,7 +240,7 @@ pub fn ModelLayout(info: ModelLayoutInfo, page_info: PageInfo, selected_item: Mo
 						<div class="model-layout-side-nav-wrapper">
 							<ModelSideNav
 								id={info.model_id.to_string()}
-								repo_title={info.repo_title}
+								_repo_title={info.repo_title}
 								selected_item={selected_item}
 							/>
 						</div>
@@ -332,7 +332,7 @@ pub fn ModelLayoutTopbar(model_layout_info: ModelLayoutInfo, selected_model_vers
 }
 
 #[component]
-pub fn ModelSideNav(id: String, repo_title: String, selected_item: ModelSideNavItem) {
+pub fn ModelSideNav(id: String, _repo_title: String, selected_item: ModelSideNavItem) {
 	html! {
 		<ui::SideNav>
 			<ui::SideNavSection>
@@ -343,10 +343,10 @@ pub fn ModelSideNav(id: String, repo_title: String, selected_item: ModelSideNavI
 					{"Overview"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/training_summary/", id, id)}
-					selected={Some(selected_item == ModelSideNavItem::TrainingSummary)}
+					href={format!("/repos/{}/models/{}/training_grid/", id, id)}
+					selected={Some(selected_item == ModelSideNavItem::TrainingGrid)}
 				>
-					{"Training Summary"}
+					{"Training Grid"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
 					href={format!("/repos/{}/models/{}/training_stats/", id, id)}

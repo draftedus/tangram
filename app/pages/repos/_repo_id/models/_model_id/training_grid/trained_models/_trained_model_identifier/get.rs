@@ -19,8 +19,8 @@ use tangram_util::id::Id;
 pub async fn get(
 	context: &Context,
 	request: http::Request<hyper::Body>,
-  model_id: &str,
-  trained_model_identifier: &str,
+	model_id: &str,
+	_trained_model_identifier: &str,
 ) -> Result<http::Response<hyper::Body>> {
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
@@ -37,40 +37,43 @@ pub async fn get(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Ok(not_found());
 	}
-	let model = get_model(&mut db, model_id).await?;
+	let _model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let page_info = PageInfo {
 		client_wasm_js_src: None,
 	};
 	let props = Props {
-    id: model_id.to_string(),
-    metrics: TrainedModelMetrics {
-      identifier: "3".into(),
-      metric: 81.0,
-      model_type: "Linear".into(),
-      time: "2 minutes".into(),
-    },
-    hyperparameters: vec![
-      ("l2_regularization".into(), "5".into()),
-      ("learning_rate".into(), "2".into()),
-      ("max_depth".into(), "10".into()),
-      ("max_examples_for_computing_bin_thresholds".into(), "4".into()),
-      ("max_leaf_nodes".into(), "22".into()),
-    ],
+		id: model_id.to_string(),
+		metrics: TrainedModelMetrics {
+			identifier: "3".into(),
+			metric: 81.0,
+			model_type: "Linear".into(),
+			time: "2 minutes".into(),
+		},
+		hyperparameters: vec![
+			("l2_regularization".into(), "5".into()),
+			("learning_rate".into(), "2".into()),
+			("max_depth".into(), "10".into()),
+			(
+				"max_examples_for_computing_bin_thresholds".into(),
+				"4".into(),
+			),
+			("max_leaf_nodes".into(), "22".into()),
+		],
 		model_layout_info,
 	};
 	db.commit().await?;
 	let html = html! {
-		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingSummary}>
+		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingGrid}>
 			<ui::S1>
-        <ui::H1 center={None}>{"Training Summary"}</ui::H1>
-        <ui::S2>
-          <ui::H2 center={None}>{"Model Metrics"}</ui::H2>
-          <ModelMetricsTable trained_model={props.metrics}/>
-        </ui::S2>
-        <ui::S2>
-          <ui::H2 center={None}>{"Model Hyperparameters"}</ui::H2>
-          <ModelHyperparametersTable hyperparameters={props.hyperparameters}/>
+				<ui::H1 center={None}>{"Training Summary"}</ui::H1>
+				<ui::S2>
+					<ui::H2 center={None}>{"Model Metrics"}</ui::H2>
+					<ModelMetricsTable trained_model={props.metrics}/>
+				</ui::S2>
+				<ui::S2>
+					<ui::H2 center={None}>{"Model Hyperparameters"}</ui::H2>
+					<ModelHyperparametersTable hyperparameters={props.hyperparameters}/>
 				</ui::S2>
 			</ui::S1>
 		</ModelLayout>
@@ -106,17 +109,17 @@ fn ModelMetricsTable(trained_model: TrainedModelMetrics) {
 			</ui::TableHeader>
 			<ui::TableBody>
 				<ui::TableRow color={None}>
-          <ui::TableCell color={None}>
-            {trained_model.identifier}
+					<ui::TableCell color={None} expand={None}>
+						{trained_model.identifier}
 					</ui::TableCell>
-          <ui::TableCell color={None}>
-            {trained_model.model_type}
+					<ui::TableCell color={None} expand={None}>
+						{trained_model.model_type}
 					</ui::TableCell>
-          <ui::TableCell color={None}>
-            {trained_model.time}
+					<ui::TableCell color={None} expand={None}>
+						{trained_model.time}
 					</ui::TableCell>
-          <ui::TableCell color={None}>
-            {trained_model.metric.to_string()}
+					<ui::TableCell color={None} expand={None}>
+						{trained_model.metric.to_string()}
 					</ui::TableCell>
 				</ui::TableRow>
 			</ui::TableBody>
@@ -128,18 +131,18 @@ fn ModelMetricsTable(trained_model: TrainedModelMetrics) {
 fn ModelHyperparametersTable(hyperparameters: Vec<(String, String)>) {
 	html! {
 		<ui::Table width={None}>
-      {hyperparameters.into_iter().map(|(hyperparam_name, hyperparam_value)| {
-        html! {
-          <ui::TableRow color={None}>
-            <ui::TableHeaderCell color={None} text_align={None} expand={Some(false)}>
-              {hyperparam_name}
-            </ui::TableHeaderCell>
-            <ui::TableCell color={None}>
-              {hyperparam_value}
-            </ui::TableCell>
-          </ui::TableRow>
-        }
-      }).collect::<Vec<_>>()}
-    </ui::Table>
-  }
+			{hyperparameters.into_iter().map(|(hyperparam_name, hyperparam_value)| {
+				html! {
+					<ui::TableRow color={None}>
+						<ui::TableHeaderCell color={None} text_align={None} expand={Some(false)}>
+							{hyperparam_name}
+						</ui::TableHeaderCell>
+						<ui::TableCell color={None} expand={Some(true)}>
+							{hyperparam_value}
+						</ui::TableCell>
+					</ui::TableRow>
+				}
+			}).collect::<Vec<_>>()}
+		</ui::Table>
+	}
 }

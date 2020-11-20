@@ -71,12 +71,14 @@ pub fn TableHeaderCell(color: Option<String>, expand: Option<bool>, text_align: 
 }
 
 #[component]
-pub fn TableCell(color: Option<String>) {
+pub fn TableCell(color: Option<String>, expand: Option<bool>) {
 	let style = style! {
 		"background-color" => color,
 	};
+	let expand = expand.and_then(|expand| if expand { Some("table-expand") } else { None });
+	let class = classes!("table-cell", expand);
 	html! {
-		<td class="table-cell" style={style}>
+		<td class={class} style={style}>
 			{children}
 		</td>
 	}

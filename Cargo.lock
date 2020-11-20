@@ -2417,6 +2417,8 @@ dependencies = [
  "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier",
  "tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name",
  "tangram_app_pages_repos_repo_id_models_model_id_production_stats_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_grid_index",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_grid_trained_models_trained_model_identifier",
  "tangram_app_pages_repos_repo_id_models_model_id_training_importances",
  "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_metrics",
  "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_index",
@@ -2424,8 +2426,6 @@ dependencies = [
  "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc",
  "tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name",
  "tangram_app_pages_repos_repo_id_models_model_id_training_stats_index",
- "tangram_app_pages_repos_repo_id_models_model_id_training_summary_index",
- "tangram_app_pages_repos_repo_id_models_model_id_training_summary_trained_models_trained_model_identifier",
  "tangram_app_pages_repos_repo_id_models_model_id_tuning",
  "tangram_app_pages_repos_repo_id_models_new",
  "tangram_app_pages_user",
@@ -2665,6 +2665,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_grid_index"
+version = "0.0.0"
+dependencies = [
+ "html",
+ "pinwheel",
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_charts",
+ "tangram_core",
+ "tangram_deps",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_grid_trained_models_trained_model_identifier"
+version = "0.0.0"
+dependencies = [
+ "html",
+ "pinwheel",
+ "serde",
+ "tangram_app_common",
+ "tangram_app_layouts",
+ "tangram_charts",
+ "tangram_core",
+ "tangram_deps",
+ "tangram_ui",
+ "tangram_util",
+]
+
+[[package]]
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_importances"
 version = "0.0.0"
 dependencies = [
@@ -2749,38 +2781,6 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
- "tangram_core",
- "tangram_deps",
- "tangram_ui",
- "tangram_util",
-]
-
-[[package]]
-name = "tangram_app_pages_repos_repo_id_models_model_id_training_summary_index"
-version = "0.0.0"
-dependencies = [
- "html",
- "pinwheel",
- "serde",
- "tangram_app_common",
- "tangram_app_layouts",
- "tangram_charts",
- "tangram_core",
- "tangram_deps",
- "tangram_ui",
- "tangram_util",
-]
-
-[[package]]
-name = "tangram_app_pages_repos_repo_id_models_model_id_training_summary_trained_models_trained_model_identifier"
-version = "0.0.0"
-dependencies = [
- "html",
- "pinwheel",
- "serde",
- "tangram_app_common",
- "tangram_app_layouts",
- "tangram_charts",
  "tangram_core",
  "tangram_deps",
  "tangram_ui",
