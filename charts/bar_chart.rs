@@ -1,12 +1,12 @@
 use crate::{
-	chart::{create_chart, HoverRegion},
-	common::{ChartBox, GridLineInterval, Point},
-	config::{ChartColors, CHART_COLORS, CHART_CONFIG, DARK_CHART_COLORS, LIGHT_CHART_COLORS},
+	chart::create_chart,
+	common::{ChartBox, GridLineInterval},
+	// config::{ChartColors, CHART_COLORS, CHART_CONFIG, DARK_CHART_COLORS, LIGHT_CHART_COLORS},
 };
 use std::cmp::Ordering;
-use wasm_bindgen::prelude::*;
+// use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::console;
+// use web_sys::console;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct BarChartOptions {
@@ -46,26 +46,26 @@ pub struct BarChartOverlayInfo {
 	chart_box: ChartBox,
 }
 
-pub struct BarChartHoverRegionInfo {
-	chart_box: ChartBox,
-	color: String,
-	point: BarChartPoint,
-	tooltipOriginPixels: Point,
-}
+// pub struct BarChartHoverRegionInfo {
+// 	chart_box: ChartBox,
+// 	color: String,
+// 	point: BarChartPoint,
+// 	tooltip_origin_pixels: Point,
+// }
 
-pub struct DrawBarChartOutput {
-	hover_regions: Vec<HoverRegion<BarChartHoverRegionInfo>>,
-	overlay_info: BarChartOverlayInfo,
-}
+// pub struct DrawBarChartOutput {
+// 	hover_regions: Vec<HoverRegion<BarChartHoverRegionInfo>>,
+// 	overlay_info: BarChartOverlayInfo,
+// }
 
 pub fn create_bar_chart(container: web_sys::HtmlElement) -> web_sys::HtmlCanvasElement {
 	create_chart(container)
 }
 
 pub fn draw_bar_chart(ctx: web_sys::CanvasRenderingContext2d, options: BarChartOptions) {
-	let width = ctx.canvas().unwrap().client_width();
-	let height = ctx.canvas().unwrap().client_height();
-	let hover_regions: Vec<HoverRegion<BarChartHoverRegionInfo>> = Vec::new();
+	let _width = ctx.canvas().unwrap().client_width();
+	let _height = ctx.canvas().unwrap().client_height();
+	// let hover_regions: Vec<HoverRegion<BarChartHoverRegionInfo>> = Vec::new();
 	let y_min = options.y_min.unwrap_or_else(|| {
 		0.0f32.min(
 			options
@@ -76,7 +76,7 @@ pub fn draw_bar_chart(ctx: web_sys::CanvasRenderingContext2d, options: BarChartO
 				.unwrap_or(0.0),
 		)
 	});
-	let mut y_max = options.y_max.unwrap_or_else(|| {
+	let mut _y_max = options.y_max.unwrap_or_else(|| {
 		0.0f32.max(
 			options
 				.data
@@ -86,8 +86,8 @@ pub fn draw_bar_chart(ctx: web_sys::CanvasRenderingContext2d, options: BarChartO
 				.unwrap_or(0.0),
 		)
 	});
-	if let Some(Ordering::Equal) = y_max.partial_cmp(&y_min) {
-		y_max = y_min + 1.0;
+	if let Some(Ordering::Equal) = _y_max.partial_cmp(&y_min) {
+		_y_max = y_min + 1.0;
 	}
 }
 
