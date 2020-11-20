@@ -61,7 +61,11 @@ export let zip = <T1, T2>(a: T1[], b: T2[]): Array<[T1, T2]> => {
 	let result: Array<[T1, T2]> = []
 	let length = Math.min(a.length, b.length)
 	for (let i = 0; i < length; i++) {
-		result.push([a[i], b[i]])
+		let aItem = a[i]
+		let bItem = b[i]
+		if (aItem === undefined) throw Error()
+		if (bItem === undefined) throw Error()
+		result.push([aItem, bItem])
 	}
 	return result
 }

@@ -5,11 +5,6 @@ import { renderPage } from "common/render"
 import { PageLayout } from "layouts/page_layout"
 import { h } from "preact"
 
-type BenchmarkDatasets = { [key: string]: BenchmarkLibraries }
-type BenchmarkLibraries = {
-	[key: string]: BenchmarkResults
-}
-type BenchmarkResults = { [key: string]: number }
 export default (pageInfo: PageInfo) => {
 	return renderPage(
 		<PageLayout background={true} pageInfo={pageInfo}>
@@ -93,11 +88,11 @@ function TreeAUCBenchmark() {
 			<div className="benchmarks_tables_grid">
 				<div className="benchmarks_table_grid">
 					<div className="benchmarks_table_title">{"Flights"}</div>
-					<AUCTable data={data["flights"]} />
+					<AUCTable data={data.flights} />
 				</div>
 				<div className="benchmarks_table_grid">
 					<div className="benchmarks_table_title">{"Higgs"}</div>
-					<AUCTable data={data["higgs"]} />
+					<AUCTable data={data.higgs} />
 				</div>
 			</div>
 			<BarChart
@@ -114,11 +109,13 @@ function TreeAUCBenchmark() {
 	)
 }
 
-type AUCTableProps = {
-	data: BenchmarkLibraries
+type AUCTableProps<D extends DatasetsForTask[Task.BinaryClassification]> = {
+	data: BenchmarkDataForDataset<D>
 }
 
-function AUCTable(props: AUCTableProps) {
+function AUCTable<D extends DatasetsForTask[Task.BinaryClassification]>(
+	props: AUCTableProps<D>,
+) {
 	let formatAUC = (value: number) => `${ui.formatNumber(value, 4)}`
 	let formatAUCDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 	return (
@@ -131,7 +128,7 @@ function AUCTable(props: AUCTableProps) {
 				</ui.TableRow>
 			</ui.TableHeader>
 			<ui.TableBody>
-				{libraries.map(library => (
+				{Object.values(Library).map(library => (
 					<ui.TableRow
 						color={library == "tangram" ? ui.colors.blue : undefined}
 						key={library}
@@ -238,7 +235,7 @@ function TimeBenchmark() {
 }
 
 type TimeTableProps = {
-	data: BenchmarkLibraries
+	data: any
 }
 
 function TimeTable(props: TimeTableProps) {
@@ -254,7 +251,7 @@ function TimeTable(props: TimeTableProps) {
 				</ui.TableRow>
 			</ui.TableHeader>
 			<ui.TableBody>
-				{libraries.map(library => (
+				{Object.values(Library).map(library => (
 					<ui.TableRow
 						color={library == "tangram" ? ui.colors.blue : undefined}
 						key={library}
@@ -361,13 +358,13 @@ function MemoryBenchmark() {
 	)
 }
 
-type MemoryTableProps = {
-	data: BenchmarkLibraries
+type MemoryTableProps<D extends Dataset> = {
+	data: BenchmarkDataForDataset<D>
 }
 
-function MemoryTable(props: MemoryTableProps) {
-	let formatGB = (value: number) => `${ui.formatNumber(value, 4)} GB`
-	let formatGBDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
+function MemoryTable<D extends Dataset>(props: MemoryTableProps<D>) {
+	let formatMemory = (value: number) => `${ui.formatNumber(value, 4)} GB`
+	let formatMemoryDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 	return (
 		<ui.Table>
 			<ui.TableHeader>
@@ -378,15 +375,17 @@ function MemoryTable(props: MemoryTableProps) {
 				</ui.TableRow>
 			</ui.TableHeader>
 			<ui.TableBody>
-				{libraries.map(library => (
+				{Object.values(Library).map(library => (
 					<ui.TableRow
 						color={library == "tangram" ? ui.colors.blue : undefined}
 						key={library}
 					>
 						<ui.TableCell>{library}</ui.TableCell>
-						<ui.TableCell>{formatGB(props.data[library].memory)}</ui.TableCell>
 						<ui.TableCell>
-							{formatGBDiff(
+							{formatMemory(props.data[library].memory)}
+						</ui.TableCell>
+						<ui.TableCell>
+							{formatMemoryDiff(
 								props.data[library].memory / props.data["tangram"].memory,
 							)}
 						</ui.TableCell>
@@ -397,8 +396,71 @@ function MemoryTable(props: MemoryTableProps) {
 	)
 }
 
-let libraries = ["tangram", "lightgbm", "xgboost", "sklearn", "h2o", "catboost"]
-let data: BenchmarkDatasets = {
+enum Library {
+	Tangram = "tangram",
+	LightGBM = "lightgbm",
+	XGBoost = "xgboost",
+	SKLearn = "sklearn",
+	H2O = "h2o",
+	CatBoost = "catboost",
+}
+
+enum Dataset {
+	Allstate = "allstate",
+	Flights = "flights",
+	Higgs = "higgs",
+}
+
+enum Task {
+	Regression = "regression",
+	BinaryClassification = "binary_classification",
+	MulticlassClassification = "multiclass_classification",
+}
+
+type BenchmarkEntryCommon = {
+	duration: number
+	memory: number
+}
+
+type BenchmarkEntryRegression = BenchmarkEntryCommon & {
+	mse: number
+}
+
+type BenchmarkEntryBinaryClassification = BenchmarkEntryCommon & {
+	auc_roc: number
+}
+
+type BenchmarkEntryMulticlassClassification = BenchmarkEntryCommon & {
+	accuracy: number
+}
+
+type DatasetsForTask = {
+	[Task.Regression]: Dataset.Allstate
+	[Task.BinaryClassification]: Dataset.Flights | Dataset.Higgs
+	[Task.MulticlassClassification]: never
+}
+
+type TaskForDataset = {
+	[Dataset.Allstate]: Task.Regression
+	[Dataset.Flights]: Task.BinaryClassification
+	[Dataset.Higgs]: Task.BinaryClassification
+}
+
+type BenchmarkEntryTypeForTask = {
+	[Task.Regression]: BenchmarkEntryRegression
+	[Task.BinaryClassification]: BenchmarkEntryBinaryClassification
+	[Task.MulticlassClassification]: BenchmarkEntryMulticlassClassification
+}
+
+type BenchmarkDataForDataset<D extends Dataset> = {
+	[L in Library]: BenchmarkEntryTypeForTask[TaskForDataset[D]]
+}
+
+type BenchmarkData = {
+	[D in Dataset]: BenchmarkDataForDataset<D>
+}
+
+let data: BenchmarkData = {
 	allstate: {
 		catboost: { duration: 1020.302861637, memory: 18.918908, mse: 1579.626 },
 		h2o: {

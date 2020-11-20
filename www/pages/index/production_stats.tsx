@@ -1,33 +1,27 @@
 import "./production_stats.css"
-import { BarChart } from "@tangramhq/charts"
+import { BarChart, BarChartData } from "@tangramhq/charts"
 import * as ui from "@tangramhq/ui"
 import { h } from "preact"
 
 export function ProductionStats() {
-	let options: string[] = [
-		"asymptomatic",
-		"atypical angina",
-		"non-angina pain",
-		"typical angina",
-	]
-	let series = [
+	let series: BarChartData = [
 		{
 			color: ui.colors.blue,
 			data: [
-				{ label: options[0], x: 0, y: 0.4752 },
-				{ label: options[1], x: 1, y: 0.165 },
-				{ label: options[2], x: 2, y: 0.2838 },
-				{ label: options[3], x: 3, y: 0.07591 },
+				{ label: "asymptomatic", x: 0, y: 0.4752 },
+				{ label: "atypical angina", x: 1, y: 0.165 },
+				{ label: "non-angina pain", x: 2, y: 0.2838 },
+				{ label: "typical angina", x: 3, y: 0.07591 },
 			],
 			title: "Training",
 		},
 		{
 			color: ui.colors.green,
 			data: [
-				{ label: options[0], x: 0, y: 0 },
-				{ label: options[1], x: 1, y: 0.1622 },
-				{ label: options[2], x: 2, y: 0.2903 },
-				{ label: options[3], x: 3, y: 0.07508 },
+				{ label: "asymptomatic", x: 0, y: 0 },
+				{ label: "atypical angina", x: 1, y: 0.1622 },
+				{ label: "non-angina pain", x: 2, y: 0.2903 },
+				{ label: "typical angina", x: 3, y: 0.07508 },
 			],
 			title: "Production",
 		},

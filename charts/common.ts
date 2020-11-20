@@ -177,6 +177,8 @@ export function computeGridLineInterval(
 	let idealN = Math.floor(distancePixels / minGridLineDistancePixels)
 	let idealInterval = range / idealN
 	let [idealK, idealP] = idealInterval.toExponential().split("e").map(Number)
+	if (idealK === undefined) throw Error()
+	if (idealP === undefined) throw Error()
 	let k: number
 	let p: number
 	if (idealK <= 2) {
@@ -429,7 +431,9 @@ export function drawXAxisLabels(options: DrawXAxisLabelsOptions): void {
 			gridLineInfo.start + gridLineIndex * gridLineInfo.interval
 		let label: string
 		if (labels) {
-			label = labels[gridLineIndex]
+			let labelForGridLine = labels[gridLineIndex]
+			if (labelForGridLine === undefined) throw Error()
+			label = labelForGridLine
 		} else {
 			label = formatNumber(gridLineValue)
 		}

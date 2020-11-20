@@ -41,12 +41,9 @@ macro_rules! asset {
 
 #[macro_export]
 macro_rules! client {
-	($client_crate_relative_path:literal) => {{
+	() => {{
 		let file_path = ::std::path::Path::new(file!());
-		let client_crate_manifest_path = file_path
-			.parent()
-			.unwrap()
-			.join($client_crate_relative_path);
+		let client_crate_manifest_path = file_path.parent().unwrap().join("client/Cargo.toml");
 		let hash = pinwheel::hash(client_crate_manifest_path.to_str().unwrap());
 		format!("/js/{}.js", hash)
 		}};
@@ -192,6 +189,7 @@ impl Pinwheel {
 
 		THREAD_LOCAL_ISOLATE.with(|isolate| {
 			let mut isolate = isolate.borrow_mut();
+			// In dev, reset the state to clear the module cache.
 			if let Pinwheel::Dev { .. } = self {
 				isolate.set_slot(Rc::new(RefCell::new(State::default())));
 			}
@@ -209,7 +207,7 @@ impl Pinwheel {
 				.global(&mut scope)
 				.set(&mut scope, console_literal.into(), console.into());
 
-			// Get the default export from page.
+			// Get the default export from the page module.
 			let page_module_namespace =
 				evaluate_module(&mut scope, self.fs(), page_js_url.clone())?;
 			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();

@@ -12,6 +12,7 @@ export function Tuning() {
 
 	let thresholdString = formatter(thresholdIndex)
 	let metrics = data[thresholdIndex]
+	if (metrics === undefined) throw Error()
 	let accuracy = ui.formatPercent(metrics.accuracy, 2)
 	let precision = ui.formatPercent(metrics.precision, 2)
 	let recall = ui.formatPercent(metrics.recall, 2)

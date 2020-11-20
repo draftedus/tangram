@@ -115,6 +115,7 @@ export function drawBarChart(
 		yMin,
 	})
 
+	if (data[0] === undefined) throw Error()
 	let categories = data[0].data.map(({ label }) => label)
 	let groupGap = options.groupGap ?? chartConfig.barGroupGap
 	let barGroupWidth =
@@ -285,7 +286,9 @@ export function drawBarChartXAxisLabels(
 		let foundOverlap = false
 		for (let i = 0; i < labelWidths.length - 1; i++) {
 			let labelWidth = labelWidths[i]
+			if (labelWidth === undefined) throw Error()
 			let nextLabelWidth = labelWidths[i + 1]
+			if (nextLabelWidth === undefined) throw Error()
 			if (labelWidth / 2 + nextLabelWidth / 2 > nextLabelOffset) {
 				foundOverlap = true
 				break

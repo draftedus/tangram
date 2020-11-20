@@ -373,6 +373,7 @@ function drawFeatureContributionsSeries(
 	)
 	while (positiveValuesIndex < positiveValues.length) {
 		let featureContributionValue = positiveValues[positiveValuesIndex]
+		if (featureContributionValue === undefined) throw Error()
 		let width = featureContributionValue.value * valueWidthMultiplier
 		if (width < chartConfig.featureContributionsArrowDepth * 2) {
 			break
@@ -409,6 +410,7 @@ function drawFeatureContributionsSeries(
 	let remainingFeaturesBoxWidth = 0
 	for (let i = positiveValuesIndex; i < positiveValues.length; i++) {
 		let featureContributionValue = positiveValues[i]
+		if (featureContributionValue === undefined) throw Error()
 		let width = featureContributionValue.value * valueWidthMultiplier
 		remainingFeaturesBoxWidth += width
 		nRemainingFeatures += 1
@@ -452,6 +454,7 @@ function drawFeatureContributionsSeries(
 	let negativeValuesIndex = 0
 	while (negativeValuesIndex < negativeValues.length) {
 		let featureContributionValue = negativeValues[negativeValuesIndex]
+		if (featureContributionValue === undefined) throw Error()
 		let width = featureContributionValue.value * valueWidthMultiplier
 		if (width < -chartConfig.featureContributionsArrowDepth * 2) {
 			break
@@ -490,6 +493,7 @@ function drawFeatureContributionsSeries(
 	}
 	for (let i = negativeValuesIndex; i < negativeValues.length; i++) {
 		let featureContributionValue = negativeValues[i]
+		if (featureContributionValue === undefined) throw Error()
 		let width = featureContributionValue.value * valueWidthMultiplier
 		let valueBox = {
 			h: boxHeight,

@@ -76,10 +76,11 @@ impl Clone for Box<dyn Component> {
 
 impl Node {
 	pub fn render_to_string(mut self) -> String {
-		self.render().to_string()
+		self.render();
+		self.to_string()
 	}
 
-	fn render(&mut self) -> &mut Node {
+	fn render(&mut self) {
 		match self {
 			Node::Fragment(node) => {
 				for child in node.children.iter_mut() {
@@ -116,7 +117,6 @@ impl Node {
 			}
 			_ => {}
 		};
-		self
 	}
 }
 

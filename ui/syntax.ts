@@ -19,6 +19,7 @@ export function highlight(
 		// Loop over each match of the rule in the text.
 		while ((match = regex.exec(text)) !== null) {
 			// This is the range of the match in the text.
+			if (match[0] === undefined) throw Error()
 			let range = {
 				end: match.index + match[0].length,
 				start: match.index,

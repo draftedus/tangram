@@ -122,6 +122,7 @@ export function drawBoxChart(
 		yMin,
 	})
 
+	if (data[0] === undefined) throw Error()
 	let categories = data[0].data.map(({ label }) => label)
 	let boxGroupWidth =
 		(chartBox.w - chartConfig.barGroupGap * (categories.length + 1)) /
@@ -226,11 +227,14 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 	}
 	activeHoverRegions.sort((activeHoverRegionA, activeHoverRegionB) => {
 		let boxPointIndexA = boxPointIndexForName[activeHoverRegionA.info.name]
+		if (boxPointIndexA === undefined) throw Error()
 		let boxPointIndexB = boxPointIndexForName[activeHoverRegionB.info.name]
+		if (boxPointIndexB === undefined) throw Error()
 		return boxPointIndexA > boxPointIndexB ? -1 : 1
 	})
 	for (let i = 0; i < activeHoverRegions.length; i++) {
 		let activeHoverRegion = activeHoverRegions[i]
+		if (activeHoverRegion === undefined) throw Error()
 		let color = activeHoverRegion.info.color
 		let x = activeHoverRegion.info.label
 		let name = activeHoverRegion.info.name
@@ -255,8 +259,10 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 		})
 	}
 	if (tooltips.length > 0) {
-		let origin =
-			activeHoverRegions[activeHoverRegions.length - 1].info.tooltipOriginPixels
+		let lastActiveHoverRegion =
+			activeHoverRegions[activeHoverRegions.length - 1]
+		if (lastActiveHoverRegion === undefined) throw Error()
+		let origin = lastActiveHoverRegion.info.tooltipOriginPixels
 		drawTooltip({
 			centerHorizontal: true,
 			container: overlayDiv,

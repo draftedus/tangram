@@ -5,7 +5,7 @@ import {
 	RegressionChartEntry,
 	Task,
 } from "./props"
-import { BarChart, BoxChart } from "@tangramhq/charts"
+import { BarChart, BarChartData, BoxChart } from "@tangramhq/charts"
 import { PageInfo } from "@tangramhq/pinwheel"
 import * as ui from "@tangramhq/ui"
 import { DateWindowSelectField } from "common/date_window_select_field"
@@ -239,20 +239,25 @@ function MulticlassClassificationProductionStatsChart(props: {
 		ui.colors.orange,
 		ui.colors.yellow,
 	]
-	let data = ui.times(props.chartData.histogram.production.length, i => ({
-		color: colorOptions[i % colorOptions.length],
-		data:
-			props.chartData.histogram !== null
-				? [
-						{
-							label: props.chartData.label,
-							x: 0,
-							y: props.chartData.histogram.production[i][1],
-						},
-				  ]
-				: [],
-		title: options[i],
-	}))
+	let data: BarChartData = props.chartData.histogram.production.map(
+		(chartEntry, i) => {
+			let title = options[i]
+			if (title === undefined) throw Error()
+			let color = colorOptions[i % colorOptions.length]
+			if (color === undefined) throw Error()
+			return {
+				color,
+				data: [
+					{
+						label: props.chartData.label,
+						x: 0,
+						y: chartEntry[1],
+					},
+				],
+				title,
+			}
+		},
+	)
 
 	let title = overallChartTitle(props.dateWindow, "Prediction Stats")
 	return <BarChart data={data} id="histogram_overall" title={title} />
@@ -263,7 +268,9 @@ function MulticlassClassificationProductionStatsIntervalChart(props: {
 	dateWindow: DateWindow
 	dateWindowInterval: DateWindowInterval
 }) {
-	let options = props.chartData[0].histogram.production.map(x => x[0])
+	let firstEntry = props.chartData[0]
+	if (firstEntry === undefined) throw Error()
+	let options = firstEntry.histogram.production.map(x => x[0])
 	let colorOptions = [
 		ui.colors.green,
 		ui.colors.blue,
@@ -274,15 +281,25 @@ function MulticlassClassificationProductionStatsIntervalChart(props: {
 		ui.colors.orange,
 		ui.colors.yellow,
 	]
-	let data = ui.times(props.chartData[0].histogram.production.length, i => ({
-		color: colorOptions[i % colorOptions.length],
-		data: props.chartData.map((entry, j) => ({
-			label: entry.label,
-			x: j,
-			y: entry?.histogram.production[i][1] ?? null,
-		})),
-		title: options[i],
-	}))
+	let data = ui.times(options.length, i => {
+		let title = options[i]
+		if (title === undefined) throw Error()
+		let color = colorOptions[i % colorOptions.length]
+		if (color === undefined) throw Error()
+		return {
+			color,
+			data: props.chartData.map((entry, j) => {
+				let productionHistogramEntry = entry.histogram.production[i]
+				if (productionHistogramEntry === undefined) throw Error()
+				return {
+					label: entry.label,
+					x: j,
+					y: productionHistogramEntry[1],
+				}
+			}),
+			title,
+		}
+	})
 	let title = intervalChartTitle(props.dateWindowInterval, "Prediction Stats")
 	return <BarChart data={data} id="histogram_intervals" title={title} />
 }

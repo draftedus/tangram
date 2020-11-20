@@ -113,8 +113,10 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 
 	function onTouchEvent(event: TouchEvent) {
 		let canvasClientRect = chartCanvas.getBoundingClientRect()
-		let x = event.touches[0].clientX - canvasClientRect.left
-		let y = event.touches[0].clientY - canvasClientRect.top
+		let touch = event.touches[0]
+		if (touch === undefined) throw Error()
+		let x = touch.clientX - canvasClientRect.left
+		let y = touch.clientY - canvasClientRect.top
 		updateActiveHoverRegions(x, y)
 	}
 	overlayCanvas.addEventListener("touchstart", onTouchEvent)

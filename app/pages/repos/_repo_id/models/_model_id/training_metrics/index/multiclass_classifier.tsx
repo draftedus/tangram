@@ -51,17 +51,21 @@ export function MulticlassClassifierTrainingMetricsIndexPage(
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>
-						{props.classes.map((className, i) => (
-							<ui.TableRow key={className}>
-								<ui.TableCell>{className}</ui.TableCell>
-								<ui.TableCell>
-									{ui.formatPercent(props.classMetrics[i].precision, 2)}
-								</ui.TableCell>
-								<ui.TableCell>
-									{ui.formatPercent(props.classMetrics[i].recall, 2)}
-								</ui.TableCell>
-							</ui.TableRow>
-						))}
+						{props.classes.map((className, i) => {
+							let classMetrics = props.classMetrics[i]
+							if (classMetrics === undefined) throw Error()
+							return (
+								<ui.TableRow key={className}>
+									<ui.TableCell>{className}</ui.TableCell>
+									<ui.TableCell>
+										{ui.formatPercent(classMetrics.precision, 2)}
+									</ui.TableCell>
+									<ui.TableCell>
+										{ui.formatPercent(classMetrics.recall, 2)}
+									</ui.TableCell>
+								</ui.TableRow>
+							)
+						})}
 					</ui.TableBody>
 				</ui.Table>
 			</ui.S2>

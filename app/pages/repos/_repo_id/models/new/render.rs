@@ -15,7 +15,7 @@ pub async fn render(context: &Context, error: Option<String>) -> Result<String> 
 		app_layout_info,
 		error,
 	};
-	let client_wasm_js_src = client!("client/Cargo.toml");
+	let client_wasm_js_src = client!();
 	let page_info = PageInfo {
 		client_wasm_js_src: Some(client_wasm_js_src),
 	};

@@ -66,6 +66,7 @@ class AsciicastPlayer {
 				break
 			}
 			let event = this.asciicast[this.frameIndex]
+			if (event == undefined) throw Error()
 			let eventTime = event[0] * 1000
 			if (currentTime < eventTime) {
 				break
@@ -75,6 +76,7 @@ class AsciicastPlayer {
 		}
 		if (this.frameIndex < this.asciicast.length) {
 			let nextEvent = this.asciicast[this.frameIndex]
+			if (nextEvent == undefined) throw Error()
 			let nextEventTime = nextEvent[0] * 1000
 			let currentTime = performance.now() - this.startTime
 			this.timeout = setTimeout(

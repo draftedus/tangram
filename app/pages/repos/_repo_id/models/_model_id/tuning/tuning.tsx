@@ -18,7 +18,9 @@ export function Tuning(props: TuningProps) {
 	let selectedThreshold = thresholds[selectedThresholdIndex]
 
 	let baselineMetrics = props.metrics[baselineIndex]
+	if (baselineMetrics === undefined) throw Error()
 	let selectedThresholdMetrics = props.metrics[selectedThresholdIndex]
+	if (selectedThresholdMetrics === undefined) throw Error()
 
 	return (
 		<ui.S1>

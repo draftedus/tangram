@@ -396,6 +396,7 @@ function drawLine(options: DrawLineOptions) {
 		return
 	}
 	let firstPoint = data[0]
+	if (firstPoint === undefined) throw Error()
 	let firstPointPixels = pointToPixels({
 		chartBox,
 		point: firstPoint,
@@ -408,8 +409,11 @@ function drawLine(options: DrawLineOptions) {
 	let cp1 = firstPoint
 	for (let i = 1; i < data.length - 1; i++) {
 		let previousPoint = data[i - 1]
+		if (previousPoint === undefined) throw Error()
 		let point = data[i]
+		if (point === undefined) throw Error()
 		let nextPoint = data[i + 1]
+		if (nextPoint === undefined) throw Error()
 		let [cp2, nextCp1] = interpolateSpline({
 			nextPoint,
 			point,
@@ -444,6 +448,7 @@ function drawLine(options: DrawLineOptions) {
 		cp1 = nextCp1
 	}
 	let lastPoint = data[data.length - 1]
+	if (lastPoint === undefined) throw Error()
 	let lastPointPixels = pointToPixels({
 		chartBox,
 		point: lastPoint,
