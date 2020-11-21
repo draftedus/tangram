@@ -98,9 +98,9 @@ function MemoryChart() {
 	let chartData = Object.values(Library).map(library => ({
 		color: colorForLibrary[library],
 		data: [
-			{ label: library, x: 0, y: data.higgs[library].duration },
-			{ label: library, x: 1, y: data.flights[library].duration },
-			{ label: library, x: 2, y: data.allstate[library].duration },
+			{ label: "higgs", x: 0, y: data.higgs[library].duration },
+			{ label: "flights", x: 1, y: data.flights[library].duration },
+			{ label: "allstate", x: 2, y: data.allstate[library].duration },
 		],
 		title: library,
 	}))
@@ -110,7 +110,7 @@ function MemoryChart() {
 			groupGap={10}
 			id="memory_chart"
 			title="Memory Usage (lower is better)"
-			xAxisTitle="Library"
+			xAxisTitle="Dataset"
 			yAxisTitle="Memory Usage (GB)"
 			yMin={0}
 		/>
@@ -157,8 +157,8 @@ function AUCChart() {
 	let chartData = Object.values(Library).map(library => ({
 		color: colorForLibrary[library],
 		data: [
-			{ label: library, x: 0, y: data.higgs[library].auc_roc },
-			{ label: library, x: 1, y: data.flights[library].auc_roc },
+			{ label: "higgs", x: 0, y: data.higgs[library].auc_roc },
+			{ label: "flights", x: 1, y: data.flights[library].auc_roc },
 		],
 		title: library,
 	}))
@@ -167,9 +167,8 @@ function AUCChart() {
 			data={chartData}
 			groupGap={10}
 			id="auc_chart"
-			shouldDrawXAxisLabels={false}
 			title="AUC (higher is better)"
-			xAxisTitle="Library"
+			xAxisTitle="Dataset"
 			yAxisTitle="AUC"
 			yMax={1}
 			yMin={0}

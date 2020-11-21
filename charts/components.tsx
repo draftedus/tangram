@@ -33,10 +33,16 @@ export function BarChart(props: BarChartProps) {
 		width: "100%",
 	}
 
+	// If hideLegend is undefined, only show the legend when there is more than one series.
+	let hideLegend = props.hideLegend
+	if (hideLegend === undefined) {
+		hideLegend = props.data.length <= 1
+	}
+
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			{!props.hideLegend && <ChartLegend items={props.data} />}
+			{!hideLegend && <ChartLegend items={props.data} />}
 			<div
 				class={props.class}
 				data-chart-type="bar"
@@ -78,10 +84,16 @@ export function BoxChart(props: BoxChartProps) {
 		width: "100%",
 	}
 
+	// If hideLegend is undefined, only show the legend when there is more than one series.
+	let hideLegend = props.hideLegend
+	if (hideLegend === undefined) {
+		hideLegend = props.data.length <= 1
+	}
+
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			{!props.hideLegend && <ChartLegend items={props.data} />}
+			{!hideLegend && <ChartLegend items={props.data} />}
 			<div
 				class={props.class}
 				data-chart-type="box"
@@ -122,10 +134,16 @@ export function LineChart(props: LineChartProps) {
 		width: "100%",
 	}
 
+	// If hideLegend is undefined, only show the legend when there is more than one series.
+	let hideLegend = props.hideLegend
+	if (hideLegend === undefined) {
+		hideLegend = props.data.length <= 1
+	}
+
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			{!props.hideLegend && <ChartLegend items={props.data} />}
+			{!hideLegend && <ChartLegend items={props.data} />}
 			<div
 				data-chart-type="line"
 				data-options={props.id && JSON.stringify(props)}

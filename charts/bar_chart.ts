@@ -174,6 +174,7 @@ export function drawBarChart(
 	})
 
 	// Draw the bars.
+	let hasMultipleSeries = data.length > 1
 	data.forEach((series, seriesIndex) => {
 		series.data.forEach((point, pointIndex) => {
 			if (point.y === null) {
@@ -215,7 +216,7 @@ export function drawBarChart(
 					point,
 					pointLabel: point.label,
 					pointValue: point.y,
-					seriesTitle: series.title,
+					seriesTitle: hasMultipleSeries ? series.title : undefined,
 					tooltipOriginPixels: { x: box.x + box.w / 2, y: box.y },
 				},
 			}
@@ -345,7 +346,12 @@ export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
 		let seriesTitle = activeHoverRegion.info.seriesTitle
 		let pointLabel = activeHoverRegion.info.pointLabel
 		let pointValue = formatNumber(activeHoverRegion.info.pointValue)
-		let text = `${seriesTitle} (${pointLabel}, ${pointValue})`
+		let text
+		if (seriesTitle === undefined) {
+			text = `(${pointLabel}, ${pointValue})`
+		} else {
+			text = `${seriesTitle} (${pointLabel}, ${pointValue})`
+		}
 		let tooltip = {
 			color: activeHoverRegion.info.color,
 			text,
