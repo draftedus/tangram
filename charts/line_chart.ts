@@ -72,9 +72,11 @@ export type LineChartOverlayInfo = {
 export type LineChartHoverRegionInfo = {
 	chartBox: Box
 	color: string
-	label?: string
 	point: Point
+	pointLabel?: string
+	pointValue: number
 	seriesIndex: number
+	seriesTitle: string | undefined
 	tooltipOriginPixels: Point
 	xMax: number
 	xMin: number
@@ -271,6 +273,7 @@ export function drawLineChart(
 	}
 
 	// Compute the hover regions.
+	let hasMultipleSeries = data.length > 1
 	data.forEach((series, seriesIndex) => {
 		series.data.forEach((point, pointIndex) => {
 			if (point.y === null) {
@@ -299,9 +302,11 @@ export function drawLineChart(
 				info: {
 					chartBox,
 					color: series.color,
-					label: labels?.[pointIndex],
 					point: { x: point.x, y: point.y },
+					pointLabel: labels?.[pointIndex],
+					pointValue: point.y,
 					seriesIndex,
+					seriesTitle: hasMultipleSeries ? series.title : undefined,
 					tooltipOriginPixels: { x: pointPixels.x, y: pointPixels.y },
 					xMax,
 					xMin,
@@ -541,17 +546,21 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 	)
 	let tooltips: TooltipLabel[] = closestActiveHoverRegions.map(
 		activeHoverRegion => {
-			let x
-			let label = activeHoverRegion.info.label
-			if (label) {
-				x = label
-			} else {
-				x = formatNumber(activeHoverRegion.info.point.x)
+			let pointLabel = activeHoverRegion.info.pointLabel
+			if (pointLabel == undefined) {
+				pointLabel = formatNumber(activeHoverRegion.info.point.x)
 			}
-			let y = formatNumber(activeHoverRegion.info.point.y)
+			let pointValue = formatNumber(activeHoverRegion.info.point.y)
+			let seriesTitle = activeHoverRegion.info.seriesTitle
+			let text
+			if (seriesTitle === undefined) {
+				text = `(${pointLabel}, ${pointValue})`
+			} else {
+				text = `${seriesTitle} (${pointLabel}, ${pointValue})`
+			}
 			return {
 				color: activeHoverRegion.info.color,
-				text: `(${x}, ${y})`,
+				text,
 			}
 		},
 	)
