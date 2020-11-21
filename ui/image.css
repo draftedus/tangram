@@ -1,4 +1,4 @@
-details.image-details[open] > summary::before {
+.image-details[open] > summary::before {
 	-webkit-appearance: none;
 	background: transparent;
 	bottom: 0;
@@ -12,12 +12,19 @@ details.image-details[open] > summary::before {
 	z-index: 1;
 }
 
-summary.image-details-summary {
+.image-details-summary {
 	display: grid;
+	outline: none;
 }
 
 .image-details-summary::-webkit-details-marker {
 	display: none;
+}
+
+.image-img {
+	border-radius: 4px;
+	cursor: zoom-in;
+	width: 100%;
 }
 
 .image-viewer {
@@ -33,11 +40,5 @@ summary.image-details-summary {
 .image-viewer-img {
 	height: 100%;
 	object-fit: contain;
-	width: 100%;
-}
-
-.image-img {
-	border-radius: 4px;
-	cursor: zoom-in;
 	width: 100%;
 }

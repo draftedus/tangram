@@ -611,13 +611,13 @@ let drawFeatureContributionTooltips = (
 		drawTooltip({
 			centerHorizontal: true,
 			container: overlayDiv,
-			origin: activeHoverRegion.info.tooltipOriginPixels,
-			values: [
+			labels: [
 				{
 					color: activeHoverRegion.info.color,
 					text: activeHoverRegion.info.label,
 				},
 			],
+			origin: activeHoverRegion.info.tooltipOriginPixels,
 		})
 	}
 }

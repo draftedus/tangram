@@ -16,7 +16,7 @@ import {
 	formatNumber,
 } from "./common"
 import { chartColors, chartConfig } from "./config"
-import { TooltipData, drawTooltip } from "./tooltip"
+import { TooltipLabel, drawTooltip } from "./tooltip"
 
 export type LineChartOptions = {
 	data: LineChartData
@@ -539,7 +539,7 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 	let closestActiveHoverRegions = Array.from(
 		closestActiveHoverRegionForSeries.values(),
 	)
-	let tooltips: TooltipData[] = closestActiveHoverRegions.map(
+	let tooltips: TooltipLabel[] = closestActiveHoverRegions.map(
 		activeHoverRegion => {
 			let x
 			let label = activeHoverRegion.info.label
@@ -580,8 +580,8 @@ export function drawLineChartOverlay(options: DrawLineChartOverlayOptions) {
 	if (tooltipOrigin) {
 		drawTooltip({
 			container: overlayDiv,
+			labels: tooltips,
 			origin: tooltipOrigin,
-			values: tooltips,
 		})
 	}
 	closestActiveHoverRegions.forEach(activeHoverRegion => {

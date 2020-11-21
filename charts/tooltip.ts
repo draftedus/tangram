@@ -1,7 +1,7 @@
 import { Point } from "./common"
 import { chartColors, chartConfig } from "./config"
 
-export type TooltipData = {
+export type TooltipLabel = {
 	color: string
 	text: string
 }
@@ -10,16 +10,16 @@ type DrawTooltipOptions = {
 	centerHorizontal?: boolean
 	container: HTMLElement
 	flipYOffset?: boolean
+	labels: TooltipLabel[]
 	origin: Point
-	values: TooltipData[]
 }
 
 export function drawTooltip(options: DrawTooltipOptions) {
 	let {
 		centerHorizontal,
 		container,
+		labels,
 		origin: { x, y },
-		values,
 	} = options
 	let tooltipWrapper = document.createElement("div")
 	tooltipWrapper.style.alignItems = "center"
@@ -44,16 +44,16 @@ export function drawTooltip(options: DrawTooltipOptions) {
 		tooltipWrapper.style.left = `calc(${x}px + 8px)`
 		tooltipWrapper.style.transform = "translateY(-100%)"
 	}
-	values.forEach(value => {
+	labels.forEach(label => {
 		let tooltipRect = document.createElement("div")
-		tooltipRect.style.backgroundColor = value.color
+		tooltipRect.style.backgroundColor = label.color
 		tooltipRect.style.borderRadius = `${chartConfig.tooltipBorderRadius}px`
 		tooltipRect.style.width = `${chartConfig.fontSize}px`
 		tooltipRect.style.height = `${chartConfig.fontSize}px`
-		let tooltip = document.createElement("div")
-		tooltip.innerText = value.text
+		let tooltipLabel = document.createElement("div")
+		tooltipLabel.innerText = label.text
 		tooltipWrapper.appendChild(tooltipRect)
-		tooltipWrapper.appendChild(tooltip)
+		tooltipWrapper.appendChild(tooltipLabel)
 	})
 	container.appendChild(tooltipWrapper)
 	// If the tooltip is not visible, place it elsewhere.

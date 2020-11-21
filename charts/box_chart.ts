@@ -13,7 +13,7 @@ import {
 	formatNumber,
 } from "./common"
 import { chartColors, chartConfig } from "./config"
-import { TooltipData, drawTooltip } from "./tooltip"
+import { TooltipLabel, drawTooltip } from "./tooltip"
 
 export type BoxChartOptions = {
 	data: BoxChartData
@@ -217,7 +217,7 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 		info: { chartBox },
 		overlayDiv,
 	} = options
-	let tooltips: TooltipData[] = []
+	let tooltips: TooltipLabel[] = []
 	let boxPointIndexForName: { [key: string]: number } = {
 		max: 4,
 		median: 2,
@@ -266,8 +266,8 @@ export function drawBoxChartOverlay(options: DrawBoxChartOverlayOptions) {
 		drawTooltip({
 			centerHorizontal: true,
 			container: overlayDiv,
+			labels: tooltips,
 			origin,
-			values: tooltips,
 		})
 	}
 }

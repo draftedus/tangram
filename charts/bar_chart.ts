@@ -34,7 +34,7 @@ export type BarChartData = BarChartSeries[]
 export type BarChartSeries = {
 	color: string
 	data: BarChartPoint[]
-	title: string
+	title?: string
 }
 
 export type BarChartPoint = {
@@ -51,6 +51,9 @@ export type BarChartHoverRegionInfo = {
 	box: Box
 	color: string
 	point: BarChartPoint
+	pointLabel: string
+	pointValue: number
+	seriesTitle: string | undefined
 	tooltipOriginPixels: Point
 }
 
@@ -210,6 +213,9 @@ export function drawBarChart(
 					box,
 					color: series.color,
 					point,
+					pointLabel: point.label,
+					pointValue: point.y,
+					seriesTitle: series.title,
 					tooltipOriginPixels: { x: box.x + box.w / 2, y: box.y },
 				},
 			}
@@ -335,11 +341,11 @@ export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
 		overlayDiv,
 	} = options
 	let activeHoverRegion = activeHoverRegions[0]
-
 	if (activeHoverRegion) {
-		let x = activeHoverRegion.info.point.label
-		let y = formatNumber(activeHoverRegion.info.point.y)
-		let text = `(${x}, ${y})`
+		let seriesTitle = activeHoverRegion.info.seriesTitle
+		let pointLabel = activeHoverRegion.info.pointLabel
+		let pointValue = formatNumber(activeHoverRegion.info.pointValue)
+		let text = `${seriesTitle} (${pointLabel}, ${pointValue})`
 		let tooltip = {
 			color: activeHoverRegion.info.color,
 			text,
@@ -347,8 +353,8 @@ export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
 		drawTooltip({
 			centerHorizontal: true,
 			container: overlayDiv,
+			labels: [tooltip],
 			origin: activeHoverRegion.info.tooltipOriginPixels,
-			values: [tooltip],
 		})
 		drawBar({
 			box: activeHoverRegion.info.box,

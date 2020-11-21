@@ -10,97 +10,170 @@ export default (pageInfo: PageInfo) => {
 		<PageLayout background={true} pageInfo={pageInfo}>
 			<ui.S1>
 				<ui.H1>{"Tangram Tree Benchmarks"}</ui.H1>
+				<ui.P>{"This is a description"}</ui.P>
 				<ui.S2>
-					<ui.H2>{"Area Under the Receiver Operating Characteristic"}</ui.H2>
-					<TreeAUCBenchmark />
-				</ui.S2>
-				<ui.S2>
-					<ui.H2>{"Time"}</ui.H2>
-					<TimeBenchmark />
+					<ui.H2>{"Training Time"}</ui.H2>
+					<TrainingTimeChart />
+					<TrainingTimeTable data={data.allstate} />
+					<TrainingTimeTable data={data.flights} />
+					<TrainingTimeTable data={data.higgs} />
 				</ui.S2>
 				<ui.S2>
 					<ui.H2>{"Memory Usage"}</ui.H2>
-					<MemoryBenchmark />
+					<MemoryChart />
+					<MemoryTable data={data.allstate} />
+					<MemoryTable data={data.flights} />
+					<MemoryTable data={data.higgs} />
+				</ui.S2>
+				<ui.S2>
+					<ui.H2>{"AUC"}</ui.H2>
+					<AUCChart />
+					<AUCTable data={data.flights} />
+					<AUCTable data={data.higgs} />
 				</ui.S2>
 			</ui.S1>
 		</PageLayout>,
 	)
 }
 
-function TreeAUCBenchmark() {
-	let barChartAUCData = [
-		{
-			color: ui.colors.blue,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.tangram.auc_roc },
-				{ label: "flights", x: 1, y: data.flights.tangram.auc_roc },
-			],
-			title: "tangram",
-		},
-		{
-			color: ui.colors.purple,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.lightgbm.auc_roc },
-				{ label: "flights", x: 1, y: data.flights.lightgbm.auc_roc },
-			],
-			title: "lightgbm",
-		},
-		{
-			color: ui.colors.green,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.xgboost.auc_roc },
-				{ label: "flights", x: 1, y: data.flights.xgboost.auc_roc },
-			],
-			title: "xgboost",
-		},
-		{
-			color: ui.colors.yellow,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.sklearn.auc_roc },
-				{ label: "flights", x: 1, y: data.flights.sklearn.auc_roc },
-			],
-			title: "sklearn",
-		},
-		{
-			color: ui.colors.orange,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.h2o.auc_roc },
-				{ label: "flights", x: 1, y: data.flights.h2o.auc_roc },
-			],
-			title: "h2o",
-		},
-		{
-			color: ui.colors.red,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.catboost.auc_roc },
-				{ label: "flights", x: 1, y: data.flights.catboost.auc_roc },
-			],
-			title: "catboost",
-		},
-	]
+function TrainingTimeChart() {
+	let chartData = Object.values(Library).map(library => ({
+		color: colorForLibrary[library],
+		data: [
+			{ label: "higgs", x: 0, y: data.higgs[library].duration },
+			{ label: "flights", x: 1, y: data.flights[library].duration },
+			{ label: "allstate", x: 2, y: data.allstate[library].duration },
+		],
+		title: library,
+	}))
 	return (
-		<div className="benchmarks_tables_grid_wrapper">
-			<div className="benchmarks_tables_grid">
-				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{"Flights"}</div>
-					<AUCTable data={data.flights} />
-				</div>
-				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{"Higgs"}</div>
-					<AUCTable data={data.higgs} />
-				</div>
-			</div>
-			<BarChart
-				data={barChartAUCData}
-				groupGap={10}
-				id="auc_benchmark"
-				title="AUC (higher is better)"
-				xAxisTitle="Library"
-				yAxisTitle="AUC"
-				yMax={1}
-				yMin={0}
-			/>
-		</div>
+		<BarChart
+			data={chartData}
+			groupGap={10}
+			id="training_time_chart"
+			title="Training Time (lower is better)"
+			xAxisTitle="Dataset"
+			yAxisTitle="Training Time (seconds)"
+		/>
+	)
+}
+
+type TimeTableProps<D extends Dataset> = {
+	data: BenchmarkDataForDataset<D>
+}
+
+function TrainingTimeTable<D extends Dataset>(props: TimeTableProps<D>) {
+	return (
+		<ui.Table width="100%">
+			<ui.TableHeader>
+				<ui.TableRow>
+					<ui.TableHeaderCell>{"Library"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Duration"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"v. Tangram"}</ui.TableHeaderCell>
+				</ui.TableRow>
+			</ui.TableHeader>
+			<ui.TableBody>
+				{Object.values(Library).map(library => (
+					<ui.TableRow
+						color={library == "tangram" ? ui.colors.blue : undefined}
+						key={library}
+					>
+						<ui.TableCell>{library}</ui.TableCell>
+						<ui.TableCell>
+							{formatDuration(props.data[library].duration)}
+						</ui.TableCell>
+						<ui.TableCell>
+							{formatDurationDiff(
+								props.data[library].duration / props.data.tangram.duration,
+							)}
+						</ui.TableCell>
+					</ui.TableRow>
+				))}
+			</ui.TableBody>
+		</ui.Table>
+	)
+}
+
+function MemoryChart() {
+	let chartData = Object.values(Library).map(library => ({
+		color: colorForLibrary[library],
+		data: [
+			{ label: library, x: 0, y: data.higgs[library].duration },
+			{ label: library, x: 1, y: data.flights[library].duration },
+			{ label: library, x: 2, y: data.allstate[library].duration },
+		],
+		title: library,
+	}))
+	return (
+		<BarChart
+			data={chartData}
+			groupGap={10}
+			id="memory_chart"
+			title="Memory Usage (lower is better)"
+			xAxisTitle="Library"
+			yAxisTitle="Memory Usage (GB)"
+			yMin={0}
+		/>
+	)
+}
+
+type MemoryTableProps<D extends Dataset> = {
+	data: BenchmarkDataForDataset<D>
+}
+
+function MemoryTable<D extends Dataset>(props: MemoryTableProps<D>) {
+	return (
+		<ui.Table width="100%">
+			<ui.TableHeader>
+				<ui.TableRow>
+					<ui.TableHeaderCell>{"Library"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"Memory"}</ui.TableHeaderCell>
+					<ui.TableHeaderCell>{"v. Tangram"}</ui.TableHeaderCell>
+				</ui.TableRow>
+			</ui.TableHeader>
+			<ui.TableBody>
+				{Object.values(Library).map(library => (
+					<ui.TableRow
+						color={library == "tangram" ? ui.colors.blue : undefined}
+						key={library}
+					>
+						<ui.TableCell>{library}</ui.TableCell>
+						<ui.TableCell>
+							{formatMemory(props.data[library].memory)}
+						</ui.TableCell>
+						<ui.TableCell>
+							{formatMemoryDiff(
+								props.data[library].memory / props.data.tangram.memory,
+							)}
+						</ui.TableCell>
+					</ui.TableRow>
+				))}
+			</ui.TableBody>
+		</ui.Table>
+	)
+}
+
+function AUCChart() {
+	let chartData = Object.values(Library).map(library => ({
+		color: colorForLibrary[library],
+		data: [
+			{ label: library, x: 0, y: data.higgs[library].auc_roc },
+			{ label: library, x: 1, y: data.flights[library].auc_roc },
+		],
+		title: library,
+	}))
+	return (
+		<BarChart
+			data={chartData}
+			groupGap={10}
+			id="auc_chart"
+			shouldDrawXAxisLabels={false}
+			title="AUC (higher is better)"
+			xAxisTitle="Library"
+			yAxisTitle="AUC"
+			yMax={1}
+			yMin={0}
+		/>
 	)
 }
 
@@ -111,8 +184,6 @@ type AUCTableProps<D extends DatasetsForTask[Task.BinaryClassification]> = {
 function AUCTable<D extends DatasetsForTask[Task.BinaryClassification]>(
 	props: AUCTableProps<D>,
 ) {
-	let formatAUC = (value: number) => `${ui.formatNumber(value, 4)}`
-	let formatAUCDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 	return (
 		<ui.Table width="100%">
 			<ui.TableHeader>
@@ -134,7 +205,7 @@ function AUCTable<D extends DatasetsForTask[Task.BinaryClassification]>(
 						</ui.TableCell>
 						<ui.TableCell>
 							{formatAUCDiff(
-								props.data[library].auc_roc / props.data["tangram"].auc_roc,
+								props.data[library].auc_roc / props.data.tangram.auc_roc,
 							)}
 						</ui.TableCell>
 					</ui.TableRow>
@@ -144,252 +215,14 @@ function AUCTable<D extends DatasetsForTask[Task.BinaryClassification]>(
 	)
 }
 
-function TimeBenchmark() {
-	let barChartTimeData = [
-		{
-			color: ui.colors.blue,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.tangram.duration },
-				{ label: "flights", x: 1, y: data.flights.tangram.duration },
-				{ label: "allstate", x: 2, y: data.allstate.tangram.duration },
-			],
-			title: "tangram",
-		},
-		{
-			color: ui.colors.purple,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.lightgbm.duration },
-				{ label: "flights", x: 1, y: data.flights.lightgbm.duration },
-				{ label: "allstate", x: 2, y: data.allstate.lightgbm.duration },
-			],
-			title: "lightgbm",
-		},
-		{
-			color: ui.colors.green,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.xgboost.duration },
-				{ label: "flights", x: 1, y: data.flights.xgboost.duration },
-				{ label: "allstate", x: 2, y: data.allstate.xgboost.duration },
-			],
-			title: "xgboost",
-		},
-		{
-			color: ui.colors.yellow,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.sklearn.duration },
-				{ label: "flights", x: 1, y: data.flights.sklearn.duration },
-				{ label: "allstate", x: 2, y: data.allstate.sklearn.duration },
-			],
-			title: "sklearn",
-		},
-		{
-			color: ui.colors.orange,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.h2o.duration },
-				{ label: "flights", x: 1, y: data.flights.h2o.duration },
-				{ label: "allstate", x: 2, y: data.allstate.h2o.duration },
-			],
-			title: "h2o",
-		},
-		{
-			color: ui.colors.red,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.catboost.duration },
-				{ label: "flights", x: 1, y: data.flights.catboost.duration },
-				{ label: "allstate", x: 2, y: data.allstate.catboost.duration },
-			],
-			title: "catboost",
-		},
-	]
-	return (
-		<div className="benchmarks_tables_grid_wrapper">
-			<div className="benchmarks_tables_grid">
-				<div className="benchmarks_table_grid">
-					<ui.P>{"Allstate"}</ui.P>
-					<TimeTable data={data.allstate} />
-				</div>
-				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{"Flights"}</div>
-					<TimeTable data={data.flights} />
-				</div>
-				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{"Higgs"}</div>
-					<TimeTable data={data.higgs} />
-				</div>
-			</div>
-			<BarChart
-				data={barChartTimeData}
-				groupGap={10}
-				id="time_benchmark"
-				title="Training Time (lower is better)"
-				xAxisTitle="Library"
-				yAxisTitle="Training Time (seconds)"
-			/>
-		</div>
-	)
-}
+let formatDuration = (value: number) => `${ui.formatNumber(value, 4)} sec`
+let formatDurationDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 
-type TimeTableProps = {
-	data: any
-}
+let formatMemory = (value: number) => `${ui.formatNumber(value, 4)} GB`
+let formatMemoryDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 
-function TimeTable(props: TimeTableProps) {
-	let formatTime = (value: number) => `${ui.formatNumber(value, 4)} sec`
-	let formatTimeDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
-	return (
-		<ui.Table width="100%">
-			<ui.TableHeader>
-				<ui.TableRow>
-					<ui.TableHeaderCell>{"Library"}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{"Training"}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{"v. Tangram"}</ui.TableHeaderCell>
-				</ui.TableRow>
-			</ui.TableHeader>
-			<ui.TableBody>
-				{Object.values(Library).map(library => (
-					<ui.TableRow
-						color={library == "tangram" ? ui.colors.blue : undefined}
-						key={library}
-					>
-						<ui.TableCell>{library}</ui.TableCell>
-						<ui.TableCell>
-							{formatTime(props.data[library].duration)}
-						</ui.TableCell>
-						<ui.TableCell>
-							{formatTimeDiff(
-								props.data[library].duration / props.data["tangram"].duration,
-							)}
-						</ui.TableCell>
-					</ui.TableRow>
-				))}
-			</ui.TableBody>
-		</ui.Table>
-	)
-}
-
-function MemoryBenchmark() {
-	let barChartMemoryData = [
-		{
-			color: ui.colors.blue,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.tangram.memory },
-				{ label: "flights", x: 1, y: data.flights.tangram.memory },
-				{ label: "allstate", x: 2, y: data.allstate.tangram.memory },
-			],
-			title: "tangram",
-		},
-		{
-			color: ui.colors.purple,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.lightgbm.memory },
-				{ label: "flights", x: 1, y: data.flights.lightgbm.memory },
-				{ label: "allstate", x: 2, y: data.allstate.lightgbm.memory },
-			],
-			title: "lightgbm",
-		},
-		{
-			color: ui.colors.green,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.xgboost.memory },
-				{ label: "flights", x: 1, y: data.flights.xgboost.memory },
-				{ label: "allstate", x: 2, y: data.allstate.xgboost.memory },
-			],
-			title: "xgboost",
-		},
-		{
-			color: ui.colors.yellow,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.sklearn.memory },
-				{ label: "flights", x: 1, y: data.flights.sklearn.memory },
-				{ label: "allstate", x: 2, y: data.allstate.sklearn.memory },
-			],
-			title: "sklearn",
-		},
-		{
-			color: ui.colors.orange,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.h2o.memory },
-				{ label: "flights", x: 1, y: data.flights.h2o.memory },
-				{ label: "allstate", x: 2, y: data.allstate.h2o.memory },
-			],
-			title: "h2o",
-		},
-		{
-			color: ui.colors.red,
-			data: [
-				{ label: "higgs", x: 0, y: data.higgs.catboost.memory },
-				{ label: "flights", x: 1, y: data.flights.catboost.memory },
-				{ label: "allstate", x: 2, y: data.allstate.catboost.memory },
-			],
-			title: "catboost",
-		},
-	]
-	return (
-		<div className="benchmarks_tables_grid_wrapper">
-			<div className="benchmarks_tables_grid">
-				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{"Allstate"}</div>
-					<MemoryTable data={data["allstate"]} />
-				</div>
-				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{"Flights"}</div>
-					<MemoryTable data={data["flights"]} />
-				</div>
-				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{"Higgs"}</div>
-					<MemoryTable data={data["higgs"]} />
-				</div>
-			</div>
-			<BarChart
-				data={barChartMemoryData}
-				groupGap={10}
-				id="memory_benchmark"
-				title="Memory Usage (lower is better)"
-				xAxisTitle="Library"
-				yAxisTitle="Memory Usage (GB)"
-				yMin={0}
-			/>
-		</div>
-	)
-}
-
-type MemoryTableProps<D extends Dataset> = {
-	data: BenchmarkDataForDataset<D>
-}
-
-function MemoryTable<D extends Dataset>(props: MemoryTableProps<D>) {
-	let formatMemory = (value: number) => `${ui.formatNumber(value, 4)} GB`
-	let formatMemoryDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
-	return (
-		<ui.Table>
-			<ui.TableHeader>
-				<ui.TableRow>
-					<ui.TableHeaderCell>{"Library"}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{"Memory"}</ui.TableHeaderCell>
-					<ui.TableHeaderCell>{"v. Tangram"}</ui.TableHeaderCell>
-				</ui.TableRow>
-			</ui.TableHeader>
-			<ui.TableBody>
-				{Object.values(Library).map(library => (
-					<ui.TableRow
-						color={library == "tangram" ? ui.colors.blue : undefined}
-						key={library}
-					>
-						<ui.TableCell>{library}</ui.TableCell>
-						<ui.TableCell>
-							{formatMemory(props.data[library].memory)}
-						</ui.TableCell>
-						<ui.TableCell>
-							{formatMemoryDiff(
-								props.data[library].memory / props.data["tangram"].memory,
-							)}
-						</ui.TableCell>
-					</ui.TableRow>
-				))}
-			</ui.TableBody>
-		</ui.Table>
-	)
-}
+let formatAUC = (value: number) => `${ui.formatNumber(value, 4)}`
+let formatAUCDiff = (value: number) => `${ui.formatNumber(value, 4)}x`
 
 enum Library {
 	Tangram = "tangram",
@@ -504,4 +337,13 @@ let data: BenchmarkData = {
 			memory: 12.734708,
 		},
 	},
+}
+
+let colorForLibrary = {
+	[Library.Tangram]: ui.colors.blue,
+	[Library.LightGBM]: ui.colors.purple,
+	[Library.XGBoost]: ui.colors.green,
+	[Library.SKLearn]: ui.colors.yellow,
+	[Library.H2O]: ui.colors.orange,
+	[Library.CatBoost]: ui.colors.red,
 }
