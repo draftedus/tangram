@@ -51,9 +51,9 @@ export function EnumColumnDetail(props: EnumProps) {
 						</ui.TableRow>
 					</ui.TableHeader>
 					<ui.TableBody>
-						{props.histogram.map(([_value, count], i) => (
+						{props.histogram.map(([value, count], i) => (
 							<ui.TableRow key={i}>
-								<ui.TableCell>{props.histogram[i][0]}</ui.TableCell>
+								<ui.TableCell>{value}</ui.TableCell>
 								<ui.TableCell>{count}</ui.TableCell>
 							</ui.TableRow>
 						))}

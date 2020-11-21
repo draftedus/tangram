@@ -27,6 +27,7 @@ export function getAll(): Map<string, Cookie> {
 	return new Map(
 		document.cookie.split(";").map(cookie => {
 			let [key, value] = cookie.trim().split("=")
+			if (key === undefined || value === undefined) throw Error()
 			return [key.trim(), { key, value }]
 		}),
 	)

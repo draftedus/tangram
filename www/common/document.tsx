@@ -14,7 +14,7 @@ export function Document(props: DocumentProps) {
 				<meta charSet="utf-8" />
 				<meta content="width=device-width, initial-scale=1" name="viewport" />
 				<link href="/favicon.png" rel="icon" type="image/png" />
-				{props.pageInfo.preloadJsSrcs?.map(modulePath => (
+				{props.pageInfo.jsSrcs?.map(modulePath => (
 					<link href={modulePath} key={modulePath} rel="modulepreload" />
 				))}
 				{props.pageInfo.cssSrcs?.map(cssSrc => (
@@ -38,7 +38,7 @@ export function Document(props: DocumentProps) {
 				)}
 				{props.pageInfo.clientWasmJsSrc && (
 					<script type="module">
-						{`import init from '${props.pageInfo.clientWasmJsSrc}'; init()`}
+						{`import init from "${props.pageInfo.clientWasmJsSrc}"; init()`}
 					</script>
 				)}
 			</body>

@@ -15,9 +15,11 @@ import { Fragment, h } from "preact"
 export default (pageInfo: PageInfo, props: Props) => {
 	let selectedClassIndex = props.classes.indexOf(props.class)
 	let selectedIntervalClassMetrics = props.classMetrics[selectedClassIndex]
+	if (selectedIntervalClassMetrics === undefined) throw Error()
 	let selectedOverallClassMetrics = props.overall.classMetrics
 		? props.overall.classMetrics[selectedClassIndex]
 		: null
+	if (selectedOverallClassMetrics === undefined) throw Error()
 
 	let precisionIntervalChartTitle = intervalChartTitle(
 		props.dateWindowInterval,

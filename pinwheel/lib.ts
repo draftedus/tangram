@@ -4,7 +4,7 @@ export type PageInfo = {
 	clientJsSrc?: string
 	clientWasmJsSrc?: string
 	cssSrcs?: string[]
-	preloadJsSrcs?: string[]
+	jsSrcs?: string[]
 }
 
 export type ClientProps<T> = {

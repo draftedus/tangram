@@ -8,6 +8,7 @@ use sourcemap::SourceMap;
 use std::{
 	borrow::Cow,
 	cell::RefCell,
+	collections::BTreeMap,
 	convert::Infallible,
 	fmt::Write,
 	future::Future,
@@ -19,10 +20,6 @@ use std::{
 use tangram_util::{err, error::Result};
 use url::Url;
 use which::which;
-
-pub trait StaticPage {
-	fn render(&self) -> String;
-}
 
 #[macro_export]
 macro_rules! asset {
@@ -103,24 +100,6 @@ impl Pinwheel {
 		}
 	}
 
-	pub fn compile(&self, pagename: &str) -> Result<()> {
-		// Compute the page entry from the pagename.
-		let page_entry = if pagename.ends_with('/') {
-			pagename.to_owned() + "index"
-		} else {
-			pagename.to_owned()
-		};
-		let page_entry = page_entry.strip_prefix('/').unwrap().to_owned();
-		// In dev mode, compile the page.
-		if let Pinwheel::Dev {
-			src_dir, dst_dir, ..
-		} = self
-		{
-			build_js_pages(true, src_dir, dst_dir, &[&page_entry])?;
-		}
-		Ok(())
-	}
-
 	pub fn render(&self, pagename: &str) -> Result<String> {
 		self.render_with_props(pagename, json!({}))
 	}
@@ -129,65 +108,62 @@ impl Pinwheel {
 	where
 		T: serde::Serialize,
 	{
-		// Compute the page entry from the pagename.
-		let page_entry = if pagename.ends_with('/') {
-			pagename.to_owned() + "index"
-		} else {
-			pagename.to_owned()
-		};
-		let page_entry = page_entry.strip_prefix('/').unwrap().to_owned();
-
-		// In dev mode, compile the page.
-		if let Pinwheel::Dev {
-			src_dir, dst_dir, ..
-		} = self
-		{
-			build_js_pages(true, src_dir, dst_dir, &[&page_entry])?;
-		}
-
-		// Determine the output URLs.
-		let static_js_url = Url::parse("dst:/")
-			.unwrap()
-			.join(&format!("{}/static.js", page_entry))
-			.unwrap();
-		let server_js_url = Url::parse("dst:/")
-			.unwrap()
-			.join(&format!("{}/server.js", page_entry))
-			.unwrap();
-		let page_js_url = if self.fs().exists(&static_js_url) {
-			static_js_url
-		} else if self.fs().exists(&server_js_url) {
-			server_js_url
-		} else {
-			return Err(err!("could not find page {}", pagename));
-		};
-		let client_js_url = Url::parse("dst:/")
-			.unwrap()
-			.join(&format!("{}/client.js", page_entry))
-			.unwrap();
-		let client_js_src = if self.fs().exists(&client_js_url) {
-			Some(format!("/{}/client.js", page_entry))
-		} else {
-			None
-		};
-		let client_wasm_js_url = Url::parse("dst:/")
-			.unwrap()
-			.join(&format!("{}/client_wasm.js", page_entry))
-			.unwrap();
-		let client_wasm_js_src = if self.fs().exists(&client_wasm_js_url) {
-			Some(format!("/{}/client_wasm.js", page_entry))
-		} else {
-			None
-		};
-
-		// Read the manifest.
-		let manifest = self
-			.fs()
-			.read(&Url::parse("dst:/manifest.json").unwrap())
-			.unwrap();
-		let manifest: serde_json::Value = serde_json::from_slice(&manifest).unwrap();
-
 		THREAD_LOCAL_ISOLATE.with(|isolate| {
+			// Compute the page entry from the pagename.
+			let page_entry = page_entry_for_pagename(pagename);
+
+			// In dev mode, compile the page.
+			if let Pinwheel::Dev {
+				src_dir, dst_dir, ..
+			} = self
+			{
+				build_js_pages(src_dir, dst_dir, &[&page_entry])?;
+			}
+
+			// Determine the output URLs.
+			let static_js_url = Url::parse("dst:/")
+				.unwrap()
+				.join(&format!("{}/static.js", page_entry))
+				.unwrap();
+			let server_js_url = Url::parse("dst:/")
+				.unwrap()
+				.join(&format!("{}/server.js", page_entry))
+				.unwrap();
+			let static_or_server_js_url = if self.fs().exists(&static_js_url) {
+				static_js_url
+			} else if self.fs().exists(&server_js_url) {
+				server_js_url
+			} else {
+				return Err(err!("could not find page {}", pagename));
+			};
+			let client_js_url = Url::parse("dst:/")
+				.unwrap()
+				.join(&format!("{}/client.js", page_entry))
+				.unwrap();
+			let client_js_src = if self.fs().exists(&client_js_url) {
+				Some(format!("/{}/client.js", page_entry))
+			} else {
+				None
+			};
+			let client_wasm_js_url = Url::parse("dst:/")
+				.unwrap()
+				.join(&format!("{}/client_wasm.js", page_entry))
+				.unwrap();
+			let client_wasm_js_src = if self.fs().exists(&client_wasm_js_url) {
+				Some(format!("/{}/client_wasm.js", page_entry))
+			} else {
+				None
+			};
+
+			// Read the pinwheel manifest.
+			let pinwheel_manifest = self
+				.fs()
+				.read(&Url::parse("dst:/pinwheel_manifest.json").unwrap())
+				.unwrap();
+			let pinwheel_manifest: PinwheelManifest =
+				serde_json::from_slice(&pinwheel_manifest).unwrap();
+
+			// Create the scope.
 			let mut isolate = isolate.borrow_mut();
 			// In dev, reset the state to clear the module cache.
 			if let Pinwheel::Dev { .. } = self {
@@ -207,28 +183,36 @@ impl Pinwheel {
 				.global(&mut scope)
 				.set(&mut scope, console_literal.into(), console.into());
 
-			// Get the default export from the page module.
+			// Get the default export from the static or server module.
 			let page_module_namespace =
-				evaluate_module(&mut scope, self.fs(), page_js_url.clone())?;
+				evaluate_module(&mut scope, self.fs(), static_or_server_js_url.clone())?;
 			let default_literal = v8::String::new(&mut scope, "default").unwrap().into();
 			let page_module_default_export = page_module_namespace
 				.get(&mut scope, default_literal)
-				.ok_or_else(|| err!("failed to get default export from {}", page_js_url))?;
+				.ok_or_else(|| {
+					err!(
+						"Failed to get default export from {}.",
+						static_or_server_js_url
+					)
+				})?;
 			if !page_module_default_export.is_function() {
-				return Err(err!("default export from page module must be a function"));
+				return Err(err!(
+					"The default export from {} must be a function.",
+					static_or_server_js_url
+				));
 			}
 			let page_module_default_export_function: v8::Local<v8::Function> =
 				unsafe { v8::Local::cast(page_module_default_export) };
 
-			// Get the CSS sources from the manifest.
-			let css_srcs = manifest
-				.get("outputs")
-				.unwrap()
-				.as_object()
-				.unwrap()
-				.keys()
-				.filter(|output| output.ends_with(".css"))
-				.collect::<Vec<_>>();
+			// Get the JS and CSS sources from the pinwheel manifest.
+			let css_srcs = pinwheel_manifest
+				.css_srcs_for_page_entry
+				.get(&page_entry)
+				.unwrap();
+			let js_srcs = pinwheel_manifest
+				.js_srcs_for_page_entry
+				.get(&page_entry)
+				.unwrap();
 
 			// Create the page info object.
 			let page_info = v8::Object::new(&mut scope);
@@ -240,6 +224,14 @@ impl Pinwheel {
 				css_srcs_array.set(&mut scope, i, css_src);
 			}
 			page_info.set(&mut scope, css_srcs_literal.into(), css_srcs_array.into());
+			let js_srcs_literal = v8::String::new(&mut scope, "jsSrcs").unwrap();
+			let js_srcs_array = v8::Array::new(&mut scope, js_srcs.len().to_i32().unwrap());
+			for (i, js_src) in js_srcs.iter().enumerate() {
+				let i = v8::Number::new(&mut scope, i.to_f64().unwrap()).into();
+				let js_src = v8::String::new(&mut scope, js_src).unwrap().into();
+				js_srcs_array.set(&mut scope, i, js_src);
+			}
+			page_info.set(&mut scope, js_srcs_literal.into(), js_srcs_array.into());
 			let client_js_src_literal = v8::String::new(&mut scope, "clientJsSrc").unwrap();
 			let client_js_src_string = if let Some(client_js_src) = client_js_src {
 				v8::String::new(&mut scope, &client_js_src).unwrap().into()
@@ -800,6 +792,12 @@ impl FileSystem for IncludedFileSystem {
 	}
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
+struct PinwheelManifest {
+	css_srcs_for_page_entry: BTreeMap<String, Vec<String>>,
+	js_srcs_for_page_entry: BTreeMap<String, Vec<String>>,
+}
+
 pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 	// Collect all pages in the pages directory.
 	let mut page_entries = <Vec<String>>::new();
@@ -827,17 +825,12 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 			_ => {}
 		}
 	}
-	// Build the pages.
-	build_js_pages(
-		false,
-		src_dir,
-		dst_dir,
-		&page_entries
-			.iter()
-			.map(|page_entry| page_entry.as_str())
-			.collect::<Vec<_>>(),
-	)
-	.unwrap();
+	// Build the js pages.
+	let page_entries = &page_entries
+		.iter()
+		.map(|page_entry| page_entry.as_str())
+		.collect::<Vec<_>>();
+	build_js_pages(src_dir, dst_dir, page_entries).unwrap();
 	// Copy static files.
 	let static_dir = src_dir.join("static");
 	for entry in walkdir::WalkDir::new(&static_dir) {
@@ -849,7 +842,7 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 			std::fs::copy(path, out_path).unwrap();
 		}
 	}
-	// Statically render the pages.
+	// Statically render the static pages.
 	let pinwheel = Pinwheel::Prod {
 		fs: ProdFileSystem::Real(RealFileSystem {
 			dst_dir: dst_dir.to_owned(),
@@ -869,13 +862,9 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 	Ok(())
 }
 
-pub fn build_js_pages(
-	_dev: bool,
-	src_dir: &Path,
-	dst_dir: &Path,
-	page_entries: &[&str],
-) -> Result<()> {
-	let metafile_path = dst_dir.join("manifest.json");
+pub fn build_js_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[&str]) -> Result<()> {
+	let pinwheel_manifest_path = dst_dir.join("pinwheel_manifest.json");
+	let esbuild_metafile_path = dst_dir.join("metafile.json");
 	let cmd = which("npx").unwrap();
 	let mut args = vec![
 		"esbuild".to_owned(),
@@ -892,7 +881,7 @@ pub fn build_js_pages(
 		"--loader:.svg=dataurl".to_owned(),
 		"--loader:.woff2=file".to_owned(),
 		"--sourcemap".to_owned(),
-		format!("--metafile={}", metafile_path.display()),
+		format!("--metafile={}", esbuild_metafile_path.display()),
 		format!("--outdir={}", dst_dir.display()),
 	];
 	for page_entry in page_entries {
@@ -917,30 +906,66 @@ pub fn build_js_pages(
 	if !status.success() {
 		return Err(err!("esbuild {}", status.to_string()));
 	}
-	// Strip the dst_dir prefix from the paths in the esbuild manifest.
-	let metafile = std::fs::read(&metafile_path)?;
-	let mut metafile: serde_json::Value = serde_json::from_slice(&metafile)?;
-	let outputs = metafile
+	// Construct the pinwheel manifest from the esbuild metafile.
+	let esbuild_metafile = std::fs::read(&esbuild_metafile_path)?;
+	let esbuild_metafile: serde_json::Value = serde_json::from_slice(&esbuild_metafile)?;
+	let esbuild_metafile_outputs = esbuild_metafile
 		.as_object()
 		.unwrap()
 		.get("outputs")
 		.unwrap()
 		.as_object()
 		.unwrap();
-	let mut new_outputs = serde_json::Map::new();
-	for (key, value) in outputs.iter() {
-		let key = key
-			.strip_prefix(dst_dir.to_str().unwrap())
-			.unwrap()
-			.to_owned();
-		new_outputs.insert(key, value.clone());
+	// Collect all the CSS sources.
+	let mut css_srcs = Vec::new();
+	for output_path in esbuild_metafile_outputs.keys() {
+		let output_path = Path::new(output_path);
+		let extension = output_path.extension().unwrap().to_str().unwrap();
+		if extension == "css" {
+			let css_src = output_path.strip_prefix(&dst_dir).unwrap().to_owned();
+			css_srcs.push(format!("/{}", css_src.display()));
+		}
 	}
-	metafile
-		.as_object_mut()
-		.unwrap()
-		.insert("outputs".to_owned(), new_outputs.into());
-	let metafile = serde_json::to_vec(&metafile)?;
-	std::fs::write(metafile_path, metafile)?;
+	let mut css_srcs_for_page_entry = BTreeMap::new();
+	let mut js_srcs_for_page_entry = BTreeMap::new();
+	for page_entry in page_entries {
+		css_srcs_for_page_entry.insert(page_entry.to_string(), css_srcs.clone());
+		js_srcs_for_page_entry.insert(page_entry.to_string(), vec![]);
+		// 	let output_path = dst_dir.join(page_entry).join("server.js");
+		// 	let esbuild_metafile_entry = esbuild_metafile_outputs
+		// 		.get(output_path.to_str().unwrap())
+		// 		.unwrap()
+		// 		.as_object()
+		// 		.unwrap();
+		// 	let js_srcs = esbuild_metafile_entry
+		// 		.get("imports")
+		// 		.unwrap()
+		// 		.as_array()
+		// 		.unwrap()
+		// 		.iter()
+		// 		.map(|value| {
+		// 			let js_path = value
+		// 				.as_object()
+		// 				.unwrap()
+		// 				.get("path")
+		// 				.unwrap()
+		// 				.as_str()
+		// 				.unwrap();
+		// 			let js_path = Path::new(js_path);
+		// 			let js_src = js_path.strip_prefix(&dst_dir).unwrap().to_owned();
+		// 			let js_src = format!("/{}", js_src.display());
+		// 			js_src
+		// 		})
+		// 		.collect();
+		// js_srcs_for_page_entry.insert(page_entry.to_string(), js_srcs);
+	}
+	let pinwheel_manifest = PinwheelManifest {
+		css_srcs_for_page_entry,
+		js_srcs_for_page_entry,
+	};
+	let pinwheel_manifest = serde_json::to_vec(&pinwheel_manifest)?;
+	std::fs::write(pinwheel_manifest_path, pinwheel_manifest)?;
+	std::fs::remove_file(esbuild_metafile_path)?;
 	Ok(())
 }
 

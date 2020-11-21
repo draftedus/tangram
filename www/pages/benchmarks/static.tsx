@@ -9,12 +9,7 @@ export default (pageInfo: PageInfo) => {
 	return renderPage(
 		<PageLayout background={true} pageInfo={pageInfo}>
 			<ui.S1>
-				<ui.H1>{"Benchmarks"}</ui.H1>
-				<ui.P>
-					{
-						"Under the hood, the Tangram CLI uses Tangram Tree and Tangram Linear to train machine learning models. Tangram tree is the fastest gradient boosted decision tree library and has by far lowest memory usage."
-					}
-				</ui.P>
+				<ui.H1>{"Tangram Tree Benchmarks"}</ui.H1>
 				<ui.S2>
 					<ui.H2>{"Area Under the Receiver Operating Characteristic"}</ui.H2>
 					<TreeAUCBenchmark />
@@ -210,16 +205,16 @@ function TimeBenchmark() {
 		<div className="benchmarks_tables_grid_wrapper">
 			<div className="benchmarks_tables_grid">
 				<div className="benchmarks_table_grid">
-					<div className="benchmarks_table_title">{"Allstate"}</div>
-					<TimeTable data={data["allstate"]} />
+					<ui.P>{"Allstate"}</ui.P>
+					<TimeTable data={data.allstate} />
 				</div>
 				<div className="benchmarks_table_grid">
 					<div className="benchmarks_table_title">{"Flights"}</div>
-					<TimeTable data={data["flights"]} />
+					<TimeTable data={data.flights} />
 				</div>
 				<div className="benchmarks_table_grid">
 					<div className="benchmarks_table_title">{"Higgs"}</div>
-					<TimeTable data={data["higgs"]} />
+					<TimeTable data={data.higgs} />
 				</div>
 			</div>
 			<BarChart

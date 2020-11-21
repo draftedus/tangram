@@ -1,1 +1,1 @@
-cargo run --release -p pinwheel -- build --src-dir www --dst-dir build/pinwheel/www
+cargo build --release --package tangram_www
