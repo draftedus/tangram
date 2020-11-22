@@ -13,6 +13,8 @@ use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_deps::{http, hyper, pinwheel::Pinwheel};
 use tangram_util::{error::Result, id::Id, zip};
 
+const MAX_FEATURE_IMPORTANCES: usize = 1_000;
+
 pub async fn get(
 	pinwheel: &Pinwheel,
 	context: &Context,
@@ -54,6 +56,7 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::LinearRegressor(LinearRegressorProps {
 					feature_importances,
 				})
@@ -75,6 +78,7 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::TreeRegressor(TreeRegressorProps {
 					feature_importances,
 				})
@@ -98,6 +102,7 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::LinearBinaryClassifier(LinearBinaryClassifierProps {
 					feature_importances,
 				})
@@ -119,6 +124,7 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::TreeBinaryClassifier(TreeBinaryClassifierProps {
 					feature_importances,
 				})
@@ -142,6 +148,7 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::LinearMulticlassClassifier(LinearMulticlassClassifierProps {
 					feature_importances,
 				})
@@ -163,6 +170,7 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::TreeMulticlassClassifier(TreeMulticlassClassifierProps {
 					feature_importances,
 				})

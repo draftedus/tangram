@@ -73,6 +73,7 @@ pub struct Regressor {
 	pub train_target_column_stats: ColumnStats,
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
+	// pub grid: Vec<GridItem>,
 	pub test_metrics: RegressionMetrics,
 	pub baseline_metrics: RegressionMetrics,
 	pub model: RegressionModel,
@@ -154,7 +155,9 @@ pub struct TreeModelTrainOptions {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum BinnedFeaturesLayout {
+	#[serde(rename = "row_major")]
 	RowMajor,
+	#[serde(rename = "column_major")]
 	ColumnMajor,
 }
 
@@ -192,6 +195,7 @@ pub struct BinaryClassifier {
 	pub train_target_column_stats: ColumnStats,
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
+	// pub grid: Vec<GridItem>,
 	pub test_metrics: BinaryClassificationMetrics,
 	pub baseline_metrics: BinaryClassificationMetrics,
 	pub model: BinaryClassificationModel,
@@ -268,6 +272,7 @@ pub struct MulticlassClassifier {
 	pub train_target_column_stats: ColumnStats,
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
+	// pub grid: Vec<GridItem>,
 	pub test_metrics: MulticlassClassificationMetrics,
 	pub baseline_metrics: MulticlassClassificationMetrics,
 	pub model: MulticlassClassificationModel,
@@ -483,6 +488,28 @@ pub struct BagOfWordsFeatureGroupToken {
 pub enum Tokenizer {
 	#[serde(rename = "alphanumeric")]
 	Alphanumeric,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub enum GridItem {
+	#[serde(rename = "linear")]
+	Linear(LinearGridItem),
+	#[serde(rename = "tree")]
+	Tree(TreeGridItem),
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct LinearGridItem {
+	pub hyperparameters: LinearModelTrainOptions,
+	pub model_comparison_metric_value: f32,
+	pub duration: f32,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct TreeGridItem {
+	pub hyperparameters: TreeModelTrainOptions,
+	pub model_comparison_metric_value: f32,
+	pub duration: f32,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

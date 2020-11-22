@@ -44,7 +44,7 @@ pub enum Prediction {
 #[serde(rename_all = "camelCase")]
 pub struct RegressionPrediction {
 	value: f32,
-	feature_contributions_chart_data: FeatureContributionsChartData,
+	feature_contributions_chart_series: Vec<FeatureContributionsChartSeries>,
 }
 
 #[derive(serde::Serialize)]
@@ -52,7 +52,7 @@ pub struct RegressionPrediction {
 pub struct BinaryClassificationPrediction {
 	class_name: String,
 	probability: f32,
-	feature_contributions_chart_data: FeatureContributionsChartData,
+	feature_contributions_chart_series: Vec<FeatureContributionsChartSeries>,
 }
 
 #[derive(serde::Serialize)]
@@ -61,10 +61,8 @@ pub struct MulticlassClassificationProductionPrediction {
 	class_name: String,
 	probability: f32,
 	probabilities: Vec<(String, f32)>,
-	feature_contributions_chart_data: FeatureContributionsChartData,
+	feature_contributions_chart_series: Vec<FeatureContributionsChartSeries>,
 }
-
-pub type FeatureContributionsChartData = Vec<FeatureContributionsChartSeries>;
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -107,7 +105,7 @@ pub fn predict(
 					.collect(),
 			}];
 			let prediction = RegressionPrediction {
-				feature_contributions_chart_data,
+				feature_contributions_chart_series: feature_contributions_chart_data,
 				value: output.value,
 			};
 			Prediction::Regression(prediction)
@@ -130,7 +128,7 @@ pub fn predict(
 			let prediction = BinaryClassificationPrediction {
 				class_name: output.class_name,
 				probability: output.probability,
-				feature_contributions_chart_data,
+				feature_contributions_chart_series: feature_contributions_chart_data,
 			};
 			Prediction::BinaryClassification(prediction)
 		}
@@ -159,7 +157,7 @@ pub fn predict(
 				class_name: output.class_name,
 				probability: output.probability,
 				probabilities: output.probabilities.into_iter().collect::<Vec<_>>(),
-				feature_contributions_chart_data,
+				feature_contributions_chart_series: feature_contributions_chart_data,
 			};
 			Prediction::MulticlassClassification(prediction)
 		}
