@@ -8,6 +8,7 @@ version = "0.0.0"
 path = "lib.rs"
 
 [build-dependencies]
+ignore = "0.4"
 pinwheel = { path = "../pinwheel" }
 tangram_util = { path = "../util" }
 walkdir = "2"

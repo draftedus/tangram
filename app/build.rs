@@ -15,7 +15,7 @@ fn main() {
 	std::fs::create_dir(dst_dir.join("assets")).unwrap();
 	std::fs::create_dir(dst_dir.join("js")).unwrap();
 	// Re-run this script if any file in the workspace changes
-	for entry in walkdir::WalkDir::new(workspace_dir) {
+	for entry in ignore::Walk::new(workspace_dir) {
 		let entry = entry.unwrap();
 		let path = entry.path();
 		if !path.starts_with(&build_dir) {
