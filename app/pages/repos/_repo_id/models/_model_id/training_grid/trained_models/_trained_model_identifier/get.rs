@@ -44,9 +44,10 @@ pub async fn get(
 	};
 	let props = Props {
 		id: model_id.to_string(),
+		model_comparison_metric_name: "AUC ROC".to_owned(),
 		metrics: TrainedModelMetrics {
 			identifier: "3".into(),
-			metric: 81.0,
+			model_comparison_metric_value: 81.0,
 			model_type: "Linear".into(),
 			time: "2 minutes".into(),
 		},
@@ -69,7 +70,7 @@ pub async fn get(
 				<ui::H1 center={None}>{"Training Summary"}</ui::H1>
 				<ui::S2>
 					<ui::H2 center={None}>{"Model Metrics"}</ui::H2>
-					<ModelMetricsTable trained_model={props.metrics}/>
+					<ModelMetricsTable trained_model={props.metrics} model_comparison_metric_name={props.model_comparison_metric_name}/>
 				</ui::S2>
 				<ui::S2>
 					<ui::H2 center={None}>{"Model Hyperparameters"}</ui::H2>
@@ -87,8 +88,7 @@ pub async fn get(
 }
 
 #[component]
-fn ModelMetricsTable(trained_model: TrainedModelMetrics) {
-	let comparison_metric = "AUC ROC";
+fn ModelMetricsTable(trained_model: TrainedModelMetrics, model_comparison_metric_name: String) {
 	html! {
 		<ui::Table width={Some("100%".to_owned())}>
 			<ui::TableHeader>
@@ -103,7 +103,7 @@ fn ModelMetricsTable(trained_model: TrainedModelMetrics) {
 						"Training Time"
 					</ui::TableHeaderCell>
 					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						{comparison_metric}
+						{model_comparison_metric_name}
 					</ui::TableHeaderCell>
 				</ui::TableRow>
 			</ui::TableHeader>
@@ -119,7 +119,7 @@ fn ModelMetricsTable(trained_model: TrainedModelMetrics) {
 						{trained_model.time}
 					</ui::TableCell>
 					<ui::TableCell color={None} expand={None}>
-						{trained_model.metric.to_string()}
+						{trained_model.model_comparison_metric_value.to_string()}
 					</ui::TableCell>
 				</ui::TableRow>
 			</ui::TableBody>

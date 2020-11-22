@@ -91,6 +91,7 @@ fn build_inner_binary_classifier(
 		id: model.id,
 		precision: default_threshold_test_metrics.precision,
 		recall: default_threshold_test_metrics.recall,
+		f1_score: default_threshold_test_metrics.f1_score,
 	}
 }
 

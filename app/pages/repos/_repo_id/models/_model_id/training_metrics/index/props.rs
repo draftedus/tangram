@@ -36,6 +36,7 @@ pub struct BinaryClassifierProps {
 	pub id: String,
 	pub precision: f32,
 	pub recall: f32,
+	pub f1_score: f32,
 }
 
 #[derive(serde::Serialize)]

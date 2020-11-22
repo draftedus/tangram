@@ -1,4 +1,4 @@
-use super::props::{Inner, Props, TrainedModel};
+use super::props::{Props, TrainedModel};
 use html::{component, html};
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
@@ -43,52 +43,57 @@ pub async fn get(
 	};
 	let props = Props {
 		id: model_id.to_string(),
-		inner: Inner {
-			num_models: 4,
-			total_training_time: "17 minutes".into(),
-			trained_models: vec![
-				TrainedModel {
-					identifier: "1".into(),
-					metric: 84.5,
-					model_type: "Gradient Boosted Decision Tree".into(),
-					time: "10 minutes".into(),
-				},
-				TrainedModel {
-					identifier: "2".into(),
-					metric: 87.5,
-					model_type: "Linear".into(),
-					time: "1 minute".into(),
-				},
-				TrainedModel {
-					identifier: "3".into(),
-					metric: 81.0,
-					model_type: "Linear".into(),
-					time: "2 minutes".into(),
-				},
-				TrainedModel {
-					identifier: "4".into(),
-					metric: 78.0,
-					model_type: "Gradient Boosted Decision Tree".into(),
-					time: "4 minutes".into(),
-				},
-			],
-			winning_model_hyperparameters: vec![
-				("l2_regularization".into(), "5".into()),
-				("learning_rate".into(), "2".into()),
-				("max_depth".into(), "10".into()),
-				(
-					"max_examples_for_computing_bin_thresholds".into(),
-					"4".into(),
-				),
-				("max_leaf_nodes".into(), "22".into()),
-			],
+		model_comparison_metric_name: "AUC ROC".to_owned(),
+		num_models: 4,
+		total_training_time: "17 minutes".into(),
+		trained_models_metrics: vec![
+			TrainedModel {
+				identifier: "1".into(),
+				model_comparison_metric_value: 84.5,
+				model_type: "Gradient Boosted Decision Tree".into(),
+				time: "10 minutes".into(),
+			},
+			TrainedModel {
+				identifier: "2".into(),
+				model_comparison_metric_value: 87.5,
+				model_type: "Linear".into(),
+				time: "1 minute".into(),
+			},
+			TrainedModel {
+				identifier: "3".into(),
+				model_comparison_metric_value: 81.0,
+				model_type: "Linear".into(),
+				time: "2 minutes".into(),
+			},
+			TrainedModel {
+				identifier: "4".into(),
+				model_comparison_metric_value: 78.0,
+				model_type: "Gradient Boosted Decision Tree".into(),
+				time: "4 minutes".into(),
+			},
+		],
+		best_model_metrics: TrainedModel {
+			identifier: "5".into(),
+			model_comparison_metric_value: 78.0,
+			model_type: "Gradient Boosted Decision Tree".into(),
+			time: "4 minutes".into(),
 		},
+		best_model_hyperparameters: vec![
+			("l2_regularization".into(), "5".into()),
+			("learning_rate".into(), "2".into()),
+			("max_depth".into(), "10".into()),
+			(
+				"max_examples_for_computing_bin_thresholds".into(),
+				"4".into(),
+			),
+			("max_leaf_nodes".into(), "22".into()),
+		],
 		model_layout_info,
 	};
 	db.commit().await?;
 	let description = format!(
 		"Tangram trained {} models. The total training time was {}.",
-		props.inner.num_models, props.inner.total_training_time
+		props.num_models, props.total_training_time
 	);
 	let html = html! {
 		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingGrid}>
@@ -99,15 +104,15 @@ pub async fn get(
 				</ui::P>
 				<ui::S2>
 					<ui::H2 center={None}>{"Best Model Metrics"}</ui::H2>
-					<OverviewTable trained_models={vec![props.inner.trained_models[1].clone()]}/>
+					<WinningModelMetricsTable best_model={props.best_model_metrics} model_comparison_metric_name={props.model_comparison_metric_name.clone()}/>
 				</ui::S2>
 				<ui::S2>
 					<ui::H2 center={None}>{"Best Model Hyperparameters"}</ui::H2>
-					<ModelHyperparametersTable hyperparameters={props.inner.winning_model_hyperparameters}/>
+					<ModelHyperparametersTable hyperparameters={props.best_model_hyperparameters} />
 				</ui::S2>
 				<ui::S2>
 					<ui::H2 center={None}>{"All Models"}</ui::H2>
-					<OverviewTable trained_models={props.inner.trained_models}/>
+					<AllTrainedModelsMetricsTable trained_models={props.trained_models_metrics} model_comparison_metric_name={props.model_comparison_metric_name}/>
 				</ui::S2>
 			</ui::S1>
 		</ModelLayout>
@@ -121,8 +126,7 @@ pub async fn get(
 }
 
 #[component]
-fn OverviewTable(trained_models: Vec<TrainedModel>) {
-	let comparison_metric = "AUC ROC";
+fn WinningModelMetricsTable(best_model: TrainedModel, model_comparison_metric_name: String) {
 	html! {
 		<ui::Table width={Some("100%".to_owned())}>
 			<ui::TableHeader>
@@ -137,7 +141,48 @@ fn OverviewTable(trained_models: Vec<TrainedModel>) {
 						"Training Time"
 					</ui::TableHeaderCell>
 					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						{comparison_metric}
+						{model_comparison_metric_name}
+					</ui::TableHeaderCell>
+				</ui::TableRow>
+			</ui::TableHeader>
+			<ui::TableRow color={None}>
+				<ui::TableCell color={None} expand={None}>
+					{best_model.identifier}
+				</ui::TableCell>
+				<ui::TableCell color={None} expand={None}>
+					{best_model.model_type}
+				</ui::TableCell>
+				<ui::TableCell color={None} expand={None}>
+					{best_model.time}
+				</ui::TableCell>
+				<ui::TableCell color={None} expand={None}>
+					{best_model.model_comparison_metric_value.to_string()}
+				</ui::TableCell>
+			</ui::TableRow>
+		</ui::Table>
+	}
+}
+
+#[component]
+fn AllTrainedModelsMetricsTable(
+	trained_models: Vec<TrainedModel>,
+	model_comparison_metric_name: String,
+) {
+	html! {
+		<ui::Table width={Some("100%".to_owned())}>
+			<ui::TableHeader>
+				<ui::TableRow color={None}>
+					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
+						"Model Number"
+					</ui::TableHeaderCell>
+					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
+						"Model Type"
+					</ui::TableHeaderCell>
+					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
+						"Training Time"
+					</ui::TableHeaderCell>
+					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
+						{model_comparison_metric_name}
 					</ui::TableHeaderCell>
 				</ui::TableRow>
 			</ui::TableHeader>
@@ -156,7 +201,7 @@ fn OverviewTable(trained_models: Vec<TrainedModel>) {
 							{trained_model.time}
 						</ui::TableCell>
 						<ui::TableCell color={None} expand={None}>
-							{trained_model.metric.to_string()}
+							{trained_model.model_comparison_metric_value.to_string()}
 						</ui::TableCell>
 					</ui::TableRow>
 				}

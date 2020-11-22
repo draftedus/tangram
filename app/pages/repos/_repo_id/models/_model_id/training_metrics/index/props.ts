@@ -38,6 +38,7 @@ export type BinaryClassifierProps = {
 	aucRoc: number
 	baselineAccuracy: number
 	classes: string[]
+	f1Score: number
 	id: string
 	precision: number
 	recall: number

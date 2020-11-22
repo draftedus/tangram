@@ -57,6 +57,12 @@ export function BinaryClassifierTrainingMetricsIndexPage(
 						value={ui.formatNumber(props.recall)}
 					/>
 				</ui.Card>
+				<ui.Card>
+					<ui.NumberChart
+						title="F1 Score"
+						value={ui.formatNumber(props.f1Score)}
+					/>
+				</ui.Card>
 			</MetricsRow>
 		</ui.S1>
 	)
