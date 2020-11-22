@@ -29,14 +29,14 @@ export default (pageInfo: PageInfo, props: Props) => {
 		)
 		.map(([threshold, recall]) => ({ x: threshold, y: recall }))
 		.filter(v => v.x !== null && v.y !== null)
-	let parametricData = [
+	let parametricSeries = [
 		{
 			color: ui.colors.blue,
 			data: prData,
 			title: "PR",
 		},
 	]
-	let nonParametricData = [
+	let nonParametricSeries = [
 		{
 			color: ui.colors.blue,
 			data: precisionData,
@@ -68,9 +68,9 @@ export default (pageInfo: PageInfo, props: Props) => {
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Card>
 						<LineChart
-							data={parametricData}
 							hideLegend={true}
 							id="parametric_pr"
+							series={parametricSeries}
 							title="Parametric Precision Recall Curve"
 							xAxisTitle="Recall"
 							xMax={1}
@@ -86,9 +86,9 @@ export default (pageInfo: PageInfo, props: Props) => {
 					<ui.P>{definitions.precisionRecall}</ui.P>
 					<ui.Card>
 						<LineChart
-							data={nonParametricData}
 							hideLegend={false}
 							id="non_parametric_pr"
+							series={nonParametricSeries}
 							title="Non-Parametric Precision Recall Curve"
 							xAxisTitle="Threshold"
 							xMax={1}

@@ -7,7 +7,7 @@ import { productionColor } from "common/tokens"
 import { h } from "preact"
 
 export function Text(props: TextProps) {
-	let overallChartData = [
+	let overallChartSeries = [
 		{
 			color: productionColor,
 			data: props.overallTokenHistogram.map(([label, count], i) => ({
@@ -29,8 +29,8 @@ export function Text(props: TextProps) {
 			)}
 			<ui.Card>
 				<BarChart
-					data={overallChartData}
 					id="text_overall"
+					series={overallChartSeries}
 					title={overallDistributionChartTitle}
 					xAxisTitle={props.columnName}
 					yAxisTitle="Count"

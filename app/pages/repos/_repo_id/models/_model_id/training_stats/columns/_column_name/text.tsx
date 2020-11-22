@@ -21,8 +21,8 @@ export function TextColumnDetail(props: TextProps) {
 			<ui.S2>
 				<ui.Card>
 					<BarChart
-						data={data}
 						id="token_histogram"
+						series={data}
 						shouldDrawXAxisLabels={false}
 						title="Most Frequent Tokens"
 						xAxisTitle="Token"

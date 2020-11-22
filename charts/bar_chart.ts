@@ -17,9 +17,9 @@ import { chartColors, chartConfig } from "./config"
 import { drawTooltip } from "./tooltip"
 
 export type BarChartOptions = {
-	data: BarChartData
 	groupGap?: number
 	hideLegend?: boolean
+	series: BarChartSeries[]
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
 	xAxisTitle?: string
@@ -28,8 +28,6 @@ export type BarChartOptions = {
 	yMax?: number
 	yMin?: number
 }
-
-export type BarChartData = BarChartSeries[]
 
 export type BarChartSeries = {
 	color: string
@@ -70,7 +68,7 @@ export function drawBarChart(
 	ctx: CanvasRenderingContext2D,
 	options: BarChartOptions,
 ): DrawBarChartOutput {
-	let { data, xAxisTitle, yAxisGridLineInterval, yAxisTitle } = options
+	let { series: data, xAxisTitle, yAxisGridLineInterval, yAxisTitle } = options
 	let width = ctx.canvas.clientWidth
 	let height = ctx.canvas.clientHeight
 	let hoverRegions: Array<HoverRegion<BarChartHoverRegionInfo>> = []

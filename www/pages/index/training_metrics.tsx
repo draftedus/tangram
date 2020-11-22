@@ -4,7 +4,7 @@ import * as ui from "@tangramhq/ui"
 import { h } from "preact"
 
 export function TrainingMetrics() {
-	let rocData = [
+	let rocChartSeries = [
 		{
 			color: ui.colors.blue,
 			data: data.rocData,
@@ -22,7 +22,7 @@ export function TrainingMetrics() {
 			title: "Reference",
 		},
 	]
-	let prData = [
+	let prChartSeries = [
 		{
 			color: ui.colors.blue,
 			data: data.prData,
@@ -50,8 +50,8 @@ export function TrainingMetrics() {
 				<div style={{ gridArea: "pr" }}>
 					<ui.Card>
 						<LineChart
-							data={prData}
 							hideLegend={true}
+							series={prChartSeries}
 							title="PR Curve"
 							xAxisTitle="Precision"
 							xMax={1}
@@ -65,8 +65,8 @@ export function TrainingMetrics() {
 				<div style={{ gridArea: "roc" }}>
 					<ui.Card>
 						<LineChart
-							data={rocData}
 							hideLegend={true}
+							series={rocChartSeries}
 							title="ROC Curve"
 							xAxisTitle="FPR"
 							xMax={1}

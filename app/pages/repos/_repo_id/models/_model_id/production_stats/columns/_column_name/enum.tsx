@@ -7,7 +7,7 @@ import { productionColor, trainingColor } from "common/tokens"
 import { Fragment, h } from "preact"
 
 export function Enum(props: EnumProps) {
-	let overallChartData = [
+	let overallChartSeries = [
 		{
 			color: trainingColor,
 			data: props.overallChartData.map(([label, entry], i) => ({
@@ -39,8 +39,8 @@ export function Enum(props: EnumProps) {
 			)}
 			<ui.Card>
 				<BarChart
-					data={overallChartData}
 					id="enum_overall"
+					series={overallChartSeries}
 					title={overallDistributionChartTitle}
 					xAxisTitle={props.columnName}
 					yAxisTitle="Percent"

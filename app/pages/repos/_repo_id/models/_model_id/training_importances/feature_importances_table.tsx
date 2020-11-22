@@ -8,7 +8,7 @@ export type Props = {
 }
 
 export function FeatureImportancesTable(props: Props) {
-	let data = [
+	let barChartSeries = [
 		{
 			color: ui.colors.blue,
 			data: props.featureImportances.map(
@@ -25,8 +25,8 @@ export function FeatureImportancesTable(props: Props) {
 		<>
 			<ui.Card>
 				<BarChart
-					data={data}
 					id="feature_importances"
+					series={barChartSeries}
 					shouldDrawXAxisLabels={false}
 					title="Feature Importances"
 					xAxisTitle="Feature Name"

@@ -39,7 +39,7 @@ export function TrainingStats() {
 				<div style={{ gridArea: "age" }}>
 					<ui.Card>
 						<BoxChart
-							data={series}
+							series={series}
 							shouldDrawXAxisLabels={false}
 							title="Age"
 							xAxisTitle="Age"

@@ -7,7 +7,7 @@ import {
 import {
 	BarChart,
 	FeatureContributionsChart,
-	FeatureContributionsChartData,
+	FeatureContributionsChartSeries,
 } from "@tangramhq/charts"
 import * as ui from "@tangramhq/ui"
 import { h } from "preact"
@@ -33,21 +33,21 @@ export type Prediction =
 	  }
 
 export type RegressionPrediction = {
-	featureContributionsChartData: FeatureContributionsChartData
+	featureContributionsChartSeries: FeatureContributionsChartSeries[]
 	value: number
 }
 
 export type BinaryClassificationPrediction = {
 	className: string
 	classes: string[]
-	featureContributionsChartData: FeatureContributionsChartData
+	featureContributionsChartSeries: FeatureContributionsChartSeries[]
 	probability: number
 }
 
 export type MulticlassClassificationPrediction = {
 	className: string
 	classes: string[]
-	featureContributionsChartData: FeatureContributionsChartData
+	featureContributionsChartSeries: FeatureContributionsChartSeries[]
 	probabilities: Array<[string, number]>
 	probability: number
 }
@@ -145,13 +145,13 @@ function RegressionPredictionResult(props: RegressionPredictionResultProps) {
 			</ui.P>
 			<ui.Card>
 				<FeatureContributionsChart
-					data={props.prediction.featureContributionsChartData}
 					id="regression_feature_contributions"
 					includeXAxisTitle={true}
 					includeYAxisLabels={false}
 					includeYAxisTitle={false}
 					negativeColor={ui.colors.red}
 					positiveColor={ui.colors.green}
+					series={props.prediction.featureContributionsChartSeries}
 				/>
 			</ui.Card>
 		</ui.S2>
@@ -183,13 +183,13 @@ function BinaryClassificationPredictionResult(
 			</ui.P>
 			<ui.Card>
 				<FeatureContributionsChart
-					data={props.prediction.featureContributionsChartData}
 					id="binary_classification_feature_contributions"
 					includeXAxisTitle={true}
 					includeYAxisLabels={true}
 					includeYAxisTitle={true}
 					negativeColor={ui.colors.red}
 					positiveColor={ui.colors.green}
+					series={props.prediction.featureContributionsChartSeries}
 				/>
 			</ui.Card>
 		</ui.S2>
@@ -227,8 +227,8 @@ function MulticlassClassificationPredictionResult(
 				/>
 			</ui.Card>
 			<BarChart
-				data={probabilityData}
 				id="probabilities"
+				series={probabilityData}
 				title="Predicted Probabilities"
 			/>
 			<ui.H2>{"Explanation"}</ui.H2>
@@ -237,13 +237,13 @@ function MulticlassClassificationPredictionResult(
 			</ui.P>
 			<ui.Card>
 				<FeatureContributionsChart
-					data={props.prediction.featureContributionsChartData}
 					id="multiclass_classification_feature_contributions"
 					includeXAxisTitle={true}
 					includeYAxisLabels={true}
 					includeYAxisTitle={true}
 					negativeColor={ui.colors.red}
 					positiveColor={ui.colors.green}
+					series={props.prediction.featureContributionsChartSeries}
 				/>
 			</ui.Card>
 		</ui.S2>

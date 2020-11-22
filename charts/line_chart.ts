@@ -19,9 +19,9 @@ import { chartColors, chartConfig } from "./config"
 import { TooltipLabel, drawTooltip } from "./tooltip"
 
 export type LineChartOptions = {
-	data: LineChartData
 	hideLegend?: boolean
 	labels?: string[]
+	series: LineChartSeries[]
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
 	title?: string
@@ -34,8 +34,6 @@ export type LineChartOptions = {
 	yMax?: number
 	yMin?: number
 }
-
-export type LineChartData = LineChartSeries[]
 
 export type LineChartSeries = {
 	color: string
@@ -98,8 +96,8 @@ export function drawLineChart(
 	options: LineChartOptions,
 ): DrawLineChartOutput {
 	let {
-		data,
 		labels,
+		series: data,
 		xAxisGridLineInterval,
 		xAxisTitle,
 		yAxisGridLineInterval,
@@ -115,7 +113,7 @@ export function drawLineChart(
 		xMin = options.xMin
 	} else {
 		xMin = Math.min(
-			...options.data.flatMap(series => series.data.map(({ x }) => x)),
+			...options.series.flatMap(series => series.data.map(({ x }) => x)),
 		)
 	}
 	let xMax: number
@@ -123,7 +121,7 @@ export function drawLineChart(
 		xMax = options.xMax
 	} else {
 		xMax = Math.max(
-			...options.data.flatMap(series => series.data.map(({ x }) => x)),
+			...options.series.flatMap(series => series.data.map(({ x }) => x)),
 		)
 	}
 	let yMin: number
@@ -131,7 +129,9 @@ export function drawLineChart(
 		yMin = options.yMin
 	} else {
 		yMin = Math.min(
-			...options.data.flatMap(series => series.data.map(p => p.y ?? Infinity)),
+			...options.series.flatMap(series =>
+				series.data.map(p => p.y ?? Infinity),
+			),
 		)
 	}
 	let yMax: number
@@ -139,7 +139,9 @@ export function drawLineChart(
 		yMax = options.yMax
 	} else {
 		yMax = Math.max(
-			...options.data.flatMap(series => series.data.map(p => p.y ?? -Infinity)),
+			...options.series.flatMap(series =>
+				series.data.map(p => p.y ?? -Infinity),
+			),
 		)
 	}
 

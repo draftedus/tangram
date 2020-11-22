@@ -105,6 +105,25 @@ type NumberFieldProps = {
 }
 
 function NumberField(props: NumberFieldProps) {
+	let columnChartSeries = [
+		{
+			color: ui.colors.blue,
+			data: [
+				{
+					label: props.field.name,
+					x: 0,
+					y: {
+						max: props.field.max,
+						min: props.field.min,
+						p25: props.field.p25,
+						p50: props.field.p50,
+						p75: props.field.p75,
+					},
+				},
+			],
+			title: "quartiles",
+		},
+	]
 	return (
 		<>
 			<div class="predict-field-wrapper">
@@ -121,27 +140,9 @@ function NumberField(props: NumberFieldProps) {
 			<div class="predict-column-chart-wrapper">
 				<BoxChart
 					class="column-chart"
-					data={[
-						{
-							color: ui.colors.blue,
-							data: [
-								{
-									label: props.field.name,
-									x: 0,
-									y: {
-										max: props.field.max,
-										min: props.field.min,
-										p25: props.field.p25,
-										p50: props.field.p50,
-										p75: props.field.p75,
-									},
-								},
-							],
-							title: "quartiles",
-						},
-					]}
 					hideLegend={true}
 					id={props.field.name}
+					series={columnChartSeries}
 					shouldDrawXAxisLabels={false}
 				/>
 			</div>
@@ -174,7 +175,9 @@ function EnumField(props: EnumFieldProps) {
 			<div class="predict-column-chart-wrapper">
 				<BarChart
 					class="column-chart"
-					data={[
+					hideLegend={true}
+					id={props.field.name}
+					series={[
 						{
 							color: ui.colors.blue,
 							data: props.field.histogram.map(([label, value], i) => ({
@@ -185,8 +188,6 @@ function EnumField(props: EnumFieldProps) {
 							title: "histogram",
 						},
 					]}
-					hideLegend={true}
-					id={props.field.name}
 					shouldDrawXAxisLabels={false}
 				/>
 			</div>

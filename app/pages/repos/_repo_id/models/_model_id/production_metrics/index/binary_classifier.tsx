@@ -12,7 +12,7 @@ export function BinaryClassifierProductionMetricsIndexPage(
 	props: BinaryClassifierProps,
 ) {
 	let chartLabels = props.accuracyChart.data.map(entry => entry.label)
-	let accuracyData = [
+	let accuracySeries = [
 		{
 			color: trainingColor,
 			data: props.accuracyChart.data.map((_, index) => ({
@@ -77,9 +77,9 @@ export function BinaryClassifierProductionMetricsIndexPage(
 				</ui.Card>
 				<ui.Card>
 					<LineChart
-						data={accuracyData}
 						id="accuracy"
 						labels={chartLabels}
+						series={accuracySeries}
 						title={accuracyChartTitle}
 						xAxisGridLineInterval={{ k: 1, p: 0 }}
 						yMax={1}

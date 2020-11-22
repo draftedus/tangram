@@ -33,16 +33,22 @@ export function BarChart(props: BarChartProps) {
 		width: "100%",
 	}
 
-	// If hideLegend is undefined, only show the legend when there is more than one series.
-	let hideLegend = props.hideLegend
-	if (hideLegend === undefined) {
-		hideLegend = props.data.length <= 1
+	let legendItems: LegendItem[] = []
+	for (let series of props.series) {
+		if (series.title !== undefined) {
+			legendItems.push({
+				color: series.color,
+				title: series.title,
+			})
+		}
 	}
+
+	let hideLegend = props.hideLegend ?? legendItems.length <= 1
 
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			{!hideLegend && <ChartLegend items={props.data} />}
+			{!hideLegend && <ChartLegend items={legendItems} />}
 			<div
 				class={props.class}
 				data-chart-type="bar"
@@ -87,13 +93,13 @@ export function BoxChart(props: BoxChartProps) {
 	// If hideLegend is undefined, only show the legend when there is more than one series.
 	let hideLegend = props.hideLegend
 	if (hideLegend === undefined) {
-		hideLegend = props.data.length <= 1
+		hideLegend = props.series.length <= 1
 	}
 
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			{!hideLegend && <ChartLegend items={props.data} />}
+			{!hideLegend && <ChartLegend items={props.series} />}
 			<div
 				class={props.class}
 				data-chart-type="box"
@@ -137,13 +143,13 @@ export function LineChart(props: LineChartProps) {
 	// If hideLegend is undefined, only show the legend when there is more than one series.
 	let hideLegend = props.hideLegend
 	if (hideLegend === undefined) {
-		hideLegend = props.data.length <= 1
+		hideLegend = props.series.length <= 1
 	}
 
 	return (
 		<div class="chart-wrapper">
 			<ChartTitle>{props.title}</ChartTitle>
-			{!hideLegend && <ChartLegend items={props.data} />}
+			{!hideLegend && <ChartLegend items={props.series} />}
 			<div
 				data-chart-type="line"
 				data-options={props.id && JSON.stringify(props)}
@@ -183,8 +189,8 @@ export function FeatureContributionsChart(
 	useEffect(() => chartRef.current?.draw(props))
 
 	let innerChartHeight =
-		props.data.length * chartConfig.featureContributionsSeriesHeight +
-		(props.data.length - 1) * chartConfig.featureContributionsSeriesGap
+		props.series.length * chartConfig.featureContributionsSeriesHeight +
+		(props.series.length - 1) * chartConfig.featureContributionsSeriesGap
 	let { bottomPadding, fontSize, labelPadding, topPadding } = chartConfig
 	let height =
 		innerChartHeight +

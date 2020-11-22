@@ -5,7 +5,7 @@ import { MetricsRow } from "common/metrics_row"
 import { h } from "preact"
 
 export function EnumColumnDetail(props: EnumProps) {
-	let histogramData = [
+	let histogramChartSeries = [
 		{
 			color: ui.colors.blue,
 			data: props.histogram.map(([label, count], i) => ({
@@ -36,8 +36,8 @@ export function EnumColumnDetail(props: EnumProps) {
 				</MetricsRow>
 				<ui.Card>
 					<BarChart
-						data={histogramData}
 						id="enum_histogram"
+						series={histogramChartSeries}
 						title={`Histogram of Unique Values for ${props.name}`}
 						xAxisTitle={props.name}
 						yAxisTitle="Count"

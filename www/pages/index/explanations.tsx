@@ -60,7 +60,7 @@ export function Explanations() {
 				</div>
 				{data.classes.length > 2 && (
 					<BarChart
-						data={[
+						series={[
 							{
 								color: ui.colors.blue,
 								data: data.chartData,
@@ -72,12 +72,12 @@ export function Explanations() {
 				)}
 				<ui.Card>
 					<FeatureContributionsChart
-						data={data.featureContributionsChartData}
 						includeXAxisTitle={true}
 						includeYAxisLabels={true}
 						includeYAxisTitle={true}
 						negativeColor={ui.colors.red}
 						positiveColor={ui.colors.green}
+						series={data.featureContributionsChartData}
 					/>
 				</ui.Card>
 			</div>

@@ -7,7 +7,7 @@ import { productionColor, trainingColor } from "common/tokens"
 import { h } from "preact"
 
 export function Number(props: NumberProps) {
-	let intervalBoxChartData = [
+	let intervalBoxChartSeries = [
 		{
 			color: productionColor,
 			data: props.intervalBoxChartData.map((entry, index) => ({
@@ -76,15 +76,15 @@ export function Number(props: NumberProps) {
 			)}
 			<ui.Card>
 				<BoxChart
-					data={overallBoxChartData}
 					id="number_overall"
+					series={overallBoxChartData}
 					title={statsOverallChartTitle}
 				/>
 			</ui.Card>
 			<ui.Card>
 				<BoxChart
-					data={intervalBoxChartData}
 					id="number_intervals"
+					series={intervalBoxChartSeries}
 					title={statsIntervalChartTitle}
 				/>
 			</ui.Card>

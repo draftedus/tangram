@@ -9,7 +9,7 @@ export function Introspection() {
 			<div class="introspection-wrapper">
 				<ui.Card>
 					<BarChart
-						data={data}
+						series={data}
 						shouldDrawXAxisLabels={false}
 						title="Feature Weights"
 						xAxisTitle="Name"

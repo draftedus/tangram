@@ -1,10 +1,10 @@
 import "./production_stats.css"
-import { BarChart, BarChartData } from "@tangramhq/charts"
+import { BarChart } from "@tangramhq/charts"
 import * as ui from "@tangramhq/ui"
 import { h } from "preact"
 
 export function ProductionStats() {
-	let series: BarChartData = [
+	let series = [
 		{
 			color: ui.colors.blue,
 			data: [
@@ -35,7 +35,7 @@ export function ProductionStats() {
 				<div style={{ gridArea: "comparison" }}>
 					<ui.Card>
 						<BarChart
-							data={series}
+							series={series}
 							title="Chest Pain"
 							xAxisTitle="Chest Pain"
 							yAxisTitle="Percent"

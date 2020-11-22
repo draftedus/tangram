@@ -5,7 +5,7 @@ import { MetricsRow } from "common/metrics_row"
 import { h } from "preact"
 
 export function NumberColumnDetail(props: NumberProps) {
-	let quantilesData = [
+	let quantilesChartSeries = [
 		{
 			color: ui.colors.blue,
 			data: [
@@ -73,11 +73,11 @@ export function NumberColumnDetail(props: NumberProps) {
 						<ui.NumberChart title="Max" value={ui.formatNumber(props.max)} />
 					</ui.Card>
 				</MetricsRow>
-				{quantilesData && (
+				{quantilesChartSeries && (
 					<ui.Card>
 						<BoxChart
-							data={quantilesData}
 							id="number_quantiles"
+							series={quantilesChartSeries}
 							title={`Distribution of Values for ${props.name}`}
 						/>
 					</ui.Card>

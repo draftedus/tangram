@@ -39,7 +39,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 	let chartLabels = selectedIntervalClassMetrics.intervals.map(
 		interval => interval.label,
 	)
-	let precisionChartData = [
+	let precisionChartSeries = [
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
@@ -60,7 +60,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 		},
 	]
 
-	let recallChartData = [
+	let recallChartSeries = [
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
@@ -81,7 +81,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 		},
 	]
 
-	let f1ScoreChartData = [
+	let f1ScoreChartSeries = [
 		{
 			color: trainingColor,
 			data: selectedIntervalClassMetrics.intervals.map((interval, index) => ({
@@ -156,9 +156,9 @@ export default (pageInfo: PageInfo, props: Props) => {
 							</MetricsRow>
 							<ui.Card>
 								<LineChart
-									data={precisionChartData}
 									id="precision_intervals"
 									labels={chartLabels}
+									series={precisionChartSeries}
 									title={precisionIntervalChartTitle}
 									xAxisGridLineInterval={{ k: 1, p: 0 }}
 									yMax={1}
@@ -167,9 +167,9 @@ export default (pageInfo: PageInfo, props: Props) => {
 							</ui.Card>
 							<ui.Card>
 								<LineChart
-									data={recallChartData}
 									id="recall_intervals"
 									labels={chartLabels}
+									series={recallChartSeries}
 									title={recallIntervalChartTitle}
 									xAxisGridLineInterval={{ k: 1, p: 0 }}
 									yMax={1}
@@ -192,9 +192,9 @@ export default (pageInfo: PageInfo, props: Props) => {
 							</MetricsRow>
 							<ui.Card>
 								<LineChart
-									data={f1ScoreChartData}
 									id="f1_intervals"
 									labels={chartLabels}
+									series={f1ScoreChartSeries}
 									title={f1ScoreIntervalChartTitle}
 									xAxisGridLineInterval={{ k: 1, p: 0 }}
 									yMax={1}

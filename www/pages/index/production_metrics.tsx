@@ -9,8 +9,8 @@ export function ProductionMetrics() {
 			<div class="production-metrics-wrapper">
 				<ui.Card>
 					<LineChart
-						data={accuracyData}
 						labels={accuracyLabels}
+						series={accuracyData}
 						title="Monthly Accuracy"
 						xAxisGridLineInterval={{ k: 1, p: 0 }}
 						yMax={1}

@@ -15,7 +15,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 		}),
 	)
 	let aucRoc = props.aucRoc
-	let data = [
+	let series = [
 		{
 			color: ui.colors.blue,
 			data: rocData,
@@ -63,9 +63,9 @@ export default (pageInfo: PageInfo, props: Props) => {
 					<ui.P>{definitions.receiverOperatingCharacteristic}</ui.P>
 					<ui.Card>
 						<LineChart
-							data={data}
 							hideLegend={false}
 							id="roc"
+							series={series}
 							title="Receiver Operating Characteristic Curve"
 							xAxisTitle="False Positive Rate"
 							xMax={1}

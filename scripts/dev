@@ -1,1 +1,1 @@
-cargo run --bin tangram_scripts dev
+cargo run --bin tangram_scripts dev app

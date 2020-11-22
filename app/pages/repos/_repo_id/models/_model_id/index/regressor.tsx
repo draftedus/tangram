@@ -5,7 +5,7 @@ import { baselineColor, trainingColor } from "common/tokens"
 import { h } from "preact"
 
 export function RegressorIndexPage(props: RegressorProps) {
-	let lossesChartData = props.lossesChartData && [
+	let lossesChartSeries = props.lossesChartData && [
 		{
 			color: ui.colors.blue,
 			data: props.lossesChartData.map((loss, index) => ({
@@ -66,10 +66,10 @@ export function RegressorIndexPage(props: RegressorProps) {
 						valueFormatter={value => ui.formatNumber(value)}
 					/>
 				</ui.Card>
-				{lossesChartData && (
+				{lossesChartSeries && (
 					<LineChart
-						data={lossesChartData}
 						id="loss_curve"
+						series={lossesChartSeries}
 						title="Training Loss Curve"
 						xAxisTitle="Epoch"
 						yAxisTitle="Loss"

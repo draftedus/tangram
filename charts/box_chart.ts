@@ -16,8 +16,8 @@ import { chartColors, chartConfig } from "./config"
 import { TooltipLabel, drawTooltip } from "./tooltip"
 
 export type BoxChartOptions = {
-	data: BoxChartData
 	hideLegend?: boolean
+	series: BoxChartSeries[]
 	shouldDrawXAxisLabels?: boolean
 	shouldDrawYAxisLabels?: boolean
 	title?: string
@@ -26,8 +26,6 @@ export type BoxChartOptions = {
 	yMax?: number
 	yMin?: number
 }
-
-export type BoxChartData = BoxChartSeries[]
 
 export type BoxChartSeries = {
 	color: string
@@ -72,7 +70,7 @@ export function drawBoxChart(
 	ctx: CanvasRenderingContext2D,
 	options: BoxChartOptions,
 ): DrawBoxChartOutput {
-	let { data, xAxisTitle, yAxisTitle } = options
+	let { series: data, xAxisTitle, yAxisTitle } = options
 	let width = ctx.canvas.clientWidth
 	let height = ctx.canvas.clientHeight
 	let hoverRegions: Array<HoverRegion<BoxChartHoverRegionInfo>> = []
@@ -94,7 +92,7 @@ export function drawBoxChart(
 		yMax = options.yMax
 	} else {
 		yMax = Math.max(
-			...options.data.flatMap(series =>
+			...options.series.flatMap(series =>
 				series.data.map(({ y }) => y?.max ?? -Infinity),
 			),
 		)
@@ -278,7 +276,7 @@ type DrawBoxOptions = {
 	boxGroupWidth: number
 	chartBox: Box
 	ctx: CanvasRenderingContext2D
-	data: BoxChartData
+	data: BoxChartSeries[]
 	point: BoxChartPoint
 	pointIndex: number
 	series: BoxChartSeries

@@ -13,7 +13,6 @@ import { drawTooltip } from "./tooltip"
 
 /** These are the options for displaying a feature contributions chart. */
 export type FeatureContributionsChartOptions = {
-	data: FeatureContributionsChartData
 	includeXAxisTitle?: boolean
 	includeYAxisLabels?: boolean
 	includeYAxisTitle?: boolean
@@ -21,6 +20,7 @@ export type FeatureContributionsChartOptions = {
 	negativeColor: string
 	/** This is the color to fill the bars for positive values. You will probably want to use a shade of green. */
 	positiveColor: string
+	series: FeatureContributionsChartSeries[]
 }
 
 /** These are the configuration used across all feature contributions charts. */
@@ -30,8 +30,6 @@ export type FeatureContributionsChartConfig = {
 	seriesGap: number
 	seriesWidth: number
 }
-
-export type FeatureContributionsChartData = FeatureContributionsChartSeries[]
 
 export type FeatureContributionsChartSeries = {
 	baseline: number
@@ -77,12 +75,12 @@ export function drawFeatureContributionsChart(
 	options: FeatureContributionsChartOptions,
 ): DrawFeatureContributionsChartOutput {
 	let {
-		data,
 		includeXAxisTitle,
 		includeYAxisLabels,
 		includeYAxisTitle,
 		negativeColor,
 		positiveColor,
+		series: data,
 	} = options
 
 	let height = ctx.canvas.clientHeight

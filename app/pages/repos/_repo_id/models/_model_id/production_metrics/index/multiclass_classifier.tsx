@@ -12,7 +12,7 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 	props: MulticlassClassifierProps,
 ) {
 	let chartLabels = props.accuracyChart.data.map(entry => entry.label)
-	let accuracyData = [
+	let accuracySeries = [
 		{
 			color: trainingColor,
 			data: props.accuracyChart.data.map((_, index) => ({
@@ -85,9 +85,9 @@ export function MulticlassClassifierProductionMetricsIndexPage(
 				</ui.Card>
 				<ui.Card>
 					<LineChart
-						data={accuracyData}
 						id="accuracy"
 						labels={chartLabels}
+						series={accuracySeries}
 						title={accuracyChartTitle}
 						xAxisGridLineInterval={{ k: 1, p: 0 }}
 						yMax={1}

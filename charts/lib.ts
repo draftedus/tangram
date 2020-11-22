@@ -4,28 +4,18 @@ import { Chart } from "./chart"
 import { createFeatureContributionsChart } from "./feature_contributions_chart"
 import { createLineChart } from "./line_chart"
 
+export type { BarChartSeries, BarChartOptions } from "./bar_chart"
 export type {
-	BarChartData,
-	BarChartSeries,
-	BarChartOptions as DrawBarChartOptions,
-} from "./bar_chart"
-export type {
-	BoxChartData,
 	BoxChartPoint,
 	BoxChartSeries,
-	BoxChartOptions as DrawBoxChartOptions,
+	BoxChartOptions,
 } from "./box_chart"
 export type {
-	FeatureContributionsChartOptions as DrawFeatureContributionsChartOptions,
-	FeatureContributionsChartData,
+	FeatureContributionsChartOptions,
 	FeatureContributionsChartSeries,
 	FeatureContributionsChartValue,
 } from "./feature_contributions_chart"
-export type {
-	LineChartOptions as DrawLineChartOptions,
-	LineChartData,
-	LineChartSeries,
-} from "./line_chart"
+export type { LineChartOptions, LineChartSeries } from "./line_chart"
 export { createBarChart } from "./bar_chart"
 export { createBoxChart } from "./box_chart"
 export { createLineChart, LineStyle, PointStyle } from "./line_chart"

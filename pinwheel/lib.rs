@@ -90,16 +90,6 @@ impl Pinwheel {
 		}
 	}
 
-	pub fn exists(&self, pagename: &str) -> bool {
-		if let Pinwheel::Dev { src_dir, .. } = self {
-			let page_entry = page_entry_for_pagename(pagename);
-			js_sources_for_page_entry(src_dir, &page_entry).is_some()
-		} else {
-			let url = Url::parse(&format!("dst:{}", pagename)).unwrap();
-			self.fs().exists(&url)
-		}
-	}
-
 	pub fn render(&self, pagename: &str) -> Result<String> {
 		self.render_with_props(pagename, json!({}))
 	}
@@ -117,6 +107,12 @@ impl Pinwheel {
 				src_dir, dst_dir, ..
 			} = self
 			{
+				// Remove the existing dst_dir and create it.
+				if dst_dir.exists() {
+					std::fs::remove_dir_all(dst_dir)?;
+				}
+				std::fs::create_dir_all(dst_dir)?;
+				// Build the requested page.
 				build_js_pages(src_dir, dst_dir, &[&page_entry])?;
 			}
 
@@ -129,9 +125,9 @@ impl Pinwheel {
 				.unwrap()
 				.join(&format!("{}/server.js", page_entry))
 				.unwrap();
-			let static_or_server_js_url = if self.fs().exists(&static_js_url) {
+			let static_or_server_js_url = if self.fs().file_exists(&static_js_url) {
 				static_js_url
-			} else if self.fs().exists(&server_js_url) {
+			} else if self.fs().file_exists(&server_js_url) {
 				server_js_url
 			} else {
 				return Err(err!("could not find page {}", pagename));
@@ -140,7 +136,7 @@ impl Pinwheel {
 				.unwrap()
 				.join(&format!("{}/client.js", page_entry))
 				.unwrap();
-			let client_js_src = if self.fs().exists(&client_js_url) {
+			let client_js_src = if self.fs().file_exists(&client_js_url) {
 				Some(format!("/{}/client.js", page_entry))
 			} else {
 				None
@@ -149,7 +145,7 @@ impl Pinwheel {
 				.unwrap()
 				.join(&format!("{}/client_wasm.js", page_entry))
 				.unwrap();
-			let client_wasm_js_src = if self.fs().exists(&client_wasm_js_url) {
+			let client_wasm_js_src = if self.fs().file_exists(&client_wasm_js_url) {
 				Some(format!("/{}/client_wasm.js", page_entry))
 			} else {
 				None
@@ -385,19 +381,26 @@ impl Pinwheel {
 		let uri = request.uri();
 		let path_and_query = uri.path_and_query().unwrap();
 		let path = path_and_query.path();
-		// Check if there is a page for this path. If there is, render it.
-		if self.exists(path) {
-			let html = self.render(path).unwrap();
-			let response = http::Response::builder()
-				.status(http::StatusCode::OK)
-				.body(hyper::Body::from(html))
-				.unwrap();
-			return response;
+		// Render static pages in dev.
+		if let Pinwheel::Dev { src_dir, .. } = self.as_ref() {
+			let page_entry = page_entry_for_pagename(path);
+			let page_exists = js_sources_for_page_entry(src_dir, &page_entry).is_some();
+			if page_exists {
+				let html = self.render(path).unwrap();
+				let response = http::Response::builder()
+					.status(http::StatusCode::OK)
+					.body(hyper::Body::from(html))
+					.unwrap();
+				return response;
+			}
 		}
 		// Serve static files from the static directory in dev.
 		if let Pinwheel::Dev { src_dir, .. } = self.as_ref() {
 			let static_path = src_dir.join("static").join(path.strip_prefix('/').unwrap());
-			if static_path.exists() {
+			let exists = std::fs::metadata(&static_path)
+				.map(|metadata| metadata.is_file())
+				.unwrap_or(false);
+			if exists {
 				let body = std::fs::read(&static_path).unwrap();
 				let mut response = http::Response::builder();
 				if let Some(content_type) = content_type(&static_path) {
@@ -411,7 +414,10 @@ impl Pinwheel {
 		if let Pinwheel::Dev { .. } = self.as_ref() {
 			if let Some(path) = path.strip_prefix("/assets") {
 				let asset_path = Path::new(path.strip_prefix('/').unwrap());
-				if asset_path.exists() {
+				let exists = std::fs::metadata(&asset_path)
+					.map(|metadata| metadata.is_file())
+					.unwrap_or(false);
+				if exists {
 					let body = std::fs::read(&asset_path).unwrap();
 					let mut response = http::Response::builder();
 					if let Some(content_type) = content_type(&asset_path) {
@@ -424,7 +430,7 @@ impl Pinwheel {
 		}
 		// Serve from the dst_dir.
 		let url = Url::parse(&format!("dst:{}", path)).unwrap();
-		if self.fs().exists(&url) {
+		if self.fs().file_exists(&url) {
 			let data = self.fs().read(&url).unwrap();
 			let mut response = http::Response::builder();
 			if let Some(content_type) = content_type(Path::new(path)) {
@@ -458,6 +464,7 @@ struct JsSourcesForPageEntryOutput {
 	client_source_path: Option<PathBuf>,
 }
 
+/// Find the JS sources for the page entry in the source directory.
 fn js_sources_for_page_entry(
 	src_dir: &Path,
 	page_entry: &str,
@@ -505,6 +512,7 @@ fn content_type(path: &Path) -> Option<&'static str> {
 	}
 }
 
+// V8 isolates are not `Send`, so we store one for each thread.
 thread_local!(static THREAD_LOCAL_ISOLATE: RefCell<v8::OwnedIsolate> = {
 	static V8_INIT: std::sync::Once = std::sync::Once::new();
 	V8_INIT.call_once(|| {
@@ -755,7 +763,7 @@ fn exception_to_string(scope: &mut v8::HandleScope, exception: v8::Local<v8::Val
 }
 
 trait FileSystem: Send + Sync {
-	fn exists(&self, url: &Url) -> bool;
+	fn file_exists(&self, url: &Url) -> bool;
 	fn read(&self, url: &Url) -> Result<Cow<'static, [u8]>>;
 }
 
@@ -764,10 +772,11 @@ pub struct RealFileSystem {
 }
 
 impl FileSystem for RealFileSystem {
-	fn exists(&self, url: &Url) -> bool {
-		self.dst_dir
-			.join(url.path().strip_prefix('/').unwrap())
-			.exists()
+	fn file_exists(&self, url: &Url) -> bool {
+		let path = self.dst_dir.join(url.path().strip_prefix('/').unwrap());
+		std::fs::metadata(path)
+			.map(|metadata| metadata.is_file())
+			.unwrap_or(false)
 	}
 	fn read(&self, url: &Url) -> Result<Cow<'static, [u8]>> {
 		std::fs::read(self.dst_dir.join(url.path().strip_prefix('/').unwrap()))
@@ -781,8 +790,10 @@ pub struct IncludedFileSystem {
 }
 
 impl FileSystem for IncludedFileSystem {
-	fn exists(&self, url: &Url) -> bool {
-		self.dir.contains(url.path().strip_prefix('/').unwrap())
+	fn file_exists(&self, url: &Url) -> bool {
+		self.dir
+			.get_file(url.path().strip_prefix('/').unwrap())
+			.is_some()
 	}
 	fn read(&self, url: &Url) -> Result<Cow<'static, [u8]>> {
 		self.dir
@@ -825,6 +836,11 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 			_ => {}
 		}
 	}
+	// Remove the existing dst_dir and create it.
+	if dst_dir.exists() {
+		std::fs::remove_dir_all(dst_dir)?;
+	}
+	std::fs::create_dir_all(dst_dir)?;
 	// Build the js pages.
 	let page_entries = &page_entries
 		.iter()
@@ -842,7 +858,7 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 			std::fs::copy(path, out_path).unwrap();
 		}
 	}
-	// Statically render the static pages.
+	// Render the static pages and write them to the dst_dir.
 	let pinwheel = Pinwheel::Prod {
 		fs: ProdFileSystem::Real(RealFileSystem {
 			dst_dir: dst_dir.to_owned(),
@@ -931,32 +947,32 @@ pub fn build_js_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[&str]) -> 
 	for page_entry in page_entries {
 		css_srcs_for_page_entry.insert(page_entry.to_string(), css_srcs.clone());
 		js_srcs_for_page_entry.insert(page_entry.to_string(), vec![]);
-		// 	let output_path = dst_dir.join(page_entry).join("server.js");
-		// 	let esbuild_metafile_entry = esbuild_metafile_outputs
-		// 		.get(output_path.to_str().unwrap())
-		// 		.unwrap()
-		// 		.as_object()
-		// 		.unwrap();
-		// 	let js_srcs = esbuild_metafile_entry
-		// 		.get("imports")
-		// 		.unwrap()
-		// 		.as_array()
-		// 		.unwrap()
-		// 		.iter()
-		// 		.map(|value| {
-		// 			let js_path = value
-		// 				.as_object()
-		// 				.unwrap()
-		// 				.get("path")
-		// 				.unwrap()
-		// 				.as_str()
-		// 				.unwrap();
-		// 			let js_path = Path::new(js_path);
-		// 			let js_src = js_path.strip_prefix(&dst_dir).unwrap().to_owned();
-		// 			let js_src = format!("/{}", js_src.display());
-		// 			js_src
-		// 		})
-		// 		.collect();
+		// let output_path = dst_dir.join(page_entry).join("server.js");
+		// let esbuild_metafile_entry = esbuild_metafile_outputs
+		// 	.get(output_path.to_str().unwrap())
+		// 	.unwrap()
+		// 	.as_object()
+		// 	.unwrap();
+		// let js_srcs = esbuild_metafile_entry
+		// 	.get("imports")
+		// 	.unwrap()
+		// 	.as_array()
+		// 	.unwrap()
+		// 	.iter()
+		// 	.map(|value| {
+		// 		let js_path = value
+		// 			.as_object()
+		// 			.unwrap()
+		// 			.get("path")
+		// 			.unwrap()
+		// 			.as_str()
+		// 			.unwrap();
+		// 		let js_path = Path::new(js_path);
+		// 		let js_src = js_path.strip_prefix(&dst_dir).unwrap().to_owned();
+		// 		let js_src = format!("/{}", js_src.display());
+		// 		js_src
+		// 	})
+		// 	.collect();
 		// js_srcs_for_page_entry.insert(page_entry.to_string(), js_srcs);
 	}
 	let pinwheel_manifest = PinwheelManifest {

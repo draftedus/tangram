@@ -8,7 +8,7 @@ import { productionColor, trainingColor } from "common/tokens"
 import { h } from "preact"
 
 export function RegressorProductionMetricsPage(props: RegressorProps) {
-	let mseData = [
+	let mseSeries = [
 		{
 			color: trainingColor,
 			data: [
@@ -52,12 +52,12 @@ export function RegressorProductionMetricsPage(props: RegressorProps) {
 					<b>{props.overall.trueValuesCount}</b>
 					{" true values for this date range."}
 				</ui.P>
-				{mseData && (
+				{mseSeries && (
 					<ui.Card>
 						<LineChart
-							data={mseData}
 							id="mse"
 							labels={props.mseChart.data.map(entry => entry.label)}
+							series={mseSeries}
 							title={mseChartTitle}
 							xAxisGridLineInterval={{ k: 1, p: 0 }}
 							yAxisTitle="Root Mean Squared Error"

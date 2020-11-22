@@ -48,9 +48,9 @@ function TrainingTimeChart() {
 	}))
 	return (
 		<BarChart
-			data={chartData}
 			groupGap={10}
 			id="training_time_chart"
+			series={chartData}
 			title="Training Time (lower is better)"
 			xAxisTitle="Dataset"
 			yAxisTitle="Training Time (seconds)"
@@ -106,9 +106,9 @@ function MemoryChart() {
 	}))
 	return (
 		<BarChart
-			data={chartData}
 			groupGap={10}
 			id="memory_chart"
+			series={chartData}
 			title="Memory Usage (lower is better)"
 			xAxisTitle="Dataset"
 			yAxisTitle="Memory Usage (GB)"
@@ -164,9 +164,9 @@ function AUCChart() {
 	}))
 	return (
 		<BarChart
-			data={chartData}
 			groupGap={10}
 			id="auc_chart"
+			series={chartData}
 			title="AUC (higher is better)"
 			xAxisTitle="Dataset"
 			yAxisTitle="AUC"
