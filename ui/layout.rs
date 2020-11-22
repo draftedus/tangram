@@ -12,14 +12,18 @@ pub fn S1() {
 #[component]
 pub fn S2() {
 	html! {
-		<div class="s2">{children}</div>
+		<div class="s2">
+			{children}
+		</div>
 	}
 }
 
 #[component]
 pub fn SpaceBetween() {
 	html! {
-		<div class="space-between">{children}</div>
+		<div class="space-between">
+			{children}
+		</div>
 	}
 }
 

@@ -25,7 +25,7 @@ pub fn Tab(disabled: Option<bool>, selected: Option<bool>) {
 			None
 		}
 	});
-	let class = classes!("tab-bar-tab", selected, disabled,);
+	let class = classes!("tab-bar-tab", selected, disabled);
 	html! {
 		<div class={class}>
 			{children}

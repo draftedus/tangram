@@ -107,11 +107,6 @@ impl Pinwheel {
 				src_dir, dst_dir, ..
 			} = self
 			{
-				// Remove the existing dst_dir and create it.
-				if dst_dir.exists() {
-					std::fs::remove_dir_all(dst_dir)?;
-				}
-				std::fs::create_dir_all(dst_dir)?;
 				// Build the requested page.
 				build_js_pages(src_dir, dst_dir, &[&page_entry])?;
 			}
@@ -836,11 +831,6 @@ pub fn build(src_dir: &Path, dst_dir: &Path) -> Result<()> {
 			_ => {}
 		}
 	}
-	// Remove the existing dst_dir and create it.
-	if dst_dir.exists() {
-		std::fs::remove_dir_all(dst_dir)?;
-	}
-	std::fs::create_dir_all(dst_dir)?;
 	// Build the js pages.
 	let page_entries = &page_entries
 		.iter()

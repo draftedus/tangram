@@ -90,7 +90,7 @@ fn main() {
 			std::fs::copy(path, asset_dst_path).unwrap();
 		}
 	}
-	// Run the pinwheel build in release
+	// Run the pinwheel build in release.
 	if cfg!(not(debug_assertions)) {
 		pinwheel::build(Path::new("."), Path::new("../build/pinwheel/app")).unwrap();
 	}
