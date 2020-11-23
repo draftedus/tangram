@@ -22,12 +22,12 @@
 	text-align: center;
 }
 
-.confusion-matrix-comparison-item-positive-wrapper {
+.confusion-matrix-comparison-item-correct-wrapper {
 	background-color: var(--header-color);
 	color: var(--text-color);
 }
 
-.confusion-matrix-comparison-item-negative-wrapper {
+.confusion-matrix-comparison-item-incorrect-wrapper {
 	background-color: var(--surface-color);
 	color: var(--text-color);
 }

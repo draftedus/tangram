@@ -3058,6 +3058,7 @@ name = "tangram_ui"
 version = "0.0.0"
 dependencies = [
  "html",
+ "num-traits",
  "wasm-bindgen",
  "web-sys",
 ]

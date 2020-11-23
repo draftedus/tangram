@@ -6,6 +6,11 @@
 	padding: 1rem;
 }
 
+.callout-wrapper-success {
+	background-color: var(--surface-color);
+	border-left-color: var(--green);
+}
+
 .callout-wrapper-info {
 	background-color: var(--surface-color);
 	border-left-color: var(--blue);

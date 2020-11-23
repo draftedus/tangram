@@ -132,8 +132,8 @@ function ConfusionMatrixComparisonItem(props: ConfusionMatrixItemProps) {
 	let className = cx(
 		"confusion-matrix-comparison-item-wrapper",
 		props.true
-			? "confusion-matrix-comparison-item-positive-wrapper"
-			: "confusion-matrix-comparison-item-negative-wrapper",
+			? "confusion-matrix-comparison-item-correct-wrapper"
+			: "confusion-matrix-comparison-item-incorrect-wrapper",
 	)
 	return (
 		<div class={className} style={wrapperStyle}>

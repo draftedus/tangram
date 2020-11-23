@@ -1,7 +1,0 @@
-.header {
-	align-items: center;
-	display: grid;
-	grid: auto / 1fr auto;
-	column-gap: 10px;
-	justify-items: stretch;
-}
