@@ -269,10 +269,11 @@ pub fn train(
 
 	// Train each model in the grid and compute model comparison metrics.
 	let num_models = grid.len();
-	let outputs: Vec<(TrainModelOutput, Metrics)> = grid
+	let outputs: Vec<(TrainModelOutput, Metrics, std::time::Duration)> = grid
 		.into_iter()
 		.enumerate()
 		.map(|(model_index, grid_item)| {
+			let start = std::time::Instant::now();
 			let train_model_output = train_model(grid_item, &dataframe_train, &mut |progress| {
 				update_progress(Progress::Training(GridTrainProgress {
 					current: model_index.to_u64().unwrap() + 1,
@@ -280,6 +281,7 @@ pub fn train(
 					grid_item_progress: progress,
 				}))
 			});
+			let duration = start.elapsed();
 			let model_comparison_metrics = compute_model_comparison_metrics(
 				&train_model_output,
 				&dataframe_comparison,
@@ -293,9 +295,12 @@ pub fn train(
 					}))
 				},
 			);
-			(train_model_output, model_comparison_metrics)
+			(train_model_output, model_comparison_metrics, duration)
 		})
 		.collect();
+
+	// Assemble the grid.
+	let grid = compute_grid(outputs.as_slice(), &comparison_metric);
 
 	// Choose the best model.
 	let train_model_output = choose_best_model(outputs, &comparison_metric);
@@ -366,6 +371,7 @@ pub fn train(
 				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
+				grid,
 			})
 		}
 		Task::BinaryClassification => {
@@ -439,6 +445,7 @@ pub fn train(
 				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
+				grid,
 			})
 		}
 		Task::MulticlassClassification { .. } => {
@@ -516,6 +523,7 @@ pub fn train(
 				baseline_metrics: baseline_metrics.into(),
 				model: model.into(),
 				comparison_metric: comparison_metric.into(),
+				grid,
 			})
 		}
 	};
@@ -1410,8 +1418,94 @@ fn compute_model_comparison_metrics(
 	}
 }
 
+fn compute_grid(
+	outputs: &[(TrainModelOutput, Metrics, std::time::Duration)],
+	comparison_metric: &ComparisonMetric,
+) -> Vec<model::GridItem> {
+	outputs
+		.iter()
+		.map(|(output, metrics, duration)| {
+			let model_comparison_metric_value =
+				get_model_comparison_metric_value(comparison_metric, metrics);
+			match output {
+				TrainModelOutput::LinearRegressor(model) => {
+					model::GridItem::Linear(model::LinearGridItem {
+						hyperparameters: model.train_options.clone().into(),
+						model_comparison_metric_value,
+						duration: duration.as_secs_f32(),
+					})
+				}
+				TrainModelOutput::TreeRegressor(model) => {
+					model::GridItem::Tree(model::TreeGridItem {
+						hyperparameters: model.train_options.clone().into(),
+						model_comparison_metric_value,
+						duration: duration.as_secs_f32(),
+					})
+				}
+				TrainModelOutput::LinearBinaryClassifier(model) => {
+					model::GridItem::Linear(model::LinearGridItem {
+						hyperparameters: model.train_options.clone().into(),
+						model_comparison_metric_value,
+						duration: duration.as_secs_f32(),
+					})
+				}
+				TrainModelOutput::TreeBinaryClassifier(model) => {
+					model::GridItem::Tree(model::TreeGridItem {
+						hyperparameters: model.train_options.clone().into(),
+						model_comparison_metric_value,
+						duration: duration.as_secs_f32(),
+					})
+				}
+				TrainModelOutput::LinearMulticlassClassifier(model) => {
+					model::GridItem::Linear(model::LinearGridItem {
+						hyperparameters: model.train_options.clone().into(),
+						model_comparison_metric_value,
+						duration: duration.as_secs_f32(),
+					})
+				}
+				TrainModelOutput::TreeMulticlassClassifier(model) => {
+					model::GridItem::Tree(model::TreeGridItem {
+						hyperparameters: model.train_options.clone().into(),
+						model_comparison_metric_value,
+						duration: duration.as_secs_f32(),
+					})
+				}
+			}
+		})
+		.collect::<Vec<_>>()
+}
+
+fn get_model_comparison_metric_value(
+	comparison_metric: &ComparisonMetric,
+	metrics: &Metrics,
+) -> f32 {
+	match (comparison_metric, metrics) {
+		(ComparisonMetric::Regression(comparison_metric), Metrics::Regression(metrics)) => {
+			match comparison_metric {
+				RegressionComparisonMetric::MeanAbsoluteError => metrics.mae,
+				RegressionComparisonMetric::MeanSquaredError => metrics.mse,
+				RegressionComparisonMetric::RootMeanSquaredError => metrics.rmse,
+				RegressionComparisonMetric::R2 => metrics.r2,
+			}
+		}
+		(
+			ComparisonMetric::BinaryClassification(comparison_metric),
+			Metrics::BinaryClassification(metrics),
+		) => match comparison_metric {
+			BinaryClassificationComparisonMetric::AUCROC => metrics.auc_roc_approx,
+		},
+		(
+			ComparisonMetric::MulticlassClassification(comparison_metric),
+			Metrics::MulticlassClassification(metrics),
+		) => match comparison_metric {
+			MulticlassClassificationComparisonMetric::Accuracy => metrics.accuracy,
+		},
+		_ => unreachable!(),
+	}
+}
+
 fn choose_best_model(
-	outputs: Vec<(TrainModelOutput, Metrics)>,
+	outputs: Vec<(TrainModelOutput, Metrics, std::time::Duration)>,
 	comparison_metric: &ComparisonMetric,
 ) -> TrainModelOutput {
 	match comparison_metric {
@@ -1428,12 +1522,12 @@ fn choose_best_model(
 }
 
 fn choose_best_model_regression(
-	outputs: Vec<(TrainModelOutput, Metrics)>,
+	outputs: Vec<(TrainModelOutput, Metrics, std::time::Duration)>,
 	comparison_metric: &RegressionComparisonMetric,
 ) -> TrainModelOutput {
 	outputs
 		.into_iter()
-		.max_by(|(_, metrics_a), (_, metrics_b)| {
+		.max_by(|(_, metrics_a, _), (_, metrics_b, _)| {
 			let metrics_a = match metrics_a {
 				Metrics::Regression(metrics) => metrics,
 				_ => unreachable!(),
@@ -1455,17 +1549,17 @@ fn choose_best_model_regression(
 				RegressionComparisonMetric::R2 => metrics_a.r2.partial_cmp(&metrics_b.r2).unwrap(),
 			}
 		})
-		.map(|(model, _)| model)
+		.map(|(model, _, _)| model)
 		.unwrap()
 }
 
 fn choose_best_model_binary_classification(
-	outputs: Vec<(TrainModelOutput, Metrics)>,
+	outputs: Vec<(TrainModelOutput, Metrics, std::time::Duration)>,
 	comparison_metric: &BinaryClassificationComparisonMetric,
 ) -> TrainModelOutput {
 	outputs
 		.into_iter()
-		.max_by(|(_, metrics_a), (_, metrics_b)| {
+		.max_by(|(_, metrics_a, _), (_, metrics_b, _)| {
 			let task_metrics_a = match metrics_a {
 				Metrics::BinaryClassification(metrics) => metrics,
 				_ => unreachable!(),
@@ -1481,17 +1575,17 @@ fn choose_best_model_binary_classification(
 					.unwrap(),
 			}
 		})
-		.map(|(model, _)| model)
+		.map(|(model, _, _)| model)
 		.unwrap()
 }
 
 fn choose_best_model_multiclass_classification(
-	outputs: Vec<(TrainModelOutput, Metrics)>,
+	outputs: Vec<(TrainModelOutput, Metrics, std::time::Duration)>,
 	comparison_metric: &MulticlassClassificationComparisonMetric,
 ) -> TrainModelOutput {
 	outputs
 		.into_iter()
-		.max_by(|(_, metrics_a), (_, metrics_b)| {
+		.max_by(|(_, metrics_a, _), (_, metrics_b, _)| {
 			let task_metrics_a = match metrics_a {
 				Metrics::MulticlassClassification(metrics) => metrics,
 				_ => unreachable!(),
@@ -1507,7 +1601,7 @@ fn choose_best_model_multiclass_classification(
 					.unwrap(),
 			}
 		})
-		.map(|(model, _)| model)
+		.map(|(model, _, _)| model)
 		.unwrap()
 }
 

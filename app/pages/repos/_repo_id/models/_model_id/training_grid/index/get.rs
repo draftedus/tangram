@@ -36,42 +36,64 @@ pub async fn get(
 	if !authorize_user_for_model(&mut db, &user, model_id).await? {
 		return Ok(not_found());
 	}
-	let _model = get_model(&mut db, model_id).await?;
+	let model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let page_info = PageInfo {
 		client_wasm_js_src: None,
 	};
+	let model_comparison_metric_name = match &model {
+		tangram_core::model::Model::Regressor(model) => match model.comparison_metric {
+			tangram_core::model::RegressionComparisonMetric::MeanAbsoluteError => {
+				"Mean Absolute Error".to_owned()
+			}
+			tangram_core::model::RegressionComparisonMetric::MeanSquaredError => {
+				"Mean Squared Error".to_owned()
+			}
+			tangram_core::model::RegressionComparisonMetric::RootMeanSquaredError => {
+				"Root Mean Squared Error".to_owned()
+			}
+			tangram_core::model::RegressionComparisonMetric::R2 => "R2".to_owned(),
+		},
+		tangram_core::model::Model::BinaryClassifier(model) => match model.comparison_metric {
+			tangram_core::model::BinaryClassificationComparisonMetric::AUCROC => "AUC".to_owned(),
+		},
+		tangram_core::model::Model::MulticlassClassifier(model) => match model.comparison_metric {
+			tangram_core::model::MulticlassClassificationComparisonMetric::Accuracy => {
+				"Accuracy".to_owned()
+			}
+		},
+	};
+	let trained_models_metrics: Vec<TrainedModel> = match &model {
+		tangram_core::model::Model::Regressor(model) => model
+			.grid
+			.iter()
+			.enumerate()
+			.map(|(index, grid_item)| {
+				trained_model_metrics_for_grid_item(index.to_string(), grid_item)
+			})
+			.collect::<Vec<_>>(),
+		tangram_core::model::Model::BinaryClassifier(model) => model
+			.grid
+			.iter()
+			.enumerate()
+			.map(|(index, grid_item)| {
+				trained_model_metrics_for_grid_item(index.to_string(), grid_item)
+			})
+			.collect::<Vec<_>>(),
+		tangram_core::model::Model::MulticlassClassifier(model) => model
+			.grid
+			.iter()
+			.enumerate()
+			.map(|(index, grid_item)| {
+				trained_model_metrics_for_grid_item(index.to_string(), grid_item)
+			})
+			.collect::<Vec<_>>(),
+	};
 	let props = Props {
 		id: model_id.to_string(),
-		model_comparison_metric_name: "AUC ROC".to_owned(),
-		num_models: 4,
-		total_training_time: "17 minutes".into(),
-		trained_models_metrics: vec![
-			TrainedModel {
-				identifier: "1".into(),
-				model_comparison_metric_value: 84.5,
-				model_type: "Gradient Boosted Decision Tree".into(),
-				time: "10 minutes".into(),
-			},
-			TrainedModel {
-				identifier: "2".into(),
-				model_comparison_metric_value: 87.5,
-				model_type: "Linear".into(),
-				time: "1 minute".into(),
-			},
-			TrainedModel {
-				identifier: "3".into(),
-				model_comparison_metric_value: 81.0,
-				model_type: "Linear".into(),
-				time: "2 minutes".into(),
-			},
-			TrainedModel {
-				identifier: "4".into(),
-				model_comparison_metric_value: 78.0,
-				model_type: "Gradient Boosted Decision Tree".into(),
-				time: "4 minutes".into(),
-			},
-		],
+		model_comparison_metric_name,
+		num_models: trained_models_metrics.len(),
+		trained_models_metrics,
 		best_model_metrics: TrainedModel {
 			identifier: "5".into(),
 			model_comparison_metric_value: 78.0,
@@ -91,10 +113,7 @@ pub async fn get(
 		model_layout_info,
 	};
 	db.commit().await?;
-	let description = format!(
-		"Tangram trained {} models. The total training time was {}.",
-		props.num_models, props.total_training_time
-	);
+	let description = format!("Tangram trained {} models.", props.num_models,);
 	let html = html! {
 		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingGrid}>
 			<ui::S1>
@@ -123,6 +142,32 @@ pub async fn get(
 		.body(hyper::Body::from(body))
 		.unwrap();
 	Ok(response)
+}
+
+fn trained_model_metrics_for_grid_item(
+	identifier: String,
+	grid_item: &tangram_core::model::GridItem,
+) -> TrainedModel {
+	match grid_item {
+		tangram_core::model::GridItem::Linear(grid_item) => TrainedModel {
+			identifier,
+			model_comparison_metric_value: grid_item.model_comparison_metric_value,
+			model_type: "Linear".into(),
+			time: format!(
+				"{:?}",
+				std::time::Duration::from_secs_f32(grid_item.duration)
+			),
+		},
+		tangram_core::model::GridItem::Tree(grid_item) => TrainedModel {
+			identifier,
+			model_comparison_metric_value: grid_item.model_comparison_metric_value,
+			model_type: "Gradient Boosted Tree".into(),
+			time: format!(
+				"{:?}",
+				std::time::Duration::from_secs_f32(grid_item.duration)
+			),
+		},
+	}
 }
 
 #[component]

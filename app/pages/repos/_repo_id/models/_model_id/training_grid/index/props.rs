@@ -6,7 +6,6 @@ pub struct Props {
 	pub id: String,
 	pub model_layout_info: ModelLayoutInfo,
 	pub num_models: usize,
-	pub total_training_time: String,
 	pub trained_models_metrics: Vec<TrainedModel>,
 	pub best_model_metrics: TrainedModel,
 	pub model_comparison_metric_name: String,
