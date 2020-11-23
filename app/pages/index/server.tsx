@@ -18,7 +18,6 @@ export default (pageInfo: PageInfo, props: Props) => {
 						<ui.TableHeader>
 							<ui.TableRow>
 								<ui.TableHeaderCell expand={true}>{"Name"}</ui.TableHeaderCell>
-								<ui.TableHeaderCell>{"Created"}</ui.TableHeaderCell>
 								<ui.TableHeaderCell></ui.TableHeaderCell>
 							</ui.TableRow>
 						</ui.TableHeader>
@@ -36,7 +35,6 @@ export default (pageInfo: PageInfo, props: Props) => {
 											{repo.title}
 										</ui.Link>
 									</ui.TableCell>
-									<ui.TableCell>{repo.createdAt}</ui.TableCell>
 									<ui.TableCell>
 										<form method="post">
 											<input name="action" type="hidden" value="delete_repo" />

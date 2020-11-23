@@ -34,7 +34,7 @@ pub async fn get(
 	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
 		return Ok(not_found());
 	};
-	let repo = get_repo(&mut db, &timezone, repo_id).await?;
+	let repo = get_repo(&mut db, repo_id).await?;
 	let app_layout_info = get_app_layout_info(context).await?;
 	let rows = sqlx::query(
 		"

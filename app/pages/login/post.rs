@@ -35,19 +35,17 @@ pub async fn post(
 	};
 	// Upsert the user.
 	let user_id = Id::new();
-	let now = Utc::now().timestamp();
 	sqlx::query(
 		"
 			insert into users (
-				id, created_at, email
+				id, email
 			) values (
-				$1, $2, $3
+				$1, $2
 			)
 			on conflict (email) do update set email = excluded.email
 		",
 	)
 	.bind(&user_id.to_string())
-	.bind(&now)
 	.bind(&email)
 	.execute(&mut *db)
 	.await?;
@@ -79,8 +77,8 @@ pub async fn post(
 					join codes
 					on codes.user_id = users.id
 					where
-						codes.deleted_at is null and
-						$1 - codes.created_at < $2 and
+						codes.used is false and
+						$1 - codes.date < $2 and
 						users.email = $3 and
 						codes.code = $4
 				",
@@ -107,18 +105,16 @@ pub async fn post(
 			};
 			let code_id: String = row.get(0);
 			let code_id: Id = code_id.parse()?;
-			let now = Utc::now().timestamp();
 			// Delete the code.
 			sqlx::query(
 				"
 					update codes
 					set
-						deleted_at = $1
+						used = true
 					where
-						id = $2
+						id = $1
 				",
 			)
-			.bind(&now)
 			.bind(&code_id.to_string())
 			.execute(&mut db)
 			.await?;
@@ -131,14 +127,15 @@ pub async fn post(
 			sqlx::query(
 				"
 					insert into codes (
-						id, created_at, user_id, code
+						id, date, used, user_id, code
 					) values (
-						$1, $2, $3, $4
+						$1, $2, $3, $4, $5
 					)
 				",
 			)
 			.bind(&code_id.to_string())
 			.bind(&now)
+			.bind(false)
 			.bind(&user_id.to_string())
 			.bind(&code)
 			.execute(&mut *db)
@@ -168,18 +165,16 @@ pub async fn post(
 async fn create_token(db: &mut sqlx::Transaction<'_, sqlx::Any>, user_id: Id) -> Result<Id> {
 	let id = Id::new();
 	let token = Id::new();
-	let now = Utc::now().timestamp();
 	sqlx::query(
 		"
 			insert into tokens (
-				id, created_at, token, user_id
+				id, token, user_id
 			) values (
-				$1, $2, $3, $4
+				$1, $2, $3
 			)
 		",
 	)
 	.bind(&id.to_string())
-	.bind(&now)
 	.bind(&token.to_string())
 	.bind(&user_id.to_string())
 	.execute(db)

@@ -118,7 +118,6 @@ async fn write_prediction_monitor_event(
 	monitor_event: &PredictionMonitorEvent,
 ) -> Result<()> {
 	let prediction_monitor_event_id = Id::new();
-	let now = Utc::now().timestamp();
 	let identifier = monitor_event.identifier.as_string();
 	let date = &monitor_event.date;
 	let input = serde_json::to_vec(&monitor_event.input)?;
@@ -126,15 +125,14 @@ async fn write_prediction_monitor_event(
 	sqlx::query(
 		"
 			insert into predictions
-				(id, model_id, date, created_at, identifier, input, output)
+				(id, model_id, date, identifier, input, output)
 			values
-				($1, $2, $3, $4, $5, $6, $7)
+				($1, $2, $3, $4, $5, $6)
 		",
 	)
 	.bind(&prediction_monitor_event_id.to_string())
 	.bind(&model_id.to_string())
 	.bind(&date.timestamp())
-	.bind(&now)
 	.bind(&identifier.to_string())
 	.bind(&base64::encode(input))
 	.bind(&base64::encode(output))
@@ -149,22 +147,20 @@ async fn write_true_value_monitor_event(
 	monitor_event: &TrueValueMonitorEvent,
 ) -> Result<()> {
 	let true_value_monitor_event_id = Id::new();
-	let now = Utc::now().timestamp();
 	let date = monitor_event.date;
 	let identifier = monitor_event.identifier.as_string();
 	let true_value = &monitor_event.true_value.to_string();
 	sqlx::query(
 		"
 			insert into true_values
-				(id, model_id, date, created_at, identifier, value)
+				(id, model_id, date, identifier, value)
 			values
-				($1, $2, $3, $4, $5, $6)
+				($1, $2, $3, $4, $5)
 		",
 	)
 	.bind(&true_value_monitor_event_id.to_string())
 	.bind(&model_id.to_string())
 	.bind(&date.timestamp())
-	.bind(&now)
 	.bind(&identifier.to_string())
 	.bind(&true_value.to_string())
 	.execute(&mut *db)

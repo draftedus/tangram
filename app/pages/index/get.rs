@@ -2,7 +2,6 @@ use super::props::Props;
 use tangram_app_common::{
 	error::{redirect_to_login, service_unavailable},
 	repos::{repos_for_root, repos_for_user},
-	timezone::get_timezone,
 	user::{authorize_user, User},
 	Context,
 };
@@ -15,7 +14,6 @@ pub async fn get(
 	context: &Context,
 	request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {
-	let timezone = get_timezone(&request);
 	let mut db = match context.pool.begin().await {
 		Ok(db) => db,
 		Err(_) => return Ok(service_unavailable()),
@@ -26,8 +24,8 @@ pub async fn get(
 	};
 	let app_layout_info = get_app_layout_info(context).await?;
 	let repos = match user {
-		User::Root => repos_for_root(&mut db, &timezone).await?,
-		User::Normal(user) => repos_for_user(&mut db, &timezone, &user).await?,
+		User::Root => repos_for_root(&mut db).await?,
+		User::Normal(user) => repos_for_user(&mut db, &user).await?,
 	};
 	let props = Props {
 		app_layout_info,

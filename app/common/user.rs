@@ -82,8 +82,7 @@ pub async fn authorize_normal_user(
 			join users
 				on users.id = tokens.user_id
 			where
-				tokens.token = $1 and
-				tokens.deleted_at is null
+				tokens.token = $1
 		",
 	)
 	.bind(&token)

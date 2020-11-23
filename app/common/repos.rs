@@ -1,5 +1,5 @@
 use crate::user::NormalUser;
-use tangram_deps::{base64, chrono::prelude::*, chrono_tz::Tz, sqlx, sqlx::prelude::*};
+use tangram_deps::{base64, chrono::prelude::*, sqlx, sqlx::prelude::*};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Serialize, Debug)]
@@ -7,20 +7,14 @@ use tangram_util::{error::Result, id::Id};
 pub struct Repo {
 	pub id: String,
 	pub title: String,
-	pub created_at: String,
 	pub owner_name: Option<String>,
 }
 
-pub async fn get_repo(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	timezone: &Tz,
-	id: Id,
-) -> Result<Repo> {
+pub async fn get_repo(db: &mut sqlx::Transaction<'_, sqlx::Any>, id: Id) -> Result<Repo> {
 	let row = sqlx::query(
 		"
 			select
 				repos.id,
-				repos.created_at,
 				repos.title
 			from repos
 			where repos.id = $1
@@ -31,11 +25,8 @@ pub async fn get_repo(
 	.await?;
 	let id: String = row.get(0);
 	let id: Id = id.parse().unwrap();
-	let created_at: i64 = row.get(1);
-	let created_at: DateTime<Tz> = Utc.timestamp(created_at, 0).with_timezone(&timezone);
-	let title = row.get(2);
+	let title = row.get(1);
 	let repo = Repo {
-		created_at: created_at.to_string(),
 		id: id.to_string(),
 		owner_name: None,
 		title,
@@ -43,18 +34,13 @@ pub async fn get_repo(
 	Ok(repo)
 }
 
-pub async fn repos_for_root(
-	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	timezone: &Tz,
-) -> Result<Vec<Repo>> {
+pub async fn repos_for_root(db: &mut sqlx::Transaction<'_, sqlx::Any>) -> Result<Vec<Repo>> {
 	let rows = sqlx::query(
 		"
 			select
 				repos.id,
-				repos.created_at,
 				repos.title
 			from repos
-			order by repos.created_at
 		",
 	)
 	.fetch_all(db)
@@ -64,11 +50,8 @@ pub async fn repos_for_root(
 		.map(|row| {
 			let id: String = row.get(0);
 			let id: Id = id.parse().unwrap();
-			let created_at: i64 = row.get(1);
-			let created_at: DateTime<Tz> = Utc.timestamp(created_at, 0).with_timezone(&timezone);
-			let title = row.get(2);
+			let title = row.get(1);
 			Repo {
-				created_at: created_at.to_string(),
 				id: id.to_string(),
 				owner_name: None,
 				title,
@@ -80,7 +63,6 @@ pub async fn repos_for_root(
 
 pub async fn repos_for_user(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
-	timezone: &Tz,
 	user: &NormalUser,
 ) -> Result<Vec<Repo>> {
 	let mut repos = Vec::new();
@@ -88,8 +70,7 @@ pub async fn repos_for_user(
 		"
 			select
 				repos.id,
-				repos.title,
-				repos.created_at
+				repos.title
 			from repos
 			where repos.user_id = $1
 		",
@@ -100,13 +81,10 @@ pub async fn repos_for_user(
 	for row in rows {
 		let id = row.get(0);
 		let title = row.get(1);
-		let created_at = row.get::<i64, _>(2);
-		let created_at: DateTime<Tz> = Utc.timestamp(created_at, 0).with_timezone(timezone);
 		let owner_name = user.email.clone();
 		repos.push(Repo {
 			id,
 			title,
-			created_at: created_at.to_string(),
 			owner_name: Some(owner_name),
 		});
 	}
@@ -115,7 +93,6 @@ pub async fn repos_for_user(
 			select
 				repos.id,
 				repos.title,
-				repos.created_at,
 				organizations.name
 			from repos
 			inner join organizations
@@ -131,13 +108,10 @@ pub async fn repos_for_user(
 	for row in rows {
 		let id = row.get(0);
 		let title = row.get(1);
-		let created_at = row.get::<i64, _>(2);
-		let created_at: DateTime<Tz> = Utc.timestamp(created_at, 0).with_timezone(timezone);
-		let owner_name = row.get(3);
+		let owner_name = row.get(2);
 		repos.push(Repo {
 			id,
 			title,
-			created_at: created_at.to_string(),
 			owner_name,
 		});
 	}
@@ -152,15 +126,14 @@ pub async fn create_root_repo(
 	sqlx::query(
 		"
 			insert into repos (
-				id, title, created_at
+				id, title
 			) values (
-				$1, $2, $3
+				$1, $2
 			)
 		",
 	)
 	.bind(&repo_id.to_string())
 	.bind(&title)
-	.bind(&Utc::now().timestamp())
 	.execute(&mut *db)
 	.await?;
 	Ok(())
@@ -175,16 +148,15 @@ pub async fn create_user_repo(
 	sqlx::query(
 		"
 			insert into repos (
-				id, title, user_id, created_at
+				id, title, user_id
 			) values (
-				$1, $2, $3, $4
+				$1, $2, $3
 			)
 		",
 	)
 	.bind(&repo_id.to_string())
 	.bind(&title)
 	.bind(&user_id.to_string())
-	.bind(&Utc::now().timestamp())
 	.execute(&mut *db)
 	.await?;
 	Ok(())
@@ -199,16 +171,15 @@ pub async fn create_org_repo(
 	sqlx::query(
 		"
 			insert into repos (
-				id, title, organization_id, created_at
+				id, title, organization_id
 			) values (
-				$1, $2, $3, $4
+				$1, $2, $3
 			)
 		",
 	)
 	.bind(&repo_id.to_string())
 	.bind(&title)
 	.bind(&org_id.to_string())
-	.bind(&Utc::now().timestamp())
 	.execute(&mut *db)
 	.await?;
 	Ok(())
@@ -222,9 +193,9 @@ pub async fn add_model_version(
 ) -> Result<()> {
 	sqlx::query(
 		"
-			insert into models
-				(id, repo_id, data, created_at)
-			values (
+			insert into models (
+				id, repo_id, data, created_at
+			) values (
 				$1, $2, $3, $4
 			)
 		",

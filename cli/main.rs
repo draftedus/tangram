@@ -64,7 +64,7 @@ struct AppArgs {
 	cookie_domain: Option<String>,
 	#[clap(long, env = "DATABASE_URL")]
 	database_url: Option<Url>,
-	#[clap(long, env = "DATABASE_POOL_SIZE")]
+	#[clap(long, env = "DATABASE_MAX_CONNECTIONS")]
 	database_max_connections: Option<u32>,
 	#[clap(long, default_value = "0.0.0.0")]
 	host: std::net::IpAddr,

@@ -3,7 +3,7 @@ use tangram_app_common::{
 	user::{authorize_normal_user, NormalUser},
 	Context,
 };
-use tangram_deps::{chrono::prelude::*, http, hyper, pinwheel::Pinwheel, serde_urlencoded, sqlx};
+use tangram_deps::{http, hyper, pinwheel::Pinwheel, serde_urlencoded, sqlx};
 use tangram_util::error::Result;
 
 #[derive(serde::Deserialize, Debug)]
@@ -48,18 +48,11 @@ async fn logout(
 	user: &NormalUser,
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 ) -> Result<http::Response<hyper::Body>> {
-	let now = Utc::now().timestamp();
 	sqlx::query(
 		"
-			update
-				tokens
-			set
-				deleted_at = $1
-			where
-				token = $2
+			delete from tokens where token = $1
 		",
 	)
-	.bind(&now)
 	.bind(&user.token)
 	.execute(&mut *db)
 	.await?;

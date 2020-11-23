@@ -5,8 +5,7 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_deps::{
-	chrono::prelude::*, http, hyper, pinwheel::Pinwheel, reqwest, serde_json::json,
-	serde_urlencoded, sqlx,
+	http, hyper, pinwheel::Pinwheel, reqwest, serde_json::json, serde_urlencoded, sqlx,
 };
 use tangram_util::{err, error::Result, id::Id};
 
@@ -63,19 +62,17 @@ async fn add_member(
 ) -> Result<http::Response<hyper::Body>> {
 	// Create the new user.
 	let user_id = Id::new();
-	let now = Utc::now().timestamp();
 	sqlx::query(
 		"
 			insert into users (
-				id, created_at, email
+				id, email
 			) values (
-				$1, $2, $2
+				$1, $2
 			)
 			on conflict (email) do update set email = excluded.email
 		",
 	)
 	.bind(&user_id.to_string())
-	.bind(&now)
 	.bind(&action.email)
 	.execute(&mut *db)
 	.await?;

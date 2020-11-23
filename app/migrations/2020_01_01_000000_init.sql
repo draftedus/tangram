@@ -1,12 +1,26 @@
 create table users (
 	id char(32) primary key,
-	created_at bigint not null,
 	email varchar(320) unique not null
+);
+
+create table codes (
+	id char(32) primary key,
+	date bigint not null,
+	used bool not null,
+	user_id char(32) references users (id) not null,
+	code char(6) not null
+);
+
+create index code_index on codes (code);
+
+create table tokens (
+	id char(32) primary key,
+	token char(32) unique not null,
+	user_id char(32) references users (id) not null
 );
 
 create table organizations (
 	id char(32) primary key,
-	created_at bigint not null,
 	name text
 );
 
@@ -17,17 +31,8 @@ create table organizations_users (
 	primary key (organization_id, user_id)
 );
 
-create table codes (
-	id char(32) primary key,
-	created_at bigint not null,
-	deleted_at bigint,
-	user_id char(32) references users (id) not null,
-	code char(6) not null
-);
-
 create table repos (
 	id char(32) primary key,
-	created_at bigint not null,
 	title varchar(64) not null,
 	organization_id char(32) references organizations (id) on delete cascade,
 	user_id char(32) references users (id) on delete cascade,
@@ -48,22 +53,10 @@ create table models (
 	data text not null
 );
 
-create index code_index on codes (code);
-
-create table tokens (
-	id char(32) primary key,
-	created_at bigint not null,
-	deleted_at bigint,
-	title text,
-	token char(32) unique not null,
-	user_id char(32) references users (id) not null
-);
-
 create table predictions (
 	id char(32) primary key,
 	model_id char(32) references models (id) on delete cascade not null,
 	date bigint not null,
-	created_at bigint not null,
 	identifier varchar(64) not null,
 	input text not null,
 	output text not null
@@ -73,7 +66,6 @@ create table true_values (
 	id char(32) primary key,
 	model_id char(32) references models (id) on delete cascade not null,
 	date bigint not null,
-	created_at bigint not null,
 	identifier varchar(64) not null,
 	value text not null
 );

@@ -3,7 +3,7 @@ use tangram_app_common::{
 	user::{authorize_normal_user, NormalUser},
 	Context,
 };
-use tangram_deps::{chrono::prelude::*, http, hyper, pinwheel::Pinwheel, serde_urlencoded, sqlx};
+use tangram_deps::{http, hyper, pinwheel::Pinwheel, serde_urlencoded, sqlx};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize, Clone, Debug)]
@@ -46,19 +46,17 @@ async fn create_organization(
 	db: &mut sqlx::Transaction<'_, sqlx::Any>,
 ) -> Result<http::Response<hyper::Body>> {
 	let Action { name } = action;
-	let now = Utc::now().timestamp();
 	let organization_id: Id = Id::new();
 	sqlx::query(
 		"
 			insert into organizations
-				(id, name, created_at)
+				(id, name)
 			values
-				($1, $2, $3)
+				($1, $2)
 			",
 	)
 	.bind(&organization_id.to_string())
 	.bind(&name)
-	.bind(&now)
 	.execute(&mut *db)
 	.await?;
 	sqlx::query(

@@ -49,9 +49,9 @@ pub async fn get(
 			output
 		from predictions
 			where
-        model_id = $1
-      and identifier = $2
-    order by created_at
+				model_id = $1
+			and identifier = $2
+		order by date
 		limit 10
 		",
 	)
