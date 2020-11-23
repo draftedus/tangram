@@ -12,7 +12,6 @@ export type Props = {
 		truePositives: number
 	}
 	classes: string[]
-
 	id: string
 	modelLayoutInfo: ModelLayoutInfo
 }

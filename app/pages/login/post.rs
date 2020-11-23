@@ -222,7 +222,7 @@ async fn send_code_email(email: String, code: String, sendgrid_api_token: String
 			"email": "noreply@tangramhq.com",
 			"name": "Tangram"
 		},
-		"subject": "Your Tangram Login Code",
+		"subject": "Tangram Login Code",
 		"tracking_settings": {
 			"click_tracking": {
 				"enable": false
@@ -231,7 +231,7 @@ async fn send_code_email(email: String, code: String, sendgrid_api_token: String
 		"content": [
 			{
 				"type": "text/plain",
-				"value": format!("Your Tangram login code is: {}", code),
+				"value": format!("Your Tangram login code is {}.", code),
 			}
 		]
 	});
