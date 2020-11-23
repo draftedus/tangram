@@ -46,6 +46,7 @@ export type NumberProps = {
 }
 
 export type TextProps = {
+	nTokens: number
 	name: string
 	tokens: TokenStats[]
 }

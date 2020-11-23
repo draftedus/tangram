@@ -28,7 +28,7 @@ export function FeatureImportancesTable(props: Props) {
 					id="feature_importances"
 					series={barChartSeries}
 					shouldDrawXAxisLabels={false}
-					title="Feature Importances"
+					title={`Feature Importances for Top ${props.featureImportances.length} Features`}
 					xAxisTitle="Feature Name"
 					yAxisTitle="Feature Importance Value"
 				/>

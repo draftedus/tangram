@@ -342,7 +342,6 @@ pub enum MulticlassClassificationComparisonMetric {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct StatsSettings {
-	pub token_histogram_max_size: usize,
 	pub number_histogram_max_size: usize,
 }
 

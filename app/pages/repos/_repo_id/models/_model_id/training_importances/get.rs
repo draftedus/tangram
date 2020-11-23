@@ -56,9 +56,11 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::LinearRegressor(LinearRegressorProps {
 					feature_importances,
+					n_features,
 				})
 			}
 			tangram_core::model::RegressionModel::Tree(inner_model) => {
@@ -78,9 +80,11 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::TreeRegressor(TreeRegressorProps {
 					feature_importances,
+					n_features,
 				})
 			}
 		},
@@ -102,9 +106,11 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::LinearBinaryClassifier(LinearBinaryClassifierProps {
 					feature_importances,
+					n_features,
 				})
 			}
 			tangram_core::model::BinaryClassificationModel::Tree(inner_model) => {
@@ -124,9 +130,11 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::TreeBinaryClassifier(TreeBinaryClassifierProps {
 					feature_importances,
+					n_features,
 				})
 			}
 		},
@@ -148,9 +156,11 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::LinearMulticlassClassifier(LinearMulticlassClassifierProps {
 					feature_importances,
+					n_features,
 				})
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {
@@ -170,9 +180,11 @@ pub async fn get(
 						.unwrap()
 						.reverse()
 				});
+				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
 				Inner::TreeMulticlassClassifier(TreeMulticlassClassifierProps {
 					feature_importances,
+					n_features,
 				})
 			}
 		},

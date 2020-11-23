@@ -37,14 +37,14 @@ export default (pageInfo: PageInfo, props: Props) => {
 							<ui.NumberChart
 								key="precision"
 								title="Precision"
-								value={ui.formatPercent(props.classMetrics.precision, 2)}
+								value={ui.formatPercent(props.precision, 2)}
 							/>
 						</ui.Card>
 						<ui.Card>
 							<ui.NumberChart
 								key="recall"
 								title="Recall"
-								value={ui.formatPercent(props.classMetrics.recall, 2)}
+								value={ui.formatPercent(props.recall, 2)}
 							/>
 						</ui.Card>
 					</MetricsRow>
@@ -53,7 +53,7 @@ export default (pageInfo: PageInfo, props: Props) => {
 							<ui.NumberChart
 								key="f1Score"
 								title="F1 Score"
-								value={ui.formatPercent(props.classMetrics.f1Score, 2)}
+								value={ui.formatPercent(props.f1Score, 2)}
 							/>
 						</ui.Card>
 					</MetricsRow>
@@ -63,10 +63,10 @@ export default (pageInfo: PageInfo, props: Props) => {
 					<ui.P>{definitions.confusionMatrix}</ui.P>
 					<ui.ConfusionMatrix
 						classLabel={props.class}
-						falseNegatives={props.classMetrics.falseNegatives}
-						falsePositives={props.classMetrics.falsePositives}
-						trueNegatives={props.classMetrics.trueNegatives}
-						truePositives={props.classMetrics.truePositives}
+						falseNegatives={props.falseNegatives}
+						falsePositives={props.falsePositives}
+						trueNegatives={props.trueNegatives}
+						truePositives={props.truePositives}
 					/>
 				</ui.S2>
 			</ui.S1>

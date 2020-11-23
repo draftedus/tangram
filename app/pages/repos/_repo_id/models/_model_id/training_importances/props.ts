@@ -47,24 +47,30 @@ export type FeatureImportance = {
 
 export type LinearRegressorProps = {
 	featureImportances: FeatureImportance[]
+	nFeatures: number
 }
 
 export type LinearBinaryClassifierProps = {
 	featureImportances: FeatureImportance[]
+	nFeatures: number
 }
 
 export type LinearMulticlassClassifierProps = {
 	featureImportances: FeatureImportance[]
+	nFeatures: number
 }
 
 export type TreeRegressorProps = {
 	featureImportances: FeatureImportance[]
+	nFeatures: number
 }
 
 export type TreeBinaryClassifierProps = {
 	featureImportances: FeatureImportance[]
+	nFeatures: number
 }
 
 export type TreeMulticlassClassifierProps = {
 	featureImportances: FeatureImportance[]
+	nFeatures: number
 }

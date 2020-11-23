@@ -31,34 +31,40 @@ pub struct FeatureImportance {
 #[serde(rename_all = "camelCase")]
 pub struct LinearRegressorProps {
 	pub feature_importances: Vec<FeatureImportance>,
+	pub n_features: usize,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeRegressorProps {
 	pub feature_importances: Vec<FeatureImportance>,
+	pub n_features: usize,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinearBinaryClassifierProps {
 	pub feature_importances: Vec<FeatureImportance>,
+	pub n_features: usize,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeBinaryClassifierProps {
 	pub feature_importances: Vec<FeatureImportance>,
+	pub n_features: usize,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LinearMulticlassClassifierProps {
 	pub feature_importances: Vec<FeatureImportance>,
+	pub n_features: usize,
 }
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TreeMulticlassClassifierProps {
 	pub feature_importances: Vec<FeatureImportance>,
+	pub n_features: usize,
 }

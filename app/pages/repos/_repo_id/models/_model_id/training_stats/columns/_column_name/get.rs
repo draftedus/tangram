@@ -9,6 +9,8 @@ use tangram_app_layouts::model_layout::get_model_layout_info;
 use tangram_deps::{http, hyper, pinwheel::Pinwheel};
 use tangram_util::{error::Result, id::Id};
 
+const MAX_TOKENS: usize = 1_000;
+
 pub async fn get(
 	pinwheel: &Pinwheel,
 	context: &Context,
@@ -59,6 +61,7 @@ pub async fn get(
 	} else {
 		return Ok(not_found());
 	};
+
 	let inner = match column {
 		tangram_core::model::ColumnStats::Unknown(_) => todo!(),
 		tangram_core::model::ColumnStats::Number(column) => Inner::Number(Number {
@@ -79,9 +82,9 @@ pub async fn get(
 			name: column.column_name.clone(),
 			unique_count: column.unique_count,
 		}),
-		tangram_core::model::ColumnStats::Text(column) => Inner::Text(Text {
-			name: column.column_name.clone(),
-			tokens: column
+		tangram_core::model::ColumnStats::Text(column) => {
+			let n_tokens = column.top_tokens.len();
+			let mut top_tokens = column
 				.top_tokens
 				.into_iter()
 				.map(|token| TokenStats {
@@ -89,8 +92,15 @@ pub async fn get(
 					count: token.occurrence_count,
 					examples_count: token.examples_count,
 				})
-				.collect(),
-		}),
+				.collect::<Vec<_>>();
+			top_tokens.sort_by(|a, b| a.count.partial_cmp(&b.count).unwrap().reverse());
+			top_tokens.truncate(MAX_TOKENS);
+			Inner::Text(Text {
+				name: column.column_name,
+				n_tokens,
+				tokens: top_tokens,
+			})
+		}
 	};
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let props = Props {

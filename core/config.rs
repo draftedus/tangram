@@ -11,6 +11,7 @@ pub struct Config {
 	pub grid: Option<Vec<GridItem>>,
 	pub shuffle: Option<Shuffle>,
 	pub comparison_metric: Option<ComparisonMetric>,
+	pub text_features_max_tokens_count: Option<usize>,
 }
 
 #[derive(Debug, serde::Deserialize)]

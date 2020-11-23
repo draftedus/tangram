@@ -83,20 +83,17 @@ pub enum Tokenizer {
 /// This struct contains settings used to compute stats.
 #[derive(Clone, Debug, PartialEq)]
 pub struct StatsSettings {
-	/// This is the maximum number of tokens to store in the histogram.
-	pub token_histogram_max_size: usize,
 	/// This is the maximum number of unique numeric values to store in the histogram.
 	pub number_histogram_max_size: usize,
 	/// This is the maximum number of tokens to track for text columns.
-	pub top_tokens_count: usize,
+	pub max_tokens_count: usize,
 }
 
 impl Default for StatsSettings {
 	fn default() -> StatsSettings {
 		StatsSettings {
-			token_histogram_max_size: 100,
 			number_histogram_max_size: 100,
-			top_tokens_count: 20_000,
+			max_tokens_count: 20_000,
 		}
 	}
 }
@@ -527,7 +524,7 @@ impl TextColumnStats {
 			top_tokens.push(TokenEntry(token.clone(), *count));
 		}
 		let n_examples = self.count.to_u64().unwrap();
-		let top_tokens = (0..settings.top_tokens_count)
+		let top_tokens = (0..settings.max_tokens_count)
 			.map(|_| top_tokens.pop())
 			.filter_map(|token_entry| token_entry.map(|token_entry| (token_entry.0, token_entry.1)))
 			.map(|(token, count)| {

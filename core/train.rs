@@ -130,8 +130,17 @@ pub fn train(
 	let test_row_count = dataframe_test.nrows();
 
 	// Compute stats.
-	let stats_settings = stats::StatsSettings {
-		..Default::default()
+	let stats_settings = match config
+		.as_ref()
+		.and_then(|config| config.text_features_max_tokens_count)
+	{
+		Some(max_tokens_count) => stats::StatsSettings {
+			max_tokens_count,
+			..Default::default()
+		},
+		None => stats::StatsSettings {
+			..Default::default()
+		},
 	};
 	let train_column_stats = stats::Stats::compute(&dataframe_train, &stats_settings);
 	let test_column_stats = stats::Stats::compute(&dataframe_test, &stats_settings);
@@ -1610,7 +1619,6 @@ fn test_model(
 impl Into<model::StatsSettings> for stats::StatsSettings {
 	fn into(self) -> model::StatsSettings {
 		model::StatsSettings {
-			token_histogram_max_size: self.token_histogram_max_size,
 			number_histogram_max_size: self.number_histogram_max_size,
 		}
 	}

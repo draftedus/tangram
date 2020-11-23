@@ -138,7 +138,7 @@ pub async fn get(
 					},
 					precision: TrainingProductionMetrics {
 						production: production_class_metrics.map(|m| m.precision),
-						training: training_class_metrics.f1_score,
+						training: training_class_metrics.precision,
 					},
 					recall: TrainingProductionMetrics {
 						training: training_class_metrics.recall,
@@ -208,7 +208,7 @@ pub async fn get(
 	let class_index = if let Some(class) = &class {
 		classes.iter().position(|c| c == class).unwrap()
 	} else {
-		1
+		0
 	};
 	let class = class.unwrap_or_else(|| classes.get(class_index).unwrap().to_owned());
 	let props = Props {

@@ -24,7 +24,7 @@ export function TextColumnDetail(props: TextProps) {
 						id="token_histogram"
 						series={data}
 						shouldDrawXAxisLabels={false}
-						title="Most Frequent Tokens"
+						title={`${props.tokens.length} Most Frequent Tokens`}
 						xAxisTitle="Token"
 						yAxisTitle="Count"
 					/>

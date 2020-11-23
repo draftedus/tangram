@@ -45,6 +45,7 @@ pub struct Enum {
 #[serde(rename_all = "camelCase")]
 pub struct Text {
 	pub name: String,
+	pub n_tokens: usize,
 	pub tokens: Vec<TokenStats>,
 }
 

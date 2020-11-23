@@ -7,7 +7,6 @@ export type SelectFieldProps = {
 	id?: string
 	label?: string
 	name?: string
-	onChange?: (newValue: string) => void
 	options: SelectFieldOption[]
 	placeholder?: string
 	required?: boolean
@@ -28,9 +27,6 @@ export function SelectField(props: SelectFieldProps) {
 				disabled={props.disabled}
 				id={props.id}
 				name={props.name}
-				onChange={event => {
-					props.onChange?.(event.currentTarget.value)
-				}}
 				placeholder={props.placeholder}
 				required={props.required}
 				value={props.value}
