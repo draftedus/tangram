@@ -41,7 +41,6 @@ tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc = { path = 
 tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name = { path = "pages/repos/_repo_id/models/_model_id/training_stats/columns/_column_name" }
 tangram_app_pages_repos_repo_id_models_model_id_training_stats_index = { path = "pages/repos/_repo_id/models/_model_id/training_stats/index" }
 tangram_app_pages_repos_repo_id_models_model_id_training_grid_index = { path = "pages/repos/_repo_id/models/_model_id/training_grid/index" }
-tangram_app_pages_repos_repo_id_models_model_id_training_grid_trained_models_trained_model_identifier = { path = "pages/repos/_repo_id/models/_model_id/training_grid/trained_models/_trained_model_identifier" }
 tangram_app_pages_repos_repo_id_models_model_id_tuning = { path = "pages/repos/_repo_id/models/_model_id/tuning" }
 tangram_app_pages_repos_repo_id_models_new = { path = "pages/repos/_repo_id/models/new" }
 tangram_app_pages_user = { path = "pages/user" }

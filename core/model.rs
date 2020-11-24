@@ -73,11 +73,12 @@ pub struct Regressor {
 	pub train_target_column_stats: ColumnStats,
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
-	pub grid: Vec<GridItem>,
 	pub test_metrics: RegressionMetrics,
 	pub baseline_metrics: RegressionMetrics,
 	pub model: RegressionModel,
 	pub comparison_metric: RegressionComparisonMetric,
+	pub grid: Vec<GridItem>,
+	pub best_grid_item_index: usize,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -195,11 +196,12 @@ pub struct BinaryClassifier {
 	pub train_target_column_stats: ColumnStats,
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
-	pub grid: Vec<GridItem>,
 	pub test_metrics: BinaryClassificationMetrics,
 	pub baseline_metrics: BinaryClassificationMetrics,
 	pub model: BinaryClassificationModel,
 	pub comparison_metric: BinaryClassificationComparisonMetric,
+	pub grid: Vec<GridItem>,
+	pub best_grid_item_index: usize,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -272,11 +274,12 @@ pub struct MulticlassClassifier {
 	pub train_target_column_stats: ColumnStats,
 	pub test_column_stats: Vec<ColumnStats>,
 	pub test_target_column_stats: ColumnStats,
-	pub grid: Vec<GridItem>,
 	pub test_metrics: MulticlassClassificationMetrics,
 	pub baseline_metrics: MulticlassClassificationMetrics,
 	pub model: MulticlassClassificationModel,
 	pub comparison_metric: MulticlassClassificationComparisonMetric,
+	pub grid: Vec<GridItem>,
+	pub best_grid_item_index: usize,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

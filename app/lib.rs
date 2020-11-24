@@ -199,11 +199,6 @@ async fn request_handler(
 				context, request, model_id,
 			).boxed()
 		}
-		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_grid", "trained_models", trained_model_identifier]) => {
-			tangram_app_pages_repos_repo_id_models_model_id_training_grid_trained_models_trained_model_identifier::get(
-				context, request, model_id, trained_model_identifier
-			).boxed()
-		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_stats", ""]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_training_stats_index::get(
 				&pinwheel,

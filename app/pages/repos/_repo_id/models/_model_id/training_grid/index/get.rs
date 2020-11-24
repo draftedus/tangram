@@ -89,31 +89,36 @@ pub async fn get(
 			})
 			.collect::<Vec<_>>(),
 	};
+	let best_model_metrics_index = match &model {
+		tangram_core::model::Model::Regressor(model) => model.best_grid_item_index,
+		tangram_core::model::Model::BinaryClassifier(model) => model.best_grid_item_index,
+		tangram_core::model::Model::MulticlassClassifier(model) => model.best_grid_item_index,
+	};
+	let best_model_metrics = trained_models_metrics[best_model_metrics_index].clone();
+	let best_model = match &model {
+		tangram_core::model::Model::Regressor(model) => &model.grid[model.best_grid_item_index],
+		tangram_core::model::Model::BinaryClassifier(model) => {
+			&model.grid[model.best_grid_item_index]
+		}
+		tangram_core::model::Model::MulticlassClassifier(model) => {
+			&model.grid[model.best_grid_item_index]
+		}
+	};
+	let best_model_hyperparameters = hyperparameters_for_grid_item(best_model);
 	let props = Props {
 		id: model_id.to_string(),
 		model_comparison_metric_name,
 		num_models: trained_models_metrics.len(),
 		trained_models_metrics,
-		best_model_metrics: TrainedModel {
-			identifier: "5".into(),
-			model_comparison_metric_value: 78.0,
-			model_type: "Gradient Boosted Decision Tree".into(),
-			time: "4 minutes".into(),
-		},
-		best_model_hyperparameters: vec![
-			("l2_regularization".into(), "5".into()),
-			("learning_rate".into(), "2".into()),
-			("max_depth".into(), "10".into()),
-			(
-				"max_examples_for_computing_bin_thresholds".into(),
-				"4".into(),
-			),
-			("max_leaf_nodes".into(), "22".into()),
-		],
+		best_model_metrics,
+		best_model_hyperparameters,
 		model_layout_info,
 	};
 	db.commit().await?;
-	let description = format!("Tangram trained {} models.", props.num_models,);
+	let description = format!(
+		"Tangram trained {} models. The models were compared by evaluating their performance on a hold out portion of the dataset and the model with the best score was chosen.",
+		props.num_models,
+	);
 	let html = html! {
 		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingGrid}>
 			<ui::S1>
@@ -235,9 +240,9 @@ fn AllTrainedModelsMetricsTable(
 				html! {
 					<ui::TableRow color={None}>
 						<ui::TableCell color={None} expand={None}>
-							<ui::Link title={None} href={Some(format!("./trained_models/{}", trained_model.identifier))} class={None}>
-								{trained_model.identifier}
-							</ui::Link>
+							// <ui::Link title={None} href={Some(format!("./trained_models/{}", trained_model.identifier))} class={None}>
+							{trained_model.identifier}
+							// </ui::Link>
 						</ui::TableCell>
 						<ui::TableCell color={None} expand={None}>
 							{trained_model.model_type}
@@ -272,5 +277,115 @@ fn ModelHyperparametersTable(hyperparameters: Vec<(String, String)>) {
 			}
 		}).collect::<Vec<_>>()}
 		</ui::Table>
+	}
+}
+
+fn hyperparameters_for_grid_item(
+	grid_item: &tangram_core::model::GridItem,
+) -> Vec<(String, String)> {
+	match grid_item {
+		tangram_core::model::GridItem::Linear(grid_item) => vec![
+			(
+				"l2_regularization".to_owned(),
+				grid_item.hyperparameters.l2_regularization.to_string(),
+			),
+			(
+				"learning_rate".to_owned(),
+				grid_item.hyperparameters.learning_rate.to_string(),
+			),
+			(
+				"max_epochs".to_owned(),
+				grid_item.hyperparameters.max_epochs.to_string(),
+			),
+			(
+				"n_examples_per_batch".to_owned(),
+				grid_item.hyperparameters.n_examples_per_batch.to_string(),
+			),
+			(
+				"early_stopping_enabled".to_owned(),
+				grid_item
+					.hyperparameters
+					.early_stopping_options
+					.is_some()
+					.to_string(),
+			),
+		],
+		tangram_core::model::GridItem::Tree(grid_item) => vec![
+			(
+				"early_stopping_enabled".to_owned(),
+				grid_item
+					.hyperparameters
+					.early_stopping_options
+					.is_some()
+					.to_string(),
+			),
+			(
+				"l2_regularization".to_owned(),
+				grid_item.hyperparameters.l2_regularization.to_string(),
+			),
+			(
+				"learning_rate".to_owned(),
+				grid_item.hyperparameters.learning_rate.to_string(),
+			),
+			(
+				"max_depth".to_owned(),
+				grid_item
+					.hyperparameters
+					.max_depth
+					.map(|max_depth| max_depth.to_string())
+					.unwrap_or_else(|| "None".to_owned()),
+			),
+			(
+				"max_examples_for_computing_bin_thresholds".to_owned(),
+				grid_item
+					.hyperparameters
+					.max_examples_for_computing_bin_thresholds
+					.to_string(),
+			),
+			(
+				"max_leaf_nodes".to_owned(),
+				grid_item.hyperparameters.max_leaf_nodes.to_string(),
+			),
+			(
+				"max_rounds".to_owned(),
+				grid_item.hyperparameters.max_rounds.to_string(),
+			),
+			(
+				"max_valid_bins_for_number_features".to_owned(),
+				grid_item
+					.hyperparameters
+					.max_valid_bins_for_number_features
+					.to_string(),
+			),
+			(
+				"min_examples_per_node".to_owned(),
+				grid_item.hyperparameters.min_examples_per_node.to_string(),
+			),
+			(
+				"min_gain_to_split".to_owned(),
+				grid_item.hyperparameters.min_gain_to_split.to_string(),
+			),
+			(
+				"min_sum_hessians_per_node".to_owned(),
+				grid_item
+					.hyperparameters
+					.min_sum_hessians_per_node
+					.to_string(),
+			),
+			(
+				"smoothing_factor_for_discrete_bin_sorting".to_owned(),
+				grid_item
+					.hyperparameters
+					.smoothing_factor_for_discrete_bin_sorting
+					.to_string(),
+			),
+			(
+				"supplemental_l2_regularization_for_discrete_splits".to_owned(),
+				grid_item
+					.hyperparameters
+					.supplemental_l2_regularization_for_discrete_splits
+					.to_string(),
+			),
+		],
 	}
 }
