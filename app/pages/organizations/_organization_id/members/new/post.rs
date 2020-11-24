@@ -4,6 +4,7 @@ use tangram_app_common::{
 	user::{authorize_normal_user, authorize_normal_user_for_organization},
 	Context,
 };
+use tangram_deps::sqlx::*;
 use tangram_deps::{
 	http, hyper, pinwheel::Pinwheel, reqwest, serde_json::json, serde_urlencoded, sqlx,
 };
@@ -76,6 +77,18 @@ async fn add_member(
 	.bind(&action.email)
 	.execute(&mut *db)
 	.await?;
+	let row = sqlx::query(
+		"
+			select id
+				from users
+			where email = $1
+		",
+	)
+	.bind(&action.email)
+	.fetch_one(&mut *db)
+	.await?;
+	let user_id: String = row.get(0);
+	let user_id: Id = user_id.parse().unwrap();
 	// Add the user to the organization.
 	let is_admin = if let Some(is_admin) = action.is_admin {
 		is_admin == "on"
