@@ -566,7 +566,7 @@ pub enum SplitDirection {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LeafNode {
-	pub value: f32,
+	pub value: f64,
 	pub examples_fraction: f32,
 }
 

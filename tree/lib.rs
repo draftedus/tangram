@@ -118,7 +118,7 @@ impl Tree {
 			loop {
 				match self.nodes.get_unchecked(node_index) {
 					// We made it to a leaf! The prediction is the leaf's value.
-					Node::Leaf(LeafNode { value, .. }) => return *value,
+					Node::Leaf(LeafNode { value, .. }) => return *value as f32,
 					// This branch uses a continuous split.
 					Node::Branch(BranchNode {
 						left_child_index,
@@ -255,7 +255,7 @@ pub struct BranchSplitDiscrete {
 #[derive(Debug)]
 pub struct LeafNode {
 	/// This is the value to output.
-	pub value: f32,
+	pub value: f64,
 	/// Leaf nodes store the fraction of training examples that were sent to them during training. This is used to compute SHAP values.
 	pub examples_fraction: f32,
 }

@@ -16,7 +16,7 @@ use tangram_util::pool::{Pool, PoolItem};
 #[derive(Debug)]
 pub struct TrainTree {
 	pub nodes: Vec<TrainNode>,
-	pub leaf_values: Vec<(Range<usize>, f32)>,
+	pub leaf_values: Vec<(Range<usize>, f64)>,
 }
 
 impl TrainTree {
@@ -70,7 +70,7 @@ impl TrainTree {
 					};
 				}
 				// We made it to a leaf! The prediction is the leaf's value.
-				TrainNode::Leaf(TrainLeafNode { value, .. }) => return *value,
+				TrainNode::Leaf(TrainLeafNode { value, .. }) => return *value as f32,
 			}
 		}
 	}
@@ -121,7 +121,7 @@ pub struct TrainBranchSplitDiscrete {
 
 #[derive(Debug)]
 pub struct TrainLeafNode {
-	pub value: f32,
+	pub value: f64,
 	pub examples_fraction: f32,
 }
 
@@ -223,7 +223,7 @@ pub fn train_tree(options: TrainTreeOptions) -> TrainTree {
 	// This priority queue stores the potential nodes to split ordered by their gain.
 	let mut queue: BinaryHeap<QueueItem> = BinaryHeap::new();
 	// To update the gradients and hessians we need to make predictions. Rather than running each example through the tree, we can reuse the mapping from example index to leaf value previously computed.
-	let mut leaf_values: Vec<(Range<usize>, f32)> = Vec::new();
+	let mut leaf_values: Vec<(Range<usize>, f64)> = Vec::new();
 
 	let n_examples_root = examples_index.len();
 	let examples_index_range_root = 0..n_examples_root;
@@ -479,7 +479,7 @@ fn add_queue_item(options: AddQueueItemOptions) {
 
 struct AddLeafOptions<'a> {
 	examples_index_range: Range<usize>,
-	leaf_values: &'a mut Vec<(Range<usize>, f32)>,
+	leaf_values: &'a mut Vec<(Range<usize>, f64)>,
 	n_examples_root: usize,
 	nodes: &'a mut Vec<TrainNode>,
 	train_options: &'a TrainOptions,
@@ -505,10 +505,8 @@ fn add_leaf(options: AddLeafOptions) {
 	// This is the index this leaf will have in the `nodes` array.
 	let leaf_index = nodes.len();
 	// Compute the leaf's value.
-	let value = (-train_options.learning_rate as f64 * sum_gradients
-		/ (sum_hessians + train_options.l2_regularization as f64 + std::f64::EPSILON))
-		.to_f32()
-		.unwrap();
+	let value = -train_options.learning_rate as f64 * sum_gradients
+		/ (sum_hessians + train_options.l2_regularization as f64 + std::f64::EPSILON);
 	let examples_fraction =
 		examples_index_range.len().to_f32().unwrap() / n_examples_root.to_f32().unwrap();
 	let node = TrainNode::Leaf(TrainLeafNode {

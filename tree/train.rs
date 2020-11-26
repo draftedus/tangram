@@ -424,7 +424,7 @@ fn update_predictions_with_tree(
 			.iter()
 			.for_each(|example_index| unsafe {
 				let example_index = example_index.to_usize().unwrap();
-				*predictions_cell.get().get_unchecked_mut(example_index) += value;
+				*predictions_cell.get().get_unchecked_mut(example_index) += *value as f32;
 			});
 	});
 	#[cfg(feature = "timing")]
