@@ -280,6 +280,7 @@ const DEFAULT_TREE_LEARNING_RATE_VALUES: [f32; 3] = [0.1, 0.01, 0.001];
 const DEFAULT_TREE_L2_REGULARIZATION_VALUES: [f32; 3] = [1.0, 0.1, 0.0];
 const DEFAULT_TREE_MAX_LEAF_NODES: [u64; 2] = [255, 512];
 const DEFAULT_TREE_MAX_ROUNDS_VALUES: [u64; 1] = [1000];
+const DEFAULT_TREE_MAX_DEPTH: [u64; 1] = [50];
 
 /// Compute the default hyperparameter grid for regression.
 pub fn default_regression_hyperparameter_grid(
@@ -305,11 +306,12 @@ pub fn default_regression_hyperparameter_grid(
 			},
 		});
 	}
-	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds) in iproduct!(
+	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds, &max_depth) in iproduct!(
 		DEFAULT_TREE_MAX_LEAF_NODES.iter(),
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
+		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter(),
+		DEFAULT_TREE_MAX_DEPTH.iter()
 	) {
 		grid.push(GridItem::TreeRegressor {
 			target_column_index,
@@ -318,6 +320,7 @@ pub fn default_regression_hyperparameter_grid(
 				max_leaf_nodes: Some(max_leaf_nodes),
 				learning_rate: Some(learning_rate),
 				max_rounds: Some(max_rounds),
+				max_depth: Some(max_depth),
 				l2_regularization: Some(l2_regularization),
 				..Default::default()
 			},
@@ -350,11 +353,12 @@ pub fn default_binary_classification_hyperparameter_grid(
 			},
 		});
 	}
-	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds) in iproduct!(
+	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds, &max_depth) in iproduct!(
 		DEFAULT_TREE_MAX_LEAF_NODES.iter(),
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
+		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter(),
+		DEFAULT_TREE_MAX_DEPTH.iter()
 	) {
 		grid.push(GridItem::TreeBinaryClassifier {
 			target_column_index,
@@ -363,6 +367,7 @@ pub fn default_binary_classification_hyperparameter_grid(
 				max_leaf_nodes: Some(max_leaf_nodes),
 				learning_rate: Some(learning_rate),
 				max_rounds: Some(max_rounds),
+				max_depth: Some(max_depth),
 				l2_regularization: Some(l2_regularization),
 				..Default::default()
 			},
@@ -395,11 +400,12 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 			},
 		});
 	}
-	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds) in iproduct!(
+	for (&max_leaf_nodes, &learning_rate, &l2_regularization, &max_rounds, &max_depth) in iproduct!(
 		DEFAULT_TREE_MAX_LEAF_NODES.iter(),
 		DEFAULT_TREE_LEARNING_RATE_VALUES.iter(),
 		DEFAULT_TREE_L2_REGULARIZATION_VALUES.iter(),
-		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter()
+		DEFAULT_TREE_MAX_ROUNDS_VALUES.iter(),
+		DEFAULT_TREE_MAX_DEPTH.iter()
 	) {
 		grid.push(GridItem::TreeMulticlassClassifier {
 			target_column_index,
@@ -408,6 +414,7 @@ pub fn default_multiclass_classification_hyperparameter_grid(
 				max_leaf_nodes: Some(max_leaf_nodes),
 				learning_rate: Some(learning_rate),
 				max_rounds: Some(max_rounds),
+				max_depth: Some(max_depth),
 				l2_regularization: Some(l2_regularization),
 				..Default::default()
 			},

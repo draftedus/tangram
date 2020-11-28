@@ -181,6 +181,10 @@ impl DataFrame {
 		DataFrame { columns }
 	}
 
+	pub fn from_columns(columns: Vec<DataFrameColumn>) -> DataFrame {
+		DataFrame { columns }
+	}
+
 	pub fn columns(&self) -> &Vec<DataFrameColumn> {
 		&self.columns
 	}
