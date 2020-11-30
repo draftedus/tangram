@@ -197,7 +197,7 @@ impl BagOfWordsFeatureGroup {
 		match self.tokenizer {
 			BagOfWordsFeatureGroupTokenizer::Alphanumeric => self
 				.compute_array_f32_for_text_column_for_alphanumeric_tokenizer(
-					features, column, progress,
+					features, column, false, progress,
 				),
 		}
 	}
@@ -206,6 +206,7 @@ impl BagOfWordsFeatureGroup {
 		&self,
 		mut features: ArrayViewMut2<f32>,
 		column: TextDataFrameColumnView,
+		use_tfidf: bool,
 		progress: &impl Fn(),
 	) {
 		// Compute the feature values for each example.
@@ -217,9 +218,14 @@ impl BagOfWordsFeatureGroup {
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
-					let feature_value = 1.0 * token.idf;
-					feature_values_sum_of_squares += feature_value * feature_value;
-					*features.get_mut([example_index, *token_index]).unwrap() += feature_value;
+					if use_tfidf {
+						let feature_value = 1.0 * token.idf;
+						feature_values_sum_of_squares += feature_value * feature_value;
+						*features.get_mut([example_index, *token_index]).unwrap() += feature_value;
+					} else {
+						let feature_value = 1.0;
+						*features.get_mut([example_index, *token_index]).unwrap() = feature_value;
+					}
 				}
 			}
 			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
@@ -228,16 +234,23 @@ impl BagOfWordsFeatureGroup {
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
-					let feature_value = 1.0 * token.idf;
-					feature_values_sum_of_squares += feature_value * feature_value;
-					*features.get_mut([example_index, *token_index]).unwrap() += feature_value;
+					if use_tfidf {
+						let feature_value = 1.0 * token.idf;
+						feature_values_sum_of_squares += feature_value * feature_value;
+						*features.get_mut([example_index, *token_index]).unwrap() += feature_value;
+					} else {
+						let feature_value = 1.0;
+						*features.get_mut([example_index, *token_index]).unwrap() = feature_value;
+					}
 				}
 			}
-			// Normalize the feature values for this example.
-			if feature_values_sum_of_squares > 0.0 {
-				let norm = feature_values_sum_of_squares.sqrt();
-				for feature in features.row_mut(example_index).iter_mut() {
-					*feature /= norm;
+			if use_tfidf {
+				// Normalize the feature values for this example.
+				if feature_values_sum_of_squares > 0.0 {
+					let norm = feature_values_sum_of_squares.sqrt();
+					for feature in features.row_mut(example_index).iter_mut() {
+						*feature /= norm;
+					}
 				}
 			}
 			progress();
@@ -265,15 +278,17 @@ impl BagOfWordsFeatureGroup {
 		progress: &impl Fn(),
 	) -> Vec<DataFrameColumn> {
 		match self.tokenizer {
-			BagOfWordsFeatureGroupTokenizer::Alphanumeric => {
-				self.compute_dataframe_for_text_column_for_alphanumeric_tokenizer(column, progress)
-			}
+			BagOfWordsFeatureGroupTokenizer::Alphanumeric => self
+				.compute_dataframe_for_text_column_for_alphanumeric_tokenizer(
+					column, false, progress,
+				),
 		}
 	}
 
 	fn compute_dataframe_for_text_column_for_alphanumeric_tokenizer(
 		&self,
 		column: TextDataFrameColumnView,
+		use_tfidf: bool,
 		progress: &impl Fn(),
 	) -> Vec<DataFrameColumn> {
 		let mut feature_columns = vec![vec![0.0; column.len()]; self.tokens.len()];
@@ -286,9 +301,14 @@ impl BagOfWordsFeatureGroup {
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
-					let feature_value = 1.0 * token.idf;
-					feature_values_sum_of_squares += feature_value * feature_value;
-					feature_columns[*token_index][example_index] += feature_value;
+					if use_tfidf {
+						let feature_value = 1.0 * token.idf;
+						feature_values_sum_of_squares += feature_value * feature_value;
+						feature_columns[*token_index][example_index] += feature_value;
+					} else {
+						let feature_value = 1.0;
+						feature_columns[*token_index][example_index] = feature_value;
+					}
 				}
 			}
 			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
@@ -297,16 +317,23 @@ impl BagOfWordsFeatureGroup {
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
-					let feature_value = 1.0 * token.idf;
-					feature_values_sum_of_squares += feature_value * feature_value;
-					feature_columns[*token_index][example_index] += feature_value;
+					if use_tfidf {
+						let feature_value = 1.0 * token.idf;
+						feature_values_sum_of_squares += feature_value * feature_value;
+						feature_columns[*token_index][example_index] += feature_value;
+					} else {
+						let feature_value = 1.0;
+						feature_columns[*token_index][example_index] = feature_value;
+					}
 				}
 			}
-			// Normalize the feature values for this example.
-			if feature_values_sum_of_squares > 0.0 {
-				let norm = feature_values_sum_of_squares.sqrt();
-				for feature_column in feature_columns.iter_mut() {
-					feature_column[example_index] /= norm;
+			if use_tfidf {
+				// Normalize the feature values for this example.
+				if feature_values_sum_of_squares > 0.0 {
+					let norm = feature_values_sum_of_squares.sqrt();
+					for feature_column in feature_columns.iter_mut() {
+						feature_column[example_index] /= norm;
+					}
 				}
 			}
 		}
@@ -348,7 +375,7 @@ impl BagOfWordsFeatureGroup {
 		match self.tokenizer {
 			BagOfWordsFeatureGroupTokenizer::Alphanumeric => {
 				self.compute_array_value_for_text_column_for_alphanumeric_tokenizer(
-					features, column, progress,
+					features, column, false, progress,
 				);
 			}
 		}
@@ -358,6 +385,7 @@ impl BagOfWordsFeatureGroup {
 		&self,
 		mut features: ArrayViewMut2<DataFrameValue>,
 		column: TextDataFrameColumnView,
+		use_tfidf: bool,
 		progress: &impl Fn(),
 	) {
 		// Compute the feature values for each example.
@@ -369,13 +397,22 @@ impl BagOfWordsFeatureGroup {
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
-					let feature_value = 1.0 * token.idf;
-					feature_values_sum_of_squares += feature_value * feature_value;
-					*features
-						.get_mut([example_index, *token_index])
-						.unwrap()
-						.as_number_mut()
-						.unwrap() += feature_value;
+					if use_tfidf {
+						let feature_value = 1.0 * token.idf;
+						*features
+							.get_mut([example_index, *token_index])
+							.unwrap()
+							.as_number_mut()
+							.unwrap() += feature_value;
+						feature_values_sum_of_squares += feature_value * feature_value;
+					} else {
+						let feature_value = 1.0;
+						*features
+							.get_mut([example_index, *token_index])
+							.unwrap()
+							.as_number_mut()
+							.unwrap() = feature_value;
+					}
 				}
 			}
 			for (token_a, token_b) in AlphanumericTokenizer::new(value).tuple_windows() {
@@ -384,20 +421,31 @@ impl BagOfWordsFeatureGroup {
 				let token_index = self.tokens_map.get(&token);
 				if let Some(token_index) = token_index {
 					let token = &self.tokens[*token_index];
-					let feature_value = 1.0 * token.idf;
-					feature_values_sum_of_squares += feature_value * feature_value;
-					*features
-						.get_mut([example_index, *token_index])
-						.unwrap()
-						.as_number_mut()
-						.unwrap() += feature_value;
+					if use_tfidf {
+						let feature_value = 1.0 * token.idf;
+						*features
+							.get_mut([example_index, *token_index])
+							.unwrap()
+							.as_number_mut()
+							.unwrap() += feature_value;
+						feature_values_sum_of_squares += feature_value * feature_value;
+					} else {
+						let feature_value = 1.0;
+						*features
+							.get_mut([example_index, *token_index])
+							.unwrap()
+							.as_number_mut()
+							.unwrap() = feature_value;
+					}
 				}
 			}
-			// Normalize the feature values for this example.
-			if feature_values_sum_of_squares > 0.0 {
-				let norm = feature_values_sum_of_squares.sqrt();
-				for feature in features.row_mut(example_index).iter_mut() {
-					*feature.as_number_mut().unwrap() /= norm;
+			if use_tfidf {
+				// Normalize the feature values for this example.
+				if feature_values_sum_of_squares > 0.0 {
+					let norm = feature_values_sum_of_squares.sqrt();
+					for feature in features.row_mut(example_index).iter_mut() {
+						*feature.as_number_mut().unwrap() /= norm;
+					}
 				}
 			}
 			progress();

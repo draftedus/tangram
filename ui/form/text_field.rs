@@ -8,7 +8,7 @@ pub fn TextField(
 	label: Option<String>,
 	name: Option<String>,
 	placeholder: Option<String>,
-	read_only: Option<bool>,
+	readonly: Option<bool>,
 	required: Option<bool>,
 	value: Option<String>,
 ) {
@@ -21,7 +21,7 @@ pub fn TextField(
 				disabled={disabled}
 				name={name}
 				placeholder={placeholder}
-				readonly={read_only}
+				readonly={readonly}
 				required={required}
 				spellcheck={false}
 				value={value}

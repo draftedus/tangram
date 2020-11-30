@@ -19,13 +19,17 @@ pub async fn render(context: &Context, error: Option<String>) -> Result<String> 
 	let page_info = PageInfo {
 		client_wasm_js_src: Some(client_wasm_js_src),
 	};
+	Ok(page(props, page_info))
+}
+
+fn page(props: Props, page_info: PageInfo) -> String {
 	let html = html! {
 		<AppLayout page_info={page_info} info={props.app_layout_info}>
 			<ui::S1>
 				<ui::H1 center={None}>{"Upload Model"}</ui::H1>
 				<ui::Form
 					id={None}
-					auto_complete={None}
+					autocomplete={None}
 					enc_type={Some("multipart/form-data".to_owned())}
 					action={None}
 					post={Some(true)}
@@ -49,6 +53,7 @@ pub async fn render(context: &Context, error: Option<String>) -> Result<String> 
 						required={Some(true)}
 					/>
 					<ui::Button
+						color={None}
 						disabled={None}
 						download={None}
 						href={None}
@@ -61,5 +66,5 @@ pub async fn render(context: &Context, error: Option<String>) -> Result<String> 
 			</ui::S1>
 		</AppLayout>
 	};
-	Ok(html.render_to_string())
+	html.render_to_string()
 }

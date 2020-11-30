@@ -707,7 +707,7 @@ fn shuffle(
 	update_progress: &mut dyn FnMut(Progress),
 ) {
 	// Check if shuffling is enabled in the config. If it is, use the seed from the config.
-	let default_seed = 42;
+	let default_seed = 12;
 	let shuffle_options = config
 		.as_ref()
 		.and_then(|config| config.shuffle.as_ref())

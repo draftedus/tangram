@@ -97,7 +97,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["login"]) => {
 			tangram_app_pages_login::get(
-				&pinwheel,
 				context,
 				request,
 				search_params

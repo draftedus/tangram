@@ -310,6 +310,7 @@ pub fn ModelLayoutTopbar(model_layout_info: ModelLayoutInfo, selected_model_vers
 				/>
 			</div>
 			<ui::Button
+				color={None}
 				button_type={ui::ButtonType::Button}
 				disabled={None}
 				id={None}
@@ -319,6 +320,7 @@ pub fn ModelLayoutTopbar(model_layout_info: ModelLayoutInfo, selected_model_vers
 				{"Download"}
 			</ui::Button>
 			<ui::Button
+				color={None}
 				button_type={ui::ButtonType::Button}
 				disabled={None}
 				id={None}

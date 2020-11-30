@@ -194,6 +194,7 @@ fn TopbarDropdown(
 							download={None}
 							href={Some(cta.href)}
 							id={None}
+							color={None}
 						>
 							{cta.title}
 						</Button>

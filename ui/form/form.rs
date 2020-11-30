@@ -3,7 +3,7 @@ use html::{component, html};
 #[component]
 pub fn Form(
 	action: Option<String>,
-	auto_complete: Option<String>,
+	autocomplete: Option<String>,
 	enc_type: Option<String>,
 	id: Option<String>,
 	post: Option<bool>,
@@ -12,7 +12,7 @@ pub fn Form(
 		<form
 			id={id}
 			action={action}
-			auto_complete={auto_complete}
+			autocomplete={autocomplete}
 			class="form"
 			enctype={enc_type}
 			method={

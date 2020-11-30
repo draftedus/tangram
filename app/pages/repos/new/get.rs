@@ -5,7 +5,7 @@ use tangram_app_common::{
 	user::{authorize_user, User},
 	Context,
 };
-use tangram_app_layouts::app_layout::get_app_layout_info;
+use tangram_app_layouts::{app_layout::get_app_layout_info, document::PageInfo};
 use tangram_deps::{http, hyper, pinwheel::Pinwheel, sqlx, sqlx::prelude::*};
 use tangram_util::error::Result;
 
@@ -62,7 +62,10 @@ pub async fn get(
 		owner: None,
 		title: None,
 	};
-	let html = render(props).await?;
+	let page_info = PageInfo {
+		client_wasm_js_src: None,
+	};
+	let html = render(props, page_info).await?;
 	db.commit().await?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)

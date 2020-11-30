@@ -1,16 +1,16 @@
-use super::props::Props;
+use crate::page::{render, Props, RepoTableItem};
 use tangram_app_common::{
 	error::{redirect_to_login, service_unavailable},
 	repos::{repos_for_root, repos_for_user},
 	user::{authorize_user, User},
 	Context,
 };
-use tangram_app_layouts::app_layout::get_app_layout_info;
+use tangram_app_layouts::{app_layout::get_app_layout_info, document::PageInfo};
 use tangram_deps::{http, hyper, pinwheel::Pinwheel};
 use tangram_util::error::Result;
 
 pub async fn get(
-	pinwheel: &Pinwheel,
+	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {
@@ -29,10 +29,20 @@ pub async fn get(
 	};
 	let props = Props {
 		app_layout_info,
-		repos,
+		repos_table: repos
+			.iter()
+			.map(|repo| RepoTableItem {
+				id: repo.id.clone(),
+				title: repo.title.clone(),
+				owner_name: repo.owner_name.clone(),
+			})
+			.collect(),
+	};
+	let page_info = PageInfo {
+		client_wasm_js_src: None,
 	};
 	db.commit().await?;
-	let html = pinwheel.render_with_props("/", props)?;
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

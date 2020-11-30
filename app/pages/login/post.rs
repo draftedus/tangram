@@ -1,4 +1,4 @@
-use super::props::Props;
+use super::page::Props;
 use tangram_app_common::{
 	error::{bad_request, service_unavailable},
 	Context,
