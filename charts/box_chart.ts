@@ -1,5 +1,10 @@
 import { drawBarChartXAxisLabels } from "./bar_chart"
-import { ActiveHoverRegion, HoverRegion, createChart } from "./chart"
+import {
+	ActiveHoverRegion,
+	DrawFunctionOptions,
+	HoverRegion,
+	createChart,
+} from "./chart"
 import {
 	Box,
 	Point,
@@ -66,10 +71,10 @@ export function createBoxChart(container: HTMLElement) {
 	return createChart(container, drawBoxChart, drawBoxChartOverlay)
 }
 
-export function drawBoxChart(
-	ctx: CanvasRenderingContext2D,
-	options: BoxChartOptions,
-): DrawBoxChartOutput {
+export function drawBoxChart({
+	ctx,
+	options,
+}: DrawFunctionOptions<BoxChartOptions>): DrawBoxChartOutput {
 	let { series: data, xAxisTitle, yAxisTitle } = options
 	let width = ctx.canvas.clientWidth
 	let height = ctx.canvas.clientHeight

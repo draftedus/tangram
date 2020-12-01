@@ -8,6 +8,7 @@ pub fn Form(
 	id: Option<String>,
 	post: Option<bool>,
 ) {
+	let method = post.and_then(|post| if post { Some("post".to_owned()) } else { None });
 	html! {
 		<form
 			id={id}
@@ -15,13 +16,7 @@ pub fn Form(
 			autocomplete={autocomplete}
 			class="form"
 			enctype={enc_type}
-			method={
-				post.and_then(|post| if post {
-					Some("post".to_owned())
-				} else {
-					None
-				})
-			}
+			method={method}
 		>
 			{children}
 		</form>

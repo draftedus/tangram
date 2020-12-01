@@ -39,7 +39,7 @@ function Hero() {
 		<div class="index-wrapper">
 			<div class="index-inner">
 				<h1 class="index-title">
-					{"All-In-One Machine Learning Toolkit for Programmers"}
+					{"All-In-One Machine Learning Toolkit Designed for Programmers"}
 				</h1>
 				<div class="index-subtitle">
 					{

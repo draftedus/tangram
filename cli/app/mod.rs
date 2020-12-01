@@ -7,7 +7,7 @@ use url::Url;
 mod license;
 
 #[cfg(feature = "app")]
-pub(crate) fn app(args: AppArgs) -> Result<()> {
+pub fn app(args: AppArgs) -> Result<()> {
 	// Verify the license if one was provided.
 	let license_verified: Option<bool> = if let Some(license_file_path) = args.license {
 		Some(verify_license(&license_file_path)?)

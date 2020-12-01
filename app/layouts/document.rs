@@ -16,7 +16,7 @@ pub fn Document(page_info: PageInfo) {
 				<title>{"Tangram"}</title>
 				<link href="/styles.css" rel="stylesheet" />
 				<meta
-					content="All-In-One Machine Learning Toolkit for Programmers"
+					content="All-In-One Machine Learning Toolkit Designed for Programmers"
 					name="description"
 				/>
 			</head>

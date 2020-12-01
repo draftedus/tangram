@@ -11,7 +11,7 @@ use tangram_util::{err, error::Result};
 mod progress_view;
 
 #[cfg(feature = "train")]
-pub(crate) fn train(args: TrainArgs) -> Result<()> {
+pub fn train(args: TrainArgs) -> Result<()> {
 	// Start the progress view if enabled and train the model. However, we need to do some extra work to make panic messages display properly. The problem is that the progress view enables the terminal's alternative screen and returns to the default screen when it is dropped. However, if a panic occurs during training, it will be printed by the default panic hook while the alternative screen is active, and then the progress view will be dropped, causing the panic message to be immediately erased. To work around this, we create a custom panic hook that stores the panic message, wrap the progress view and training with `catch_unwind`, and then print the panic message if `catch_unwind` returns an `Err`. This ensures that the progress view will be dropped before the panic message is displayed.
 	static PANIC_MESSAGE_AND_BACKTRACE: Lazy<Mutex<Option<(String, Backtrace)>>> =
 		Lazy::new(|| Mutex::new(None));

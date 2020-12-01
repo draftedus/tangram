@@ -10,26 +10,30 @@ export type Chart<Options> = {
 	draw: (options: Options) => void
 }
 
-export type DrawFunction<Options, Info, HoverRegionInfo> = (
-	ctx: CanvasRenderingContext2D,
-	options: Options,
-) => DrawOutput<Info, HoverRegionInfo>
+export type DrawFunctionOptions<Options> = {
+	ctx: CanvasRenderingContext2D
+	options: Options
+}
 
-export type DrawOutput<OverlayInfo, HoverRegionInfo> = {
+export type DrawFunction<Options, OverlayInfo, HoverRegionInfo> = (
+	options: DrawFunctionOptions<Options>,
+) => DrawFunctionOutput<OverlayInfo, HoverRegionInfo>
+
+export type DrawFunctionOutput<OverlayInfo, HoverRegionInfo> = {
 	hoverRegions: Array<HoverRegion<HoverRegionInfo>>
 	overlayInfo: OverlayInfo
 }
 
-type DrawOverlayFunction<Info, HoverRegionInfo> = (
-	options: DrawOverlayOptions<Info, HoverRegionInfo>,
-) => void
-
-export type DrawOverlayOptions<Info, HoverRegionInfo> = {
+export type DrawOverlayOptions<OverlayInfo, HoverRegionInfo> = {
 	activeHoverRegions: Array<ActiveHoverRegion<HoverRegionInfo>>
 	ctx: CanvasRenderingContext2D
-	info: Info
+	info: OverlayInfo
 	overlayDiv: HTMLElement
 }
+
+export type DrawOverlayFunction<OverlayInfo, HoverRegionInfo> = (
+	options: DrawOverlayOptions<OverlayInfo, HoverRegionInfo>,
+) => void
 
 export type HoverRegion<HoverRegionInfo> = {
 	distance: (x: number, y: number) => number
@@ -146,7 +150,7 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		ctx.scale(dpr, dpr)
 		ctx.clearRect(0, 0, width, height)
 		ctx.font = chartConfig.font
-		let output = drawChart(ctx, state.options)
+		let output = drawChart({ ctx, options: state.options })
 		state.hoverRegions = output.hoverRegions
 		state.overlayInfo = output.overlayInfo
 	}
@@ -169,8 +173,8 @@ export function createChart<Options, OverlayInfo, HoverRegionInfo>(
 		}
 		ctx.scale(dpr, dpr)
 		ctx.clearRect(0, 0, width, height)
-		overlayDiv.childNodes.forEach(child => overlayDiv.removeChild(child))
 		ctx.font = chartConfig.font
+		overlayDiv.childNodes.forEach(child => overlayDiv.removeChild(child))
 		drawChartOverlay?.({
 			activeHoverRegions: state.activeHoverRegions ?? [],
 			ctx,

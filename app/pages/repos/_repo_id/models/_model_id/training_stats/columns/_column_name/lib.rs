@@ -1,3 +1,4 @@
+mod enum_column;
 mod get;
 mod props;
 

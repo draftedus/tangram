@@ -240,9 +240,7 @@ fn AllTrainedModelsMetricsTable(
 				html! {
 					<ui::TableRow color={None}>
 						<ui::TableCell color={None} expand={None}>
-							// <ui::Link title={None} href={Some(format!("./trained_models/{}", trained_model.identifier))} class={None}>
 							{trained_model.identifier}
-							// </ui::Link>
 						</ui::TableCell>
 						<ui::TableCell color={None} expand={None}>
 							{trained_model.model_type}

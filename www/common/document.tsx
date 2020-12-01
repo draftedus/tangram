@@ -22,7 +22,7 @@ export function Document(props: DocumentProps) {
 				))}
 				<title>{"Tangram"}</title>
 				<meta
-					content="All-In-One Machine Learning Toolkit for Programmers"
+					content="All-In-One Machine Learning Toolkit Designed for Programmers"
 					name="description"
 				/>
 			</head>

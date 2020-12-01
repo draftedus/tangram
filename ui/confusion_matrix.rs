@@ -28,47 +28,47 @@ pub fn ConfusionMatrix(
 	let total = true_positives + true_negatives + false_positives + false_negatives;
 	html! {
 		<div class="confusion-matrix-wrapper">
-			<ConfusionMatrixLabel area={"actual-true-label".to_owned()} left={None}>
+			<ConfusionMatrixLabel area={"actual-true-label"} left={None}>
 				<div>{"Actual"}</div>
 				<Token color={None}>{class_label.clone()}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area={"actual-false-label".to_owned()} left={None}>
+			<ConfusionMatrixLabel area={"actual-false-label"} left={None}>
 				<div>{"Actual Not"}</div>
 				<Token color={None}>{class_label.clone()}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area={"predicted-true-label".to_owned()} left={Some(true)}>
+			<ConfusionMatrixLabel area={"predicted-true-label"} left={Some(true)}>
 				<div>{"Predicted"}</div>
 				<Token color={None}>{class_label.clone()}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area={"predicted-false-label".to_owned()} left={Some(true)}>
+			<ConfusionMatrixLabel area={"predicted-false-label"} left={Some(true)}>
 				<div>{"Predicted Not"}</div>
 				<Token color={None}>{class_label}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixItem
-				area={"true-positive".into()}
+				area={"true-positive"}
 				correct={true}
-				title={"True Positives".to_owned()}
+				title={"True Positives"}
 				total={total}
 				value={true_positives}
 			/>
 			<ConfusionMatrixItem
-				area={"false-positive".to_owned()}
-				title={"False Positives".to_owned()}
+				area={"false-positive"}
+				title={"False Positives"}
 				correct={false}
 				total={total}
 				value={false_positives}
 			/>
 			<ConfusionMatrixItem
-				area={"false-negative".to_owned()}
-				title={"False Negatives".to_owned()}
+				area={"false-negative"}
+				title={"False Negatives"}
 				correct={false}
 				total={total}
 				value={false_negatives}
 			/>
 			<ConfusionMatrixItem
-				area={"true-negative".to_owned()}
+				area={"true-negative"}
 				correct={true}
-				title={"True Negatives".to_owned()}
+				title={"True Negatives"}
 				total={total}
 				value={true_negatives}
 			/>

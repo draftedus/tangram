@@ -1,4 +1,9 @@
-import { ActiveHoverRegion, HoverRegion, createChart } from "./chart"
+import {
+	ActiveHoverRegion,
+	DrawFunctionOptions,
+	HoverRegion,
+	createChart,
+} from "./chart"
 import {
 	Box,
 	Point,
@@ -70,10 +75,12 @@ export function createFeatureContributionsChart(container: HTMLElement) {
 	)
 }
 
-export function drawFeatureContributionsChart(
-	ctx: CanvasRenderingContext2D,
-	options: FeatureContributionsChartOptions,
-): DrawFeatureContributionsChartOutput {
+export function drawFeatureContributionsChart({
+	ctx,
+	options,
+}: DrawFunctionOptions<
+	FeatureContributionsChartOptions
+>): DrawFeatureContributionsChartOutput {
 	let {
 		includeXAxisTitle,
 		includeYAxisLabels,

@@ -17,9 +17,9 @@ pub fn Button(
 	color: Option<String>,
 ) {
 	let button_type = match button_type {
-		ButtonType::Submit => "submit".to_owned(),
-		ButtonType::Button => "button".to_owned(),
-		ButtonType::Reset => "reset".to_owned(),
+		ButtonType::Submit => "submit",
+		ButtonType::Button => "button",
+		ButtonType::Reset => "reset",
 	};
 	let style = style! {
 		"background-color" => color,
@@ -28,11 +28,10 @@ pub fn Button(
 		html! {
 			<a
 				class="button"
-				style={style}
 				disabled={disabled}
 				download={download}
 				href={href}
-				type={button_type}
+				style={style}
 			>
 				{children}
 			</a>
@@ -41,9 +40,9 @@ pub fn Button(
 		html! {
 			<button
 				class="button"
-				style={style}
 				disabled={disabled}
 				id={id}
+				style={style}
 				type={button_type}
 			>
 				{children}

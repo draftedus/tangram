@@ -1,18 +1,18 @@
-use super::props::{Enum, Inner, Number, Props, Text, TokenStats};
+use super::props::{Enum, Inner, Number, Page, Props, Text, TokenStats};
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{html::html, http, hyper, pinwheel::client, pinwheel::Pinwheel};
 use tangram_util::{error::Result, id::Id};
 
 const MAX_TOKENS: usize = 1_000;
 
 pub async fn get(
-	pinwheel: &Pinwheel,
+	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -103,16 +103,26 @@ pub async fn get(
 		}
 	};
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
-	let props = Props {
-		id: model_id.to_string(),
-		inner,
-		model_layout_info,
-	};
 	db.commit().await?;
-	let html = pinwheel.render_with_props(
-		"/repos/_repo_id/models/_model_id/training_stats/columns/_column_name",
-		props,
-	)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: Some(client!()),
+	};
+	let html = html! {
+		<Page
+			inner={inner}
+			model_layout_info={model_layout_info}
+			page_info={page_info}
+		/>
+	}
+	.render_to_string();
+	// let props = Props {
+	// 	inner,
+	// 	model_layout_info,
+	// };
+	// let html = _pinwheel.render_with_props(
+	// 	"/repos/_repo_id/models/_model_id/training_stats/columns/_column_name",
+	// 	props,
+	// )?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

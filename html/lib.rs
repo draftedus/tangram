@@ -77,7 +77,7 @@ impl Clone for Box<dyn Component> {
 impl Node {
 	pub fn render_to_string(mut self) -> String {
 		self.render();
-		self.to_string()
+		format!("<!doctype html>{}", self)
 	}
 
 	fn render(&mut self) {
@@ -176,7 +176,9 @@ impl std::fmt::Display for HostNode {
 				}
 				AttributeValue::String(value) => {
 					if let Some(value) = value {
-						write!(f, r#" {}="{}""#, key, EscapedText(&value))?;
+						if !value.is_empty() {
+							write!(f, r#" {}="{}""#, key, EscapedText(&value))?;
+						}
 					}
 				}
 			}
@@ -319,9 +321,10 @@ macro_rules! style {
 				let value = &$value;
 				let value = ::html::AsOptionStr::as_option_str(value);
 				if let Some(value) = value {
-					if !first {
-						style.push(' ');
+					if first {
 						first = false;
+					} else {
+						style.push(' ');
 					}
 					style.push_str($key);
 					style.push_str(": ");

@@ -35,7 +35,7 @@ pub fn SelectField(
 				{
 					options.iter().map(|option| {
 						html! {
-							<option key={option.value.clone()} value={option.value.clone()}>
+							<option value={option.value.clone()}>
 								{option.text.clone()}
 							</option>
 						}

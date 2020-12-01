@@ -1,4 +1,10 @@
-import { ActiveHoverRegion, HoverRegion, createChart } from "./chart"
+import {
+	ActiveHoverRegion,
+	DrawFunctionOptions,
+	DrawFunctionOutput,
+	HoverRegion,
+	createChart,
+} from "./chart"
 import {
 	Box,
 	GridLineInterval,
@@ -55,19 +61,17 @@ export type BarChartHoverRegionInfo = {
 	tooltipOriginPixels: Point
 }
 
-export type DrawBarChartOutput = {
-	hoverRegions: Array<HoverRegion<BarChartHoverRegionInfo>>
-	overlayInfo: BarChartOverlayInfo
-}
-
 export function createBarChart(container: HTMLElement) {
 	return createChart(container, drawBarChart, drawBarChartOverlay)
 }
 
-export function drawBarChart(
-	ctx: CanvasRenderingContext2D,
-	options: BarChartOptions,
-): DrawBarChartOutput {
+export function drawBarChart({
+	ctx,
+	options,
+}: DrawFunctionOptions<BarChartOptions>): DrawFunctionOutput<
+	BarChartOverlayInfo,
+	BarChartHoverRegionInfo
+> {
 	let { series: data, xAxisTitle, yAxisGridLineInterval, yAxisTitle } = options
 	let width = ctx.canvas.clientWidth
 	let height = ctx.canvas.clientHeight
@@ -191,10 +195,8 @@ export function drawBarChart(
 			}
 			drawBar({
 				box,
-				chartBox,
 				color: series.color + "af",
 				ctx,
-				point,
 			})
 			let hoverRegion: HoverRegion<BarChartHoverRegionInfo> = {
 				distance: (mouseX: number, _: number) => {
@@ -219,7 +221,6 @@ export function drawBarChart(
 				},
 			}
 			hoverRegions.push(hoverRegion)
-			return { hoverRegions }
 		})
 	})
 
@@ -232,18 +233,12 @@ export function drawBarChart(
 
 type DrawBarOptions = {
 	box: Box
-	chartBox: Box
 	color: string
 	ctx: CanvasRenderingContext2D
-	point: BarChartPoint
 }
 
 function drawBar(options: DrawBarOptions) {
-	let { box, color, ctx, point } = options
-	let hoverRegions: Array<HoverRegion<BarChartHoverRegionInfo>> = []
-	if (point.y == null) {
-		return { hoverRegions }
-	}
+	let { box, color, ctx } = options
 	let cornerMask =
 		box.h > 0
 			? RectCorner.TopLeft | RectCorner.TopRight
@@ -333,12 +328,7 @@ type DrawBarChartOverlayOptions = {
 }
 
 export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
-	let {
-		activeHoverRegions,
-		ctx,
-		info: { chartBox },
-		overlayDiv,
-	} = options
+	let { activeHoverRegions, ctx, overlayDiv } = options
 	let activeHoverRegion = activeHoverRegions[0]
 	if (activeHoverRegion) {
 		let seriesTitle = activeHoverRegion.info.seriesTitle
@@ -362,10 +352,8 @@ export function drawBarChartOverlay(options: DrawBarChartOverlayOptions) {
 		})
 		drawBar({
 			box: activeHoverRegion.info.box,
-			chartBox,
 			color: "#00000022",
 			ctx,
-			point: activeHoverRegion.info.point,
 		})
 	}
 }

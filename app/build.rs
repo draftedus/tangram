@@ -14,7 +14,7 @@ fn main() {
 	std::fs::create_dir_all(&dst_dir).unwrap();
 	std::fs::create_dir(dst_dir.join("assets")).unwrap();
 	std::fs::create_dir(dst_dir.join("js")).unwrap();
-	// Re-run this script if any file in the workspace changes
+	// Re-run this script if any file in the workspace changes.
 	for entry in ignore::Walk::new(workspace_dir) {
 		let entry = entry.unwrap();
 		let path = entry.path();
@@ -22,24 +22,25 @@ fn main() {
 			println!("cargo:rerun-if-changed={}", path.display());
 		}
 	}
-	// Build all the client crates.
+	// Build client crates.
+	let mut client_crate_manifest_paths = vec![];
 	for entry in walkdir::WalkDir::new(&pages_dir) {
 		let entry = entry.unwrap();
 		let path = entry.path();
-		if !path.ends_with("client/Cargo.toml") {
-			continue;
+		if path.ends_with("client/Cargo.toml") {
+			let client_crate_manifest_path = path.strip_prefix(workspace_dir).unwrap();
+			client_crate_manifest_paths.push(client_crate_manifest_path.to_owned());
 		}
-		let client_crate_manifest_path = path.strip_prefix(workspace_dir).unwrap();
-		pinwheel::build_client_crate(
-			workspace_dir,
-			client_crate_manifest_path,
-			&cargo_wasm_dir,
-			false,
-			&dst_dir,
-		)
-		.unwrap();
 	}
-	// Collect all the CSS.
+	pinwheel::build_client_crate(
+		workspace_dir,
+		&client_crate_manifest_paths,
+		&cargo_wasm_dir,
+		false,
+		&dst_dir,
+	)
+	.unwrap();
+	// Collect the CSS.
 	let mut css = String::new();
 	let mut collect_css = |css_src_dir: &Path| {
 		for entry in walkdir::WalkDir::new(&css_src_dir) {
@@ -55,7 +56,7 @@ fn main() {
 	collect_css(&workspace_dir.join("ui"));
 	collect_css(&workspace_dir.join("www"));
 	std::fs::write(dst_dir.join("styles.css"), css).unwrap();
-	// Copy all the static files in release.
+	// Copy static files in release mode.
 	if cfg!(not(debug_assertions)) {
 		let static_dir = crate_dir.join("static");
 		for entry in walkdir::WalkDir::new(&static_dir) {
@@ -68,7 +69,7 @@ fn main() {
 			}
 		}
 	}
-	// Copy all the assets in release.
+	// Copy assets in release mode.
 	if cfg!(not(debug_assertions)) {
 		let asset_extensions = &["gif", "jpg", "png", "svg", "woff2"];
 		for entry in walkdir::WalkDir::new(&crate_dir) {

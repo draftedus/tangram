@@ -180,9 +180,9 @@ impl quote::ToTokens for Element {
 			let fields = self.attributes.iter().map(|attribute| match attribute {
 				Attribute::Shorthand(key) => quote! { #key: #key },
 				Attribute::Longhand(key, value) => match value {
-					AttributeValue::String(string) => quote! { #key: #string },
+					AttributeValue::String(string) => quote! { #key: #string.into() },
 					AttributeValue::Block(block) => {
-						quote! { #key: #block }
+						quote! { #key: #block.into() }
 					}
 				},
 			});

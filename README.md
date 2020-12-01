@@ -4,19 +4,19 @@
 
 # Tangram
 
-Tangram is an all-in-one machine learning toolkit for programmers. Here's the TLDR:
+Tangram is an all-in-one machine learning toolkit designed for programmers. Here's the TLDR:
 
 1. Install the `tangram` CLI: [Install Instructions](https://www.tangramhq.com/docs/install).
-2. Train a machine learning model from a CSV file: `tangram train --file heart_disease.csv --target diagnosis`. The CLI automatically performs feature engineering, trains a number of models with a range of hyperparameter settings, and writes the best one to `heart_disease.tangram` in the current directory. Your data stays secure because all training happens on your laptop or your own server. If you want more control, you can configure training with a YAML config file.
-3. Use one of the language libraries to load your model and make predictions from your code. Prediction happens in process, so predictions are fast and data doesn't go over the network. Go, JavaScript, Python, and Ruby are available now. C/C++, C#, Java, PHP, and Rust are coming soon.
-4. Run `tangram app --model heart_disease.tangram`. This starts a web app where you can:
+2. Train a machine learning model from a CSV file: `tangram train --file heart_disease.csv --target diagnosis`. The CLI automatically performs feature engineering, trains a number of models with a range of hyperparameter settings, and writes the best one to `heart_disease.tangram` in the current directory. Your data stays secure because all training happens on your own computer. If you want more control, you can configure training with a YAML config file.
+3. Use one of the language libraries to load your model and make predictions from your code. Prediction happens via FFI, so predictions are fast and data doesn't go over the network. Go, JavaScript, Python, and Ruby are available now. C/C++, C#, Java, PHP, and Rust are coming soon.
+4. Run `tangram app`, open your browser to http://localhost:8080, and upload the model you trained. This starts a web app where you can:
 
 - View stats and metrics showing how your model performed on the test set.
 - Tune your model to get the best performance.
 - Make example predictions and view detailed explanations.
 - Set up production monitoring so you can view stats, metrics, and explanations of real-world predictions.
 
-Watch the video below to learn more.
+Watch the video below to see a demo.
 
 <p align="center">
 	<img src="tangram.svg" title="Tangram">
@@ -28,24 +28,17 @@ Watch the video below to learn more.
 
 ## Contributing
 
-1. Install [Rust](rust-lang.org) >= 1.47 and [Node.js](nodejs.org) >= 15 on Linux, macOS, or Windows.
+1. Install [Rust](rust-lang.org) >= 1.48 on Linux, macOS, or Windows.
 2. Clone this repo and `cd` into it.
-3. Run `npm install` to install npm dependencies.
-4. Run `cargo run` to run a debug build of the CLI. If you are working on the app, run `./scripts/dev` to run the CLI with the `app` subcommand under a file watcher.
+3. Run `cargo run` to run a debug build of the CLI.
 
-Before submitting a pull request, please run `./scripts/fmt` and `./scripts/check` at the root of the repository to confirm that your changes are formatted correctly and do not have any errors.
+If you are working on the app, run `scripts/dev`. This runs the CLI with the `app` subcommand and automatically rebuilds it as you make changes.
 
-### Tips
-
-- To get faster incremental compile times, configure cargo to use [lld](https://www.archlinux.org/packages/extra/x86_64/lld/). Install it with your package manager then add `build.rustflags = ["-C", "link-arg=-fuse-ld=lld"]` to `~/.cargo/config`.
-
-- To save your SSD from a premature death, set up a RAM disk for the `build` directory, where output from cargo, tsc, eslint, and pinwheel is written. On linux you can do this by adding `none /path/to/tangram/build tmpfs rw,relatime 0 0` to `/etc/fstab` and rebooting.
-
-- For good IDE support, use [Visual Studio Code](https://code.visualstudio.com/) with the [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer), [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint), and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions.
+Before submitting a pull request, please run `scripts/fmt` and `scripts/check` at the root of the repository to confirm that your changes are formatted correctly and do not have any errors.
 
 ## Repository Structure
 
-This repository is both a Cargo workspace and a Yarn workspace. Almost every folder in the root of the repository is either a Rust crate or an NPM package. Below is a description of the most important folders:
+This repository is both a Cargo workspace and a Yarn workspace. Every folder in the root of the repository is a Rust crate, except `languages` which holds the language libraries. Below is a description of the most important folders:
 
 - [`core`](core): This folder contains the `tangram_core` crate that defines the model file format and automated machine learning functionality. It is used by the `tangram_cli` crate to train a model, and by the `libtangram` crate to expose its functionality as a C api to the language libraries.
 
@@ -62,6 +55,14 @@ This repository is both a Cargo workspace and a Yarn workspace. Almost every fol
 - [`languages`](languages): This folder contains the libraries for making predictions in each language. Each library has a README with more information.
 
 - [`www`](www): This folder contains the source for the marketing and documentation website deployed to https://www.tangramhq.com.
+
+### Tips
+
+- To get faster incremental compile times, configure cargo to use [lld](https://lld.llvm.org/) instead of the system linker. On Linux, install lld with your package manager, then add `target.x86_64-unknown-linux-gnu.rustflags = ["-C", "link-arg=-fuse-ld=lld"]` to `~/.cargo/config.toml`.
+
+- To save your SSD from a premature death, set up a RAM disk for the `target` directory, where output from cargo is written. On Linux, run `sudo mkdir /path/to/tangram/target && sudo chmod 777 /path/to/tangram/target && sudo mount -t tmpfs target /path/to/tangram/target`. To set up a RAM disk automatically when your computer starts, add `none /path/to/tangram/target tmpfs rw,relatime 0 0` to `/etc/fstab` and reboot.
+
+- For helpful features like inline errors, autocomplete, go-to-defintion, and more, configure your editor to use [Rust Analyzer](https://rust-analyzer.github.io/).
 
 ## License
 

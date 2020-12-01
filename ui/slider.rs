@@ -13,12 +13,12 @@ pub fn Slider(max: f32, min: f32, value: f32, value_formatter: Option<fn(f32) ->
 		.map(|value_formatter| value_formatter(value))
 		.unwrap_or_else(|| value.to_string());
 	html! {
-		<div class={"slider-wrapper".to_owned()}>
+		<div class={"slider-wrapper"}>
 			<input
-				class={"slider-range".to_owned()}
+				class={"slider-range"}
 				max={max.to_string()}
 				min={min.to_string()}
-				type={"range".to_owned()}
+				type={"range"}
 			/>
 			<div class="slider-progress" style={progress_style} />
 			<div class="slider-tooltip" style={tooltip_style}>

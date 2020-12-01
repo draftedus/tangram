@@ -1,14 +1,18 @@
-use tangram_app_layouts::model_layout::ModelLayoutInfo;
+use super::enum_column::EnumColumn;
+use html::{component, html};
+use tangram_app_layouts::{
+	document::PageInfo,
+	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
+};
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Props {
-	pub id: String,
 	pub inner: Inner,
 	pub model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type", content = "value")]
 pub enum Inner {
@@ -17,7 +21,7 @@ pub enum Inner {
 	Text(Text),
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Number {
 	pub invalid_count: u64,
@@ -32,7 +36,7 @@ pub struct Number {
 	pub unique_count: u64,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Enum {
 	pub histogram: Option<Vec<(String, u64)>>,
@@ -41,7 +45,7 @@ pub struct Enum {
 	pub unique_count: u64,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Text {
 	pub name: String,
@@ -49,10 +53,30 @@ pub struct Text {
 	pub tokens: Vec<TokenStats>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TokenStats {
 	pub token: String,
 	pub count: u64,
 	pub examples_count: u64,
+}
+
+#[component]
+pub fn Page(inner: Inner, model_layout_info: ModelLayoutInfo, page_info: PageInfo) {
+	let inner = match inner {
+		Inner::Number(_) => todo!(),
+		Inner::Enum(inner) => html! {
+			<EnumColumn props={inner} />
+		},
+		Inner::Text(_) => todo!(),
+	};
+	html! {
+		<ModelLayout
+			info={model_layout_info}
+			page_info={page_info}
+			selected_item={ModelSideNavItem::TrainingStats}
+		>
+			{inner}
+		</ModelLayout>
+	}
 }

@@ -17,7 +17,7 @@ use std::{
 	rc::Rc,
 	sync::Arc,
 };
-use tangram_util::{err, error::Result};
+use tangram_util::{err, error::Result, zip};
 use url::Url;
 use which::which;
 
@@ -977,24 +977,33 @@ pub fn build_js_pages(src_dir: &Path, dst_dir: &Path, page_entries: &[&str]) -> 
 
 pub fn build_client_crate(
 	src_dir: &Path,
-	client_crate_manifest_path: &Path,
+	client_crate_manifest_paths: &[PathBuf],
 	cargo_wasm_dir: &Path,
 	dev: bool,
 	dst_dir: &Path,
-) -> Result<String> {
-	let client_crate_manifest = std::fs::read_to_string(&src_dir.join(client_crate_manifest_path))?;
-	let client_crate_manifest: toml::Value = toml::from_str(&client_crate_manifest)?;
-	let client_crate_name = client_crate_manifest
-		.as_table()
-		.unwrap()
-		.get("package")
-		.unwrap()
-		.as_table()
-		.unwrap()
-		.get("name")
-		.unwrap()
-		.as_str()
-		.unwrap();
+) -> Result<()> {
+	let output_wasm_dir = dst_dir.join("js");
+	let client_crate_package_names = client_crate_manifest_paths
+		.iter()
+		.map(|client_crate_manifest_path| {
+			let client_crate_manifest =
+				std::fs::read_to_string(&src_dir.join(client_crate_manifest_path))?;
+			let client_crate_manifest: toml::Value = toml::from_str(&client_crate_manifest)?;
+			let client_crate_name = client_crate_manifest
+				.as_table()
+				.unwrap()
+				.get("package")
+				.unwrap()
+				.as_table()
+				.unwrap()
+				.get("name")
+				.unwrap()
+				.as_str()
+				.unwrap()
+				.to_owned();
+			Ok(client_crate_name)
+		})
+		.collect::<Result<Vec<_>>>()?;
 	let cmd = which("cargo")?;
 	let mut args = vec![
 		"build".to_owned(),
@@ -1002,36 +1011,42 @@ pub fn build_client_crate(
 		"wasm32-unknown-unknown".to_owned(),
 		"--target-dir".to_owned(),
 		cargo_wasm_dir.to_str().unwrap().to_owned(),
-		"--package".to_owned(),
-		client_crate_name.to_owned(),
 	];
 	if !dev {
 		args.push("--release".to_owned())
+	}
+	for client_crate_package_name in client_crate_package_names.iter() {
+		args.push("--package".to_owned());
+		args.push(client_crate_package_name.clone());
 	}
 	let mut process = std::process::Command::new(cmd).args(&args).spawn()?;
 	let status = process.wait()?;
 	if !status.success() {
 		return Err(err!("cargo {}", status.to_string()));
 	}
-	let input_wasm_path = format!(
-		"{}/wasm32-unknown-unknown/{}/{}.wasm",
-		cargo_wasm_dir.to_str().unwrap(),
-		if dev { "debug" } else { "release" },
-		client_crate_name,
-	);
-	let hash = hash(client_crate_manifest_path.to_str().unwrap());
-	let output_wasm_path = dst_dir.join("js");
-	wasm_bindgen_cli_support::Bindgen::new()
-		.web(true)
-		.unwrap()
-		.keep_debug(dev)
-		.remove_producers_section(true)
-		.remove_name_section(true)
-		.input_path(input_wasm_path)
-		.out_name(&hash)
-		.generate(output_wasm_path)
-		.map_err(|error| err!(error))?;
-	Ok(hash)
+	for (client_crate_manifest_path, client_crate_package_name) in zip!(
+		client_crate_manifest_paths.iter(),
+		client_crate_package_names.iter()
+	) {
+		let input_wasm_path = format!(
+			"{}/wasm32-unknown-unknown/{}/{}.wasm",
+			cargo_wasm_dir.to_str().unwrap(),
+			if dev { "debug" } else { "release" },
+			client_crate_package_name,
+		);
+		let hash = hash(client_crate_manifest_path.to_str().unwrap());
+		wasm_bindgen_cli_support::Bindgen::new()
+			.web(true)
+			.unwrap()
+			.keep_debug(dev)
+			.remove_producers_section(true)
+			.remove_name_section(true)
+			.input_path(input_wasm_path)
+			.out_name(&hash)
+			.generate(&output_wasm_dir)
+			.map_err(|error| err!(error))?;
+	}
+	Ok(())
 }
 
 pub fn hash(s: &str) -> String {

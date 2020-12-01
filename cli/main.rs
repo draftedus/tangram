@@ -28,7 +28,7 @@ enum Args {
 #[derive(Clap)]
 #[clap(about = "train a model")]
 #[clap(long_about = "train a model from a csv file")]
-struct TrainArgs {
+pub struct TrainArgs {
 	#[clap(short, long, about = "the path to your .csv file", conflicts_with_all=&["file-train", "file-test"])]
 	file: Option<PathBuf>,
 	#[clap(
@@ -57,7 +57,7 @@ struct TrainArgs {
 #[derive(Clap)]
 #[clap(about = "run the app")]
 #[clap(long_about = "run the reporting and monitoring web app")]
-struct AppArgs {
+pub struct AppArgs {
 	#[clap(long = "auth", env = "AUTH", takes_value = false)]
 	auth_enabled: bool,
 	#[clap(long, env = "COOKIE_DOMAIN")]

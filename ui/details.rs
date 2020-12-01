@@ -17,7 +17,7 @@ pub fn Details(options: Option<Vec<DetailsOption>>, summary: Option<String>) {
 				{options.map(|options|
 					options.into_iter().map(|option| {
 						html! {
-							<a class="details-list-item" href={option.href} key={option.title.clone()}>
+							<a class="details-list-item" href={option.href}>
 							{option.title}
 							</a>
 						}

@@ -46,27 +46,27 @@ pub fn ConfusionMatrixComparison(
 	let value_formatter = value_formatter.unwrap_or(default_value_formatter);
 	html! {
 		<div class="confusion-matrix-comparison-wrapper">
-			<ConfusionMatrixLabel area={"actual-true-label".to_owned()} left={None}>
+			<ConfusionMatrixLabel area={"actual-true-label"} left={None}>
 				<div>{"Actual"}</div>
 				<Token color={None}>{class_label.clone()}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area={"actual-false-label".to_owned()} left={None}>
+			<ConfusionMatrixLabel area={"actual-false-label"} left={None}>
 				<div>{"Actual Not"}</div>
 				<Token color={None}>{class_label.clone()}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area={"predicted-true-label".to_owned()} left={Some(true)}>
+			<ConfusionMatrixLabel area={"predicted-true-label"} left={Some(true)}>
 				<div>{"Predicted"}</div>
 				<Token color={None}>{class_label.clone()}</Token>
 			</ConfusionMatrixLabel>
-			<ConfusionMatrixLabel area={"predicted-false-label".to_owned()} left={Some(true)}>
+			<ConfusionMatrixLabel area={"predicted-false-label"} left={Some(true)}>
 				<div>{"Predicted Not"}</div>
 				<Token color={None}>{class_label}</Token>
 			</ConfusionMatrixLabel>
 			<ConfusionMatrixComparisonItem
-				area={"true-positive".to_owned()}
+				area={"true-positive"}
 				color_a={color_a.clone()}
 				color_b={color_b.clone()}
-				label={"True Positives".to_owned()}
+				label={"True Positives"}
 				correct={true}
 				value_a={value_a.true_positive}
 				value_a_title={value_a_title.clone()}
@@ -75,11 +75,11 @@ pub fn ConfusionMatrixComparison(
 				value_formatter={value_formatter}
 			/>
 			<ConfusionMatrixComparisonItem
-				area={"false-positive".to_owned()}
+				area={"false-positive"}
 				color_a={color_a.clone()}
 				correct={false}
 				color_b={color_b.clone()}
-				label={"False Positives".to_owned()}
+				label={"False Positives"}
 				value_a={value_a.false_positive}
 				value_a_title={value_a_title.clone()}
 				value_b={value_b.false_positive}
@@ -87,11 +87,11 @@ pub fn ConfusionMatrixComparison(
 				value_formatter={value_formatter}
 			/>
 			<ConfusionMatrixComparisonItem
-				area={"false-negative".to_owned()}
+				area={"false-negative"}
 				color_a={color_a.clone()}
 				color_b={color_b.clone()}
 				correct={false}
-				label={"False Negatives".to_owned()}
+				label={"False Negatives"}
 				value_a={value_a.false_negative}
 				value_a_title={value_a_title.clone()}
 				value_b={value_b.false_negative}
@@ -99,10 +99,10 @@ pub fn ConfusionMatrixComparison(
 				value_formatter={value_formatter}
 			/>
 			<ConfusionMatrixComparisonItem
-				area={"true-negative".to_owned()}
+				area={"true-negative"}
 				color_a={color_a}
 				color_b={color_b}
-				label={"True Negatives".to_owned()}
+				label={"True Negatives"}
 				correct={true}
 				value_a={value_a.true_negative}
 				value_a_title={value_a_title}
@@ -128,7 +128,7 @@ fn ConfusionMatrixComparisonItem(
 	value_formatter: fn(f32) -> String,
 ) {
 	let wrapper_style = style! {
-			"grid-area" => area,
+		"grid-area" => area,
 	};
 	let class = if correct {
 		"confusion-matrix-comparison-item-correct-wrapper"

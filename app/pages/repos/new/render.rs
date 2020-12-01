@@ -48,7 +48,7 @@ pub async fn render(props: Props, page_info: PageInfo) -> Result<String> {
 							options={owners.into_iter().map(|owner| ui::SelectFieldOption {
 								text: owner.title,
 								value: owner.value,
-							}).collect()}
+							}).collect::<Vec<_>>()}
 							disabled={None}
 						/>
 					})}

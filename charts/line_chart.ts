@@ -1,4 +1,9 @@
-import { ActiveHoverRegion, HoverRegion, createChart } from "./chart"
+import {
+	ActiveHoverRegion,
+	DrawFunctionOptions,
+	HoverRegion,
+	createChart,
+} from "./chart"
 import {
 	Box,
 	GridLineInterval,
@@ -91,10 +96,10 @@ export function createLineChart(container: HTMLElement) {
 	return createChart(container, drawLineChart, drawLineChartOverlay)
 }
 
-export function drawLineChart(
-	ctx: CanvasRenderingContext2D,
-	options: LineChartOptions,
-): DrawLineChartOutput {
+export function drawLineChart({
+	ctx,
+	options,
+}: DrawFunctionOptions<LineChartOptions>): DrawLineChartOutput {
 	let {
 		labels,
 		series: data,

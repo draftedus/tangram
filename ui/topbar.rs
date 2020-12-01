@@ -54,7 +54,7 @@ pub fn Topbar(
 							element
 						} else {
 							html! {
-								<a class="topbar-link" href={item.href.clone()} key={item.title.clone()}>
+								<a class="topbar-link" href={item.href.clone()}>
 									{item.title.clone()}
 								</a>
 							}
@@ -124,7 +124,6 @@ fn TopbarHamburger(text_color: String) {
 			>
 				{[0.0, 0.5, 1.0].iter().map(|y| html!(
 					<line
-						key={y.to_string()}
 						stroke={text_color.clone()}
 						stroke-linecap="round"
 						stroke-width="0.2"
@@ -179,8 +178,8 @@ fn TopbarDropdown(
 	html! {
 		<div class="topbar-dropdown-wrapper" style={wrapper_style}>
 			{items.map(|items| items.into_iter().map(|item| html! {
-				<a class="topbar-dropdown-link" href={item.href} key={item.title.clone()}>
-					<div class="topbar-dropdown-item" key={item.title.clone()}>
+				<a class="topbar-dropdown-link" href={item.href}>
+					<div class="topbar-dropdown-item">
 						{item.title}
 					</div>
 				</a>

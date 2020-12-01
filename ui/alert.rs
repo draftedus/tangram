@@ -16,11 +16,11 @@ pub enum Level {
 
 #[component]
 pub fn Alert(level: Level, title: Option<String>) {
-	let level_class: String = match level {
-		Level::Info => "alert-level-info".to_owned(),
-		Level::Success => "alert-level-success".to_owned(),
-		Level::Warning => "alert-level-warning".to_owned(),
-		Level::Danger => "alert-level-danger".to_owned(),
+	let level_class = match level {
+		Level::Info => "alert-level-info",
+		Level::Success => "alert-level-success",
+		Level::Warning => "alert-level-warning",
+		Level::Danger => "alert-level-danger",
 	};
 	let class = classes!("alert-wrapper", level_class);
 	html! {
