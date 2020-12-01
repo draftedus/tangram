@@ -32,7 +32,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 				}
 				<ui::TextField
 					autocomplete={Some("username".to_owned())}
-					disabled={Some(props.email.is_none())}
+					disabled={None}
 					name={Some("email".into())}
 					placeholder={Some("Email".to_owned())}
 					value={props.email}
@@ -40,14 +40,34 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 					label={None}
 					readonly={None}
 				/>
+				{
+					if props.code {
+						Some(html! {
+							<ui::TextField
+								autocomplete={None}
+								disabled={None}
+								name={Some("code".to_owned())}
+								placeholder={Some("Code".to_owned())}
+								value={None}
+								required={None}
+								label={None}
+								readonly={None}
+							/>
+						})
+					} else {
+						None
+					}
+				}
 				<ui::Button
 					download={None}
 					id={None}
 					href={None}
 					color={None}
 					disabled={None}
-					button_type={ui::ButtonType::Button}
-				/>
+					button_type={ui::ButtonType::Submit}
+				>
+					{"Login"}
+				</ui::Button>
 				{
 					if props.code {
 						Some(html! {
