@@ -38,14 +38,14 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 						</ui::Button>
 					</ui::SpaceBetween>
 					<ui::TextField
-						autocomplete={Some("username".to_owned())}
-						disabled={None}
+						autocomplete={None}
+						disabled={Some(true)}
 						name={None}
 						placeholder={None}
 						value={Some(props.name.clone())}
 						required={None}
 						label={Some("Organization Name".to_owned())}
-						readonly={None}
+						readonly={Some(true)}
 					/>
 					</ui::S2>
 					<ui::S2>
@@ -148,6 +148,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 						<ui::TableBody>
 						{props.members.iter().map(|member| html! {
 							<ui::TableRow color={None}>
+								<ui::TableCell color={None} expand={None}>{member.email.clone()}</ui::TableCell>
 								<ui::TableCell color={None} expand={None}>
 								{
 									if member.is_admin {
@@ -215,7 +216,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 						value="delete_organization"
 					/>
 					<ui::Button
-						button_type={ui::ButtonType::Button}
+						button_type={ui::ButtonType::Submit}
 						disabled={None}
 						href={None}
 						download={None}

@@ -43,8 +43,6 @@ pub async fn get(
 				repos.id,
 				repos.title
 			from repos
-			join models
-				on models.repo_id = repos.id
 			where repos.organization_id = $1
 		",
 	)
