@@ -1,6 +1,29 @@
-use crate::bar_chart::{BarChartOptions, BarChartSeries};
-use crate::common::GridLineInterval;
+use crate::{
+	bar_chart::{BarChartOptions, BarChartSeries},
+	chart::{Chart, ChartImpl},
+	common::GridLineInterval,
+};
 use html::{component, html, style};
+use wasm_bindgen::JsCast;
+use web_sys::*;
+
+pub fn hydrate_chart<T>(id: &str)
+where
+	T: ChartImpl,
+	T::Options: serde::de::DeserializeOwned,
+{
+	let document = window().unwrap().document().unwrap();
+	let container = document
+		.get_element_by_id(id)
+		.unwrap()
+		.dyn_into::<HtmlElement>()
+		.unwrap();
+	let options = container.dataset().get("options").unwrap();
+	let options = serde_json::from_str(&options).unwrap();
+	let chart = Chart::<T>::new(container);
+	chart.borrow_mut().draw(options);
+	std::mem::forget(chart);
+}
 
 #[component]
 pub fn BarChart(

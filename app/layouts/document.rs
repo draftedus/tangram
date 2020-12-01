@@ -9,7 +9,7 @@ pub struct PageInfo {
 pub fn Document(page_info: PageInfo) {
 	html! {
 		<>
-			{"<!doctype html>"}
+			{raw!("<!doctype html>")}
 			<html lang="en">
 				<head>
 					<meta charset="utf-8" />

@@ -1,4 +1,4 @@
-use super::props::{Enum, Inner, Number, Page, Text, TokenStats};
+use super::props::{Enum, Inner, Number, Page, Props, Text, TokenStats};
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
@@ -114,6 +114,14 @@ pub async fn get(
 		/>
 	}
 	.render_to_string();
+	// let props = Props {
+	// 	inner,
+	// 	model_layout_info,
+	// };
+	// let html = _pinwheel.render_with_props(
+	// 	"/repos/_repo_id/models/_model_id/training_stats/columns/_column_name",
+	// 	props,
+	// )?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))
