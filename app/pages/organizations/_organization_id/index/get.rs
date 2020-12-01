@@ -1,16 +1,15 @@
-use super::props::{Props, Repo};
+use super::page::{render, Props, Repo};
 use tangram_app_common::{
 	error::{bad_request, not_found, service_unavailable, unauthorized},
 	organizations::get_organization,
 	user::{authorize_normal_user, authorize_normal_user_for_organization},
 	Context,
 };
-use tangram_app_layouts::app_layout::get_app_layout_info;
-use tangram_deps::{http, hyper, pinwheel::Pinwheel, sqlx, sqlx::prelude::*};
+use tangram_app_layouts::{app_layout::get_app_layout_info, document::PageInfo};
+use tangram_deps::{http, hyper, sqlx, sqlx::prelude::*};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	organization_id: &str,
@@ -68,7 +67,10 @@ pub async fn get(
 		repos,
 		user_id: user.id.to_string(),
 	};
-	let html = pinwheel.render_with_props("/organizations/_organization_id/", props)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: None,
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

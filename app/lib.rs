@@ -366,7 +366,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["organizations", organization_id, ""]) => {
 			tangram_app_pages_organizations_organization_id_index::get(
-				&pinwheel,
 				context,
 				request,
 				organization_id,
