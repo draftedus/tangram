@@ -77,7 +77,7 @@ impl Clone for Box<dyn Component> {
 impl Node {
 	pub fn render_to_string(mut self) -> String {
 		self.render();
-		format!("<!doctype html>{}", self)
+		self.to_string()
 	}
 
 	fn render(&mut self) {
