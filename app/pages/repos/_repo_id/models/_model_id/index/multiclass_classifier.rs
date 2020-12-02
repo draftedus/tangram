@@ -38,7 +38,7 @@ pub fn multiclass_classifier_index_page(props: MulticlassClassifierProps) -> htm
 				.enumerate()
 				.map(|(index, loss)| LineChartPoint {
 					x: index.to_f64().unwrap(),
-					y: Some(loss.to_f64().unwrap()),
+					y: loss.to_f64().unwrap(),
 				})
 				.collect::<Vec<_>>(),
 			title: Some("loss".to_owned()),

@@ -34,7 +34,7 @@ pub fn binary_classifier_index_page(props: BinaryClassifierProps) -> html::Node 
 				.enumerate()
 				.map(|(index, loss)| LineChartPoint {
 					x: index.to_f64().unwrap(),
-					y: Some(loss.to_f64().unwrap()),
+					y: loss.to_f64().unwrap(),
 				})
 				.collect::<Vec<_>>(),
 			title: Some("loss".to_owned()),
