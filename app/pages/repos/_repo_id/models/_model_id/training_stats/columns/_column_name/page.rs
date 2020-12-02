@@ -1,29 +1,25 @@
 use super::enum_column::EnumColumn;
-use html::{component, html};
+use super::number_column::NumberColumn;
+use super::text_column::TextColumn;
+use html::html;
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
 };
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Props {
 	pub inner: Inner,
 	pub model_layout_info: ModelLayoutInfo,
 }
 
-#[derive(serde::Serialize, Clone)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "type", content = "value")]
 pub enum Inner {
-	Number(Number),
-	Enum(Enum),
-	Text(Text),
+	Number(NumberProps),
+	Enum(EnumProps),
+	Text(TextProps),
 }
 
-#[derive(serde::Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Number {
+#[derive(Clone)]
+pub struct NumberProps {
 	pub invalid_count: u64,
 	pub max: f32,
 	pub mean: f32,
@@ -36,47 +32,48 @@ pub struct Number {
 	pub unique_count: u64,
 }
 
-#[derive(serde::Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Enum {
+#[derive(Clone)]
+pub struct EnumProps {
 	pub histogram: Option<Vec<(String, u64)>>,
 	pub invalid_count: u64,
 	pub name: String,
 	pub unique_count: u64,
 }
 
-#[derive(serde::Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Text {
+#[derive(Clone)]
+pub struct TextProps {
 	pub name: String,
 	pub n_tokens: usize,
 	pub tokens: Vec<TokenStats>,
 }
 
-#[derive(serde::Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone)]
 pub struct TokenStats {
 	pub token: String,
 	pub count: u64,
 	pub examples_count: u64,
 }
 
-#[component]
-pub fn Page(inner: Inner, model_layout_info: ModelLayoutInfo, page_info: PageInfo) {
-	let inner = match inner {
-		Inner::Number(_) => todo!(),
+pub fn render(props: Props, page_info: PageInfo) -> String {
+	let inner = match props.inner {
+		Inner::Number(inner) => html! {
+			<NumberColumn props={inner} />
+		},
 		Inner::Enum(inner) => html! {
 			<EnumColumn props={inner} />
 		},
-		Inner::Text(_) => todo!(),
+		Inner::Text(inner) => html! {
+			<TextColumn props={inner} />
+		},
 	};
-	html! {
+	let html = html! {
 		<ModelLayout
-			info={model_layout_info}
+			info={props.model_layout_info}
 			page_info={page_info}
 			selected_item={ModelSideNavItem::TrainingStats}
 		>
 			{inner}
 		</ModelLayout>
-	}
+	};
+	html.render_to_string()
 }

@@ -1,4 +1,4 @@
-use super::props::{Enum, Inner, Number, Page, Text, TokenStats};
+use super::page::{render, EnumProps, Inner, NumberProps, Props, TextProps, TokenStats};
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
@@ -6,7 +6,7 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
-use tangram_deps::{html::html, http, hyper, pinwheel::client};
+use tangram_deps::{http, hyper, pinwheel::client};
 use tangram_util::{error::Result, id::Id};
 
 const MAX_TOKENS: usize = 1_000;
@@ -63,7 +63,7 @@ pub async fn get(
 
 	let inner = match column {
 		tangram_core::model::ColumnStats::Unknown(_) => todo!(),
-		tangram_core::model::ColumnStats::Number(column) => Inner::Number(Number {
+		tangram_core::model::ColumnStats::Number(column) => Inner::Number(NumberProps {
 			invalid_count: column.invalid_count,
 			min: column.min,
 			max: column.max,
@@ -75,7 +75,7 @@ pub async fn get(
 			std: column.std,
 			unique_count: column.unique_count,
 		}),
-		tangram_core::model::ColumnStats::Enum(column) => Inner::Enum(Enum {
+		tangram_core::model::ColumnStats::Enum(column) => Inner::Enum(EnumProps {
 			histogram: Some(column.histogram),
 			invalid_count: column.invalid_count,
 			name: column.column_name.clone(),
@@ -94,7 +94,7 @@ pub async fn get(
 				.collect::<Vec<_>>();
 			top_tokens.sort_by(|a, b| a.count.partial_cmp(&b.count).unwrap().reverse());
 			top_tokens.truncate(MAX_TOKENS);
-			Inner::Text(Text {
+			Inner::Text(TextProps {
 				name: column.column_name,
 				n_tokens,
 				tokens: top_tokens,
@@ -106,14 +106,11 @@ pub async fn get(
 	let page_info = PageInfo {
 		client_wasm_js_src: Some(client!()),
 	};
-	let html = html! {
-		<Page
-			inner={inner}
-			model_layout_info={model_layout_info}
-			page_info={page_info}
-		/>
-	}
-	.render_to_string();
+	let props = Props {
+		inner,
+		model_layout_info,
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

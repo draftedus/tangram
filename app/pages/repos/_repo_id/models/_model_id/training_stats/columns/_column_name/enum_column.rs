@@ -1,4 +1,4 @@
-use super::props::Enum;
+use super::page::EnumProps;
 use html::{component, html};
 use tangram_app_common::metrics_row::MetricsRow;
 use tangram_charts::{
@@ -9,7 +9,7 @@ use tangram_deps::num_traits::ToPrimitive;
 use tangram_ui as ui;
 
 #[component]
-pub fn EnumColumn(props: Enum) {
+pub fn EnumColumn(props: EnumProps) {
 	let name = props.name;
 	html! {
 		<ui::S1>
