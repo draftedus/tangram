@@ -4,7 +4,6 @@ use tangram_charts::{
 	hydrate_chart,
 };
 use wasm_bindgen::prelude::*;
-use web_sys::*;
 
 #[wasm_bindgen(start)]
 pub fn start() {

@@ -1,15 +1,29 @@
 use crate::{
-	chart::{ActiveHoverRegion, DrawChartOptions, HoverRegion},
-	common::GridLineInterval,
-	common::{Point, Rect},
+	chart::{
+		ActiveHoverRegion, ChartImpl, DrawChartOptions, DrawChartOutput, DrawOverlayOptions,
+		HoverRegion,
+	},
+	common::{
+		compute_boxes, compute_x_axis_grid_line_info, draw_x_axis, draw_x_axis_grid_lines,
+		draw_x_axis_labels, draw_x_axis_title, draw_y_axis, draw_y_axis_grid_lines,
+		draw_y_axis_labels, draw_y_axis_title, ComputeBoxesOptions, ComputeBoxesOutput,
+		ComputeXAxisGridLineInfoOptions, DrawXAxisGridLinesOptions, DrawXAxisLabelsOptions,
+		DrawXAxisOptions, DrawXAxisTitleOptions, DrawYAxisGridLinesOptions, DrawYAxisLabelsOptions,
+		DrawYAxisOptions, DrawYAxisTitleOptions, GridLineInterval, Point, Rect,
+	},
+	config::ChartConfig,
 };
+use itertools::Itertools;
+use num_traits::ToPrimitive;
 use wasm_bindgen::JsValue;
 use web_sys::*;
+
+pub struct LineChart;
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct LineChartOptions {
 	pub hide_legend: Option<bool>,
-	pub labels: Option<String>,
+	pub labels: Option<Vec<String>>,
 	pub series: Vec<LineChartSeries>,
 	pub should_draw_x_axis_labels: Option<bool>,
 	pub should_draw_y_axis_labels: Option<bool>,
@@ -33,13 +47,31 @@ pub struct LineChartSeries {
 	pub title: Option<String>,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct LineChartPoint {
 	pub x: f64,
-	pub y: Option<f64>,
+	pub y: f64,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+impl Into<Point> for LineChartPoint {
+	fn into(self) -> Point {
+		Point {
+			x: self.x,
+			y: self.y,
+		}
+	}
+}
+
+impl From<Point> for LineChartPoint {
+	fn from(value: Point) -> LineChartPoint {
+		LineChartPoint {
+			x: value.x,
+			y: value.y,
+		}
+	}
+}
+
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum LineStyle {
 	#[serde(rename = "hidden")]
 	Hidden,
@@ -49,7 +81,7 @@ pub enum LineStyle {
 	Dashed,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum PointStyle {
 	#[serde(rename = "hidden")]
 	Hidden,
@@ -57,7 +89,7 @@ pub enum PointStyle {
 	Circle,
 }
 
-struct LineChartOverlayInfo {
+pub struct LineChartOverlayInfo {
 	chart_box: Rect,
 	x_max: f64,
 	x_min: f64,
@@ -66,7 +98,7 @@ struct LineChartOverlayInfo {
 }
 
 #[derive(Clone)]
-struct LineChartHoverRegionInfo {
+pub struct LineChartHoverRegionInfo {
 	chart_box: Rect,
 	color: String,
 	point: Point,
@@ -81,254 +113,295 @@ struct LineChartHoverRegionInfo {
 	y_min: f64,
 }
 
-struct DrawLineChartOutput {
-	hover_regions: Vec<HoverRegion<LineChartHoverRegionInfo>>,
-	overlay_info: LineChartOverlayInfo,
+impl ChartImpl for LineChart {
+	type Options = LineChartOptions;
+	type OverlayInfo = LineChartOverlayInfo;
+	type HoverRegionInfo = LineChartHoverRegionInfo;
+
+	fn draw_chart(
+		options: DrawChartOptions<Self::Options>,
+	) -> DrawChartOutput<Self::OverlayInfo, Self::HoverRegionInfo> {
+		draw_line_chart(options)
+	}
+
+	fn draw_overlay(options: DrawOverlayOptions<Self::OverlayInfo, Self::HoverRegionInfo>) {
+		draw_line_chart_overlay(options)
+	}
 }
 
-fn draw_line_chart(options: DrawChartOptions<LineChartOptions>) -> DrawLineChartOutput {
-	todo!()
-	// 	let {
-	// 		labels,
-	// 		series: data,
-	// 		xAxisGridLineInterval,
-	// 		xAxisTitle,
-	// 		yAxisGridLineInterval,
-	// 		yAxisTitle,
-	// 	} = options
-	// 	let width = ctx.canvas.clientWidth
-	// 	let height = ctx.canvas.clientHeight
-	// 	let hoverRegions: Array<HoverRegion<LineChartHoverRegionInfo>> = []
+fn draw_line_chart(
+	options: DrawChartOptions<LineChartOptions>,
+) -> DrawChartOutput<LineChartOverlayInfo, LineChartHoverRegionInfo> {
+	let DrawChartOptions {
+		chart_colors,
+		chart_config,
+		options,
+		ctx,
+		..
+	} = options;
+	let LineChartOptions {
+		labels,
+		series,
+		x_axis_grid_line_interval,
+		x_axis_title,
+		y_axis_grid_line_interval,
+		y_axis_title,
+		..
+	} = &options;
+	let canvas = ctx.canvas().unwrap();
+	let width = canvas.client_width().to_f64().unwrap();
+	let height = canvas.client_height().to_f64().unwrap();
+	let mut hover_regions: Vec<HoverRegion<LineChartHoverRegionInfo>> = Vec::new();
 
-	// 	// Compute the bounds.
-	// 	let xMin: number
-	// 	if (options.xMin !== undefined) {
-	// 		xMin = options.xMin
-	// 	} else {
-	// 		xMin = Math.min(
-	// 			...options.series.flatMap(series => series.data.map(({ x }) => x)),
-	// 		)
-	// 	}
-	// 	let xMax: number
-	// 	if (options.xMax !== undefined) {
-	// 		xMax = options.xMax
-	// 	} else {
-	// 		xMax = Math.max(
-	// 			...options.series.flatMap(series => series.data.map(({ x }) => x)),
-	// 		)
-	// 	}
-	// 	let yMin: number
-	// 	if (options.yMin !== undefined) {
-	// 		yMin = options.yMin
-	// 	} else {
-	// 		yMin = Math.min(
-	// 			...options.series.flatMap(series =>
-	// 				series.data.map(p => p.y ?? Infinity),
-	// 			),
-	// 		)
-	// 	}
-	// 	let yMax: number
-	// 	if (options.yMax !== undefined) {
-	// 		yMax = options.yMax
-	// 	} else {
-	// 		yMax = Math.max(
-	// 			...options.series.flatMap(series =>
-	// 				series.data.map(p => p.y ?? -Infinity),
-	// 			),
-	// 		)
-	// 	}
+	// Compute the bounds.
+	let x_min = options.x_min.unwrap_or_else(|| {
+		options
+			.series
+			.iter()
+			.flat_map(|series| series.data.iter().map(|point| point.x))
+			.min_by(|a, b| a.partial_cmp(b).unwrap())
+			.unwrap()
+	});
+	let x_max = options.x_max.unwrap_or_else(|| {
+		options
+			.series
+			.iter()
+			.flat_map(|series| series.data.iter().map(|point| point.x))
+			.max_by(|a, b| a.partial_cmp(b).unwrap())
+			.unwrap()
+	});
+	let y_min = options.y_min.unwrap_or_else(|| {
+		options
+			.series
+			.iter()
+			.flat_map(|series| series.data.iter().map(|point| point.y))
+			.min_by(|a, b| a.partial_cmp(b).unwrap())
+			.unwrap()
+	});
+	let y_max = options.y_max.unwrap_or_else(|| {
+		options
+			.series
+			.iter()
+			.flat_map(|series| series.data.iter().map(|point| point.y))
+			.max_by(|a, b| a.partial_cmp(b).unwrap())
+			.unwrap()
+	});
 
-	// 	// Compute the boxes.
-	// 	let {
-	// 		chart_box,
-	// 		xAxisLabelsBox,
-	// 		xAxisTitleBox,
-	// 		yAxisGridLineInfo,
-	// 		yAxisLabelsBox,
-	// 		yAxisTitleBox,
-	// 	} = computeBoxes({
-	// 		ctx,
-	// 		height,
-	// 		includeXAxisLabels: options.shouldDrawXAxisLabels ?? true,
-	// 		includeXAxisTitle: xAxisTitle !== undefined,
-	// 		includeYAxisLabels: options.shouldDrawYAxisLabels ?? true,
-	// 		includeYAxisTitle: yAxisTitle !== undefined,
-	// 		width,
-	// 		xAxisGridLineInterval,
-	// 		yAxisGridLineInterval,
-	// 		yMax,
-	// 		yMin,
-	// 	})
+	// Compute the boxes.
+	let ComputeBoxesOutput {
+		chart_box,
+		x_axis_labels_box,
+		x_axis_title_box,
+		y_axis_grid_line_info,
+		y_axis_labels_box,
+		y_axis_title_box,
+	} = compute_boxes(ComputeBoxesOptions {
+		chart_config,
+		ctx: ctx.clone(),
+		height,
+		include_x_axis_labels: options.should_draw_x_axis_labels.unwrap_or(true),
+		include_x_axis_title: x_axis_title.is_some(),
+		include_y_axis_labels: options.should_draw_y_axis_labels.unwrap_or(true),
+		include_y_axis_title: y_axis_title.is_some(),
+		width,
+		x_axis_grid_line_interval: x_axis_grid_line_interval.clone(),
+		y_axis_grid_line_interval: y_axis_grid_line_interval.clone(),
+		y_max,
+		y_min,
+	});
 
-	// 	// Compute the grid line info.
-	// 	let xAxisGridLineInfo = computeXAxisGridLineInfo({
-	// 		chartWidth: chart_box.w,
-	// 		ctx,
-	// 		xAxisGridLineInterval,
-	// 		xMax,
-	// 		xMin,
-	// 	})
+	// Compute the grid line info.
+	let x_axis_grid_line_info = compute_x_axis_grid_line_info(ComputeXAxisGridLineInfoOptions {
+		chart_width: chart_box.w,
+		ctx: ctx.clone(),
+		x_axis_grid_line_interval: x_axis_grid_line_interval.clone(),
+		x_max,
+		x_min,
+	});
 
-	// 	drawXAxisGridLines({
-	// 		box: chart_box,
-	// 		ctx,
-	// 		xAxisGridLineInfo,
-	// 	})
+	draw_x_axis_grid_lines(DrawXAxisGridLinesOptions {
+		chart_colors,
+		chart_config,
+		ctx: ctx.clone(),
+		rect: chart_box,
+		x_axis_grid_line_info: x_axis_grid_line_info.clone(),
+	});
 
-	// 	drawYAxisGridLines({
-	// 		box: chart_box,
-	// 		ctx,
-	// 		yAxisGridLineInfo,
-	// 	})
+	draw_y_axis_grid_lines(DrawYAxisGridLinesOptions {
+		chart_colors,
+		chart_config,
+		ctx: ctx.clone(),
+		rect: chart_box,
+		y_axis_grid_line_info: y_axis_grid_line_info.clone(),
+	});
 
-	// 	drawXAxis({
-	// 		box: chart_box,
-	// 		ctx,
-	// 		yAxisGridLineInfo,
-	// 	})
+	draw_x_axis(DrawXAxisOptions {
+		chart_colors,
+		chart_config,
+		ctx: ctx.clone(),
+		rect: chart_box,
+		y_axis_grid_line_info: y_axis_grid_line_info.clone(),
+	});
 
-	// 	drawYAxis({
-	// 		box: chart_box,
-	// 		ctx,
-	// 		xAxisGridLineInfo,
-	// 	})
+	draw_y_axis(DrawYAxisOptions {
+		chart_colors,
+		chart_config,
+		ctx: ctx.clone(),
+		rect: chart_box,
+		x_axis_grid_line_info: x_axis_grid_line_info.clone(),
+	});
 
-	// 	// Draw the X axis labels.
-	// 	if (options.shouldDrawXAxisLabels ?? true) {
-	// 		drawXAxisLabels({
-	// 			box: xAxisLabelsBox,
-	// 			ctx,
-	// 			gridLineInfo: xAxisGridLineInfo,
-	// 			labels,
-	// 			width,
-	// 		})
-	// 	}
+	// Draw the X axis labels.
+	if options.should_draw_x_axis_labels.unwrap_or(true) {
+		draw_x_axis_labels(DrawXAxisLabelsOptions {
+			rect: x_axis_labels_box,
+			ctx: ctx.clone(),
+			grid_line_info: x_axis_grid_line_info,
+			width,
+			labels,
+		})
+	}
 
-	// 	// Draw the Y axis labels.
-	// 	if (options.shouldDrawYAxisLabels ?? true) {
-	// 		drawYAxisLabels({
-	// 			box: yAxisLabelsBox,
-	// 			ctx,
-	// 			fontSize: chartConfig.fontSize,
-	// 			gridLineInfo: yAxisGridLineInfo,
-	// 			height,
-	// 		})
-	// 	}
+	// Draw the Y axis labels.
+	if options.should_draw_y_axis_labels.unwrap_or(true) {
+		draw_y_axis_labels(DrawYAxisLabelsOptions {
+			rect: y_axis_labels_box,
+			ctx: ctx.clone(),
+			font_size: chart_config.font_size,
+			grid_line_info: y_axis_grid_line_info,
+			height,
+		})
+	}
 
-	// 	drawXAxisTitle({
-	// 		box: xAxisTitleBox,
-	// 		ctx,
-	// 		title: xAxisTitle,
-	// 	})
+	// Draw the X axis title.
+	if let Some(x_axis_title) = x_axis_title {
+		draw_x_axis_title(DrawXAxisTitleOptions {
+			rect: x_axis_title_box,
+			ctx: ctx.clone(),
+			title: x_axis_title,
+		});
+	}
 
-	// 	drawYAxisTitle({
-	// 		box: yAxisTitleBox,
-	// 		ctx,
-	// 		title: yAxisTitle,
-	// 	})
+	// Draw the Y axis title.
+	if let Some(y_axis_title) = y_axis_title {
+		draw_y_axis_title(DrawYAxisTitleOptions {
+			rect: y_axis_title_box,
+			ctx: ctx.clone(),
+			title: y_axis_title,
+		});
+	}
 
-	// 	// Draw the lines.
-	// 	data.forEach(series => {
-	// 		drawLine({
-	// 			chart_box,
-	// 			ctx,
-	// 			series,
-	// 			xMax,
-	// 			xMin,
-	// 			yMax,
-	// 			yMin,
-	// 		})
-	// 	})
+	// Draw the lines.
+	for series in series.iter() {
+		draw_line(DrawLineOptions {
+			chart_config,
+			chart_box,
+			ctx: ctx.clone(),
+			series,
+			x_max,
+			x_min,
+			y_max,
+			y_min,
+		});
+	}
 
-	// 	let maxPointCount = Math.max(...data.map(series => series.data.length))
-	// 	let shouldDrawPoints =
-	// 		chart_box.w / maxPointCount > 2 * chartConfig.pointRadius
+	let max_point_count = series
+		.iter()
+		.map(|series| series.data.len())
+		.max()
+		.unwrap()
+		.to_f64()
+		.unwrap();
+	let should_draw_points = chart_box.w / max_point_count > 2.0 * chart_config.point_radius;
 
-	// 	// Draw the points.
-	// 	if (shouldDrawPoints) {
-	// 		data.forEach(series => {
-	// 			series.data.forEach(point => {
-	// 				if (point.y === null) {
-	// 					return
-	// 				}
-	// 				drawPoint({
-	// 					chart_box,
-	// 					color: series.color,
-	// 					ctx,
-	// 					point: { x: point.x, y: point.y },
-	// 					pointStyle: series.pointStyle ?? PointStyle.Circle,
-	// 					radius: chartConfig.pointRadius,
-	// 					xMax,
-	// 					xMin,
-	// 					yMax,
-	// 					yMin,
-	// 				})
-	// 			})
-	// 		})
-	// 	}
+	// Draw the points.
+	if should_draw_points {
+		for series in series.iter() {
+			for point in series.data.iter() {
+				draw_point(DrawPointOptions {
+					chart_box,
+					color: &series.color,
+					ctx: ctx.clone(),
+					point: *point,
+					point_style: series.point_style.unwrap_or(PointStyle::Circle),
+					radius: chart_config.point_radius,
+					x_max,
+					x_min,
+					y_max,
+					y_min,
+				})
+			}
+		}
+	}
 
-	// 	// Compute the hover regions.
-	// 	let hasMultipleSeries = data.length > 1
-	// 	data.forEach((series, seriesIndex) => {
-	// 		series.data.forEach((point, pointIndex) => {
-	// 			if (point.y === null) {
-	// 				return
-	// 			}
-	// 			let pointPixels = pointToPixels({
-	// 				chart_box,
-	// 				point: { x: point.x, y: point.y },
-	// 				xMax,
-	// 				xMin,
-	// 				yMax,
-	// 				yMin,
-	// 			})
-	// 			let hoverRegion: HoverRegion<LineChartHoverRegionInfo> = {
-	// 				distance: (mouseX: number, mouseY: number) => {
-	// 					return (pointPixels.x - mouseX) ** 2 + (pointPixels.y - mouseY) ** 2
-	// 				},
-	// 				hitTest: (mouseX: number, mouseY: number) => {
-	// 					return (
-	// 						mouseX > pointPixels.x - chartConfig.tooltipTargetRadius &&
-	// 						mouseX < pointPixels.x + chartConfig.tooltipTargetRadius &&
-	// 						mouseY > pointPixels.y - chartConfig.tooltipTargetRadius &&
-	// 						mouseY < pointPixels.y + chartConfig.tooltipTargetRadius
-	// 					)
-	// 				},
-	// 				info: {
-	// 					chart_box,
-	// 					color: series.color,
-	// 					point: { x: point.x, y: point.y },
-	// 					pointLabel: labels?.[pointIndex],
-	// 					pointValue: point.y,
-	// 					seriesIndex,
-	// 					seriesTitle: hasMultipleSeries ? series.title : undefined,
-	// 					tooltipOriginPixels: { x: pointPixels.x, y: pointPixels.y },
-	// 					xMax,
-	// 					xMin,
-	// 					yMax,
-	// 					yMin,
-	// 				},
-	// 			}
-	// 			hoverRegions.push(hoverRegion)
-	// 		})
-	// 	})
+	// Compute the hover regions.
+	let has_multiple_series = series.len() > 1;
+	for (series_index, series) in series.iter().enumerate() {
+		for (point_index, point) in series.data.iter().enumerate() {
+			let point_pixels = point_to_pixels(PointToPixelsOptions {
+				chart_box,
+				point: point.clone().into(),
+				x_max,
+				x_min,
+				y_max,
+				y_min,
+			});
+			let tooltip_target_radius = chart_config.tooltip_target_radius;
+			let point_label = labels
+				.as_ref()
+				.map(|labels| labels.get(point_index).unwrap().clone());
+			let hover_region = HoverRegion {
+				distance: Box::new(move |x: f64, y: f64| {
+					(point_pixels.x - x).powi(2) + (point_pixels.y - y).powi(2)
+				}),
+				hit_test: Box::new(move |x: f64, y: f64| {
+					x > point_pixels.x - tooltip_target_radius
+						&& x < point_pixels.x + tooltip_target_radius
+						&& y > point_pixels.y - tooltip_target_radius
+						&& y < point_pixels.y + tooltip_target_radius
+				}),
+				info: LineChartHoverRegionInfo {
+					chart_box,
+					color: series.color.clone(),
+					point: point.clone().into(),
+					point_label,
+					point_value: point.y,
+					series_index: series_index.to_f64().unwrap(),
+					series_title: if has_multiple_series {
+						series.title.clone()
+					} else {
+						None
+					},
+					tooltip_origin_pixels: point_pixels,
+					x_max,
+					x_min,
+					y_max,
+					y_min,
+				},
+			};
+			hover_regions.push(hover_region);
+		}
+	}
 
-	// 	let overlayInfo: LineChartOverlayInfo = {
-	// 		chart_box,
-	// 		xMax,
-	// 		xMin,
-	// 		yMax,
-	// 		yMin,
-	// 	}
+	let overlay_info = LineChartOverlayInfo {
+		chart_box,
+		x_max,
+		x_min,
+		y_max,
+		y_min,
+	};
 
-	// 	return { hoverRegions, overlayInfo }
+	DrawChartOutput {
+		hover_regions,
+		overlay_info,
+	}
 }
 
-struct DrawPointOptions {
+struct DrawPointOptions<'a> {
 	chart_box: Rect,
-	color: String,
+	color: &'a str,
 	ctx: CanvasRenderingContext2d,
-	point: Point,
+	point: LineChartPoint,
 	point_style: PointStyle,
 	radius: f64,
 	x_max: f64,
@@ -355,7 +428,7 @@ fn draw_point(options: DrawPointOptions) {
 	}
 	let point_pixels = point_to_pixels(PointToPixelsOptions {
 		chart_box,
-		point,
+		point: point.clone().into(),
 		x_max,
 		x_min,
 		y_max,
@@ -374,10 +447,11 @@ fn draw_point(options: DrawPointOptions) {
 	ctx.fill();
 }
 
-struct DrawLineOptions {
+struct DrawLineOptions<'a> {
 	chart_box: Rect,
+	chart_config: &'a ChartConfig,
 	ctx: CanvasRenderingContext2d,
-	series: LineChartSeries,
+	series: &'a LineChartSeries,
 	x_max: f64,
 	x_min: f64,
 	y_max: f64,
@@ -385,109 +459,108 @@ struct DrawLineOptions {
 }
 
 fn draw_line(options: DrawLineOptions) {
-	// 	let {
-	// 		chart_box,
-	// 		ctx,
-	// 		series,
-	// 		series: { color },
-	// 		xMax,
-	// 		xMin,
-	// 		yMax,
-	// 		yMin,
-	// 	} = options
-	// 	if (series.lineStyle === LineStyle.Hidden) {
-	// 		return
-	// 	}
-	// 	ctx.beginPath()
-	// 	ctx.strokeStyle = color
-	// 	if (options.series.lineStyle === LineStyle.Dashed) {
-	// 		ctx.setLineDash([4, 4])
-	// 	} else {
-	// 		ctx.setLineDash([])
-	// 	}
-	// 	let data = series.data.filter((p: LineChartPoint): p is Point => p.y !== null)
-	// 	if (data.length < 2) {
-	// 		return
-	// 	}
-	// 	let firstPoint = data[0]
-	// 	if (firstPoint === undefined) throw Error()
-	// 	let firstPointPixels = pointToPixels({
-	// 		chart_box,
-	// 		point: firstPoint,
-	// 		xMax,
-	// 		xMin,
-	// 		yMax,
-	// 		yMin,
-	// 	})
-	// 	ctx.moveTo(firstPointPixels.x, firstPointPixels.y)
-	// 	let cp1 = firstPoint
-	// 	for (let i = 1; i < data.length - 1; i++) {
-	// 		let previousPoint = data[i - 1]
-	// 		if (previousPoint === undefined) throw Error()
-	// 		let point = data[i]
-	// 		if (point === undefined) throw Error()
-	// 		let nextPoint = data[i + 1]
-	// 		if (nextPoint === undefined) throw Error()
-	// 		let [cp2, nextCp1] = interpolateSpline({
-	// 			nextPoint,
-	// 			point,
-	// 			previousPoint,
-	// 			tension: chartConfig.splineTension,
-	// 		})
-	// 		let cp1Pixels = pointToPixels({
-	// 			chart_box,
-	// 			point: cp1,
-	// 			xMax,
-	// 			xMin,
-	// 			yMax,
-	// 			yMin,
-	// 		})
-	// 		let cp2Pixels = pointToPixels({
-	// 			chart_box,
-	// 			point: cp2,
-	// 			xMax,
-	// 			xMin,
-	// 			yMax,
-	// 			yMin,
-	// 		})
-	// 		let pointPixels = pointToPixels({ chart_box, point, xMax, xMin, yMax, yMin })
-	// 		ctx.bezierCurveTo(
-	// 			cp1Pixels.x,
-	// 			cp1Pixels.y,
-	// 			cp2Pixels.x,
-	// 			cp2Pixels.y,
-	// 			pointPixels.x,
-	// 			pointPixels.y,
-	// 		)
-	// 		cp1 = nextCp1
-	// 	}
-	// 	let lastPoint = data[data.length - 1]
-	// 	if (lastPoint === undefined) throw Error()
-	// 	let lastPointPixels = pointToPixels({
-	// 		chart_box,
-	// 		point: lastPoint,
-	// 		xMax,
-	// 		xMin,
-	// 		yMax,
-	// 		yMin,
-	// 	})
-	// 	let cp1Pixels = pointToPixels({
-	// 		chart_box,
-	// 		point: cp1,
-	// 		xMax,
-	// 		xMin,
-	// 		yMax,
-	// 		yMin,
-	// 	})
-	// 	ctx.bezierCurveTo(
-	// 		cp1Pixels.x,
-	// 		cp1Pixels.y,
-	// 		lastPointPixels.x,
-	// 		lastPointPixels.y,
-	// 		lastPointPixels.x,
-	// 		lastPointPixels.y,
-	// 	)
-	// 	ctx.stroke()
+	let DrawLineOptions {
+		chart_box,
+		chart_config,
+		ctx,
+		series,
+		x_max,
+		x_min,
+		y_max,
+		y_min,
+	} = options;
+	if let Some(LineStyle::Hidden) = &series.line_style {
+		return;
+	}
+	ctx.save();
+	ctx.begin_path();
+	ctx.set_stroke_style(&series.color.as_str().into());
+	if let Some(LineStyle::Dashed) = &series.line_style {
+		ctx.set_line_dash(&JsValue::from_serde(&[4, 4]).unwrap())
+			.unwrap();
+	}
+	if series.data.len() < 2 {
+		return;
+	}
+	let first_point = series.data[0];
+	let first_point_pixels = point_to_pixels(PointToPixelsOptions {
+		chart_box,
+		point: first_point.into(),
+		x_max,
+		x_min,
+		y_max,
+		y_min,
+	});
+	ctx.move_to(first_point_pixels.x, first_point_pixels.y);
+	let mut cp1 = first_point;
+	for (previous_point, point, next_point) in series.data.iter().tuple_windows() {
+		let (cp2, next_cp1) = interpolate_spline(InterpolateSplineOptions {
+			next_point: next_point.clone().into(),
+			point: point.clone().into(),
+			previous_point: previous_point.clone().into(),
+			tension: chart_config.spline_tension,
+		});
+		let cp1_pixels = point_to_pixels(PointToPixelsOptions {
+			chart_box,
+			point: cp1.into(),
+			x_max,
+			x_min,
+			y_max,
+			y_min,
+		});
+		let cp2_pixels = point_to_pixels(PointToPixelsOptions {
+			chart_box,
+			point: cp2,
+			x_max,
+			x_min,
+			y_max,
+			y_min,
+		});
+		let point_pixels = point_to_pixels(PointToPixelsOptions {
+			chart_box,
+			point: point.clone().into(),
+			x_max,
+			x_min,
+			y_max,
+			y_min,
+		});
+		ctx.bezier_curve_to(
+			cp1_pixels.x,
+			cp1_pixels.y,
+			cp2_pixels.x,
+			cp2_pixels.y,
+			point_pixels.x,
+			point_pixels.y,
+		);
+		cp1 = next_cp1.clone().into();
+	}
+	let last_point = series.data[series.data.len() - 1];
+	let last_point_pixels = point_to_pixels(PointToPixelsOptions {
+		chart_box,
+		point: last_point.into(),
+		x_max,
+		x_min,
+		y_max,
+		y_min,
+	});
+	let cp1_pixels = point_to_pixels(PointToPixelsOptions {
+		chart_box,
+		point: cp1.into(),
+		x_max,
+		x_min,
+		y_max,
+		y_min,
+	});
+	ctx.bezier_curve_to(
+		cp1_pixels.x,
+		cp1_pixels.y,
+		last_point_pixels.x,
+		last_point_pixels.y,
+		last_point_pixels.x,
+		last_point_pixels.y,
+	);
+	ctx.stroke();
+	ctx.restore();
 }
 
 struct InterpolateSplineOptions {
@@ -519,20 +592,23 @@ fn interpolate_spline(options: InterpolateSplineOptions) -> (Point, Point) {
 	(cp1, cp2)
 }
 
-struct DrawLineChartOverlayOptions {
-	active_hover_regions: Vec<ActiveHoverRegion<LineChartHoverRegionInfo>>,
-	ctx: CanvasRenderingContext2d,
-	info: LineChartOverlayInfo,
-	overlay_div: HtmlElement,
-}
-
-fn draw_line_chart_overlay(options: DrawLineChartOverlayOptions) {
-	// 	let {
-	// 		activeHoverRegions,
-	// 		ctx,
-	// 		info: { chart_box, xMax, xMin, yMax, yMin },
-	// 		overlayDiv,
-	// 	} = options
+fn draw_line_chart_overlay(
+	options: DrawOverlayOptions<LineChartOverlayInfo, LineChartHoverRegionInfo>,
+) {
+	let DrawOverlayOptions {
+		active_hover_regions,
+		ctx,
+		overlay_info,
+		overlay_div,
+		..
+	} = options;
+	let LineChartOverlayInfo {
+		chart_box,
+		x_max,
+		x_min,
+		y_max,
+		y_min,
+	} = &overlay_info;
 	// 	let closestActiveHoverRegionForSeries = new Map<
 	// 		number,
 	// 		ActiveHoverRegion<LineChartHoverRegionInfo>
@@ -669,17 +745,20 @@ struct PointToPixelsOptions {
 }
 
 fn point_to_pixels(options: PointToPixelsOptions) -> Point {
-	todo!()
-	// 	let { chart_box, point, xMax, xMin, yMax, yMin } = options
-	// 	return {
-	// 		x:
-	// 			chart_box.x +
-	// 			(-xMin / (xMax - xMin)) * chart_box.w +
-	// 			(point.x / (xMax - xMin)) * chart_box.w,
-	// 		y:
-	// 			chart_box.y +
-	// 			chart_box.h -
-	// 			(-yMin / (yMax - yMin)) * chart_box.h -
-	// 			(point.y / (yMax - yMin)) * chart_box.h,
-	// 	}
+	let PointToPixelsOptions {
+		chart_box,
+		point,
+		x_max,
+		x_min,
+		y_max,
+		y_min,
+	} = options;
+	Point {
+		x: chart_box.x
+			+ (-x_min / (x_max - x_min)) * chart_box.w
+			+ (point.x / (x_max - x_min)) * chart_box.w,
+		y: chart_box.y + chart_box.h
+			- (-y_min / (y_max - y_min)) * chart_box.h
+			- (point.y / (y_max - y_min)) * chart_box.h,
+	}
 }

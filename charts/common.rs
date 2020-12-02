@@ -286,11 +286,11 @@ pub fn compute_grid_line_info(
 }
 
 pub struct ComputeXAxisGridLineInfoOptions {
-	chart_width: f64,
-	ctx: CanvasRenderingContext2d,
-	x_axis_grid_line_interval: Option<GridLineInterval>,
-	x_max: f64,
-	x_min: f64,
+	pub chart_width: f64,
+	pub ctx: CanvasRenderingContext2d,
+	pub x_axis_grid_line_interval: Option<GridLineInterval>,
+	pub x_max: f64,
+	pub x_min: f64,
 }
 
 pub fn compute_x_axis_grid_line_info(options: ComputeXAxisGridLineInfoOptions) -> GridLineInfo {
@@ -492,12 +492,12 @@ pub fn draw_y_axis(options: DrawYAxisOptions) {
 	}
 }
 
-pub struct DrawXAxisLabelsOptions {
-	rect: Rect,
-	ctx: CanvasRenderingContext2d,
-	grid_line_info: GridLineInfo,
-	labels: Option<Vec<String>>,
-	width: f64,
+pub struct DrawXAxisLabelsOptions<'a> {
+	pub rect: Rect,
+	pub ctx: CanvasRenderingContext2d,
+	pub grid_line_info: GridLineInfo,
+	pub labels: &'a Option<Vec<String>>,
+	pub width: f64,
 }
 
 pub fn draw_x_axis_labels(options: DrawXAxisLabelsOptions) {

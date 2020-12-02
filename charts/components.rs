@@ -249,7 +249,7 @@ pub fn LineChart(
 	class: Option<String>,
 	hide_legend: Option<bool>,
 	id: Option<String>,
-	labels: Option<String>,
+	labels: Option<Vec<String>>,
 	series: Vec<LineChartSeries>,
 	should_draw_x_axis_labels: Option<bool>,
 	should_draw_y_axis_labels: Option<bool>,
