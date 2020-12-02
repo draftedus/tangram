@@ -134,7 +134,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", repo_id, ""]) => {
 			tangram_app_pages_repos_repo_id_index::get(
-				&pinwheel,
 				context,
 				request,
 				repo_id,

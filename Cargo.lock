@@ -2581,6 +2581,7 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_index"
 version = "0.0.0"
 dependencies = [
+ "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",

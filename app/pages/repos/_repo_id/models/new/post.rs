@@ -1,9 +1,10 @@
-use super::render::render;
+use super::render::{render, Props};
 use tangram_app_common::{
 	error::{not_found, redirect_to_login, service_unavailable},
 	user::{authorize_user, authorize_user_for_repo},
 	Context,
 };
+use tangram_app_layouts::{app_layout::get_app_layout_info, document::PageInfo};
 use tangram_deps::{
 	base64, bytes::Buf, chrono::prelude::*, http, hyper, multer, multer::Multipart, sqlx,
 };
@@ -29,6 +30,7 @@ pub async fn post(
 	if !authorize_user_for_repo(&mut db, &user, repo_id).await? {
 		return Ok(not_found());
 	}
+	let app_layout_info = get_app_layout_info(context).await?;
 	let boundary = match request
 		.headers()
 		.get(http::header::CONTENT_TYPE)
@@ -37,12 +39,18 @@ pub async fn post(
 	{
 		Some(boundary) => boundary,
 		None => {
-			let error = Some(format!(
-				"Failed to parse request body.\n{}:{}",
-				file!(),
-				line!()
-			));
-			let html = render(context, error).await?;
+			let props = Props {
+				app_layout_info,
+				error: Some(format!(
+					"Failed to parse request body.\n{}:{}",
+					file!(),
+					line!()
+				)),
+			};
+			let page_info = PageInfo {
+				client_wasm_js_src: None,
+			};
+			let html = render(props, page_info);
 			let response = http::Response::builder()
 				.status(http::StatusCode::BAD_REQUEST)
 				.body(hyper::Body::from(html))
@@ -56,12 +64,18 @@ pub async fn post(
 		let name = match field.name() {
 			Some(name) => name.to_owned(),
 			None => {
-				let error = Some(format!(
-					"Failed to parse request body.\n{}:{}",
-					file!(),
-					line!()
-				));
-				let html = render(context, error).await?;
+				let props = Props {
+					app_layout_info,
+					error: Some(format!(
+						"Failed to parse request body.\n{}:{}",
+						file!(),
+						line!()
+					)),
+				};
+				let page_info = PageInfo {
+					client_wasm_js_src: None,
+				};
+				let html = render(props, page_info);
 				let response = http::Response::builder()
 					.status(http::StatusCode::BAD_REQUEST)
 					.body(hyper::Body::from(html))
@@ -76,12 +90,18 @@ pub async fn post(
 		match name.as_str() {
 			"file" => file = Some(field_data),
 			_ => {
-				let error = Some(format!(
-					"Failed to parse request body.\n{}:{}",
-					file!(),
-					line!()
-				));
-				let html = render(context, error).await?;
+				let props = Props {
+					app_layout_info,
+					error: Some(format!(
+						"Failed to parse request body.\n{}:{}",
+						file!(),
+						line!()
+					)),
+				};
+				let page_info = PageInfo {
+					client_wasm_js_src: None,
+				};
+				let html = render(props, page_info);
 				let response = http::Response::builder()
 					.status(http::StatusCode::BAD_REQUEST)
 					.body(hyper::Body::from(html))
@@ -93,7 +113,14 @@ pub async fn post(
 	let file = match file {
 		Some(file) => file,
 		None => {
-			let html = render(context, Some("A file is required.".to_owned())).await?;
+			let props = Props {
+				app_layout_info,
+				error: Some("A file is required.".to_owned()),
+			};
+			let page_info = PageInfo {
+				client_wasm_js_src: None,
+			};
+			let html = render(props, page_info);
 			let response = http::Response::builder()
 				.status(http::StatusCode::BAD_REQUEST)
 				.body(hyper::Body::from(html))
@@ -104,7 +131,14 @@ pub async fn post(
 	let model = match tangram_core::model::Model::from_slice(&file) {
 		Ok(model) => model,
 		Err(_) => {
-			let html = render(context, Some("Invalid tangram model file.".to_owned())).await?;
+			let props = Props {
+				app_layout_info,
+				error: Some("Invalid tangram model file.".to_owned()),
+			};
+			let page_info = PageInfo {
+				client_wasm_js_src: None,
+			};
+			let html = render(props, page_info);
 			let response = http::Response::builder()
 				.status(http::StatusCode::BAD_REQUEST)
 				.body(hyper::Body::from(html))
@@ -128,11 +162,14 @@ pub async fn post(
 	.execute(&mut *db)
 	.await;
 	if result.is_err() {
-		let html = render(
-			context,
-			Some("There was an error uploading your model.".to_owned()),
-		)
-		.await?;
+		let props = Props {
+			app_layout_info,
+			error: Some("There was an error uploading your model.".to_owned()),
+		};
+		let page_info = PageInfo {
+			client_wasm_js_src: None,
+		};
+		let html = render(props, page_info);
 		let response = http::Response::builder()
 			.status(http::StatusCode::BAD_REQUEST)
 			.body(hyper::Body::from(html))
