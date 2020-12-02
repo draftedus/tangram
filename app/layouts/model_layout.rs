@@ -237,8 +237,8 @@ pub fn ModelLayout(info: ModelLayoutInfo, page_info: PageInfo, selected_item: Mo
 					<div class="model-layout-grid">
 						<div class="model-layout-side-nav-wrapper">
 							<ModelSideNav
-								id={info.model_id.to_string()}
-								_repo_title={info.repo_title}
+								repo_id={info.repo_id.to_string()}
+								model_id={info.model_id.to_string()}
 								selected_item={selected_item}
 							/>
 						</div>
@@ -332,54 +332,54 @@ pub fn ModelLayoutTopbar(model_layout_info: ModelLayoutInfo, selected_model_vers
 }
 
 #[component]
-pub fn ModelSideNav(id: String, _repo_title: String, selected_item: ModelSideNavItem) {
+pub fn ModelSideNav(repo_id: String, model_id: String, selected_item: ModelSideNavItem) {
 	html! {
 		<ui::SideNav>
 			<ui::SideNavSection>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/", id, id)}
+					href={format!("/repos/{}/models/{}/", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::Overview)}
 				>
 					{"Overview"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/training_grid/", id, id)}
+					href={format!("/repos/{}/models/{}/training_grid/", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::TrainingGrid)}
 				>
 					{"Training Grid"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/training_stats/", id, id)}
+					href={format!("/repos/{}/models/{}/training_stats/", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::TrainingStats)}
 				>
 					{"Training Stats"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/training_metrics/", id, id)}
+					href={format!("/repos/{}/models/{}/training_metrics/", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::TrainingMetrics)}
 				>
 					{"Training Metrics"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/training_importances", id, id)}
+					href={format!("/repos/{}/models/{}/training_importances", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::TrainingImportances)}
 				>
 					{"Training Importances"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/prediction", id, id)}
+					href={format!("/repos/{}/models/{}/prediction", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::Prediction)}
 				>
 					{"Prediction"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/tuning", id, id)}
+					href={format!("/repos/{}/models/{}/tuning", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::Tuning)}
 				>
 					{"Tuning"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/production_predictions/", id, id)}
+					href={format!("/repos/{}/models/{}/production_predictions/", repo_id, model_id)}
 					selected={Some(
 						selected_item == ModelSideNavItem::ProductionPredictions
 					)}
@@ -387,13 +387,13 @@ pub fn ModelSideNav(id: String, _repo_title: String, selected_item: ModelSideNav
 					{"Production Predictions"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/production_stats/", id, id)}
+					href={format!("/repos/{}/models/{}/production_stats/", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::ProductionStats)}
 				>
 					{"Production Stats"}
 				</ui::SideNavItem>
 				<ui::SideNavItem
-					href={format!("/repos/{}/models/{}/production_metrics/", id, id)}
+					href={format!("/repos/{}/models/{}/production_metrics/", repo_id, model_id)}
 					selected={Some(selected_item == ModelSideNavItem::ProductionMetrics)}
 				>
 					{"Production Metrics"}

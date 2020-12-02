@@ -3,6 +3,7 @@ use super::page::{
 	MulticlassClassifierInnerClassMetrics, MulticlassClassifierInnerMetrics,
 	MulticlassClassifierProps, Props, RegressorInnerMetrics, RegressorProps, TrainingSummary,
 };
+use pinwheel::client;
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
@@ -119,7 +120,7 @@ pub async fn get(
 		model_layout_info,
 	};
 	let page_info = PageInfo {
-		client_wasm_js_src: None,
+		client_wasm_js_src: Some(client!()),
 	};
 	let html = render(props, page_info);
 	let response = http::Response::builder()

@@ -1,9 +1,14 @@
 use crate::{
-	chart::{ActiveHoverRegion, DrawChartOptions, HoverRegion},
+	chart::{
+		ActiveHoverRegion, ChartImpl, DrawChartOptions, DrawChartOutput, DrawOverlayOptions,
+		HoverRegion,
+	},
 	common::{Point, Rect},
 };
 use wasm_bindgen::JsValue;
 use web_sys::*;
+
+pub struct BoxChart;
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct BoxChartOptions {
@@ -57,6 +62,24 @@ pub struct BoxChartHoverRegionInfo {
 pub struct DrawBoxChartOutput {
 	hover_regions: Vec<HoverRegion<BoxChartHoverRegionInfo>>,
 	overlay_info: BoxChartOverlayInfo,
+}
+
+impl ChartImpl for BoxChart {
+	type Options = BoxChartOptions;
+	type OverlayInfo = BoxChartOverlayInfo;
+	type HoverRegionInfo = BoxChartHoverRegionInfo;
+
+	fn draw_chart(
+		options: DrawChartOptions<Self::Options>,
+	) -> DrawChartOutput<Self::OverlayInfo, Self::HoverRegionInfo> {
+		todo!()
+		// draw_line_chart(options)
+	}
+
+	fn draw_overlay(options: DrawOverlayOptions<Self::OverlayInfo, Self::HoverRegionInfo>) {
+		todo!()
+		// draw_line_chart_overlay(options)
+	}
 }
 
 fn draw_box_chart(options: DrawChartOptions<BoxChartOptions>) -> DrawBoxChartOutput {
