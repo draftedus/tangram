@@ -1,6 +1,6 @@
 mod get;
+mod page;
 mod post;
-mod props;
 
 pub use get::get;
 pub use post::post;

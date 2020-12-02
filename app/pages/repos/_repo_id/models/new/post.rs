@@ -5,13 +5,11 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_deps::{
-	base64, bytes::Buf, chrono::prelude::*, http, hyper, multer, multer::Multipart,
-	pinwheel::Pinwheel, sqlx,
+	base64, bytes::Buf, chrono::prelude::*, http, hyper, multer, multer::Multipart, sqlx,
 };
 use tangram_util::{error::Result, id::Id};
 
 pub async fn post(
-	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	repo_id: &str,

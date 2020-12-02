@@ -1,16 +1,14 @@
-use super::props::{Owner, Props};
-use super::render::render;
+use super::page::{render, Owner, Props};
 use tangram_app_common::{
 	error::{redirect_to_login, service_unavailable},
 	user::{authorize_user, User},
 	Context,
 };
 use tangram_app_layouts::{app_layout::get_app_layout_info, document::PageInfo};
-use tangram_deps::{http, hyper, pinwheel::Pinwheel, sqlx, sqlx::prelude::*};
+use tangram_deps::{http, hyper, sqlx, sqlx::prelude::*};
 use tangram_util::error::Result;
 
 pub async fn get(
-	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {
@@ -65,7 +63,7 @@ pub async fn get(
 	let page_info = PageInfo {
 		client_wasm_js_src: None,
 	};
-	let html = render(props, page_info).await?;
+	let html = render(props, page_info);
 	db.commit().await?;
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)

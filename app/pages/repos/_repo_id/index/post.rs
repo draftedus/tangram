@@ -3,7 +3,7 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_deps::{http, hyper, pinwheel::Pinwheel, serde_urlencoded, sqlx};
+use tangram_deps::{http, hyper, serde_urlencoded, sqlx};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize)]
@@ -19,7 +19,6 @@ struct DeleteModelAction {
 }
 
 pub async fn post(
-	_pinwheel: &Pinwheel,
 	context: &Context,
 	mut request: http::Request<hyper::Body>,
 	repo_id: &str,

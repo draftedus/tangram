@@ -2516,6 +2516,7 @@ dependencies = [
 name = "tangram_app_pages_organizations_new"
 version = "0.0.0"
 dependencies = [
+ "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2554,6 +2555,7 @@ dependencies = [
 name = "tangram_app_pages_organizations_organization_id_members_new"
 version = "0.0.0"
 dependencies = [
+ "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2855,6 +2857,7 @@ dependencies = [
 name = "tangram_app_pages_user"
 version = "0.0.0"
 dependencies = [
+ "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",

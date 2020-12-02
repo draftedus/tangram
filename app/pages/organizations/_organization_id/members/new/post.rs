@@ -5,9 +5,7 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_deps::sqlx::*;
-use tangram_deps::{
-	http, hyper, pinwheel::Pinwheel, reqwest, serde_json::json, serde_urlencoded, sqlx,
-};
+use tangram_deps::{http, hyper, reqwest, serde_json::json, serde_urlencoded, sqlx};
 use tangram_util::{err, error::Result, id::Id};
 
 #[derive(serde::Deserialize, Clone, Debug)]
@@ -18,7 +16,6 @@ struct Action {
 }
 
 pub async fn post(
-	_pinwheel: &Pinwheel,
 	context: &Context,
 	mut request: http::Request<hyper::Body>,
 	organization_id: &str,

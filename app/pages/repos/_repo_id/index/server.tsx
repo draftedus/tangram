@@ -14,7 +14,6 @@ export default (pageInfo: PageInfo, props: Props) => {
 					<ui.Button href="./models/new">{"Upload New Version"}</ui.Button>
 				</ui.SpaceBetween>
 				<ui.S2>
-					{/* <ui.H2>{'Models'}</ui.H2> */}
 					{props.models.length > 0 ? (
 						<ui.Table width="100%">
 							<ui.TableHeader>
