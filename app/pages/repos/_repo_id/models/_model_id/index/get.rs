@@ -1,5 +1,5 @@
-use super::props::{
-	BinaryClassifierInnerMetrics, BinaryClassifierProps, Inner,
+use super::page::{
+	render, BinaryClassifierInnerMetrics, BinaryClassifierProps, Inner,
 	MulticlassClassifierInnerClassMetrics, MulticlassClassifierInnerMetrics,
 	MulticlassClassifierProps, Props, RegressorInnerMetrics, RegressorProps, TrainingSummary,
 };
@@ -9,12 +9,11 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, num_traits::ToPrimitive, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{http, hyper, num_traits::ToPrimitive};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -45,7 +44,7 @@ pub async fn get(
 				mse: model.test_metrics.mse,
 				baseline_mse: model.baseline_metrics.mse,
 			},
-			losses_chart_data: match &model.model {
+			losses_chart_series: match &model.model {
 				tangram_core::model::RegressionModel::Linear(model) => model.losses.clone(),
 				tangram_core::model::RegressionModel::Tree(model) => model.losses.clone(),
 			},
@@ -71,7 +70,7 @@ pub async fn get(
 					precision: default_threshold_test_metrics.precision,
 					recall: default_threshold_test_metrics.recall,
 				},
-				losses_chart_data: match &model.model {
+				losses_chart_series: match &model.model {
 					tangram_core::model::BinaryClassificationModel::Linear(model) => {
 						model.losses.clone()
 					}
@@ -100,7 +99,7 @@ pub async fn get(
 					class_metrics,
 					classes: model.classes.clone(),
 				},
-				losses_chart_data: match &model.model {
+				losses_chart_series: match &model.model {
 					tangram_core::model::MulticlassClassificationModel::Linear(model) => {
 						model.losses.clone()
 					}
@@ -119,7 +118,10 @@ pub async fn get(
 		inner,
 		model_layout_info,
 	};
-	let html = pinwheel.render_with_props("/repos/_repo_id/models/_model_id/", props)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: None,
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))
