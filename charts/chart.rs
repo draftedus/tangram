@@ -29,7 +29,7 @@ where
 pub trait ChartImpl: 'static {
 	type Options;
 	type OverlayInfo;
-	type HoverRegionInfo;
+	type HoverRegionInfo: Clone;
 	fn draw_chart(
 		options: DrawChartOptions<Self::Options>,
 	) -> DrawChartOutput<Self::OverlayInfo, Self::HoverRegionInfo>;
@@ -43,7 +43,10 @@ pub struct DrawChartOptions<'a, Options> {
 	pub options: &'a Options,
 }
 
-pub struct DrawChartOutput<OverlayInfo, HoverRegionInfo> {
+pub struct DrawChartOutput<OverlayInfo, HoverRegionInfo>
+where
+	HoverRegionInfo: Clone,
+{
 	pub hover_regions: Vec<HoverRegion<HoverRegionInfo>>,
 	pub overlay_info: OverlayInfo,
 }
@@ -57,7 +60,10 @@ pub struct DrawOverlayOptions<'a, OverlayInfo, HoverRegionInfo> {
 	pub overlay_div: HtmlElement,
 }
 
-pub struct HoverRegion<HoverRegionInfo> {
+pub struct HoverRegion<HoverRegionInfo>
+where
+	HoverRegionInfo: Clone,
+{
 	pub distance: Box<dyn Fn(f64, f64) -> f64>,
 	pub hit_test: Box<dyn Fn(f64, f64) -> bool>,
 	pub info: HoverRegionInfo,
@@ -148,6 +154,16 @@ where
 			chart.update_active_hover_regions(x, y);
 			chart.draw_overlay();
 		}));
+		chart
+			.borrow_mut()
+			.overlay_canvas
+			.add_event_listener_with_callback("mouseenter", on_mouse_event.as_ref().unchecked_ref())
+			.unwrap();
+		chart
+			.borrow_mut()
+			.overlay_canvas
+			.add_event_listener_with_callback("mouseleave", on_mouse_event.as_ref().unchecked_ref())
+			.unwrap();
 		chart
 			.borrow_mut()
 			.overlay_canvas
@@ -305,18 +321,17 @@ where
 	}
 
 	fn update_active_hover_regions(&mut self, x: f64, y: f64) {
-		let mut active_hover_regions = Vec::new();
-		if let Some(hover_regions) = self.hover_regions.take() {
+		self.active_hover_regions = Vec::new();
+		if let Some(hover_regions) = self.hover_regions.as_ref() {
 			for hover_region in hover_regions {
 				if (hover_region.hit_test)(x, y) {
-					active_hover_regions.push(ActiveHoverRegion {
+					self.active_hover_regions.push(ActiveHoverRegion {
 						distance: (hover_region.distance)(x, y),
-						info: hover_region.info,
+						info: hover_region.info.clone(),
 					});
 				}
 			}
 		}
-		self.active_hover_regions = active_hover_regions;
 	}
 }
 
@@ -326,27 +341,39 @@ where
 {
 	fn drop(&mut self) {
 		// Remove event listeners.
-		let on_mouse_event = self.on_mouse_event.take().unwrap();
+		let on_mouse_event = self.on_mouse_event.as_ref().unwrap();
+		self.chart_canvas
+			.remove_event_listener_with_callback(
+				"mouseenter",
+				on_mouse_event.as_ref().unchecked_ref(),
+			)
+			.unwrap();
+		self.chart_canvas
+			.remove_event_listener_with_callback(
+				"mouseleave",
+				on_mouse_event.as_ref().unchecked_ref(),
+			)
+			.unwrap();
 		self.chart_canvas
 			.remove_event_listener_with_callback(
 				"mousemove",
 				on_mouse_event.as_ref().unchecked_ref(),
 			)
 			.unwrap();
-		let on_touch_event = self.on_touch_event.take().unwrap();
+		let on_touch_event = self.on_touch_event.as_ref().unwrap();
 		self.chart_canvas
 			.remove_event_listener_with_callback(
 				"touchstart",
 				on_touch_event.as_ref().unchecked_ref(),
 			)
 			.unwrap();
-		let on_resize = self.on_resize.take().unwrap();
+		let on_resize = self.on_resize.as_ref().unwrap();
 		window()
 			.unwrap()
 			.remove_event_listener_with_callback("resize", on_resize.as_ref().unchecked_ref())
 			.unwrap();
 		let on_color_scheme_media_query_change =
-			self.on_color_scheme_media_query_change.take().unwrap();
+			self.on_color_scheme_media_query_change.as_ref().unwrap();
 		self.color_scheme_media_query
 			.as_ref()
 			.unwrap()

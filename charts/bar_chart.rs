@@ -8,6 +8,7 @@ use crate::{
 		Point, Rect,
 	},
 	config::{ChartColors, ChartConfig},
+	tooltip::{draw_tooltip, DrawTooltipOptions, TooltipLabel},
 };
 use itertools::Itertools;
 use num_traits::ToPrimitive;
@@ -47,6 +48,7 @@ pub struct BarChartOverlayInfo {
 	pub chart_box: Rect,
 }
 
+#[derive(Clone)]
 pub struct BarChartHoverRegionInfo {
 	pub rect: Rect,
 	pub color: String,
@@ -231,9 +233,9 @@ fn draw_bar_chart(
 			let hover_region = HoverRegion {
 				distance: Box::new(move |x, _| (rect.x + rect.w / 2.0 - x).abs()),
 				hit_test: Box::new(move |x, y| {
-					x >= rect.x.max(rect.x + rect.w)
-						&& x < rect.x.max(rect.x + rect.w)
-						&& y >= chart_box.y && y < chart_box.y + chart_box.h
+					x >= rect.x
+						&& x < rect.x + rect.w && y >= chart_box.y
+						&& y < chart_box.y + chart_box.h
 				}),
 				info: BarChartHoverRegionInfo {
 					rect,
@@ -371,20 +373,23 @@ fn draw_bar_chart_overlay(
 		let point_label = &active_hover_region.info.point_label;
 		let point_value = format_number(Some(active_hover_region.info.point_value), None);
 		let text = if let Some(series_title) = series_title {
-			format!("{} ({}, {})", series_title, point_label, point_value);
+			format!("{} ({}, {})", series_title, point_label, point_value)
 		} else {
-			format!("({}, {})", point_label, point_value);
+			format!("({}, {})", point_label, point_value)
 		};
-		// let tooltip = {
-		// 	color: activeHoverRegion.info.color,
-		// 	text,
-		// }
-		// drawTooltip({
-		// 	centerHorizontal: true,
-		// 	container: overlayDiv,
-		// 	labels: [tooltip],
-		// 	origin: activeHoverRegion.info.tooltipOriginPixels,
-		// })
+		let tooltip_label = TooltipLabel {
+			color: active_hover_region.info.color.clone(),
+			text,
+		};
+		draw_tooltip(DrawTooltipOptions {
+			center_horizontal: Some(true),
+			chart_colors: &options.chart_colors,
+			chart_config: &options.chart_config,
+			container: options.overlay_div,
+			flip_y_offset: None,
+			labels: vec![tooltip_label],
+			origin: active_hover_region.info.tooltip_origin_pixels,
+		});
 		draw_bar(DrawBarOptions {
 			chart_config: &options.chart_config,
 			color: "#00000022",

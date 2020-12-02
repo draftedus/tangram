@@ -41,6 +41,7 @@ pub struct ComputeBoxesOutput {
 	pub y_axis_title_box: Rect,
 }
 
+#[derive(Clone, Copy)]
 pub struct Point {
 	pub x: f64,
 	pub y: f64,
