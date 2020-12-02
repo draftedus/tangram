@@ -2,6 +2,7 @@ use tangram_deps::{sqlx, url};
 
 pub mod cookies;
 pub mod date_window;
+pub mod definitions;
 pub mod error;
 pub mod logo;
 pub mod metrics_row;
