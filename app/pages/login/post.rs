@@ -1,11 +1,12 @@
-use super::page::Props;
+use super::page::{render, Props};
 use tangram_app_common::{
 	error::{bad_request, service_unavailable},
 	Context,
 };
+use tangram_app_layouts::document::PageInfo;
 use tangram_deps::{
-	chrono::prelude::*, http, hyper, pinwheel::Pinwheel, rand, rand::Rng, reqwest,
-	serde_json::json, serde_urlencoded, sqlx, sqlx::prelude::*,
+	chrono::prelude::*, http, hyper, rand, rand::Rng, reqwest, serde_json::json, serde_urlencoded,
+	sqlx, sqlx::prelude::*,
 };
 use tangram_util::{err, error::Result, id::Id};
 
@@ -16,7 +17,6 @@ struct Action {
 }
 
 pub async fn post(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	mut request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {
@@ -100,7 +100,10 @@ pub async fn post(
 					error: Some("invalid code".to_owned()),
 					email: Some(email),
 				};
-				let html = pinwheel.render_with_props("/login", props)?;
+				let page_info = PageInfo {
+					client_wasm_js_src: None,
+				};
+				let html = render(props, page_info);
 				let response = http::Response::builder()
 					.status(http::StatusCode::BAD_REQUEST)
 					.body(hyper::Body::from(html))?;

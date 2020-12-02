@@ -12,7 +12,6 @@ struct Action {
 }
 
 pub async fn post(
-	_pinwheel: &Pinwheel,
 	context: &Context,
 	mut request: http::Request<hyper::Body>,
 ) -> Result<http::Response<hyper::Body>> {

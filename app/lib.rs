@@ -104,7 +104,6 @@ async fn request_handler(
 		},
 		(&http::Method::POST, &["login"]) => {
 			tangram_app_pages_login::post(
-				&pinwheel,
 				context,
 				request,
 			).boxed()
@@ -359,7 +358,6 @@ async fn request_handler(
 		},
 		(&http::Method::POST, &["organizations", "new"]) => {
 			tangram_app_pages_organizations_new::post(
-				&pinwheel,
 				context,
 				request,
 			).boxed()
@@ -381,7 +379,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["organizations", organization_id, "edit"]) => {
 			tangram_app_pages_organizations_organization_id_edit::get(
-				&pinwheel,
 				context,
 				request,
 				organization_id,

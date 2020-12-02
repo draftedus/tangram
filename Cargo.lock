@@ -2528,6 +2528,7 @@ dependencies = [
 name = "tangram_app_pages_organizations_organization_id_edit"
 version = "0.0.0"
 dependencies = [
+ "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
