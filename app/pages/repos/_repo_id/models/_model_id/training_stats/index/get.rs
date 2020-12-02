@@ -1,16 +1,18 @@
-use super::props::{ColumnStats, ColumnType, Props};
+use super::render::{
+	render, ColumnStatsTableProps, ColumnStatsTableRow, ColumnType, Props,
+	TargetColumnStatsTableProps,
+};
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, num_traits::ToPrimitive, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{http, hyper, num_traits::ToPrimitive};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -35,52 +37,72 @@ pub async fn get(
 		tangram_core::model::Model::Regressor(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
-				column_count: column_stats.len(),
-				column_stats: column_stats
-					.iter()
-					.map(|column_stats| build_column_stats(column_stats))
-					.collect(),
+				column_stats_table: ColumnStatsTableProps {
+					column_stats_table_rows: column_stats
+						.iter()
+						.map(|column_stats| build_column_stats(column_stats))
+						.collect(),
+				},
 				id: model.id.clone(),
 				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
-				target_column_stats: build_column_stats(&model.overall_target_column_stats),
+				column_count: column_stats.len(),
 				row_count: model.test_row_count.to_usize().unwrap()
 					+ model.train_row_count.to_usize().unwrap(),
+				target_column_stats_table: TargetColumnStatsTableProps {
+					target_column_stats_table_row: build_column_stats(
+						&model.overall_target_column_stats,
+					),
+				},
 			}
 		}
 		tangram_core::model::Model::BinaryClassifier(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
-				column_count: column_stats.len(),
-				column_stats: column_stats
-					.iter()
-					.map(|column_stats| build_column_stats(column_stats))
-					.collect(),
+				column_stats_table: ColumnStatsTableProps {
+					column_stats_table_rows: column_stats
+						.iter()
+						.map(|column_stats| build_column_stats(column_stats))
+						.collect(),
+				},
 				id: model.id.clone(),
 				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
-				target_column_stats: build_column_stats(&model.overall_target_column_stats),
+				column_count: column_stats.len(),
 				row_count: model.test_row_count.to_usize().unwrap()
 					+ model.train_row_count.to_usize().unwrap(),
+				target_column_stats_table: TargetColumnStatsTableProps {
+					target_column_stats_table_row: build_column_stats(
+						&model.overall_target_column_stats,
+					),
+				},
 			}
 		}
 		tangram_core::model::Model::MulticlassClassifier(model) => {
 			let column_stats = model.overall_column_stats;
 			Props {
-				column_count: column_stats.len(),
-				column_stats: column_stats
-					.iter()
-					.map(|column_stats| build_column_stats(column_stats))
-					.collect(),
+				column_stats_table: ColumnStatsTableProps {
+					column_stats_table_rows: column_stats
+						.iter()
+						.map(|column_stats| build_column_stats(column_stats))
+						.collect(),
+				},
 				id: model.id.clone(),
 				model_layout_info: get_model_layout_info(&mut db, context, model_id).await?,
-				target_column_stats: build_column_stats(&model.overall_target_column_stats),
 				row_count: model.test_row_count.to_usize().unwrap()
 					+ model.train_row_count.to_usize().unwrap(),
+				column_count: column_stats.len(),
+				target_column_stats_table: TargetColumnStatsTableProps {
+					target_column_stats_table_row: build_column_stats(
+						&model.overall_target_column_stats,
+					),
+				},
 			}
 		}
 	};
 	db.commit().await?;
-	let html =
-		pinwheel.render_with_props("/repos/_repo_id/models/_model_id/training_stats/", props)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: None,
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))
@@ -88,9 +110,9 @@ pub async fn get(
 	Ok(response)
 }
 
-fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> ColumnStats {
+fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> ColumnStatsTableRow {
 	match column_stats {
-		tangram_core::model::ColumnStats::Unknown(column_stats) => ColumnStats {
+		tangram_core::model::ColumnStats::Unknown(column_stats) => ColumnStatsTableRow {
 			column_type: ColumnType::Unknown,
 			unique_count: None,
 			invalid_count: None,
@@ -101,7 +123,7 @@ fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> Column
 			mean: None,
 			variance: None,
 		},
-		tangram_core::model::ColumnStats::Number(column_stats) => ColumnStats {
+		tangram_core::model::ColumnStats::Number(column_stats) => ColumnStatsTableRow {
 			column_type: ColumnType::Number,
 			unique_count: Some(column_stats.unique_count.to_usize().unwrap()),
 			invalid_count: Some(column_stats.invalid_count.to_usize().unwrap()),
@@ -112,7 +134,7 @@ fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> Column
 			mean: Some(column_stats.mean),
 			variance: Some(column_stats.variance),
 		},
-		tangram_core::model::ColumnStats::Enum(column_stats) => ColumnStats {
+		tangram_core::model::ColumnStats::Enum(column_stats) => ColumnStatsTableRow {
 			column_type: ColumnType::Enum,
 			unique_count: column_stats.unique_count.to_usize(),
 			invalid_count: column_stats.invalid_count.to_usize(),
@@ -123,7 +145,7 @@ fn build_column_stats(column_stats: &tangram_core::model::ColumnStats) -> Column
 			mean: None,
 			variance: None,
 		},
-		tangram_core::model::ColumnStats::Text(column_stats) => ColumnStats {
+		tangram_core::model::ColumnStats::Text(column_stats) => ColumnStatsTableRow {
 			column_type: ColumnType::Text,
 			unique_count: None,
 			invalid_count: None,

@@ -30,26 +30,26 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 		props.num_models,
 	);
 	let html = html! {
-	<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingGrid}>
-		<ui::S1>
-		<ui::H1 center={None}>{"Training Summary"}</ui::H1>
-		<ui::P>
-			{description}
-		</ui::P>
-		<ui::S2>
-			<ui::H2 center={None}>{"Best Model Metrics"}</ui::H2>
-			<WinningModelMetricsTable best_model={props.best_model_metrics} model_comparison_metric_name={props.model_comparison_metric_name.clone()}/>
-		</ui::S2>
-		<ui::S2>
-			<ui::H2 center={None}>{"Best Model Hyperparameters"}</ui::H2>
-			<ModelHyperparametersTable hyperparameters={props.best_model_hyperparameters} />
-		</ui::S2>
-		<ui::S2>
-			<ui::H2 center={None}>{"All Models"}</ui::H2>
-			<AllTrainedModelsMetricsTable trained_models={props.trained_models_metrics} model_comparison_metric_name={props.model_comparison_metric_name}/>
-		</ui::S2>
-		</ui::S1>
-	</ModelLayout>
+		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingGrid}>
+			<ui::S1>
+				<ui::H1 center={None}>{"Training Summary"}</ui::H1>
+				<ui::P>
+					{description}
+				</ui::P>
+				<ui::S2>
+					<ui::H2 center={None}>{"Best Model Metrics"}</ui::H2>
+					<WinningModelMetricsTable best_model={props.best_model_metrics} model_comparison_metric_name={props.model_comparison_metric_name.clone()}/>
+				</ui::S2>
+				<ui::S2>
+					<ui::H2 center={None}>{"Best Model Hyperparameters"}</ui::H2>
+					<ModelHyperparametersTable hyperparameters={props.best_model_hyperparameters} />
+				</ui::S2>
+				<ui::S2>
+					<ui::H2 center={None}>{"All Models"}</ui::H2>
+					<AllTrainedModelsMetricsTable trained_models={props.trained_models_metrics} model_comparison_metric_name={props.model_comparison_metric_name}/>
+				</ui::S2>
+			</ui::S1>
+		</ModelLayout>
 	};
 	html.render_to_string()
 }
