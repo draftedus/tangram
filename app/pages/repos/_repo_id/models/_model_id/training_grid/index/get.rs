@@ -1,18 +1,13 @@
-use super::props::{Props, TrainedModel};
-use html::{component, html};
+use super::page::{render, Props, TrainedModel};
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
+use tangram_app_layouts::document::PageInfo;
 use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_app_layouts::{
-	document::PageInfo,
-	model_layout::{ModelLayout, ModelSideNavItem},
-};
 use tangram_deps::{http, hyper};
-use tangram_ui as ui;
 use tangram_util::error::Result;
 use tangram_util::id::Id;
 
@@ -115,36 +110,10 @@ pub async fn get(
 		model_layout_info,
 	};
 	db.commit().await?;
-	let description = format!(
-		"Tangram trained {} models. The models were compared by evaluating their performance on a hold out portion of the dataset and the model with the best score was chosen.",
-		props.num_models,
-	);
-	let html = html! {
-		<ModelLayout page_info={page_info} info={props.model_layout_info} selected_item={ModelSideNavItem::TrainingGrid}>
-			<ui::S1>
-				<ui::H1 center={None}>{"Training Summary"}</ui::H1>
-				<ui::P>
-					{description}
-				</ui::P>
-				<ui::S2>
-					<ui::H2 center={None}>{"Best Model Metrics"}</ui::H2>
-					<WinningModelMetricsTable best_model={props.best_model_metrics} model_comparison_metric_name={props.model_comparison_metric_name.clone()}/>
-				</ui::S2>
-				<ui::S2>
-					<ui::H2 center={None}>{"Best Model Hyperparameters"}</ui::H2>
-					<ModelHyperparametersTable hyperparameters={props.best_model_hyperparameters} />
-				</ui::S2>
-				<ui::S2>
-					<ui::H2 center={None}>{"All Models"}</ui::H2>
-					<AllTrainedModelsMetricsTable trained_models={props.trained_models_metrics} model_comparison_metric_name={props.model_comparison_metric_name}/>
-				</ui::S2>
-			</ui::S1>
-		</ModelLayout>
-	};
-	let body = html.render_to_string();
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
-		.body(hyper::Body::from(body))
+		.body(hyper::Body::from(html))
 		.unwrap();
 	Ok(response)
 }
@@ -172,109 +141,6 @@ fn trained_model_metrics_for_grid_item(
 				std::time::Duration::from_secs_f32(grid_item.duration)
 			),
 		},
-	}
-}
-
-#[component]
-fn WinningModelMetricsTable(best_model: TrainedModel, model_comparison_metric_name: String) {
-	html! {
-		<ui::Table width={Some("100%".to_owned())}>
-			<ui::TableHeader>
-				<ui::TableRow color={None}>
-					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						"Model Number"
-					</ui::TableHeaderCell>
-					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						"Model Type"
-					</ui::TableHeaderCell>
-					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						"Training Time"
-					</ui::TableHeaderCell>
-					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						{model_comparison_metric_name}
-					</ui::TableHeaderCell>
-				</ui::TableRow>
-			</ui::TableHeader>
-			<ui::TableRow color={None}>
-				<ui::TableCell color={None} expand={None}>
-					{best_model.identifier}
-				</ui::TableCell>
-				<ui::TableCell color={None} expand={None}>
-					{best_model.model_type}
-				</ui::TableCell>
-				<ui::TableCell color={None} expand={None}>
-					{best_model.time}
-				</ui::TableCell>
-				<ui::TableCell color={None} expand={None}>
-					{best_model.model_comparison_metric_value.to_string()}
-				</ui::TableCell>
-			</ui::TableRow>
-		</ui::Table>
-	}
-}
-
-#[component]
-fn AllTrainedModelsMetricsTable(
-	trained_models: Vec<TrainedModel>,
-	model_comparison_metric_name: String,
-) {
-	html! {
-		<ui::Table width={Some("100%".to_owned())}>
-			<ui::TableHeader>
-				<ui::TableRow color={None}>
-					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						"Model Number"
-					</ui::TableHeaderCell>
-					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						"Model Type"
-					</ui::TableHeaderCell>
-					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						"Training Time"
-					</ui::TableHeaderCell>
-					<ui::TableHeaderCell color={None} text_align={None} expand={None}>
-						{model_comparison_metric_name}
-					</ui::TableHeaderCell>
-				</ui::TableRow>
-			</ui::TableHeader>
-			{trained_models.into_iter().map(|trained_model| {
-				html! {
-					<ui::TableRow color={None}>
-						<ui::TableCell color={None} expand={None}>
-							{trained_model.identifier}
-						</ui::TableCell>
-						<ui::TableCell color={None} expand={None}>
-							{trained_model.model_type}
-						</ui::TableCell>
-						<ui::TableCell color={None} expand={None}>
-							{trained_model.time}
-						</ui::TableCell>
-						<ui::TableCell color={None} expand={None}>
-							{trained_model.model_comparison_metric_value.to_string()}
-						</ui::TableCell>
-					</ui::TableRow>
-				}
-			}).collect::<Vec<_>>()}
-		</ui::Table>
-	}
-}
-
-#[component]
-fn ModelHyperparametersTable(hyperparameters: Vec<(String, String)>) {
-	html! {
-		<ui::Table width={Some("100%".to_owned())}>
-		{hyperparameters.into_iter().map(|(hyperparam_name, hyperparam_value)| {
-			html! {
-				<ui::TableRow color={None}>
-					<ui::TableHeaderCell color={None} text_align={None} expand={Some(false)}>
-						{hyperparam_name}
-					</ui::TableHeaderCell>
-					<ui::TableCell color={None} expand={Some(true)}>
-						{hyperparam_value}
-					</ui::TableCell>
-				</ui::TableRow>
-			}
-		}).collect::<Vec<_>>()}
-		</ui::Table>
 	}
 }
 
