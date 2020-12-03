@@ -2657,10 +2657,23 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics_client",
+ "tangram_charts",
  "tangram_core",
  "tangram_deps",
  "tangram_ui",
  "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics_client"
+version = "0.0.0"
+dependencies = [
+ "console_error_panic_hook",
+ "tangram_charts",
+ "tangram_ui",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
@@ -2670,10 +2683,22 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index_client",
  "tangram_core",
  "tangram_deps",
  "tangram_ui",
  "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index_client"
+version = "0.0.0"
+dependencies = [
+ "console_error_panic_hook",
+ "tangram_charts",
+ "tangram_ui",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
@@ -2725,10 +2750,22 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name_client",
  "tangram_core",
  "tangram_deps",
  "tangram_ui",
  "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name_client"
+version = "0.0.0"
+dependencies = [
+ "console_error_panic_hook",
+ "tangram_charts",
+ "tangram_ui",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
@@ -2738,10 +2775,22 @@ dependencies = [
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_app_pages_repos_repo_id_models_model_id_production_stats_index_client",
  "tangram_core",
  "tangram_deps",
  "tangram_ui",
  "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_production_stats_index_client"
+version = "0.0.0"
+dependencies = [
+ "console_error_panic_hook",
+ "tangram_charts",
+ "tangram_ui",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
