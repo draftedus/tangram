@@ -16,6 +16,8 @@
 // import { chartColors, chartConfig } from "./config"
 // import { drawTooltip } from "./tooltip"
 
+pub struct FeatureContributionsChart;
+
 /// These are the options for displaying a feature contributions chart.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct FeatureContributionsChartOptions {

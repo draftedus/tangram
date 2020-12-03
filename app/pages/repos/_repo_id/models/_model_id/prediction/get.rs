@@ -2,6 +2,7 @@ use super::page::{
 	render, Column, EnumFieldProps, Inner, NumberFieldProps, PredictForm, PredictionFormProps,
 	Props, TextFieldProps, UnknownFieldProps,
 };
+use pinwheel::client;
 use std::collections::BTreeMap;
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
@@ -143,7 +144,7 @@ pub async fn get(
 		inner,
 	};
 	let page_info = PageInfo {
-		client_wasm_js_src: None,
+		client_wasm_js_src: Some(client!()),
 	};
 	let html = render(props, page_info);
 	let response = http::Response::builder()
