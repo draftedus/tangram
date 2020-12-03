@@ -1,4 +1,4 @@
-use super::props::Props;
+use super::page::{render, Props};
 use std::collections::BTreeMap;
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
@@ -6,12 +6,11 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{http, hyper};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -68,10 +67,10 @@ pub async fn get(
 		true_negatives,
 		true_positives,
 	};
-	let html = pinwheel.render_with_props(
-		"/repos/_repo_id/models/_model_id/training_metrics/class_metrics",
-		props,
-	)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: None,
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

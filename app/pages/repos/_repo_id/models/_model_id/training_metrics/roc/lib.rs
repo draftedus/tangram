@@ -1,4 +1,4 @@
 mod get;
-mod props;
+mod page;
 
 pub use get::get;

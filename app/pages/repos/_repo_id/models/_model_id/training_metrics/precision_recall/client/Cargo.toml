@@ -1,0 +1,22 @@
+[package]
+edition = "2018"
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_precision_recall_client"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+path = "client.rs"
+
+[dependencies]
+console_error_panic_hook = "0.1"
+tangram_charts = { path = "../../../../../../../../../charts" }
+tangram_ui = { path = "../../../../../../../../../ui" }
+wasm-bindgen = "0.2.68"
+web-sys = { version = "0.3.45", features = [
+  "console",
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Node",
+  "Window",
+] }

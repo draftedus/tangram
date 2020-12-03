@@ -1,16 +1,15 @@
-use super::props::{PrecisionRecallPoint, Props};
+use super::page::{render, PrecisionRecallPoint, Props};
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{http, hyper};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -35,7 +34,7 @@ pub async fn get(
 		tangram_core::model::Model::BinaryClassifier(model) => model,
 		_ => return Ok(bad_request()),
 	};
-	let precision_recall_curve_data = model
+	let precision_recall_curve_series = model
 		.test_metrics
 		.thresholds
 		.iter()
@@ -48,15 +47,15 @@ pub async fn get(
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let props = Props {
 		class: model.positive_class,
-		precision_recall_curve_data,
+		precision_recall_curve_series,
 		id: model_id.to_string(),
 		model_layout_info,
 	};
 	db.commit().await?;
-	let html = pinwheel.render_with_props(
-		"/repos/_repo_id/models/_model_id/training_metrics/precision_recall",
-		props,
-	)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: None,
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

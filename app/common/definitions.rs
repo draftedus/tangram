@@ -22,15 +22,15 @@ pub const ACCURACY: &str =
 // 	"In mini-batch gradient descent, the gradient of the loss function is evaluated by averaging the gradient of a batch of training examples."
 // const STOCHASTIC_GRADIENT_DESCENT =
 // 	"In stochastic gradient descent, the gradient of the loss function and update of the model weights is performed for each training example."
-// const AUC_ROC =
-// 	"The area under the receiver operating characteric curve is the probability that a randomly chosen positive example's predicted score is higher than a randomly selected negative example's score"
-// const CONFUSION_MATRIX =
-// 	"The confusion matrix shows the distribution of how your model predicted classes versus what the actual class labels are."
+pub const AUC_ROC: &str =
+	"The area under the receiver operating characteric curve is the probability that a randomly chosen positive example's predicted score is higher than a randomly selected negative example's score";
+pub const CONFUSION_MATRIX: &str =
+	"The confusion matrix shows the distribution of how your model predicted classes versus what the actual class labels are.";
 pub const PRECISION_RECALL: &str =
 	"Precision is the percentage of examples that were labeled as positive that are actually positive. Recall is the percentage of positive examples that were labeled as positive.";
 // const PRECISION =
 // 	"Precision is the percentage of examples that were labeled as positive that are actually positive."
 // const RECALL =
 // 	"Recall is the percentage of positive examples that were labeled as positive."
-// const RECEIVER_OPERATING_CHARACTERISTIC =
-// 	"The Receiver Operating Characteristic Curve shows the True Positive Rate v. False Positive Rate at various thresholds in binary classification."
+pub const RECEIVER_OPERATING_CHARACTERISTIC: &str =
+	"The Receiver Operating Characteristic Curve shows the True Positive Rate v. False Positive Rate at various thresholds in binary classification.";
