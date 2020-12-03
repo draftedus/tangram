@@ -1,4 +1,5 @@
-use super::props::{Pagination, PredictionTable, PredictionTableRow, Props};
+use super::page::{render, Pagination, PredictionTable, PredictionTableRow, Props};
+use pinwheel::client;
 use std::collections::BTreeMap;
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
@@ -7,17 +8,16 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
 use tangram_deps::{
-	base64, chrono::prelude::*, chrono_tz::Tz, http, hyper, num_traits::ToPrimitive,
-	pinwheel::Pinwheel, serde_json, sqlx, sqlx::prelude::*,
+	base64, chrono::prelude::*, chrono_tz::Tz, http, hyper, num_traits::ToPrimitive, serde_json,
+	sqlx, sqlx::prelude::*,
 };
 use tangram_util::{error::Result, id::Id};
 
 const N_PREDICTIONS_PER_PAGE: i64 = 10;
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -202,10 +202,10 @@ pub async fn get(
 		},
 		pagination,
 	};
-	let html = pinwheel.render_with_props(
-		"/repos/_repo_id/models/_model_id/production_predictions/",
-		props,
-	)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: Some(client!()),
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

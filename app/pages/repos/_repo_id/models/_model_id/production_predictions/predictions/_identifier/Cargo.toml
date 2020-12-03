@@ -13,6 +13,10 @@ serde = { version = "1", features = ["derive"] }
 tangram_app_common = { path = "../../../../../../../../common" }
 tangram_app_layouts = { path = "../../../../../../../../layouts" }
 tangram_core = { path = "../../../../../../../../../core" }
+tangram_charts = { path = "../../../../../../../../../charts" }
 tangram_deps = { path = "../../../../../../../../../deps" }
 tangram_ui = { path = "../../../../../../../../../ui" }
 tangram_util = { path = "../../../../../../../../../util" }
+
+[target.wasm32-unknown-unknown.dependencies]
+tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier_client = { path = "client" }
