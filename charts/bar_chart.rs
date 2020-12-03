@@ -285,9 +285,10 @@ fn draw_bar(options: DrawBarOptions) {
 	} else {
 		(true, true, false, false)
 	};
-	let radius = (rect.h / 2.0)
-		.abs()
-		.min((rect.w / 6.0).abs().min(chart_config.max_corner_radius));
+	let radius = f64::INFINITY
+		.min((rect.h / 2.0).abs())
+		.min((rect.w / 6.0).abs())
+		.min(chart_config.max_corner_radius);
 	draw_rounded_rect(DrawRoundedRectOptions {
 		rect,
 		round_bottom_left,
@@ -302,17 +303,17 @@ fn draw_bar(options: DrawBarOptions) {
 	})
 }
 
-struct DrawBarChartXAxisLabelsOptions<'a> {
-	bar_group_gap: f64,
-	chart_colors: &'a ChartColors,
-	rect: Rect,
-	categories: &'a [&'a String],
-	ctx: CanvasRenderingContext2d,
-	group_width: f64,
-	width: f64,
+pub struct DrawBarChartXAxisLabelsOptions<'a> {
+	pub bar_group_gap: f64,
+	pub chart_colors: &'a ChartColors,
+	pub rect: Rect,
+	pub categories: &'a [&'a String],
+	pub ctx: CanvasRenderingContext2d,
+	pub group_width: f64,
+	pub width: f64,
 }
 
-fn draw_bar_chart_x_axis_labels(options: DrawBarChartXAxisLabelsOptions) {
+pub fn draw_bar_chart_x_axis_labels(options: DrawBarChartXAxisLabelsOptions) {
 	let DrawBarChartXAxisLabelsOptions {
 		bar_group_gap,
 		chart_colors,
@@ -371,7 +372,7 @@ fn draw_bar_chart_overlay(
 	if let Some(active_hover_region) = options.active_hover_regions.get(0) {
 		let series_title = &active_hover_region.info.series_title;
 		let point_label = &active_hover_region.info.point_label;
-		let point_value = format_number(Some(active_hover_region.info.point_value), None);
+		let point_value = format_number(active_hover_region.info.point_value);
 		let text = if let Some(series_title) = series_title {
 			format!("{} ({}, {})", series_title, point_label, point_value)
 		} else {

@@ -3037,6 +3037,7 @@ version = "0.0.0"
 dependencies = [
  "html",
  "itertools",
+ "lexical",
  "num-traits",
  "serde",
  "serde_json",

@@ -1,10 +1,19 @@
 use crate::{
+	bar_chart::{draw_bar_chart_x_axis_labels, DrawBarChartXAxisLabelsOptions},
 	chart::{
 		ActiveHoverRegion, ChartImpl, DrawChartOptions, DrawChartOutput, DrawOverlayOptions,
 		HoverRegion,
 	},
-	common::{Point, Rect},
+	common::{
+		compute_boxes, draw_rounded_rect, draw_x_axis, draw_x_axis_title, draw_y_axis_grid_lines,
+		draw_y_axis_labels, draw_y_axis_title, format_number, ComputeBoxesOptions,
+		ComputeBoxesOutput, DrawRoundedRectOptions, DrawXAxisOptions, DrawXAxisTitleOptions,
+		DrawYAxisGridLinesOptions, DrawYAxisLabelsOptions, DrawYAxisTitleOptions, GridLineInterval,
+		Point, Rect,
+	},
+	config::ChartConfig,
 };
+use num_traits::ToPrimitive;
 use wasm_bindgen::JsValue;
 use web_sys::*;
 
@@ -59,11 +68,6 @@ pub struct BoxChartHoverRegionInfo {
 	value: f64,
 }
 
-pub struct DrawBoxChartOutput {
-	hover_regions: Vec<HoverRegion<BoxChartHoverRegionInfo>>,
-	overlay_info: BoxChartOverlayInfo,
-}
-
 impl ChartImpl for BoxChart {
 	type Options = BoxChartOptions;
 	type OverlayInfo = BoxChartOverlayInfo;
@@ -72,157 +76,182 @@ impl ChartImpl for BoxChart {
 	fn draw_chart(
 		options: DrawChartOptions<Self::Options>,
 	) -> DrawChartOutput<Self::OverlayInfo, Self::HoverRegionInfo> {
-		todo!()
-		// draw_line_chart(options)
+		draw_box_chart(options)
 	}
 
 	fn draw_overlay(options: DrawOverlayOptions<Self::OverlayInfo, Self::HoverRegionInfo>) {
-		todo!()
-		// draw_line_chart_overlay(options)
+		draw_box_chart_overlay(options)
 	}
 }
 
-fn draw_box_chart(options: DrawChartOptions<BoxChartOptions>) -> DrawBoxChartOutput {
-	todo!()
-	// 	let { series: data, xAxisTitle, yAxisTitle } = options
-	// 	let width = ctx.canvas.clientWidth
-	// 	let height = ctx.canvas.clientHeight
-	// 	let hoverRegions: Array<HoverRegion<BoxChartHoverRegionInfo>> = []
+fn draw_box_chart(
+	options: DrawChartOptions<BoxChartOptions>,
+) -> DrawChartOutput<BoxChartOverlayInfo, BoxChartHoverRegionInfo> {
+	let DrawChartOptions {
+		chart_colors,
+		chart_config,
+		ctx,
+		options,
+	} = options;
+	let BoxChartOptions {
+		series,
+		x_axis_title,
+		y_axis_title,
+		..
+	} = &options;
+	let canvas = ctx.canvas().unwrap();
+	let width = canvas.client_width().to_f64().unwrap();
+	let height = canvas.client_height().to_f64().unwrap();
+	let mut hover_regions: Vec<HoverRegion<BoxChartHoverRegionInfo>> = Vec::new();
 
-	// 	// Compute the bounds.
-	// 	let yMin: number
-	// 	if (options.yMin !== undefined) {
-	// 		yMin = options.yMin
-	// 	} else {
-	// 		yMin = Math.min(
-	// 			...data.flatMap(series => series.data.map(({ y }) => y?.min ?? Infinity)),
-	// 		)
-	// 		if (!isFinite(yMin)) {
-	// 			yMin = 0
-	// 		}
-	// 	}
-	// 	let yMax: number
-	// 	if (options.yMax !== undefined) {
-	// 		yMax = options.yMax
-	// 	} else {
-	// 		yMax = Math.max(
-	// 			...options.series.flatMap(series =>
-	// 				series.data.map(({ y }) => y?.max ?? -Infinity),
-	// 			),
-	// 		)
-	// 		if (!isFinite(yMax)) {
-	// 			yMax = yMin + 1
-	// 		}
-	// 	}
+	// Compute the bounds.
+	let y_min = options.y_min.unwrap_or_else(|| {
+		series
+			.iter()
+			.flat_map(|series| {
+				series
+					.data
+					.iter()
+					.map(|p| p.y.as_ref().map(|y| y.min).unwrap_or(f64::INFINITY))
+			})
+			.min_by(|a, b| a.partial_cmp(b).unwrap())
+			.unwrap()
+	});
+	let mut y_max = options.y_max.unwrap_or_else(|| {
+		series
+			.iter()
+			.flat_map(|series| {
+				series
+					.data
+					.iter()
+					.map(|p| p.y.as_ref().map(|y| y.max).unwrap_or(f64::NEG_INFINITY))
+			})
+			.max_by(|a, b| a.partial_cmp(b).unwrap())
+			.unwrap()
+	});
+	if !y_max.is_finite() || (y_max - y_min).abs() < f64::EPSILON {
+		y_max = y_min + 1.0;
+	}
 
-	// 	let {
-	// 		chartBox,
-	// 		xAxisLabelsBox,
-	// 		xAxisTitleBox,
-	// 		yAxisGridLineInfo,
-	// 		yAxisLabelsBox,
-	// 		yAxisTitleBox,
-	// 	} = computeBoxes({
-	// 		ctx,
-	// 		height,
-	// 		includeXAxisLabels: options.shouldDrawXAxisLabels ?? true,
-	// 		includeXAxisTitle: xAxisTitle !== undefined,
-	// 		includeYAxisLabels: options.shouldDrawYAxisLabels ?? true,
-	// 		includeYAxisTitle: yAxisTitle !== undefined,
-	// 		width,
-	// 		yMax,
-	// 		yMin,
-	// 	})
+	// Compute the boxes.
+	let ComputeBoxesOutput {
+		chart_box,
+		x_axis_labels_box,
+		x_axis_title_box,
+		y_axis_grid_line_info,
+		y_axis_labels_box,
+		y_axis_title_box,
+	} = compute_boxes(ComputeBoxesOptions {
+		chart_config,
+		ctx: ctx.clone(),
+		height,
+		include_x_axis_labels: options.should_draw_x_axis_labels.unwrap_or(true),
+		include_x_axis_title: x_axis_title.is_some(),
+		include_y_axis_labels: options.should_draw_y_axis_labels.unwrap_or(true),
+		include_y_axis_title: y_axis_title.is_some(),
+		width,
+		x_axis_grid_line_interval: None,
+		y_axis_grid_line_interval: None,
+		y_max,
+		y_min,
+	});
 
-	// 	if (data[0] === undefined) throw Error()
-	// 	let categories = data[0].data.map(({ label }) => label)
-	// 	let boxGroupWidth =
-	// 		(chartBox.w - chartConfig.barGroupGap * (categories.length + 1)) /
-	// 		categories.length
+	let categories: Vec<&String> = series[0].data.iter().map(|point| &point.label).collect();
+	let box_group_width = (chart_box.w
+		- chart_config.bar_group_gap * (categories.len() + 1).to_f64().unwrap())
+		/ categories.len().to_f64().unwrap();
 
-	// 	// Draw the X axis labels.
-	// 	if (options.shouldDrawXAxisLabels ?? true) {
-	// 		drawBarChartXAxisLabels({
-	// 			barGroupGap: chartConfig.barGroupGap,
-	// 			box: xAxisLabelsBox,
-	// 			categories,
-	// 			ctx,
-	// 			groupWidth: boxGroupWidth,
-	// 			width,
-	// 		})
-	// 	}
+	// Draw the X axis labels.
+	if options.should_draw_x_axis_labels.unwrap_or(true) {
+		draw_bar_chart_x_axis_labels(DrawBarChartXAxisLabelsOptions {
+			bar_group_gap: chart_config.bar_group_gap,
+			chart_colors,
+			rect: x_axis_labels_box,
+			categories: &categories,
+			ctx: ctx.clone(),
+			group_width: box_group_width,
+			width,
+		})
+	}
 
-	// 	drawYAxisGridLines({
-	// 		box: chartBox,
-	// 		ctx,
-	// 		yAxisGridLineInfo,
-	// 	})
+	draw_y_axis_grid_lines(DrawYAxisGridLinesOptions {
+		chart_colors,
+		chart_config,
+		ctx: ctx.clone(),
+		rect: chart_box,
+		y_axis_grid_line_info: y_axis_grid_line_info.clone(),
+	});
 
-	// 	drawXAxis({
-	// 		box: chartBox,
-	// 		ctx,
-	// 		yAxisGridLineInfo,
-	// 	})
+	draw_x_axis(DrawXAxisOptions {
+		chart_colors,
+		chart_config,
+		ctx: ctx.clone(),
+		rect: chart_box,
+		y_axis_grid_line_info: y_axis_grid_line_info.clone(),
+	});
 
-	// 	// Draw the Y axis labels.
-	// 	if (options.shouldDrawYAxisLabels ?? true) {
-	// 		drawYAxisLabels({
-	// 			box: yAxisLabelsBox,
-	// 			ctx,
-	// 			fontSize: chartConfig.fontSize,
-	// 			gridLineInfo: yAxisGridLineInfo,
-	// 			height,
-	// 		})
-	// 	}
+	// Draw the Y axis labels.
+	if options.should_draw_y_axis_labels.unwrap_or(true) {
+		draw_y_axis_labels(DrawYAxisLabelsOptions {
+			rect: y_axis_labels_box,
+			ctx: ctx.clone(),
+			font_size: chart_config.font_size,
+			grid_line_info: y_axis_grid_line_info,
+			height,
+		})
+	}
 
-	// 	drawXAxisTitle({
-	// 		box: xAxisTitleBox,
-	// 		ctx,
-	// 		title: xAxisTitle,
-	// 	})
+	// Draw the X axis title.
+	if let Some(x_axis_title) = x_axis_title {
+		draw_x_axis_title(DrawXAxisTitleOptions {
+			rect: x_axis_title_box,
+			ctx: ctx.clone(),
+			title: x_axis_title,
+		});
+	}
 
-	// 	drawYAxisTitle({
-	// 		box: yAxisTitleBox,
-	// 		ctx,
-	// 		title: yAxisTitle,
-	// 	})
+	// Draw the Y axis title.
+	if let Some(y_axis_title) = y_axis_title {
+		draw_y_axis_title(DrawYAxisTitleOptions {
+			rect: y_axis_title_box,
+			ctx: ctx.clone(),
+			title: y_axis_title,
+		});
+	}
 
-	// 	// Draw the boxes.
-	// 	data.forEach((series, seriesIndex) => {
-	// 		series.data.forEach((point, pointIndex) => {
-	// 			let output = drawBox({
-	// 				boxGap: chartConfig.barGap,
-	// 				boxGroupGap: chartConfig.barGroupGap,
-	// 				boxGroupWidth,
-	// 				chartBox,
-	// 				ctx,
-	// 				data,
-	// 				point,
-	// 				pointIndex,
-	// 				series,
-	// 				seriesIndex,
-	// 				yMax,
-	// 				yMin,
-	// 			})
-	// 			hoverRegions.push(...output.hoverRegions)
-	// 		})
-	// 	})
+	// Draw the boxes.
+	for (series_index, this_series) in series.iter().enumerate() {
+		for (point_index, point) in this_series.data.iter().enumerate() {
+			let output = draw_box(DrawBoxOptions {
+				box_gap: chart_config.bar_gap,
+				box_group_gap: chart_config.bar_group_gap,
+				box_group_width,
+				chart_box,
+				chart_config,
+				point_index,
+				series_index,
+				y_max,
+				y_min,
+				ctx: ctx.clone(),
+				data: series,
+				point: point.clone(),
+				series: this_series,
+			});
+			hover_regions.extend(output.hover_regions);
+		}
+	}
 
-	// 	let overlayInfo: BoxChartOverlayInfo = {
-	// 		chartBox,
-	// 	}
+	let overlay_info = BoxChartOverlayInfo { chart_box };
 
-	// 	return { hoverRegions, overlayInfo }
+	DrawChartOutput {
+		hover_regions,
+		overlay_info,
+	}
 }
 
-struct DrawBoxChartOverlayOptions {
-	active_hover_regions: Vec<ActiveHoverRegion<BoxChartHoverRegionInfo>>,
-	ctx: CanvasRenderingContext2d,
-	info: BoxChartOverlayInfo,
-	overlay_div: HtmlElement,
-}
-
-fn draw_box_chart_overlay(options: DrawBoxChartOverlayOptions) {
+fn draw_box_chart_overlay(
+	options: DrawOverlayOptions<BoxChartOverlayInfo, BoxChartHoverRegionInfo>,
+) {
 	todo!()
 	// 	let {
 	// 		activeHoverRegions,
@@ -285,17 +314,18 @@ fn draw_box_chart_overlay(options: DrawBoxChartOverlayOptions) {
 	// 	}
 }
 
-struct DrawBoxOptions {
+struct DrawBoxOptions<'a> {
 	box_gap: f64,
 	box_group_gap: f64,
 	box_group_width: f64,
 	chart_box: Rect,
+	chart_config: &'a ChartConfig,
 	ctx: CanvasRenderingContext2d,
-	data: Vec<BoxChartSeries>,
+	data: &'a [BoxChartSeries],
 	point: BoxChartPoint,
-	point_index: f64,
-	series: BoxChartSeries,
-	series_index: f64,
+	point_index: usize,
+	series: &'a BoxChartSeries,
+	series_index: usize,
 	y_max: f64,
 	y_min: f64,
 }
@@ -305,275 +335,308 @@ struct DrawBoxOutput {
 }
 
 fn draw_box(options: DrawBoxOptions) -> DrawBoxOutput {
-	todo!()
-	// 	let {
-	// 		boxGap,
-	// 		boxGroupGap,
-	// 		boxGroupWidth,
-	// 		chartBox,
-	// 		ctx,
-	// 		data,
-	// 		point,
-	// 		pointIndex,
-	// 		series,
-	// 		seriesIndex,
-	// 		yMax,
-	// 		yMin,
-	// 	} = options
-	// 	let hoverRegions: Array<HoverRegion<BoxChartHoverRegionInfo>> = []
+	let DrawBoxOptions {
+		chart_config,
+		box_gap,
+		box_group_gap,
+		box_group_width,
+		chart_box,
+		ctx,
+		data,
+		point,
+		point_index,
+		series,
+		series_index,
+		y_max,
+		y_min,
+	} = options;
+	let n_series = data.len().to_f64().unwrap();
+	let mut hover_regions: Vec<HoverRegion<BoxChartHoverRegionInfo>> = Vec::new();
 
-	// 	// Ignore boxes with null values.
-	// 	if (!point.y) {
-	// 		return { hoverRegions }
-	// 	}
+	let value = if let Some(y) = point.y {
+		y
+	} else {
+		return DrawBoxOutput { hover_regions };
+	};
 
-	// 	let boxWidth =
-	// 		boxGroupWidth / data.length - chartConfig.barGap * (data.length - 1)
-	// 	let x =
-	// 		chartBox.x +
-	// 		(boxGroupGap + (boxGroupGap + boxGroupWidth) * pointIndex) +
-	// 		(boxGap + boxWidth) * seriesIndex
+	let box_width = box_group_width / n_series - chart_config.bar_gap * (n_series - 1.0);
+	let x = chart_box.x
+		+ (box_group_gap + (box_group_gap + box_group_width) * point_index.to_f64().unwrap())
+		+ (box_gap + box_width) * series_index.to_f64().unwrap();
 
-	// 	let whiskerTipWidth = boxWidth / 10
-	// 	let lineWidth = 2
-	// 	let valueToPixels = (value: number) =>
-	// 		chartBox.y +
-	// 		chartBox.h -
-	// 		(-yMin / (yMax - yMin)) * chartBox.h -
-	// 		(value / (yMax - yMin)) * chartBox.h
+	let whisker_tip_width = box_width / 10.0;
+	let line_width = 2.0;
+	let value_to_pixels = |value: f64| {
+		chart_box.y + chart_box.h
+			- (-y_min / (y_max - y_min)) * chart_box.h
+			- (value / (y_max - y_min)) * chart_box.h
+	};
 
-	// 	// Draw the box.
-	// 	let box = {
-	// 		h: (Math.abs(point.y.p75 - point.y.p25) / (yMax - yMin)) * chartBox.h,
-	// 		w: boxWidth,
-	// 		x,
-	// 		y: valueToPixels(Math.max(point.y.p25, point.y.p75)),
-	// 	}
-	// 	drawRoundedRect({
-	// 		box,
-	// 		ctx,
-	// 		fillColor: series.color + "af",
-	// 		radius: Math.min(
-	// 			Math.abs(box.h / 2),
-	// 			Math.abs(box.w / 6),
-	// 			chartConfig.maxCornerRadius,
-	// 		),
-	// 		strokeColor: series.color,
-	// 		strokeWidth: chartConfig.barStrokeWidth,
-	// 	})
+	// Draw the box.
+	let rect = Rect {
+		h: ((value.p75 - value.p25).abs() / (y_max - y_min)) * chart_box.h,
+		w: box_width,
+		x,
+		y: value_to_pixels(f64::max(value.p25, value.p75)),
+	};
+	let radius = f64::INFINITY
+		.min((rect.h / 2.0).abs())
+		.min((rect.w / 6.0).abs())
+		.min(chart_config.max_corner_radius);
+	draw_rounded_rect(DrawRoundedRectOptions {
+		rect,
+		ctx: ctx.clone(),
+		fill_color: Some(&format!("{}af", series.color)),
+		radius,
+		stroke_color: Some(&series.color),
+		stroke_width: Some(chart_config.bar_stroke_width),
+		round_bottom_left: true,
+		round_bottom_right: true,
+		round_top_left: true,
+		round_top_right: true,
+	});
 
-	// 	// Create a clip path so the median line will not overflow the box.
-	// 	ctx.save()
-	// 	drawRoundedRect({
-	// 		box,
-	// 		ctx,
-	// 		radius: Math.min(
-	// 			Math.abs(box.h / 2),
-	// 			Math.abs(box.w / 6),
-	// 			chartConfig.maxCornerRadius,
-	// 		),
-	// 	})
-	// 	ctx.clip()
-	// 	// Draw the median line.
-	// 	let medianBox = {
-	// 		h: lineWidth,
-	// 		w: boxWidth,
-	// 		x,
-	// 		y: valueToPixels(point.y.p50),
-	// 	}
-	// 	drawLine({
-	// 		color: series.color,
-	// 		ctx,
-	// 		end: { x: medianBox.x + medianBox.w, y: medianBox.y },
-	// 		lineWidth,
-	// 		start: { x: medianBox.x, y: medianBox.y },
-	// 	})
-	// 	hoverRegions.push(
-	// 		boxChartHoverRegion({
-	// 			box: medianBox,
-	// 			color: series.color,
-	// 			label: point.label,
-	// 			name: "median",
-	// 			tooltipOriginPixels: { ...medianBox, x: x + boxWidth / 2 },
-	// 			value: point.y.p50,
-	// 		}),
-	// 	)
-	// 	ctx.restore()
+	// Create a clip path so the median line will not overflow the box.
+	ctx.save();
+	draw_rounded_rect(DrawRoundedRectOptions {
+		ctx: ctx.clone(),
+		fill_color: None,
+		radius,
+		rect,
+		round_bottom_left: true,
+		round_bottom_right: true,
+		round_top_left: true,
+		round_top_right: true,
+		stroke_color: None,
+		stroke_width: None,
+	});
+	ctx.clip();
+	// Draw the median line.
+	let median_box = Rect {
+		h: line_width,
+		w: box_width,
+		x,
+		y: value_to_pixels(value.p50),
+	};
+	draw_line(DrawLineOptions {
+		color: Some(&series.color),
+		ctx: ctx.clone(),
+		end: Point {
+			x: median_box.x + median_box.w,
+			y: median_box.y,
+		},
+		line_width: Some(line_width),
+		start: Point {
+			x: median_box.x,
+			y: median_box.y,
+		},
+		dashed: None,
+		line_cap: None,
+	});
+	hover_regions.push(box_chart_hover_region(BoxChartHoverRegionOptions {
+		rect: median_box,
+		color: series.color.clone(),
+		label: point.label.clone(),
+		name: "median".to_owned(),
+		tooltip_origin_pixels: Point {
+			x: x + box_width / 2.0,
+			y: median_box.y,
+		},
+		value: value.p50,
+		chart_config,
+	}));
+	ctx.restore();
 
-	// 	// Draw the min line.
-	// 	drawLine({
-	// 		color: series.color,
-	// 		ctx,
-	// 		end: {
-	// 			x: x + boxWidth / 2,
-	// 			y: valueToPixels(point.y.min),
-	// 		},
-	// 		lineWidth,
-	// 		start: {
-	// 			x: x + boxWidth / 2,
-	// 			y: valueToPixels(point.y.p25),
-	// 		},
-	// 	})
-	// 	let minWhiskerTipBox = {
-	// 		h: lineWidth,
-	// 		w: whiskerTipWidth,
-	// 		x: x + boxWidth / 2 - whiskerTipWidth / 2,
-	// 		y: valueToPixels(point.y.min),
-	// 	}
-	// 	drawLine({
-	// 		color: series.color,
-	// 		ctx,
-	// 		end: {
-	// 			x: minWhiskerTipBox.x + minWhiskerTipBox.w,
-	// 			y: minWhiskerTipBox.y,
-	// 		},
-	// 		lineCap: "round",
-	// 		lineWidth,
-	// 		start: { x: minWhiskerTipBox.x, y: minWhiskerTipBox.y },
-	// 	})
-	// 	hoverRegions.push(
-	// 		boxChartHoverRegion({
-	// 			box: minWhiskerTipBox,
-	// 			color: series.color,
-	// 			label: point.label,
-	// 			name: "min",
-	// 			tooltipOriginPixels: { ...minWhiskerTipBox, x: x + boxWidth / 2 },
-	// 			value: point.y.min,
-	// 		}),
-	// 	)
+	// Draw the min line.
+	draw_line(DrawLineOptions {
+		color: Some(&series.color),
+		ctx: ctx.clone(),
+		end: Point {
+			x: x + box_width / 2.0,
+			y: value_to_pixels(value.min),
+		},
+		line_width: Some(line_width),
+		start: Point {
+			x: x + box_width / 2.0,
+			y: value_to_pixels(value.p25),
+		},
+		dashed: None,
+		line_cap: None,
+	});
+	let min_whisker_tip_box = Rect {
+		h: line_width,
+		w: whisker_tip_width,
+		x: x + box_width / 2.0 - whisker_tip_width / 2.0,
+		y: value_to_pixels(value.min),
+	};
+	draw_line(DrawLineOptions {
+		color: Some(&series.color),
+		ctx: ctx.clone(),
+		end: Point {
+			x: min_whisker_tip_box.x + min_whisker_tip_box.w,
+			y: min_whisker_tip_box.y,
+		},
+		line_cap: Some("round"),
+		line_width: Some(line_width),
+		start: Point {
+			x: min_whisker_tip_box.x,
+			y: min_whisker_tip_box.y,
+		},
+		dashed: None,
+	});
+	hover_regions.push(box_chart_hover_region(BoxChartHoverRegionOptions {
+		rect: min_whisker_tip_box,
+		color: series.color.clone(),
+		label: point.label.clone(),
+		name: "min".to_owned(),
+		tooltip_origin_pixels: Point {
+			y: min_whisker_tip_box.y,
+			x: x + box_width / 2.0,
+		},
+		value: value.min,
+		chart_config,
+	}));
 
-	// 	// Draw the max line.
-	// 	drawLine({
-	// 		color: series.color,
-	// 		ctx,
-	// 		end: {
-	// 			x: x + boxWidth / 2,
-	// 			y: valueToPixels(point.y.max),
-	// 		},
-	// 		lineWidth,
-	// 		start: {
-	// 			x: x + boxWidth / 2,
-	// 			y: valueToPixels(point.y.p75),
-	// 		},
-	// 	})
-	// 	let maxWhiskerTipBox = {
-	// 		h: lineWidth,
-	// 		w: whiskerTipWidth,
-	// 		x: x + boxWidth / 2 - whiskerTipWidth / 2,
-	// 		y: valueToPixels(point.y.max),
-	// 	}
-	// 	drawLine({
-	// 		color: series.color,
-	// 		ctx,
-	// 		end: {
-	// 			x: maxWhiskerTipBox.x + maxWhiskerTipBox.w,
-	// 			y: maxWhiskerTipBox.y,
-	// 		},
-	// 		lineCap: "round",
-	// 		lineWidth,
-	// 		start: { x: maxWhiskerTipBox.x, y: maxWhiskerTipBox.y },
-	// 	})
-	// 	hoverRegions.push(
-	// 		boxChartHoverRegion({
-	// 			box: maxWhiskerTipBox,
-	// 			color: series.color,
-	// 			label: point.label,
-	// 			name: "max",
-	// 			tooltipOriginPixels: {
-	// 				...maxWhiskerTipBox,
-	// 				x: x + boxWidth / 2,
-	// 			},
-	// 			value: point.y.max,
-	// 		}),
-	// 	)
+	// Draw the max line.
+	draw_line(DrawLineOptions {
+		color: Some(&series.color),
+		ctx: ctx.clone(),
+		end: Point {
+			x: x + box_width / 2.0,
+			y: value_to_pixels(value.max),
+		},
+		line_width: Some(line_width),
+		start: Point {
+			x: x + box_width / 2.0,
+			y: value_to_pixels(value.p75),
+		},
+		dashed: None,
+		line_cap: None,
+	});
+	let max_whisker_tip_box = Rect {
+		h: line_width,
+		w: whisker_tip_width,
+		x: x + box_width / 2.0 - whisker_tip_width / 2.0,
+		y: value_to_pixels(value.max),
+	};
+	draw_line(DrawLineOptions {
+		color: Some(&series.color),
+		ctx,
+		end: Point {
+			x: max_whisker_tip_box.x + max_whisker_tip_box.w,
+			y: max_whisker_tip_box.y,
+		},
+		line_cap: Some("round"),
+		line_width: Some(line_width),
+		start: Point {
+			x: max_whisker_tip_box.x,
+			y: max_whisker_tip_box.y,
+		},
+		dashed: None,
+	});
+	hover_regions.push(box_chart_hover_region(BoxChartHoverRegionOptions {
+		rect: max_whisker_tip_box,
+		color: series.color.clone(),
+		label: point.label.clone(),
+		name: "max".to_owned(),
+		tooltip_origin_pixels: Point {
+			x: x + box_width / 2.0,
+			y: max_whisker_tip_box.y,
+		},
+		value: value.max,
+		chart_config,
+	}));
 
-	// 	// Register the p25 hit region.
-	// 	let p25Box = {
-	// 		h: lineWidth,
-	// 		w: boxWidth,
-	// 		x,
-	// 		y: valueToPixels(point.y.p25),
-	// 	}
-	// 	hoverRegions.push(
-	// 		boxChartHoverRegion({
-	// 			box: p25Box,
-	// 			color: series.color,
-	// 			label: point.label,
-	// 			name: "p25",
-	// 			tooltipOriginPixels: {
-	// 				...p25Box,
-	// 				x: x + boxWidth / 2,
-	// 			},
-	// 			value: point.y.p25,
-	// 		}),
-	// 	)
+	// Register the p25 hit region.
+	let p25_box = Rect {
+		h: line_width,
+		w: box_width,
+		x,
+		y: value_to_pixels(value.p25),
+	};
+	hover_regions.push(box_chart_hover_region(BoxChartHoverRegionOptions {
+		rect: p25_box,
+		color: series.color.clone(),
+		label: point.label.clone(),
+		name: "p25".to_owned(),
+		tooltip_origin_pixels: Point {
+			x: x + box_width / 2.0,
+			y: p25_box.y,
+		},
+		value: value.p25,
+		chart_config,
+	}));
 
-	// 	// Register the p75 hit region.
-	// 	let p75Box = {
-	// 		h: lineWidth,
-	// 		w: boxWidth,
-	// 		x,
-	// 		y: valueToPixels(point.y.p75),
-	// 	}
-	// 	hoverRegions.push(
-	// 		boxChartHoverRegion({
-	// 			box: p75Box,
-	// 			color: series.color,
-	// 			label: point.label,
-	// 			name: "p75",
-	// 			tooltipOriginPixels: {
-	// 				...p75Box,
-	// 				x: x + boxWidth / 2,
-	// 			},
-	// 			value: point.y.p75,
-	// 		}),
-	// 	)
+	// Register the p75 hit region.
+	let p75_box = Rect {
+		h: line_width,
+		w: box_width,
+		x,
+		y: value_to_pixels(value.p75),
+	};
+	hover_regions.push(box_chart_hover_region(BoxChartHoverRegionOptions {
+		rect: p75_box,
+		color: series.color.clone(),
+		label: point.label,
+		name: "p75".to_owned(),
+		tooltip_origin_pixels: Point {
+			x: x + box_width / 2.0,
+			y: p75_box.y,
+		},
+		value: value.p75,
+		chart_config,
+	}));
 
-	// 	return { hoverRegions }
+	DrawBoxOutput { hover_regions }
 }
 
-struct BoxChartHoverRegionOptions {
+struct BoxChartHoverRegionOptions<'a> {
+	chart_config: &'a ChartConfig,
 	rect: Rect,
 	color: String,
 	label: String,
 	name: String,
-	tooltip_origin_pixels: Rect,
+	tooltip_origin_pixels: Point,
 	value: f64,
 }
 
 fn box_chart_hover_region(
 	options: BoxChartHoverRegionOptions,
 ) -> HoverRegion<BoxChartHoverRegionInfo> {
-	todo!()
-	// let { box, color, label, name, tooltipOriginPixels, value } = options
-	// return {
-	// 	distance: (mouseX: number, mouseY: number) => {
-	// 		return (box.x - mouseX) ** 2 + (box.y - mouseY) ** 2
-	// 	},
-	// 	hitTest: (mouseX: number, mouseY: number) => {
-	// 		return (
-	// 			mouseY < box.y + box.h + chartConfig.tooltipTargetRadius &&
-	// 			mouseY > box.y - box.h - chartConfig.tooltipTargetRadius &&
-	// 			mouseX > box.x - chartConfig.tooltipTargetRadius &&
-	// 			mouseX < box.x + box.w + chartConfig.tooltipTargetRadius
-	// 		)
-	// 	},
-	// 	info: {
-	// 		color,
-	// 		label,
-	// 		name,
-	// 		tooltipOriginPixels,
-	// 		value,
-	// 	},
-	// }
+	let BoxChartHoverRegionOptions {
+		chart_config,
+		rect,
+		color,
+		label,
+		name,
+		tooltip_origin_pixels,
+		value,
+	} = options;
+	let tooltip_target_radius = chart_config.tooltip_target_radius;
+	HoverRegion {
+		distance: Box::new(move |x, y| (rect.x - x).powi(2) + (rect.y - y).powi(2)),
+		hit_test: Box::new(move |x, y| {
+			y < rect.y + rect.h + tooltip_target_radius
+				&& y > rect.y - rect.h - tooltip_target_radius
+				&& x > rect.x - tooltip_target_radius
+				&& x < rect.x + rect.w + tooltip_target_radius
+		}),
+		info: BoxChartHoverRegionInfo {
+			color,
+			label,
+			name,
+			tooltip_origin_pixels,
+			value,
+		},
+	}
 }
 
-struct DrawLineOptions {
-	color: Option<String>,
+struct DrawLineOptions<'a> {
+	color: Option<&'a str>,
 	ctx: CanvasRenderingContext2d,
 	dashed: Option<bool>,
 	end: Point,
-	line_cap: Option<String>,
+	line_cap: Option<&'a str>,
 	line_width: Option<f64>,
 	start: Point,
 }
@@ -597,7 +660,7 @@ fn draw_line(options: DrawLineOptions) {
 			.unwrap();
 	}
 	if let Some(color) = &color {
-		ctx.set_stroke_style(&color.into());
+		ctx.set_stroke_style(&color.to_owned().into());
 	}
 	ctx.set_line_width(line_width);
 	ctx.set_line_cap(line_cap);

@@ -1,6 +1,5 @@
 use tangram_deps::{base64, sqlx, sqlx::prelude::*};
-use tangram_util::error::Result;
-use tangram_util::id::Id;
+use tangram_util::{error::Result, id::Id};
 
 /// Retrieves the model with the specified id.
 pub async fn get_model(

@@ -51,7 +51,10 @@ where
 	pub overlay_info: OverlayInfo,
 }
 
-pub struct DrawOverlayOptions<'a, OverlayInfo, HoverRegionInfo> {
+pub struct DrawOverlayOptions<'a, OverlayInfo, HoverRegionInfo>
+where
+	HoverRegionInfo: Clone,
+{
 	pub active_hover_regions: &'a [ActiveHoverRegion<HoverRegionInfo>],
 	pub chart_colors: &'a ChartColors,
 	pub chart_config: &'a ChartConfig,
@@ -69,7 +72,11 @@ where
 	pub info: HoverRegionInfo,
 }
 
-pub struct ActiveHoverRegion<HoverRegionInfo> {
+#[derive(Clone)]
+pub struct ActiveHoverRegion<HoverRegionInfo>
+where
+	HoverRegionInfo: Clone,
+{
 	pub distance: f64,
 	pub info: HoverRegionInfo,
 }

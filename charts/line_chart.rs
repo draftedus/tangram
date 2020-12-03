@@ -6,12 +6,14 @@ use crate::{
 	common::{
 		compute_boxes, compute_x_axis_grid_line_info, draw_x_axis, draw_x_axis_grid_lines,
 		draw_x_axis_labels, draw_x_axis_title, draw_y_axis, draw_y_axis_grid_lines,
-		draw_y_axis_labels, draw_y_axis_title, ComputeBoxesOptions, ComputeBoxesOutput,
-		ComputeXAxisGridLineInfoOptions, DrawXAxisGridLinesOptions, DrawXAxisLabelsOptions,
-		DrawXAxisOptions, DrawXAxisTitleOptions, DrawYAxisGridLinesOptions, DrawYAxisLabelsOptions,
-		DrawYAxisOptions, DrawYAxisTitleOptions, GridLineInterval, Point, Rect,
+		draw_y_axis_labels, draw_y_axis_title, format_number, ComputeBoxesOptions,
+		ComputeBoxesOutput, ComputeXAxisGridLineInfoOptions, DrawXAxisGridLinesOptions,
+		DrawXAxisLabelsOptions, DrawXAxisOptions, DrawXAxisTitleOptions, DrawYAxisGridLinesOptions,
+		DrawYAxisLabelsOptions, DrawYAxisOptions, DrawYAxisTitleOptions, GridLineInterval, Point,
+		Rect,
 	},
 	config::ChartConfig,
+	tooltip::{draw_tooltip, DrawTooltipOptions, TooltipLabel},
 };
 use itertools::Itertools;
 use num_traits::ToPrimitive;
@@ -91,6 +93,7 @@ pub enum PointStyle {
 
 pub struct LineChartOverlayInfo {
 	chart_box: Rect,
+	n_series: usize,
 	x_max: f64,
 	x_min: f64,
 	y_max: f64,
@@ -104,7 +107,7 @@ pub struct LineChartHoverRegionInfo {
 	point: Point,
 	point_label: Option<String>,
 	point_value: f64,
-	series_index: f64,
+	series_index: usize,
 	series_title: Option<String>,
 	tooltip_origin_pixels: Point,
 	x_max: f64,
@@ -322,7 +325,7 @@ fn draw_line_chart(
 					chart_box,
 					color: &series.color,
 					ctx: ctx.clone(),
-					point: *point,
+					point: point.clone().into(),
 					point_style: series.point_style.unwrap_or(PointStyle::Circle),
 					radius: chart_config.point_radius,
 					x_max,
@@ -366,7 +369,7 @@ fn draw_line_chart(
 					point: point.clone().into(),
 					point_label,
 					point_value: point.y,
-					series_index: series_index.to_f64().unwrap(),
+					series_index,
 					series_title: if has_multiple_series {
 						series.title.clone()
 					} else {
@@ -385,6 +388,7 @@ fn draw_line_chart(
 
 	let overlay_info = LineChartOverlayInfo {
 		chart_box,
+		n_series: options.series.len(),
 		x_max,
 		x_min,
 		y_max,
@@ -401,7 +405,7 @@ struct DrawPointOptions<'a> {
 	chart_box: Rect,
 	color: &'a str,
 	ctx: CanvasRenderingContext2d,
-	point: LineChartPoint,
+	point: Point,
 	point_style: PointStyle,
 	radius: f64,
 	x_max: f64,
@@ -428,7 +432,7 @@ fn draw_point(options: DrawPointOptions) {
 	}
 	let point_pixels = point_to_pixels(PointToPixelsOptions {
 		chart_box,
-		point: point.clone().into(),
+		point,
 		x_max,
 		x_min,
 		y_max,
@@ -596,116 +600,113 @@ fn draw_line_chart_overlay(
 	options: DrawOverlayOptions<LineChartOverlayInfo, LineChartHoverRegionInfo>,
 ) {
 	let DrawOverlayOptions {
+		chart_colors,
+		chart_config,
 		active_hover_regions,
 		ctx,
 		overlay_info,
 		overlay_div,
-		..
 	} = options;
 	let LineChartOverlayInfo {
 		chart_box,
+		n_series,
 		x_max,
 		x_min,
 		y_max,
 		y_min,
 	} = &overlay_info;
-	// 	let closestActiveHoverRegionForSeries = new Map<
-	// 		number,
-	// 		ActiveHoverRegion<LineChartHoverRegionInfo>
-	// 	>()
-	// 	for (let activeHoverRegion of activeHoverRegions) {
-	// 		let activeHoverRegionForSeries = closestActiveHoverRegionForSeries.get(
-	// 			activeHoverRegion.info.seriesIndex,
-	// 		)
-	// 		if (
-	// 			!activeHoverRegionForSeries ||
-	// 			activeHoverRegion.distance < activeHoverRegionForSeries.distance
-	// 		) {
-	// 			closestActiveHoverRegionForSeries.set(
-	// 				activeHoverRegion.info.seriesIndex,
-	// 				activeHoverRegion,
-	// 			)
-	// 		}
-	// 	}
-	// 	let closestActiveHoverRegions = Array.from(
-	// 		closestActiveHoverRegionForSeries.values(),
-	// 	)
-	// 	let tooltips: TooltipLabel[] = closestActiveHoverRegions.map(
-	// 		activeHoverRegion => {
-	// 			let pointLabel = activeHoverRegion.info.pointLabel
-	// 			if (pointLabel == undefined) {
-	// 				pointLabel = formatNumber(activeHoverRegion.info.point.x)
-	// 			}
-	// 			let pointValue = formatNumber(activeHoverRegion.info.point.y)
-	// 			let seriesTitle = activeHoverRegion.info.seriesTitle
-	// 			let text
-	// 			if (seriesTitle === undefined) {
-	// 				text = `(${pointLabel}, ${pointValue})`
-	// 			} else {
-	// 				text = `${seriesTitle} (${pointLabel}, ${pointValue})`
-	// 			}
-	// 			return {
-	// 				color: activeHoverRegion.info.color,
-	// 				text,
-	// 			}
-	// 		},
-	// 	)
-	// 	let closestActiveHoverRegion:
-	// 		| ActiveHoverRegion<LineChartHoverRegionInfo>
-	// 		| undefined
-	// 	for (let activeHoverRegion of closestActiveHoverRegions) {
-	// 		if (
-	// 			!closestActiveHoverRegion ||
-	// 			activeHoverRegion.distance < closestActiveHoverRegion.distance
-	// 		) {
-	// 			closestActiveHoverRegion = activeHoverRegion
-	// 		}
-	// 	}
-	// 	let tooltipOrigin = closestActiveHoverRegion
-	// 		? closestActiveHoverRegion.info.tooltipOriginPixels
-	// 		: undefined
-	// 	if (tooltipOrigin && tooltips.length === 1) {
-	// 		drawCrosshairs({
-	// 			chart_box,
-	// 			crosshairsColor: chartColors.current.crosshairsColor,
-	// 			ctx,
-	// 			origin: tooltipOrigin,
-	// 		})
-	// 	}
-	// 	if (tooltipOrigin) {
-	// 		drawTooltip({
-	// 			container: overlayDiv,
-	// 			labels: tooltips,
-	// 			origin: tooltipOrigin,
-	// 		})
-	// 	}
-	// 	closestActiveHoverRegions.forEach(activeHoverRegion => {
-	// 		let point = activeHoverRegion.info.point
-	// 		drawPoint({
-	// 			chart_box,
-	// 			color: activeHoverRegion.info.color,
-	// 			ctx,
-	// 			point: { x: point.x, y: point.y },
-	// 			pointStyle: PointStyle.Circle,
-	// 			radius: chartConfig.pointRadius,
-	// 			xMax,
-	// 			xMin,
-	// 			yMax,
-	// 			yMin,
-	// 		})
-	// 		drawPoint({
-	// 			chart_box,
-	// 			color: "#00000022",
-	// 			ctx,
-	// 			point: { x: point.x, y: point.y },
-	// 			pointStyle: PointStyle.Circle,
-	// 			radius: chartConfig.pointRadius,
-	// 			xMax,
-	// 			xMin,
-	// 			yMax,
-	// 			yMin,
-	// 		})
-	// 	})
+	let mut closest_active_hover_region_for_series: Vec<
+		Option<ActiveHoverRegion<LineChartHoverRegionInfo>>,
+	> = Vec::with_capacity(*n_series);
+	for _ in 0..*n_series {
+		closest_active_hover_region_for_series.push(None);
+	}
+	for active_hover_region in active_hover_regions {
+		let active_hover_region_for_series = closest_active_hover_region_for_series
+			.get_mut(active_hover_region.info.series_index)
+			.unwrap();
+		*active_hover_region_for_series = Some(match active_hover_region_for_series.take() {
+			None => active_hover_region.clone(),
+			Some(active_hover_region_for_series) => {
+				if active_hover_region.distance > active_hover_region_for_series.distance {
+					active_hover_region.clone()
+				} else {
+					active_hover_region_for_series
+				}
+			}
+		});
+	}
+	let tooltips: Vec<TooltipLabel> = closest_active_hover_region_for_series
+		.iter()
+		.filter_map(|active_hover_region| {
+			active_hover_region.as_ref().map(|active_hover_region| {
+				let series_title = &active_hover_region.info.series_title;
+				let point_label = active_hover_region.info.point_label.clone();
+				let point_label =
+					point_label.unwrap_or_else(|| format_number(active_hover_region.info.point.x));
+				let point_value = format_number(active_hover_region.info.point_value);
+				let text = if let Some(series_title) = series_title {
+					format!("{} ({}, {})", series_title, point_label, point_value)
+				} else {
+					format!("({}, {})", point_label, point_value)
+				};
+				TooltipLabel {
+					color: active_hover_region.info.color.to_owned(),
+					text,
+				}
+			})
+		})
+		.collect();
+	let closest_active_hover_region = active_hover_regions
+		.iter()
+		.min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+	let tooltip_origin = closest_active_hover_region.map(|r| r.info.tooltip_origin_pixels);
+	if let Some(tooltip_origin) = tooltip_origin {
+		draw_crosshairs(DrawCrosshairsOptions {
+			chart_box: *chart_box,
+			crosshairs_color: chart_colors.crosshairs_color.to_owned(),
+			ctx: ctx.clone(),
+			origin: tooltip_origin,
+		});
+		draw_tooltip(DrawTooltipOptions {
+			center_horizontal: None,
+			chart_colors,
+			chart_config,
+			container: overlay_div,
+			flip_y_offset: None,
+			labels: tooltips,
+			origin: tooltip_origin,
+		});
+	}
+	for active_hover_region in closest_active_hover_region_for_series.iter() {
+		if let Some(active_hover_region) = active_hover_region {
+			let point = active_hover_region.info.point;
+			draw_point(DrawPointOptions {
+				chart_box: *chart_box,
+				color: &active_hover_region.info.color,
+				ctx: ctx.clone(),
+				point,
+				point_style: PointStyle::Circle,
+				radius: chart_config.point_radius,
+				x_max: *x_max,
+				x_min: *x_min,
+				y_max: *y_max,
+				y_min: *y_min,
+			});
+			draw_point(DrawPointOptions {
+				chart_box: *chart_box,
+				color: "#00000022",
+				ctx: ctx.clone(),
+				point,
+				point_style: PointStyle::Circle,
+				radius: chart_config.point_radius,
+				x_max: *x_max,
+				x_min: *x_min,
+				y_max: *y_max,
+				y_min: *y_min,
+			});
+		}
+	}
 }
 
 struct DrawCrosshairsOptions {

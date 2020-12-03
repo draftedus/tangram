@@ -314,7 +314,7 @@ pub fn compute_x_axis_grid_line_info(options: ComputeXAxisGridLineInfoOptions) -
 		for grid_line_index in 0..x_axis_grid_line_info.num_grid_lines {
 			let grid_line_value = x_axis_grid_line_info.start
 				+ grid_line_index.to_f64().unwrap() * x_axis_grid_line_info.interval;
-			let label = format_number(Some(grid_line_value), None);
+			let label = format_number(grid_line_value);
 			let label_width = ctx.measure_text(&label).unwrap().width();
 			if label_width > x_axis_grid_line_info.interval_pixels {
 				x_axis_min_grid_line_distance = label_width;
@@ -357,7 +357,7 @@ fn compute_axis_labels_max_width(
 		.map(|grid_line_index| {
 			let grid_line_value =
 				grid_line_info.start + grid_line_index.to_f64().unwrap() * grid_line_info.interval;
-			let label = format_number(Some(grid_line_value), None);
+			let label = format_number(grid_line_value);
 			ctx.measure_text(&label).unwrap().width()
 		})
 		.max_by(|a, b| a.partial_cmp(b).unwrap())
@@ -520,7 +520,7 @@ pub fn draw_x_axis_labels(options: DrawXAxisLabelsOptions) {
 		let label: Cow<str> = if let Some(labels) = &labels {
 			labels.get(grid_line_index).unwrap().into()
 		} else {
-			format_number(Some(grid_line_value), None).into()
+			format_number(grid_line_value).into()
 		};
 		// Do not draw the label if it will overlap the previous label.
 		if let Some(previous_label_endpoint) = previous_label_endpoint {
@@ -569,7 +569,7 @@ pub fn draw_y_axis_labels(options: DrawYAxisLabelsOptions) {
 			+ grid_line_index.to_f64().unwrap() * grid_line_info.interval_pixels;
 		let grid_line_value =
 			grid_line_info.start + grid_line_index.to_f64().unwrap() * grid_line_info.interval;
-		let label = format_number(Some(grid_line_value), None);
+		let label = format_number(grid_line_value);
 		if rect.y + rect.h - grid_line_offset_pixels - font_size / 2.0 < 0.0
 			|| rect.y + rect.h - grid_line_offset_pixels + font_size / 2.0 > height
 		{
@@ -729,17 +729,6 @@ fn truncate_text(ctx: CanvasRenderingContext2d, label: &str, width: f64) -> Cow<
 	longest_truncated_label.into()
 }
 
-pub fn format_number(value: Option<f64>, max_digits: Option<usize>) -> String {
-	value
-		.map(|value| format!("{}", value))
-		.unwrap_or_else(|| "".to_owned())
-	// if (value === undefined || value === null) {
-	// 	return ""
-	// }
-	// let result = value.toPrecision(maxDigits ?? 6)
-	// // Remove trailing zeros including the decimal point, for example 12345.000.
-	// result = result.replace(/\.(0*)$/, "")
-	// // Remove trailing zeros excluding the decimal point, for example .01234500.
-	// result = result.replace(/\.([0-9]*)([1-9])(0*)$/, ".$1$2")
-	// return result
+pub fn format_number(value: f64) -> String {
+	lexical::to_string(value)
 }
