@@ -1,10 +1,10 @@
 use crate::page::BinaryClassifierProps;
-use html::{component, html};
 use tangram_app_common::{
 	definitions::ACCURACY,
 	metrics_row::MetricsRow,
 	tokens::{BASELINE_COLOR, TRAINING_COLOR},
 };
+use tangram_deps::html::{self, component, html};
 use tangram_ui as ui;
 
 #[component]

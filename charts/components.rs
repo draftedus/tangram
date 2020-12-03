@@ -19,7 +19,8 @@ where
 	T: ChartImpl,
 	T::Options: serde::de::DeserializeOwned,
 {
-	let document = window().unwrap().document().unwrap();
+	let window = window().unwrap();
+	let document = window.document().unwrap();
 	let container = document
 		.get_element_by_id(id)
 		.unwrap()

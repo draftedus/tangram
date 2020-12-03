@@ -1,11 +1,10 @@
-use html::{component, html};
-use tangram_app_layouts::document::PageInfo;
-use tangram_app_layouts::model_layout::ModelLayoutInfo;
-use tangram_app_layouts::model_layout::{ModelLayout, ModelSideNavItem};
+use tangram_app_layouts::{
+	document::PageInfo,
+	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
+};
+use tangram_deps::html::{self, component, html};
 use tangram_ui as ui;
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Props {
 	pub id: String,
 	pub model_layout_info: ModelLayoutInfo,
@@ -16,7 +15,7 @@ pub struct Props {
 	pub best_model_hyperparameters: Vec<(String, String)>,
 }
 
-#[derive(serde::Serialize, Clone)]
+#[derive(Clone)]
 pub struct TrainedModel {
 	pub identifier: String,
 	pub model_comparison_metric_value: f32,

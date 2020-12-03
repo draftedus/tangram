@@ -1,8 +1,8 @@
-use html::html;
 use tangram_app_layouts::{
 	app_layout::{AppLayout, AppLayoutInfo},
 	document::PageInfo,
 };
+use tangram_deps::html::{self, html};
 use tangram_ui as ui;
 
 pub struct Props {

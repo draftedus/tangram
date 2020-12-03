@@ -1,10 +1,10 @@
-use html::{component, html};
 use tangram_app_common::metrics_row::MetricsRow;
 use tangram_app_common::tokens::{EnumColumnToken, NumberColumnToken, TextColumnToken};
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
 };
+use tangram_deps::html::{self, component, html};
 use tangram_ui as ui;
 
 #[derive(Clone)]

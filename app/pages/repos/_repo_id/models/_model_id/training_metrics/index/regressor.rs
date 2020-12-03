@@ -1,9 +1,9 @@
 use crate::page::RegressorProps;
-use html::{component, html};
 use tangram_app_common::{
 	metrics_row::MetricsRow,
 	tokens::{BASELINE_COLOR, TRAINING_COLOR},
 };
+use tangram_deps::html::{self, component, html};
 use tangram_ui as ui;
 
 #[component]

@@ -2464,9 +2464,7 @@ dependencies = [
 name = "tangram_app_common"
 version = "0.0.0"
 dependencies = [
- "html",
  "insta",
- "num-traits",
  "serde",
  "tangram_charts",
  "tangram_core",
@@ -2492,7 +2490,6 @@ dependencies = [
 name = "tangram_app_pages_index"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2505,7 +2502,6 @@ dependencies = [
 name = "tangram_app_pages_login"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2518,7 +2514,6 @@ dependencies = [
 name = "tangram_app_pages_organizations_new"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2531,7 +2526,6 @@ dependencies = [
 name = "tangram_app_pages_organizations_organization_id_edit"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2544,7 +2538,6 @@ dependencies = [
 name = "tangram_app_pages_organizations_organization_id_index"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2557,7 +2550,6 @@ dependencies = [
 name = "tangram_app_pages_organizations_organization_id_members_new"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2570,7 +2562,6 @@ dependencies = [
 name = "tangram_app_pages_repos_new"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2583,7 +2574,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_index"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2596,10 +2586,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_index"
 version = "0.0.0"
 dependencies = [
- "html",
- "num-traits",
- "pinwheel",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_model_id_index_client",
@@ -2625,10 +2611,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_prediction"
 version = "0.0.0"
 dependencies = [
- "html",
- "num-traits",
- "pinwheel",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_model_id_prediction_client",
@@ -2705,8 +2687,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_index"
 version = "0.0.0"
 dependencies = [
- "html",
- "pinwheel",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2719,9 +2699,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier"
 version = "0.0.0"
 dependencies = [
- "html",
- "pinwheel",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier_client",
@@ -2797,9 +2774,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_grid_index"
 version = "0.0.0"
 dependencies = [
- "html",
- "pinwheel",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_charts",
@@ -2813,10 +2787,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_importances"
 version = "0.0.0"
 dependencies = [
- "html",
- "num-traits",
- "pinwheel",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_model_id_training_importances_client",
@@ -2842,9 +2812,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_metrics"
 version = "0.0.0"
 dependencies = [
- "html",
- "num-traits",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_metrics_client",
@@ -2869,8 +2836,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_index"
 version = "0.0.0"
 dependencies = [
- "html",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
@@ -2883,9 +2848,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_precision_recall"
 version = "0.0.0"
 dependencies = [
- "html",
- "num-traits",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_precision_recall_client",
@@ -2911,10 +2873,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc"
 version = "0.0.0"
 dependencies = [
- "html",
- "num-traits",
- "pinwheel",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_roc_client",
@@ -2940,10 +2898,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name"
 version = "0.0.0"
 dependencies = [
- "html",
- "num-traits",
- "pinwheel",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_model_id_training_stats_columns_column_name_client",
@@ -2969,8 +2923,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_stats_index"
 version = "0.0.0"
 dependencies = [
- "html",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_core",
@@ -2996,9 +2948,6 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_new"
 version = "0.0.0"
 dependencies = [
- "html",
- "pinwheel",
- "serde",
  "tangram_app_common",
  "tangram_app_layouts",
  "tangram_app_pages_repos_repo_id_models_new_client",
@@ -3022,7 +2971,6 @@ dependencies = [
 name = "tangram_app_pages_user"
 version = "0.0.0"
 dependencies = [
- "html",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",

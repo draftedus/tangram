@@ -7,9 +7,6 @@ version = "0.0.0"
 path = "lib.rs"
 
 [dependencies]
-html = { path = "../../../../../../../../html" }
-num-traits = "0.2"
-serde = { version = "1", features = ["derive"] }
 tangram_app_common = { path = "../../../../../../../common" }
 tangram_app_layouts = { path = "../../../../../../../layouts" }
 tangram_core = { path = "../../../../../../../../core" }

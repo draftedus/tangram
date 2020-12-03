@@ -30,7 +30,7 @@ macro_rules! asset {
 			format!("/assets/{}", asset_path.display())
 		} else {
 			let extension = asset_path.extension().map(|e| e.to_str().unwrap()).unwrap();
-			let hash = ::pinwheel::hash(&asset_path.to_str().unwrap());
+			let hash = pinwheel::hash(&asset_path.to_str().unwrap());
 			format!("/assets/{}.{}", hash, extension)
 			}
 		}};

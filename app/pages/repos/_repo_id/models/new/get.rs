@@ -1,12 +1,14 @@
 use super::render::{render, Props};
-use pinwheel::client;
 use tangram_app_common::{
 	error::{not_found, redirect_to_login, service_unavailable},
 	user::{authorize_user, authorize_user_for_repo},
 	Context,
 };
 use tangram_app_layouts::{app_layout::get_app_layout_info, document::PageInfo};
-use tangram_deps::{http, hyper};
+use tangram_deps::{
+	http, hyper,
+	pinwheel::{self, client},
+};
 use tangram_util::{error::Result, id::Id};
 
 pub async fn get(

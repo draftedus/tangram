@@ -1,5 +1,3 @@
-use html::{component, html};
-use num_traits::ToPrimitive;
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
@@ -8,6 +6,8 @@ use tangram_charts::{
 	bar_chart::{BarChartPoint, BarChartSeries},
 	components::BarChart,
 };
+use tangram_deps::html::{self, component, html};
+use tangram_deps::num_traits::ToPrimitive;
 use tangram_ui as ui;
 
 pub struct Props {

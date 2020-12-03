@@ -1,6 +1,4 @@
 use crate::tokens::{EnumColumnToken, NumberColumnToken, TextColumnToken, UnknownColumnToken};
-use html::{component, html};
-use num_traits::ToPrimitive;
 use std::convert::TryInto;
 use tangram_charts::{
 	bar_chart::{BarChartPoint, BarChartSeries},
@@ -9,7 +7,11 @@ use tangram_charts::{
 		FeatureContributionsChartSeries, FeatureContributionsChartValue,
 	},
 };
-use tangram_deps::serde_json;
+use tangram_deps::{
+	html::{self, component, html},
+	num_traits::ToPrimitive,
+	serde_json,
+};
 use tangram_ui as ui;
 
 #[derive(Clone)]

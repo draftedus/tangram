@@ -1,11 +1,11 @@
 use super::page::TrainingSummary;
-use html::html;
-use num_traits::ToPrimitive;
 use tangram_app_common::tokens::{BASELINE_COLOR, TRAINING_COLOR};
 use tangram_charts::{
 	components::LineChart,
 	line_chart::{LineChartPoint, LineChartSeries, LineStyle, PointStyle},
 };
+use tangram_deps::html::{self, html};
+use tangram_deps::num_traits::ToPrimitive;
 use tangram_ui as ui;
 
 pub struct RegressorProps {
@@ -101,7 +101,7 @@ pub fn regressor_index_page(props: RegressorProps) -> html::Node {
 						y_max={None}
 						class={None}
 						hide_legend={None}
-						id={"loss_curve".to_owned()}
+						id={"loss".to_owned()}
 						series={losses_chart_series}
 						title={"Training Loss Curve".to_owned()}
 						x_axis_title={"Epoch".to_owned()}

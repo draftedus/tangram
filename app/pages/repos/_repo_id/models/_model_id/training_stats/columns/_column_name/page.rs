@@ -1,11 +1,11 @@
 use super::enum_column::EnumColumn;
 use super::number_column::NumberColumn;
 use super::text_column::TextColumn;
-use html::html;
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
 };
+use tangram_deps::html::{self, html};
 
 pub struct Props {
 	pub inner: Inner,

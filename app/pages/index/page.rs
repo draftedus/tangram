@@ -1,17 +1,17 @@
-use html::{component, html, style};
-use tangram_app_layouts::app_layout::AppLayoutInfo;
-use tangram_app_layouts::{app_layout::AppLayout, document::PageInfo};
+use tangram_app_layouts::{
+	app_layout::{AppLayout, AppLayoutInfo},
+	document::PageInfo,
+};
+use tangram_deps::html::{self, component, html, style};
 use tangram_ui as ui;
 
-#[derive(serde::Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone)]
 pub struct Props {
 	pub app_layout_info: AppLayoutInfo,
 	pub repos_table: Vec<RepoTableItem>,
 }
 
-#[derive(serde::Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone)]
 pub struct RepoTableItem {
 	pub id: String,
 	pub title: String,

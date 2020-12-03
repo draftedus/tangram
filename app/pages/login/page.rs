@@ -1,9 +1,8 @@
-use html::html;
-use tangram_app_layouts::auth_layout::AuthLayout;
-use tangram_app_layouts::document::PageInfo;
+use tangram_app_layouts::{auth_layout::AuthLayout, document::PageInfo};
+use tangram_deps::html::{self, html};
 use tangram_ui as ui;
 
-#[derive(serde::Serialize)]
+#[derive(Clone)]
 pub struct Props {
 	pub code: bool,
 	pub email: Option<String>,

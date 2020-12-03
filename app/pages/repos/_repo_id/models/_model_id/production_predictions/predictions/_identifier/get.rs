@@ -1,5 +1,4 @@
 use super::page::{render, Found, Inner, Props};
-use pinwheel::client;
 use std::collections::BTreeMap;
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
@@ -10,6 +9,7 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::pinwheel::{self, client};
 use tangram_deps::{
 	base64, chrono::prelude::*, chrono_tz::Tz, http, hyper, lexical, serde_json, sqlx,
 	sqlx::prelude::*,

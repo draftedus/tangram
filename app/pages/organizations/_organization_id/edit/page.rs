@@ -1,10 +1,10 @@
-use html::html;
-use tangram_app_layouts::app_layout::{AppLayout, AppLayoutInfo};
-use tangram_app_layouts::document::PageInfo;
+use tangram_app_layouts::{
+	app_layout::{AppLayout, AppLayoutInfo},
+	document::PageInfo,
+};
+use tangram_deps::html::{self, html};
 use tangram_ui as ui;
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Props {
 	pub app_layout_info: AppLayoutInfo,
 	pub error: Option<String>,

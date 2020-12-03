@@ -2,9 +2,9 @@ use crate::{
 	binary_classifier::binary_classifier_index_page,
 	multiclass_classifier::multiclass_classifier_index_page, regressor::regressor_index_page,
 };
-use html::html;
 use tangram_app_layouts::document::PageInfo;
 use tangram_app_layouts::model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem};
+use tangram_deps::html::{self, html};
 
 pub use {
 	crate::binary_classifier::{BinaryClassifierInnerMetrics, BinaryClassifierProps},

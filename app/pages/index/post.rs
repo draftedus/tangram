@@ -3,7 +3,7 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_repo},
 	Context,
 };
-use tangram_deps::{http, hyper, serde_urlencoded, sqlx};
+use tangram_deps::{http, hyper, serde, serde_urlencoded, sqlx};
 use tangram_util::{error::Result, id::Id};
 
 #[derive(serde::Deserialize)]

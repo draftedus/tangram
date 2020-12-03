@@ -127,7 +127,7 @@ impl quote::ToTokens for Fragment {
 		let children = self.children.iter();
 		let children = quote! { vec![#(#children.into()),*] };
 		let code = quote! {
-			::html::Node::Fragment(::html::FragmentNode {
+			html::Node::Fragment(html::FragmentNode {
 				children: #children,
 			})
 		};
@@ -167,7 +167,7 @@ impl quote::ToTokens for Element {
 			let children = quote! { vec![#(#children.into()),*] };
 			let self_closing = self.self_closing;
 			let code = quote! {
-				::html::Node::Host(::html::HostNode {
+				html::Node::Host(html::HostNode {
 					name: #name,
 					attributes: #attributes.into_iter().collect(),
 					children: #children,
@@ -189,7 +189,7 @@ impl quote::ToTokens for Element {
 			let children = self.children.iter();
 			let children = quote! { vec![#(#children.into()),*] };
 			let code = quote! {
-				::html::Node::Component(::html::ComponentNode::Unrendered {
+				html::Node::Component(html::ComponentNode::Unrendered {
 					component: Some(Box::new(#name { #(#fields),* })),
 					children: Some(#children),
 				})
@@ -217,7 +217,7 @@ fn component_transform(ast: syn::ItemFn) -> TokenStream {
 		.collect();
 	let ast = quote! {
 		#[derive(Clone)] #visibility struct #struct_name#impl_generics { #(#visibility #inputs),* }
-		impl#impl_generics ::html::Component for #struct_name#ty_generics #where_clause {
+		impl#impl_generics html::Component for #struct_name#ty_generics #where_clause {
 			fn render(self: Box<Self>, children: Vec<html::Node>) -> html::Node {
 				let #struct_name { #(#input_patterns),* } = *self;
 				#block

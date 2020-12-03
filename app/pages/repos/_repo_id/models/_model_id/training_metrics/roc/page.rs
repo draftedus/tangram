@@ -1,5 +1,3 @@
-use html::html;
-use num_traits::ToPrimitive;
 use tangram_app_common::definitions::{AUC_ROC, RECEIVER_OPERATING_CHARACTERISTIC};
 use tangram_app_layouts::{
 	document::PageInfo,
@@ -9,6 +7,8 @@ use tangram_charts::{
 	components::LineChart,
 	line_chart::{LineChartPoint, LineChartSeries, LineStyle, PointStyle},
 };
+use tangram_deps::html::{self, html};
+use tangram_deps::num_traits::ToPrimitive;
 use tangram_ui as ui;
 
 pub struct Props {
@@ -78,7 +78,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 					<ui::TabLink
 						disabled={false}
 						href={"roc".to_owned()}
-						selected={false}
+						selected={true}
 					>
 						{"ROC Curve"}
 					</ui::TabLink>

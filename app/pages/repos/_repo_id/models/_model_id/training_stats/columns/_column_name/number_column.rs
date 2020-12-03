@@ -1,12 +1,12 @@
 use super::page::NumberProps;
-use html::{component, html};
-use num_traits::ToPrimitive;
 use tangram_app_common::metrics_row::MetricsRow;
 use tangram_charts::{
 	box_chart::BoxChartPoint,
 	box_chart::{BoxChartSeries, BoxChartValue},
 	components::BoxChart,
 };
+use tangram_deps::html::{self, component, html};
+use tangram_deps::num_traits::ToPrimitive;
 use tangram_ui as ui;
 
 #[component]

@@ -1,5 +1,3 @@
-use html::html;
-use num_traits::ToPrimitive;
 use tangram_app_common::{
 	definitions::{CONFUSION_MATRIX, PRECISION_RECALL},
 	metrics_row::MetricsRow,
@@ -8,6 +6,8 @@ use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
 };
+use tangram_deps::html::{self, html};
+use tangram_deps::num_traits::ToPrimitive;
 use tangram_ui as ui;
 
 pub struct Props {

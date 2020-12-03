@@ -7,10 +7,6 @@ version = "0.0.0"
 path = "lib.rs"
 
 [dependencies]
-pinwheel = { path = "../../../../../../../pinwheel" }
-num-traits = "0.2"
-html = { path = "../../../../../../../html" }
-serde = { version = "1", features = ["derive"] }
 tangram_app_common = { path = "../../../../../../common" }
 tangram_app_layouts = { path = "../../../../../../layouts" }
 tangram_charts = { path = "../../../../../../../charts" }

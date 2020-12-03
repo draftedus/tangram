@@ -1,11 +1,11 @@
 use crate::binary_classifier::BinaryClassifierTrainingMetricsIndexPage;
 use crate::multiclass_classifier::MulticlassClassifierTrainingMetricsIndexPage;
 use crate::regressor::RegressorTrainingMetricsIndexPage;
-use html::html;
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
 };
+use tangram_deps::html::{self, html};
 
 pub struct Props {
 	pub id: String,

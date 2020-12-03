@@ -1,10 +1,12 @@
 use super::page::TrainingSummary;
-use html::html;
-use num_traits::ToPrimitive;
 use tangram_app_common::metrics_row::MetricsRow;
 use tangram_charts::{
 	components::LineChart,
 	line_chart::{LineChartPoint, LineChartSeries, LineStyle, PointStyle},
+};
+use tangram_deps::{
+	html::{self, html},
+	num_traits::ToPrimitive,
 };
 use tangram_ui as ui;
 
@@ -115,7 +117,7 @@ pub fn binary_classifier_index_page(props: BinaryClassifierProps) -> html::Node 
 						y_max={None}
 						class={None}
 						hide_legend={None}
-						id={"loss_curve".to_owned()}
+						id={"loss".to_owned()}
 						series={losses_chart_series}
 						title={"Training Loss Curve".to_owned()}
 						x_axis_title={"Epoch".to_owned()}

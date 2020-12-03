@@ -319,7 +319,7 @@ macro_rules! style {
 			let mut style = String::new();
 			$(
 				let value = &$value;
-				let value = ::html::AsOptionStr::as_option_str(value);
+				let value = html::AsOptionStr::as_option_str(value);
 				if let Some(value) = value {
 					if first {
 						first = false;
@@ -345,7 +345,7 @@ macro_rules! classes {
 			let mut classes = String::new();
 			$(
 				let class = &$class;
-				let class = ::html::AsOptionStr::as_option_str(class);
+				let class = html::AsOptionStr::as_option_str(class);
 				if let Some(class) = class {
 					if first {
 						first = false;
@@ -363,13 +363,13 @@ macro_rules! classes {
 #[macro_export]
 macro_rules! raw {
 	($t:expr) => {
-		::html::RawTextNode($t.into())
+		html::RawTextNode($t.into())
 	};
 }
 
 #[macro_export]
 macro_rules! text {
 	($t:expr) => {
-		::html::EscapedTextNode($t.into())
+		html::EscapedTextNode($t.into())
 	};
 }

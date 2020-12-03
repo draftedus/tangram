@@ -1,10 +1,10 @@
 use super::page::EnumProps;
-use html::{component, html};
 use tangram_app_common::metrics_row::MetricsRow;
 use tangram_charts::{
 	bar_chart::{BarChartPoint, BarChartSeries},
 	components::BarChart,
 };
+use tangram_deps::html::{self, component, html};
 use tangram_deps::num_traits::ToPrimitive;
 use tangram_ui as ui;
 

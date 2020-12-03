@@ -6,7 +6,10 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
-use tangram_deps::{http, hyper, pinwheel::client};
+use tangram_deps::{
+	http, hyper,
+	pinwheel::{self, client},
+};
 use tangram_util::{error::Result, id::Id};
 
 const MAX_TOKENS: usize = 1_000;

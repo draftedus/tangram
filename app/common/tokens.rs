@@ -1,4 +1,4 @@
-use html::{component, html};
+use tangram_deps::html::{self, component, html};
 use tangram_ui as ui;
 
 pub const TRAINING_COLOR: &str = ui::colors::BLUE;

@@ -1,8 +1,8 @@
-use html::html;
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
 };
+use tangram_deps::html::{self, html};
 use tangram_ui as ui;
 
 #[derive(Clone)]
