@@ -1,29 +1,36 @@
+use crate::tokens::{EnumColumnToken, NumberColumnToken, TextColumnToken, UnknownColumnToken};
+use html::{component, html};
+use num_traits::ToPrimitive;
 use std::convert::TryInto;
+use tangram_charts::{
+	bar_chart::{BarChartPoint, BarChartSeries},
+	components::{BarChart, FeatureContributionsChart},
+	feature_contributions_chart::{
+		FeatureContributionsChartSeries, FeatureContributionsChartValue,
+	},
+};
 use tangram_deps::serde_json;
+use tangram_ui as ui;
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PredictionResult {
+#[derive(Clone)]
+pub struct PredictionResultProps {
 	pub input_table: InputTable,
 	pub prediction: Prediction,
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone)]
 pub struct InputTable {
 	pub rows: Vec<InputTableRow>,
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone)]
 pub struct InputTableRow {
 	pub column_name: String,
 	pub column_type: ColumnType,
 	pub value: serde_json::Value,
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "snake_case")]
+#[derive(Clone)]
 pub enum ColumnType {
 	Unknown,
 	Number,
@@ -31,52 +38,46 @@ pub enum ColumnType {
 	Text,
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "type", content = "value")]
+#[derive(Clone)]
 pub enum Prediction {
-	Regression(RegressionPrediction),
-	BinaryClassification(BinaryClassificationPrediction),
-	MulticlassClassification(MulticlassClassificationProductionPrediction),
+	Regression(RegressionPredictionResultProps),
+	BinaryClassification(BinaryClassificationPredictionResultProps),
+	MulticlassClassification(MulticlassClassificationPredictionResultProps),
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RegressionPrediction {
+#[derive(Clone)]
+pub struct RegressionPredictionResultProps {
 	value: f32,
-	feature_contributions_chart_series: Vec<FeatureContributionsChartSeries>,
+	feature_contributions_chart_series: Vec<FeatureContributionsChartSeriesData>,
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BinaryClassificationPrediction {
+#[derive(Clone)]
+pub struct BinaryClassificationPredictionResultProps {
 	class_name: String,
 	probability: f32,
-	feature_contributions_chart_series: Vec<FeatureContributionsChartSeries>,
+	feature_contributions_chart_series: Vec<FeatureContributionsChartSeriesData>,
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct MulticlassClassificationProductionPrediction {
+#[derive(Clone)]
+pub struct MulticlassClassificationPredictionResultProps {
 	class_name: String,
 	probability: f32,
 	probabilities: Vec<(String, f32)>,
-	feature_contributions_chart_series: Vec<FeatureContributionsChartSeries>,
+	feature_contributions_chart_series: Vec<FeatureContributionsChartSeriesData>,
 }
 
-#[derive(serde::Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct FeatureContributionsChartSeries {
+#[derive(Clone)]
+pub struct FeatureContributionsChartSeriesData {
 	baseline: f32,
 	baseline_label: String,
 	label: String,
 	output: f32,
 	output_label: String,
-	values: Vec<FeatureContributionsChartValue>,
+	values: Vec<FeatureContributionsChartValueData>,
 }
 
-#[derive(serde::Serialize, Debug)]
-pub struct FeatureContributionsChartValue {
+#[derive(Clone)]
+pub struct FeatureContributionsChartValueData {
 	feature: String,
 	value: f32,
 }
@@ -92,7 +93,7 @@ pub fn predict(
 		tangram_core::predict::PredictOutput::Regression(mut output) => {
 			let output = output.remove(0);
 			let feature_contributions = output.feature_contributions.unwrap();
-			let feature_contributions_chart_data = vec![FeatureContributionsChartSeries {
+			let feature_contributions_chart_data = vec![FeatureContributionsChartSeriesData {
 				baseline: feature_contributions.baseline_value,
 				baseline_label: format!("{}", feature_contributions.baseline_value),
 				label: "output".to_owned(),
@@ -104,7 +105,7 @@ pub fn predict(
 					.map(compute_feature_contributions_chart_value)
 					.collect(),
 			}];
-			let prediction = RegressionPrediction {
+			let prediction = RegressionPredictionResultProps {
 				feature_contributions_chart_series: feature_contributions_chart_data,
 				value: output.value,
 			};
@@ -113,7 +114,7 @@ pub fn predict(
 		tangram_core::predict::PredictOutput::BinaryClassification(mut output) => {
 			let output = output.remove(0);
 			let feature_contributions = output.feature_contributions.unwrap();
-			let feature_contributions_chart_data = vec![FeatureContributionsChartSeries {
+			let feature_contributions_chart_data = vec![FeatureContributionsChartSeriesData {
 				baseline: feature_contributions.baseline_value,
 				baseline_label: format!("{}", feature_contributions.baseline_value),
 				label: "output".to_owned(),
@@ -125,7 +126,7 @@ pub fn predict(
 					.map(compute_feature_contributions_chart_value)
 					.collect(),
 			}];
-			let prediction = BinaryClassificationPrediction {
+			let prediction = BinaryClassificationPredictionResultProps {
 				class_name: output.class_name,
 				probability: output.probability,
 				feature_contributions_chart_series: feature_contributions_chart_data,
@@ -134,12 +135,12 @@ pub fn predict(
 		}
 		tangram_core::predict::PredictOutput::MulticlassClassification(mut output) => {
 			let output = output.remove(0);
-			let feature_contributions_chart_data: Vec<FeatureContributionsChartSeries> = output
+			let feature_contributions_chart_data: Vec<FeatureContributionsChartSeriesData> = output
 				.feature_contributions
 				.unwrap()
 				.into_iter()
 				.map(
-					|(class, feature_contributions)| FeatureContributionsChartSeries {
+					|(class, feature_contributions)| FeatureContributionsChartSeriesData {
 						baseline: feature_contributions.baseline_value,
 						baseline_label: format!("{}", feature_contributions.baseline_value),
 						label: class,
@@ -153,7 +154,7 @@ pub fn predict(
 					},
 				)
 				.collect();
-			let prediction = MulticlassClassificationProductionPrediction {
+			let prediction = MulticlassClassificationPredictionResultProps {
 				class_name: output.class_name,
 				probability: output.probability,
 				probabilities: output.probabilities.into_iter().collect::<Vec<_>>(),
@@ -167,19 +168,19 @@ pub fn predict(
 
 fn compute_feature_contributions_chart_value(
 	feature_contribution: tangram_core::predict::FeatureContribution,
-) -> FeatureContributionsChartValue {
+) -> FeatureContributionsChartValueData {
 	match feature_contribution {
 		tangram_core::predict::FeatureContribution::Identity {
 			column_name,
 			feature_contribution_value,
-		} => FeatureContributionsChartValue {
+		} => FeatureContributionsChartValueData {
 			feature: column_name,
 			value: feature_contribution_value,
 		},
 		tangram_core::predict::FeatureContribution::Normalized {
 			column_name,
 			feature_contribution_value,
-		} => FeatureContributionsChartValue {
+		} => FeatureContributionsChartValueData {
 			feature: column_name,
 			value: feature_contribution_value,
 		},
@@ -194,7 +195,7 @@ fn compute_feature_contributions_chart_value(
 				.map(|option| format!("\"{}\"", option))
 				.unwrap_or_else(|| "invalid".to_owned());
 			let feature = format!("{} {} {}", column_name, predicate, option);
-			FeatureContributionsChartValue {
+			FeatureContributionsChartValueData {
 				feature,
 				value: feature_contribution_value,
 			}
@@ -211,10 +212,292 @@ fn compute_feature_contributions_chart_value(
 				"does not contain"
 			};
 			let feature = format!("{} {} \"{}\"", column_name, predicate, token);
-			FeatureContributionsChartValue {
+			FeatureContributionsChartValueData {
 				feature,
 				value: feature_contribution_value,
 			}
 		}
+	}
+}
+
+#[component]
+pub fn PredictionResult(props: PredictionResultProps) {
+	let inner = match props.prediction {
+		Prediction::Regression(inner) => {
+			html! {<RegressionPrediction props={inner} />}
+		}
+		Prediction::BinaryClassification(inner) => {
+			html! {<BinaryClassificationPrediction props={inner} />}
+		}
+		Prediction::MulticlassClassification(inner) => {
+			html! {<MulticlassClassificationPrediction props={inner} />}
+		}
+	};
+	html! {
+		<ui::S2>
+			<ui::H2 center={false}>{"Input"}</ui::H2>
+			<ui::Table width={"100%".to_owned()}>
+				<ui::TableHeader>
+					<ui::TableRow color={None}>
+						<ui::TableHeaderCell
+							color={None}
+							expand={None}
+							text_align={None}
+						>
+							{"Column Name"}
+						</ui::TableHeaderCell>
+						<ui::TableHeaderCell
+							color={None}
+							expand={None}
+							text_align={None}
+						>
+							{"Column Type"}
+						</ui::TableHeaderCell>
+						<ui::TableHeaderCell
+							color={None}
+							expand={None}
+							text_align={None}
+						>
+							{"Value"}
+						</ui::TableHeaderCell>
+					</ui::TableRow>
+				</ui::TableHeader>
+				<ui::TableBody>
+				{props.input_table.rows.iter().map(|input_table_row| {
+					html! {
+					<ui::TableRow color={None}>
+						<ui::TableCell
+							color={None}
+							expand={None}
+						>
+							{input_table_row.column_name.to_owned()}
+						</ui::TableCell>
+						<ui::TableCell
+							color={None}
+							expand={None}
+						>
+							{column_type_token(&input_table_row.column_type)}
+						</ui::TableCell>
+						<ui::TableCell
+							color={None}
+							expand={None}
+						>
+							{input_table_row.value.to_string()}
+						</ui::TableCell>
+					</ui::TableRow>
+					}
+				}).collect::<Vec<_>>()}
+				</ui::TableBody>
+			</ui::Table>
+			{inner}
+		</ui::S2>
+	}
+}
+
+fn column_type_token(column_type: &ColumnType) -> html::Node {
+	match column_type {
+		ColumnType::Unknown => {
+			html! {<UnknownColumnToken /> }
+		}
+		ColumnType::Number => {
+			html! {<NumberColumnToken /> }
+		}
+		ColumnType::Enum => {
+			html! {<EnumColumnToken /> }
+		}
+		ColumnType::Text => {
+			html! {<TextColumnToken /> }
+		}
+	}
+}
+
+#[component]
+pub fn RegressionPrediction(props: RegressionPredictionResultProps) {
+	let series = props
+		.feature_contributions_chart_series
+		.iter()
+		.map(|feature_contribution| FeatureContributionsChartSeries {
+			title: None,
+			baseline: feature_contribution.baseline.to_f64().unwrap(),
+			baseline_label: feature_contribution.baseline_label.to_owned(),
+			output: feature_contribution.output.to_f64().unwrap(),
+			output_label: feature_contribution.output_label.to_owned(),
+			values: feature_contribution
+				.values
+				.iter()
+				.map(|value| FeatureContributionsChartValue {
+					feature: value.feature.to_owned(),
+					value: value.value.to_f64().unwrap(),
+				})
+				.collect::<Vec<_>>(),
+		})
+		.collect::<Vec<_>>();
+	html! {
+		<ui::S2>
+			<ui::H2 center={false}>{"Output"}</ui::H2>
+			<ui::Card>
+				<ui::NumberChart
+					title={"Prediction".to_owned()}
+					value={props.value.to_string()}
+				/>
+			</ui::Card>
+			<ui::H2 center={false}>{"Explanation"}</ui::H2>
+			<ui::P>
+				{"This chart shows how the input values influenced the model's output."}
+			</ui::P>
+			<ui::Card>
+				<FeatureContributionsChart
+					class={None}
+					title={None}
+					id={"regression_feature_contributions".to_owned()}
+					include_x_axis_title={true}
+					include_y_axis_labels={false}
+					include_y_axis_title={false}
+					negative_color={ui::colors::RED.to_owned()}
+					positive_color={ui::colors::GREEN.to_owned()}
+					series={series}
+				/>
+			</ui::Card>
+		</ui::S2>
+	}
+}
+
+#[component]
+pub fn BinaryClassificationPrediction(props: BinaryClassificationPredictionResultProps) {
+	let series = props
+		.feature_contributions_chart_series
+		.iter()
+		.map(|feature_contribution| FeatureContributionsChartSeries {
+			title: None,
+			baseline: feature_contribution.baseline.to_f64().unwrap(),
+			baseline_label: feature_contribution.baseline_label.to_owned(),
+			output: feature_contribution.output.to_f64().unwrap(),
+			output_label: feature_contribution.output_label.to_owned(),
+			values: feature_contribution
+				.values
+				.iter()
+				.map(|value| FeatureContributionsChartValue {
+					feature: value.feature.to_owned(),
+					value: value.value.to_f64().unwrap(),
+				})
+				.collect::<Vec<_>>(),
+		})
+		.collect::<Vec<_>>();
+	html! {
+		<ui::S2>
+			<ui::H2 center={false}>{"Output"}</ui::H2>
+			<ui::Card>
+				<ui::NumberChart title="Prediction" value={props.class_name} />
+			</ui::Card>
+			<ui::Card>
+				<ui::NumberChart
+					title="Probability"
+					value={ui::format_percent(props.probability)}
+				/>
+			</ui::Card>
+			<ui::H2 center={false}>{"Explanation"}</ui::H2>
+			<ui::P>
+				{"This chart shows how the input values influenced the model's output."}
+			</ui::P>
+			<ui::Card>
+				<FeatureContributionsChart
+					class={None}
+					title={None}
+					id={"binary_classification_feature_contributions".to_owned()}
+					include_x_axis_title={true}
+					include_y_axis_labels={true}
+					include_y_axis_title={true}
+					negative_color={ui::colors::RED.to_owned()}
+					positive_color={ui::colors::GREEN.to_owned()}
+					series={series}
+				/>
+			</ui::Card>
+		</ui::S2>
+	}
+}
+
+#[component]
+pub fn MulticlassClassificationPrediction(props: MulticlassClassificationPredictionResultProps) {
+	let probability_series = vec![BarChartSeries {
+		color: ui::colors::BLUE.to_owned(),
+		title: Some("Probabilities".to_owned()),
+		data: props
+			.probabilities
+			.iter()
+			.enumerate()
+			.map(|(index, (class_name, probability))| BarChartPoint {
+				label: class_name.to_owned(),
+				x: index.to_f64().unwrap(),
+				y: Some(probability.to_f64().unwrap()),
+			})
+			.collect::<Vec<_>>(),
+	}];
+	let feature_contributions_series = props
+		.feature_contributions_chart_series
+		.iter()
+		.map(|feature_contribution| FeatureContributionsChartSeries {
+			title: None,
+			baseline: feature_contribution.baseline.to_f64().unwrap(),
+			baseline_label: feature_contribution.baseline_label.to_owned(),
+			output: feature_contribution.output.to_f64().unwrap(),
+			output_label: feature_contribution.output_label.to_owned(),
+			values: feature_contribution
+				.values
+				.iter()
+				.map(|value| FeatureContributionsChartValue {
+					feature: value.feature.to_owned(),
+					value: value.value.to_f64().unwrap(),
+				})
+				.collect::<Vec<_>>(),
+		})
+		.collect::<Vec<_>>();
+	html! {
+		<ui::S2>
+			<ui::H2 center={false}>{"Output"}</ui::H2>
+			<ui::Card>
+				<ui::NumberChart
+					title="Prediction"
+					value={props.class_name}
+				/>
+			</ui::Card>
+			<ui::Card>
+				<ui::NumberChart
+					title="Probability"
+					value={ui::format_percent(props.probability)}
+				/>
+			</ui::Card>
+			<BarChart
+				class={None}
+				group_gap={None}
+				hide_legend={None}
+				x_axis_title={None}
+				should_draw_x_axis_labels={None}
+				should_draw_y_axis_labels={None}
+				y_axis_grid_line_interval={None}
+				y_min={None}
+				y_max={None}
+				y_axis_title={None}
+				id={"probabilities".to_owned()}
+				series={probability_series}
+				title={"Predicted Probabilities".to_owned()}
+			/>
+			<ui::H2 center={false}>{"Explanation"}</ui::H2>
+			<ui::P>
+				{"This chart shows how the input values influenced the model's output."}
+			</ui::P>
+			<ui::Card>
+				<FeatureContributionsChart
+					class={None}
+					title={None}
+					id={"multiclass_classification_feature_contributions".to_owned()}
+					include_x_axis_title={true}
+					include_y_axis_labels={true}
+					include_y_axis_title={true}
+					negative_color={ui::colors::RED.to_owned()}
+					positive_color={ui::colors::GREEN.to_owned()}
+					series={feature_contributions_series}
+				/>
+			</ui::Card>
+		</ui::S2>
 	}
 }

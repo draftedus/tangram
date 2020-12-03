@@ -11,9 +11,11 @@ insta = "1"
 
 [dependencies]
 html = { path = "../../html" }
+num-traits = "0.2"
 serde = { version = "1", features = ["derive"] }
 tangram_core = { path = "../../core" }
 tangram_deps = { path = "../../deps" }
 tangram_metrics = { path = "../../metrics" }
 tangram_ui = { path = "../../ui" }
+tangram_charts = { path = "../../charts" }
 tangram_util = { path = "../../util" }

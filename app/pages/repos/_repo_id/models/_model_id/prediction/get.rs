@@ -1,20 +1,20 @@
-use super::props::{
-	Column, Enum, Inner, Number, PredictForm, PredictionForm, Props, Text, Unknown,
+use super::page::{
+	render, Column, EnumFieldProps, Inner, NumberFieldProps, PredictForm, PredictionFormProps,
+	Props, TextFieldProps, UnknownFieldProps,
 };
 use std::collections::BTreeMap;
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
-	predict::{ColumnType, InputTable, InputTableRow, Prediction, PredictionResult},
+	predict::{ColumnType, InputTable, InputTableRow, Prediction, PredictionResultProps},
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, lexical, pinwheel::Pinwheel, serde_json};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{http, hyper, lexical, serde_json};
 use tangram_util::{err, error::Result, id::Id};
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -51,7 +51,7 @@ pub async fn get(
 					.and_then(|s| s.get(&name))
 					.cloned()
 					.unwrap_or_else(|| "".to_owned());
-				Column::Unknown(Unknown { name, value })
+				Column::Unknown(UnknownFieldProps { name, value })
 			}
 			tangram_core::model::ColumnStats::Number(column_stats) => {
 				let name = column_stats.column_name.clone();
@@ -61,7 +61,7 @@ pub async fn get(
 					.and_then(|s| s.get(&name))
 					.cloned()
 					.unwrap_or_else(|| mean.to_string());
-				Column::Number(Number {
+				Column::Number(NumberFieldProps {
 					name,
 					max: column_stats.max,
 					min: column_stats.min,
@@ -88,7 +88,7 @@ pub async fn get(
 					.cloned()
 					.unwrap_or(mode);
 				let histogram = column_stats.histogram.clone();
-				Column::Enum(Enum {
+				Column::Enum(EnumFieldProps {
 					name,
 					options,
 					value,
@@ -102,7 +102,7 @@ pub async fn get(
 					.and_then(|s| s.get(&name))
 					.cloned()
 					.unwrap_or_else(|| "".to_owned());
-				Column::Text(Text { name, value })
+				Column::Text(TextFieldProps { name, value })
 			}
 		})
 		.collect();
@@ -125,14 +125,14 @@ pub async fn get(
 				}
 			})
 			.collect();
-		Inner::PredictionResult(PredictionResult {
+		Inner::PredictionResult(PredictionResultProps {
 			input_table: InputTable {
 				rows: input_table_rows,
 			},
 			prediction,
 		})
 	} else {
-		Inner::PredictionForm(PredictionForm {
+		Inner::PredictionForm(PredictionFormProps {
 			form: PredictForm { fields: columns },
 		})
 	};
@@ -142,7 +142,10 @@ pub async fn get(
 		id: model_id.to_string(),
 		inner,
 	};
-	let html = pinwheel.render_with_props("/repos/_repo_id/models/_model_id/prediction", props)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: None,
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

@@ -2466,7 +2466,9 @@ version = "0.0.0"
 dependencies = [
  "html",
  "insta",
+ "num-traits",
  "serde",
+ "tangram_charts",
  "tangram_core",
  "tangram_deps",
  "tangram_metrics",
@@ -2623,9 +2625,12 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_prediction"
 version = "0.0.0"
 dependencies = [
+ "html",
+ "num-traits",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_charts",
  "tangram_core",
  "tangram_deps",
  "tangram_ui",
@@ -2674,6 +2679,8 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier"
 version = "0.0.0"
 dependencies = [
+ "html",
+ "pinwheel",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
@@ -2729,13 +2736,29 @@ dependencies = [
 name = "tangram_app_pages_repos_repo_id_models_model_id_training_importances"
 version = "0.0.0"
 dependencies = [
+ "html",
+ "num-traits",
+ "pinwheel",
  "serde",
  "tangram_app_common",
  "tangram_app_layouts",
+ "tangram_app_pages_repos_repo_id_models_model_id_training_importances_client",
+ "tangram_charts",
  "tangram_core",
  "tangram_deps",
  "tangram_ui",
  "tangram_util",
+]
+
+[[package]]
+name = "tangram_app_pages_repos_repo_id_models_model_id_training_importances_client"
+version = "0.0.0"
+dependencies = [
+ "console_error_panic_hook",
+ "tangram_charts",
+ "tangram_ui",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

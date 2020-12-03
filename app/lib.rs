@@ -203,7 +203,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "training_importances"]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_training_importances::get(
-				&pinwheel,
 				context,
 				request,
 				model_id,
@@ -211,7 +210,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "prediction"]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_prediction::get(
-				&pinwheel,
 				context,
 				request,
 				model_id,
@@ -273,7 +271,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_predictions", "predictions", identifier]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_predictions_predictions_identifier::get(
-				&pinwheel,
 				context,
 				request,
 				model_id,

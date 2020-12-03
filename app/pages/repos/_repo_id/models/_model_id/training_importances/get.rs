@@ -1,22 +1,18 @@
-use super::props::{
-	FeatureImportance, Inner, LinearBinaryClassifierProps, LinearMulticlassClassifierProps,
-	LinearRegressorProps, Props, TreeBinaryClassifierProps, TreeMulticlassClassifierProps,
-	TreeRegressorProps,
-};
+use crate::page::{render, FeatureImportance, Props};
+use pinwheel::client;
 use tangram_app_common::{
 	error::{bad_request, not_found, redirect_to_login, service_unavailable},
 	model::get_model,
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{http, hyper};
 use tangram_util::{error::Result, id::Id, zip};
 
 const MAX_FEATURE_IMPORTANCES: usize = 1_000;
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -37,7 +33,7 @@ pub async fn get(
 		return Ok(not_found());
 	}
 	let model = get_model(&mut db, model_id).await?;
-	let inner = match model {
+	let (feature_importances, n_features) = match model {
 		tangram_core::model::Model::Regressor(model) => match model.model {
 			tangram_core::model::RegressionModel::Linear(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
@@ -58,10 +54,7 @@ pub async fn get(
 				});
 				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
-				Inner::LinearRegressor(LinearRegressorProps {
-					feature_importances,
-					n_features,
-				})
+				(feature_importances, n_features)
 			}
 			tangram_core::model::RegressionModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
@@ -82,10 +75,7 @@ pub async fn get(
 				});
 				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
-				Inner::TreeRegressor(TreeRegressorProps {
-					feature_importances,
-					n_features,
-				})
+				(feature_importances, n_features)
 			}
 		},
 		tangram_core::model::Model::BinaryClassifier(model) => match &model.model {
@@ -108,10 +98,7 @@ pub async fn get(
 				});
 				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
-				Inner::LinearBinaryClassifier(LinearBinaryClassifierProps {
-					feature_importances,
-					n_features,
-				})
+				(feature_importances, n_features)
 			}
 			tangram_core::model::BinaryClassificationModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
@@ -132,10 +119,7 @@ pub async fn get(
 				});
 				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
-				Inner::TreeBinaryClassifier(TreeBinaryClassifierProps {
-					feature_importances,
-					n_features,
-				})
+				(feature_importances, n_features)
 			}
 		},
 		tangram_core::model::Model::MulticlassClassifier(model) => match model.model {
@@ -158,10 +142,7 @@ pub async fn get(
 				});
 				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
-				Inner::LinearMulticlassClassifier(LinearMulticlassClassifierProps {
-					feature_importances,
-					n_features,
-				})
+				(feature_importances, n_features)
 			}
 			tangram_core::model::MulticlassClassificationModel::Tree(inner_model) => {
 				let feature_names = compute_feature_names(&inner_model.feature_groups);
@@ -182,24 +163,22 @@ pub async fn get(
 				});
 				let n_features = feature_importances.len();
 				feature_importances.truncate(MAX_FEATURE_IMPORTANCES);
-				Inner::TreeMulticlassClassifier(TreeMulticlassClassifierProps {
-					feature_importances,
-					n_features,
-				})
+				(feature_importances, n_features)
 			}
 		},
 	};
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
 	let props = Props {
 		id: model_id.to_string(),
-		inner,
+		feature_importances,
+		n_features,
 		model_layout_info,
 	};
 	db.commit().await?;
-	let html = pinwheel.render_with_props(
-		"/repos/_repo_id/models/_model_id/training_importances",
-		props,
-	)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: Some(client!()),
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))
