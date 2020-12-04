@@ -117,7 +117,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 		title: Some("Prediction Count".to_owned()),
 	}];
 	let prediction_count_title =
-		interval_chart_title(props.date_window_interval, "Prediction Count".to_owned());
+		interval_chart_title(&props.date_window_interval, "Prediction Count".to_owned());
 	let interval_chart = match props.prediction_stats_interval_chart {
 		PredictionStatsIntervalChart::Regression(data) => html! {
 				<RegressionProductionStatsIntervalChart
@@ -345,7 +345,7 @@ fn RegressionProductionStatsChart(chart_data: RegressionChartEntry, date_window:
 			title: Some("training quantiles".to_owned()),
 		},
 	];
-	let title = overall_chart_title(date_window, "Prediction Distribution Stats".to_owned());
+	let title = overall_chart_title(&date_window, "Prediction Distribution Stats".to_owned());
 	html! {
 		<BoxChart
 			class={None}
@@ -388,7 +388,7 @@ fn RegressionProductionStatsIntervalChart(
 		title: Some("quantiles".to_owned()),
 	}];
 	let title = interval_chart_title(
-		date_window_interval,
+		&date_window_interval,
 		"Prediction Distribution Stats".to_owned(),
 	);
 	html! {
@@ -430,7 +430,7 @@ fn ClassificationProductionStatsChart(
 		.cloned()
 		.map(|(class, _)| class)
 		.collect::<Vec<_>>();
-	let title = overall_chart_title(date_window, "Prediction Stats".to_owned());
+	let title = overall_chart_title(&date_window, "Prediction Stats".to_owned());
 	let series = zip!(classes.iter(), chart_data.histogram.production.iter())
 		.enumerate()
 		.map(|(index, (class, entry))| {
@@ -480,7 +480,7 @@ fn ClassificationProductionStatsIntervalChart(
 		ui::colors::ORANGE,
 		ui::colors::YELLOW,
 	];
-	let title = interval_chart_title(date_window_interval, "Prediction Stats".to_owned());
+	let title = interval_chart_title(&date_window_interval, "Prediction Stats".to_owned());
 	let classes = chart_data[0]
 		.histogram
 		.production

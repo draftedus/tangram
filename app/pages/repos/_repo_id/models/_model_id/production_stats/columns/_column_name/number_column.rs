@@ -93,9 +93,9 @@ pub fn NumberColumn(props: NumberColumnProps) {
 			title: Some(format!("Production Stats for {}", props.column_name)),
 		},
 	];
-	let stats_overall_chart_title = overall_chart_title(props.date_window, "Stats".to_owned());
+	let stats_overall_chart_title = overall_chart_title(&props.date_window, "Stats".to_owned());
 	let stats_interval_chart_title =
-		interval_chart_title(props.date_window_interval, "Stats".to_owned());
+		interval_chart_title(&props.date_window_interval, "Stats".to_owned());
 	let value_formatter: fn(f32) -> String = |value: f32| ui::format_number(value);
 	html! {
 		<ui::S2>

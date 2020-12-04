@@ -41,7 +41,7 @@ pub fn TextColumn(props: TextColumnProps) {
 		title: Some("Production".to_owned()),
 	}];
 	let overall_distribution_chart_title = overall_chart_title(
-		props.date_window,
+		&props.date_window,
 		format!("Distribution of Unique Values for {}", props.column_name),
 	);
 	html! {

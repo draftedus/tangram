@@ -1,7 +1,7 @@
 use crate::date_window::{DateWindow, DateWindowInterval};
 use tangram_deps::{chrono::prelude::*, chrono_tz::Tz};
 
-pub fn format_date_window(date: DateTime<Utc>, date_window: DateWindow, timezone: Tz) -> String {
+pub fn format_date_window(date: DateTime<Utc>, date_window: &DateWindow, timezone: Tz) -> String {
 	let date = date.with_timezone(&timezone);
 	match date_window {
 		DateWindow::Today => format_day(date),
@@ -12,7 +12,7 @@ pub fn format_date_window(date: DateTime<Utc>, date_window: DateWindow, timezone
 
 pub fn format_date_window_interval(
 	date: DateTime<Utc>,
-	date_window_interval: DateWindowInterval,
+	date_window_interval: &DateWindowInterval,
 	timezone: Tz,
 ) -> String {
 	let date = date.with_timezone(&timezone);
@@ -23,7 +23,7 @@ pub fn format_date_window_interval(
 	}
 }
 
-pub fn interval_chart_title(date_window_interval: DateWindowInterval, title: String) -> String {
+pub fn interval_chart_title(date_window_interval: &DateWindowInterval, title: String) -> String {
 	match date_window_interval {
 		DateWindowInterval::Hourly => format!("Hourly {}", title),
 		DateWindowInterval::Daily => format!("Daily {}", title),
@@ -31,7 +31,7 @@ pub fn interval_chart_title(date_window_interval: DateWindowInterval, title: Str
 	}
 }
 
-pub fn overall_chart_title(date_window: DateWindow, title: String) -> String {
+pub fn overall_chart_title(date_window: &DateWindow, title: String) -> String {
 	match date_window {
 		DateWindow::Today => format!("Today's {}", title),
 		DateWindow::ThisMonth => format!("This Month's {}", title),

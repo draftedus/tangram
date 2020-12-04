@@ -53,8 +53,14 @@ pub async fn get(
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
-	let get_production_stats_output =
-		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
+	let get_production_stats_output = get_production_stats(
+		&mut db,
+		&model,
+		date_window.clone(),
+		date_window_interval.clone(),
+		timezone,
+	)
+	.await?;
 	let train_row_count = match &model {
 		tangram_core::model::Model::Regressor(model) => model.train_row_count,
 		tangram_core::model::Model::BinaryClassifier(model) => model.train_row_count,
@@ -74,7 +80,7 @@ pub async fn get(
 			Inner::Number(number_props(
 				get_production_stats_output,
 				train_column_stats,
-				date_window,
+				date_window.clone(),
 				date_window_interval,
 				timezone,
 			))
@@ -83,14 +89,14 @@ pub async fn get(
 			get_production_stats_output,
 			train_column_stats,
 			train_row_count,
-			date_window,
+			date_window.clone(),
 			date_window_interval,
 			timezone,
 		)),
 		tangram_core::model::ColumnStats::Text(train_column_stats) => Inner::Text(text_props(
 			get_production_stats_output,
 			train_column_stats,
-			date_window,
+			date_window.clone(),
 			date_window_interval,
 			timezone,
 		)),
@@ -173,7 +179,7 @@ fn number_props(
 			IntervalBoxChartDataPoint {
 				label: format_date_window_interval(
 					interval.start_date,
-					date_window_interval,
+					&date_window_interval,
 					timezone,
 				),
 				stats: production_column_stats.stats.as_ref().map(|c| {

@@ -51,9 +51,14 @@ pub async fn get(
 	}
 	let model = get_model(&mut db, model_id).await?;
 	let model_layout_info = get_model_layout_info(&mut db, context, model_id).await?;
-	let production_metrics =
-		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
-			.await?;
+	let production_metrics = get_production_metrics(
+		&mut db,
+		&model,
+		date_window.clone(),
+		date_window_interval.clone(),
+		timezone,
+	)
+	.await?;
 	let model = match model {
 		tangram_core::model::Model::MulticlassClassifier(model) => model,
 		_ => return Ok(bad_request()),
@@ -152,7 +157,7 @@ pub async fn get(
 			})
 			.collect();
 	let overall = OverallClassMetrics {
-		label: format_date_window_interval(overall.start_date, date_window_interval, timezone),
+		label: format_date_window_interval(overall.start_date, &date_window_interval, timezone),
 		class_metrics: overall_class_metrics,
 	};
 	let class_metrics: Vec<ClassMetricsEntry> = classes
@@ -183,7 +188,7 @@ pub async fn get(
 					IntervalEntry {
 						label: format_date_window_interval(
 							interval.start_date,
-							date_window_interval,
+							&date_window_interval,
 							timezone,
 						),
 						f1_score: TrainingProductionMetrics {

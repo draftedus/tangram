@@ -1,9 +1,9 @@
-use super::page::{
+use crate::page::{
 	render, AccuracyChart, AccuracyChartEntry, BinaryClassificationOverallProductionMetrics,
-	BinaryClassifierProductionMetricsOverview, ClassMetricsTableEntry, Inner, MSEChart,
-	MSEChartEntry, MulticlassClassificationOverallProductionMetrics,
-	MulticlassClassifierProductionMetricsOverview, Props, RegressionProductionMetrics,
-	RegressorProductionMetricsOverview, TrainingProductionMetrics, TrueValuesCountChartEntry,
+	BinaryClassifierProductionMetricsProps, ClassMetricsTableEntry, Inner, MSEChart, MSEChartEntry,
+	MulticlassClassificationOverallProductionMetrics, MulticlassClassifierProductionMetricsProps,
+	Props, RegressionProductionMetrics, RegressorProductionMetricsProps, TrainingProductionMetrics,
+	TrueValuesCountChartEntry,
 };
 use std::collections::BTreeMap;
 use tangram_app_common::{
@@ -18,11 +18,13 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
-use tangram_deps::{http, hyper, pinwheel::{self, client, Pinwheel}};
+use tangram_deps::{
+	http, hyper,
+	pinwheel::{self, client},
+};
 use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
-	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -49,9 +51,14 @@ pub async fn get(
 		return Ok(not_found());
 	}
 	let model = get_model(&mut db, model_id).await?;
-	let production_metrics =
-		get_production_metrics(&mut db, &model, date_window, date_window_interval, timezone)
-			.await?;
+	let production_metrics = get_production_metrics(
+		&mut db,
+		&model,
+		date_window.clone(),
+		date_window_interval.clone(),
+		timezone,
+	)
+	.await?;
 	let inner = match &model {
 		tangram_core::model::Model::Regressor(model) => {
 			let training_metrics = &model.test_metrics;
@@ -82,7 +89,7 @@ pub async fn get(
 					.map(|interval| {
 						let label = format_date_window_interval(
 							interval.start_date,
-							date_window_interval,
+							&date_window_interval,
 							timezone,
 						);
 						let mse = interval
@@ -113,12 +120,12 @@ pub async fn get(
 					count: interval.true_values_count,
 					label: format_date_window_interval(
 						interval.start_date,
-						date_window_interval,
+						&date_window_interval,
 						timezone,
 					),
 				})
 				.collect();
-			Inner::Regressor(RegressorProductionMetricsOverview {
+			Inner::Regressor(RegressorProductionMetricsProps {
 				date_window,
 				date_window_interval,
 				mse_chart,
@@ -142,7 +149,7 @@ pub async fn get(
 					count: interval.true_values_count,
 					label: format_date_window_interval(
 						interval.start_date,
-						date_window_interval,
+						&date_window_interval,
 						timezone,
 					),
 				})
@@ -154,7 +161,7 @@ pub async fn get(
 					.map(|interval| {
 						let label = format_date_window_interval(
 							interval.start_date,
-							date_window_interval,
+							&date_window_interval,
 							timezone,
 						);
 						let accuracy =
@@ -215,7 +222,7 @@ pub async fn get(
 				},
 				true_values_count,
 			};
-			Inner::BinaryClassifier(BinaryClassifierProductionMetricsOverview {
+			Inner::BinaryClassifier(BinaryClassifierProductionMetricsProps {
 				date_window,
 				date_window_interval,
 				true_values_count_chart,
@@ -243,7 +250,7 @@ pub async fn get(
 					count: interval.true_values_count,
 					label: format_date_window_interval(
 						interval.start_date,
-						date_window_interval,
+						&date_window_interval,
 						timezone,
 					),
 				})
@@ -255,7 +262,7 @@ pub async fn get(
 					.map(|interval| {
 						let label = format_date_window_interval(
 							interval.start_date,
-							date_window_interval,
+							&date_window_interval,
 							timezone,
 						);
 						let accuracy =
@@ -317,7 +324,7 @@ pub async fn get(
 				class_metrics_table,
 				true_values_count,
 			};
-			Inner::MulticlassClassifier(MulticlassClassifierProductionMetricsOverview {
+			Inner::MulticlassClassifier(MulticlassClassifierProductionMetricsProps {
 				date_window,
 				date_window_interval,
 				true_values_count_chart,

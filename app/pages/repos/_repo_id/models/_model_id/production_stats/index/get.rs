@@ -22,7 +22,7 @@ use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_inf
 use tangram_deps::{
 	http, hyper,
 	num_traits::ToPrimitive,
-	pinwheel::{self, client, Pinwheel},
+	pinwheel::{self, client},
 };
 use tangram_util::{error::Result, id::Id};
 
@@ -30,7 +30,6 @@ const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
 const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
 
 pub async fn get(
-	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -57,8 +56,14 @@ pub async fn get(
 		return Ok(not_found());
 	}
 	let model = get_model(&mut db, model_id).await?;
-	let production_stats =
-		get_production_stats(&mut db, &model, date_window, date_window_interval, timezone).await?;
+	let production_stats = get_production_stats(
+		&mut db,
+		&model,
+		date_window.clone(),
+		date_window_interval.clone(),
+		timezone,
+	)
+	.await?;
 	let target_column_stats = match model {
 		tangram_core::model::Model::Regressor(model) => model.overall_target_column_stats,
 		tangram_core::model::Model::BinaryClassifier(model) => model.overall_target_column_stats,
@@ -123,7 +128,11 @@ pub async fn get(
 		.iter()
 		.map(|interval| PredictionCountChartEntry {
 			count: interval.row_count,
-			label: format_date_window_interval(interval.start_date, date_window_interval, timezone),
+			label: format_date_window_interval(
+				interval.start_date,
+				&date_window_interval,
+				timezone,
+			),
 		})
 		.collect();
 	let overall_production_stats = production_stats.overall;
@@ -133,7 +142,7 @@ pub async fn get(
 			PredictionStatsChart::Regression(RegressionChartEntry {
 				label: format_date_window(
 					overall_production_stats.start_date,
-					date_window,
+					&date_window,
 					timezone,
 				),
 				quantiles: compute_production_training_quantiles(
@@ -147,7 +156,7 @@ pub async fn get(
 			PredictionStatsChart::BinaryClassification(ClassificationChartEntry {
 				label: format_date_window(
 					overall_production_stats.start_date,
-					date_window,
+					&date_window,
 					timezone,
 				),
 				histogram: ProductionTrainingHistogram {
@@ -161,7 +170,7 @@ pub async fn get(
 			PredictionStatsChart::MulticlassClassification(ClassificationChartEntry {
 				label: format_date_window(
 					overall_production_stats.start_date,
-					date_window,
+					&date_window,
 					timezone,
 				),
 				histogram: ProductionTrainingHistogram {
@@ -183,7 +192,7 @@ pub async fn get(
 							RegressionChartEntry {
 								label: format_date_window_interval(
 									interval_production_stats.start_date,
-									date_window_interval,
+									&date_window_interval,
 									timezone,
 								),
 								quantiles: compute_production_training_quantiles(
@@ -210,7 +219,7 @@ pub async fn get(
 								ClassificationChartEntry {
 									label: format_date_window_interval(
 										interval_production_stats.start_date,
-										date_window_interval,
+										&date_window_interval,
 										timezone,
 									),
 									histogram: ProductionTrainingHistogram {
@@ -238,7 +247,7 @@ pub async fn get(
 								ClassificationChartEntry {
 									label: format_date_window_interval(
 										interval_production_stats.start_date,
-										date_window_interval,
+										&date_window_interval,
 										timezone,
 									),
 									histogram: ProductionTrainingHistogram {

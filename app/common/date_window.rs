@@ -1,22 +1,27 @@
 use std::collections::BTreeMap;
+use std::fmt::Display;
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub enum DateWindow {
-	#[serde(rename = "today")]
 	Today,
-	#[serde(rename = "this_month")]
 	ThisMonth,
-	#[serde(rename = "this_year")]
 	ThisYear,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone, Copy, Debug)]
+impl Display for DateWindow {
+	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+		match *self {
+			DateWindow::Today => f.write_str("today"),
+			DateWindow::ThisMonth => f.write_str("this_month"),
+			DateWindow::ThisYear => f.write_str("this_year"),
+		}
+	}
+}
+
+#[derive(Clone, Debug)]
 pub enum DateWindowInterval {
-	#[serde(rename = "hourly")]
 	Hourly,
-	#[serde(rename = "daily")]
 	Daily,
-	#[serde(rename = "monthly")]
 	Monthly,
 }
 
