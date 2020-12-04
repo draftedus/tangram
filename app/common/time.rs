@@ -1,4 +1,4 @@
-use crate::date_window::{DateWindow, DateWindowInterval};
+use crate::date_window::{self, DateWindow, DateWindowInterval};
 use tangram_deps::{chrono::prelude::*, chrono_tz::Tz};
 
 pub fn format_date_window(date: DateTime<Utc>, date_window: DateWindow, timezone: Tz) -> String {
@@ -20,6 +20,22 @@ pub fn format_date_window_interval(
 		DateWindowInterval::Hourly => format_hour(date),
 		DateWindowInterval::Daily => format_day_of_month(date),
 		DateWindowInterval::Monthly => format_month(date),
+	}
+}
+
+pub fn interval_chart_title(date_window_interval: DateWindowInterval, title: String) -> String {
+	match date_window_interval {
+		DateWindowInterval::Hourly => format!("Hourly {}", title),
+		DateWindowInterval::Daily => format!("Daily {}", title),
+		DateWindowInterval::Monthly => format!("Monthly {}", title),
+	}
+}
+
+pub fn overall_chart_title(date_window: DateWindow, title: String) -> String {
+	match date_window {
+		DateWindow::Today => format!("Today's {}", title),
+		DateWindow::ThisMonth => format!("This Month's {}", title),
+		DateWindow::ThisYear => format!("This Year's {}", title),
 	}
 }
 

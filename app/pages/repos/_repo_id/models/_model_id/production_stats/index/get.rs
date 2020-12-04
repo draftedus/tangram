@@ -1,8 +1,7 @@
-use super::props::{
-	BinaryClassificationChartEntry, ColumnType, MulticlassClassificationChartEntry,
-	OverallColumnStats, PredictionCountChartEntry, PredictionStatsChart,
-	PredictionStatsIntervalChart, ProductionTrainingHistogram, ProductionTrainingQuantiles, Props,
-	Quantiles, RegressionChartEntry,
+use super::page::{
+	render, ClassificationChartEntry, ColumnType, OverallColumnStats, PredictionCountChartEntry,
+	PredictionStatsChart, PredictionStatsIntervalChart, ProductionTrainingHistogram,
+	ProductionTrainingQuantiles, Props, Quantiles, RegressionChartEntry,
 };
 use std::collections::BTreeMap;
 use tangram_app_common::{
@@ -19,15 +18,19 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, num_traits::ToPrimitive, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{
+	http, hyper,
+	num_traits::ToPrimitive,
+	pinwheel::{self, client, Pinwheel},
+};
 use tangram_util::{error::Result, id::Id};
 
 const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
 const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;
 
 pub async fn get(
-	pinwheel: &Pinwheel,
+	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -141,7 +144,7 @@ pub async fn get(
 		}
 		ProductionPredictionStatsOutput::BinaryClassification(prediction_stats) => {
 			let target_column_stats = target_column_stats.as_enum().unwrap();
-			PredictionStatsChart::BinaryClassification(BinaryClassificationChartEntry {
+			PredictionStatsChart::BinaryClassification(ClassificationChartEntry {
 				label: format_date_window(
 					overall_production_stats.start_date,
 					date_window,
@@ -155,7 +158,7 @@ pub async fn get(
 		}
 		ProductionPredictionStatsOutput::MulticlassClassification(prediction_stats) => {
 			let target_column_stats = target_column_stats.as_enum().unwrap();
-			PredictionStatsChart::MulticlassClassification(MulticlassClassificationChartEntry {
+			PredictionStatsChart::MulticlassClassification(ClassificationChartEntry {
 				label: format_date_window(
 					overall_production_stats.start_date,
 					date_window,
@@ -204,7 +207,7 @@ pub async fn get(
 								prediction_stats,
 							) => {
 								let target_column_stats = target_column_stats.as_enum().unwrap();
-								BinaryClassificationChartEntry {
+								ClassificationChartEntry {
 									label: format_date_window_interval(
 										interval_production_stats.start_date,
 										date_window_interval,
@@ -232,7 +235,7 @@ pub async fn get(
 								prediction_stats,
 							) => {
 								let target_column_stats = target_column_stats.as_enum().unwrap();
-								MulticlassClassificationChartEntry {
+								ClassificationChartEntry {
 									label: format_date_window_interval(
 										interval_production_stats.start_date,
 										date_window_interval,
@@ -263,8 +266,10 @@ pub async fn get(
 		prediction_stats_interval_chart,
 		model_layout_info,
 	};
-	let html =
-		pinwheel.render_with_props("/repos/_repo_id/models/_model_id/production_stats/", props)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: Some(client!()),
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

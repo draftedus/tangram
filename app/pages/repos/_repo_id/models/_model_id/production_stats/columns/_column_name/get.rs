@@ -1,7 +1,7 @@
-use super::props::{
-	EnumOverallHistogramEntry, EnumProps, Inner, IntervalBoxChartDataPoint,
-	IntervalBoxChartDataPointStats, NumberProps, NumberTrainingProductionComparison,
-	OverallBoxChartData, OverallBoxChartDataStats, Props, TextProps,
+use super::page::{
+	render, EnumColumnProps, EnumOverallHistogramEntry, Inner, IntervalBoxChartDataPoint,
+	IntervalBoxChartDataPointStats, NumberColumnProps, NumberTrainingProductionComparison,
+	OverallBoxChartData, OverallBoxChartDataStats, Props, TextColumnProps,
 };
 use std::collections::BTreeMap;
 use tangram_app_common::{
@@ -15,12 +15,16 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{chrono_tz::Tz, http, hyper, num_traits::ToPrimitive, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{
+	chrono_tz::Tz,
+	http, hyper,
+	num_traits::ToPrimitive,
+	pinwheel::{self, client},
+};
 use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
-	pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -100,10 +104,10 @@ pub async fn get(
 		inner,
 		model_layout_info,
 	};
-	let html = pinwheel.render_with_props(
-		"/repos/_repo_id/models/_model_id/production_stats/columns/_column_name",
-		props,
-	)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: Some(client!()),
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))
@@ -117,7 +121,7 @@ fn number_props(
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	timezone: Tz,
-) -> NumberProps {
+) -> NumberColumnProps {
 	let overall = get_production_stats_output
 		.overall
 		.column_stats
@@ -200,7 +204,7 @@ fn number_props(
 		production: overall.stats.as_ref().map(|s| s.std),
 		training: train_column_stats.std,
 	};
-	NumberProps {
+	NumberColumnProps {
 		absent_count: overall.absent_count,
 		alert: None,
 		column_name: train_column_stats.column_name.clone(),
@@ -224,7 +228,7 @@ fn enum_props(
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	_timezone: Tz,
-) -> EnumProps {
+) -> EnumColumnProps {
 	let overall = get_production_stats_output
 		.overall
 		.column_stats
@@ -258,7 +262,7 @@ fn enum_props(
 		},
 	)
 	.collect();
-	EnumProps {
+	EnumColumnProps {
 		absent_count: overall.absent_count,
 		alert: None,
 		column_name: overall.column_name.clone(),
@@ -277,7 +281,7 @@ fn text_props(
 	date_window: DateWindow,
 	date_window_interval: DateWindowInterval,
 	_timezone: Tz,
-) -> TextProps {
+) -> TextColumnProps {
 	let overall = get_production_stats_output
 		.overall
 		.column_stats
@@ -295,7 +299,7 @@ fn text_props(
 		.iter()
 		.map(|(token, count)| (token.to_string(), *count))
 		.collect();
-	TextProps {
+	TextColumnProps {
 		alert: None,
 		row_count: get_production_stats_output.overall.row_count,
 		absent_count: overall.absent_count,

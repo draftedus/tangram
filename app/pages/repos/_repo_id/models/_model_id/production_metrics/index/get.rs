@@ -1,5 +1,5 @@
-use super::props::{
-	AccuracyChart, AccuracyChartEntry, BinaryClassificationOverallProductionMetrics,
+use super::page::{
+	render, AccuracyChart, AccuracyChartEntry, BinaryClassificationOverallProductionMetrics,
 	BinaryClassifierProductionMetricsOverview, ClassMetricsTableEntry, Inner, MSEChart,
 	MSEChartEntry, MulticlassClassificationOverallProductionMetrics,
 	MulticlassClassifierProductionMetricsOverview, Props, RegressionProductionMetrics,
@@ -17,12 +17,12 @@ use tangram_app_common::{
 	user::{authorize_user, authorize_user_for_model},
 	Context,
 };
-use tangram_app_layouts::model_layout::get_model_layout_info;
-use tangram_deps::{http, hyper, pinwheel::Pinwheel};
+use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
+use tangram_deps::{http, hyper, pinwheel::{self, client, Pinwheel}};
 use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
-	pinwheel: &Pinwheel,
+	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,
@@ -334,10 +334,10 @@ pub async fn get(
 		inner,
 		model_layout_info,
 	};
-	let html = pinwheel.render_with_props(
-		"/repos/_repo_id/models/_model_id/production_metrics/",
-		props,
-	)?;
+	let page_info = PageInfo {
+		client_wasm_js_src: Some(client!()),
+	};
+	let html = render(props, page_info);
 	let response = http::Response::builder()
 		.status(http::StatusCode::OK)
 		.body(hyper::Body::from(html))

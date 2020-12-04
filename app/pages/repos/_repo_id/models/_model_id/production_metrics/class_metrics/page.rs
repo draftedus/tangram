@@ -1,5 +1,5 @@
 use tangram_app_common::date_window::{DateWindow, DateWindowInterval};
-use tangram_app_layouts::model_layout::ModelLayoutInfo;
+use tangram_app_layouts::{document::PageInfo, model_layout::ModelLayoutInfo};
 
 #[derive(serde::Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -71,4 +71,8 @@ pub struct ConfusionMatrix {
 pub struct TrainingProductionMetrics {
 	pub production: Option<f32>,
 	pub training: f32,
+}
+
+pub fn render(props: Props, page_info: PageInfo) -> String {
+	todo!()
 }

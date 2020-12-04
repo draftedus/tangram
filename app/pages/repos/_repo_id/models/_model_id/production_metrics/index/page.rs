@@ -1,5 +1,5 @@
 use tangram_app_common::date_window::{DateWindow, DateWindowInterval};
-use tangram_app_layouts::model_layout::ModelLayoutInfo;
+use tangram_app_layouts::{document::PageInfo, model_layout::ModelLayoutInfo};
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -125,4 +125,8 @@ pub struct ClassMetricsTableEntry {
 	pub class_name: String,
 	pub precision: TrainingProductionMetrics,
 	pub recall: TrainingProductionMetrics,
+}
+
+pub fn render(props: Props, page_info: PageInfo) -> String {
+	todo!()
 }

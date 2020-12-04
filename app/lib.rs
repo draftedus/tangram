@@ -287,7 +287,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_stats", "columns", column_name]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns_column_name::get(
-				&pinwheel,
 				context,
 				request,
 				model_id,
