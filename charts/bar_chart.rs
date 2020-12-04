@@ -16,6 +16,22 @@ use web_sys::*;
 
 pub struct BarChart;
 
+impl ChartImpl for BarChart {
+	type Options = BarChartOptions;
+	type OverlayInfo = BarChartOverlayInfo;
+	type HoverRegionInfo = BarChartHoverRegionInfo;
+
+	fn draw_chart(
+		options: DrawChartOptions<Self::Options>,
+	) -> DrawChartOutput<Self::OverlayInfo, Self::HoverRegionInfo> {
+		draw_bar_chart(options)
+	}
+
+	fn draw_overlay(options: DrawOverlayOptions<Self::OverlayInfo, Self::HoverRegionInfo>) {
+		draw_bar_chart_overlay(options)
+	}
+}
+
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct BarChartOptions {
 	pub group_gap: Option<f64>,
@@ -57,22 +73,6 @@ pub struct BarChartHoverRegionInfo {
 	pub point_value: f64,
 	pub series_title: Option<String>,
 	pub tooltip_origin_pixels: Point,
-}
-
-impl ChartImpl for BarChart {
-	type Options = BarChartOptions;
-	type OverlayInfo = BarChartOverlayInfo;
-	type HoverRegionInfo = BarChartHoverRegionInfo;
-
-	fn draw_chart(
-		options: DrawChartOptions<Self::Options>,
-	) -> DrawChartOutput<Self::OverlayInfo, Self::HoverRegionInfo> {
-		draw_bar_chart(options)
-	}
-
-	fn draw_overlay(options: DrawOverlayOptions<Self::OverlayInfo, Self::HoverRegionInfo>) {
-		draw_bar_chart_overlay(options)
-	}
 }
 
 fn draw_bar_chart(

@@ -1,7 +1,7 @@
-pub struct FeatureContributionsChart;
 use crate::{
 	chart::{
-		ActiveHoverRegion, DrawChartOptions, DrawChartOutput, DrawOverlayOptions, HoverRegion,
+		ActiveHoverRegion, ChartImpl, DrawChartOptions, DrawChartOutput, DrawOverlayOptions,
+		HoverRegion,
 	},
 	common::{
 		compute_x_axis_grid_line_info, draw_x_axis_grid_lines, draw_x_axis_labels,
@@ -14,6 +14,24 @@ use crate::{
 };
 use num_traits::ToPrimitive;
 use web_sys::*;
+
+pub struct FeatureContributionsChart;
+
+impl ChartImpl for FeatureContributionsChart {
+	type Options = FeatureContributionsChartOptions;
+	type OverlayInfo = FeatureContributionsChartOverlayInfo;
+	type HoverRegionInfo = FeatureContributionsChartHoverRegionInfo;
+
+	fn draw_chart(
+		options: DrawChartOptions<Self::Options>,
+	) -> DrawChartOutput<Self::OverlayInfo, Self::HoverRegionInfo> {
+		draw_feature_contributions_chart(options)
+	}
+
+	fn draw_overlay(options: DrawOverlayOptions<Self::OverlayInfo, Self::HoverRegionInfo>) {
+		draw_feature_contributions_chart_overlay(options)
+	}
+}
 
 /// These are the options for displaying a feature contributions chart.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -41,7 +59,7 @@ pub struct FeatureContributionsChartSeries {
 	pub baseline_label: String,
 	pub output: f64,
 	pub output_label: String,
-	pub title: Option<String>,
+	pub title: String,
 	pub values: Vec<FeatureContributionsChartValue>,
 }
 
@@ -52,7 +70,7 @@ pub struct FeatureContributionsChartValue {
 }
 
 #[derive(Clone)]
-struct FeatureContributionsChartHoverRegionInfo {
+pub struct FeatureContributionsChartHoverRegionInfo {
 	rect: Rect,
 	color: String,
 	direction: FeatureContributionsBoxDirection,
@@ -60,7 +78,7 @@ struct FeatureContributionsChartHoverRegionInfo {
 	tooltip_origin_pixels: Point,
 }
 
-struct FeatureContributionsChartOverlayInfo {
+pub struct FeatureContributionsChartOverlayInfo {
 	chart_box: Rect,
 }
 
@@ -327,72 +345,74 @@ fn draw_feature_contributions_chart(
 		labels: &None,
 	});
 
-	// 	let categories = data.map(({ label }) => label)
-	// 	if (includeYAxisLabels) {
-	// 		drawFeatureContributionsChartYAxisLabels({
-	// 			box: yAxisLabelsBox,
-	// 			categories,
-	// 			ctx,
-	// 			width,
-	// 		})
-	// 	}
+	let categories = data.iter().map(|series| &series.title).collect::<Vec<_>>();
+	if include_y_axis_labels {
+		draw_feature_contributions_chart_y_axis_labels(
+			DrawFeatureContributionsChartYAxisLabelsOptions {
+				rect: y_axis_labels_box,
+				categories: &categories,
+				ctx: ctx.clone(),
+				width,
+				chart_config,
+			},
+		);
+	}
 
-	// 	// Draw the series separators.
-	// 	for (let i = 1; i < categories.length; i++) {
-	// 		let y =
-	// 			chartBox.y +
-	// 			i * chartConfig.featureContributionsSeriesHeight +
-	// 			(i - 1) * chartConfig.featureContributionsSeriesGap +
-	// 			chartConfig.featureContributionsSeriesGap / 2
-	// 		ctx.save()
-	// 		ctx.strokeStyle = chartColors.current.gridLineColor
-	// 		ctx.moveTo(chartBox.x, y)
-	// 		ctx.lineTo(chartBox.x + chartBox.w, y)
-	// 		ctx.stroke()
-	// 		ctx.restore()
-	// 	}
+	// Draw the series separators.
+	for i in 0..categories.len() {
+		let y = chart_box.y
+			+ i.to_f64().unwrap() * chart_config.feature_contributions_series_height
+			+ (i - 1).to_f64().unwrap() * chart_config.feature_contributions_series_gap
+			+ chart_config.feature_contributions_series_gap / 2.0;
+		ctx.save();
+		ctx.set_stroke_style(&chart_colors.grid_line_color.into());
+		ctx.move_to(chart_box.x, y);
+		ctx.line_to(chart_box.x + chart_box.w, y);
+		ctx.stroke();
+		ctx.restore();
+	}
 
-	// 	let valueWidthMultiplier = chartBox.w / (xMax - xMin)
-	// 	data.forEach((series, seriesIndex) => {
-	// 		let sumPositives = series.values
-	// 			.filter(({ value }) => value > 0)
-	// 			.reduce((posSum, { value }) => (posSum += value), 0.0)
-	// 		let min = Math.min(series.baseline, series.output)
-	// 		let max = series.baseline + sumPositives
-	// 		let width = max - min
-	// 		let boxHeight =
-	// 			(chartConfig.featureContributionsSeriesHeight -
-	// 				chartConfig.featureContributionsBarGap) /
-	// 			2
-	// 		let box = {
-	// 			h: chartConfig.featureContributionsSeriesHeight,
-	// 			w: width * valueWidthMultiplier,
-	// 			x: chartBox.x + (min - xMin) * valueWidthMultiplier,
-	// 			y:
-	// 				chartBox.y +
-	// 				(chartConfig.featureContributionsSeriesGap +
-	// 					chartConfig.featureContributionsSeriesHeight) *
-	// 					seriesIndex,
-	// 		}
-	// 		let output = drawFeatureContributionsSeries({
-	// 			box,
-	// 			boxHeight,
-	// 			ctx,
-	// 			negativeColor,
-	// 			positiveColor,
-	// 			series,
-	// 			valueWidthMultiplier,
-	// 		})
-	// 		hoverRegions.push(...output.hoverRegions)
-	// 	})
+	let value_width_multiplier = chart_box.w / (x_max - x_min);
+	for (series_index, series) in data.iter().enumerate() {
+		let sum_positives = series
+			.values
+			.iter()
+			.filter(|value| value.value > 0.0)
+			.map(|value| value.value)
+			.sum::<f64>();
+		let min = series.baseline.min(series.output);
+		let max = series.baseline + sum_positives;
+		let width = max - min;
+		let box_height = (chart_config.feature_contributions_series_height
+			- chart_config.feature_contributions_bar_gap)
+			/ 2.0;
+		let rect = Rect {
+			h: chart_config.feature_contributions_series_height,
+			w: width * value_width_multiplier,
+			x: chart_box.x + (min - x_min) * value_width_multiplier,
+			y: chart_box.y
+				+ (chart_config.feature_contributions_series_gap
+					+ chart_config.feature_contributions_series_height)
+					* series_index.to_f64().unwrap(),
+		};
+		let output = draw_feature_contribution_series(DrawFeatureContributionSeriesOptions {
+			rect,
+			box_height,
+			ctx: ctx.clone(),
+			negative_color,
+			positive_color,
+			series,
+			value_width_multiplier,
+			chart_config,
+			chart_colors,
+		});
+		hover_regions.extend(output.hover_regions);
+	}
 
-	// 	return {
-	// 		hoverRegions,
-	// 		overlayInfo: {
-	// 			chartBox,
-	// 		},
-	// 	}
-	todo!()
+	DrawChartOutput {
+		hover_regions,
+		overlay_info: FeatureContributionsChartOverlayInfo { chart_box },
+	}
 }
 
 struct DrawFeatureContributionSeriesOptions<'a> {
@@ -401,9 +421,9 @@ struct DrawFeatureContributionSeriesOptions<'a> {
 	rect: Rect,
 	box_height: f64,
 	ctx: CanvasRenderingContext2d,
-	negative_color: String,
-	positive_color: String,
-	series: FeatureContributionsChartSeries,
+	negative_color: &'a str,
+	positive_color: &'a str,
+	series: &'a FeatureContributionsChartSeries,
 	value_width_multiplier: f64,
 }
 
@@ -411,7 +431,7 @@ struct DrawFeatureContributionsSeriesOutput {
 	hover_regions: Vec<HoverRegion<FeatureContributionsChartHoverRegionInfo>>,
 }
 
-fn draw_feature_contributions_series(
+fn draw_feature_contribution_series(
 	options: DrawFeatureContributionSeriesOptions,
 ) -> DrawFeatureContributionsSeriesOutput {
 	let mut hover_regions: Vec<HoverRegion<FeatureContributionsChartHoverRegionInfo>> = Vec::new();
@@ -469,7 +489,7 @@ fn draw_feature_contributions_series(
 		};
 		draw_feature_contribution_box(DrawFeatureContributionBoxOptions {
 			rect: value_box,
-			color: positive_color.clone(),
+			color: positive_color.to_owned(),
 			ctx: ctx.clone(),
 			direction: FeatureContributionsBoxDirection::Negative,
 			label: feature_contribution_value.feature.clone(),
@@ -478,7 +498,7 @@ fn draw_feature_contributions_series(
 		hover_regions.push(feature_contributions_chart_hover_region(
 			FeatureContributionsChartHoverRegionOptions {
 				rect: value_box,
-				color: positive_color.clone(),
+				color: positive_color.to_owned(),
 				direction: FeatureContributionsBoxDirection::Negative,
 				label: feature_contribution_value.feature.clone(),
 				tooltip_origin_pixels: Point {
@@ -527,105 +547,100 @@ fn draw_feature_contributions_series(
 		))
 	}
 
-	// 	// Draw the negative boxes which start at the max and go to the output, starting with the remaining features rect.
-	// 	x = rect.x + rect.w
-	// 	let y = rect.y + boxHeight + chartConfig.featureContributionsBarGap
-	// 	let negativeValues = series.values
-	// 		.filter(({ value }) => value < 0)
-	// 		.sort((a, b) => (a.value > b.value ? -1 : 1))
-	// 	remainingFeaturesBoxWidth = 0
-	// 	nRemainingFeatures = 0
-	// 	let negativeValuesIndex = 0
-	// 	while (negativeValuesIndex < negativeValues.length) {
-	// 		let featureContributionValue = negativeValues[negativeValuesIndex]
-	// 		if (featureContributionValue === undefined) throw Error()
-	// 		let width = featureContributionValue.value * valueWidthMultiplier
-	// 		if (width < -chartConfig.featureContributionsArrowDepth * 2) {
-	// 			break
-	// 		}
-	// 		remainingFeaturesBoxWidth += width
-	// 		nRemainingFeatures += 1
-	// 		negativeValuesIndex += 1
+	// Draw the negative boxes which start at the max and go to the output, starting with the remaining features rect.
+	x = rect.x + rect.w;
+	let y = rect.y + box_height + chart_config.feature_contributions_bar_gap;
+	// let negativeValues = series.values
+	// 	.filter(({ value }) => value < 0)
+	// 	.sort((a, b) => (a.value > b.value ? -1 : 1))
+	// remainingFeaturesBoxWidth = 0
+	// nRemainingFeatures = 0
+	// let negativeValuesIndex = 0
+	// while (negativeValuesIndex < negativeValues.length) {
+	// 	let featureContributionValue = negativeValues[negativeValuesIndex]
+	// 	if (featureContributionValue === undefined) throw Error()
+	// 	let width = featureContributionValue.value * valueWidthMultiplier
+	// 	if (width < -chartConfig.featureContributionsArrowDepth * 2) {
+	// 		break
 	// 	}
-	// 	if (remainingFeaturesBoxWidth < 0) {
-	// 		let remainingFeaturesBox = {
-	// 			h: boxHeight,
-	// 			w: remainingFeaturesBoxWidth,
-	// 			x,
-	// 			y,
-	// 		}
-	// 		x += remainingFeaturesBoxWidth
-	// 		drawFeatureContributionBox({
+	// 	remainingFeaturesBoxWidth += width
+	// 	nRemainingFeatures += 1
+	// 	negativeValuesIndex += 1
+	// }
+	// if (remainingFeaturesBoxWidth < 0) {
+	// 	let remainingFeaturesBox = {
+	// 		h: boxHeight,
+	// 		w: remainingFeaturesBoxWidth,
+	// 		x,
+	// 		y,
+	// 	}
+	// 	x += remainingFeaturesBoxWidth
+	// 	drawFeatureContributionBox({
+	// 		box: remainingFeaturesBox,
+	// 		color: `${negativeColor}33`,
+	// 		ctx,
+	// 		direction: FeatureContributionsBoxDirection.Positive,
+	// 		label: `${nRemainingFeatures} other features`,
+	// 	})
+	// 	hoverRegions.push(
+	// 		featureContributionsChartHoverRegion({
 	// 			box: remainingFeaturesBox,
 	// 			color: `${negativeColor}33`,
-	// 			ctx,
 	// 			direction: FeatureContributionsBoxDirection.Positive,
 	// 			label: `${nRemainingFeatures} other features`,
-	// 		})
-	// 		hoverRegions.push(
-	// 			featureContributionsChartHoverRegion({
-	// 				box: remainingFeaturesBox,
-	// 				color: `${negativeColor}33`,
-	// 				direction: FeatureContributionsBoxDirection.Positive,
-	// 				label: `${nRemainingFeatures} other features`,
-	// 				tooltipOriginPixels: {
-	// 					...remainingFeaturesBox,
-	// 					x: remainingFeaturesBox.x + remainingFeaturesBox.w / 2,
-	// 				},
-	// 			}),
-	// 		)
+	// 			tooltipOriginPixels: {
+	// 				...remainingFeaturesBox,
+	// 				x: remainingFeaturesBox.x + remainingFeaturesBox.w / 2,
+	// 			},
+	// 		}),
+	// 	)
+	// }
+	// for (let i = negativeValuesIndex; i < negativeValues.length; i++) {
+	// 	let featureContributionValue = negativeValues[i]
+	// 	if (featureContributionValue === undefined) throw Error()
+	// 	let width = featureContributionValue.value * valueWidthMultiplier
+	// 	let valueBox = {
+	// 		h: boxHeight,
+	// 		w: width,
+	// 		x,
+	// 		y,
 	// 	}
-	// 	for (let i = negativeValuesIndex; i < negativeValues.length; i++) {
-	// 		let featureContributionValue = negativeValues[i]
-	// 		if (featureContributionValue === undefined) throw Error()
-	// 		let width = featureContributionValue.value * valueWidthMultiplier
-	// 		let valueBox = {
-	// 			h: boxHeight,
-	// 			w: width,
-	// 			x,
-	// 			y,
-	// 		}
-	// 		drawFeatureContributionBox({
+	// 	drawFeatureContributionBox({
+	// 		box: valueBox,
+	// 		color: negativeColor,
+	// 		ctx,
+	// 		direction: FeatureContributionsBoxDirection.Positive,
+	// 		label: `${featureContributionValue.feature}`,
+	// 	})
+	// 	hoverRegions.push(
+	// 		featureContributionsChartHoverRegion({
 	// 			box: valueBox,
 	// 			color: negativeColor,
-	// 			ctx,
 	// 			direction: FeatureContributionsBoxDirection.Positive,
 	// 			label: `${featureContributionValue.feature}`,
-	// 		})
-	// 		hoverRegions.push(
-	// 			featureContributionsChartHoverRegion({
-	// 				box: valueBox,
-	// 				color: negativeColor,
-	// 				direction: FeatureContributionsBoxDirection.Positive,
-	// 				label: `${featureContributionValue.feature}`,
-	// 				tooltipOriginPixels: {
-	// 					...valueBox,
-	// 					x: valueBox.x + valueBox.w / 2,
-	// 				},
-	// 			}),
-	// 		)
-	// 		x += width
-	// 	}
-	// 	// Draw the output value and label.
-	// 	ctx.textBaseline = "bottom"
-	// 	ctx.fillText(
-	// 		`output`,
-	// 		x - chartConfig.labelPadding,
-	// 		rect.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
+	// 			tooltipOriginPixels: {
+	// 				...valueBox,
+	// 				x: valueBox.x + valueBox.w / 2,
+	// 			},
+	// 		}),
 	// 	)
-	// 	ctx.textBaseline = "top"
-	// 	ctx.fillText(
-	// 		series.outputLabel,
-	// 		x - chartConfig.labelPadding,
-	// 		rect.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
-	// 	)
-
-	// 	return {
-	// 		hoverRegions,
-	// 	}
+	// 	x += width
 	// }
+	// // Draw the output value and label.
+	// ctx.textBaseline = "bottom"
+	// ctx.fillText(
+	// 	`output`,
+	// 	x - chartConfig.labelPadding,
+	// 	rect.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
+	// )
+	// ctx.textBaseline = "top"
+	// ctx.fillText(
+	// 	series.outputLabel,
+	// 	x - chartConfig.labelPadding,
+	// 	rect.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
+	// )
 
-	todo!()
+	DrawFeatureContributionsSeriesOutput { hover_regions }
 }
 
 struct DrawFeatureContributionsChartYAxisLabelsOptions<'a> {

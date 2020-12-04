@@ -319,7 +319,7 @@ pub fn RegressionPrediction(props: RegressionPredictionResultProps) {
 		.feature_contributions_chart_series
 		.iter()
 		.map(|feature_contribution| FeatureContributionsChartSeries {
-			title: None,
+			title: feature_contribution.label.clone(),
 			baseline: feature_contribution.baseline.to_f64().unwrap(),
 			baseline_label: feature_contribution.baseline_label.to_owned(),
 			output: feature_contribution.output.to_f64().unwrap(),
@@ -370,7 +370,7 @@ pub fn BinaryClassificationPrediction(props: BinaryClassificationPredictionResul
 		.feature_contributions_chart_series
 		.iter()
 		.map(|feature_contribution| FeatureContributionsChartSeries {
-			title: None,
+			title: feature_contribution.label.clone(),
 			baseline: feature_contribution.baseline.to_f64().unwrap(),
 			baseline_label: feature_contribution.baseline_label.to_owned(),
 			output: feature_contribution.output.to_f64().unwrap(),
@@ -438,7 +438,7 @@ pub fn MulticlassClassificationPrediction(props: MulticlassClassificationPredict
 		.feature_contributions_chart_series
 		.iter()
 		.map(|feature_contribution| FeatureContributionsChartSeries {
-			title: None,
+			title: feature_contribution.label.clone(),
 			baseline: feature_contribution.baseline.to_f64().unwrap(),
 			baseline_label: feature_contribution.baseline_label.to_owned(),
 			output: feature_contribution.output.to_f64().unwrap(),
