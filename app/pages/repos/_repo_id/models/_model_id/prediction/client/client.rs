@@ -1,17 +1,14 @@
 use tangram_charts::{
-	hydrate_chart,
-	{
-		bar_chart::BarChart, box_chart::BoxChart,
-		feature_contributions_chart::FeatureContributionsChart,
-	},
+	bar_chart::BarChart, box_chart::BoxChart,
+	feature_contributions_chart::FeatureContributionsChart, hydrate_chart,
 };
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{prelude::*, JsCast};
+use web_sys::window;
 
 #[wasm_bindgen(start)]
 pub fn start() {
 	console_error_panic_hook::set_once();
-	let window = web_sys::window().unwrap();
+	let window = window().unwrap();
 	let document = window.document().unwrap();
 	let bar_charts_query = document
 		.query_selector_all(".column-chart[data-chart-type='bar']")
@@ -22,7 +19,7 @@ pub fn start() {
 			.unwrap()
 			.dyn_into::<web_sys::Element>()
 			.unwrap();
-		hydrate_chart::<BoxChart>(&item.id());
+		hydrate_chart::<BarChart>(&item.id());
 	}
 	let box_charts_query = document
 		.query_selector_all(".column-chart[data-chart-type='box']")
@@ -35,8 +32,22 @@ pub fn start() {
 			.unwrap();
 		hydrate_chart::<BoxChart>(&item.id());
 	}
-
-	// hydrate_chart::<FeatureContributionsChart>("regression_feature_contributions")
-	// hydrate_chart::<FeatureContributionsChart>("binary_classification_feature_contributions")
-	// hydrate_chart::<FeatureContributionsChart>("multiclass_classification_feature_contributions")
+	if document
+		.get_element_by_id("regression_feature_contributions")
+		.is_some()
+	{
+		// hydrate_chart::<FeatureContributionsChart>("regression_feature_contributions")
+	}
+	if document
+		.get_element_by_id("binary_classification_feature_contributions")
+		.is_some()
+	{
+		// hydrate_chart::<FeatureContributionsChart>("binary_classification_feature_contributions")
+	}
+	if document
+		.get_element_by_id("multiclass_classification_feature_contributions")
+		.is_some()
+	{
+		// hydrate_chart::<FeatureContributionsChart>("multiclass_classification_feature_contributions")
+	}
 }

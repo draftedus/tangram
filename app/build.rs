@@ -36,7 +36,7 @@ fn main() {
 		workspace_dir,
 		&client_crate_manifest_paths,
 		&cargo_wasm_dir,
-		false,
+		cfg!(debug_assertions),
 		&dst_dir,
 	)
 	.unwrap();

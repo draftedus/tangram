@@ -354,10 +354,10 @@ fn draw_line_chart(
 				.as_ref()
 				.map(|labels| labels.get(point_index).unwrap().clone());
 			let hover_region = HoverRegion {
-				distance: Box::new(move |x: f64, y: f64| {
+				distance: Box::new(move |x, y| {
 					(point_pixels.x - x).powi(2) + (point_pixels.y - y).powi(2)
 				}),
-				hit_test: Box::new(move |x: f64, y: f64| {
+				hit_test: Box::new(move |x, y| {
 					x > point_pixels.x - tooltip_target_radius
 						&& x < point_pixels.x + tooltip_target_radius
 						&& y > point_pixels.y - tooltip_target_radius

@@ -12,6 +12,7 @@ use crate::{
 		Point, Rect,
 	},
 	config::ChartConfig,
+	tooltip::{draw_tooltip, DrawTooltipOptions, TooltipLabel},
 };
 use num_traits::ToPrimitive;
 use wasm_bindgen::JsValue;
@@ -252,14 +253,14 @@ fn draw_box_chart(
 fn draw_box_chart_overlay(
 	options: DrawOverlayOptions<BoxChartOverlayInfo, BoxChartHoverRegionInfo>,
 ) {
-	todo!()
-	// 	let {
-	// 		activeHoverRegions,
-	// 		ctx,
-	// 		info: { chartBox },
-	// 		overlayDiv,
-	// 	} = options
-	// 	let tooltips: TooltipLabel[] = []
+	let DrawOverlayOptions {
+		active_hover_regions,
+		ctx,
+		overlay_info,
+		overlay_div,
+		..
+	} = options;
+	let mut tooltips: Vec<TooltipLabel> = Vec::new();
 	// 	let boxPointIndexForName: { [key: string]: number } = {
 	// 		max: 4,
 	// 		median: 2,

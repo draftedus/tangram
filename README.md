@@ -38,7 +38,7 @@ Before submitting a pull request, please run `scripts/fmt` and `scripts/check` a
 
 ## Repository Structure
 
-This repository is both a Cargo workspace and a Yarn workspace. Every folder in the root of the repository is a Rust crate, except `languages` which holds the language libraries. Below is a description of the most important folders:
+This repository is a Cargo workspace. Every folder in the root of the repository is a Rust crate, except `languages` which holds the language libraries. Below is a description of the most important folders:
 
 - [`core`](core): This folder contains the `tangram_core` crate that defines the model file format and automated machine learning functionality. It is used by the `tangram_cli` crate to train a model, and by the `libtangram` crate to expose its functionality as a C api to the language libraries.
 
@@ -46,7 +46,7 @@ This repository is both a Cargo workspace and a Yarn workspace. Every folder in 
 
 - [`tree`](tree): This folder contains the `tangram_tree` crate that implements tree machine learning models.
 
-- [`app`](app): This folder contains the `tangram_app` crate that implementats the reporting and monitoring web app. See `run()` in [app/lib.rs](app/lib.rs) for the entrypoint.
+- [`app`](app): This folder contains the `tangram_app` crate that implements the reporting and monitoring web app. See `run()` in [app/lib.rs](app/lib.rs) for the entrypoint.
 
 - [`cli`](cli): This folder contains the `tangram_cli` crate. It uses the `tangram_core` crate to train a model, and the `tangram_app` crate to run the reporting and monitoring web app. See `main()` in [cli/main.rs](cli/main.rs) for the entrypoint.
 
@@ -62,7 +62,7 @@ This repository is both a Cargo workspace and a Yarn workspace. Every folder in 
 
 - To save your SSD from a premature death, set up a RAM disk for the `target` directory, where output from cargo is written. On Linux, run `sudo mkdir /path/to/tangram/target && sudo chmod 777 /path/to/tangram/target && sudo mount -t tmpfs target /path/to/tangram/target`. To set up a RAM disk automatically when your computer starts, add `none /path/to/tangram/target tmpfs rw,relatime 0 0` to `/etc/fstab` and reboot.
 
-- For helpful features like inline errors, autocomplete, go-to-defintion, and more, configure your editor to use [Rust Analyzer](https://rust-analyzer.github.io/).
+- For helpful features like diagnostics, autocomplete, go-to-defintion, and more, configure your editor to use [Rust Analyzer](https://rust-analyzer.github.io/).
 
 ## License
 
