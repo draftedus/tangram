@@ -127,6 +127,6 @@ pub struct ClassMetricsTableEntry {
 	pub recall: TrainingProductionMetrics,
 }
 
-pub fn render(props: Props, page_info: PageInfo) -> String {
+pub fn render(_props: Props, _page_info: PageInfo) -> String {
 	todo!()
 }

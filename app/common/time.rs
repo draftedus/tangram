@@ -1,4 +1,4 @@
-use crate::date_window::{self, DateWindow, DateWindowInterval};
+use crate::date_window::{DateWindow, DateWindowInterval};
 use tangram_deps::{chrono::prelude::*, chrono_tz::Tz};
 
 pub fn format_date_window(date: DateTime<Utc>, date_window: DateWindow, timezone: Tz) -> String {

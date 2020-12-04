@@ -5,6 +5,3 @@ version = "0.0.0"
 
 [lib]
 path = "lib.rs"
-
-[dependencies]
-tangram_deps = { path = "../../../deps" }

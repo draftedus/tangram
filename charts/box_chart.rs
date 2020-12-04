@@ -1,15 +1,11 @@
 use crate::{
 	bar_chart::{draw_bar_chart_x_axis_labels, DrawBarChartXAxisLabelsOptions},
-	chart::{
-		ActiveHoverRegion, ChartImpl, DrawChartOptions, DrawChartOutput, DrawOverlayOptions,
-		HoverRegion,
-	},
+	chart::{ChartImpl, DrawChartOptions, DrawChartOutput, DrawOverlayOptions, HoverRegion},
 	common::{
 		compute_boxes, draw_rounded_rect, draw_x_axis, draw_x_axis_title, draw_y_axis_grid_lines,
 		draw_y_axis_labels, draw_y_axis_title, format_number, ComputeBoxesOptions,
 		ComputeBoxesOutput, DrawRoundedRectOptions, DrawXAxisOptions, DrawXAxisTitleOptions,
-		DrawYAxisGridLinesOptions, DrawYAxisLabelsOptions, DrawYAxisTitleOptions, GridLineInterval,
-		Point, Rect,
+		DrawYAxisGridLinesOptions, DrawYAxisLabelsOptions, DrawYAxisTitleOptions, Point, Rect,
 	},
 	config::ChartConfig,
 	tooltip::{draw_tooltip, DrawTooltipOptions, TooltipLabel},
@@ -258,61 +254,63 @@ fn draw_box_chart_overlay(
 		ctx,
 		overlay_info,
 		overlay_div,
-		..
+		chart_config,
+		chart_colors,
 	} = options;
+	let BoxChartOverlayInfo { chart_box } = overlay_info;
 	let mut tooltips: Vec<TooltipLabel> = Vec::new();
-	// 	let boxPointIndexForName: { [key: string]: number } = {
-	// 		max: 4,
-	// 		median: 2,
-	// 		min: 0,
-	// 		p25: 1,
-	// 		p75: 3,
-	// 	}
-	// 	activeHoverRegions.sort((activeHoverRegionA, activeHoverRegionB) => {
-	// 		let boxPointIndexA = boxPointIndexForName[activeHoverRegionA.info.name]
-	// 		if (boxPointIndexA === undefined) throw Error()
-	// 		let boxPointIndexB = boxPointIndexForName[activeHoverRegionB.info.name]
-	// 		if (boxPointIndexB === undefined) throw Error()
-	// 		return boxPointIndexA > boxPointIndexB ? -1 : 1
-	// 	})
-	// 	for (let i = 0; i < activeHoverRegions.length; i++) {
-	// 		let activeHoverRegion = activeHoverRegions[i]
-	// 		if (activeHoverRegion === undefined) throw Error()
-	// 		let color = activeHoverRegion.info.color
-	// 		let x = activeHoverRegion.info.label
-	// 		let name = activeHoverRegion.info.name
-	// 		let value = formatNumber(activeHoverRegion.info.value)
-	// 		let y = `${name} = ${value}`
-	// 		let text = `(${x}, ${y})`
-	// 		tooltips.push({
-	// 			color,
-	// 			text,
-	// 		})
-	// 	}
-	// 	for (let activeHoverRegion of activeHoverRegions) {
-	// 		drawLine({
-	// 			color: chartColors.current.crosshairsColor,
-	// 			ctx,
-	// 			dashed: true,
-	// 			end: {
-	// 				x: chartBox.x + chartBox.w,
-	// 				y: activeHoverRegion.info.tooltipOriginPixels.y,
-	// 			},
-	// 			start: { x: chartBox.x, y: activeHoverRegion.info.tooltipOriginPixels.y },
-	// 		})
-	// 	}
-	// 	if (tooltips.length > 0) {
-	// 		let lastActiveHoverRegion =
-	// 			activeHoverRegions[activeHoverRegions.length - 1]
-	// 		if (lastActiveHoverRegion === undefined) throw Error()
-	// 		let origin = lastActiveHoverRegion.info.tooltipOriginPixels
-	// 		drawTooltip({
-	// 			centerHorizontal: true,
-	// 			container: overlayDiv,
-	// 			labels: tooltips,
-	// 			origin,
-	// 		})
-	// 	}
+	fn box_point_index_for_name(name: &str) -> usize {
+		match name {
+			"max" => 4,
+			"median" => 2,
+			"min" => 0,
+			"p25" => 1,
+			"p75" => 3,
+			_ => unreachable!(),
+		}
+	}
+	let mut active_hover_regions = active_hover_regions.to_owned();
+	active_hover_regions.sort_unstable_by_key(|r| box_point_index_for_name(&r.info.name));
+	for active_hover_region in active_hover_regions.iter() {
+		let color = &active_hover_region.info.color;
+		let x = &active_hover_region.info.label;
+		let name = &active_hover_region.info.name;
+		let value = format_number(active_hover_region.info.value);
+		let y = format!("{} = {}", name, value);
+		let text = format!("({}, {})", x, y);
+		tooltips.push(TooltipLabel {
+			color: color.to_owned(),
+			text,
+		});
+		draw_line(DrawLineOptions {
+			color: Some(&chart_colors.crosshairs_color),
+			ctx: ctx.clone(),
+			dashed: Some(true),
+			end: Point {
+				x: chart_box.x + chart_box.w,
+				y: active_hover_region.info.tooltip_origin_pixels.y,
+			},
+			start: Point {
+				x: chart_box.x,
+				y: active_hover_region.info.tooltip_origin_pixels.y,
+			},
+			line_cap: None,
+			line_width: None,
+		});
+	}
+	if !tooltips.is_empty() {
+		let last_active_hover_region = active_hover_regions.last().unwrap();
+		let origin = last_active_hover_region.info.tooltip_origin_pixels;
+		draw_tooltip(DrawTooltipOptions {
+			center_horizontal: Some(true),
+			container: overlay_div,
+			labels: tooltips,
+			origin,
+			chart_colors,
+			chart_config,
+			flip_y_offset: None,
+		})
+	}
 }
 
 struct DrawBoxOptions<'a> {

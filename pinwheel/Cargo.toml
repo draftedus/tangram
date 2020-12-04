@@ -9,7 +9,6 @@ path = "lib.rs"
 
 [dependencies]
 backtrace = "0.3"
-clap = { version = "3.0.0-beta.2", features = ["color"] }
 futures = "0.3"
 hex = "0.4"
 http = "0.2"

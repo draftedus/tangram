@@ -78,9 +78,7 @@ pub struct FeatureContributionsChartHoverRegionInfo {
 	tooltip_origin_pixels: Point,
 }
 
-pub struct FeatureContributionsChartOverlayInfo {
-	chart_box: Rect,
-}
+pub struct FeatureContributionsChartOverlayInfo {}
 
 fn draw_feature_contributions_chart(
 	options: DrawChartOptions<FeatureContributionsChartOptions>,
@@ -340,7 +338,7 @@ fn draw_feature_contributions_chart(
 	draw_x_axis_labels(DrawXAxisLabelsOptions {
 		rect: bottom_x_axis_labels_box,
 		ctx: ctx.clone(),
-		grid_line_info: x_axis_grid_line_info.clone(),
+		grid_line_info: x_axis_grid_line_info,
 		width,
 		labels: &None,
 	});
@@ -352,7 +350,6 @@ fn draw_feature_contributions_chart(
 				rect: y_axis_labels_box,
 				categories: &categories,
 				ctx: ctx.clone(),
-				width,
 				chart_config,
 			},
 		);
@@ -404,20 +401,18 @@ fn draw_feature_contributions_chart(
 			series,
 			value_width_multiplier,
 			chart_config,
-			chart_colors,
 		});
 		hover_regions.extend(output.hover_regions);
 	}
 
 	DrawChartOutput {
 		hover_regions,
-		overlay_info: FeatureContributionsChartOverlayInfo { chart_box },
+		overlay_info: FeatureContributionsChartOverlayInfo {},
 	}
 }
 
 struct DrawFeatureContributionSeriesOptions<'a> {
 	chart_config: &'a ChartConfig,
-	chart_colors: &'a ChartColors,
 	rect: Rect,
 	box_height: f64,
 	ctx: CanvasRenderingContext2d,
@@ -444,7 +439,6 @@ fn draw_feature_contribution_series(
 		series,
 		value_width_multiplier,
 		chart_config,
-		chart_colors,
 	} = options;
 	let min = series.baseline.min(series.output);
 
@@ -452,10 +446,10 @@ fn draw_feature_contribution_series(
 	let mut positive_values: Vec<FeatureContributionsChartValue> = series
 		.values
 		.iter()
-		.filter(|value| value.value > 0.0)
+		.filter(|value| value.value >= 0.0)
 		.cloned()
 		.collect();
-	positive_values.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
+	positive_values.sort_unstable_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
 	let mut x = rect.x + (series.baseline - min) * value_width_multiplier;
 	// Draw the baseline value and label.
 	ctx.set_text_baseline("bottom");
@@ -548,97 +542,103 @@ fn draw_feature_contribution_series(
 	}
 
 	// Draw the negative boxes which start at the max and go to the output, starting with the remaining features rect.
-	x = rect.x + rect.w;
+	let mut x = rect.x + rect.w;
 	let y = rect.y + box_height + chart_config.feature_contributions_bar_gap;
-	// let negativeValues = series.values
-	// 	.filter(({ value }) => value < 0)
-	// 	.sort((a, b) => (a.value > b.value ? -1 : 1))
-	// remainingFeaturesBoxWidth = 0
-	// nRemainingFeatures = 0
-	// let negativeValuesIndex = 0
-	// while (negativeValuesIndex < negativeValues.length) {
-	// 	let featureContributionValue = negativeValues[negativeValuesIndex]
-	// 	if (featureContributionValue === undefined) throw Error()
-	// 	let width = featureContributionValue.value * valueWidthMultiplier
-	// 	if (width < -chartConfig.featureContributionsArrowDepth * 2) {
-	// 		break
-	// 	}
-	// 	remainingFeaturesBoxWidth += width
-	// 	nRemainingFeatures += 1
-	// 	negativeValuesIndex += 1
-	// }
-	// if (remainingFeaturesBoxWidth < 0) {
-	// 	let remainingFeaturesBox = {
-	// 		h: boxHeight,
-	// 		w: remainingFeaturesBoxWidth,
-	// 		x,
-	// 		y,
-	// 	}
-	// 	x += remainingFeaturesBoxWidth
-	// 	drawFeatureContributionBox({
-	// 		box: remainingFeaturesBox,
-	// 		color: `${negativeColor}33`,
-	// 		ctx,
-	// 		direction: FeatureContributionsBoxDirection.Positive,
-	// 		label: `${nRemainingFeatures} other features`,
-	// 	})
-	// 	hoverRegions.push(
-	// 		featureContributionsChartHoverRegion({
-	// 			box: remainingFeaturesBox,
-	// 			color: `${negativeColor}33`,
-	// 			direction: FeatureContributionsBoxDirection.Positive,
-	// 			label: `${nRemainingFeatures} other features`,
-	// 			tooltipOriginPixels: {
-	// 				...remainingFeaturesBox,
-	// 				x: remainingFeaturesBox.x + remainingFeaturesBox.w / 2,
-	// 			},
-	// 		}),
-	// 	)
-	// }
-	// for (let i = negativeValuesIndex; i < negativeValues.length; i++) {
-	// 	let featureContributionValue = negativeValues[i]
-	// 	if (featureContributionValue === undefined) throw Error()
-	// 	let width = featureContributionValue.value * valueWidthMultiplier
-	// 	let valueBox = {
-	// 		h: boxHeight,
-	// 		w: width,
-	// 		x,
-	// 		y,
-	// 	}
-	// 	drawFeatureContributionBox({
-	// 		box: valueBox,
-	// 		color: negativeColor,
-	// 		ctx,
-	// 		direction: FeatureContributionsBoxDirection.Positive,
-	// 		label: `${featureContributionValue.feature}`,
-	// 	})
-	// 	hoverRegions.push(
-	// 		featureContributionsChartHoverRegion({
-	// 			box: valueBox,
-	// 			color: negativeColor,
-	// 			direction: FeatureContributionsBoxDirection.Positive,
-	// 			label: `${featureContributionValue.feature}`,
-	// 			tooltipOriginPixels: {
-	// 				...valueBox,
-	// 				x: valueBox.x + valueBox.w / 2,
-	// 			},
-	// 		}),
-	// 	)
-	// 	x += width
-	// }
-	// // Draw the output value and label.
-	// ctx.textBaseline = "bottom"
-	// ctx.fillText(
-	// 	`output`,
-	// 	x - chartConfig.labelPadding,
-	// 	rect.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
-	// )
-	// ctx.textBaseline = "top"
-	// ctx.fillText(
-	// 	series.outputLabel,
-	// 	x - chartConfig.labelPadding,
-	// 	rect.y + boxHeight + chartConfig.featureContributionsBarGap + boxHeight / 2,
-	// )
+	let mut negative_values: Vec<FeatureContributionsChartValue> = series
+		.values
+		.iter()
+		.filter(|value| value.value < 0.0)
+		.cloned()
+		.collect();
+	negative_values.sort_unstable_by(|a, b| a.value.partial_cmp(&b.value).unwrap().reverse());
+	let mut remaining_features_box_width = 0.0;
+	let mut n_remaining_features = 0;
+	let mut negative_values_index = 0;
+	while negative_values_index < negative_values.len() {
+		let feature_contribution_value = negative_values.get(negative_values_index).unwrap();
+		let width = feature_contribution_value.value * value_width_multiplier;
+		if width < -chart_config.feature_contributions_arrow_depth * 2.0 {
+			break;
+		}
+		remaining_features_box_width += width;
+		n_remaining_features += 1;
+		negative_values_index += 1;
+	}
+	if remaining_features_box_width < 0.0 {
+		let remaining_features_box = Rect {
+			h: box_height,
+			w: remaining_features_box_width,
+			x,
+			y,
+		};
+		x += remaining_features_box_width;
+		draw_feature_contribution_box(DrawFeatureContributionBoxOptions {
+			rect: remaining_features_box,
+			color: format!("{}33", negative_color),
+			ctx: ctx.clone(),
+			direction: FeatureContributionsBoxDirection::Positive,
+			label: format!("{} other features", n_remaining_features),
+			chart_config,
+		});
+		hover_regions.push(feature_contributions_chart_hover_region(
+			FeatureContributionsChartHoverRegionOptions {
+				rect: remaining_features_box,
+				color: format!("{}33", negative_color),
+				direction: FeatureContributionsBoxDirection::Positive,
+				label: format!("{} other features", n_remaining_features),
+				tooltip_origin_pixels: Point {
+					x: remaining_features_box.x + remaining_features_box.w / 2.0,
+					y: remaining_features_box.y,
+				},
+			},
+		));
+	}
+	while negative_values_index < negative_values.len() {
+		let feature_contribution_value = negative_values.get(negative_values_index).unwrap();
+		let width = feature_contribution_value.value * value_width_multiplier;
+		let value_box = Rect {
+			h: box_height,
+			w: width,
+			x,
+			y,
+		};
+		draw_feature_contribution_box(DrawFeatureContributionBoxOptions {
+			rect: value_box,
+			color: negative_color.to_owned(),
+			ctx: ctx.clone(),
+			direction: FeatureContributionsBoxDirection::Positive,
+			label: feature_contribution_value.feature.clone(),
+			chart_config,
+		});
+		hover_regions.push(feature_contributions_chart_hover_region(
+			FeatureContributionsChartHoverRegionOptions {
+				rect: value_box,
+				color: negative_color.to_owned(),
+				direction: FeatureContributionsBoxDirection::Positive,
+				label: feature_contribution_value.feature.clone(),
+				tooltip_origin_pixels: Point {
+					x: value_box.x + value_box.w / 2.0,
+					y: value_box.y,
+				},
+			},
+		));
+		x += width;
+	}
+	// Draw the output value and label.
+	ctx.set_text_baseline("bottom");
+	ctx.fill_text(
+		"output",
+		x - chart_config.label_padding,
+		rect.y + box_height + chart_config.feature_contributions_bar_gap + box_height / 2.0,
+	)
+	.unwrap();
+	ctx.set_text_baseline("top");
+	ctx.fill_text(
+		&series.output_label,
+		x - chart_config.label_padding,
+		rect.y + box_height + chart_config.feature_contributions_bar_gap + box_height / 2.0,
+	)
+	.unwrap();
 
 	DrawFeatureContributionsSeriesOutput { hover_regions }
 }
@@ -648,7 +648,6 @@ struct DrawFeatureContributionsChartYAxisLabelsOptions<'a> {
 	rect: Rect,
 	categories: &'a [&'a String],
 	ctx: CanvasRenderingContext2d,
-	width: f64,
 }
 
 fn draw_feature_contributions_chart_y_axis_labels(
@@ -659,7 +658,6 @@ fn draw_feature_contributions_chart_y_axis_labels(
 		rect,
 		categories,
 		ctx,
-		width,
 	} = options;
 	ctx.set_text_align("end");
 	for (i, label) in categories.iter().enumerate() {
@@ -682,15 +680,13 @@ fn draw_feature_contributions_chart_overlay(
 	let DrawOverlayOptions {
 		active_hover_regions,
 		ctx,
-		overlay_info,
 		overlay_div,
-		chart_colors,
 		chart_config,
+		chart_colors,
+		..
 	} = options;
 	draw_feature_contribution_tooltips(DrawFeatureContributionTooltipsOptions {
 		active_hover_regions,
-		chart_box: overlay_info.chart_box,
-		ctx: ctx.clone(),
 		overlay_div,
 		chart_colors,
 		chart_config,
@@ -700,7 +696,7 @@ fn draw_feature_contributions_chart_overlay(
 			rect: active_hover_region.info.rect,
 			color: "#00000022".to_owned(),
 			ctx: ctx.clone(),
-			direction: active_hover_region.info.direction.clone(),
+			direction: active_hover_region.info.direction,
 			label: "".to_owned(),
 			chart_config,
 		});
@@ -711,8 +707,6 @@ struct DrawFeatureContributionTooltipsOptions<'a> {
 	chart_colors: &'a ChartColors,
 	chart_config: &'a ChartConfig,
 	active_hover_regions: &'a [ActiveHoverRegion<FeatureContributionsChartHoverRegionInfo>],
-	chart_box: Rect,
-	ctx: CanvasRenderingContext2d,
 	overlay_div: HtmlElement,
 }
 
@@ -721,8 +715,6 @@ fn draw_feature_contribution_tooltips(options: DrawFeatureContributionTooltipsOp
 		chart_colors,
 		chart_config,
 		active_hover_regions,
-		chart_box,
-		ctx,
 		overlay_div,
 	} = options;
 	for active_hover_region in active_hover_regions {

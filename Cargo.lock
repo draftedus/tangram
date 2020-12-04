@@ -1651,7 +1651,6 @@ name = "pinwheel"
 version = "0.1.0-dev"
 dependencies = [
  "backtrace",
- "clap",
  "futures",
  "hex",
  "http",
@@ -2602,7 +2601,6 @@ version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
  "tangram_charts",
- "tangram_ui",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -2627,7 +2625,6 @@ version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
  "tangram_charts",
- "tangram_ui",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -2806,7 +2803,6 @@ version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
  "tangram_charts",
- "tangram_ui",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -3075,7 +3071,6 @@ dependencies = [
  "pinwheel",
  "rand",
  "reqwest",
- "rmp-serde",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -3200,9 +3195,6 @@ dependencies = [
 [[package]]
 name = "tangram_www_pages_index"
 version = "0.0.0"
-dependencies = [
- "tangram_deps",
-]
 
 [[package]]
 name = "tap"
