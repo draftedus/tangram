@@ -26,3 +26,5 @@ tangram_dataframe = { path = "../dataframe" }
 tangram_util = { path = "../util" }
 tokio = { version = "0.2", features = ["full"] }
 url = "2"
+watchexec = "1"
+which = "4"

@@ -1,6 +1,7 @@
 use crate::watch::watch;
 use clap::Clap;
 use tangram_util::error::Result;
+// use which::which;
 
 #[derive(Clap)]
 #[clap(
@@ -21,13 +22,15 @@ enum Target {
 }
 
 pub fn dev(args: Args) -> Result<()> {
-	let tangram_path = std::env::current_dir()?;
-	let build_path = tangram_path.join("build");
-	let watch_paths = vec![tangram_path];
-	let ignore_paths = vec![build_path];
+	let workspace_dir = std::env::current_dir()?;
+	let target_dir = workspace_dir.join("target");
+	let target_wasm_dir = workspace_dir.join("target_wasm");
+	let watch_paths = vec![workspace_dir];
+	let ignore_paths = vec![target_dir, target_wasm_dir];
 	let (cmd, cmd_args) = match args.target {
 		Target::App => {
 			let cmd = "cargo".to_owned();
+			// let cmd = which("cargo")?.as_os_str().to_str().unwrap().to_owned();
 			let mut cmd_args = vec![
 				"run".to_owned(),
 				"--bin".to_owned(),

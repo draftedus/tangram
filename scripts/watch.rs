@@ -8,15 +8,13 @@ pub fn watch(
 	cmd: String,
 	args: Vec<String>,
 ) -> Result<()> {
-	let (tx, rx) = channel();
-	let mut watcher = notify::watcher(tx, Duration::from_secs_f32(0.1)).unwrap();
-	for path in watch_paths {
-		watcher
-			.watch(path, notify::RecursiveMode::Recursive)
-			.unwrap();
-	}
 	let mut process = ChildProcess::new(cmd, args);
 	process.start()?;
+	let (tx, rx) = channel();
+	let mut watcher = notify::watcher(tx, Duration::from_secs_f32(0.1)).unwrap();
+	for path in watch_paths.iter() {
+		watcher.watch(path, notify::RecursiveMode::Recursive)?;
+	}
 	loop {
 		let event = rx.recv()?;
 		let paths = match event {
@@ -33,9 +31,9 @@ pub fn watch(
 			}
 		};
 		let should_restart = paths.iter().any(|path| {
-			ignore_paths
+			!ignore_paths
 				.iter()
-				.any(|ignore_path| !path.starts_with(ignore_path))
+				.any(|ignore_path| path.starts_with(ignore_path))
 		});
 		if should_restart {
 			process.restart()?;
@@ -86,3 +84,21 @@ impl Drop for ChildProcess {
 		self.stop().unwrap();
 	}
 }
+
+// let mut cmd = vec![cmd];
+// cmd.extend(args);
+// watchexec::run(
+// 	watchexec::ArgsBuilder::default()
+// 		.cmd(cmd)
+// 		.paths(watch_paths)
+// 		.ignores(
+// 			ignore_paths
+// 				.into_iter()
+// 				.map(|path| path.to_str().unwrap().to_owned())
+// 				.collect::<Vec<String>>(),
+// 		)
+// 		.restart(true)
+// 		.build()
+// 		.unwrap(),
+// )?;
+// Ok(())
