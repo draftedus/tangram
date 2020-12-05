@@ -18,10 +18,10 @@ use num_traits::ToPrimitive;
 
 #[derive(Clone)]
 pub struct ConfusionMatrixComparisonValue {
-	false_negative: usize,
-	false_positive: usize,
-	true_negative: usize,
-	true_positive: usize,
+	pub false_negative: f32,
+	pub false_positive: f32,
+	pub true_negative: f32,
+	pub true_positive: f32,
 }
 
 fn default_value_formatter(value: f32) -> String {
@@ -121,9 +121,9 @@ fn ConfusionMatrixComparisonItem(
 	color_b: String,
 	label: String,
 	correct: bool,
-	value_a: usize,
+	value_a: f32,
 	value_a_title: String,
-	value_b: usize,
+	value_b: f32,
 	value_b_title: String,
 	value_formatter: fn(f32) -> String,
 ) {

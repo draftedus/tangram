@@ -113,12 +113,19 @@ pub async fn get(
 					.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
 				let production_fn_fraction = production_fn
 					.map(|p| p.to_f32().unwrap() / production_total.unwrap().to_f32().unwrap());
-				let confusion_matrix = ConfusionMatrix {
-					false_negatives: production_fn,
-					true_negatives: production_tn,
-					true_positives: production_tp,
-					false_positives: production_fp,
-				};
+				let confusion_matrix =
+					production_class_metrics.map(|production_class_metrics| ConfusionMatrix {
+						false_negatives: production_class_metrics
+							.false_negatives
+							.to_usize()
+							.unwrap(),
+						true_negatives: production_class_metrics.true_negatives.to_usize().unwrap(),
+						true_positives: production_class_metrics.true_positives.to_usize().unwrap(),
+						false_positives: production_class_metrics
+							.false_negatives
+							.to_usize()
+							.unwrap(),
+					});
 				let comparison = Comparison {
 					false_negative_fraction: TrainingProductionMetrics {
 						production: production_fn_fraction,
