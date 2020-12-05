@@ -3,6 +3,7 @@ use tangram_deps::{sqlx, url};
 pub mod class_select_field;
 pub mod cookies;
 pub mod date_window;
+pub mod date_window_select_field;
 pub mod definitions;
 pub mod error;
 pub mod logo;

@@ -19,3 +19,7 @@ pub fn ClassSelectField(class: String, classes: Vec<String>) {
 		/>
 	}
 }
+
+pub fn boot_class_select_field() {
+	ui::select_field_submit_on_change("class-select-field".to_owned());
+}
