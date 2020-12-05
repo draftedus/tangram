@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use tangram_app_common::{
 	metrics_row::MetricsRow,
 	tokens::{BASELINE_COLOR, SELECTED_THRESHOLD_COLOR},
@@ -60,11 +61,13 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 
 #[component]
 fn Tuning(props: TuningProps) {
-	let thresholds = props
-		.metrics
-		.iter()
-		.map(|metric| metric.threshold)
-		.collect::<Vec<_>>();
+	let thresholds = Rc::new(
+		props
+			.metrics
+			.iter()
+			.map(|metric| metric.threshold)
+			.collect::<Vec<_>>(),
+	);
 	let baseline_index = thresholds
 		.iter()
 		.position(|value| value - props.baseline_threshold < std::f32::EPSILON)
@@ -73,7 +76,7 @@ fn Tuning(props: TuningProps) {
 	let selected_threshold = thresholds[selected_threshold_index];
 	let baseline_metrics = &props.metrics[baseline_index];
 	let selected_threshold_metrics = &props.metrics[selected_threshold_index];
-	let value_formatter: fn(f32) -> String = |value| ui::format_percent(value);
+	let value_formatter: fn(f32) -> String = ui::format_percent;
 	html! {
 		<ui::S1>
 			<ui::H1 center={false}>{"Tuning"}</ui::H1>
@@ -83,34 +86,29 @@ fn Tuning(props: TuningProps) {
 						"Drag the silder to see how metrics change with varying settings of the threshold."
 					}
 				</ui::P>
-			// 	<ui::Slider
-			// 		color="var(--accent-color)"
-			// 		max={thresholds.length - 1}
-			// 		min={0}
-			// 		onChange={setSelectedThresholdIndex}
-			// 		step={1}
-			// 		value={selectedThresholdIndex}
-			// 		valueFormatter={index => ui::formatNumber(thresholds[index], 2)}
-			// 	/>
+				<ui::Slider
+					id={"slider".to_owned()}
+					max={(thresholds.len() - 1).to_f32().unwrap()}
+					min={0.0}
+					value={selected_threshold_index}
+				/>
 			</ui::S2>
 			{if selected_threshold == 0.0 {
 				Some(html! {
 					<ui::Alert
 						title={None}
-						level={ui::Level::Info}>
-					{
-						"A threshold of 0 makes your model predict the same class for every input."
-					}
+						level={ui::Level::Info}
+					>
+						{"A threshold of 0 makes your model predict the same class for every input."}
 					</ui::Alert>
 				})
 				} else if selected_threshold.partial_cmp(&1.0).unwrap() == std::cmp::Ordering::Equal {
 					Some(html! {
 						<ui::Alert
 							title={None}
-							level={ui::Level::Info}>
-						{
-							"A threshold of 1 makes your model predict the same class for every input."
-						}
+							level={ui::Level::Info}
+						>
+							{"A threshold of 1 makes your model predict the same class for every input."}
 						</ui::Alert>
 					})
 				} else {
@@ -193,6 +191,5 @@ fn Tuning(props: TuningProps) {
 				/>
 			</ui::S2>
 		</ui::S1>
-
 	}
 }

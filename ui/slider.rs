@@ -1,20 +1,25 @@
 use html::{component, html, style};
+use num_traits::ToPrimitive;
 
 #[component]
-pub fn Slider(max: f32, min: f32, value: f32, value_formatter: Option<fn(f32) -> String>) {
-	let percent = ((value - min) / (max - min)) * 100.0;
+pub fn Slider(
+	id: Option<String>,
+	max: f32,
+	min: f32,
+	value: usize,
+) {
+	let percent = ((value.to_f32().unwrap() - min) / (max - min)) * 100.0;
 	let progress_style = style! {
 	  "width" =>  format!("{}%", percent),
 	};
 	let tooltip_style = style! {
 	  "margin-left" =>  format!("{}%", percent),
 	};
-	let value = value_formatter
-		.map(|value_formatter| value_formatter(value))
-		.unwrap_or_else(|| value.to_string());
+	let value = value.to_string();
 	html! {
 		<div class={"slider-wrapper"}>
 			<input
+				id={id}
 				class={"slider-range"}
 				max={max.to_string()}
 				min={min.to_string()}
