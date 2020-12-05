@@ -31,7 +31,3 @@ pub fn DateWindowSelectField(date_window: DateWindow) {
 		/>
 	}
 }
-
-pub fn boot_date_window_select_field() {
-	ui::select_field_submit_on_change("date-window-select-field".to_owned());
-}

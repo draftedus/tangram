@@ -1,5 +1,6 @@
 use tangram_app_common::{
 	date_window::{DateWindow, DateWindowInterval},
+	date_window_select_field::DateWindowSelectField,
 	time::{interval_chart_title, overall_chart_title},
 	tokens::{EnumColumnToken, NumberColumnToken, TextColumnToken, UnknownColumnToken},
 };
@@ -146,24 +147,23 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 		PredictionStatsChart::Regression(data) => html! {
 			<RegressionProductionStatsChart
 				chart_data={data}
-				date_window={props.date_window}
+				date_window={props.date_window.clone()}
 			/>
 		},
 		PredictionStatsChart::BinaryClassification(data) => html! {
 			<ClassificationProductionStatsChart
 				chart_data={data}
-				date_window={props.date_window}
+				date_window={props.date_window.clone()}
 			/>
 		},
 		PredictionStatsChart::MulticlassClassification(data) => html! {
 			<ClassificationProductionStatsChart
 				chart_data={data}
-				date_window={props.date_window}
+				date_window={props.date_window.clone()}
 			/>
 		},
 	};
 	let html = html! {
-		<>
 		<ModelLayout
 			info={props.model_layout_info}
 			page_info={page_info}
@@ -178,7 +178,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 					enc_type={None}
 					id={None}
 				>
-			// 		<DateWindowSelectField dateWindow={props.dateWindow} />
+					<DateWindowSelectField date_window={props.date_window} />
 					<noscript>
 						<ui::Button
 							color={None}
@@ -303,7 +303,6 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 				</ui::Table>
 			</ui::S1>
 		</ModelLayout>
-		</>
 	};
 	html.render_to_string()
 }

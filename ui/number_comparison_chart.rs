@@ -31,9 +31,9 @@ pub fn NumberComparisonChart(
 	};
 	let difference_class = match value_a.partial_cmp(&value_b) {
 		Some(ordering) => match ordering {
-			std::cmp::Ordering::Less => "number-comparison-negative",
+			std::cmp::Ordering::Less => "number-comparison-positive",
 			std::cmp::Ordering::Equal => "number-comparison-equals",
-			std::cmp::Ordering::Greater => "number-comparison-positive",
+			std::cmp::Ordering::Greater => "number-comparison-negative",
 		},
 		None => "",
 	};

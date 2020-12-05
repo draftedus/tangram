@@ -24,7 +24,7 @@ pub fn MulticlassClassifierTrainingMetricsIndexPage(props: MulticlassClassifierP
 			<ui::TabLink
 				disabled={None}
 				href={"class_metrics".to_owned()}
-				selected={true}
+				selected={false}
 			>
 				{"Class Metrics"}
 			</ui::TabLink>

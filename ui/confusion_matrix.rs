@@ -79,7 +79,7 @@ pub fn ConfusionMatrix(
 #[component]
 fn ConfusionMatrixItem(area: String, correct: bool, title: String, total: usize, value: usize) {
 	let item_wrapper_style = style! {
-			"grid_area" => area,
+			"grid-area" => area,
 	};
 	let class = match correct {
 		true => "confusion-matrix-item-correct-wrapper",
@@ -107,8 +107,8 @@ pub fn ConfusionMatrixLabel(area: String, left: Option<bool>) {
 	let left = left.unwrap_or(false);
 	let justify_items = if left { "end" } else { "auto" };
 	let style = style! {
-		"grid_area" => area,
-		"justify_items" => justify_items,
+		"grid-area" => area,
+		"justify-items" => justify_items,
 	};
 	html! {
 		<div class="confusion-matrix-label" style={style}>

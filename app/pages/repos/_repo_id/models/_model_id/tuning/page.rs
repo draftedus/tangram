@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use tangram_app_common::{
 	metrics_row::MetricsRow,
 	tokens::{BASELINE_COLOR, SELECTED_THRESHOLD_COLOR},
@@ -61,16 +60,15 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 
 #[component]
 fn Tuning(props: TuningProps) {
-	let thresholds = Rc::new(
+	let thresholds =
 		props
 			.metrics
 			.iter()
 			.map(|metric| metric.threshold)
-			.collect::<Vec<_>>(),
-	);
+			.collect::<Vec<_>>();
 	let baseline_index = thresholds
 		.iter()
-		.position(|value| value - props.baseline_threshold < std::f32::EPSILON)
+		.position(|value| (value - props.baseline_threshold).abs() < std::f32::EPSILON)
 		.unwrap();
 	let selected_threshold_index = baseline_index;
 	let selected_threshold = thresholds[selected_threshold_index];
