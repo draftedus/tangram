@@ -2649,7 +2649,6 @@ name = "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class
 version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
- "tangram_app_common",
  "tangram_charts",
  "tangram_ui",
  "wasm-bindgen",
@@ -2676,7 +2675,6 @@ name = "tangram_app_pages_repos_repo_id_models_model_id_production_metrics_index
 version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
- "tangram_app_common",
  "tangram_charts",
  "tangram_ui",
  "wasm-bindgen",
@@ -2740,7 +2738,6 @@ name = "tangram_app_pages_repos_repo_id_models_model_id_production_stats_columns
 version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
- "tangram_app_common",
  "tangram_charts",
  "tangram_ui",
  "wasm-bindgen",
@@ -2767,7 +2764,6 @@ name = "tangram_app_pages_repos_repo_id_models_model_id_production_stats_index_c
 version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
- "tangram_app_common",
  "tangram_charts",
  "tangram_ui",
  "wasm-bindgen",
@@ -2829,7 +2825,6 @@ name = "tangram_app_pages_repos_repo_id_models_model_id_training_metrics_class_m
 version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
- "tangram_app_common",
  "tangram_charts",
  "tangram_ui",
  "wasm-bindgen",

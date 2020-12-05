@@ -18,12 +18,11 @@ use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_inf
 use tangram_deps::{
 	http, hyper,
 	num_traits::ToPrimitive,
-	pinwheel::{self, client, Pinwheel},
+	pinwheel::{self, client},
 };
 use tangram_util::{error::Result, id::Id, zip};
 
 pub async fn get(
-	_pinwheel: &Pinwheel,
 	context: &Context,
 	request: http::Request<hyper::Body>,
 	model_id: &str,

@@ -1,4 +1,5 @@
 use tangram_app_common::date_window::DateWindow;
+use tangram_app_common::date_window_select_field::DateWindowSelectField;
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
@@ -76,7 +77,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 					autocomplete={None}
 					action={None}
 				>
-					// <DateWindowSelectField dateWindow={props.dateWindow} />
+					<DateWindowSelectField date_window={props.date_window} />
 					<noscript>
 						<ui::Button
 							disabled={None}

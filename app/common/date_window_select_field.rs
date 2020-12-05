@@ -3,7 +3,7 @@ use tangram_deps::html::{self, component, html};
 use tangram_ui as ui;
 
 #[component]
-fn DateWindowSelectField(date_window: DateWindow) {
+pub fn DateWindowSelectField(date_window: DateWindow) {
 	let date_window_select_field_options = vec![
 		ui::SelectFieldOption {
 			text: "Today".to_owned(),

@@ -1,5 +1,7 @@
 use tangram_app_common::{
+	class_select_field::ClassSelectField,
 	date_window::{DateWindow, DateWindowInterval},
+	date_window_select_field::DateWindowSelectField,
 	definitions::{CONFUSION_MATRIX, PRECISION_RECALL},
 	metrics_row::MetricsRow,
 	time::interval_chart_title,
@@ -227,8 +229,8 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 				id={None}
 				post={None}
 			>
-		// 		<DateWindowSelectField dateWindow={props.dateWindow} />
-		// 		<ClassSelectField class={props.class} classes={props.classes} />
+				<DateWindowSelectField date_window={props.date_window} />
+				<ClassSelectField class={props.class.clone()} classes={props.classes.clone()} />
 				<noscript>
 					<ui::Button
 						disabled={None}

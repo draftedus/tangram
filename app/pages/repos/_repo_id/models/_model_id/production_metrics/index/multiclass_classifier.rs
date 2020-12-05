@@ -3,6 +3,7 @@ use crate::page::{
 };
 use tangram_app_common::{
 	date_window::{DateWindow, DateWindowInterval},
+	date_window_select_field::DateWindowSelectField,
 	definitions::{ACCURACY, PRECISION_RECALL},
 	metrics_row::MetricsRow,
 	time::interval_chart_title,
@@ -104,7 +105,7 @@ pub fn MulticlassClassifierProductionMetrics(props: MulticlassClassifierProducti
 					id={None}
 					post={None}
 				>
-		// 			<DateWindowSelectField dateWindow={props.dateWindow} />
+					<DateWindowSelectField date_window={props.date_window} />
 					<noscript>
 						<ui::Button
 							disabled={None}
