@@ -8,12 +8,11 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
-use tangram_deps::pinwheel::{self, client};
 use tangram_deps::{
 	base64, chrono::prelude::*, chrono_tz::Tz, http, hyper, num_traits::ToPrimitive, serde_json,
 	sqlx, sqlx::prelude::*,
 };
-use tangram_util::{error::Result, id::Id};
+use tangram_util::{client, error::Result, id::Id};
 
 const N_PREDICTIONS_PER_PAGE: i64 = 10;
 

@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, sync::Arc};
 use tangram_app_common::Context;
-use tangram_deps::{futures::FutureExt, http, hyper, pinwheel::Pinwheel, sqlx, tokio, url};
-use tangram_util::{err, error::Result};
+use tangram_deps::{futures::FutureExt, http, hyper, sqlx, tokio, url};
+use tangram_util::{err, error::Result, serve::serve};
 
 mod migrations;
 
@@ -17,16 +17,6 @@ pub fn run(options: Options) -> Result<()> {
 }
 
 async fn run_inner(options: Options) -> Result<()> {
-	// Create the pinwheel.
-	#[cfg(debug_assertions)]
-	let pinwheel = Pinwheel::dev(
-		std::path::PathBuf::from("app"),
-		std::path::PathBuf::from("build/pinwheel/app"),
-	);
-	#[cfg(not(debug_assertions))]
-	let pinwheel = Pinwheel::prod(tangram_deps::include_dir::include_dir!(
-		"../build/pinwheel/app"
-	));
 	// Configure the database pool.
 	let database_url = options.database_url.to_string();
 	let (pool_options, pool_max_connections) = if database_url.starts_with("sqlite:") {
@@ -59,14 +49,11 @@ async fn run_inner(options: Options) -> Result<()> {
 	let host = options.host;
 	let port = options.port;
 	let context = Context { options, pool };
-	pinwheel
-		.serve_with_handler(host, port, context, request_handler)
-		.await?;
+	serve(host, port, context, request_handler).await?;
 	Ok(())
 }
 
 async fn request_handler(
-	pinwheel: Arc<Pinwheel>,
 	context: Arc<Context>,
 	request: http::Request<hyper::Body>,
 ) -> http::Response<hyper::Body> {
@@ -374,7 +361,11 @@ async fn request_handler(
 				organization_id,
 			).boxed()
 		}
-		_ => pinwheel.handle(request).map(Ok).boxed(),
+		_ => {
+			// in dev, serve static files from the static directory, assets from the source tree, and client js/wasm.
+			// if nothing found, 404
+			todo!()
+		},
 	};
 	let result = result.await;
 	let response = match result {

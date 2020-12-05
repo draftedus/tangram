@@ -5,6 +5,7 @@ pub mod id;
 pub mod pool;
 pub mod progress_counter;
 pub mod pzip;
+pub mod serve;
 pub mod super_unsafe;
 pub mod table;
 pub mod zip;

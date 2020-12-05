@@ -9,7 +9,6 @@ members = [
 	"libtangram",
 	"linear",
 	"metrics",
-	"pinwheel",
 	"scripts",
 	"tree",
 	"util",

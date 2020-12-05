@@ -35,9 +35,9 @@ pub fn boot_file_fields() {
 		let file_input_element = file_input_elements.item(file_input_element_index).unwrap();
 		update_file_input_element(&file_input_element.clone());
 		let file_input_element_for_closure = file_input_element.clone();
-		let callback_fn = Closure::wrap(Box::new(move || {
+		let callback_fn = Closure::<dyn FnMut()>::wrap(Box::new(move || {
 			update_file_input_element(&file_input_element_for_closure)
-		}) as Box<dyn FnMut()>);
+		}));
 		file_input_element
 			.add_event_listener_with_callback("change", callback_fn.as_ref().unchecked_ref())
 			.unwrap();

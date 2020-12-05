@@ -1,4 +1,4 @@
-use backtrace::Backtrace;
+use tangram_deps::backtrace::Backtrace;
 
 #[macro_export]
 macro_rules! err {

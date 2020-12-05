@@ -1,9 +1,0 @@
-{
-	"extends": "../tscommon.json",
-	"compilerOptions": {
-		"baseUrl": ".",
-		"outDir": "../build/tsc/ui"
-	},
-	"references": [],
-	"include": ["**/*.ts", "**/*.tsx"]
-}

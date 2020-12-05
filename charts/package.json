@@ -1,9 +1,0 @@
-{
-	"dependencies": {
-		"preact": "10.5.7"
-	},
-	"license": "UNLICENSED",
-	"main": "lib.ts",
-	"name": "@tangramhq/charts",
-	"version": "0.0.0"
-}

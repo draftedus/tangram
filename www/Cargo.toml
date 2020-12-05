@@ -7,10 +7,6 @@ version = "0.0.0"
 name = "tangram_www"
 path = "main.rs"
 
-[build-dependencies]
-tangram_deps = { path = "../deps" }
-
 [dependencies]
 tangram_deps = { path = "../deps" }
 tangram_util = { path = "../util" }
-tangram_www_pages_index = { path = "pages/index" }

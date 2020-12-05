@@ -12,13 +12,13 @@ assert!(Finite::new(n.get() / 0.0).is_err());
 
 */
 
-use num_traits::Float;
 use std::{
 	cmp::{Ord, Ordering},
 	fmt::Debug,
 	hash::{Hash, Hasher},
 	ops::{Add, Mul, Sub},
 };
+use tangram_deps::num_traits::Float;
 
 /**
 The `Finite` type is used to indicate that a floating point number is not infinite and not NaN. It is similar in spirit to the standard library's NonZero{U8, I8, etc.} types.

@@ -1,9 +1,0 @@
-{
-	"dependencies": {
-		"esbuild": "0.8.12"
-	},
-	"license": "MIT",
-	"main": "lib.ts",
-	"name": "@tangramhq/pinwheel",
-	"version": "0.0.0"
-}

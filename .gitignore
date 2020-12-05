@@ -1,4 +1,4 @@
-/build
 /data
 /dist
-node_modules
+/target
+/target_wasm

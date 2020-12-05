@@ -32,14 +32,6 @@ jobs:
         uses: actions/checkout@v2
       - name: setup rust
         uses: actions-rs/toolchain@v1
-        with:
-          toolchain: "1.47.0"
-          profile: minimal
-          components: rustfmt, clippy
-      - name: setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: "15.0.1"
       - name: workaround for https://github.com/actions/cache/issues/403
         if: runner.os == 'macOS'
         run: |
@@ -48,16 +40,14 @@ jobs:
       - name: cache
         uses: actions/cache@v2
         with:
-          key: ${{ matrix.os }}-v2
+          key: ${{ matrix.target }}
           path: |
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            build/cargo/
-      - name: npm install
-        run: |
-          npm install
+            target/
+            target_wasm/
       - name: build
         run: |
           cargo build --release --target ${{ matrix.target }}

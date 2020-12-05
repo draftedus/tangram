@@ -1,6 +1,6 @@
 use tangram_charts::{bar_chart::BarChart, box_chart::BoxChart, hydrate_chart};
-use wasm_bindgen::prelude::*;
 use tangram_ui as ui;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
 pub fn start() {

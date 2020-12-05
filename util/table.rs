@@ -1,5 +1,5 @@
 use crate::zip;
-use ndarray::prelude::*;
+use tangram_deps::ndarray::prelude::*;
 
 pub struct Table<'a> {
 	padding: usize,

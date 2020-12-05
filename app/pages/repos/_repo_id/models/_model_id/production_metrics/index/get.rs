@@ -18,11 +18,8 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
-use tangram_deps::{
-	http, hyper,
-	pinwheel::{self, client},
-};
-use tangram_util::{error::Result, id::Id, zip};
+use tangram_deps::{http, hyper};
+use tangram_util::{client, error::Result, id::Id, zip};
 
 pub async fn get(
 	context: &Context,

@@ -19,12 +19,8 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
-use tangram_deps::{
-	http, hyper,
-	num_traits::ToPrimitive,
-	pinwheel::{self, client},
-};
-use tangram_util::{error::Result, id::Id};
+use tangram_deps::{http, hyper, num_traits::ToPrimitive};
+use tangram_util::{client, error::Result, id::Id};
 
 const LARGE_ABSENT_RATIO_THRESHOLD: f32 = 0.1;
 const LARGE_INVALID_RATIO_THRESHOLD: f32 = 0.1;

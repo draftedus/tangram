@@ -1,9 +1,0 @@
-{
-	"extends": "../tscommon.json",
-	"compilerOptions": {
-		"baseUrl": ".",
-		"outDir": "../build/tsc/charts"
-	},
-	"references": [],
-	"include": ["**/*.ts", "**/*.tsx"]
-}

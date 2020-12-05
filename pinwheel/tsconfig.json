@@ -1,9 +1,0 @@
-{
-	"extends": "../tscommon.json",
-	"compilerOptions": {
-		"baseUrl": ".",
-		"outDir": "../build/tsc/pinwheel"
-	},
-	"references": [],
-	"include": ["**/*.ts", "**/*.tsx"]
-}

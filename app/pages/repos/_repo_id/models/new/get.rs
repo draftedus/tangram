@@ -5,11 +5,8 @@ use tangram_app_common::{
 	Context,
 };
 use tangram_app_layouts::{app_layout::get_app_layout_info, document::PageInfo};
-use tangram_deps::{
-	http, hyper,
-	pinwheel::{self, client},
-};
-use tangram_util::{error::Result, id::Id};
+use tangram_deps::{http, hyper};
+use tangram_util::{client, error::Result, id::Id};
 
 pub async fn get(
 	context: &Context,
