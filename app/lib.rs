@@ -247,7 +247,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "tuning"]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_tuning::get(
-				&pinwheel,
 				context,
 				request,
 				model_id,
@@ -303,7 +302,6 @@ async fn request_handler(
 		}
 		(&http::Method::GET, &["repos", _repo_id, "models", model_id, "production_metrics", "class_metrics"]) => {
 			tangram_app_pages_repos_repo_id_models_model_id_production_metrics_class_metrics::get(
-				&pinwheel,
 				context,
 				request,
 				model_id,
