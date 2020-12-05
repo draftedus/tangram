@@ -4,6 +4,7 @@ mod avatar;
 mod button;
 mod callout;
 mod card;
+mod code;
 mod confusion_matrix;
 mod confusion_matrix_comparison;
 mod details;

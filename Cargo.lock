@@ -3032,6 +3032,7 @@ version = "0.0.0"
 dependencies = [
  "html",
  "num-traits",
+ "rand",
  "wasm-bindgen",
  "web-sys",
 ]
