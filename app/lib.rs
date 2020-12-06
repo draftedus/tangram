@@ -363,15 +363,29 @@ async fn request_handler(
 			).boxed()
 		}
 		_ => async {
-			let out_dir = PathBuf::from(env!("OUT_DIR"));
-			if let Some(response) = serve_static(&out_dir, path) {
-				Ok(response)
-			} else {
-				Ok(http::Response::builder()
-					.status(http::StatusCode::NOT_FOUND)
-					.body(hyper::Body::from("not found"))
-					.unwrap())
+			#[cfg(debug_assertions)]
+			{
+				let out_dir = PathBuf::from(env!("OUT_DIR"));
+				if let Some(response) = serve_from_dir(&out_dir, path).await? {
+					return Ok(response)
+				}
+				if let Some(path) = path.strip_prefix("/assets") {
+					if let Some(response) = serve_from_dir(&Path::new("."), path).await? {
+						return Ok(response)
+					}
+				}
 			}
+			#[cfg(not(debug_assertions))]
+			{
+				let dir = include_dir!(env!("OUT_DIR"));
+				if let Some(response) = serve_from_include_dir(&dir, path).await? {
+					return Ok(response)
+				}
+			}
+			Ok(http::Response::builder()
+				.status(http::StatusCode::NOT_FOUND)
+				.body(hyper::Body::from("not found"))
+				.unwrap())
 		}.boxed(),
 	};
 	let result = result.await;
@@ -394,21 +408,40 @@ async fn request_handler(
 	response
 }
 
-fn serve_static(dir: &Path, path: &str) -> Option<http::Response<hyper::Body>> {
+async fn serve_from_dir(dir: &Path, path: &str) -> Result<Option<http::Response<hyper::Body>>> {
 	let static_path = dir.join(path.strip_prefix('/').unwrap());
 	let static_path_exists = std::fs::metadata(&static_path)
 		.map(|metadata| metadata.is_file())
 		.unwrap_or(false);
 	if !static_path_exists {
-		return None;
+		return Ok(None);
 	}
-	let body = std::fs::read(&static_path).unwrap();
+	let body = tokio::fs::read(&static_path).await?;
 	let mut response = http::Response::builder();
 	if let Some(content_type) = content_type(&static_path) {
 		response = response.header(http::header::CONTENT_TYPE, content_type);
 	}
 	let response = response.body(hyper::Body::from(body)).unwrap();
-	Some(response)
+	Ok(Some(response))
+}
+
+#[cfg(not(debug_assertions))]
+async fn serve_from_include_dir(
+	dir: &tangram_deps::include_dir::Dir<'static>,
+	path: &str,
+) -> Result<Option<http::Response<hyper::Body>>> {
+	let static_path = Path::new(path.strip_prefix('/').unwrap());
+	let static_path_exists = dir.contains(&static_path);
+	if !static_path_exists {
+		return Ok(None);
+	}
+	let body = tokio::fs::read(&static_path).await?;
+	let mut response = http::Response::builder();
+	if let Some(content_type) = content_type(&static_path) {
+		response = response.header(http::header::CONTENT_TYPE, content_type);
+	}
+	let response = response.body(hyper::Body::from(body)).unwrap();
+	Ok(Some(response))
 }
 
 fn content_type(path: &std::path::Path) -> Option<&'static str> {
