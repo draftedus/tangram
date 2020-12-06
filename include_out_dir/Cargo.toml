@@ -1,0 +1,12 @@
+[package]
+name = "include_out_dir"
+version = "0.0.0"
+edition = "2018"
+license = "MIT"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+derive_more = "0.99"
+include_out_dir_macro = { path = "macro" }

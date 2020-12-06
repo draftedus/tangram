@@ -9,6 +9,7 @@ pub use html;
 pub use http;
 pub use hyper;
 pub use include_dir;
+pub use include_out_dir;
 pub use itertools;
 pub use lexical;
 pub use maplit;

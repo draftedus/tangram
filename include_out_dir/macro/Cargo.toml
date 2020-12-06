@@ -1,5 +1,5 @@
 [package]
-name = "html_macro"
+name = "include_out_dir_macro"
 version = "0.0.0"
 edition = "2018"
 license = "MIT"
@@ -12,3 +12,4 @@ proc-macro = true
 syn = { version = "1", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
+walkdir = "2"

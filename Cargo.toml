@@ -6,6 +6,7 @@ members = [
 	"deps",
 	"features",
 	"html",
+	"include_out_dir",
 	"libtangram",
 	"linear",
 	"metrics",

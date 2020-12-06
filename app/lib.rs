@@ -377,7 +377,8 @@ async fn request_handler(
 			}
 			#[cfg(not(debug_assertions))]
 			{
-				let dir = include_dir!(env!("OUT_DIR"));
+				use tangram_deps::include_out_dir;
+				let dir = include_out_dir::include_out_dir!();
 				if let Some(response) = serve_from_include_dir(&dir, path).await? {
 					return Ok(response)
 				}
@@ -427,15 +428,15 @@ async fn serve_from_dir(dir: &Path, path: &str) -> Result<Option<http::Response<
 
 #[cfg(not(debug_assertions))]
 async fn serve_from_include_dir(
-	dir: &tangram_deps::include_dir::Dir<'static>,
+	dir: &tangram_deps::include_out_dir::Dir,
 	path: &str,
 ) -> Result<Option<http::Response<hyper::Body>>> {
 	let static_path = Path::new(path.strip_prefix('/').unwrap());
-	let static_path_exists = dir.contains(&static_path);
-	if !static_path_exists {
+	let body = if let Some(data) = dir.read(&static_path) {
+		data
+	} else {
 		return Ok(None);
-	}
-	let body = tokio::fs::read(&static_path).await?;
+	};
 	let mut response = http::Response::builder();
 	if let Some(content_type) = content_type(&static_path) {
 		response = response.header(http::header::CONTENT_TYPE, content_type);

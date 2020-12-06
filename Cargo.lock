@@ -1043,6 +1043,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "include_out_dir"
+version = "0.0.0"
+dependencies = [
+ "derive_more",
+ "include_out_dir_macro",
+]
+
+[[package]]
+name = "include_out_dir_macro"
+version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "walkdir",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3094,6 +3112,7 @@ dependencies = [
  "http",
  "hyper",
  "include_dir",
+ "include_out_dir",
  "itertools",
  "lexical",
  "maplit",
