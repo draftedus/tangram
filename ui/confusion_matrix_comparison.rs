@@ -1,6 +1,7 @@
 use crate::Token;
 use html::{classes, component, html, style};
 use num_traits::ToPrimitive;
+use wasm_bindgen::{prelude::*, JsCast};
 
 // |-----------------------------------------------------------|
 // |           ||       |                Actual                |
@@ -34,6 +35,7 @@ fn default_value_formatter(value: f32) -> String {
 
 #[component]
 pub fn ConfusionMatrixComparison(
+	id: Option<String>,
 	class_label: String,
 	color_a: String,
 	color_b: String,
@@ -45,7 +47,7 @@ pub fn ConfusionMatrixComparison(
 ) {
 	let value_formatter = value_formatter.unwrap_or(default_value_formatter);
 	html! {
-		<div class="confusion-matrix-comparison-wrapper">
+		<div class="confusion-matrix-comparison-wrapper" id={id}>
 			<ConfusionMatrixLabel area={"actual-true-label"} left={None}>
 				<div>{"Actual"}</div>
 				<Token color={None}>{class_label.clone()}</Token>
@@ -139,13 +141,13 @@ fn ConfusionMatrixComparisonItem(
 	let value_a = value_formatter(value_a.to_f32().unwrap());
 	let value_b = value_formatter(value_b.to_f32().unwrap());
 	html! {
-		<div class={class} style={wrapper_style}>
+		<div class={class} style={wrapper_style} data-area={area}>
 			<div class="confusion-matrix-comparison-item-title">{label}</div>
 			<div class="confusion-matrix-comparison-number-comparison-wrapper">
-				<div class="confusion-matrix-comparison-item-value">
+				<div class="confusion-matrix-comparison-item-value" data-field={"value-a"}>
 					{value_a}
 				</div>
-				<div class="confusion-matrix-comparison-item-value">
+				<div class="confusion-matrix-comparison-item-value" data-field={"value-b"}>
 					{value_b}
 				</div>
 				<div>
@@ -172,4 +174,59 @@ pub fn ConfusionMatrixLabel(area: String, left: Option<bool>) {
 			{children}
 		</div>
 	}
+}
+
+pub fn update_confusion_matrix_comparison_item(id: &str, area: &str, value_a: f32, value_b: f32) {
+	let document = web_sys::window().unwrap().document().unwrap();
+	let value_a_element = document
+		.query_selector(&format!(
+			"#{} [data-area='{}'] [data-field='value-a']",
+			id, area
+		))
+		.unwrap()
+		.unwrap()
+		.dyn_into::<web_sys::HtmlElement>()
+		.unwrap();
+	let value_b_element = document
+		.query_selector(&format!(
+			"#{} [data-area='{}'] [data-field='value-b']",
+			id, area
+		))
+		.unwrap()
+		.unwrap()
+		.dyn_into::<web_sys::HtmlElement>()
+		.unwrap();
+	value_a_element.set_inner_html(&default_value_formatter(value_a));
+	value_b_element.set_inner_html(&default_value_formatter(value_b));
+}
+
+pub fn update_confusion_matrix_comparison(
+	id: &str,
+	value_a: ConfusionMatrixComparisonValue,
+	value_b: ConfusionMatrixComparisonValue,
+) {
+	update_confusion_matrix_comparison_item(
+		id,
+		"false-positive",
+		value_a.false_positive,
+		value_b.false_positive,
+	);
+	update_confusion_matrix_comparison_item(
+		id,
+		"false-negative",
+		value_a.false_negative,
+		value_b.false_negative,
+	);
+	update_confusion_matrix_comparison_item(
+		id,
+		"true-positive",
+		value_a.true_positive,
+		value_b.true_positive,
+	);
+	update_confusion_matrix_comparison_item(
+		id,
+		"true-negative",
+		value_a.true_negative,
+		value_b.true_negative,
+	);
 }

@@ -7,7 +7,7 @@ use tangram_app_common::{
 };
 use tangram_app_layouts::{document::PageInfo, model_layout::get_model_layout_info};
 use tangram_deps::{http, hyper};
-use tangram_util::{error::Result, id::Id};
+use tangram_util::{client, error::Result, id::Id};
 
 pub async fn get(
 	context: &Context,
@@ -39,10 +39,10 @@ pub async fn get(
 				.iter()
 				.map(|metrics| Metrics {
 					threshold: metrics.threshold,
-					precision: metrics.precision,
-					recall: metrics.recall,
-					accuracy: metrics.accuracy,
-					f1_score: metrics.f1_score,
+					precision: Some(metrics.precision),
+					recall: Some(metrics.recall),
+					accuracy: Some(metrics.accuracy),
+					f1_score: Some(metrics.f1_score),
 					false_negatives: metrics.false_negatives,
 					false_positives: metrics.false_positives,
 					true_negatives: metrics.true_negatives,
@@ -64,7 +64,7 @@ pub async fn get(
 		model_layout_info,
 	};
 	let page_info = PageInfo {
-		client_wasm_js_src: None,
+		client_wasm_js_src: Some(client!()),
 	};
 	let html = render(props, page_info);
 	let response = http::Response::builder()

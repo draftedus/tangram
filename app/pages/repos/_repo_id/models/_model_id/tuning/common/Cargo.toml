@@ -1,0 +1,10 @@
+[package]
+edition = "2018"
+name = "tangram_app_pages_repos_repo_id_models_model_id_tuning_common"
+version = "0.0.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+serde = "1"

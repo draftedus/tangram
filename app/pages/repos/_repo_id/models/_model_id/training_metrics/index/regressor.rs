@@ -23,6 +23,7 @@ pub fn RegressorTrainingMetricsIndexPage(props: RegressorProps) {
 				<MetricsRow>
 					<ui::Card>
 						<ui::NumberComparisonChart
+							id={None}
 							color_a={BASELINE_COLOR.to_owned()}
 							color_b={TRAINING_COLOR.to_owned()}
 							title={"Root Mean Squared Error".to_owned()}
@@ -35,6 +36,7 @@ pub fn RegressorTrainingMetricsIndexPage(props: RegressorProps) {
 					</ui::Card>
 					<ui::Card>
 						<ui::NumberComparisonChart
+							id={None}
 							color_a={BASELINE_COLOR.to_owned()}
 							color_b={TRAINING_COLOR.to_owned()}
 							title={"Mean Squared Error".to_owned()}

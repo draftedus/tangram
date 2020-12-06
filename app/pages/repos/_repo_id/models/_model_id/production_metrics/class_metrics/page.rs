@@ -250,6 +250,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 					<MetricsRow>
 						<ui::Card>
 							<ui::NumberComparisonChart
+								id={None}
 								color_a={TRAINING_COLOR.to_owned()}
 								color_b={PRODUCTION_COLOR.to_owned()}
 								title={"Precision".to_owned()}
@@ -262,6 +263,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 							</ui::Card>
 							<ui::Card>
 								<ui::NumberComparisonChart
+									id={None}
 									color_a={TRAINING_COLOR.to_owned()}
 									color_b={PRODUCTION_COLOR.to_owned()}
 									title={"Recall".to_owned()}
@@ -318,6 +320,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 						<MetricsRow>
 							<ui::Card>
 								<ui::NumberComparisonChart
+									id={None}
 									color_a={TRAINING_COLOR.to_owned()}
 									color_b={PRODUCTION_COLOR.to_owned()}
 									title={"F1 Score".to_owned()}
@@ -375,6 +378,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 						<ui::H2 center={false}>{"Production v. Training Confusion Matrix"}</ui::H2>
 						<ui::P>{CONFUSION_MATRIX}</ui::P>
 						<ui::ConfusionMatrixComparison
+							id={None}
 							class_label={props.class.to_owned()}
 							color_a={TRAINING_COLOR.to_owned()}
 							color_b={PRODUCTION_COLOR.to_owned()}

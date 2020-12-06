@@ -138,6 +138,7 @@ pub fn MulticlassClassifierProductionMetrics(props: MulticlassClassifierProducti
 				<ui::P>{ACCURACY}</ui::P>
 				<ui::Card>
 					<ui::NumberComparisonChart
+						id={None}
 						color_a={TRAINING_COLOR.to_owned()}
 						color_b={PRODUCTION_COLOR.to_owned()}
 						title={"Accuracy".to_owned()}

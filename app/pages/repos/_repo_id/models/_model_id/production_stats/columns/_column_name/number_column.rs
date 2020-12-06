@@ -160,6 +160,7 @@ pub fn NumberColumn(props: NumberColumnProps) {
 			<MetricsRow>
 				<ui::Card>
 					<ui::NumberComparisonChart
+						id={None}
 						color_a={TRAINING_COLOR.to_owned()}
 						color_b={PRODUCTION_COLOR.to_owned()}
 						title={"Min".to_owned()}
@@ -172,6 +173,7 @@ pub fn NumberColumn(props: NumberColumnProps) {
 				</ui::Card>
 				<ui::Card>
 					<ui::NumberComparisonChart
+						id={None}
 						color_a={TRAINING_COLOR.to_owned()}
 						color_b={PRODUCTION_COLOR.to_owned()}
 						title={"Max".to_owned()}
@@ -186,6 +188,7 @@ pub fn NumberColumn(props: NumberColumnProps) {
 			<MetricsRow>
 				<ui::Card>
 					<ui::NumberComparisonChart
+						id={None}
 						color_a={TRAINING_COLOR.to_owned()}
 						color_b={PRODUCTION_COLOR.to_owned()}
 						title={"Mean".to_owned()}
@@ -198,6 +201,7 @@ pub fn NumberColumn(props: NumberColumnProps) {
 				</ui::Card>
 				<ui::Card>
 					<ui::NumberComparisonChart
+						id={None}
 						color_a={TRAINING_COLOR.to_owned()}
 						color_b={PRODUCTION_COLOR.to_owned()}
 						title={"Standard Deviation".to_owned()}

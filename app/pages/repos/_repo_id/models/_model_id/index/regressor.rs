@@ -79,6 +79,7 @@ pub fn regressor_index_page(props: RegressorProps) -> html::Node {
 				</ui::P>
 				<ui::Card>
 					<ui::NumberComparisonChart
+						id={None}
 						color_a={BASELINE_COLOR.to_owned()}
 						color_b={TRAINING_COLOR.to_owned()}
 						title={"Root Mean Squared Error".to_owned()}

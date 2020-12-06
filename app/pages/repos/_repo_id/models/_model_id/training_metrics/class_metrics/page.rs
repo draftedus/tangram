@@ -1,4 +1,5 @@
 use tangram_app_common::{
+	class_select_field::ClassSelectField,
 	definitions::{CONFUSION_MATRIX, PRECISION_RECALL},
 	metrics_row::MetricsRow,
 };
@@ -56,7 +57,7 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 					action={None}
 					autocomplete={None}
 				>
-				// 	<ClassSelectField class={props.class} classes={props.classes} />
+					<ClassSelectField class={props.class.clone()} classes={props.classes} />
 					<noscript>
 						<ui::Button
 							color={None}

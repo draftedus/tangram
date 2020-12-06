@@ -8,9 +8,14 @@ path = "lib.rs"
 
 [dependencies]
 serde = "1"
+serde_json = "1"
 tangram_app_common = { path = "../../../../../../common" }
 tangram_app_layouts = { path = "../../../../../../layouts" }
 tangram_core = { path = "../../../../../../../core" }
 tangram_deps = { path = "../../../../../../../deps" }
 tangram_ui = { path = "../../../../../../../ui" }
 tangram_util = { path = "../../../../../../../util" }
+tangram_app_pages_repos_repo_id_models_model_id_tuning_common = { path = "common" }
+
+[target.wasm32-unknown-unknown.dependencies]
+tangram_app_pages_repos_repo_id_models_model_id_tuning_client = { path = "client" }

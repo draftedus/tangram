@@ -6,6 +6,7 @@ use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
 };
+pub use tangram_app_pages_repos_repo_id_models_model_id_tuning_common::{ClientProps, Metrics};
 use tangram_deps::{
 	html::{self, component, html},
 	num_traits::ToPrimitive,
@@ -22,19 +23,6 @@ pub struct TuningProps {
 	pub baseline_threshold: f32,
 	pub metrics: Vec<Metrics>,
 	pub class: String,
-}
-
-#[derive(Clone)]
-pub struct Metrics {
-	pub accuracy: f32,
-	pub f1_score: f32,
-	pub false_negatives: u64,
-	pub false_positives: u64,
-	pub precision: f32,
-	pub recall: f32,
-	pub threshold: f32,
-	pub true_negatives: u64,
-	pub true_positives: u64,
 }
 
 pub fn render(props: Props, page_info: PageInfo) -> String {
@@ -74,119 +62,135 @@ fn Tuning(props: TuningProps) {
 	let baseline_metrics = &props.metrics[baseline_index];
 	let selected_threshold_metrics = &props.metrics[selected_threshold_index];
 	let value_formatter: fn(f32) -> String = ui::format_percent;
+	let client_props = ClientProps {
+		baseline_metrics: baseline_metrics.clone(),
+		threshold_metrics: props.metrics.clone(),
+	};
+	let client_props = serde_json::to_string(&client_props).unwrap();
 	html! {
-		<ui::S1>
-			<ui::H1 center={false}>{"Tuning"}</ui::H1>
-			<ui::S2>
-				<ui::P>
-					{
-						"Drag the silder to see how metrics change with varying settings of the threshold."
-					}
-				</ui::P>
-				<ui::Slider
-					id={"slider".to_owned()}
-					max={(thresholds.len() - 1).to_f32().unwrap()}
-					min={0.0}
-					value={selected_threshold_index}
-				/>
-			</ui::S2>
-			{if selected_threshold == 0.0 {
-				Some(html! {
-					<ui::Alert
-						title={None}
-						level={ui::Level::Info}
-					>
-						{"A threshold of 0 makes your model predict the same class for every input."}
-					</ui::Alert>
-				})
-				} else if selected_threshold.partial_cmp(&1.0).unwrap() == std::cmp::Ordering::Equal {
+		<div id="tuning-page" data-props={client_props}>
+			<ui::S1>
+				<ui::H1 center={false}>{"Tuning"}</ui::H1>
+				<ui::S2>
+					<ui::P>
+						{
+							"Drag the silder to see how metrics change with varying settings of the threshold."
+						}
+					</ui::P>
+					<ui::Slider
+						id={"tuning-slider".to_owned()}
+						max={(thresholds.len() - 1).to_f32().unwrap()}
+						min={0.0}
+						value={selected_threshold_index}
+					/>
+				</ui::S2>
+				{if selected_threshold == 0.0 {
 					Some(html! {
 						<ui::Alert
 							title={None}
 							level={ui::Level::Info}
 						>
-							{"A threshold of 1 makes your model predict the same class for every input."}
+							{
+								"A threshold of 0 makes your model predict the same class for every input."
+							}
 						</ui::Alert>
 					})
-				} else {
-					None
-			}}
-			<ui::S2>
-				<MetricsRow>
-					<ui::Card>
-						<ui::NumberComparisonChart
-							color_a={BASELINE_COLOR.to_owned()}
-							color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
-							title={"Accuracy".to_owned()}
-							value_a={baseline_metrics.accuracy}
-							value_a_title={"Baseline".to_owned()}
-							value_b={selected_threshold_metrics.accuracy}
-							value_b_title={"Selected Threshold".to_owned()}
-							value_formatter={value_formatter}
-						/>
-					</ui::Card>
-					<ui::Card>
-						<ui::NumberComparisonChart
-							color_a={BASELINE_COLOR.to_owned()}
-							color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
-							title={"F1 Score".to_owned()}
-							value_a={baseline_metrics.f1_score}
-							value_a_title={"Baseline".to_owned()}
-							value_b={selected_threshold_metrics.f1_score}
-							value_b_title={"Selected Threshold".to_owned()}
-							value_formatter={value_formatter}
-						/>
-					</ui::Card>
-				</MetricsRow>
-				<MetricsRow>
-					<ui::Card>
-						<ui::NumberComparisonChart
-							color_a={BASELINE_COLOR.to_owned()}
-							color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
-							title={"Precision".to_owned()}
-							value_a={baseline_metrics.precision}
-							value_a_title={"Baseline".to_owned()}
-							value_b={selected_threshold_metrics.precision}
-							value_b_title={"Selected Threshold".to_owned()}
-							value_formatter={value_formatter}
-						/>
-					</ui::Card>
-					<ui::Card>
-						<ui::NumberComparisonChart
-							color_a={BASELINE_COLOR.to_owned()}
-							color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
-							title={"Recall".to_owned()}
-							value_a={baseline_metrics.recall}
-							value_a_title={"Baseline".to_owned()}
-							value_b={selected_threshold_metrics.recall}
-							value_b_title="Selected Threshold"
-							value_formatter={value_formatter}
-						/>
-					</ui::Card>
-				</MetricsRow>
-			</ui::S2>
-			<ui::S2>
-				<ui::ConfusionMatrixComparison
-					class_label={props.class.to_owned()}
-					color_a={BASELINE_COLOR.to_owned()}
-					color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
-					value_a={ui::ConfusionMatrixComparisonValue {
-						false_negative: baseline_metrics.false_negatives.to_f32().unwrap(),
-						false_positive: baseline_metrics.false_positives.to_f32().unwrap(),
-						true_negative: baseline_metrics.true_negatives.to_f32().unwrap(),
-						true_positive: baseline_metrics.true_positives.to_f32().unwrap(),
-					}}
-					value_a_title="Baseline"
-					value_b={ui::ConfusionMatrixComparisonValue {
-						false_negative: selected_threshold_metrics.false_negatives.to_f32().unwrap(),
-						false_positive: selected_threshold_metrics.false_positives.to_f32().unwrap(),
-						true_negative: selected_threshold_metrics.true_negatives.to_f32().unwrap(),
-						true_positive: selected_threshold_metrics.true_positives.to_f32().unwrap(),
-					}}
-					value_b_title={"Selected Threshold".to_owned()}
-					value_formatter={None}
-				/>
-			</ui::S2>
-		</ui::S1>
+					} else if selected_threshold.partial_cmp(&1.0).unwrap() == std::cmp::Ordering::Equal {
+						Some(html! {
+							<ui::Alert
+								title={None}
+								level={ui::Level::Info}
+							>
+								{
+									"A threshold of 1 makes your model predict the same class for every input."
+								}
+							</ui::Alert>
+						})
+					} else {
+						None
+				}}
+				<ui::S2>
+					<MetricsRow>
+						<ui::Card>
+							<ui::NumberComparisonChart
+								id={"tuning-accuracy".to_owned()}
+								color_a={BASELINE_COLOR.to_owned()}
+								color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
+								title={"Accuracy".to_owned()}
+								value_a={baseline_metrics.accuracy.unwrap()}
+								value_a_title={"Baseline".to_owned()}
+								value_b={selected_threshold_metrics.accuracy.unwrap()}
+								value_b_title={"Selected Threshold".to_owned()}
+								value_formatter={value_formatter}
+							/>
+						</ui::Card>
+						<ui::Card>
+							<ui::NumberComparisonChart
+								id={"tuning-f1-score".to_owned()}
+								color_a={BASELINE_COLOR.to_owned()}
+								color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
+								title={"F1 Score".to_owned()}
+								value_a={baseline_metrics.f1_score.unwrap()}
+								value_a_title={"Baseline".to_owned()}
+								value_b={selected_threshold_metrics.f1_score.unwrap()}
+								value_b_title={"Selected Threshold".to_owned()}
+								value_formatter={value_formatter}
+							/>
+						</ui::Card>
+					</MetricsRow>
+					<MetricsRow>
+						<ui::Card>
+							<ui::NumberComparisonChart
+								id={"tuning-precision".to_owned()}
+								color_a={BASELINE_COLOR.to_owned()}
+								color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
+								title={"Precision".to_owned()}
+								value_a={baseline_metrics.precision.unwrap()}
+								value_a_title={"Baseline".to_owned()}
+								value_b={selected_threshold_metrics.precision.unwrap()}
+								value_b_title={"Selected Threshold".to_owned()}
+								value_formatter={value_formatter}
+							/>
+						</ui::Card>
+						<ui::Card>
+							<ui::NumberComparisonChart
+								id={"tuning-recall".to_owned()}
+								color_a={BASELINE_COLOR.to_owned()}
+								color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
+								title={"Recall".to_owned()}
+								value_a={baseline_metrics.recall.unwrap()}
+								value_a_title={"Baseline".to_owned()}
+								value_b={selected_threshold_metrics.recall.unwrap()}
+								value_b_title="Selected Threshold"
+								value_formatter={value_formatter}
+							/>
+						</ui::Card>
+					</MetricsRow>
+				</ui::S2>
+				<ui::S2>
+					<ui::ConfusionMatrixComparison
+						id={"tuning-confusion-matrix-comparison".to_owned()}
+						class_label={props.class.to_owned()}
+						color_a={BASELINE_COLOR.to_owned()}
+						color_b={SELECTED_THRESHOLD_COLOR.to_owned()}
+						value_a={ui::ConfusionMatrixComparisonValue {
+							false_negative: baseline_metrics.false_negatives.to_f32().unwrap(),
+							false_positive: baseline_metrics.false_positives.to_f32().unwrap(),
+							true_negative: baseline_metrics.true_negatives.to_f32().unwrap(),
+							true_positive: baseline_metrics.true_positives.to_f32().unwrap(),
+						}}
+						value_a_title="Baseline"
+						value_b={ui::ConfusionMatrixComparisonValue {
+							false_negative: selected_threshold_metrics.false_negatives.to_f32().unwrap(),
+							false_positive: selected_threshold_metrics.false_positives.to_f32().unwrap(),
+							true_negative: selected_threshold_metrics.true_negatives.to_f32().unwrap(),
+							true_positive: selected_threshold_metrics.true_positives.to_f32().unwrap(),
+						}}
+						value_b_title={"Selected Threshold".to_owned()}
+						value_formatter={None}
+					/>
+				</ui::S2>
+			</ui::S1>
+		</div>
 	}
 }

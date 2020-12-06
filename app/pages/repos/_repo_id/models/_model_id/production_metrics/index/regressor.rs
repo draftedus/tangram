@@ -149,6 +149,7 @@ pub fn RegressorProductionMetrics(props: RegressorProductionMetricsProps) {
 			<MetricsRow>
 				<ui::Card>
 					<ui::NumberComparisonChart
+						id={None}
 						color_a={TRAINING_COLOR.to_owned()}
 						color_b={PRODUCTION_COLOR.to_owned()}
 						title={"Root Mean Squared Error".to_owned()}
@@ -161,6 +162,7 @@ pub fn RegressorProductionMetrics(props: RegressorProductionMetricsProps) {
 				</ui::Card>
 				<ui::Card>
 					<ui::NumberComparisonChart
+						id={None}
 						color_a={TRAINING_COLOR.to_owned()}
 						color_b={PRODUCTION_COLOR.to_owned()}
 						title={"Mean Squared Error".to_owned()}

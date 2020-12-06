@@ -41,6 +41,7 @@ pub fn MulticlassClassifierTrainingMetricsIndexPage(props: MulticlassClassifierP
 			<ui::P>{ACCURACY.to_string()}</ui::P>
 			<ui::Card>
 				<ui::NumberComparisonChart
+					id={None}
 					color_a={BASELINE_COLOR.to_string()}
 					color_b={TRAINING_COLOR.to_string()}
 					title={"Accuracy".to_owned()}

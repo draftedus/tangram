@@ -1,0 +1,26 @@
+[package]
+edition = "2018"
+name = "tangram_app_pages_repos_repo_id_models_model_id_tuning_client"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+path = "client.rs"
+
+[dependencies]
+console_error_panic_hook = "0.1"
+serde = "1"
+serde_json = "1"
+tangram_charts = { path = "../../../../../../../../charts" }
+tangram_ui = { path = "../../../../../../../../ui" }
+tangram_app_pages_repos_repo_id_models_model_id_tuning_common = { path = "../common" }
+wasm-bindgen = "0.2.68"
+num-traits = "0.2"
+web-sys = { version = "0.3.45", features = [
+  "console",
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Node",
+  "Window",
+] }
