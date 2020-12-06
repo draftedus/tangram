@@ -43,6 +43,7 @@ pub struct CodeText {
 
 #[component]
 pub fn CodeSelect(hide_line_numbers: Option<bool>, code_text: CodeText) {
+	// TODO this sucks
 	let option_id = rand::thread_rng().gen::<f32>().to_string();
 	html! {
 		<div class="code code-grid">
@@ -92,6 +93,7 @@ pub fn CodeOption(
 		Language::Python => "python".to_owned(),
 		Language::Ruby => "ruby".to_owned(),
 	};
+	// TODO this sucks
 	let option_id = rand::thread_rng().gen::<f32>().to_string();
 	let hide_line_numbers = hide_line_numbers.unwrap_or(false);
 	let style = style! {
