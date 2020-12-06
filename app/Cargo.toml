@@ -9,8 +9,11 @@ path = "lib.rs"
 
 [build-dependencies]
 ignore = "0.4"
+rayon = "1.5"
 tangram_util = { path = "../util" }
-walkdir = "2"
+toml = "0.5"
+wasm-bindgen-cli-support = "0.2.69"
+which = "4"
 
 [dependencies]
 tangram_api = { path = "api" }

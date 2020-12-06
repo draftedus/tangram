@@ -10,7 +10,7 @@ path = "lib.rs"
 [dependencies]
 itertools = "0.9"
 fnv = "1"
-ndarray = "0.13"
+ndarray = "0.14"
 num-traits = "0.2"
 rmp-serde = "0.14"
 serde = { version = "1", features = ["derive"] }

@@ -60,12 +60,11 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 
 #[component]
 fn Tuning(props: TuningProps) {
-	let thresholds =
-		props
-			.metrics
-			.iter()
-			.map(|metric| metric.threshold)
-			.collect::<Vec<_>>();
+	let thresholds = props
+		.metrics
+		.iter()
+		.map(|metric| metric.threshold)
+		.collect::<Vec<_>>();
 	let baseline_index = thresholds
 		.iter()
 		.position(|value| (value - props.baseline_threshold).abs() < std::f32::EPSILON)

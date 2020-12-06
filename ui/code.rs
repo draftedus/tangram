@@ -1,7 +1,7 @@
 use html::{component, html, style};
 use rand::prelude::*;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
+// use wasm_bindgen::prelude::*;
+// use wasm_bindgen::JsCast;
 
 #[derive(Clone)]
 pub enum Language {
@@ -156,7 +156,7 @@ pub fn InlineCode() {
 }
 
 fn count_lines(text: String) -> usize {
-	let n_lines = text.split('\n').collect::<Vec<_>>().len();
+	let n_lines = text.split('\n').count();
 	if text.ends_with('\n') {
 		n_lines - 1
 	} else {
@@ -164,39 +164,39 @@ fn count_lines(text: String) -> usize {
 	}
 }
 
-pub fn boot_code_select() {
-	let document = web_sys::window().unwrap().document().unwrap();
-	let radio_elements = document.query_selector_all("input[type=radio]").unwrap();
-	let callback_fn = Closure::<dyn Fn(_)>::wrap(Box::new(move |event: web_sys::Event| {
-		let lang = event
-			.current_target()
-			.unwrap()
-			.dyn_into::<web_sys::HtmlElement>()
-			.unwrap()
-			.dataset()
-			.get("lang")
-			.unwrap();
-		let document = web_sys::window().unwrap().document().unwrap();
-		let lang_elements = document
-			.query_selector_all(&format!("input[type=radio][data-lang={}]", lang))
-			.unwrap();
-		for index in 0..lang_elements.length() {
-			let lang_element = lang_elements
-				.get(index)
-				.unwrap()
-				.dyn_into::<web_sys::HtmlInputElement>()
-				.unwrap();
-			lang_element.set_checked(true);
-		}
-	}));
-	for index in 0..radio_elements.length() {
-		let radio_element = radio_elements
-			.get(index)
-			.unwrap()
-			.dyn_into::<web_sys::HtmlInputElement>()
-			.unwrap();
-		radio_element
-			.add_event_listener_with_callback("click", callback_fn.as_ref().unchecked_ref())
-			.unwrap();
-	}
-}
+// pub fn boot_code_select() {
+// 	let document = web_sys::window().unwrap().document().unwrap();
+// 	let radio_elements = document.query_selector_all("input[type=radio]").unwrap();
+// 	let callback_fn = Closure::<dyn Fn(_)>::wrap(Box::new(move |event: web_sys::Event| {
+// 		let document = web_sys::window().unwrap().document().unwrap();
+// 		let lang = event
+// 			.current_target()
+// 			.unwrap()
+// 			.dyn_into::<web_sys::HtmlElement>()
+// 			.unwrap()
+// 			.dataset()
+// 			.get("lang")
+// 			.unwrap();
+// 		let lang_elements = document
+// 			.query_selector_all(&format!("input[type=radio][data-lang={}]", lang))
+// 			.unwrap();
+// 		for index in 0..lang_elements.length() {
+// 			let lang_element = lang_elements
+// 				.get(index)
+// 				.unwrap()
+// 				.dyn_into::<web_sys::HtmlInputElement>()
+// 				.unwrap();
+// 			lang_element.set_checked(true);
+// 		}
+// 	}));
+// 	for index in 0..radio_elements.length() {
+// 		let radio_element = radio_elements
+// 			.get(index)
+// 			.unwrap()
+// 			.dyn_into::<web_sys::HtmlInputElement>()
+// 			.unwrap();
+// 		radio_element
+// 			.add_event_listener_with_callback("click", callback_fn.as_ref().unchecked_ref())
+// 			.unwrap();
+// 	}
+// }

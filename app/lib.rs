@@ -1,3 +1,4 @@
+use std::path::{Path, PathBuf};
 use std::{collections::BTreeMap, sync::Arc};
 use tangram_app_common::Context;
 use tangram_deps::{futures::FutureExt, http, hyper, sqlx, tokio, url};
@@ -361,11 +362,17 @@ async fn request_handler(
 				organization_id,
 			).boxed()
 		}
-		_ => {
-			// in dev, serve static files from the static directory, assets from the source tree, and client js/wasm.
-			// if nothing found, 404
-			todo!()
-		},
+		_ => async {
+			let out_dir = PathBuf::from(env!("OUT_DIR"));
+			if let Some(response) = serve_static(&out_dir, path) {
+				Ok(response)
+			} else {
+				Ok(http::Response::builder()
+					.status(http::StatusCode::NOT_FOUND)
+					.body(hyper::Body::from("not found"))
+					.unwrap())
+			}
+		}.boxed(),
 	};
 	let result = result.await;
 	let response = match result {
@@ -385,4 +392,36 @@ async fn request_handler(
 	};
 	eprintln!("{} {} {}", method, path, response.status());
 	response
+}
+
+fn serve_static(dir: &Path, path: &str) -> Option<http::Response<hyper::Body>> {
+	let static_path = dir.join(path.strip_prefix('/').unwrap());
+	let static_path_exists = std::fs::metadata(&static_path)
+		.map(|metadata| metadata.is_file())
+		.unwrap_or(false);
+	if !static_path_exists {
+		return None;
+	}
+	let body = std::fs::read(&static_path).unwrap();
+	let mut response = http::Response::builder();
+	if let Some(content_type) = content_type(&static_path) {
+		response = response.header(http::header::CONTENT_TYPE, content_type);
+	}
+	let response = response.body(hyper::Body::from(body)).unwrap();
+	Some(response)
+}
+
+fn content_type(path: &std::path::Path) -> Option<&'static str> {
+	let path = path.to_str().unwrap();
+	if path.ends_with(".css") {
+		Some("text/css")
+	} else if path.ends_with(".js") {
+		Some("text/javascript")
+	} else if path.ends_with(".svg") {
+		Some("image/svg+xml")
+	} else if path.ends_with(".wasm") {
+		Some("application/wasm")
+	} else {
+		None
+	}
 }
