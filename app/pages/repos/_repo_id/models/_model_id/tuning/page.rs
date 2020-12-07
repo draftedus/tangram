@@ -5,7 +5,7 @@ use tangram_app_layouts::{
 };
 pub use tangram_app_pages_repos_repo_id_models_model_id_tuning_common::{ClientProps, Metrics};
 use tangram_deps::{
-	html::{self, component, html},
+	html::{self, component, html, style},
 	num_traits::ToPrimitive,
 };
 use tangram_ui as ui;
@@ -63,6 +63,11 @@ fn Tuning(props: TuningProps) {
 		threshold_metrics: props.metrics.clone(),
 	};
 	let client_props = serde_json::to_string(&client_props).unwrap();
+	let style = style! {
+		"display" => "grid",
+		"gap" => "2rem",
+		"grid" => "auto auto / 50% 50%",
+	};
 	html! {
 		<div id="tuning-page" data-props={client_props}>
 			<ui::S1>
@@ -100,7 +105,7 @@ fn Tuning(props: TuningProps) {
 						None
 				}}
 				<ui::S2>
-					<div>
+					<div style={style}>
 						<ui::Card>
 							<ui::NumberComparisonChart
 								id={"tuning-accuracy".to_owned()}
