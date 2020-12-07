@@ -1,6 +1,6 @@
 use crate::Token;
 use html::{classes, component, html};
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::JsCast;
 
 fn default_value_formatter(value: Option<f32>) -> String {
 	match value {
