@@ -1,11 +1,11 @@
 use num_traits::Num;
 
-pub fn format_percent(value: f32) -> String {
-	format_percent_with_precision(value, 2)
-}
-
 pub fn format_number<T: Num + std::fmt::Display>(value: T) -> String {
 	value.to_string()
+}
+
+pub fn format_percent(value: f32) -> String {
+	format_percent_with_precision(value, 2)
 }
 
 pub fn format_percent_with_precision(value: f32, precision: usize) -> String {

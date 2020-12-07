@@ -1,2 +1,2 @@
-cargo run --release --bin tangram_scripts -- dev app -- $@
-# watchexec --watch . --ignore target --ignore target_wasm --restart -- cargo run -- app
+# cargo run --release --bin tangram_scripts -- dev app -- $@
+watchexec --watch . --ignore target --ignore target_wasm --restart -- cargo run -- app

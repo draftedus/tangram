@@ -1,36 +1,16 @@
-use std::{cell::RefCell, convert::Infallible, future::Future, panic::AssertUnwindSafe, sync::Arc};
+use crate::error::Result;
+use std::{
+	cell::RefCell, convert::Infallible, future::Future, panic::AssertUnwindSafe, path::Path,
+	sync::Arc,
+};
 use tangram_deps::{
 	backtrace::Backtrace,
 	futures::FutureExt,
 	hex, http, hyper,
+	include_out_dir::Dir,
 	sha2::{self, Digest},
 	tokio,
 };
-
-#[macro_export]
-macro_rules! asset {
-	($asset_relative_path:literal) => {{
-		let file_path = ::std::path::Path::new(file!());
-		let asset_path = file_path.parent().unwrap().join($asset_relative_path);
-		if cfg!(debug_assertions) {
-			format!("/assets/{}", asset_path.display())
-		} else {
-			let extension = asset_path.extension().map(|e| e.to_str().unwrap()).unwrap();
-			let hash = tangram_util::serve::hash(&asset_path.to_str().unwrap());
-			format!("/assets/{}.{}", hash, extension)
-			}
-		}};
-}
-
-#[macro_export]
-macro_rules! client {
-	() => {{
-		let file_path = ::std::path::Path::new(file!());
-		let client_crate_manifest_path = file_path.parent().unwrap().join("client/Cargo.toml");
-		let hash = tangram_util::serve::hash(client_crate_manifest_path.to_str().unwrap());
-		format!("/js/{}.js", hash)
-		}};
-}
 
 pub async fn serve<C, H, F>(
 	host: std::net::IpAddr,
@@ -108,6 +88,56 @@ where
 	Ok(())
 }
 
+pub async fn serve_from_dir(dir: &Path, path: &str) -> Result<Option<http::Response<hyper::Body>>> {
+	let static_path = dir.join(path.strip_prefix('/').unwrap());
+	let static_path_exists = std::fs::metadata(&static_path)
+		.map(|metadata| metadata.is_file())
+		.unwrap_or(false);
+	if !static_path_exists {
+		return Ok(None);
+	}
+	let body = tokio::fs::read(&static_path).await?;
+	let mut response = http::Response::builder();
+	if let Some(content_type) = content_type(&static_path) {
+		response = response.header(http::header::CONTENT_TYPE, content_type);
+	}
+	let response = response.body(hyper::Body::from(body)).unwrap();
+	Ok(Some(response))
+}
+
+pub async fn serve_from_include_dir(
+	dir: &Dir,
+	path: &str,
+) -> Result<Option<http::Response<hyper::Body>>> {
+	let static_path = Path::new(path.strip_prefix('/').unwrap());
+	let body = if let Some(data) = dir.read(&static_path) {
+		data
+	} else {
+		return Ok(None);
+	};
+	let mut response = http::Response::builder();
+	if let Some(content_type) = content_type(&static_path) {
+		response = response.header(http::header::CONTENT_TYPE, content_type);
+	}
+	let response = response.body(hyper::Body::from(body)).unwrap();
+	Ok(Some(response))
+}
+
+fn content_type(path: &std::path::Path) -> Option<&'static str> {
+	let path = path.to_str().unwrap();
+	if path.ends_with(".css") {
+		Some("text/css")
+	} else if path.ends_with(".js") {
+		Some("text/javascript")
+	} else if path.ends_with(".svg") {
+		Some("image/svg+xml")
+	} else if path.ends_with(".wasm") {
+		Some("application/wasm")
+	} else {
+		None
+	}
+}
+
 pub fn hash(s: &str) -> String {
 	let mut hash: sha2::Sha256 = Digest::new();
 	hash.update(s);
@@ -115,4 +145,29 @@ pub fn hash(s: &str) -> String {
 	let hash = hex::encode(hash);
 	let hash = &hash[0..16];
 	hash.to_owned()
+}
+
+#[macro_export]
+macro_rules! asset {
+	($asset_relative_path:literal) => {{
+		let file_path = ::std::path::Path::new(file!());
+		let asset_path = file_path.parent().unwrap().join($asset_relative_path);
+		if cfg!(debug_assertions) {
+			format!("/assets/{}", asset_path.display())
+		} else {
+			let extension = asset_path.extension().map(|e| e.to_str().unwrap()).unwrap();
+			let hash = tangram_util::serve::hash(&asset_path.to_str().unwrap());
+			format!("/assets/{}.{}", hash, extension)
+			}
+		}};
+}
+
+#[macro_export]
+macro_rules! client {
+	() => {{
+		let file_path = ::std::path::Path::new(file!());
+		let client_crate_manifest_path = file_path.parent().unwrap().join("client/Cargo.toml");
+		let hash = tangram_util::serve::hash(client_crate_manifest_path.to_str().unwrap());
+		format!("/js/{}.js", hash)
+		}};
 }

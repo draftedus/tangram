@@ -365,12 +365,15 @@ async fn request_handler(
 		_ => async {
 			#[cfg(debug_assertions)]
 			{
+				if let Some(response) = tangram_util::serve::serve_from_dir(&Path::new("app/static"), path).await? {
+					return Ok(response)
+				}
 				let out_dir = PathBuf::from(env!("OUT_DIR"));
-				if let Some(response) = serve_from_dir(&out_dir, path).await? {
+				if let Some(response) = tangram_util::serve::serve_from_dir(&out_dir, path).await? {
 					return Ok(response)
 				}
 				if let Some(path) = path.strip_prefix("/assets") {
-					if let Some(response) = serve_from_dir(&Path::new("."), path).await? {
+					if let Some(response) = tangram_util::serve::serve_from_dir(&Path::new("."), path).await? {
 						return Ok(response)
 					}
 				}
@@ -379,7 +382,7 @@ async fn request_handler(
 			{
 				use tangram_deps::include_out_dir;
 				let dir = include_out_dir::include_out_dir!();
-				if let Some(response) = serve_from_include_dir(&dir, path).await? {
+				if let Some(response) = tangram_util::serve::serve_from_include_dir(&dir, path).await? {
 					return Ok(response)
 				}
 			}
@@ -407,55 +410,4 @@ async fn request_handler(
 	};
 	eprintln!("{} {} {}", method, path, response.status());
 	response
-}
-
-async fn serve_from_dir(dir: &Path, path: &str) -> Result<Option<http::Response<hyper::Body>>> {
-	let static_path = dir.join(path.strip_prefix('/').unwrap());
-	let static_path_exists = std::fs::metadata(&static_path)
-		.map(|metadata| metadata.is_file())
-		.unwrap_or(false);
-	if !static_path_exists {
-		return Ok(None);
-	}
-	let body = tokio::fs::read(&static_path).await?;
-	let mut response = http::Response::builder();
-	if let Some(content_type) = content_type(&static_path) {
-		response = response.header(http::header::CONTENT_TYPE, content_type);
-	}
-	let response = response.body(hyper::Body::from(body)).unwrap();
-	Ok(Some(response))
-}
-
-#[cfg(not(debug_assertions))]
-async fn serve_from_include_dir(
-	dir: &tangram_deps::include_out_dir::Dir,
-	path: &str,
-) -> Result<Option<http::Response<hyper::Body>>> {
-	let static_path = Path::new(path.strip_prefix('/').unwrap());
-	let body = if let Some(data) = dir.read(&static_path) {
-		data
-	} else {
-		return Ok(None);
-	};
-	let mut response = http::Response::builder();
-	if let Some(content_type) = content_type(&static_path) {
-		response = response.header(http::header::CONTENT_TYPE, content_type);
-	}
-	let response = response.body(hyper::Body::from(body)).unwrap();
-	Ok(Some(response))
-}
-
-fn content_type(path: &std::path::Path) -> Option<&'static str> {
-	let path = path.to_str().unwrap();
-	if path.ends_with(".css") {
-		Some("text/css")
-	} else if path.ends_with(".js") {
-		Some("text/javascript")
-	} else if path.ends_with(".svg") {
-		Some("image/svg+xml")
-	} else if path.ends_with(".wasm") {
-		Some("application/wasm")
-	} else {
-		None
-	}
 }

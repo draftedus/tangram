@@ -25,7 +25,7 @@ pub fn Document(page_info: PageInfo) {
 				<body>
 					{children}
 					<script>
-						{"document.cookie = `tangram-timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone};max-age=31536000`"}
+						{"document.cookie = `tangram-timezone=${Intl.DateTimeFormat().resolvedOptions().timeZone};max-age=31536000;samesite=lax`"}
 					</script>
 					{page_info.client_wasm_js_src.map(|client_wasm_js_src| html! {
 						<script type="module">

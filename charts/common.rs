@@ -730,5 +730,5 @@ fn truncate_text(ctx: CanvasRenderingContext2d, label: &str, width: f64) -> Cow<
 }
 
 pub fn format_number(value: f64) -> String {
-	lexical::to_string(value)
+	format!("{:.*e}", 4, value)
 }

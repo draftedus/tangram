@@ -193,7 +193,7 @@ fn set_cookie_header_value(token: Id, domain: Option<&str>) -> String {
 	let path = Some(";path=/");
 	let max_age = Some(";max-age=31536000");
 	let same_site = if domain.is_some() {
-		Some(";samesite=none")
+		Some(";samesite=lax")
 	} else {
 		None
 	};

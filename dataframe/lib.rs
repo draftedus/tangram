@@ -1,5 +1,5 @@
 /*!
-This crate provides a basic implementation of dataframes, which are two dimensional arrays of data where each column can have a different data type, like a spreadsheet. This crate is similar to Python's Pandas library, but at present it is very limited, because it only implements the features needed to support Tangram.
+This crate provides a basic implementation of dataframes, which are two dimensional arrays of data where each column can have a different data type, like a spreadsheet or database.
 */
 
 use fnv::FnvHashMap;
