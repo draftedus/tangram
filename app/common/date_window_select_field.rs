@@ -23,7 +23,7 @@ pub fn DateWindowSelectField(date_window: DateWindow) {
 			disabled={None}
 			placeholder={None}
 			required={None}
-			id={"date-window-select-field".to_owned()}
+			id={"date_window_select_field".to_owned()}
 			label={"Date Window".to_owned()}
 			name={"date_window".to_owned()}
 			options={date_window_select_field_options}

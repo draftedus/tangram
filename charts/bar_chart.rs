@@ -46,14 +46,14 @@ pub struct BarChartOptions {
 	pub y_min: Option<f64>,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
 pub struct BarChartSeries {
 	pub color: String,
 	pub data: Vec<BarChartPoint>,
 	pub title: Option<String>,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
 pub struct BarChartPoint {
 	pub label: String,
 	pub x: f64,

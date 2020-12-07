@@ -2791,6 +2791,7 @@ version = "0.0.0"
 dependencies = [
  "console_error_panic_hook",
  "tangram_charts",
+ "tangram_ui",
  "wasm-bindgen",
  "web-sys",
 ]

@@ -196,7 +196,6 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 			title: Some("Production F1 Score".to_owned()),
 		},
 	];
-	let value_formatter: fn(f32) -> String = |value: f32| ui::format_percent(value);
 
 	let html = html! {
 	<ModelLayout
@@ -258,7 +257,6 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 								value_a_title={"Training".to_owned()}
 								value_b={selected_class_overall_metrics.precision.production.unwrap()}
 								value_b_title={"Production".to_owned()}
-								value_formatter={value_formatter}
 							/>
 							</ui::Card>
 							<ui::Card>
@@ -271,7 +269,6 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 									value_a_title={"Training".to_owned()}
 									value_b={selected_class_overall_metrics.recall.production.unwrap()}
 									value_b_title={"Production".to_owned()}
-									value_formatter={value_formatter}
 								/>
 							</ui::Card>
 						</MetricsRow>
@@ -328,7 +325,6 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 									value_a_title={"Training".to_owned()}
 									value_b={selected_class_overall_metrics.f1_score.production.unwrap()}
 									value_b_title={"Production".to_owned()}
-									value_formatter={value_formatter}
 								/>
 							</ui::Card>
 						</MetricsRow>
@@ -412,7 +408,6 @@ pub fn render(props: Props, page_info: PageInfo) -> String {
 										.true_positive_fraction.production.unwrap(),
 							}}
 							value_b_title={"Production".to_owned()}
-							value_formatter={value_formatter}
 						/>
 				</ui::S2>
 			</ui::S1>

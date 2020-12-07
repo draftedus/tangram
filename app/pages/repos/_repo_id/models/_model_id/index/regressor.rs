@@ -39,7 +39,6 @@ pub fn regressor_index_page(props: RegressorProps) -> html::Node {
 			title: Some("loss".to_owned()),
 		}]
 	});
-	let value_formatter: fn(f32) -> String = |value: f32| ui::format_number(value);
 	html! {
 		<ui::S1>
 			<ui::H1 center={false}>{"Overview"}</ui::H1>
@@ -87,7 +86,6 @@ pub fn regressor_index_page(props: RegressorProps) -> html::Node {
 						value_a_title={"Baseline Root Mean Squared Error".to_owned()}
 						value_b={props.metrics.rmse}
 						value_b_title={"Root Mean Squared Error".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 				{losses_chart_series.map(|losses_chart_series| html! {

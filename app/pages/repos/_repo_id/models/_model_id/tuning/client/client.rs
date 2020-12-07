@@ -2,7 +2,6 @@ use num_traits::ToPrimitive;
 use tangram_app_pages_repos_repo_id_models_model_id_tuning_common::ClientProps;
 use tangram_ui as ui;
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::console;
 
 #[wasm_bindgen(start)]
 pub fn start() {

@@ -44,7 +44,6 @@ pub fn multiclass_classifier_index_page(props: MulticlassClassifierProps) -> htm
 			title: Some("loss".to_owned()),
 		}]
 	});
-	let value_formatter: fn(f32) -> String = |value: f32| ui::format_percent(value);
 	html! {
 		<ui::S1>
 			<ui::H1 center={false}>{"Overview"}</ui::H1>
@@ -92,7 +91,6 @@ pub fn multiclass_classifier_index_page(props: MulticlassClassifierProps) -> htm
 						value_a_title={"Baseline".to_owned()}
 						value_b={props.metrics.accuracy}
 						value_b_title={"Training".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 				{losses_chart_series.map(|losses_chart_series| html! {

@@ -30,17 +30,22 @@ pub fn SelectField(
 				name={name}
 				placeholder={placeholder}
 				required={required}
-				value={value}
+				value={value.clone()}
 			>
-				{
-					options.iter().map(|option| {
-						html! {
-							<option value={option.value.clone()}>
-								{option.text.clone()}
-							</option>
-						}
-					}).collect::<Vec<_>>()
-				}
+				{options.iter().map(|option| {
+					let selected = value
+						.as_ref()
+						.map(|value| *value == option.value)
+						.unwrap_or(false);
+					html! {
+						<option
+							value={option.value.clone()}
+							selected={selected}
+						>
+							{option.text.clone()}
+						</option>
+					}
+				}).collect::<Vec<_>>()}
 			</select>
 		</FieldLabel>
 	}

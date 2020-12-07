@@ -8,7 +8,6 @@ use tangram_ui as ui;
 
 #[component]
 pub fn RegressorTrainingMetricsIndexPage(props: RegressorProps) {
-	let value_formatter: fn(f32) -> String = |value| ui::format_number(value);
 	html! {
 		<ui::S1>
 			<ui::H1 center={false}>{"Training Metrics"}</ui::H1>
@@ -31,7 +30,6 @@ pub fn RegressorTrainingMetricsIndexPage(props: RegressorProps) {
 							value_a_title={"Baseline Mean Squared Error".to_owned()}
 							value_b={props.rmse}
 							value_b_title={"Root Mean Squared Error".to_owned()}
-							value_formatter={value_formatter}
 						/>
 					</ui::Card>
 					<ui::Card>
@@ -44,7 +42,6 @@ pub fn RegressorTrainingMetricsIndexPage(props: RegressorProps) {
 							value_a_title={"Mean Squared Error".to_owned()}
 							value_b={props.mse}
 							value_b_title={"Mean Squared Error".to_owned()}
-							value_formatter={value_formatter}
 						/>
 					</ui::Card>
 				</MetricsRow>

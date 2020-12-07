@@ -77,7 +77,6 @@ pub fn MulticlassClassifierProductionMetrics(props: MulticlassClassifierProducti
 	];
 	let accuracy_chart_title =
 		interval_chart_title(&props.date_window_interval, "Accuracy".to_owned());
-	let value_formatter: fn(f32) -> String = |value: f32| ui::format_percent(value);
 	html! {
 		<ui::S1>
 			<ui::H1 center={false}>{"Production Metrics"}</ui::H1>
@@ -146,7 +145,6 @@ pub fn MulticlassClassifierProductionMetrics(props: MulticlassClassifierProducti
 						value_a_title={"Training".to_owned()}
 						value_b={props.overall.accuracy.production.unwrap()}
 						value_b_title={"Production".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 				<ui::Card>

@@ -9,7 +9,6 @@ use tangram_ui as ui;
 
 #[component]
 pub fn BinaryClassifierTrainingMetricsIndexPage(props: BinaryClassifierProps) {
-	let value_formatter: fn(f32) -> String = |value| ui::format_percent(value);
 	html! {
 		<ui::S1>
 		<ui::H1 center={false}>{"Training Metrics"}</ui::H1>
@@ -56,7 +55,6 @@ pub fn BinaryClassifierTrainingMetricsIndexPage(props: BinaryClassifierProps) {
 					value_a_title={"Baseline".to_owned()}
 					value_b={props.accuracy}
 					value_b_title={"Training".to_owned()}
-					value_formatter={value_formatter}
 				/>
 			</ui::Card>
 		</ui::S2>

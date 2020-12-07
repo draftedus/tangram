@@ -19,7 +19,6 @@ pub fn NumberComparisonChart(
 	value_a_title: Option<String>,
 	value_b: Option<f32>,
 	value_b_title: String,
-	value_formatter: Option<fn(f32) -> String>,
 ) {
 	let difference_string = difference_string(value_a, value_b);
 	let difference_class = difference_class(value_a, value_b);

@@ -52,14 +52,18 @@ pub fn H2(center: Option<bool>) {
 #[component]
 pub fn P() {
 	html! {
-		<p class="p">{children}</p>
+		<p class="p">
+			{children}
+		</p>
 	}
 }
 
 #[component]
 pub fn List() {
 	html! {
-		<ul class="list">{children}</ul>
+		<ul class="list">
+			{children}
+		</ul>
 	}
 }
 
@@ -75,6 +79,8 @@ pub fn OrderedList() {
 #[component]
 pub fn ListItem() {
 	html! {
-		<li>{children}</li>
+		<li>
+			{children}
+		</li>
 	}
 }

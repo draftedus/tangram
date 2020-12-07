@@ -96,7 +96,6 @@ pub fn NumberColumn(props: NumberColumnProps) {
 	let stats_overall_chart_title = overall_chart_title(&props.date_window, "Stats".to_owned());
 	let stats_interval_chart_title =
 		interval_chart_title(&props.date_window_interval, "Stats".to_owned());
-	let value_formatter: fn(f32) -> String = |value: f32| ui::format_number(value);
 	html! {
 		<ui::S2>
 			{props.alert.map(|alert| html! {
@@ -168,7 +167,6 @@ pub fn NumberColumn(props: NumberColumnProps) {
 						value_a_title={"Training".to_owned()}
 						value_b={props.min_comparison.production}
 						value_b_title={"Production".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 				<ui::Card>
@@ -181,7 +179,6 @@ pub fn NumberColumn(props: NumberColumnProps) {
 						value_a_title={"Training".to_owned()}
 						value_b={props.max_comparison.production}
 						value_b_title={"Production".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 			</MetricsRow>
@@ -196,7 +193,6 @@ pub fn NumberColumn(props: NumberColumnProps) {
 						value_a_title={"Training".to_owned()}
 						value_b={props.mean_comparison.production}
 						value_b_title={"Production".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 				<ui::Card>
@@ -209,7 +205,6 @@ pub fn NumberColumn(props: NumberColumnProps) {
 						value_a_title={"Training".to_owned()}
 						value_b={props.std_comparison.production}
 						value_b_title={"Production".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 			</MetricsRow>

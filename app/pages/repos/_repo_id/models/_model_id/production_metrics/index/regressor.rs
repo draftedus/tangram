@@ -85,7 +85,6 @@ pub fn RegressorProductionMetrics(props: RegressorProductionMetricsProps) {
 	];
 	let mse_chart_title =
 		interval_chart_title(&props.date_window_interval, "Mean Squared Error".to_owned());
-	let value_formatter: fn(f32) -> String = |value: f32| ui::format_number(value);
 	html! {
 	<ui::S1>
 		<ui::H1 center={false}>{"Production Metrics"}</ui::H1>
@@ -157,7 +156,6 @@ pub fn RegressorProductionMetrics(props: RegressorProductionMetricsProps) {
 						value_a_title={"Training".to_owned()}
 						value_b={props.overall.rmse.production.unwrap()}
 						value_b_title={"Production".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 				<ui::Card>
@@ -170,7 +168,6 @@ pub fn RegressorProductionMetrics(props: RegressorProductionMetricsProps) {
 						value_a_title={"Training".to_owned()}
 						value_b={props.overall.mse.production.unwrap()}
 						value_b_title={"Production".to_owned()}
-						value_formatter={value_formatter}
 					/>
 				</ui::Card>
 			</MetricsRow>

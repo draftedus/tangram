@@ -9,7 +9,6 @@ use tangram_util::zip;
 
 #[component]
 pub fn MulticlassClassifierTrainingMetricsIndexPage(props: MulticlassClassifierProps) {
-	let value_formatter: fn(f32) -> String = |value| ui::format_percent(value);
 	html! {
 	<ui::S1>
 		<ui::H1 center={false}>{"Training Metrics"}</ui::H1>
@@ -49,7 +48,6 @@ pub fn MulticlassClassifierTrainingMetricsIndexPage(props: MulticlassClassifierP
 					value_a_title={"Baseline Accuracy".to_owned()}
 					value_b={props.accuracy}
 					value_b_title={"Accuracy".to_owned()}
-					value_formatter={value_formatter}
 				/>
 			</ui::Card>
 		</ui::S2>

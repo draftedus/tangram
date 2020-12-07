@@ -226,13 +226,13 @@ fn compute_feature_contributions_chart_value(
 pub fn PredictionResult(props: PredictionResultProps) {
 	let inner = match props.prediction {
 		Prediction::Regression(inner) => {
-			html! {<RegressionPrediction props={inner} />}
+			html! { <RegressionPrediction props={inner} /> }
 		}
 		Prediction::BinaryClassification(inner) => {
-			html! {<BinaryClassificationPrediction props={inner} />}
+			html! { <BinaryClassificationPrediction props={inner} /> }
 		}
 		Prediction::MulticlassClassification(inner) => {
-			html! {<MulticlassClassificationPrediction props={inner} />}
+			html! { <MulticlassClassificationPrediction props={inner} /> }
 		}
 	};
 	html! {
@@ -299,16 +299,16 @@ pub fn PredictionResult(props: PredictionResultProps) {
 fn column_type_token(column_type: &ColumnType) -> html::Node {
 	match column_type {
 		ColumnType::Unknown => {
-			html! {<UnknownColumnToken /> }
+			html! { <UnknownColumnToken /> }
 		}
 		ColumnType::Number => {
-			html! {<NumberColumnToken /> }
+			html! { <NumberColumnToken /> }
 		}
 		ColumnType::Enum => {
-			html! {<EnumColumnToken /> }
+			html! { <EnumColumnToken /> }
 		}
 		ColumnType::Text => {
-			html! {<TextColumnToken /> }
+			html! { <TextColumnToken /> }
 		}
 	}
 }
@@ -472,16 +472,16 @@ pub fn MulticlassClassificationPrediction(props: MulticlassClassificationPredict
 				class={None}
 				group_gap={None}
 				hide_legend={None}
-				x_axis_title={None}
-				should_draw_x_axis_labels={None}
-				should_draw_y_axis_labels={None}
-				y_axis_grid_line_interval={None}
-				y_min={None}
-				y_max={None}
-				y_axis_title={None}
 				id={"probabilities".to_owned()}
 				series={probability_series}
+				should_draw_x_axis_labels={None}
+				should_draw_y_axis_labels={None}
 				title={"Predicted Probabilities".to_owned()}
+				x_axis_title={None}
+				y_axis_grid_line_interval={None}
+				y_axis_title={None}
+				y_max={None}
+				y_min={None}
 			/>
 			<ui::H2 center={false}>{"Explanation"}</ui::H2>
 			<ui::P>
@@ -490,7 +490,6 @@ pub fn MulticlassClassificationPrediction(props: MulticlassClassificationPredict
 			<ui::Card>
 				<FeatureContributionsChart
 					class={None}
-					title={None}
 					id={"multiclass_classification_feature_contributions".to_owned()}
 					include_x_axis_title={true}
 					include_y_axis_labels={true}
@@ -498,6 +497,7 @@ pub fn MulticlassClassificationPrediction(props: MulticlassClassificationPredict
 					negative_color={ui::colors::RED.to_owned()}
 					positive_color={ui::colors::GREEN.to_owned()}
 					series={feature_contributions_series}
+					title={None}
 				/>
 			</ui::Card>
 		</ui::S2>

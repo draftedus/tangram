@@ -1,7 +1,6 @@
 use crate::Token;
 use html::{classes, component, html, style};
-use num_traits::ToPrimitive;
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::JsCast;
 
 // |-----------------------------------------------------------|
 // |           ||       |                Actual                |
@@ -43,9 +42,7 @@ pub fn ConfusionMatrixComparison(
 	value_a_title: String,
 	value_b: ConfusionMatrixComparisonValue,
 	value_b_title: String,
-	value_formatter: Option<fn(f32) -> String>,
 ) {
-	let value_formatter = value_formatter.unwrap_or(default_value_formatter);
 	html! {
 		<div class="confusion-matrix-comparison-wrapper" id={id}>
 			<ConfusionMatrixLabel area={"actual-true-label"} left={None}>
@@ -74,7 +71,6 @@ pub fn ConfusionMatrixComparison(
 				value_a_title={value_a_title.clone()}
 				value_b={value_b.true_positive}
 				value_b_title={value_b_title.clone()}
-				value_formatter={value_formatter}
 			/>
 			<ConfusionMatrixComparisonItem
 				area={"false-positive"}
@@ -86,7 +82,6 @@ pub fn ConfusionMatrixComparison(
 				value_a_title={value_a_title.clone()}
 				value_b={value_b.false_positive}
 				value_b_title={value_b_title.clone()}
-				value_formatter={value_formatter}
 			/>
 			<ConfusionMatrixComparisonItem
 				area={"false-negative"}
@@ -98,7 +93,6 @@ pub fn ConfusionMatrixComparison(
 				value_a_title={value_a_title.clone()}
 				value_b={value_b.false_negative}
 				value_b_title={value_b_title.clone()}
-				value_formatter={value_formatter}
 			/>
 			<ConfusionMatrixComparisonItem
 				area={"true-negative"}
@@ -110,7 +104,6 @@ pub fn ConfusionMatrixComparison(
 				value_a_title={value_a_title}
 				value_b={value_b.true_negative}
 				value_b_title={value_b_title}
-				value_formatter={value_formatter}
 			/>
 		</div>
 	}
@@ -127,7 +120,6 @@ fn ConfusionMatrixComparisonItem(
 	value_a_title: String,
 	value_b: f32,
 	value_b_title: String,
-	value_formatter: fn(f32) -> String,
 ) {
 	let wrapper_style = style! {
 		"grid-area" => area,
@@ -138,8 +130,8 @@ fn ConfusionMatrixComparisonItem(
 		"confusion-matrix-comparison-item-incorrect-wrapper"
 	};
 	let class = classes!("confusion-matrix-comparison-item-wrapper", class);
-	let value_a = value_formatter(value_a.to_f32().unwrap());
-	let value_b = value_formatter(value_b.to_f32().unwrap());
+	let value_a = value_a.to_string();
+	let value_b = value_b.to_string();
 	html! {
 		<div class={class} style={wrapper_style} data-area={area}>
 			<div class="confusion-matrix-comparison-item-title">{label}</div>

@@ -1,7 +1,4 @@
-use tangram_app_common::{
-	metrics_row::MetricsRow,
-	tokens::{BASELINE_COLOR, SELECTED_THRESHOLD_COLOR},
-};
+use tangram_app_common::tokens::{BASELINE_COLOR, SELECTED_THRESHOLD_COLOR};
 use tangram_app_layouts::{
 	document::PageInfo,
 	model_layout::{ModelLayout, ModelLayoutInfo, ModelSideNavItem},
@@ -61,7 +58,6 @@ fn Tuning(props: TuningProps) {
 	let selected_threshold = thresholds[selected_threshold_index];
 	let baseline_metrics = &props.metrics[baseline_index];
 	let selected_threshold_metrics = &props.metrics[selected_threshold_index];
-	let value_formatter: fn(f32) -> String = ui::format_percent;
 	let client_props = ClientProps {
 		baseline_metrics: baseline_metrics.clone(),
 		threshold_metrics: props.metrics.clone(),
@@ -73,9 +69,7 @@ fn Tuning(props: TuningProps) {
 				<ui::H1 center={false}>{"Tuning"}</ui::H1>
 				<ui::S2>
 					<ui::P>
-						{
-							"Drag the silder to see how metrics change with varying settings of the threshold."
-						}
+						{"Drag the silder to see how metrics change with varying settings of the threshold."}
 					</ui::P>
 					<ui::Slider
 						id={"tuning-slider".to_owned()}
@@ -90,9 +84,7 @@ fn Tuning(props: TuningProps) {
 							title={None}
 							level={ui::Level::Info}
 						>
-							{
-								"A threshold of 0 makes your model predict the same class for every input."
-							}
+							{"A threshold of 0 makes your model predict the same class for every input."}
 						</ui::Alert>
 					})
 					} else if selected_threshold.partial_cmp(&1.0).unwrap() == std::cmp::Ordering::Equal {
@@ -101,16 +93,14 @@ fn Tuning(props: TuningProps) {
 								title={None}
 								level={ui::Level::Info}
 							>
-								{
-									"A threshold of 1 makes your model predict the same class for every input."
-								}
+								{"A threshold of 1 makes your model predict the same class for every input."}
 							</ui::Alert>
 						})
 					} else {
 						None
 				}}
 				<ui::S2>
-					<MetricsRow>
+					<div>
 						<ui::Card>
 							<ui::NumberComparisonChart
 								id={"tuning-accuracy".to_owned()}
@@ -121,7 +111,6 @@ fn Tuning(props: TuningProps) {
 								value_a_title={"Baseline".to_owned()}
 								value_b={selected_threshold_metrics.accuracy.unwrap()}
 								value_b_title={"Selected Threshold".to_owned()}
-								value_formatter={value_formatter}
 							/>
 						</ui::Card>
 						<ui::Card>
@@ -134,11 +123,8 @@ fn Tuning(props: TuningProps) {
 								value_a_title={"Baseline".to_owned()}
 								value_b={selected_threshold_metrics.f1_score.unwrap()}
 								value_b_title={"Selected Threshold".to_owned()}
-								value_formatter={value_formatter}
 							/>
 						</ui::Card>
-					</MetricsRow>
-					<MetricsRow>
 						<ui::Card>
 							<ui::NumberComparisonChart
 								id={"tuning-precision".to_owned()}
@@ -149,7 +135,6 @@ fn Tuning(props: TuningProps) {
 								value_a_title={"Baseline".to_owned()}
 								value_b={selected_threshold_metrics.precision.unwrap()}
 								value_b_title={"Selected Threshold".to_owned()}
-								value_formatter={value_formatter}
 							/>
 						</ui::Card>
 						<ui::Card>
@@ -162,10 +147,9 @@ fn Tuning(props: TuningProps) {
 								value_a_title={"Baseline".to_owned()}
 								value_b={selected_threshold_metrics.recall.unwrap()}
 								value_b_title="Selected Threshold"
-								value_formatter={value_formatter}
 							/>
 						</ui::Card>
-					</MetricsRow>
+					</div>
 				</ui::S2>
 				<ui::S2>
 					<ui::ConfusionMatrixComparison
@@ -187,7 +171,6 @@ fn Tuning(props: TuningProps) {
 							true_positive: selected_threshold_metrics.true_positives.to_f32().unwrap(),
 						}}
 						value_b_title={"Selected Threshold".to_owned()}
-						value_formatter={None}
 					/>
 				</ui::S2>
 			</ui::S1>
