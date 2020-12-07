@@ -40,7 +40,7 @@ pub async fn get(
 				models.created_at
 			from models
 			where models.repo_id = $1
-			order by models.created_at
+			order by models.created_at desc
 		",
 	)
 	.bind(&repo_id.to_string())
