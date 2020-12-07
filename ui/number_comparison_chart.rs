@@ -2,11 +2,10 @@ use crate::Token;
 use html::{classes, component, html};
 use wasm_bindgen::{prelude::*, JsCast};
 
-fn default_value_formatter(value: f32) -> String {
-	if value.is_finite() {
-		value.to_string()
-	} else {
-		"N/A".to_owned()
+fn default_value_formatter(value: Option<f32>) -> String {
+	match value {
+		Some(value) => value.to_string(),
+		None => "N/A".to_owned(),
 	}
 }
 
@@ -16,9 +15,9 @@ pub fn NumberComparisonChart(
 	color_a: Option<String>,
 	color_b: Option<String>,
 	title: Option<String>,
-	value_a: f32,
+	value_a: Option<f32>,
 	value_a_title: Option<String>,
-	value_b: f32,
+	value_b: Option<f32>,
 	value_b_title: String,
 	value_formatter: Option<fn(f32) -> String>,
 ) {
@@ -31,10 +30,10 @@ pub fn NumberComparisonChart(
 			<div class={difference_class} data-field={"difference"}>{difference_string}</div>
 			<div class="number-comparison-inner-wrapper">
 				<div class="number-comparison-value" data-field="value-a">
-					{value_a.to_string()}
+					{value_a.map(|value_a| value_a.to_string()).unwrap_or_else(|| "N/A".to_owned())}
 				</div>
 				<div class="number-comparison-value" data-field="value-b">
-					{value_b.to_string()}
+					{value_b.map(|value_b| value_b.to_string()).unwrap_or_else(|| "N/A".to_owned())}
 				</div>
 				<div>
 					<Token color={color_a}>{value_a_title}</Token>
@@ -47,31 +46,37 @@ pub fn NumberComparisonChart(
 	}
 }
 
-pub fn difference_class(value_a: f32, value_b: f32) -> String {
-	match value_a.partial_cmp(&value_b) {
-		Some(ordering) => match ordering {
-			std::cmp::Ordering::Less => "number-comparison-positive".to_owned(),
-			std::cmp::Ordering::Equal => "number-comparison-equals".to_owned(),
-			std::cmp::Ordering::Greater => "number-comparison-negative".to_owned(),
+pub fn difference_class(value_a: Option<f32>, value_b: Option<f32>) -> String {
+	match (value_a, value_b) {
+		(Some(value_a), Some(value_b)) => match value_a.partial_cmp(&value_b) {
+			Some(ordering) => match ordering {
+				std::cmp::Ordering::Less => "number-comparison-positive".to_owned(),
+				std::cmp::Ordering::Equal => "number-comparison-equals".to_owned(),
+				std::cmp::Ordering::Greater => "number-comparison-negative".to_owned(),
+			},
+			None => "".to_owned(),
 		},
-		None => "".to_owned(),
+		(_, _) => "number-comparison-na".to_owned(),
 	}
 }
 
-pub fn difference_string(value_a: f32, value_b: f32) -> String {
-	match value_a.partial_cmp(&value_b) {
-		Some(ordering) => match &ordering {
-			std::cmp::Ordering::Less => format!("+ {}", default_value_formatter(value_b - value_a)),
-			std::cmp::Ordering::Equal => "equal".to_owned(),
-			std::cmp::Ordering::Greater => {
-				format!("{}", default_value_formatter(value_b - value_a))
-			}
+pub fn difference_string(value_a: Option<f32>, value_b: Option<f32>) -> String {
+	match (value_a, value_b) {
+		(Some(value_a), Some(value_b)) => match value_a.partial_cmp(&value_b) {
+			Some(ordering) => match &ordering {
+				std::cmp::Ordering::Less => {
+					format!("+{}", default_value_formatter(Some(value_b - value_a)))
+				}
+				std::cmp::Ordering::Equal => "equal".to_owned(),
+				std::cmp::Ordering::Greater => default_value_formatter(Some(value_b - value_a)),
+			},
+			None => "N/A".to_owned(),
 		},
-		None => "N/A".to_owned(),
+		(_, _) => "N/A".to_owned(),
 	}
 }
 
-pub fn update_number_comparison_chart(id: &str, value_a: f32, value_b: f32) {
+pub fn update_number_comparison_chart(id: &str, value_a: Option<f32>, value_b: Option<f32>) {
 	let document = web_sys::window().unwrap().document().unwrap();
 	let difference_element = document
 		.query_selector(&format!("#{} [data-field='difference']", id))

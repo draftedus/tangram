@@ -166,7 +166,7 @@ pub fn NumberColumn(props: NumberColumnProps) {
 						title={"Min".to_owned()}
 						value_a={props.min_comparison.training}
 						value_a_title={"Training".to_owned()}
-						value_b={props.min_comparison.production.unwrap()}
+						value_b={props.min_comparison.production}
 						value_b_title={"Production".to_owned()}
 						value_formatter={value_formatter}
 					/>
@@ -179,7 +179,7 @@ pub fn NumberColumn(props: NumberColumnProps) {
 						title={"Max".to_owned()}
 						value_a={props.max_comparison.training}
 						value_a_title={"Training".to_owned()}
-						value_b={props.max_comparison.production.unwrap()}
+						value_b={props.max_comparison.production}
 						value_b_title={"Production".to_owned()}
 						value_formatter={value_formatter}
 					/>
@@ -194,7 +194,7 @@ pub fn NumberColumn(props: NumberColumnProps) {
 						title={"Mean".to_owned()}
 						value_a={props.mean_comparison.training}
 						value_a_title={"Training".to_owned()}
-						value_b={props.mean_comparison.production.unwrap()}
+						value_b={props.mean_comparison.production}
 						value_b_title={"Production".to_owned()}
 						value_formatter={value_formatter}
 					/>
@@ -207,7 +207,7 @@ pub fn NumberColumn(props: NumberColumnProps) {
 						title={"Standard Deviation".to_owned()}
 						value_a={props.std_comparison.training}
 						value_a_title={"Training".to_owned()}
-						value_b={props.std_comparison.production.unwrap()}
+						value_b={props.std_comparison.production}
 						value_b_title={"Production".to_owned()}
 						value_formatter={value_formatter}
 					/>

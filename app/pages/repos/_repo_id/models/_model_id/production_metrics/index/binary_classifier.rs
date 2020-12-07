@@ -66,7 +66,10 @@ pub fn BinaryClassifierProductionMetrics(props: BinaryClassifierProductionMetric
 				.enumerate()
 				.map(|(index, entry)| LineChartPoint {
 					x: index.to_f64().unwrap(),
-					y: entry.accuracy.unwrap().to_f64().unwrap(),
+					y: entry
+						.accuracy
+						.map(|accuracy| accuracy.to_f64().unwrap())
+						.unwrap_or(f64::NAN),
 				})
 				.collect::<Vec<_>>(),
 			line_style: None,
@@ -127,7 +130,7 @@ pub fn BinaryClassifierProductionMetrics(props: BinaryClassifierProductionMetric
 						title={"Accuracy".to_owned()}
 						value_a={props.overall.accuracy.training}
 						value_a_title={"Training".to_owned()}
-						value_b={props.overall.accuracy.production.unwrap()}
+						value_b={props.overall.accuracy.production}
 						value_b_title={"Production".to_owned()}
 						value_formatter={value_formatter}
 					/>

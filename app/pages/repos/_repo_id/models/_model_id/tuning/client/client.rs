@@ -14,9 +14,16 @@ pub fn start() {
 		.unwrap()
 		.dyn_into::<web_sys::HtmlElement>()
 		.unwrap();
-	let metrics = data.dataset().get("props").unwrap();
-	let client_props: ClientProps = serde_json::from_str(&metrics).unwrap();
-	ui::boot_slider("tuning-slider");
+	let client_props = data.dataset().get("props").unwrap();
+	let client_props: ClientProps = serde_json::from_str(&client_props).unwrap();
+	let thresholds = client_props
+		.threshold_metrics
+		.iter()
+		.map(|metric| metric.threshold)
+		.collect::<Vec<f32>>();
+	let value_formatter: Box<dyn Fn(usize) -> String> =
+		Box::new(move |value: usize| thresholds[value].to_string());
+	ui::boot_slider("tuning-slider".to_owned(), Some(value_formatter));
 	let document = web_sys::window().unwrap().document().unwrap();
 	let slider = document.get_element_by_id("tuning-slider").unwrap();
 	let callback_fn = Closure::<dyn Fn(_)>::wrap(Box::new(move |event: web_sys::Event| {
@@ -29,23 +36,37 @@ pub fn start() {
 			let baseline_metrics = &client_props.baseline_metrics;
 			ui::update_number_comparison_chart(
 				"tuning-accuracy",
-				baseline_metrics.accuracy.unwrap().to_f32().unwrap(),
-				threshold_metrics.accuracy.unwrap().to_f32().unwrap(),
+				baseline_metrics
+					.accuracy
+					.map(|value| value.to_f32().unwrap()),
+				threshold_metrics
+					.accuracy
+					.map(|value| value.to_f32().unwrap()),
 			);
 			ui::update_number_comparison_chart(
 				"tuning-precision",
-				baseline_metrics.precision.unwrap().to_f32().unwrap(),
-				threshold_metrics.precision.unwrap().to_f32().unwrap(),
+				baseline_metrics
+					.precision
+					.map(|value| value.to_f32().unwrap()),
+				threshold_metrics
+					.precision
+					.map(|value| value.to_f32().unwrap()),
 			);
 			ui::update_number_comparison_chart(
 				"tuning-recall",
-				baseline_metrics.recall.unwrap().to_f32().unwrap(),
-				threshold_metrics.recall.unwrap().to_f32().unwrap(),
+				baseline_metrics.recall.map(|value| value.to_f32().unwrap()),
+				threshold_metrics
+					.recall
+					.map(|value| value.to_f32().unwrap()),
 			);
 			ui::update_number_comparison_chart(
 				"tuning-f1-score",
-				baseline_metrics.f1_score.unwrap().to_f32().unwrap(),
-				threshold_metrics.f1_score.unwrap().to_f32().unwrap(),
+				baseline_metrics
+					.f1_score
+					.map(|value| value.to_f32().unwrap()),
+				threshold_metrics
+					.f1_score
+					.map(|value| value.to_f32().unwrap()),
 			);
 			ui::update_confusion_matrix_comparison(
 				"tuning-confusion-matrix-comparison",

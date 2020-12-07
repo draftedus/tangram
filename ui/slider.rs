@@ -3,6 +3,10 @@ use num_traits::ToPrimitive;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
+fn default_value_formatter(value: usize) -> String {
+	value.to_string()
+}
+
 #[component]
 pub fn Slider(id: Option<String>, max: f32, min: f32, value: usize) {
 	let percent = ((value.to_f32().unwrap() - min) / (max - min)) * 100.0;
@@ -12,7 +16,6 @@ pub fn Slider(id: Option<String>, max: f32, min: f32, value: usize) {
 	let tooltip_style = style! {
 	  "margin-left" =>  format!("{}%", percent),
 	};
-	let value = value.to_string();
 	html! {
 		<div class={"slider-wrapper"}>
 			<input
@@ -22,17 +25,24 @@ pub fn Slider(id: Option<String>, max: f32, min: f32, value: usize) {
 				min={min.to_string()}
 				type={"range"}
 			/>
-			<div class="slider-progress" style={progress_style} />
+			<div class="slider-progress" style={progress_style}></div>
 			<div class="slider-tooltip" style={tooltip_style}>
-				{value}
+				{value.to_string()}
 			</div>
 		</div>
 	}
 }
 
-pub fn boot_slider(id: &str) {
+pub fn boot_slider(id: String, value_formatter: Option<Box<dyn Fn(usize) -> String>>) {
 	let document = web_sys::window().unwrap().document().unwrap();
-	let slider = document.get_element_by_id(id).unwrap();
+	let slider = document
+		.get_element_by_id(&id)
+		.unwrap()
+		.dyn_into::<web_sys::HtmlInputElement>()
+		.unwrap();
+	let value_formatter = value_formatter.unwrap_or_else(|| Box::new(default_value_formatter));
+	let value = slider.value().parse().unwrap();
+	set_slider_tooltip_value(id.clone(), value_formatter(value));
 	let callback_fn = Closure::<dyn Fn(_)>::wrap(Box::new(move |event: web_sys::Event| {
 		if let Some(current_target) = event.current_target() {
 			let current_target = &current_target
@@ -67,6 +77,10 @@ pub fn boot_slider(id: &str) {
 				.style()
 				.set_property("margin-left", &format!("{}%", &percent))
 				.unwrap();
+			set_slider_tooltip_value(
+				id.clone(),
+				value_formatter(current_target.value().parse::<usize>().unwrap()),
+			);
 		}
 	}));
 	if let Some(slider) = slider.dyn_ref::<web_sys::HtmlInputElement>() {
@@ -75,4 +89,15 @@ pub fn boot_slider(id: &str) {
 			.unwrap();
 	}
 	callback_fn.forget();
+}
+
+pub fn set_slider_tooltip_value(id: String, value: String) {
+	let document = web_sys::window().unwrap().document().unwrap();
+	let slider_tooltip = document
+		.query_selector(&format!("#{}~.slider-tooltip", id))
+		.unwrap()
+		.unwrap()
+		.dyn_into::<web_sys::HtmlElement>()
+		.unwrap();
+	slider_tooltip.set_inner_html(&value);
 }
